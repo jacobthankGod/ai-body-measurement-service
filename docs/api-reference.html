@@ -1,0 +1,232 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>API Reference - AI Body Scan API</title>
+    <link rel="stylesheet" href="styles.css">
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=Fira+Code:wght@400;500&display=swap" rel="stylesheet">
+</head>
+<body>
+    <nav class="sidebar">
+        <div class="logo">
+            <svg width="32" height="32" viewBox="0 0 32 32" fill="none">
+                <circle cx="16" cy="16" r="14" stroke="#6366f1" stroke-width="2"/>
+                <circle cx="16" cy="10" r="4" fill="#6366f1"/>
+                <path d="M10 22c0-3 2.5-6 6-6s6 3 6 6" stroke="#6366f1" stroke-width="2" stroke-linecap="round"/>
+            </svg>
+            <span>AI Body Scan API</span>
+        </div>
+        
+        <div class="nav-section">
+            <h3>Getting Started</h3>
+            <a href="index.html">Introduction</a>
+            <a href="quickstart.html">Quick Start</a>
+            <a href="authentication.html">Authentication</a>
+        </div>
+        
+        <div class="nav-section">
+            <h3>API Reference</h3>
+            <a href="api-reference.html" class="active">Measurements</a>
+            <a href="errors.html">Errors</a>
+            <a href="webhooks.html">Webhooks</a>
+        </div>
+        
+        <div class="nav-section">
+            <h3>SDKs</h3>
+            <a href="sdk-javascript.html">JavaScript</a>
+            <a href="sdk-python.html">Python</a>
+            <a href="sdk-dart.html">Dart/Flutter</a>
+        </div>
+    </nav>
+    
+    <main class="content">
+        <header class="top-bar">
+            <div class="search">
+                <input type="text" placeholder="Search documentation... (⌘K)">
+            </div>
+            <div class="links">
+                <a href="#">API Reference</a>
+                <a href="#">Support</a>
+                <a href="#" class="github">GitHub →</a>
+            </div>
+        </header>
+        
+        <section class="hero" style="text-align: left;">
+            <h1>API Reference</h1>
+            <p class="tagline">Complete endpoint documentation for body measurement extraction.</p>
+        </section>
+        
+        <section>
+            <h2>Endpoints</h2>
+            
+            <div class="endpoint">
+                <div class="endpoint-header">
+                    <span class="method post">POST</span>
+                    <span class="path">/v2/measurements/extract</span>
+                </div>
+                <div class="endpoint-body">
+                    <p style="margin-bottom: 16px; color: var(--text-secondary);">Extract body measurements from dual photos (front + side). Requires both photos for ±1-3cm accuracy.</p>
+                    
+                    <h4 style="margin: 24px 0 12px;">Request Body</h4>
+                    <table style="width: 100%; border-collapse: collapse;">
+                        <thead>
+                            <tr style="border-bottom: 1px solid var(--border);">
+                                <th style="text-align: left; padding: 12px; color: var(--text-secondary); font-size: 13px;">Parameter</th>
+                                <th style="text-align: left; padding: 12px; color: var(--text-secondary); font-size: 13px;">Type</th>
+                                <th style="text-align: left; padding: 12px; color: var(--text-secondary); font-size: 13px;">Required</th>
+                                <th style="text-align: left; padding: 12px; color: var(--text-secondary); font-size: 13px;">Description</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            <tr>
+                                <td style="padding: 12px; font-family: monospace;">front</td>
+                                <td style="padding: 12px; color: var(--text-secondary);">file</td>
+                                <td style="padding: 12px;">✓</td>
+                                <td style="padding: 12px; color: var(--text-secondary);">Front photo (JPEG/PNG)</td>
+                            </tr>
+                            <tr style="background: rgba(255,255,255,0.02);">
+                                <td style="padding: 12px; font-family: monospace;">side</td>
+                                <td style="padding: 12px; color: var(--text-secondary);">file</td>
+                                <td style="padding: 12px;">✓</td>
+                                <td style="padding: 12px; color: var(--text-secondary);">Side profile photo (JPEG/PNG)</td>
+                            </tr>
+                            <tr>
+                                <td style="padding: 12px; font-family: monospace;">height</td>
+                                <td style="padding: 12px; color: var(--text-secondary);">number</td>
+                                <td style="padding: 12px;">✓</td>
+                                <td style="padding: 12px; color: var(--text-secondary);">User height in cm (120-220)</td>
+                            </tr>
+                            <tr style="background: rgba(255,255,255,0.02);">
+                                <td style="padding: 12px; font-family: monospace;">gender</td>
+                                <td style="padding: 12px; color: var(--text-secondary);">string</td>
+                                <td style="padding: 12px;"></td>
+                                <td style="padding: 12px; color: var(--text-secondary);">"male" or "female" (default: male)</td>
+                            </tr>
+                        </tbody>
+                    </table>
+                    
+                    <div class="code-block" style="margin-top: 24px;">
+<pre><code><span class="comment"># Example request</span>
+curl -X POST "https://api.aiscan.io/v2/measurements/extract" \
+  -H "Authorization: Bearer sk_live_xxx" \
+  -F "front=@front.jpg" \
+  -F "side=@side.jpg" \
+  -F "height=175" \
+  -F "gender=male"</code></pre>
+                    </div>
+                    
+                    <h4 style="margin: 24px 0 12px;">Success Response (200)</h4>
+                    <div class="response-example">
+<pre><code>{
+  <span class="json-key">"success"</span>: <span class="json-string">true</span>,
+  <span class="json-key">"measurements"</span>: {
+    <span class="json-key">"Shoulder"</span>: <span class="json-number">46.4</span>,
+    <span class="json-key">"Neck Round"</span>: <span class="json-number">39.2</span>,
+    <span class="json-key">"Chest Round"</span>: <span class="json-number">102.9</span>,
+    <span class="json-key">"Waist Round"</span>: <span class="json-number">82.4</span>,
+    <span class="json-key">"Hip Round"</span>: <span class="json-number">97.8</span>,
+    <span class="json-key">"Full Top Length"</span>: <span class="json-number">77.2</span>,
+    <span class="json-key">"Inseam"</span>: <span class="json-number">80.3</span>
+  },
+  <span class="json-key">"accuracy_mode"</span>: <span class="json-string">"dual"</span>,
+  <span class="json-key">"accuracy"</span>: <span class="json-string">"±1-3cm"</span>
+}</code></pre>
+                    </div>
+                </div>
+            </div>
+            
+            <div class="endpoint">
+                <div class="endpoint-header">
+                    <span class="method get">GET</span>
+                    <span class="path">/v2/health</span>
+                </div>
+                <div class="endpoint-body">
+                    <p style="margin-bottom: 16px; color: var(--text-secondary);">Check API health status and version info.</p>
+                    
+                    <h4 style="margin: 24px 0 12px;">Response</h4>
+                    <div class="response-example">
+<pre><code>{
+  <span class="json-key">"status"</span>: <span class="json-string">"healthy"</span>,
+  <span class="json-key">"version"</span>: <span class="json-string">"2.1.0"</span>,
+  <span class="json-key">"accuracy"</span>: <span class="json-string">"±1-3cm"</span>,
+  <span class="json-key">"mediapipe_available"</span>: <span class="json-string">true</span>
+}</code></pre>
+                    </div>
+                </div>
+            </div>
+        </section>
+        
+        <section>
+            <h2>Measurements</h2>
+            <p style="color: var(--text-secondary); margin-bottom: 24px;">Returns 18 measurements for male, 27 for female. All values in centimeters.</p>
+            
+            <h3 style="margin: 32px 0 16px; font-size: 20px;">Male (18 measurements)</h3>
+            <table style="width: 100%; border-collapse: collapse; margin-bottom: 32px;">
+                <thead>
+                    <tr style="border-bottom: 1px solid var(--border);">
+                        <th style="text-align: left; padding: 12px; color: var(--text-secondary); font-size: 13px;">Measurement</th>
+                        <th style="text-align: left; padding: 12px; color: var(--text-secondary); font-size: 13px;">Description</th>
+                        <th style="text-align: left; padding: 12px; color: var(--text-secondary); font-size: 13px;">Typical Range</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    <tr><td style="padding: 12px; font-family: monospace;">Shoulder</td><td style="padding: 12px; color: var(--text-secondary);">Shoulder width</td><td style="padding: 12px; color: var(--text-secondary);">35-55cm</td></tr>
+                    <tr style="background: rgba(255,255,255,0.02);"><td style="padding: 12px; font-family: monospace;">Neck Round</td><td style="padding: 12px; color: var(--text-secondary);">Neck circumference</td><td style="padding: 12px; color: var(--text-secondary);">30-45cm</td></tr>
+                    <tr><td style="padding: 12px; font-family: monospace;">Chest Round</td><td style="padding: 12px; color: var(--text-secondary);">Chest circumference</td><td style="padding: 12px; color: var(--text-secondary);">80-120cm</td></tr>
+                    <tr style="background: rgba(255,255,255,0.02);"><td style="padding: 12px; font-family: monospace;">Waist Round</td><td style="padding: 12px; color: var(--text-secondary);">Waist circumference</td><td style="padding: 12px; color: var(--text-secondary);">65-100cm</td></tr>
+                    <tr><td style="padding: 12px; font-family: monospace;">Hip Round</td><td style="padding: 12px; color: var(--text-secondary);">Hip circumference</td><td style="padding: 12px; color: var(--text-secondary);">80-110cm</td></tr>
+                    <tr style="background: rgba(255,255,255,0.02);"><td style="padding: 12px; font-family: monospace;">Full Top Length</td><td style="padding: 12px; color: var(--text-secondary);">Shoulder to hem</td><td style="padding: 12px; color: var(--text-secondary);">55-85cm</td></tr>
+                    <tr><td style="padding: 12px; font-family: monospace;">Inseam</td><td style="padding: 12px; color: var(--text-secondary);">Crotch to ankle</td><td style="padding: 12px; color: var(--text-secondary);">65-95cm</td></tr>
+                </tbody>
+            </table>
+            
+            <h3 style="margin: 32px 0 16px; font-size: 20px;">Female (27 measurements)</h3>
+            <table style="width: 100%; border-collapse: collapse;">
+                <thead>
+                    <tr style="border-bottom: 1px solid var(--border);">
+                        <th style="text-align: left; padding: 12px; color: var(--text-secondary); font-size: 13px;">Measurement</th>
+                        <th style="text-align: left; padding: 12px; color: var(--text-secondary); font-size: 13px;">Description</th>
+                        <th style="text-align: left; padding: 12px; color: var(--text-secondary); font-size: 13px;">Typical Range</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    <tr><td style="padding: 12px; font-family: monospace;">Bust Round</td><td style="padding: 12px; color: var(--text-secondary);">Bust circumference</td><td style="padding: 12px; color: var(--text-secondary);">70-110cm</td></tr>
+                    <tr style="background: rgba(255,255,255,0.02);"><td style="padding: 12px; font-family: monospace;">Under Bust</td><td style="padding: 12px; color: var(--text-secondary);">Under bust</td><td style="padding: 12px; color: var(--text-secondary);">60-95cm</td></tr>
+                    <tr><td style="padding: 12px; font-family: monospace;">Waist Round</td><td style="padding: 12px; color: var(--text-secondary);">Waist circumference</td><td style="padding: 12px; color: var(--text-secondary);">55-85cm</td></tr>
+                    <tr style="background: rgba(255,255,255,0.02);"><td style="padding: 12px; font-family: monospace;">Hip Round</td><td style="padding: 12px; color: var(--text-secondary);">Hip circumference</td><td style="padding: 12px; color: var(--text-secondary);">75-115cm</td></tr>
+                    <tr><td style="padding: 12px; font-family: monospace;">Thigh Round</td><td style="padding: 12px; color: var(--text-secondary);">Thigh circumference</td><td style="padding: 12px; color: var(--text-secondary);">40-65cm</td></tr>
+                </tbody>
+            </table>
+        </section>
+        
+        <footer>
+            <div class="footer-links">
+                <div>
+                    <h4>Product</h4>
+                    <a href="#">Features</a>
+                    <a href="#">Pricing</a>
+                    <a href="#">Changelog</a>
+                </div>
+                <div>
+                    <h4>Company</h4>
+                    <a href="#">About</a>
+                    <a href="#">Blog</a>
+                    <a href="#">Careers</a>
+                </div>
+                <div>
+                    <h4>Legal</h4>
+                    <a href="#">Privacy</a>
+                    <a href="#">Terms</a>
+                    <a href="#">Security</a>
+                </div>
+            </div>
+            <div class="footer-bottom">
+                <p>© 2024 AI Body Scan API. All rights reserved.</p>
+            </div>
+        </footer>
+    </main>
+</body>
+</html>

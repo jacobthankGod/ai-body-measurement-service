@@ -1,0 +1,194 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Python SDK - AI Body Scan API</title>
+    <link rel="stylesheet" href="styles.css">
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=Fira+Code:wght@400;500&display=swap" rel="stylesheet">
+</head>
+<body>
+    <nav class="sidebar">
+        <div class="logo">
+            <svg width="32" height="32" viewBox="0 0 32 32" fill="none">
+                <circle cx="16" cy="16" r="14" stroke="#6366f1" stroke-width="2"/>
+                <circle cx="16" cy="10" r="4" fill="#6366f1"/>
+                <path d="M10 22c0-3 2.5-6 6-6s6 3 6 6" stroke="#6366f1" stroke-width="2" stroke-linecap="round"/>
+            </svg>
+            <span>AI Body Scan API</span>
+        </div>
+        
+        <div class="nav-section">
+            <h3>SDKs</h3>
+            <a href="index.html">Introduction</a>
+            <a href="quickstart.html">Quick Start</a>
+            <a href="sdk-javascript.html">JavaScript</a>
+            <a href="sdk-python.html" class="active">Python</a>
+            <a href="sdk-dart.html">Dart/Flutter</a>
+        </div>
+    </nav>
+    
+    <main class="content">
+        <header class="top-bar">
+            <div class="search">
+                <input type="text" placeholder="Search documentation... (⌘K)">
+            </div>
+            <div class="links">
+                <a href="#">API Reference</a>
+                <a href="#">Support</a>
+                <a href="#" class="github">GitHub →</a>
+            </div>
+        </header>
+        
+        <section class="hero" style="text-align: left;">
+            <div style="display: flex; align-items: center; gap: 16px; margin-bottom: 24px;">
+                <span style="background: #3776ab; color: white; padding: 8px 16px; border-radius: 8px; font-weight: 700;">PY</span>
+                <h1 style="margin: 0;">Python SDK</h1>
+            </div>
+            <p class="tagline">Official Python client for AI Body Scan API.</p>
+        </section>
+        
+        <section>
+            <h2>Installation</h2>
+            <div class="code-block">
+<pre><code>pip install aiscan-sdk</code></pre>
+<button class="copy">Copy</button>
+            </div>
+        </section>
+        
+        <section>
+            <h2>Quick Start</h2>
+            <div class="code-block">
+<pre><code><span class="comment"># Python example</span>
+<span class="keyword">import</span> aiscan
+
+<span class="comment"># Initialize with your API key</span>
+client = aiscan.Client(<span class="string">"sk_live_your_api_key"</span>)
+
+<span class="comment"># Extract measurements</span>
+result = client.measurements.extract(
+    front=<span class="string">"front.jpg"</span>,
+    side=<span class="string">"side.jpg"</span>,
+    height=<span class="number">175</span>,
+    gender=<span class="string">"male"</span>
+)
+
+<span class="comment"># Access measurements</span>
+<span class="keyword">print</span>(result.measurements[<span class="string">"Shoulder"</span>])  <span class="comment"># 46.4</span>
+<span class="keyword">print</span>(result.accuracy)  <span class="comment"># "±1-3cm"</span></code></pre>
+<button class="copy">Copy</button>
+            </div>
+        </section>
+        
+        <section>
+            <h2>API Reference</h2>
+            
+            <h3 style="margin: 32px 0 16px; font-size: 20px;">Client</h3>
+            <div class="feature-card">
+                <h4>aiscan.Client</h4>
+                <p style="color: var(--text-secondary); margin-bottom: 16px;">Main client for interacting with the API.</p>
+                <pre><code>client = aiscan.Client(api_key, base_url="https://api.aiscan.io")</code></pre>
+            </div>
+            
+            <h3 style="margin: 32px 0 16px; font-size: 20px;">Methods</h3>
+            
+            <div class="endpoint">
+                <div class="endpoint-header">
+                    <span class="method post">extract()</span>
+                </div>
+                <div class="endpoint-body">
+                    <p style="color: var(--text-secondary);">Extract measurements from photos.</p>
+                    <div class="code-block" style="margin-top: 16px;">
+<pre><code>result = client.measurements.extract(
+    front=<span class="string">"photo.jpg"</span>,      <span class="comment"># Required</span>
+    side=<span class="string">"side.jpg"</span>,        <span class="comment"># Required</span>
+    height=<span class="number">175</span>,            <span class="comment"># Required (cm)</span>
+    gender=<span class="string">"male"</span>         <span class="comment"># "male" or "female"</span>
+)</code></pre>
+                    </div>
+                </div>
+            </div>
+            
+            <div class="endpoint">
+                <div class="endpoint-header">
+                    <span class="method get">estimate()</span>
+                </div>
+                <div class="endpoint-body">
+                    <p style="color: var(--text-secondary);">Estimate measurements from height only.</p>
+                    <div class="code-block" style="margin-top: 16px;">
+<pre><code>result = client.measurements.estimate(
+    height=<span class="number">175</span>,
+    gender=<span class="string">"male"</span>
+)</code></pre>
+                    </div>
+                </div>
+            </div>
+        </section>
+        
+        <section>
+            <h2>Error Handling</h2>
+            <div class="code-block">
+<pre><code><span class="keyword">try</span>:
+    result = client.measurements.extract(
+        front=<span class="string">"front.jpg"</span>,
+        side=<span class="string">"side.jpg"</span>,
+        height=<span class="number">175</span>
+    )
+<span class="keyword">except</span> aiscan.APIError <span class="keyword">as</span> e:
+    <span class="keyword">print</span>(f<span class="string">"API Error: {e.message}"</span>)
+<span class="keyword">except</span> aiscan.AuthenticationError <span class="keyword">as</span> e:
+    <span class="keyword">print</span>(f<span class="string">"Auth Error: {e.message}"</span>)
+<span class="keyword">except</span> aiscan.RateLimitError <span class="keyword">as</span> e:
+    <span class="keyword">print</span>(f<span class="string">"Rate limited. Retry after: {e.retry_after}s"</span>)</code></pre>
+<button class="copy">Copy</button>
+            </div>
+        </section>
+        
+        <section>
+            <h2>Async Support</h2>
+            <div class="code-block">
+<pre><code><span class="keyword">import</span> aioaiscan
+
+<span class="comment"># Async client</span>
+client = aioaiscan.AsyncClient(<span class="string">"sk_live_key"</span>)
+
+<span class="comment"># Extract with async/await</span>
+result = <span class="keyword">await</span> client.measurements.extract(
+    front=<span class="string">"front.jpg"</span>,
+    side=<span class="string">"side.jpg"</span>,
+    height=<span class="number">175</span>
+)</code></pre>
+<button class="copy">Copy</button>
+            </div>
+        </section>
+        
+        <footer>
+            <div class="footer-links">
+                <div>
+                    <h4>Product</h4>
+                    <a href="#">Features</a>
+                    <a href="#">Pricing</a>
+                    <a href="#">Changelog</a>
+                </div>
+                <div>
+                    <h4>Company</h4>
+                    <a href="#">About</a>
+                    <a href="#">Blog</a>
+                    <a href="#">Careers</a>
+                </div>
+                <div>
+                    <h4>Legal</h4>
+                    <a href="#">Privacy</a>
+                    <a href="#">Terms</a>
+                    <a href="#">Security</a>
+                </div>
+            </div>
+            <div class="footer-bottom">
+                <p>© 2024 AI Body Scan API. All rights reserved.</p>
+            </div>
+        </footer>
+    </main>
+</body>
+</html>

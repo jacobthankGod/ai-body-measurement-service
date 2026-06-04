@@ -1,0 +1,60 @@
+# AI Body Scan SaaS - Configuration
+# ==============================
+
+service:
+  name: "AI Body Scan API"
+  version: "2.0.0"
+  environment: "development"
+  debug: false
+
+server:
+  host: "0.0.0.0"
+  port: 5001
+  workers: 1
+  timeout: 60
+
+storage:
+  type: "file"
+  base_dir: "./data"
+  max_file_size_mb: 16
+  allowed_extensions:
+    - jpg
+    - jpeg
+    - png
+    - webp
+
+ml:
+  model_path: "./models"
+  use_mediapipe: true
+  accuracy_mode: "dual"
+  estimated_accuracy_cm: "±1-3"
+
+subscription:
+  quotas:
+    tailor_basic: 0
+    tailor_pro: 10
+    tailor_elite: 50
+    enterprise: 200
+  reset_day: 1
+
+auth:
+  api_key_header: "X-API-Key"
+  require_auth: true
+
+rate_limit:
+  enabled: false
+  requests_per_minute: 60
+
+logging:
+  level: "INFO"
+  format: "json"
+
+production:
+  logging:
+    level: "WARNING"
+  rate_limit:
+    enabled: true
+    requests_per_minute: 120
+
+staging:
+  debug: true
