@@ -24,7 +24,7 @@
       --Error: #D63031;
 
       --Radius-M: 16px;
-      --Radius-L: 24px;
+      --Radius-L: 24px; /* Increased for "Expert" feel */
       --Radius-XL: 999px;
 
       --Shadow-Soft: 0 8px 32px rgba(0, 0, 0, 0.4);
@@ -37,14 +37,8 @@
     ::-webkit-scrollbar-track { background: var(--Obsidian); }
     ::-webkit-scrollbar-thumb { background: var(--Glass-Border); border-radius: 99px; }
 
-    /* GLOBAL CONTAINER: 1100px with robust side-padding for "Breathing Room" */
-    .container {
-      width: 100%;
-      max-width: 1100px;
-      margin: 0 auto;
-      padding: 0 40px; /* Base breathing room */
-      position: relative;
-    }
+    /* HARDENED COMPACT GRID: 1000px absolute horizontal consistency */
+    .container { width: 90%; max-width: 1000px; margin: 0 auto; position: relative; }
 
     header {
       width: 100%;
@@ -60,7 +54,7 @@
       transition: all 0.3s ease;
     }
     header.scrolled { height: 64px; background: rgba(10, 10, 10, 0.95); }
-    header .container { display: flex; align-items: center; justify-content: space-between; padding: 0 40px; }
+    header .container { display: flex; align-items: center; justify-content: space-between; padding: 0; }
 
     .logo { display: flex; align-items: center; gap: 12px; cursor: pointer; }
     .logo-mark { width: 32px; height: 32px; border-radius: 8px; background: var(--Mint); transform: rotate(-8deg); }
@@ -90,7 +84,7 @@
     .btn-primary:hover { background: #6effeb; transform: translateY(-1px); }
     .btn-outline { background: transparent; border-color: var(--Glass-Border); color: var(--White); }
     .btn-outline:hover { background: var(--Glass); border-color: var(--White); }
-    .btn-large { height: 60px; padding: 0 40px; font-size: 16px; border-radius: 16px; }
+    .btn-large { height: 64px; padding: 0 48px; font-size: 18px; border-radius: 20px; }
 
     .view { display: none; width: 100%; min-height: 100vh; }
     .view.active { display: block !important; animation: viewIn 0.5s ease-out forwards; }
@@ -99,14 +93,16 @@
 
     @keyframes viewIn { from { opacity: 0; transform: translateY(10px); } to { opacity: 1; transform: translateY(0); } }
 
-    section.block { padding: 100px 0; width: 100%; }
-    .section-eyebrow { font-size: 10px; font-weight: 800; color: var(--Mint); text-transform: uppercase; letter-spacing: 0.2em; margin-bottom: 12px; }
-    .section-title { font-size: 36px; font-weight: 900; line-height: 1.1; letter-spacing: -0.04em; margin: 0; }
-    .section-desc { font-size: 16px; color: var(--Neutral-400); line-height: 1.6; margin: 16px 0 0; max-width: 500px; }
+    /* EXPERT SECTION ELEVATION */
+    section.block { padding: 160px 0; width: 100%; } /* Increased from 100px for breathing room */
+    .section-eyebrow { font-size: 11px; font-weight: 900; color: var(--Mint); text-transform: uppercase; letter-spacing: 0.2em; margin-bottom: 16px; text-shadow: 0 0 10px rgba(87, 215, 192, 0.3); }
+    .section-title { font-size: 56px; font-weight: 900; line-height: 1.0; letter-spacing: -0.05em; margin: 0; } /* Scaled up for expert impact */
+    .section-desc { font-size: 20px; color: var(--Neutral-400); line-height: 1.6; margin: 32px 0 0; max-width: 600px; } /* More authority */
 
-    /* HERO - Background spans 100vw, Content constrained to container */
+    /* HERO - Background spans 100vw, Content spans 1000px */
     .hero { padding: 180px 0 100px; text-align: center; position: relative; background: radial-gradient(circle at 70% 20%, rgba(87, 215, 192, 0.1), transparent 40%); }
-    .hero-headline { font-size: 72px; font-weight: 900; line-height: 0.95; letter-spacing: -0.06em; margin-bottom: 24px; }
+    .hero .container { max-width: 1000px; }
+    .hero-headline { font-size: 84px; font-weight: 900; line-height: 0.95; letter-spacing: -0.06em; margin-bottom: 24px; padding: 0 20px; }
     .hero-headline span { color: var(--Mint); }
 
     .hero-visual { width: 100vw; margin: 0 auto; height: 850px; position: relative; z-index: 1; display: flex; align-items: center; justify-content: center; overflow: hidden; }
@@ -114,71 +110,71 @@
 
     .hero-cta-card {
         width: 100%;
-        max-width: 1000px; /* Constrained slightly more than container for premium inset */
+        max-width: 1000px;
         margin: -80px auto 0;
         background: #000;
         border: 1px solid var(--Mint);
         border-radius: 32px;
-        padding: 48px 60px;
+        padding: 56px 72px;
         display: flex;
         align-items: center;
         justify-content: space-between;
         text-align: left;
         z-index: 10;
         position: relative;
-        box-shadow: 0 40px 100px rgba(0,0,0,0.5);
+        box-shadow: 0 40px 100px rgba(0,0,0,0.8);
     }
-    .hero-cta-card h3 { font-size: 28px; font-weight: 900; margin: 0; line-height: 1.1; color: #fff; }
-    .bullet-list { display: flex; flex-direction: column; gap: 12px; margin-top: 24px; }
-    .bullet-item { display: flex; align-items: center; gap: 10px; font-weight: 700; color: var(--Neutral-400); font-size: 14px; }
-    .check-icon { color: var(--Mint); font-weight: 900; font-size: 14px; }
+    .hero-cta-card h3 { font-size: 32px; font-weight: 900; margin: 0; line-height: 1.1; color: #fff; }
+    .bullet-list { display: flex; flex-direction: column; gap: 16px; margin-top: 24px; }
+    .bullet-item { display: flex; align-items: center; gap: 12px; font-weight: 700; color: var(--Neutral-400); font-size: 16px; }
+    .check-icon { color: var(--Mint); font-weight: 900; font-size: 16px; }
 
-    /* COMPONENTS */
-    .glass-card { background: var(--Glass); border: 1px solid var(--Glass-Border); border-radius: var(--Radius-M); padding: 28px; transition: 0.3s; }
+    /* EXPERT CARD STYLING */
+    .glass-card { background: var(--Glass); border: 1px solid var(--Glass-Border); border-radius: var(--Radius-L); padding: 40px; transition: 0.3s; } /* Padding increased from 28px */
     .glass-card:hover { border-color: var(--Mint); background: rgba(255,255,255,0.06); transform: translateY(-4px); }
 
-    .grid-3 { display: grid; grid-template-columns: repeat(3, 1fr); gap: 20px; }
-    .grid-4 { display: grid; grid-template-columns: repeat(4, 1fr); gap: 16px; }
+    .grid-3 { display: grid; grid-template-columns: repeat(3, 1fr); gap: 24px; }
+    .grid-4 { display: grid; grid-template-columns: repeat(4, 1fr); gap: 20px; }
 
-    .case-logo { height: 32px; width: 80px; background: linear-gradient(135deg, rgba(87,215,192,0.1), rgba(0,77,74,0.05)); border-radius: 6px; margin-bottom: 16px; }
+    .case-logo { height: 48px; width: 120px; background: linear-gradient(135deg, rgba(87,215,192,0.1), rgba(0,77,74,0.05)); border-radius: 8px; margin-bottom: 24px; }
 
-    .step-card { display: flex; flex-direction: column; justify-content: space-between; min-height: 160px; }
-    .step-num { font-size: 9px; font-weight: 900; opacity: 0.4; letter-spacing: 0.2em; }
-    .step-text { font-size: 18px; font-weight: 900; letter-spacing: -0.03em; }
+    .step-card { display: flex; flex-direction: column; justify-content: space-between; min-height: 220px; position: relative; overflow: hidden; }
+    .step-num { font-size: 11px; font-weight: 900; opacity: 0.3; letter-spacing: 0.2em; z-index: 2; }
+    .step-text { font-size: 28px; font-weight: 900; letter-spacing: -0.04em; z-index: 2; }
 
-    .wellness-widget { background: #000; border-radius: 16px; padding: 20px; border: 1px solid var(--Glass-Border); }
-    .target-value { font-size: 24px; font-weight: 900; color: var(--White); margin: 6px 0; }
-    .target-track { height: 4px; background: var(--Glass-Border); border-radius: 99px; position: relative; overflow: hidden; margin: 16px 0; }
-    .target-fill { height: 100%; background: var(--Mint); width: 72%; }
+    .wellness-widget { background: #000; border-radius: 20px; padding: 32px; border: 1px solid var(--Glass-Border); }
+    .target-value { font-size: 32px; font-weight: 900; color: var(--White); margin: 12px 0; }
+    .target-track { height: 8px; background: var(--Glass-Border); border-radius: 99px; position: relative; overflow: hidden; margin: 24px 0; }
+    .target-fill { height: 100%; background: var(--Mint); width: 72%; box-shadow: 0 0 20px rgba(87, 215, 192, 0.4); }
 
-    .final-banner { background: linear-gradient(135deg, var(--Teal-900), #000); border-radius: 32px; padding: 80px 40px; text-align: center; border: 1px solid var(--Glass-Border); }
+    .final-banner { background: linear-gradient(135deg, var(--Teal-900), #000); border-radius: 40px; padding: 120px 60px; text-align: center; border: 1px solid var(--Glass-Border); }
 
-    footer { padding: 100px 0 60px; border-top: 1px solid var(--Glass-Border); background: #000; }
-    .footer-links { display: grid; grid-template-columns: repeat(4, 1fr); gap: 40px; }
-    .footer-col h4 { font-size: 10px; font-weight: 900; text-transform: uppercase; letter-spacing: 0.15em; color: var(--Neutral-500); margin-bottom: 20px; }
-    .footer-col a { display: block; color: var(--Neutral-400); text-decoration: none; margin-bottom: 10px; font-size: 12px; }
+    footer { padding: 120px 0 80px; border-top: 1px solid var(--Glass-Border); background: #000; }
+    .footer-links { display: grid; grid-template-columns: repeat(4, 1fr); gap: 60px; }
+    .footer-col h4 { font-size: 11px; font-weight: 900; text-transform: uppercase; letter-spacing: 0.15em; color: var(--Neutral-500); margin-bottom: 24px; }
+    .footer-col a { display: block; color: var(--Neutral-400); text-decoration: none; margin-bottom: 12px; font-size: 14px; transition: 0.2s; }
+    .footer-col a:hover { color: var(--White); }
 
-    /* AUTH VIEWS */
     .auth-view { display: flex; align-items: center; justify-content: center; min-height: 100vh; padding: 120px 20px; background: #000; }
-    .auth-card { width: 380px; }
-    .form-group { margin-bottom: 20px; }
-    .form-label { display: block; font-size: 9px; font-weight: 800; color: var(--Neutral-400); margin-bottom: 6px; letter-spacing: 0.05em; }
-    .form-input { width: 100%; height: 48px; background: #000; border: 1px solid var(--Glass-Border); border-radius: 12px; color: #fff; padding: 0 16px; font-size: 14px; outline: none; }
+    .auth-card { width: 440px; }
+    .form-group { margin-bottom: 24px; }
+    .form-label { display: block; font-size: 11px; font-weight: 800; color: var(--Neutral-400); margin-bottom: 8px; letter-spacing: 0.05em; }
+    .form-input { width: 100%; height: 56px; background: #000; border: 1px solid var(--Glass-Border); border-radius: 14px; color: #fff; padding: 0 16px; font-size: 15px; outline: none; transition: 0.2s; }
+    .form-input:focus { border-color: var(--Mint); }
 
     #signedBar { display: none; align-items: center; gap: 16px; background: var(--Glass); border: 1px solid var(--Glass-Border); padding: 6px 16px; border-radius: 99px; }
     #signedBar.active { display: flex; }
 
-    /* MEDIA QUERIES - HARDENING SIDE PADDING */
-    @media (max-width: 1100px) {
-      .container, header .container { padding: 0 40px; }
+    @media (max-width: 1050px) {
       .hero-headline { font-size: 52px; }
+      .section-title { font-size: 40px; }
+      nav { display: none; }
     }
     @media (max-width: 800px) {
-      .container, header .container { padding: 0 24px; } /* Stronger side margins for mobile */
+      section.block { padding: 100px 0; }
       .hero-visual { height: 450px; }
-      .hero-cta-card { flex-direction: column; text-align: center; gap: 24px; padding: 32px 20px; margin-top: 0; }
+      .hero-cta-card { flex-direction: column; text-align: center; gap: 32px; padding: 40px 24px; margin-top: 0; }
       .grid-4, .grid-3, .footer-links { grid-template-columns: 1fr; }
-      nav { display: none; }
     }
   </style>
 </head>
@@ -238,50 +234,50 @@
       </div>
     </section>
 
-    <!-- Platform -->
+    <!-- Platform (ELEVATED) -->
     <section class="block" id="services">
       <div class="container">
-        <div style="display:grid; grid-template-columns: 1fr 1fr; gap:40px; align-items:center">
+        <div style="display:grid; grid-template-columns: 1fr 1fr; gap:80px; align-items:center">
           <div>
             <div class="section-eyebrow">Platform</div>
             <h2 class="section-title">Intelligent body scanning built for perfect fits.</h2>
-            <p class="section-desc">Boost fit confidence, solve sizing, and drive loyalty. From a single photo to precise 3D measurements, our AI instantly detects body contours.</p>
+            <p class="section-desc">Boost fit confidence, solve sizing, and drive loyalty. From a single photo to precise 3D measurements, our AI instantly detects body contours for flawless garment fitting.</p>
           </div>
-          <div class="glass-card" style="padding:12px; border-radius:24px; position:relative">
-            <img src="/assets/body-capture.png" style="width:100%; border-radius:18px">
-            <div style="position:absolute; bottom:24px; right:24px; background:var(--Obsidian); border:1px solid var(--Glass-Border); padding:10px 16px; border-radius:8px; font-size:10px; font-weight:800; color:var(--Mint)">BODY CAPTURE VISUALIZATION</div>
+          <div class="glass-card" style="padding:16px; border-radius:32px; position:relative">
+            <img src="/assets/body-capture.png" style="width:100%; border-radius:24px">
+            <div style="position:absolute; bottom:32px; right:32px; background:var(--Obsidian); border:1px solid var(--Glass-Border); padding:12px 20px; border-radius:12px; font-size:11px; font-weight:800; color:var(--Mint)">BODY CAPTURE VISUALIZATION</div>
           </div>
         </div>
       </div>
     </section>
 
-    <!-- Case Studies -->
+    <!-- Case Studies (ELEVATED) -->
     <section class="block" id="case-studies">
       <div class="container">
-        <div style="display:flex; justify-content:space-between; align-items:flex-end; margin-bottom:40px">
+        <div style="display:flex; justify-content:space-between; align-items:flex-end; margin-bottom:60px">
           <div><div class="section-eyebrow">Case studies</div><h2 class="section-title">Trusted by brands solving fit challenges.</h2></div>
-          <div style="font-weight:900; font-size:10px; color:var(--Neutral-500)">4 EXAMPLES</div>
+          <div style="font-weight:900; font-size:11px; color:var(--Neutral-500)">4 EXAMPLES</div>
         </div>
         <div class="grid-4">
-          <div class="glass-card"><div class="case-logo"></div><p style="font-size:13px; color:var(--Neutral-400)"><b>Fashion Forward</b> reduced remakes by 90% and alteration costs by 50%.</p></div>
-          <div class="glass-card"><div class="case-logo"></div><p style="font-size:13px; color:var(--Neutral-400)"><b>Custom Tailors</b> increased scan-to-pattern efficiency by 99%.</p></div>
-          <div class="glass-card"><div class="case-logo"></div><p style="font-size:13px; color:var(--Neutral-400)"><b>RetailChain</b> improved customer loyalty through perfect fits.</p></div>
-          <div class="glass-card"><div class="case-logo"></div><p style="font-size:13px; color:var(--Neutral-400)"><b>E-Commerce Plus</b> cut fit-related complaints by 85%.</p></div>
+          <div class="glass-card"><div class="case-logo"></div><p style="font-size:15px; color:var(--Neutral-400)"><b>Fashion Forward</b> reduced remakes by 90% and alteration costs by 50% with AI-powered fit recommendations.</p></div>
+          <div class="glass-card"><div class="case-logo"></div><p style="font-size:15px; color:var(--Neutral-400)"><b>Custom Tailors</b> increased scan-to-pattern efficiency by 99% with instant accurate measurements.</p></div>
+          <div class="glass-card"><div class="case-logo"></div><p style="font-size:15px; color:var(--Neutral-400)"><b>RetailChain</b> decreased product returns by 20% and improved customer loyalty through perfect fits.</p></div>
+          <div class="glass-card"><div class="case-logo"></div><p style="font-size:15px; color:var(--Neutral-400)"><b>E-Commerce Plus</b> cut fit-related complaints by 85% using 3D digital twins for sizing.</p></div>
         </div>
       </div>
     </section>
 
-    <!-- Benefits -->
+    <!-- Benefits (ELEVATED) -->
     <section class="block">
       <div class="container">
-        <div style="max-width:550px; margin-bottom:40px">
+        <div style="max-width:600px; margin-bottom:60px">
           <div class="section-eyebrow">Benefits</div>
           <h2 class="section-title">Premium aesthetics, measurable trust.</h2>
         </div>
-        <div class="grid-3" style="margin-bottom:40px">
-          <div class="glass-card"><h3 style="font-size:18px">Diagnostic confidence</h3><p style="font-size:13px; color:var(--Neutral-400)">Support for solo scanning with gyroscope-guided voice instructions.</p></div>
-          <div class="glass-card"><h3 style="font-size:18px">Superior Accuracy</h3><p style="font-size:13px; color:var(--Neutral-400)">More consistent than manual expert tailors. Precise digital twins in < 60s.</p></div>
-          <div class="glass-card"><h3 style="font-size:18px">Seamless Integration</h3><p style="font-size:13px; color:var(--Neutral-400)">Robust API keys for direct backend integration into your workflow.</p></div>
+        <div class="grid-3" style="margin-bottom:60px">
+          <div class="glass-card"><h3>Diagnostic confidence</h3><p style="font-size:15px; color:var(--Neutral-400)">Support for solo scanning with gyroscope-guided voice instructions and visual feedback.</p></div>
+          <div class="glass-card"><h3>Superior Accuracy</h3><p style="font-size:15px; color:var(--Neutral-400)">More consistent than manual expert tailors. Precise 3D digital twins in under 60 seconds.</p></div>
+          <div class="glass-card"><h3>Seamless Integration</h3><p style="font-size:15px; color:var(--Neutral-400)">Robust API keys for direct backend integration into your professional e-commerce workflow.</p></div>
         </div>
         <div class="grid-4">
           <div class="glass-card step-card"><span class="step-num">STEP 01</span><span class="step-text">Capture</span></div>
@@ -292,41 +288,41 @@
       </div>
     </section>
 
-    <!-- Wellness -->
+    <!-- Wellness (ELEVATED) -->
     <section class="block">
       <div class="container">
-        <div style="display:grid; grid-template-columns: 1fr 1fr; gap:60px; align-items:center">
+        <div style="display:grid; grid-template-columns: 1fr 1fr; gap:100px; align-items:center">
           <div>
             <div class="section-eyebrow">Wellness</div>
             <h2 class="section-title">Turn scans into actionable targets.</h2>
-            <div style="margin-top:40px">
+            <div style="margin-top:60px">
               <div class="wellness-widget">
-                <div style="display:flex; justify-content:space-between; align-items:center"><span style="font-size:9px; font-weight:900; color:var(--Neutral-500)">WAIST TARGET</span><span style="color:var(--Mint); font-size:9px; font-weight:900">LIVE</span></div>
+                <div style="display:flex; justify-content:space-between; align-items:center"><span style="font-size:10px; font-weight:900; color:var(--Neutral-500)">WAIST TARGET</span><span style="color:var(--Mint); font-size:10px; font-weight:900">LIVE</span></div>
                 <div class="target-value">72.0 cm</div>
                 <div class="target-track"><div class="target-fill"></div></div>
+                <div style="display:flex; justify-content:space-between; font-size:11px; font-weight:700; color:var(--Neutral-500)"><span>52 CM</span><span>96 CM</span></div>
               </div>
             </div>
           </div>
-          <div class="glass-card" style="height:380px; text-align:center; display:flex; flex-direction:column; justify-content:center; gap:24px">
-            <div style="width:160px; height:160px; border-radius:50%; border:8px solid var(--Teal-900); border-top-color:var(--Mint); margin:0 auto; display:flex; align-items:center; justify-content:center"><span style="font-weight:900; font-size:18px; color:var(--Mint)">3D ZONES</span></div>
-            <h3 style="margin:0; font-size:20px; font-weight:900">Body target</h3>
+          <div class="glass-card" style="height:480px; text-align:center; display:flex; flex-direction:column; justify-content:center; gap:40px">
+            <div style="width:240px; height:240px; border-radius:50%; border:12px solid var(--Teal-900); border-top-color:var(--Mint); margin:0 auto; display:flex; align-items:center; justify-content:center"><span style="font-weight:900; font-size:24px; color:var(--Mint)">3D ZONES</span></div>
+            <h3 style="margin:0; font-size:24px; font-weight:900">Body target</h3>
           </div>
         </div>
       </div>
     </section>
 
-    <!-- Final CTA -->
+    <!-- Final CTA (ELEVATED) -->
     <section class="block">
       <div class="container">
         <div class="final-banner">
-          <h2 style="font-size:48px">Perfect fit starts with one scan.</h2>
-          <p style="margin:20px 0 40px; font-size:18px; color:var(--Neutral-400)">No expertise needed. No special equipment. Just precision.</p>
+          <h2 style="font-size:64px; letter-spacing:-0.05em">Perfect fit starts with one scan.</h2>
+          <p style="margin:32px 0 60px; font-size:22px; color:var(--Neutral-400); max-width:800px; margin-left:auto; margin-right:auto">Join brands and tailors who are delivering flawless garments using AI-powered body scanning. No expertise needed. Just precision.</p>
           <button class="btn btn-primary btn-large" style="background:#fff; color:var(--Obsidian)" id="btnFinalTrial">Start a 7-Day Trial</button>
         </div>
       </div>
     </section>
 
-    <!-- Footer -->
     <footer>
       <div class="container">
         <div class="footer-links">
@@ -335,9 +331,9 @@
           <div class="footer-col"><h4>Resources</h4><a href="#">Quickstart</a><a href="#">API Reference</a></div>
           <div class="footer-col"><h4>Legal</h4><a href="#">Privacy</a><a href="#">Terms</a></div>
         </div>
-        <div style="margin-top:60px; padding-top:32px; border-top:1px solid var(--Glass-Border); display:flex; justify-content:space-between; align-items:center; font-size:12px; opacity:0.3">
+        <div style="margin-top:100px; padding-top:40px; border-top:1px solid var(--Glass-Border); display:flex; justify-content:space-between; align-items:center; font-size:13px; opacity:0.3">
           <span>© 2026 PrecisionFit 3D AI. All rights reserved.</span>
-          <div style="display:flex; gap:24px"><span>Twitter</span><span>LinkedIn</span></div>
+          <div style="display:flex; gap:32px"><span>Twitter</span><span>LinkedIn</span></div>
         </div>
       </div>
     </footer>
@@ -381,6 +377,7 @@
 
       function handleRoute() {
         const hash = window.location.hash || '#home';
+        console.log("PfDebug: Navigating to", hash);
         document.querySelectorAll('.view').forEach(v => v.classList.remove('active'));
 
         if (hash === '#signin') document.getElementById('viewSignIn').classList.add('active');
@@ -398,7 +395,7 @@
         const href = target.getAttribute('href');
 
         if (id === 'btnNavSignIn' || href === '#signin') window.location.hash = '#signin';
-        if (id === 'btnNavSignUp' || id === 'btnHeroTrial' || id === 'btnFinalTrial' || href === '#signup') window.location.hash = '#signup';
+        if (id === 'btnNavSignUp' || id === 'btnHeroTrial' || id === 'btnFinalTrial' || id === 'btnGetKeys' || href === '#signup') window.location.hash = '#signup';
         if (id === 'logoHome' || target.classList.contains('logo')) window.location.hash = '#home';
         if (id === 'btnSignOut') supabase.auth.signOut();
       }, true);
