@@ -64,8 +64,10 @@ def include_lazy_routers():
 include_lazy_routers()
 
 # 2. STATIC ASSET MOUNTING (Isolated folder)
-# We mount /assets to the /public directory where images live
-app.mount("/assets", StaticFiles(directory=str(BASE_DIR / "public")), name="assets")
+# This MUST come before the catch-all route
+public_dir = BASE_DIR / "public"
+if public_dir.exists():
+    app.mount("/assets", StaticFiles(directory=str(public_dir)), name="assets")
 
 # 3. SPA / FRONTEND RECOVERY
 @app.get("/")
@@ -74,7 +76,14 @@ async def serve_index():
 
 @app.get("/{full_path:path}")
 async def catch_all(full_path: str):
-    # This prevents the backend from eating images—it only serves index.html for non-asset routes
+    # Only serve index.html for routes that don't look like file requests
+    if "." in full_path:
+        # If it's a file request that wasn't caught by /assets/, check public dir
+        local_file = public_dir / full_path
+        if local_file.exists():
+            return FileResponse(str(local_file))
+        return JSONResponse(status_code=404, content={"error": "Asset not found"})
+
     return FileResponse(str(BASE_DIR / "index.html"))
 
 @app.exception_handler(Exception)
