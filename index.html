@@ -87,6 +87,7 @@
     /* VIEW VISIBILITY FIX */
     .view { display: none; width: 100%; min-height: 100vh; }
     .view.active { display: block !important; animation: viewIn 0.5s ease-out forwards; }
+    .view.active.auth-view { display: flex !important; }
     @keyframes viewIn { from { opacity: 0; transform: translateY(10px); } to { opacity: 1; transform: translateY(0); } }
 
     /* SECTION BASICS */
@@ -101,7 +102,7 @@
     .hero-headline span { color: var(--Mint); }
     .hero-sub { font-size: 20px; color: var(--Neutral-400); max-width: 800px; margin: 0 auto 60px; line-height: 1.6; padding: 0 20px; }
 
-    .hero-visual { width: 100vw; margin: 0 auto; height: 850px; position: relative; z-index: 1; display: flex; align-items: center; justify-content: center; overflow: hidden; }
+    .hero-visual { width: 100vw; margin: 0 auto; height: 950px; position: relative; z-index: 1; display: flex; align-items: center; justify-content: center; overflow: hidden; }
     .hero-visual img { width: 100%; height: 100%; object-fit: contain; }
 
     /* PREMIUM DARK CTA CARD WITH MINT BORDER */
@@ -133,7 +134,7 @@
     .grid-4 { display: grid; grid-template-columns: repeat(4, 1fr); gap: 24px; }
 
     /* Case Studies */
-    .case-logo { height: 48px; width: 120px; background: linear-gradient(135deg, rgba(87,215,192,0.1), rgba(0,77,74,0.05)); border-radius: 8px; margin-bottom: 24px; }
+    .case-logo { height: 48px; width: 120px; background: linear-gradient(135deg, rgba(87, 215, 192, 0.1), rgba(0, 77, 74, 0.05)); border-radius: 8px; margin-bottom: 24px; }
 
     /* Steps */
     .step-card { display: flex; flex-direction: column; justify-content: space-between; min-height: 200px; }
@@ -201,9 +202,8 @@
 </head>
 <body>
 
-  <!-- HEADER -->
   <header id="mainHeader">
-    <div class="logo" onclick="window.location.hash='#home'">
+    <div class="logo" id="logoHome">
       <div class="logo-mark"></div>
       <div class="logo-text">PrecisionFit 3D</div>
     </div>
@@ -282,19 +282,19 @@
       <div class="grid-4">
         <div class="glass-card">
           <div class="case-logo"></div>
-          <p><b>Fashion Forward</b> reduced remakes by 90% and alteration costs by 50% with AI-powered fit recommendations.</p>
+          <p style="margin-top:20px"><b>Fashion Forward</b> reduced remakes by 90% and alteration costs by 50% with AI-powered fit recommendations.</p>
         </div>
         <div class="glass-card">
           <div class="case-logo"></div>
-          <p><b>Custom Tailors</b> increased scan-to-pattern efficiency by 99% with instant accurate measurements.</p>
+          <p style="margin-top:20px"><b>Custom Tailors</b> increased scan-to-pattern efficiency by 99% with instant accurate measurements.</p>
         </div>
         <div class="glass-card">
           <div class="case-logo"></div>
-          <p><b>RetailChain</b> decreased product returns by 20% and improved customer loyalty through perfect fits.</p>
+          <p style="margin-top:20px"><b>RetailChain</b> decreased product returns by 20% and improved customer loyalty through perfect fits.</p>
         </div>
         <div class="glass-card">
           <div class="case-logo"></div>
-          <p><b>E-Commerce Plus</b> cut fit-related complaints by 85% using 3D digital twins for sizing.</p>
+          <p style="margin-top:20px"><b>E-Commerce Plus</b> cut fit-related complaints by 85% using 3D digital twins for sizing.</p>
         </div>
       </div>
     </section>
@@ -349,6 +349,30 @@
       </div>
     </section>
 
+    <!-- Audience -->
+    <section class="block container">
+      <div class="section-eyebrow">Audience</div>
+      <h2 class="section-title">Built for teams that need measurements at scale.</h2>
+      <div class="grid-4" style="margin-top:60px">
+        <div class="glass-card">
+          <h4 style="margin:0 0 16px; font-size:18px">Hybrid Capture</h4>
+          <p style="font-size:14px; opacity:0.6">Support for "With a Friend" or "Hands-Free" solo scanning with voice guidance.</p>
+        </div>
+        <div class="glass-card">
+          <h4 style="margin:0 0 16px; font-size:18px">Fitness tracking</h4>
+          <p style="font-size:14px; opacity:0.6">Track biometric change over time with high-precision 3D digital twins.</p>
+        </div>
+        <div class="glass-card">
+          <h4 style="margin:0 0 16px; font-size:18px">E-commerce sizing</h4>
+          <p style="font-size:14px; opacity:0.6">Increase recommendation confidence and reduce returns by up to 80%.</p>
+        </div>
+        <div class="glass-card">
+          <h4 style="margin:0 0 16px; font-size:18px">Wellness diagnostics</h4>
+          <p style="font-size:14px; opacity:0.6">Start with clinical-grade baselines for posture and biometric targets.</p>
+        </div>
+      </div>
+    </section>
+
     <!-- Final CTA -->
     <section class="block container">
       <div class="final-banner">
@@ -397,8 +421,8 @@
   <!-- 2. SIGN IN VIEW -->
   <div id="viewSignIn" class="view auth-view">
     <div class="auth-card glass-card">
-      <h2 style="font-size:32px; font-weight:900; margin-bottom:8px">Welcome back</h2>
-      <p style="color:var(--Neutral-400); margin-bottom:40px">Enter your credentials to enter the command center.</p>
+      <h2 style="font-size:32px; font-weight:900; margin:0 0 8px">Welcome back</h2>
+      <p style="color:var(--Neutral-400); margin:0 0 40px">Enter your credentials to enter the command center.</p>
       <form id="signInForm">
         <div class="form-group"><label class="form-label">PROFESSIONAL EMAIL</label><input type="email" class="form-input" id="inEmail" required></div>
         <div class="form-group"><label class="form-label">ACCESS KEY</label><input type="password" class="form-input" id="inPass" required></div>
@@ -468,9 +492,11 @@
   <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2/dist/umd/supabase-js.min.js"></script>
   <script>
     (function() {
-      const SUPABASE_URL = 'https://blsettabymllulsxtziw.supabase.co';
-      const SUPABASE_ANON_KEY = 'sb_publishable_miCOIXHtlxLkfDgpwE0N-g_BA1Q-x8y';
-      const supabase = window.supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
+      const config = {
+        supabaseUrl: 'https://blsettabymllulsxtziw.supabase.co',
+        supabaseKey: 'sb_publishable_miCOIXHtlxLkfDgpwE0N-g_BA1Q-x8y'
+      };
+      const supabase = window.supabase.createClient(config.supabaseUrl, config.supabaseKey);
 
       let onboardingData = { industry: '' };
 
@@ -485,7 +511,7 @@
         onboardingData.industry = val;
       };
 
-      // --- CRITICAL ROUTING FIX ---
+      // --- CRITICAL ROUTING ENGINE ---
       function handleRoute() {
         const hash = window.location.hash || '#home';
         console.log("PfDebug: Routing to", hash);
@@ -508,14 +534,16 @@
 
       // --- BULLETPROOF BUTTON LISTENERS ---
       document.addEventListener('click', (e) => {
-        const target = e.target.closest('button, .logo');
+        const target = e.target.closest('button, .logo, a');
         if (!target) return;
 
         const id = target.id;
-        console.log("PfDebug: Click on", id);
+        const href = target.getAttribute('href');
+        console.log("PfDebug: Click on", id || href);
 
-        if (id === 'btnNavSignIn') window.location.hash = '#signin';
-        if (id === 'btnNavSignUp' || id === 'btnHeroTrial' || id === 'btnFinalTrial' || id === 'btnGetKeys') window.location.hash = '#signup';
+        if (id === 'btnNavSignIn' || href === '#signin') window.location.hash = '#signin';
+        if (id === 'btnNavSignUp' || id === 'btnHeroTrial' || id === 'btnFinalTrial' || id === 'btnGetKeys' || href === '#signup') window.location.hash = '#signup';
+        if (id === 'logoHome') window.location.hash = '#home';
         if (id === 'btnSignOut') supabase.auth.signOut();
       }, true);
 
@@ -524,20 +552,21 @@
         const authBtns = document.getElementById('authButtons');
         const bar = document.getElementById('signedBar');
         if (session) {
-          authBtns.style.display = 'none';
-          bar.classList.add('active');
-          document.getElementById('userEmailDisplay').textContent = session.user.email;
+          if(authBtns) authBtns.style.display = 'none';
+          if(bar) bar.classList.add('active');
+          const emailDisplay = document.getElementById('userEmailDisplay');
+          if(emailDisplay) emailDisplay.textContent = session.user.email;
         } else {
-          bar.classList.remove('active');
-          authBtns.style.display = 'flex';
-          if (window.location.hash === '#dashboard') window.location.hash = '#home';
+          if(bar) bar.classList.remove('active');
+          if(authBtns) authBtns.style.display = 'flex';
         }
       });
 
       handleRoute();
       window.addEventListener('scroll', () => {
-        if (window.scrollY > 40) document.getElementById('mainHeader').classList.add('scrolled');
-        else document.getElementById('mainHeader').classList.remove('scrolled');
+        const header = document.getElementById('mainHeader');
+        if (window.scrollY > 40) header.classList.add('scrolled');
+        else header.classList.remove('scrolled');
       });
     })();
   </script>
