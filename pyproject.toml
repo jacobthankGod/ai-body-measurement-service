@@ -1,0 +1,8 @@
+[project]
+name = "ai-body-measurement-service"
+version = "0.1.0"
+description = "AI Body Measurement Service"
+requires-python = ">=3.11"
+
+[tool.uv]
+dev-dependencies = []

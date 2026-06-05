@@ -1,0 +1,42 @@
+# Custom Body Points - Female Measurements
+# Anthropometric ratios for female body measurements
+# Format: measurement_name, ratio_to_height
+
+# Upper Body Measurements
+Shoulder, 0.230
+Neck Round, 0.206
+Bust Round, 0.521
+High Bust, 0.460
+Under Bust, 0.412
+Bust Point, 0.121
+Shoulder to Bust Point, 0.145
+Shoulder to Under Bust, 0.170
+Shoulder to Waist, 0.230
+
+# Torso Measurements
+Front Waist Length, 0.218
+Back Waist Length, 0.242
+Across Chest, 0.206
+Across Back, 0.194
+Armhole Round, 0.242
+
+# Sleeve Measurements
+Sleeve Length, 0.333
+Bicep Round, 0.170
+Elbow Round, 0.145
+Wrist Round, 0.109
+
+# Waist Measurements
+Waist Round, 0.400
+Half Length, 0.315
+
+# Hip Measurements
+Waist to Hip, 0.109
+Upper Hip, 0.521
+Hip Round, 0.570
+
+# Lower Body Measurements
+Thigh Round, 0.315
+Knee Round, 0.206
+Calf Round, 0.194
+Ankle Round, 0.133

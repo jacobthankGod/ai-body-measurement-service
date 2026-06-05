@@ -1,0 +1,10 @@
+# PrecisionFit 3D AI Engine - Robots.txt
+User-agent: *
+Allow: /
+Allow: /index.html
+Allow: /docs/
+Disallow: /api/
+Disallow: /middleware/
+Disallow: /data/
+
+Sitemap: https://ai-body-measurement-service-1.onrender.com/sitemap.xml

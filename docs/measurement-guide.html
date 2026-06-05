@@ -1,0 +1,252 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Measurement Guide - AI Body Scan API</title>
+    <link rel="stylesheet" href="styles.css">
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=Fira+Code:wght@400;500&display=swap" rel="stylesheet">
+</head>
+<body>
+    <nav class="sidebar">
+        <div class="logo">
+            <svg width="32" height="32" viewBox="0 0 32 32" fill="none">
+                <circle cx="16" cy="16" r="14" stroke="#6366f1" stroke-width="2"/>
+                <circle cx="16" cy="10" r="4" fill="#6366f1"/>
+                <path d="M10 22c0-3 2.5-6 6-6s6 3 6 6" stroke="#6366f1" stroke-width="2" stroke-linecap="round"/>
+            </svg>
+            <span>AI Body Scan API</span>
+        </div>
+        
+        <div class="nav-section">
+            <h3>Getting Started</h3>
+            <a href="index.html">Introduction</a>
+            <a href="quickstart.html">Quick Start</a>
+            <a href="authentication.html">Authentication</a>
+        </div>
+        
+        <div class="nav-section">
+            <h3>API Reference</h3>
+            <a href="api-reference.html">Measurements</a>
+            <a href="errors.html">Errors</a>
+            <a href="webhooks.html" class="active">Webhooks</a>
+        </div>
+        
+        <div class="nav-section">
+            <h3>SDKs</h3>
+            <a href="sdk-javascript.html">JavaScript</a>
+            <a href="sdk-python.html">Python</a>
+            <a href="sdk-dart.html">Dart/Flutter</a>
+        </div>
+        
+        <div class="nav-section">
+            <h3>Resources</h3>
+            <a href="measurement-guide.html" class="active">Measurement Guide</a>
+            <a href="Best-practices.html">Best Practices</a>
+            <a href="changelog.html">Changelog</a>
+        </div>
+    </nav>
+    
+    <main class="content">
+        <header class="top-bar">
+            <div class="search">
+                <input type="text" placeholder="Search documentation... (⌘K)">
+            </div>
+            <div class="links">
+                <a href="#">API Reference</a>
+                <a href="#">Support</a>
+                <a href="#" class="github">GitHub →</a>
+            </div>
+        </header>
+        
+        <section class="hero">
+            <h1>Measurement Guide</h1>
+            <p class="tagline">Learn how to take optimal photos for accurate AI body measurements. Follow these guidelines to achieve ±1-3cm accuracy.</p>
+        </section>
+        
+        <section class="features">
+            <h2>📸 Photo Requirements</h2>
+            
+            <div class="feature-card">
+                <div class="icon">✅</div>
+                <h3>Camera Specifications</h3>
+                <ul>
+                    <li>Minimum resolution: 256x256 pixels</li>
+                    <li>Recommended: 1080x1920 or higher (portrait)</li>
+                    <li>Any modern smartphone camera works</li>
+                    <li>Front-facing or rear camera acceptable</li>
+                </ul>
+            </div>
+            
+            <div class="feature-card">
+                <div class="icon">📐</div>
+                <h3>Framing Guidelines</h3>
+                <ul>
+                    <li>Full body visible from head to toes</li>
+                    <li>Stand 2-3 meters (6-10 feet) from camera</li>
+                    <li>Arms slightly away from body (~15cm)</li>
+                    <li>Feet shoulder-width apart</li>
+                </ul>
+            </div>
+            
+            <div class="feature-card">
+                <div class="icon">💡</div>
+                <h3>Lighting Requirements</h3>
+                <ul>
+                    <li>Avoid harsh direct sunlight</li>
+                    <li>Use indirect natural light when possible</li>
+                    <li>Even lighting on front and side of body</li>
+                    <li>Avoid strong shadows on body</li>
+                </ul>
+            </div>
+            
+            <div class="feature-card">
+                <div class="icon">👕</div>
+                <h3>Clothing Recommendations</h3>
+                <ul>
+                    <li>Tight-fitting clothing shows body outline</li>
+                    <li>Avoid loose/bulky garments</li>
+                    <li>Form-fitting t-shirt and leggings ideal</li>
+                    <li>Remove accessories that affect outline</li>
+                </ul>
+            </div>
+        </section>
+        
+        <section class="features">
+            <h2>📋 Step-by-Step Instructions</h2>
+            
+            <div class="step">
+                <h3>1. Prepare the Space</h3>
+                <ul>
+                    <li>Find a well-lit area with plain background</li>
+                    <li>Ensure 2-3 meters (6-10 feet) of clear space</li>
+                    <li>Check camera screen shows full body</li>
+                </ul>
+            </div>
+            
+            <div class="step">
+                <h3>2. Take Front Photo</h3>
+                <ul>
+                    <li>Stand straight facing camera</li>
+                    <li>Feet shoulder-width apart</li>
+                    <li>Arms slightly away from sides</li>
+                    <li>Look straight ahead</li>
+                    <li>Take photo at eye level or slightly above</li>
+                </ul>
+            </div>
+            
+            <div class="step">
+                <h3>3. Take Side Photo</h3>
+                <ul>
+                    <li>Turn 90 degrees from camera</li>
+                    <li>Ensure full profile is visible</li>
+                    <li>Arms still slightly away from body</li>
+                    <li>Take photo at same height as front</li>
+                </ul>
+            </div>
+            
+            <div class="step">
+                <h3>4. Review & Upload</h3>
+                <ul>
+                    <li>Check both photos show full body clearly</li>
+                    <li>Ensure body outline is not obscured</li>
+                    <li>Upload both to API endpoint</li>
+                </ul>
+            </div>
+        </section>
+        
+        <section class="features">
+            <h2>⚠️ Common Issues to Avoid</h2>
+            
+            <table>
+                <thead>
+                    <tr>
+                        <th>Issue</th>
+                        <th>Problem</th>
+                        <th>Solution</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    <tr>
+                        <td>Body cut off</td>
+                        <td>Head or feet not visible</td>
+                        <td>Step back further from camera</td>
+                    </tr>
+                    <tr>
+                        <td>Too close</td>
+                        <td>Body fills entire frame</td>
+                        <td>Move 2-3 meters away</td>
+                    </tr>
+                    <tr>
+                        <td>Bad lighting</td>
+                        <td>Too dark or too bright</td>
+                        <td>Find even indirect light</td>
+                    </tr>
+                    <tr>
+                        <td>Loose clothing</td>
+                        <td>Cannot see body outline</td>
+                        <td>Wear form-fitting clothes</td>
+                    </tr>
+                    <tr>
+                        <td>Blurry photo</td>
+                        <td>Camera moved</td>
+                        <td>Hold steady or use timer</td>
+                    </tr>
+                </tbody>
+            </table>
+        </section>
+        
+        <section class="features">
+            <h2>📏 Available Measurements</h2>
+            
+            <h3>Male (18 measurements)</h3>
+            <ul>
+                <li>Shoulder, Neck Round, Chest Round</li>
+                <li>Stomach Round, Waist Round, Hip Round</li>
+                <li>Thigh Round, Knee Round, Calf Round, Ankle Round</li>
+                <li>Full Top Length, Half Length, Across Back, Across Chest</li>
+                <li>Trouser Waist, Trouser Length, Inseam, Crotch Depth, Arm Length</li>
+            </ul>
+            
+            <h3>Female (27 measurements)</h3>
+            <ul>
+                <li>Shoulder, Neck Round, Bust Round, High Bust, Under Bust</li>
+                <li>Waist Round, Hip Round, Upper Hip</li>
+                <li>Thigh Round, Knee Round, Calf Round, Ankle Round</li>
+                <li>Half Length, Front Waist Length, Back Waist Length</li>
+                <li>Across Back, Across Chest, Armhole Round</li>
+                <li>Sleeve Length, Bicep Round, Elbow Round, Wrist Round</li>
+                <li>Waist to Hip, Arm Length</li>
+            </ul>
+        </section>
+        
+        <footer>
+            <div class="footer-links">
+                <div>
+                    <h4>Product</h4>
+                    <a href="#">Features</a>
+                    <a href="#">Pricing</a>
+                    <a href="#">Changelog</a>
+                </div>
+                <div>
+                    <h4>Company</h4>
+                    <a href="#">About</a>
+                    <a href="#">Blog</a>
+                    <a href="#">Careers</a>
+                </div>
+                <div>
+                    <h4>Legal</h4>
+                    <a href="#">Privacy</a>
+                    <a href="#">Terms</a>
+                    <a href="#">Security</a>
+                </div>
+            </div>
+            <div class="footer-bottom">
+                <p>© 2024 AI Body Scan API. All rights reserved.</p>
+            </div>
+        </footer>
+    </main>
+</body>
+</html>

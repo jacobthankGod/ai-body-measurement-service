@@ -1,0 +1,179 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Changelog - AI Body Scan API</title>
+    <link rel="stylesheet" href="styles.css">
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=Fira+Code:wght@400;500&display=swap" rel="stylesheet">
+</head>
+<body>
+    <nav class="sidebar">
+        <div class="logo">
+            <svg width="32" height="32" viewBox="0 0 32 32" fill="none">
+                <circle cx="16" cy="16" r="14" stroke="#6366f1" stroke-width="2"/>
+                <circle cx="16" cy="10" r="4" fill="#6366f1"/>
+                <path d="M10 22c0-3 2.5-6 6-6s6 3 6 6" stroke="#6366f1" stroke-width="2" stroke-linecap="round"/>
+            </svg>
+            <span>AI Body Scan API</span>
+        </div>
+        
+        <div class="nav-section">
+            <h3>Getting Started</h3>
+            <a href="index.html">Introduction</a>
+            <a href="quickstart.html">Quick Start</a>
+            <a href="authentication.html">Authentication</a>
+        </div>
+        
+        <div class="nav-section">
+            <h3>API Reference</h3>
+            <a href="api-reference.html">Measurements</a>
+            <a href="errors.html">Errors</a>
+            <a href="webhooks.html">Webhooks</a>
+        </div>
+        
+        <div class="nav-section">
+            <h3>SDKs</h3>
+            <a href="sdk-javascript.html">JavaScript</a>
+            <a href="sdk-python.html">Python</a>
+            <a href="sdk-dart.html">Dart/Flutter</a>
+        </div>
+        
+        <div class="nav-section">
+            <h3>Resources</h3>
+            <a href="measurement-guide.html">Measurement Guide</a>
+            <a href="Best-practices.html">Best Practices</a>
+            <a href="changelog.html" class="active">Changelog</a>
+        </div>
+    </nav>
+    
+    <main class="content">
+        <header class="top-bar">
+            <div class="search">
+                <input type="text" placeholder="Search documentation... (⌘K)">
+            </div>
+            <div class="links">
+                <a href="#">API Reference</a>
+                <a href="#">Support</a>
+                <a href="#" class="github">GitHub →</a>
+            </div>
+        </header>
+        
+        <section class="hero">
+            <h1>Changelog</h1>
+            <p class="tagline">All notable changes to the AI Body Scan API are documented here.</p>
+        </section>
+        
+        <section class="changelog">
+            <div class="version">
+                <div class="version-header">
+                    <h2>v2.0.0</h2>
+                    <span class="date">Current</span>
+                </div>
+                <h3>🚀 Major Release</h3>
+                <ul>
+                    <li><strong>New:</strong> FastAPI-based architecture deployable to Vercel</li>
+                    <li><strong>New:</strong> X-API-Key authentication</li>
+                    <li><strong>New:</strong> MediaPipe pose detection integration</li>
+                    <li><strong>New:</strong> API key management and quota tracking</li>
+                    <li><strong>New:</strong> Subscription tiers (Starter/Growth/Enterprise)</li>
+                    <li><strong>New:</strong> Usage logging and analytics</li>
+                    <li><strong>New:</strong> Rate limiting middleware</li>
+                    <li><strong>Improved:</strong> Measurement accuracy (±1-3cm with dual photos)</li>
+                    <li><strong>Fixed:</strong> Image validation edge cases</li>
+                </ul>
+            </div>
+            
+            <div class="version">
+                <div class="version-header">
+                    <h2>v1.5.0</h2>
+                    <span class="date">Legacy</span>
+                </div>
+                <h3>📈 Feature Updates</h3>
+                <ul>
+                    <li><strong>New:</strong> Dual photo measurement mode</li>
+                    <li><strong>New:</strong> 27 female measurements</li>
+                    <li><strong>Improved:</strong> Height-based estimation</li>
+                    <li><strong>Fixed:</strong> Aspect ratio calculations</li>
+                </ul>
+            </div>
+            
+            <div class="version">
+                <div class="version-header">
+                    <h2>v1.0.0</h2>
+                    <span class="date">Legacy</span>
+                </div>
+                <h3>🎉 Initial Release</h3>
+                <ul>
+                    <li><strong>New:</strong> Flask-based API</li>
+                    <li><strong>New:</strong> 18 male measurements</li>
+                    <li><strong>New:</strong> Single photo mode</li>
+                    <li><strong>New:</strong> Proportional calculation fallback</li>
+                </ul>
+            </div>
+        </section>
+        
+        <section class="deprecation">
+            <h2>⚠️ Deprecation Timeline</h2>
+            <table>
+                <thead>
+                    <tr>
+                        <th>Feature</th>
+                        <th>Deprecated In</th>
+                        <th>Removed In</th>
+                        <th>Replacement</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    <tr>
+                        <td>Authorization header</td>
+                        <td>v2.0.0</td>
+                        <td>v3.0.0</td>
+                        <td>X-API-Key header</td>
+                    </tr>
+                    <tr>
+                        <td>Single photo mode</td>
+                        <td>v2.0.0</td>
+                        <td>v3.0.0</td>
+                        <td>Dual photo mode</td>
+                    </tr>
+                    <tr>
+                        <td>Flask endpoints</td>
+                        <td>v2.0.0</td>
+                        <td>v3.0.0</td>
+                        <td>FastAPI endpoints</td>
+                    </tr>
+                </tbody>
+            </table>
+        </section>
+        
+        <footer>
+            <div class="footer-links">
+                <div>
+                    <h4>Product</h4>
+                    <a href="#">Features</a>
+                    <a href="#">Pricing</a>
+                    <a href="#">Changelog</a>
+                </div>
+                <div>
+                    <h4>Company</h4>
+                    <a href="#">About</a>
+                    <a href="#">Blog</a>
+                    <a href="#">Careers</a>
+                </div>
+                <div>
+                    <h4>Legal</h4>
+                    <a href="#">Privacy</a>
+                    <a href="#">Terms</a>
+                    <a href="#">Security</a>
+                </div>
+            </div>
+            <div class="footer-bottom">
+                <p>© 2024 AI Body Scan API. All rights reserved.</p>
+            </div>
+        </footer>
+    </main>
+</body>
+</html>

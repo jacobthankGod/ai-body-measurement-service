@@ -1,0 +1,31 @@
+# Custom Body Points - Male Measurements
+# Anthropometric ratios for male body measurements
+# Format: measurement_name, ratio_to_height
+
+# Upper Body Measurements
+Shoulder, 0.265
+Neck Round, 0.224
+Chest Round, 0.588
+Stomach Round, 0.500
+Waist Round, 0.471
+Armhole Round, 0.247
+
+# Length Measurements
+Half Length, 0.353
+Full Top Length, 0.441
+Across Back, 0.247
+Across Chest, 0.259
+Sleeve Length, 0.588
+
+# Lower Body Measurements
+Hip Round, 0.559
+Thigh Round, 0.324
+Knee Round, 0.224
+Calf Round, 0.212
+Ankle Round, 0.153
+
+# Trouser Measurements
+Trouser Waist, 0.482
+Trouser Length, 0.588
+Inseam, 0.459
+Crotch Depth, 0.165

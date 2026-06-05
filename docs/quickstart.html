@@ -1,0 +1,206 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Quick Start - AI Body Scan API</title>
+    <link rel="stylesheet" href="styles.css">
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=Fira+Code:wght@400;500&display=swap" rel="stylesheet">
+</head>
+<body>
+    <nav class="sidebar">
+        <div class="logo">
+            <svg width="32" height="32" viewBox="0 0 32 32" fill="none">
+                <circle cx="16" cy="16" r="14" stroke="#6366f1" stroke-width="2"/>
+                <circle cx="16" cy="10" r="4" fill="#6366f1"/>
+                <path d="M10 22c0-3 2.5-6 6-6s6 3 6 6" stroke="#6366f1" stroke-width="2" stroke-linecap="round"/>
+            </svg>
+            <span>AI Body Scan API</span>
+        </div>
+        
+        <div class="nav-section">
+            <h3>Getting Started</h3>
+            <a href="index.html">Introduction</a>
+            <a href="quickstart.html" class="active">Quick Start</a>
+            <a href="authentication.html">Authentication</a>
+        </div>
+        
+        <div class="nav-section">
+            <h3>API Reference</h3>
+            <a href="api-reference.html">Measurements</a>
+            <a href="errors.html">Errors</a>
+        </div>
+        
+        <div class="nav-section">
+            <h3>SDKs</h3>
+            <a href="sdk-javascript.html">JavaScript</a>
+            <a href="sdk-python.html">Python</a>
+            <a href="sdk-dart.html">Dart/Flutter</a>
+        </div>
+    </nav>
+    
+    <main class="content">
+        <header class="top-bar">
+            <div class="search">
+                <input type="text" placeholder="Search documentation... (⌘K)">
+            </div>
+            <div class="links">
+                <a href="#">API Reference</a>
+                <a href="#">Support</a>
+                <a href="#" class="github">GitHub →</a>
+            </div>
+        </header>
+        
+        <section class="hero" style="text-align: left;">
+            <h1>Quick Start Guide</h1>
+            <p class="tagline">Get up and running with AI Body Scan API in under 5 minutes.</p>
+        </section>
+        
+        <section>
+            <h2>Step 1: Get Your API Key</h2>
+            <p style="color: var(--text-secondary); margin-bottom: 24px;">
+                Sign up at <a href="#" style="color: var(--primary);">https://aiscan.io</a> to get your API key.
+                For testing, you can use the sandbox API key from the dashboard.
+            </p>
+            
+            <div class="code-block">
+<pre><code><span class="comment"># Your API key will look like this:</span>
+pk_test_placeholder</code></pre>
+            </div>
+        </section>
+        
+        <section>
+            <h2>Step 2: Test the API</h2>
+            <p style="color: var(--text-secondary); margin-bottom: 24px;">
+                Use cURL to make your first API call. You'll need two photos: front and side.
+            </p>
+            
+            <div class="code-block">
+<pre><code><span class="comment"># Test the health endpoint</span>
+curl -X GET "https://api.aiscan.io/v2/health" \
+  -H "X-API-Key: pk_test_placeholder_api_key"</code></pre>
+            </div>
+            
+            <div class="response-example">
+<pre><code>{
+  <span class="json-key">"status"</span>: <span class="json-string">"healthy"</span>,
+  <span class="json-key">"version"</span>: <span class="json-string">"2.0.0"</span>,
+  <span class="json-key">"mediapipe_available"</span>: <span class="json-string">true</span>
+}</code></pre>
+            </div>
+        </section>
+        
+        <section>
+            <h2>Step 3: Extract Measurements</h2>
+            <p style="color: var(--text-secondary); margin-bottom: 24px;">
+                Upload front and side photos to get accurate measurements (±1-3cm).
+            </p>
+            
+            <div class="code-block">
+<pre><code><span class="comment"># Extract measurements from photos</span>
+curl -X POST "https://api.aiscan.io/v2/measurements/extract" \
+  -H "X-API-Key: pk_test_placeholder_api_key" \
+  -F "front=@front.jpg" \
+  -F "side=@side.jpg" \
+  -F "height=175" \
+  -F "gender=male"</code></pre>
+            </div>
+            
+            <div class="response-example">
+<pre><code>{
+  <span class="json-key">"success"</span>: <span class="json-string">true</span>,
+  <span class="json-key">"measurements"</span>: {
+    <span class="json-key">"Shoulder"</span>: <span class="json-number">46.4</span>,
+    <span class="json-key">"Chest Round"</span>: <span class="json-number">102.9</span>,
+    <span class="json-key">"Waist Round"</span>: <span class="json-number">82.4</span>,
+    <span class="json-key">"Hip Round"</span>: <span class="json-number">97.8</span>
+  },
+  <span class="json-key">"accuracy"</span>: <span class="json-string">"±1-3cm"</span>
+}</code></pre>
+            </div>
+        </section>
+        
+        <section>
+            <h2>Photo Guidelines</h2>
+            
+            <div class="feature-card" style="margin-bottom: 16px;">
+                <h3>📸 Front Photo</h3>
+                <ul style="color: var(--text-secondary); margin-top: 12px;">
+                    <li>Stand 6-8 feet from camera</li>
+                    <li>Keep phone at chest height</li>
+                    <li>Stand straight, arms at sides</li>
+                    <li>Wear fitted clothing</li>
+                </ul>
+            </div>
+            
+            <div class="feature-card">
+                <h3>📸 Side Photo</h3>
+                <ul style="color: var(--text-secondary); margin-top: 12px;">
+                    <li>Turn 90° from camera</li>
+                    <li>Full body in frame</li>
+                    <li>Side profile visible</li>
+                    <li>Feet shoulder-width apart</li>
+                </ul>
+            </div>
+        </section>
+        
+        <section>
+            <h2>Next Steps</h2>
+            <p style="color: var(--text-secondary); margin-bottom: 24px;">
+                Now that you've made your first call, explore more:
+            </p>
+            
+            <div class="use-case-grid">
+                <div class="use-case">
+                    <h3>📦</h3>
+                    <h4>Install SDK</h4>
+                    <p>Use our Python or JavaScript SDK for easier integration.</p>
+                    <a href="sdk-python.html">View SDKs →</a>
+                </div>
+                
+                <div class="use-case">
+                    <h3>📏</h3>
+                    <h4>All Measurements</h4>
+                    <p>See the full list of 18 male and 27 female measurements.</p>
+                    <a href="api-reference.html">View Reference →</a>
+                </div>
+                
+                <div class="use-case">
+                    <h3>⚠️</h3>
+                    <h4>Error Handling</h4>
+                    <p>Learn how to handle API errors gracefully.</p>
+                    <a href="errors.html">View Errors →</a>
+                </div>
+            </div>
+        </section>
+        
+        <footer>
+            <div class="footer-links">
+                <div>
+                    <h4>Product</h4>
+                    <a href="#">Features</a>
+                    <a href="#">Pricing</a>
+                    <a href="#">Changelog</a>
+                </div>
+                <div>
+                    <h4>Company</h4>
+                    <a href="#">About</a>
+                    <a href="#">Blog</a>
+                    <a href="#">Careers</a>
+                </div>
+                <div>
+                    <h4>Legal</h4>
+                    <a href="#">Privacy</a>
+                    <a href="#">Terms</a>
+                    <a href="#">Security</a>
+                </div>
+            </div>
+            <div class="footer-bottom">
+                <p>© 2024 AI Body Scan API. All rights reserved.</p>
+            </div>
+        </footer>
+    </main>
+</body>
+</html>

@@ -1,0 +1,252 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Best Practices - AI Body Scan API</title>
+    <link rel="stylesheet" href="styles.css">
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=Fira+Code:wght@400;500&display=swap" rel="stylesheet">
+</head>
+<body>
+    <nav class="sidebar">
+        <div class="logo">
+            <svg width="32" height="32" viewBox="0 0 32 32" fill="none">
+                <circle cx="16" cy="16" r="14" stroke="#6366f1" stroke-width="2"/>
+                <circle cx="16" cy="10" r="4" fill="#6366f1"/>
+                <path d="M10 22c0-3 2.5-6 6-6s6 3 6 6" stroke="#6366f1" stroke-width="2" stroke-linecap="round"/>
+            </svg>
+            <span>AI Body Scan API</span>
+        </div>
+        
+        <div class="nav-section">
+            <h3>Getting Started</h3>
+            <a href="index.html">Introduction</a>
+            <a href="quickstart.html">Quick Start</a>
+            <a href="authentication.html">Authentication</a>
+        </div>
+        
+        <div class="nav-section">
+            <h3>API Reference</h3>
+            <a href="api-reference.html">Measurements</a>
+            <a href="errors.html">Errors</a>
+            <a href="webhooks.html">Webhooks</a>
+        </div>
+        
+        <div class="nav-section">
+            <h3>SDKs</h3>
+            <a href="sdk-javascript.html">JavaScript</a>
+            <a href="sdk-python.html">Python</a>
+            <a href="sdk-dart.html">Dart/Flutter</a>
+        </div>
+        
+        <div class="nav-section">
+            <h3>Resources</h3>
+            <a href="measurement-guide.html">Measurement Guide</a>
+            <a href="Best-practices.html" class="active">Best Practices</a>
+            <a href="changelog.html">Changelog</a>
+        </div>
+    </nav>
+    
+    <main class="content">
+        <header class="top-bar">
+            <div class="search">
+                <input type="text" placeholder="Search documentation... (⌘K)">
+            </div>
+            <div class="links">
+                <a href="#">API Reference</a>
+                <a href="#">Support</a>
+                <a href="#" class="github">GitHub →</a>
+            </div>
+        </header>
+        
+        <section class="hero">
+            <h1>Best Practices</h1>
+            <p class="tagline">Get the most out of the AI Body Scan API with these recommended patterns and tips.</p>
+        </section>
+        
+        <section class="features">
+            <h2>🔑 API Key Management</h2>
+            
+            <div class="feature-card">
+                <div class="icon">🔒</div>
+                <h3>Secure Storage</h3>
+                <ul>
+                    <li>Store API keys in environment variables, never in code</li>
+                    <li>Use secrets management (AWS Secrets Manager, GCP Secret Manager)</li>
+                    <li>Never commit keys to version control</li>
+                    <li>Rotate keys regularly (every 90 days)</li>
+                </ul>
+            </div>
+            
+            <div class="feature-card">
+                <div class="icon">🚫</div>
+                <h3>Key Scoping</h3>
+                <ul>
+                    <li>Use separate keys per environment (dev/staging/prod)</li>
+                    <li>Implement proper key prefixes (sk_live_, sk_test_)</li>
+                    <li>Set up separate keys per application</li>
+                    <li>Monitor key usage for anomalies</li>
+                </ul>
+            </div>
+        </section>
+        
+        <section class="features">
+            <h2>📸 Photo Quality</h2>
+            
+            <div class="feature-card">
+                <div class="icon">✅</div>
+                <h3>Pre-validation</h3>
+                <ul>
+                    <li>Validate image dimensions client-side before upload</li>
+                    <li>Check file size (max 16MB)</li>
+                    <li>Verify image format (PNG, JPG, WebP)</li>
+                    <li>Show preview before submitting</li>
+                </ul>
+            </div>
+            
+            <div class="feature-card">
+                <div class="icon">📱</div>
+                <h3>Mobile Optimization</h3>
+                <ul>
+                    <li>Compress images before upload (>1MB)</li>
+                    <li>Use progressive JPEG for faster upload start</li>
+                    <li>Implement offline queue for poor connectivity</li>
+                    <li>Show upload progress indicator</li>
+                </ul>
+            </div>
+        </section>
+        
+        <section class="features">
+            <h2>⚡ Performance</h2>
+            
+            <div class="feature-card">
+                <div class="icon">⏱️</div>
+                <h3>Request Optimization</h3>
+                <ul>
+                    <li>Use connection pooling for highvolume</li>
+                    <li>Implement request timeout (30s recommended)</li>
+                    <li>Add retry with exponential backoff</li>
+                    <li>Cache health check results (5 min TTL)</li>
+                </ul>
+            </div>
+            
+            <div class="feature-card">
+                <div class="icon">📊</div>
+                <h3>Rate Limiting</h3>
+                <ul>
+                    <li>Implement client-side rate limiting</li>
+                    <li>Queue requests during high traffic</li>
+                    <li>Use webhooks for async processing</li>
+                    <li>Monitor 429 responses</li>
+                </ul>
+            </div>
+        </section>
+        
+        <section class="features">
+            <h2>🛡️ Error Handling</h2>
+            
+            <div class="feature-card">
+                <div class="icon">❌</div>
+                <h3>Retry Strategy</h3>
+                <ul>
+                    <li>Retry on 5xx errors (exponential backoff)</li>
+                    <li>Don't retry on 4xx errors</li>
+                    <li>Max 3 retries per request</li>
+                    <li>Log failures for monitoring</li>
+                </ul>
+            </div>
+            
+            <div class="feature-card">
+                <div class="icon">💬</div>
+                <h3>User Feedback</h3>
+                <ul>
+                    <li>Show specific error messages</li>
+                    <li>Provide actionable suggestions</li>
+                    <li>Allow easy photo retake</li>
+                    <li>Don't expose raw API errors</li>
+                </ul>
+            </div>
+        </section>
+        
+        <section class="features">
+            <h2>📈 Monitoring</h2>
+            
+            <div class="feature-card">
+                <div class="icon">📉</div>
+                <h3>Key Metrics</h3>
+                <ul>
+                    <li>API latency (p50, p95, p99)</li>
+                    <li>Success/failure rates</li>
+                    <li>Measurement accuracy feedback</li>
+                    <li>Quota usage tracking</li>
+                </ul>
+            </div>
+            
+            <div class="feature-card">
+                <div class="icon">🔔</div>
+                <h3>Alerting</h3>
+                <ul>
+                    <li>Alert on >5% error rate</li>
+                    <li>Alert on quota >80%</li>
+                    <li>Alert on high latency</li>
+                    <li>Set up webhook notifications</li>
+                </ul>
+            </div>
+        </section>
+        
+        <section class="features">
+            <h2>🏗️ Architecture</h2>
+            
+            <div class="feature-card">
+                <div class="icon">🔄</div>
+                <h3>Resiliency Patterns</h3>
+                <ul>
+                    <li>Implement circuit breaker</li>
+                    <li>Use bulkhead pattern for isolation</li>
+                    <li>Add dead letter queue for failures</li>
+                    <li>Plan for graceful degradation</li>
+                </ul>
+            </div>
+            
+            <div class="feature-card">
+                <div class="icon">📦</div>
+                <h3>Scalability</h3>
+                <ul>
+                    <li>Design for horizontal scaling</li>
+                    <li>Use async processing</li>
+                    <li>Implement caching layer</li>
+                    <li>Consider CDN for static assets</li>
+                </ul>
+            </div>
+        </section>
+        
+        <footer>
+            <div class="footer-links">
+                <div>
+                    <h4>Product</h4>
+                    <a href="#">Features</a>
+                    <a href="#">Pricing</a>
+                    <a href="#">Changelog</a>
+                </div>
+                <div>
+                    <h4>Company</h4>
+                    <a href="#">About</a>
+                    <a href="#">Blog</a>
+                    <a href="#">Careers</a>
+                </div>
+                <div>
+                    <h4>Legal</h4>
+                    <a href="#">Privacy</a>
+                    <a href="#">Terms</a>
+                    <a href="#">Security</a>
+                </div>
+            </div>
+            <div class="footer-bottom">
+                <p>© 2024 AI Body Scan API. All rights reserved.</p>
+            </div>
+        </footer>
+    </main>
+</body>
+</html>

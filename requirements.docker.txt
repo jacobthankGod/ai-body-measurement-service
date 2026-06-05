@@ -1,0 +1,34 @@
+# AI Body Scan SaaS - Full ML Requirements (Docker/Local)
+# ========================================================
+# This file is for Heavy AI environments (No 250MB limit)
+
+# Core ML/Image (Crucial for HMR & MediaPipe)
+mediapipe==0.10.9
+mediapipe-core==0.10.9
+opencv-python-headless==4.8.1
+numpy==1.26.3
+pillow==10.2.0
+scikit-image==0.22.0
+scipy==1.11.4
+matplotlib==3.8.2
+
+# 3D Extraction (HMR/SMPL)
+chumpy>=0.70
+PyOpenGL==3.1.7
+tensorflow==1.13.1
+absl-py==2.0.0
+
+# Web Framework
+fastapi==0.109.0
+uvicorn[standard]==0.27.0
+python-multipart==0.0.6
+httpx==0.26.0
+
+# Data & Database
+pydantic==2.5.3
+pydantic-settings==2.1.0
+supabase==2.3.7
+postgrest==0.16.2
+
+# Utilities
+python-dotenv==1.0.0

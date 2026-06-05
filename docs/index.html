@@ -1,0 +1,240 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>AI Body Scan API - Documentation</title>
+    <link rel="stylesheet" href="styles.css">
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=Fira+Code:wght@400;500&display=swap" rel="stylesheet">
+</head>
+<body>
+    <nav class="sidebar">
+        <div class="logo">
+            <svg width="32" height="32" viewBox="0 0 32 32" fill="none">
+                <circle cx="16" cy="16" r="14" stroke="#6366f1" stroke-width="2"/>
+                <circle cx="16" cy="10" r="4" fill="#6366f1"/>
+                <path d="M10 22c0-3 2.5-6 6-6s6 3 6 6" stroke="#6366f1" stroke-width="2" stroke-linecap="round"/>
+            </svg>
+            <span>AI Body Scan API</span>
+        </div>
+        
+        <div class="nav-section">
+            <h3>Getting Started</h3>
+            <a href="index.html" class="active">Introduction</a>
+            <a href="quickstart.html">Quick Start</a>
+            <a href="authentication.html">Authentication</a>
+        </div>
+        
+        <div class="nav-section">
+            <h3>API Reference</h3>
+            <a href="api-reference.html">Measurements</a>
+            <a href="errors.html">Errors</a>
+            <a href="webhooks.html">Webhooks</a>
+        </div>
+        
+        <div class="nav-section">
+            <h3>SDKs</h3>
+            <a href="sdk-javascript.html">JavaScript</a>
+            <a href="sdk-python.html">Python</a>
+            <a href="sdk-dart.html">Dart/Flutter</a>
+        </div>
+        
+        <div class="nav-section">
+            <h3>Resources</h3>
+            <a href="measurement-guide.html">Measurement Guide</a>
+            <a href="Best-practices.html">Best Practices</a>
+            <a href="changelog.html">Changelog</a>
+        </div>
+    </nav>
+    
+    <main class="content">
+        <header class="top-bar">
+            <div class="search">
+                <input type="text" placeholder="Search documentation... (⌘K)">
+            </div>
+            <div class="links">
+                <a href="#">API Reference</a>
+                <a href="#">Support</a>
+                <a href="#" class="github">GitHub →</a>
+            </div>
+        </header>
+        
+        <section class="hero">
+            <h1>AI-Powered Body Measurement API</h1>
+            <p class="tagline">Extract accurate body measurements from photos using advanced computer vision. Built for fashion, fitness, and tailoring apps.</p>
+            
+            <div class="badges">
+                <span class="badge">±1-3cm Accuracy</span>
+                <span class="badge">Dual Photo Mode</span>
+                <span class="badge">18/27 Measurements</span>
+                <span class="badge">99.9% Uptime</span>
+            </div>
+            
+<div class="code-block">
+                <pre><code><span class="comment"># cURL example</span>
+curl -X POST "https://api.aiscan.io/v2/measurements/extract" \
+  -H "X-API-Key: sk_live_your_api_key" \
+  -F "front=@front.jpg" \
+  -F "side=@side.jpg" \
+  -F "height=175" \
+  -F "gender=male"</code></pre>
+                <button class="copy">Copy</button>
+            </div>
+        </section>
+        
+        <section class="features">
+            <div class="feature-card">
+                <div class="icon">📸</div>
+                <h3>Dual Photo Analysis</h3>
+                <p>Upload front and side photos for ±1-3cm accuracy with our optimized 3D reconstruction pipeline.</p>
+            </div>
+            
+            <div class="feature-card">
+                <div class="icon">⚡</div>
+                <h3>Fast Processing</h3>
+                <p>Get results in under 2 seconds. Optimized for mobile and web applications.</p>
+            </div>
+            
+            <div class="feature-card">
+                <div class="icon">📏</div>
+                <h3>18 Male / 27 Female</h3>
+                <p>Industry-standard measurements including chest, waist, hips, inseam, and more.</p>
+            </div>
+            
+            <div class="feature-card">
+                <div class="icon">🔒</div>
+                <h3>Secure & Compliant</h3>
+                <p>GDPR compliant. Images processed securely with automatic deletion.</p>
+            </div>
+        </section>
+        
+        <section class="integration">
+            <h2>Integrate in Minutes</h2>
+            
+            <div class="integrations-grid">
+                <div class="integration-card">
+                    <div class="lang-icon">JS</div>
+                    <h4>JavaScript</h4>
+                    <pre><code>npm install @aiscan/sdk</code></pre>
+                    <a href="sdk-javascript.html">View SDK →</a>
+                </div>
+                
+                <div class="integration-card">
+                    <div class="lang-icon">PY</div>
+                    <h4>Python</h4>
+                    <pre><code>pip install aiscan-sdk</code></pre>
+                    <a href="sdk-python.html">View SDK →</a>
+                </div>
+                
+                <div class="integration-card">
+                    <div class="lang-icon">FL</div>
+                    <h4>Flutter</h4>
+                    <pre><code>flutter pub add aiscan</code></pre>
+                    <a href="sdk-dart.html">View SDK →</a>
+                </div>
+            </div>
+        </section>
+        
+        <section class="use-cases">
+            <h2>Popular Use Cases</h2>
+            
+            <div class="use-case-grid">
+                <div class="use-case">
+                    <h3>👗</h3>
+                    <h4>Tailoring & Alterations</h4>
+                    <p>Get precise measurements for custom clothing. Perfect for bespoke tailoring apps.</p>
+                </div>
+                
+                <div class="use-case">
+                    <h3>🏋️</h3>
+<h4>Fitness Tracking</h4>
+                    <p>Track body composition changes over time. Monitor progress effectively.</p>
+                </div>
+                
+                <div class="use-case">
+                    <h3>🛒</h3>
+                    <h4>E-commerce</h4>
+                    <p>Size recommendations based on AI measurements. Reduce returns by 40%.</p>
+                </div>
+                
+                <div class="use-case">
+                    <h3>👔</h3>
+                    <h4>Corporate Uniforms</h4>
+                    <p>Bulk measurement collection for uniforms and workwear.</p>
+                </div>
+            </div>
+        </section>
+        
+        <section class="pricing">
+            <h2>Simple, Transparent Pricing</h2>
+            
+            <div class="pricing-grid">
+                <div class="pricing-card popular">
+                    <div class="badge">Most Popular</div>
+                    <h3>Starter</h3>
+                    <div class="price">$29<span>/month</span></div>
+                    <p>500 measurements/month</p>
+                    <ul>
+                        <li>✓ Dual photo mode</li>
+                        <li>✓ All measurements</li>
+                        <li>✓ Email support</li>
+                    </ul>
+                    <button>Get Started →</button>
+                </div>
+                
+                <div class="pricing-card">
+                    <h3>Growth</h3>
+                    <div class="price">$99<span>/month</span></div>
+                    <p>2,500 measurements/month</p>
+                    <ul>
+                        <li>✓ Everything in Starter</li>
+                        <li>✓ Priority support</li>
+                        <li>✓ Webhooks</li>
+                    </ul>
+                    <button>Get Started →</button>
+                </div>
+                
+                <div class="pricing-card">
+                    <h3>Enterprise</h3>
+                    <div class="price">Custom</div>
+                    <p>Unlimited measurements</p>
+                    <ul>
+                        <li>✓ Everything in Growth</li>
+                        <li>✓ Dedicated support</li>
+                        <li>✓ SLA guarantee</li>
+                    </ul>
+                    <button>Contact Sales →</button>
+                </div>
+            </div>
+        </section>
+        
+        <footer>
+            <div class="footer-links">
+                <div>
+                    <h4>Product</h4>
+                    <a href="#">Features</a>
+                    <a href="#">Pricing</a>
+                    <a href="#">Changelog</a>
+                </div>
+                <div>
+                    <h4>Company</h4>
+                    <a href="#">About</a>
+                    <a href="#">Blog</a>
+                    <a href="#">Careers</a>
+                </div>
+                <div>
+                    <h4>Legal</h4>
+                    <a href="#">Privacy</a>
+                    <a href="#">Terms</a>
+                    <a href="#">Security</a>
+                </div>
+            </div>
+            <div class="footer-bottom">
+                <p>© 2024 AI Body Scan API. All rights reserved.</p>
+            </div>
+        </footer>
+    </main>
+</body>
+</html>

@@ -1,0 +1,150 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Flutter SDK - AI Body Scan API</title>
+    <link rel="stylesheet" href="styles.css">
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=Fira+Code:wght@400;500&display=swap" rel="stylesheet">
+</head>
+<body>
+    <nav class="sidebar">
+        <div class="logo">
+            <svg width="32" height="32" viewBox="0 0 32 32" fill="none">
+                <circle cx="16" cy="16" r="14" stroke="#6366f1" stroke-width="2"/>
+                <circle cx="16" cy="10" r="4" fill="#6366f1"/>
+                <path d="M10 22c0-3 2.5-6 6-6s6 3 6 6" stroke="#6366f1" stroke-width="2" stroke-linecap="round"/>
+            </svg>
+            <span>AI Body Scan API</span>
+        </div>
+        
+        <div class="nav-section">
+            <h3>Getting Started</h3>
+            <a href="index.html">Introduction</a>
+            <a href="quickstart.html">Quick Start</a>
+            <a href="authentication.html">Authentication</a>
+        </div>
+        
+        <div class="nav-section">
+            <h3>API Reference</h3>
+            <a href="api-reference.html">Measurements</a>
+            <a href="errors.html">Errors</a>
+            <a href="webhooks.html">Webhooks</a>
+        </div>
+        
+        <div class="nav-section">
+            <h3>SDKs</h3>
+            <a href="sdk-javascript.html">JavaScript</a>
+            <a href="sdk-python.html">Python</a>
+            <a href="sdk-dart.html" class="active">Dart/Flutter</a>
+        </div>
+        
+        <div class="nav-section">
+            <h3>Resources</h3>
+            <a href="measurement-guide.html">Measurement Guide</a>
+            <a href="Best-practices.html">Best Practices</a>
+            <a href="changelog.html">Changelog</a>
+        </div>
+    </nav>
+    
+    <main class="content">
+        <header class="top-bar">
+            <div class="search">
+                <input type="text" placeholder="Search documentation... (⌘K)">
+            </div>
+            <div class="links">
+                <a href="#">API Reference</a>
+                <a href="#">Support</a>
+                <a href="#" class="github">GitHub →</a>
+            </div>
+        </header>
+        
+        <section class="hero">
+            <h1>Flutter/Dart SDK</h1>
+            <p class="tagline">Coming soon! The Flutter SDK is under development. For now, use direct HTTP calls.</p>
+        </section>
+        
+        <section class="features">
+            <h2>📦 Installation</h2>
+            <p>Add to your pubspec.yaml:</p>
+            <div class="code-block">
+<pre><code>dependencies:
+  http: ^1.0.0
+  image_picker: ^1.0.0</code></pre>
+            </div>
+        </section>
+        
+        <section class="features">
+            <h2>💻 Quick Start</h2>
+            <div class="code-block">
+<pre><code><span class="comment">// Direct HTTP example</span>
+import 'dart:convert';
+import 'package:http/http.dart' as http;
+
+Future<Map<String, dynamic>> extractMeasurements(
+  List<int> frontImageBytes,
+  List<int> sideImageBytes,
+  double height,
+  String gender,
+) async {
+  final request = http.MultipartRequest(
+    'POST',
+    Uri.parse('https://api.aiscan.io/v2/measurements/extract'),
+  );
+  
+  request.headers['X-API-Key'] = 'your_api_key';
+  request.fields['height'] = height.toString();
+  request.fields['gender'] = gender;
+  request.files.add(await http.MultipartFile.fromBytes(
+    'front', frontImageBytes, filename: 'front.jpg'));
+  request.files.add(await http.MultipartFile.fromBytes(
+    'side', sideImageBytes, filename: 'side.jpg'));
+  
+  final streamedResponse = await request.send();
+  final response = await http.Response.fromStream(streamedResponse);
+  
+  return json.decode(response.body);
+}</code></pre>
+            </div>
+        </section>
+        
+        <section class="features">
+            <h2>⚠️ SDK Status</h2>
+            <p>The official Flutter SDK is planned for Q2 2024. Current workaround:</p>
+            <ul>
+                <li>Use direct HTTP with http package</li>
+                <li>Use Dio for advanced configuration</li>
+                <li>Check GitHub for updates</li>
+            </ul>
+        </section>
+        
+        <footer>
+            <div class="footer-links">
+                <div>
+                    <h4>Product</h4>
+                    <a href="#">Features</a>
+                    <a href="#">Pricing</a>
+                    <a href="#">Changelog</a>
+                </div>
+                <div>
+                    <h4>Company</h4>
+                    <a href="#">About</a>
+                    <a href="#">Blog</a>
+                    <a href="#">Careers</a>
+                </div>
+                <div>
+                    <h4>Legal</h4>
+                    <a href="#">Privacy</a>
+                    <a href="#">Terms</a>
+                    <a href="#">Security</a>
+                </div>
+            </div>
+            <div class="footer-bottom">
+                <p>© 2024 AI Body Scan API. All rights reserved.</p>
+            </div>
+        </footer>
+    </main>
+</body>
+</html>

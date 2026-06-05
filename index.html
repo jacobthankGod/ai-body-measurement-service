@@ -1,0 +1,277 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>PrecisionFit 3D | Professional Body Measurement SaaS</title>
+
+  <!-- Favicon / Brand Icon -->
+  <link rel="icon" type="image/png" href="/assets/body-capture.png">
+
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet" />
+  <style>
+    :root{
+      --Neutral-0:#FFFFFF;
+      --Neutral-50:#F7F4EF;
+      --Neutral-100:#F2F2F2;
+      --Neutral-200:#E6E6E6;
+      --Neutral-500:#6B6B6B;
+      --Neutral-700:#2E2E2E;
+      --Neutral-900:#0A0A0A;
+      --Mint-500:#57D7C0;
+      --Teal-700:#004D4A;
+      --Error:#D63031;
+      --Radius-XL:999px;
+      --SoftCardShadow: 0px 10px 30px rgba(0,0,0,0.04);
+      --FloatingHeroShadow: 0px 24px 48px rgba(0,0,0,0.08);
+      --PageBg:#F7F4EF;
+    }
+    *{box-sizing:border-box}
+    html,body{height:100%; margin:0; padding:0; font-family:Inter, sans-serif; background:var(--PageBg); color:var(--Neutral-900); overflow-x:hidden}
+    header{width:100%; height:84px; padding:0 40px; display:flex; align-items:center; justify-content:space-between; position:fixed; top:0; z-index:100; background:rgba(255,255,255,0.85); backdrop-filter: blur(12px); border-bottom:1px solid rgba(0,0,0,0.03)}
+    .logo{display:flex; align-items:center; gap:16px; cursor:pointer}
+    .logoMark{width:40px; height:40px; border-radius:12px; background:linear-gradient(135deg,#9BE7D8,var(--Teal-700))}
+    .logoText{font-size:24px; font-weight:900; letter-spacing:-0.04em}
+    nav{display:flex; gap:32px}
+    nav a{font-size:13px; font-weight:700; color:var(--Neutral-900); text-decoration:none; text-transform:uppercase; opacity:0.6}
+    .btn{height:44px; padding:0 24px; border-radius:999px; border:none; font-size:14px; font-weight:700; cursor:pointer; display:inline-flex; align-items:center; justify-content:center; gap:8px; transition:all .2s ease; user-select:none}
+    .btnPrimary{background:var(--Neutral-900); color:#fff}
+    .btnGhost{background:rgba(255,255,255,0.7); border:1px solid var(--Neutral-200)}
+    .btnSmall{height:36px; padding:0 16px; font-size:12px}
+
+    /* Layout Views */
+    .view{display:none}
+    .view.active{display:block}
+
+    /* Hero */
+    .hero{padding:160px 0 100px; text-align:center; position:relative}
+    .heroHeadline{font-size:56px; font-weight:900; line-height:1.1; margin-bottom:24px}
+    .heroSub{font-size:18px; color:var(--Neutral-500); max-width:700px; margin:0 auto 48px}
+    .mannequin{width:100%; max-width:800px; margin:0 auto; height:500px; overflow:hidden}
+    .mannequin img{width:100%; height:100%; object-fit:contain}
+
+    .heroCta{width:900px; margin:60px auto 0; background:#fff; padding:40px; border-radius:24px; box-shadow:var(--FloatingHeroShadow); display:flex; align-items:center; justify-content:space-between; text-align:left}
+
+    /* Workbench */
+    .app-view{padding:120px 40px}
+    .quota-box{background:#fff; padding:32px; border-radius:20px; box-shadow:var(--SoftCardShadow); margin-bottom:40px}
+
+    /* Modal */
+    .overlay{position:fixed; inset:0; background:rgba(0,0,0,0.6); backdrop-filter:blur(4px); display:none; align-items:center; justify-content:center; z-index:200}
+    .overlay.open{display:flex}
+    .modal{width:400px; background:#fff; border-radius:24px; padding:32px}
+
+    .signedBar{display:none; align-items:center; gap:12px}
+    .signedBar.show{display:flex}
+
+    @media (max-width: 800px) {
+      .heroHeadline{font-size:38px}
+      .heroCta{width:90%; flex-direction:column; gap:24px}
+      header{padding:0 20px}
+      nav{display:none}
+    }
+  </style>
+</head>
+<body>
+
+  <header>
+    <div class="logo" id="logoHome">
+      <div class="logoMark"></div>
+      <div class="logoText">PrecisionFit 3D</div>
+    </div>
+    <nav>
+      <a href="#services">Technology</a>
+      <a href="#about">About</a>
+    </nav>
+    <div style="flex:1"></div>
+    <div id="authButtons" style="display:flex; gap:12px">
+      <button class="btn btnGhost btnSmall" id="navSignIn">Sign In</button>
+      <button class="btn btnPrimary btnSmall" id="navSignUp">Sign Up</button>
+    </div>
+    <div class="signedBar" id="signedBar">
+      <span style="font-weight:700; font-size:13px" id="userEmail"></span>
+      <button class="btn btnGhost btnSmall" id="btnSignOut" style="color:red">Sign Out</button>
+    </div>
+  </header>
+
+  <!-- Views -->
+  <div id="viewMarketing" class="view active">
+    <section class="hero">
+      <h1 class="heroHeadline">AI-powered body measuring<br><span style="color:var(--Teal-700)">for a perfect fit.</span></h1>
+      <p class="heroSub">"Experience clinical-grade 3D body measurements in seconds using just your smartphone camera."</p>
+      <div class="mannequin">
+        <img src="/assets/homepage_image.png?v=2.0.2" alt="AI Scan" id="heroImgTag">
+      </div>
+      <div class="heroCta">
+        <div>
+          <h3 style="margin:0; font-size:24px">Start your trial</h3>
+          <p style="margin:8px 0 0; color:var(--Neutral-500)">Get your first 10 scans for free.</p>
+        </div>
+        <button class="btn btnPrimary" style="height:60px" id="heroGetStarted">Get API Keys</button>
+      </div>
+    </section>
+  </div>
+
+  <div id="viewApp" class="view">
+    <div class="app-view">
+      <h2 style="font-size:32px; font-weight:900">Merchant Workbench</h2>
+      <div class="quota-box">
+        <div style="display:flex; justify-content:space-between; margin-bottom:12px">
+          <span style="font-weight:700">Monthly Usage</span>
+          <span id="quotaText">0 / 10 scans</span>
+        </div>
+        <div style="height:8px; background:var(--Neutral-100); border-radius:99px; overflow:hidden">
+          <div id="quotaBar" style="width:0%; height:100%; background:var(--Mint-500); transition:width 1s"></div>
+        </div>
+      </div>
+      <div id="scansGrid" style="display:grid; grid-template-columns:repeat(3, 1fr); gap:24px">
+        <div style="background:#fff; border-radius:24px; padding:60px; text-align:center; border:2px dashed #eee; grid-column:span 3">
+          <p style="color:#999">No scans recorded yet.</p>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Auth Modal -->
+  <div class="overlay" id="authOverlay">
+    <div class="modal">
+      <h2 id="modalTitle" style="margin-top:0">Sign In</h2>
+      <form id="authForm">
+        <div style="margin-bottom:16px">
+          <label style="display:block; font-size:12px; font-weight:700; margin-bottom:8px">EMAIL</label>
+          <input type="email" id="email" required style="width:100%; height:44px; border-radius:12px; border:1px solid #ddd; padding:0 12px">
+        </div>
+        <div style="margin-bottom:24px">
+          <label style="display:block; font-size:12px; font-weight:700; margin-bottom:8px">PASSWORD</label>
+          <input type="password" id="password" required minlength="6" style="width:100%; height:44px; border-radius:12px; border:1px solid #ddd; padding:0 12px">
+        </div>
+        <button type="submit" class="btn btnPrimary" id="btnAuthSubmit" style="width:100%; height:52px">Continue</button>
+        <p style="text-align:center; margin-top:20px; font-size:13px">
+          <a href="#" id="toggleAuth" style="color:var(--Teal-700); font-weight:700; text-decoration:none">Need an account? Sign Up</a>
+        </p>
+      </form>
+    </div>
+  </div>
+
+  <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2/dist/umd/supabase-js.min.js"></script>
+  <script>
+    window.addEventListener('DOMContentLoaded', () => {
+      console.log("PfDebug: App Boot Sequence Start");
+
+      const SUPABASE_URL = 'https://blsettabymllulsxtziw.supabase.co';
+      const SUPABASE_ANON_KEY = 'sb_publishable_miCOIXHtlxLkfDgpwE0N-g_BA1Q-x8y';
+      const supabase = window.supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
+
+      let authMode = 'signin';
+
+      // --- BULLETPROOF EVENT DELEGATION ---
+      document.addEventListener('click', (e) => {
+        const target = e.target.closest('button, a, .logo');
+        if (!target) return;
+
+        const id = target.id;
+        console.log("PfDebug: Click Detected on", id || "element without ID");
+
+        // Auth Modals
+        if (['navSignIn', 'navSignUp', 'heroGetStarted'].includes(id)) {
+          authMode = (id === 'navSignIn') ? 'signin' : 'signup';
+          updateAuthModal();
+          document.getElementById('authOverlay').classList.add('open');
+        }
+
+        if (id === 'toggleAuth') {
+          e.preventDefault();
+          authMode = (authMode === 'signin') ? 'signup' : 'signin';
+          updateAuthModal();
+        }
+
+        if (target.classList.contains('overlay')) {
+          target.classList.remove('open');
+        }
+
+        if (id === 'btnSignOut') {
+          supabase.auth.signOut();
+        }
+
+        if (id === 'logoHome') {
+          window.location.hash = '#home';
+        }
+      });
+
+      function updateAuthModal() {
+        document.getElementById('modalTitle').textContent = (authMode === 'signin') ? 'Sign In' : 'Sign Up';
+        document.getElementById('toggleAuth').textContent = (authMode === 'signin') ? 'Need an account? Sign Up' : 'Already have an account? Sign In';
+      }
+
+      // --- Close modal on overlay click ---
+      document.getElementById('authOverlay').addEventListener('click', (e) => {
+        if(e.target.id === 'authOverlay') e.target.classList.remove('open');
+      });
+
+      // --- Auth Logic ---
+      document.getElementById('authForm').addEventListener('submit', async (e) => {
+        e.preventDefault();
+        const email = document.getElementById('email').value;
+        const password = document.getElementById('password').value;
+        const btn = document.getElementById('btnAuthSubmit');
+
+        btn.disabled = true;
+        btn.textContent = 'Processing...';
+
+        try {
+          const { data, error } = (authMode === 'signin')
+            ? await supabase.auth.signInWithPassword({ email, password })
+            : await supabase.auth.signUp({ email, password });
+
+          if (error) throw error;
+          if (data.user) {
+            document.getElementById('authOverlay').classList.remove('open');
+            window.location.hash = '#dashboard';
+          }
+        } catch (err) {
+          alert(err.message);
+        } finally {
+          btn.disabled = false;
+          btn.textContent = 'Continue';
+        }
+      });
+
+      // --- SPA Routing ---
+      const handleRoute = () => {
+        const hash = window.location.hash;
+        console.log("PfDebug: Routing to", hash);
+        if (hash === '#dashboard' || hash === '#workbench') {
+          document.getElementById('viewMarketing').classList.remove('active');
+          document.getElementById('viewApp').classList.add('active');
+          window.scrollTo(0,0);
+        } else {
+          document.getElementById('viewApp').classList.remove('active');
+          document.getElementById('viewMarketing').classList.add('active');
+        }
+      };
+
+      window.addEventListener('hashchange', handleRoute);
+      handleRoute();
+
+      // --- Auth Observer ---
+      supabase.auth.onAuthStateChange((event, session) => {
+        console.log("PfDebug: Auth Event", event);
+        if (session) {
+          document.getElementById('authButtons').style.display = 'none';
+          document.getElementById('signedBar').classList.add('show');
+          document.getElementById('userEmail').textContent = session.user.email;
+          document.getElementById('quotaBar').style.width = '20%';
+        } else {
+          document.getElementById('signedBar').classList.remove('show');
+          document.getElementById('authButtons').style.display = 'flex';
+          if (window.location.hash === '#dashboard') window.location.hash = '#home';
+        }
+      });
+
+      console.log("PfDebug: App Boot Sequence Complete");
+    });
+  </script>
+</body>
+</html>

@@ -1,0 +1,155 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Authentication - AI Body Scan API</title>
+    <link rel="stylesheet" href="styles.css">
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=Fira+Code:wght@400;500&display=swap" rel="stylesheet">
+</head>
+<body>
+    <nav class="sidebar">
+        <div class="logo">
+            <svg width="32" height="32" viewBox="0 0 32 32" fill="none">
+                <circle cx="16" cy="16" r="14" stroke="#6366f1" stroke-width="2"/>
+                <circle cx="16" cy="10" r="4" fill="#6366f1"/>
+                <path d="M10 22c0-3 2.5-6 6-6s6 3 6 6" stroke="#6366f1" stroke-width="2" stroke-linecap="round"/>
+            </svg>
+            <span>AI Body Scan API</span>
+        </div>
+        
+        <div class="nav-section">
+            <h3>Getting Started</h3>
+            <a href="index.html">Introduction</a>
+            <a href="quickstart.html">Quick Start</a>
+            <a href="authentication.html" class="active">Authentication</a>
+        </div>
+        
+        <div class="nav-section">
+            <h3>API Reference</h3>
+            <a href="api-reference.html">Measurements</a>
+            <a href="errors.html">Errors</a>
+        </div>
+        
+        <div class="nav-section">
+            <h3>SDKs</h3>
+            <a href="sdk-javascript.html">JavaScript</a>
+            <a href="sdk-python.html">Python</a>
+            <a href="sdk-dart.html">Dart/Flutter</a>
+        </div>
+    </nav>
+    
+    <main class="content">
+        <header class="top-bar">
+            <div class="search">
+                <input type="text" placeholder="Search documentation... (⌘K)">
+            </div>
+            <div class="links">
+                <a href="#">API Reference</a>
+                <a href="#">Support</a>
+                <a href="#" class="github">GitHub →</a>
+            </div>
+        </header>
+        
+        <section class="hero" style="text-align: left;">
+            <h1>Authentication</h1>
+            <p class="tagline">All API requests require authentication via API key.</p>
+        </section>
+        
+        <section>
+            <h2>API Keys</h2>
+            <p style="color: var(--text-secondary); margin-bottom: 24px;">
+                Get your API key from the dashboard. Include it in the <code>X-API-Key</code> header.
+            </p>
+            
+            <div class="code-block">
+<pre><code><span class="comment"># Include API key in header</span>
+curl -X POST "https://api.aiscan.io/v2/measurements/extract" \
+  -H "X-API-Key: pk_test_placeholder" \
+  -F "front=@front.jpg" \
+  -F "side=@side.jpg" \
+  -F "height=175"</code></pre>
+            </div>
+        </section>
+        
+        <section>
+            <h2>Key Types</h2>
+            
+            <table style="width: 100%; border-collapse: collapse; margin-bottom: 32px;">
+                <thead>
+                    <tr style="border-bottom: 1px solid var(--border);">
+                        <th style="text-align: left; padding: 12px; color: var(--text-secondary); font-size: 13px;">Type</th>
+                        <th style="text-align: left; padding: 12px; color: var(--text-secondary); font-size: 13px;">Prefix</th>
+                        <th style="text-align: left; padding: 12px; color: var(--text-secondary); font-size: 13px;">Description</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    <tr>
+                        <td style="padding: 12px; font-family: monospace;">Live</td>
+                        <td style="padding: 12px;"><code style="background: var(--surface); padding: 2px 6px; border-radius: 4px;">pk_test_placeholder</code></td>
+                        <td style="padding: 12px; color: var(--text-secondary);">Production use</td>
+                    </tr>
+                    <tr style="background: rgba(255,255,255,0.02);">
+                        <td style="padding: 12px; font-family: monospace;">Test</td>
+                        <td style="padding: 12px;"><code style="background: var(--surface); padding: 2px 6px; border-radius: 4px;">sk_test_</code></td>
+                        <td style="padding: 12px; color: var(--text-secondary);">Testing only</td>
+                    </tr>
+                </tbody>
+            </table>
+        </section>
+        
+        <section>
+            <h2>SDK Authentication</h2>
+            
+            <div class="code-block">
+<pre><code><span class="comment"># Python SDK</span>
+<span class="keyword">import</span> aiscan
+
+client = aiscan.Client(<span class="string">"pk_test_placeholder_api_key"</span>)
+
+<span class="comment"># JavaScript SDK</span>
+<span class="keyword">const</span> aiscan = require(<span class="string">'@aiscan/sdk'</span>);
+<span class="keyword">const</span> client = <span class="keyword">new</span> aiscan.Client({ apiKey: <span class="string">'pk_test_placeholder_api_key'</span> });</code></pre>
+            </div>
+        </section>
+        
+        <section>
+            <h2>Security</h2>
+            <ul style="color: var(--text-secondary); margin-bottom: 24px;">
+                <li>Never expose API keys in client-side code</li>
+                <li>Use environment variables to store keys</li>
+                <li>Rotate keys periodically</li>
+                <li>Revoke compromised keys immediately</li>
+            </ul>
+        </section>
+        
+        <footer>
+            <div class="footer-links">
+                <div>
+                    <h4>Product</h4>
+                    <a href="#">Features</a>
+                    <a href="#">Pricing</a>
+                    <a href="#">Changelog</a>
+                </div>
+                <div>
+                    <h4>Company</h4>
+                    <a href="#">About</a>
+                    <a href="#">Blog</a>
+                    <a href="#">Careers</a>
+                </div>
+                <div>
+                    <h4>Legal</h4>
+                    <a href="#">Privacy</a>
+                    <a href="#">Terms</a>
+                    <a href="#">Security</a>
+                </div>
+            </div>
+            <div class="footer-bottom">
+                <p>© 2024 AI Body Scan API. All rights reserved.</p>
+            </div>
+        </footer>
+    </main>
+</body>
+</html>

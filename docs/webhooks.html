@@ -1,0 +1,213 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Webhooks - AI Body Scan API</title>
+    <link rel="stylesheet" href="styles.css">
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=Fira+Code:wght@400;500&display=swap" rel="stylesheet">
+</head>
+<body>
+    <nav class="sidebar">
+        <div class="logo">
+            <svg width="32" height="32" viewBox="0 0 32 32" fill="none">
+                <circle cx="16" cy="16" r="14" stroke="#6366f1" stroke-width="2"/>
+                <circle cx="16" cy="10" r="4" fill="#6366f1"/>
+                <path d="M10 22c0-3 2.5-6 6-6s6 3 6 6" stroke="#6366f1" stroke-width="2" stroke-linecap="round"/>
+            </svg>
+            <span>AI Body Scan API</span>
+        </div>
+        
+        <div class="nav-section">
+            <h3>Getting Started</h3>
+            <a href="index.html">Introduction</a>
+            <a href="quickstart.html">Quick Start</a>
+            <a href="authentication.html">Authentication</a>
+        </div>
+        
+        <div class="nav-section">
+            <h3>API Reference</h3>
+            <a href="api-reference.html">Measurements</a>
+            <a href="errors.html">Errors</a>
+            <a href="webhooks.html" class="active">Webhooks</a>
+        </div>
+        
+        <div class="nav-section">
+            <h3>SDKs</h3>
+            <a href="sdk-javascript.html">JavaScript</a>
+            <a href="sdk-python.html">Python</a>
+            <a href="sdk-dart.html">Dart/Flutter</a>
+        </div>
+        
+        <div class="nav-section">
+            <h3>Resources</h3>
+            <a href="measurement-guide.html">Measurement Guide</a>
+            <a href="Best-practices.html">Best Practices</a>
+            <a href="changelog.html">Changelog</a>
+        </div>
+    </nav>
+    
+    <main class="content">
+        <header class="top-bar">
+            <div class="search">
+                <input type="text" placeholder="Search documentation... (⌘K)">
+            </div>
+            <div class="links">
+                <a href="#">API Reference</a>
+                <a href="#">Support</a>
+                <a href="#" class="github">GitHub →</a>
+            </div>
+        </header>
+        
+        <section class="hero">
+            <h1>Webhooks</h1>
+            <p class="tagline">Receive real-time notifications when events occur in your account. Available on Growth and Enterprise plans.</p>
+        </section>
+        
+        <section class="features">
+            <h2>📥 Available Events</h2>
+            
+            <div class="feature-card">
+                <div class="icon">📏</div>
+                <h3>measurement.completed</h3>
+                <p>Sent when a measurement extraction completes successfully.</p>
+                <pre><code>{
+  "event": "measurement.completed",
+  "request_id": "req_abc123",
+  "timestamp": "2024-01-15T10:30:00Z",
+  "data": {
+    "measurements": { "Chest": 102.5, "Waist": 82.0 },
+    "accuracy": "±1-3cm"
+  }
+}</code></pre>
+            </div>
+            
+            <div class="feature-card">
+                <div class="icon">⚠️</div>
+                <h3>measurement.failed</h3>
+                <p>Sent when a measurement extraction fails.</p>
+                <pre><code>{
+  "event": "measurement.failed",
+  "request_id": "req_abc123",
+  "timestamp": "2024-01-15T10:30:00Z",
+  "data": {
+    "error": "image_too_dark",
+    "message": "Please retake photo in better lighting"
+  }
+}</code></pre>
+            </div>
+            
+            <div class="feature-card">
+                <div class="icon">💳</div>
+                <h3>subscription.renewed</h3>
+                <p>Sent when a subscription is renewed.</p>
+                <pre><code>{
+  "event": "subscription.renewed",
+  "timestamp": "2024-01-15T10:30:00Z",
+  "data": {
+    "plan": "Growth",
+    "next_billing": "2024-02-15"
+  }
+}</code></pre>
+            </div>
+            
+            <div class="feature-card">
+                <div class="icon">🛑</div>
+                <h3>quota.exceeded</h3>
+                <p>Sent when monthly quota is exceeded.</p>
+                <pre><code>{
+  "event": "quota.exceeded",
+  "timestamp": "2024-01-15T10:30:00Z",
+  "data": {
+    "limit": 2500,
+    "used": 2500,
+    "reset_date": "2024-02-01"
+  }
+}</code></pre>
+            </div>
+        </section>
+        
+        <section class="features">
+            <h2>⚙️ Setup Instructions</h2>
+            
+            <ol>
+                <li>
+                    <h3>1. Configure Webhook URL</h3>
+                    <p>Go to Dashboard → Settings → Webhooks and add your endpoint URL.</p>
+                </li>
+                <li>
+                    <h3>2. Verify Secret</h3>
+                    <p>Your webhook endpoint will receive a secret in the X-Webhook-Secret header to verify requests.</p>
+                </li>
+                <li>
+                    <h3>3. Handle Events</h3>
+                    <p>Implement endpoint to handle POST requests with event payload.</p>
+                </li>
+                <li>
+                    <h3>4. Return 200</h3>
+                    <p>Return HTTP 200 within 30 seconds to acknowledge receipt.</p>
+                </li>
+            </ol>
+        </section>
+        
+        <section class="features">
+            <h2>🔒 Security</h2>
+            
+            <div class="feature-card">
+                <div class="icon">🔑</div>
+                <h3>Webhook Secrets</h3>
+                <p>Each webhook has a unique secret. Verify the X-Webhook-Signature header using HMAC-SHA256.</p>
+                <pre><code><span class="comment"># Verify webhook signature</span>
+import hmac
+import hashlib
+
+def verify_webhook(payload, signature, secret):
+    expected = hmac.new(
+        secret.encode(),
+        payload.encode(),
+        hashlib.sha256
+    ).hexdigest()
+    return hmac.compare_digest(signature, expected)</code></pre>
+            </div>
+        </section>
+        
+        <section class="features">
+            <h2>♻️ Retries</h2>
+            <p>Failed webhook deliveries are retried up to 3 times with exponential backoff:</p>
+            <ul>
+                <li>1st retry: 1 minute after failure</li>
+                <li>2nd retry: 5 minutes after failure</li>
+                <li>3rd retry: 30 minutes after failure</li>
+            </ul>
+        </section>
+        
+        <footer>
+            <div class="footer-links">
+                <div>
+                    <h4>Product</h4>
+                    <a href="#">Features</a>
+                    <a href="#">Pricing</a>
+                    <a href="#">Changelog</a>
+                </div>
+                <div>
+                    <h4>Company</h4>
+                    <a href="#">About</a>
+                    <a href="#">Blog</a>
+                    <a href="#">Careers</a>
+                </div>
+                <div>
+                    <h4>Legal</h4>
+                    <a href="#">Privacy</a>
+                    <a href="#">Terms</a>
+                    <a href="#">Security</a>
+                </div>
+            </div>
+            <div class="footer-bottom">
+                <p>© 2024 AI Body Scan API. All rights reserved.</p>
+            </div>
+        </footer>
+    </main>
+</body>
+</html>
