@@ -23,7 +23,7 @@
       --White: #FFFFFF;
       --Error: #D63031;
 
-      /* FIGMA-GRADE SPACING (8pt Grid) */
+      /* NOPS-INSPIRED RHYTHMIC SPACING */
       --S-8: 8px;
       --S-16: 16px;
       --S-24: 24px;
@@ -35,11 +35,9 @@
       --S-160: 160px;
       --S-200: 200px;
 
-      --Radius-M: 16px;
-      --Radius-L: 24px;
+      --Radius-M: 12px;
+      --Radius-L: 20px;
       --Radius-XL: 999px;
-
-      --Shadow-Soft: 0 8px 32px rgba(0, 0, 0, 0.4);
     }
 
     * { box-sizing: border-box; -webkit-font-smoothing: antialiased; margin: 0; padding: 0; }
@@ -49,12 +47,12 @@
     ::-webkit-scrollbar-track { background: var(--Obsidian); }
     ::-webkit-scrollbar-thumb { background: var(--Glass-Border); border-radius: 99px; }
 
-    /* FIGMA-GRADE CONTAINER: HARD 1000px CONSTRAINT */
+    /* INCREASED CONTAINER: 1150px for Nops-style width */
     .container {
       width: 100%;
-      max-width: 1000px;
+      max-width: 1150px;
       margin: 0 auto;
-      padding: 0 var(--S-32); /* Uniform 32px side padding */
+      padding: 0 var(--S-48);
       position: relative;
     }
 
@@ -74,132 +72,104 @@
     header.scrolled { height: 64px; background: rgba(10, 10, 10, 0.95); }
     header .container { display: flex; align-items: center; justify-content: space-between; padding: 0; }
 
-    .logo { display: flex; align-items: center; gap: var(--S-16); cursor: pointer; }
+    .logo { display: flex; align-items: center; gap: var(--S-12); cursor: pointer; }
     .logo-mark { width: 32px; height: 32px; border-radius: 8px; background: var(--Mint); transform: rotate(-8deg); }
     .logo-text { font-size: 20px; font-weight: 900; letter-spacing: -0.04em; }
 
-    nav { display: flex; gap: var(--S-40); margin-left: var(--S-48); }
-    nav a { font-size: 11px; font-weight: 700; color: var(--White); text-decoration: none; text-transform: uppercase; letter-spacing: 0.1em; opacity: 0.5; transition: 0.2s; }
+    nav { display: flex; gap: var(--S-32); margin-left: var(--S-48); }
+    nav a { font-size: 11px; font-weight: 800; color: var(--White); text-decoration: none; text-transform: uppercase; letter-spacing: 0.1em; opacity: 0.5; transition: 0.2s; }
     nav a:hover { opacity: 1; color: var(--Mint); }
 
-    /* HARDENED BUTTON SYSTEM */
     .btn {
-      height: 56px; /* Standard Expert Height */
-      padding: 0 var(--S-32);
-      border-radius: var(--Radius-XL);
+      height: 52px;
+      padding: 0 var(--S-24);
+      border-radius: 12px;
       border: 1px solid transparent;
-      font-size: 14px;
+      font-size: 13px;
       font-weight: 800;
       cursor: pointer;
       display: inline-flex;
       align-items: center;
       justify-content: center;
       gap: 12px;
-      transition: all 0.2s cubic-bezier(0.4, 0, 0.2, 1);
+      transition: all 0.2s ease;
       text-decoration: none;
-      user-select: none;
     }
     .btn-primary { background: var(--Mint); color: var(--Obsidian); }
-    .btn-primary:hover { background: #6effeb; transform: translateY(-1px); }
-
-    .btn-outline { background: transparent; border-color: var(--Glass-Border); color: var(--White); }
+    .btn-outline { background: transparent; border: 1px solid var(--Glass-Border); color: var(--White); }
     .btn-outline:hover { background: var(--Glass); border-color: var(--White); }
-
-    .btn-large { height: 72px; padding: 0 var(--S-64); font-size: 18px; border-radius: 20px; }
-    .btn-small { height: 44px; padding: 0 var(--S-24); font-size: 12px; }
+    .btn-large { height: 64px; padding: 0 var(--S-48); font-size: 16px; }
 
     .view { display: none; width: 100%; min-height: 100vh; }
     .view.active { display: block !important; animation: viewIn 0.5s ease-out forwards; }
     .view.active.auth-view { display: flex !important; }
     .view:not(.active) { display: none !important; }
-
     @keyframes viewIn { from { opacity: 0; transform: translateY(10px); } to { opacity: 1; transform: translateY(0); } }
 
-    /* FLUID TYPOGRAPHY & RHYTHMIC SPACING */
-    section.block { padding: var(--S-160) 0; width: 100%; }
-    section.block-large { padding: var(--S-200) 0; }
+    /* NOPS-STYLE TYPOGRAPHY & SPACING */
+    section.block { padding: var(--S-160) 0; }
+    .section-eyebrow { font-size: 11px; font-weight: 900; color: var(--Mint); text-transform: uppercase; letter-spacing: 0.2em; margin-bottom: var(--S-16); }
+    .section-title { font-size: 48px; font-weight: 800; line-height: 1.1; letter-spacing: -0.03em; margin: 0; }
+    .section-desc { font-size: 18px; color: var(--Neutral-400); line-height: 1.6; margin-top: var(--S-24); max-width: 500px; font-weight: 500; }
 
-    .section-eyebrow { font-size: 12px; font-weight: 900; color: var(--Mint); text-transform: uppercase; letter-spacing: 0.3em; margin-bottom: var(--S-24); text-shadow: 0 0 15px rgba(87, 215, 192, 0.4); }
-    .section-title { font-size: clamp(40px, 6vw, 64px); font-weight: 900; line-height: 0.95; letter-spacing: -0.06em; margin: 0; }
-    .section-desc { font-size: 20px; color: var(--Neutral-400); line-height: 1.6; margin-top: var(--S-40); max-width: 600px; }
-
-    /* HERO - Background spans 100vw, Content spans 1000px */
-    .hero { padding: 180px 0 var(--S-120); text-align: center; position: relative; background: radial-gradient(circle at 70% 20%, rgba(87, 215, 192, 0.1), transparent 40%); }
-    .hero-headline { font-size: clamp(56px, 8vw, 84px); font-weight: 900; line-height: 0.95; letter-spacing: -0.07em; margin-bottom: var(--S-32); }
+    /* HERO Visual: Spans 100vw, but content centered at 1150px */
+    .hero { padding: 180px 0 var(--S-80); text-align: center; position: relative; background: radial-gradient(circle at 70% 20%, rgba(87, 215, 192, 0.1), transparent 40%); }
+    .hero-headline { font-size: 84px; font-weight: 900; line-height: 0.95; letter-spacing: -0.05em; margin-bottom: var(--S-24); }
     .hero-headline span { color: var(--Mint); }
-    .hero-sub { font-size: 20px; color: var(--Neutral-400); max-width: 800px; margin: 0 auto var(--S-80); line-height: 1.6; }
-
-    .hero-visual { width: 100vw; margin: 0 auto; height: 750px; position: relative; z-index: 1; display: flex; align-items: center; justify-content: center; overflow: hidden; }
+    .hero-visual { width: 100vw; margin: 0 auto; height: 850px; position: relative; display: flex; align-items: center; justify-content: center; overflow: hidden; }
     .hero-visual img { width: 100%; height: 100%; object-fit: contain; }
 
+    /* Hero CTA card matches 1000px precisely */
     .hero-cta-card {
         width: 100%;
         max-width: 1000px;
         margin: -100px auto 0;
         background: #000;
         border: 1px solid var(--Mint);
-        border-radius: 40px;
-        padding: var(--S-64) var(--S-80);
+        border-radius: 24px;
+        padding: var(--S-48) var(--S-64);
         display: flex;
         align-items: center;
         justify-content: space-between;
         text-align: left;
         z-index: 10;
         position: relative;
-        box-shadow: 0 60px 120px rgba(0,0,0,0.8);
+        box-shadow: 0 40px 100px rgba(0,0,0,0.5);
     }
-    .hero-cta-card h3 { font-size: 36px; font-weight: 900; margin: 0; line-height: 1.1; color: #fff; letter-spacing: -0.04em; }
-    .bullet-list { display: flex; flex-direction: column; gap: var(--S-16); margin-top: var(--S-32); }
-    .bullet-item { display: flex; align-items: center; gap: var(--S-16); font-weight: 700; color: var(--Neutral-400); font-size: 16px; }
-    .check-icon { color: var(--Mint); font-weight: 900; font-size: 18px; }
+    .hero-cta-card h3 { font-size: 32px; font-weight: 900; margin: 0; color: #fff; }
 
-    /* HARDENED COMPONENTS */
-    .glass-card { background: var(--Glass); border: 1px solid var(--Glass-Border); border-radius: var(--Radius-L); padding: var(--S-48); transition: 0.3s cubic-bezier(0.4, 0, 0.2, 1); }
-    .glass-card:hover { border-color: var(--Mint); background: rgba(255,255,255,0.06); transform: translateY(-8px); }
+    /* REDUCED TEXT / INCREASED IMAGE GRID */
+    .grid-nops { display: grid; grid-template-columns: 1fr 1.5fr; gap: var(--S-80); align-items: center; }
+    .glass-card { background: var(--Glass); border: 1px solid var(--Glass-Border); border-radius: var(--Radius-L); padding: var(--S-48); transition: 0.3s; }
+    .glass-card:hover { border-color: var(--Mint); }
 
-    .grid-3 { display: grid; grid-template-columns: repeat(3, 1fr); gap: var(--S-32); }
     .grid-4 { display: grid; grid-template-columns: repeat(4, 1fr); gap: var(--S-24); }
+    .grid-3 { display: grid; grid-template-columns: repeat(3, 1fr); gap: var(--S-32); }
 
-    .case-logo { height: 48px; width: 120px; background: linear-gradient(135deg, rgba(87,215,192,0.1), rgba(0,77,74,0.05)); border-radius: 12px; margin-bottom: var(--S-32); }
+    /* RECTANGULAR FINAL CTA */
+    .final-banner {
+      background: linear-gradient(135deg, var(--Teal-900), #000);
+      border-radius: 24px;
+      padding: var(--S-64) var(--S-80);
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      text-align: left;
+      border: 1px solid var(--Glass-Border);
+    }
+    .final-banner h2 { font-size: 40px; font-weight: 800; letter-spacing: -0.04em; margin: 0; flex: 1; }
+    .final-banner p { font-size: 16px; color: var(--Neutral-400); margin: 0 var(--S-48); flex: 1.2; }
 
-    .step-card { display: flex; flex-direction: column; justify-content: space-between; min-height: 240px; }
-    .step-num { font-size: 12px; font-weight: 900; opacity: 0.3; letter-spacing: 0.3em; }
-    .step-text { font-size: 28px; font-weight: 900; letter-spacing: -0.05em; }
-
-    .wellness-widget { background: #000; border-radius: 24px; padding: var(--S-48); border: 1px solid var(--Glass-Border); }
-    .target-value { font-size: 40px; font-weight: 900; color: var(--White); margin: var(--S-16) 0; letter-spacing: -0.05em; }
-    .target-track { height: 10px; background: var(--Glass-Border); border-radius: 99px; position: relative; overflow: hidden; margin: var(--S-32) 0; }
-    .target-fill { height: 100%; background: var(--Mint); width: 72%; box-shadow: 0 0 25px rgba(87, 215, 192, 0.4); }
-
-    .final-banner { background: linear-gradient(135deg, var(--Teal-900), #000); border-radius: 48px; padding: var(--S-120) var(--S-80); text-align: center; border: 1px solid var(--Glass-Border); }
-
-    footer { padding: var(--S-120) 0 var(--S-80); border-top: 1px solid var(--Glass-Border); background: #000; }
-    .footer-links { display: grid; grid-template-columns: repeat(4, 1fr); gap: var(--S-80); }
-    .footer-col h4 { font-size: 11px; font-weight: 900; text-transform: uppercase; letter-spacing: 0.2em; color: var(--Neutral-500); margin-bottom: var(--S-32); }
-    .footer-col a { display: block; color: var(--Neutral-400); text-decoration: none; margin-bottom: var(--S-16); font-size: 14px; transition: 0.2s; }
-    .footer-col a:hover { color: var(--White); }
-
-    /* AUTH VIEWS */
-    .auth-view { display: flex; align-items: center; justify-content: center; min-height: 100vh; padding: var(--S-120) var(--S-24); background: #000; }
-    .auth-card { width: 440px; }
-    .form-group { margin-bottom: var(--S-32); }
-    .form-label { display: block; font-size: 11px; font-weight: 800; color: var(--Neutral-400); margin-bottom: var(--S-12); letter-spacing: 0.1em; }
-    .form-input { width: 100%; height: 56px; background: #000; border: 1px solid var(--Glass-Border); border-radius: 14px; color: #fff; padding: 0 var(--S-24); font-size: 15px; outline: none; transition: 0.2s; }
-    .form-input:focus { border-color: var(--Mint); }
-
-    #signedBar { display: none; align-items: center; gap: var(--S-20); background: var(--Glass); border: 1px solid var(--Glass-Border); padding: var(--S-8) var(--S-24); border-radius: 99px; }
-    #signedBar.active { display: flex; }
+    footer { padding: var(--S-120) 0 var(--S-64); border-top: 1px solid var(--Glass-Border); background: #000; }
+    .footer-links { display: grid; grid-template-columns: repeat(4, 1fr); gap: var(--S-64); }
+    .footer-col h4 { font-size: 10px; font-weight: 900; text-transform: uppercase; color: var(--Neutral-500); margin-bottom: var(--S-24); }
+    .footer-col a { display: block; color: var(--Neutral-400); text-decoration: none; margin-bottom: var(--S-12); font-size: 13px; }
 
     @media (max-width: 1050px) {
       .hero-headline { font-size: 52px; }
-      .section-title { font-size: 40px; }
       nav { display: none; }
-    }
-    @media (max-width: 800px) {
-      section.block { padding: var(--S-80) 0; }
-      .hero-visual { height: 450px; }
-      .hero-cta-card { flex-direction: column; text-align: center; gap: var(--S-40); padding: var(--S-48) var(--S-32); margin-top: 0; }
-      .grid-4, .grid-3, .footer-links { grid-template-columns: 1fr; }
+      .grid-nops { grid-template-columns: 1fr; gap: var(--S-48); }
+      .final-banner { flex-direction: column; text-align: center; gap: var(--S-32); }
     }
   </style>
 </head>
@@ -211,20 +181,20 @@
         <div class="logo-mark"></div>
         <div class="logo-text">PrecisionFit 3D</div>
       </div>
-      <nav>
-        <a href="#services">Engine</a>
-        <a href="#case-studies">Studies</a>
-        <a href="#about">Philosophy</a>
+      <nav id="marketingNav">
+        <a href="#services">Technology</a>
+        <a href="#case-studies">Case studies</a>
+        <a href="#about">About</a>
       </nav>
       <div style="flex:1"></div>
       <div style="display:flex; align-items:center; gap:var(--S-16)">
         <div id="authButtons" style="display:flex; gap:var(--S-12)">
-          <button class="btn btn-outline btn-small" id="btnNavSignIn">Sign In</button>
-          <button class="btn btn-primary btn-small" id="btnNavSignUp">Get Access</button>
+          <button class="btn btn-outline" id="btnNavSignIn">Sign In</button>
+          <button class="btn btn-primary" id="btnNavSignUp">Get Access</button>
         </div>
         <div id="signedBar">
-          <span style="font-weight:700; font-size:13px; color:var(--Mint)" id="userEmailDisplay"></span>
-          <button class="btn btn-outline btn-small" id="btnSignOut" style="color:var(--Error); padding:0 var(--S-16); height:36px">Exit</button>
+          <span style="font-weight:700; font-size:12px; color:var(--Mint)" id="userEmailDisplay"></span>
+          <button class="btn btn-outline" id="btnSignOut" style="color:var(--Error); height:36px">Exit</button>
         </div>
       </div>
     </div>
@@ -238,19 +208,14 @@
         <h1 class="hero-headline">Precision is<br><span>the new luxury.</span></h1>
         <p class="hero-sub">Clinical-grade 3D body modeling for bespoke tailors and elite fashion-tech. 85+ measurements in under 60 seconds — no expertise required.</p>
       </div>
-
-      <div class="hero-visual">
-        <img src="/assets/homepage_image.png?v=2.0.2" alt="3D Model">
-      </div>
-
+      <div class="hero-visual"><img src="/assets/homepage_image.png?v=2.0.2" alt="3D Model"></div>
       <div class="container">
         <div class="hero-cta-card">
           <div>
             <h3>One scan. Perfectly fitted.</h3>
-            <div class="bullet-list">
-              <div class="bullet-item"><span class="check-icon">✓</span> Clinical 3D measurements in under 60 seconds.</div>
-              <div class="bullet-item"><span class="check-icon">✓</span> Smartphone capture with gyroscope voice guidance.</div>
-              <div class="bullet-item"><span class="check-icon">✓</span> Reduce returns by up to 80% with AI twins.</div>
+            <div style="display:flex; gap:24px; margin-top:16px">
+              <span style="font-size:14px; color:var(--Neutral-400)">✓ Clinical 3D Data</span>
+              <span style="font-size:14px; color:var(--Neutral-400)">✓ Smartphone Capture</span>
             </div>
           </div>
           <button class="btn btn-primary btn-large" id="btnHeroTrial">Start Private Trial</button>
@@ -258,19 +223,19 @@
       </div>
     </section>
 
-    <!-- Platform -->
-    <section class="block-large" id="services">
+    <!-- Platform (Reduced Text, Increased Image, 1150px Container) -->
+    <section class="block" id="services">
       <div class="container">
-        <div style="display:grid; grid-template-columns: 1fr 1.1fr; gap:var(--S-80); align-items:center">
+        <div class="grid-nops">
           <div>
             <div class="section-eyebrow">Platform</div>
-            <h2 class="section-title">Intelligent body scanning built for perfect fits.</h2>
-            <p class="section-desc">Boost fit confidence and drive loyalty. From a single photo to precise 3D measurements, our AI instantly detects body contours for flawless garment fitting.</p>
-            <button class="btn btn-primary btn-large" style="margin-top:var(--S-64)" id="btnGetKeys">Get API Access</button>
+            <h2 class="section-title">Intelligent body scanning for perfect fits.</h2>
+            <p class="section-desc">Boost fit confidence and drive loyalty. Precise 3D measurements instantly detect body contours for flawless fitting.</p>
+            <button class="btn btn-primary" style="margin-top:var(--S-48)" id="btnGetKeys">Get API Access</button>
           </div>
-          <div class="glass-card" style="padding:var(--S-24); border-radius:40px; position:relative">
-            <img src="/assets/body-capture.png" style="width:100%; border-radius:32px">
-            <div style="position:absolute; bottom:var(--S-40); right:var(--S-40); background:var(--Obsidian); border:1px solid var(--Glass-Border); padding:var(--S-16) var(--S-24); border-radius:16px; font-size:11px; font-weight:900; color:var(--Mint); letter-spacing:0.1em">BODY CAPTURE VISUALIZATION</div>
+          <div class="glass-card" style="padding:12px; border-radius:24px; position:relative">
+            <img src="/assets/body-capture.png" style="width:100%; border-radius:16px">
+            <div style="position:absolute; bottom:24px; right:24px; background:var(--Obsidian); border:1px solid var(--Glass-Border); padding:10px 16px; border-radius:8px; font-size:10px; font-weight:800; color:var(--Mint)">BODY CAPTURE VISUALIZATION</div>
           </div>
         </div>
       </div>
@@ -279,36 +244,37 @@
     <!-- Case Studies -->
     <section class="block" id="case-studies">
       <div class="container">
-        <div style="display:flex; justify-content:space-between; align-items:flex-end; margin-bottom:var(--S-80)">
+        <div style="display:flex; justify-content:space-between; align-items:flex-end; margin-bottom:var(--S-64)">
           <div><div class="section-eyebrow">Case studies</div><h2 class="section-title">Trusted by elite brands.</h2></div>
-          <div style="font-weight:900; font-size:12px; color:var(--Neutral-500); letter-spacing:0.2em">EXPERT EXAMPLES</div>
         </div>
         <div class="grid-4">
-          <div class="glass-card"><div class="case-logo"></div><p style="font-size:15px; color:var(--Neutral-400); line-height:1.5"><b>Fashion Forward</b> reduced remakes by 90% and alteration costs by 50%.</p></div>
-          <div class="glass-card"><div class="case-logo"></div><p style="font-size:15px; color:var(--Neutral-400); line-height:1.5"><b>Custom Tailors</b> increased scan-to-pattern efficiency by 99%.</p></div>
-          <div class="glass-card"><div class="case-logo"></div><p style="font-size:15px; color:var(--Neutral-400); line-height:1.5"><b>RetailChain</b> improved customer loyalty and retention through data-driven fits.</p></div>
-          <div class="glass-card"><div class="case-logo"></div><p style="font-size:15px; color:var(--Neutral-400); line-height:1.5"><b>E-Commerce Plus</b> cut fit-related complaints by 85% using 3D digital twins.</p></div>
+          <div class="glass-card" style="padding:var(--S-32)">
+            <p style="font-size:14px; font-weight:600; color:var(--Neutral-400)"><b>Fashion Forward</b> reduced remakes by 90% with AI-powered fit recommendations.</p>
+          </div>
+          <div class="glass-card" style="padding:var(--S-32)">
+            <p style="font-size:14px; font-weight:600; color:var(--Neutral-400)"><b>Custom Tailors</b> increased scan-to-pattern efficiency by 99%.</p>
+          </div>
+          <div class="glass-card" style="padding:var(--S-32)">
+            <p style="font-size:14px; font-weight:600; color:var(--Neutral-400)"><b>RetailChain</b> improved customer loyalty through perfect fits.</p>
+          </div>
+          <div class="glass-card" style="padding:var(--S-32)">
+            <p style="font-size:14px; font-weight:600; color:var(--Neutral-400)"><b>E-Commerce Plus</b> cut fit-related complaints by 85%.</p>
+          </div>
         </div>
       </div>
     </section>
 
     <!-- Benefits -->
-    <section class="block-large">
+    <section class="block">
       <div class="container">
-        <div style="max-width:700px; margin-bottom:var(--S-80)">
+        <div style="max-width:600px; margin-bottom:var(--S-64)">
           <div class="section-eyebrow">Benefits</div>
           <h2 class="section-title">Premium aesthetics, measurable trust.</h2>
         </div>
-        <div class="grid-3" style="margin-bottom:var(--S-80)">
-          <div class="glass-card"><h3>Diagnostic confidence</h3><p style="font-size:15px; color:var(--Neutral-400); margin-top:var(--S-16)">Gyroscope-guided voice instructions and visual feedback for solo scanning.</p></div>
-          <div class="glass-card"><h3>Superior Accuracy</h3><p style="font-size:15px; color:var(--Neutral-400); margin-top:var(--S-16)">More consistent than manual expert tailors. Precise 3D digital twins in < 60s.</p></div>
-          <div class="glass-card"><h3>Seamless Integration</h3><p style="font-size:15px; color:var(--Neutral-400); margin-top:var(--S-16)">Robust API keys for direct backend integration into your professional workflow.</p></div>
-        </div>
-        <div class="grid-4">
-          <div class="glass-card step-card"><span class="step-num">STEP 01</span><span class="step-text">Capture</span></div>
-          <div class="glass-card step-card"><span class="step-num">STEP 02</span><span class="step-text">Scan</span></div>
-          <div class="glass-card step-card"><span class="step-num">STEP 03</span><span class="step-text">Analyze</span></div>
-          <div class="glass-card step-card"><span class="step-num">STEP 04</span><span class="step-text">Act</span></div>
+        <div class="grid-3" style="margin-bottom:var(--S-64)">
+          <div class="glass-card"><h3>Diagnostic confidence</h3><p style="font-size:14px; color:var(--Neutral-400); margin-top:var(--S-16)">Support for solo scanning with gyroscope voice instructions.</p></div>
+          <div class="glass-card"><h3>Superior Accuracy</h3><p style="font-size:14px; color:var(--Neutral-400); margin-top:var(--S-16)">More consistent than manual expert tailors. Precise twins in < 60s.</p></div>
+          <div class="glass-card"><h3>Seamless Integration</h3><p style="font-size:14px; color:var(--Neutral-400); margin-top:var(--S-16)">Robust API keys for direct professional backend integration.</p></div>
         </div>
       </div>
     </section>
@@ -316,34 +282,31 @@
     <!-- Wellness -->
     <section class="block">
       <div class="container">
-        <div style="display:grid; grid-template-columns: 1fr 1fr; gap:var(--S-120); align-items:center">
+        <div class="grid-nops">
           <div>
             <div class="section-eyebrow">Wellness</div>
             <h2 class="section-title">Turn scans into actionable targets.</h2>
-            <div style="margin-top:var(--S-80)">
-              <div class="wellness-widget">
-                <div style="display:flex; justify-content:space-between; align-items:center"><span style="font-size:11px; font-weight:900; color:var(--Neutral-500); letter-spacing:0.1em">WAIST TARGET</span><span style="color:var(--Mint); font-size:11px; font-weight:900">LIVE PULSE</span></div>
-                <div class="target-value">72.0 cm</div>
-                <div class="target-track"><div class="target-fill"></div></div>
-                <div style="display:flex; justify-content:space-between; font-size:12px; font-weight:800; color:var(--Neutral-500)"><span>52 CM</span><span>96 CM</span></div>
-              </div>
+            <div class="wellness-widget" style="margin-top:var(--S-48)">
+              <div style="display:flex; justify-content:space-between; align-items:center"><span style="font-size:10px; font-weight:900; color:var(--Neutral-500)">WAIST TARGET</span><span style="color:var(--Mint); font-size:10px; font-weight:900">LIVE</span></div>
+              <div class="target-value">72.0 cm</div>
+              <div class="target-track"><div class="target-fill"></div></div>
             </div>
           </div>
-          <div class="glass-card" style="height:520px; text-align:center; display:flex; flex-direction:column; justify-content:center; gap:var(--S-48)">
-            <div style="width:240px; height:240px; border-radius:50%; border:12px solid var(--Teal-900); border-top-color:var(--Mint); margin:0 auto; display:flex; align-items:center; justify-content:center"><span style="font-weight:900; font-size:24px; color:var(--Mint)">3D ZONES</span></div>
-            <h3 style="margin:0; font-size:28px; font-weight:900">Body target</h3>
+          <div class="glass-card" style="height:400px; text-align:center; display:flex; flex-direction:column; justify-content:center; gap:32px">
+            <div style="width:200px; height:200px; border-radius:50%; border:12px solid var(--Teal-900); border-top-color:var(--Mint); margin:0 auto; display:flex; align-items:center; justify-content:center"><span style="font-weight:900; font-size:24px; color:var(--Mint)">3D ZONES</span></div>
+            <h3 style="margin:0; font-size:24px; font-weight:900">Body target</h3>
           </div>
         </div>
       </div>
     </section>
 
-    <!-- Final CTA -->
-    <section class="block-large">
+    <!-- Final CTA (Rectangular Banner) -->
+    <section class="block">
       <div class="container">
         <div class="final-banner">
-          <h2 style="font-size:clamp(48px, 6vw, 72px); letter-spacing:-0.06em">Perfect fit starts<br>with one scan.</h2>
-          <p style="margin:var(--S-48) auto var(--S-80); font-size:22px; color:var(--Neutral-400); max-width:800px; line-height:1.6">Join brands and tailors delivering flawless garments using AI-powered body scanning. No expertise needed.</p>
-          <button class="btn btn-primary btn-large" style="background:#fff; color:var(--Obsidian)" id="btnFinalTrial">Start Private 7-Day Trial</button>
+          <h2>Perfect fit starts<br>with one scan.</h2>
+          <p>Join brands and tailors delivering flawless garments using AI-powered body scanning. No expertise needed.</p>
+          <button class="btn btn-primary btn-large" style="background:#fff; color:var(--Obsidian)" id="btnFinalTrial">Start Private Trial</button>
         </div>
       </div>
     </section>
@@ -356,35 +319,34 @@
           <div class="footer-col"><h4>Resources</h4><a href="#">Quickstart</a><a href="#">API Docs</a></div>
           <div class="footer-col"><h4>Legal</h4><a href="#">Privacy</a><a href="#">Terms</a></div>
         </div>
-        <div style="margin-top:var(--S-120); padding-top:var(--S-40); border-top:1px solid var(--Glass-Border); display:flex; justify-content:space-between; align-items:center; font-size:14px; opacity:0.3">
+        <div style="margin-top:80px; padding-top:40px; border-top:1px solid var(--Glass-Border); display:flex; justify-content:space-between; align-items:center; font-size:13px; opacity:0.3">
           <span>© 2026 PrecisionFit 3D AI. All rights reserved.</span>
-          <div style="display:flex; gap:var(--S-40)"><span>Twitter</span><span>LinkedIn</span></div>
+          <div style="display:flex; gap:32px"><span>Twitter</span><span>LinkedIn</span></div>
         </div>
       </div>
     </footer>
   </div>
 
-  <!-- 2. SIGN IN VIEW -->
+  <!-- AUTH VIEWS (Centered) -->
   <div id="viewSignIn" class="view auth-view">
     <div class="auth-card glass-card">
-      <h2 style="font-size:32px; font-weight:900; margin-bottom:var(--S-12); letter-spacing:-0.04em">Welcome back</h2>
-      <p style="color:var(--Neutral-400); margin-bottom:var(--S-48); font-size:15px">Identify yourself to enter the command center.</p>
+      <h2 style="font-size:32px; font-weight:800; margin-bottom:12px">Welcome back</h2>
+      <p style="color:var(--Neutral-400); margin-bottom:48px">Identify yourself to enter the command center.</p>
       <form id="signInForm">
-        <div class="form-group"><label class="form-label">IDENTITY (EMAIL)</label><input type="email" class="form-input" id="inEmail" required></div>
-        <div class="form-group"><label class="form-label">SECRET KEY</label><input type="password" class="form-input" id="inPass" required></div>
+        <div class="form-group"><label class="form-label">EMAIL</label><input type="email" class="form-input" id="inEmail" required></div>
+        <div class="form-group"><label class="form-label">PASSWORD</label><input type="password" class="form-input" id="inPass" required></div>
         <button type="submit" class="btn btn-primary" style="width:100%">Enter Workbench</button>
       </form>
     </div>
   </div>
 
-  <!-- 3. SIGN UP VIEW -->
   <div id="viewSignUp" class="view auth-view">
-    <div class="auth-card glass-card">
-      <h2 style="font-size:32px; font-weight:900; margin-bottom:var(--S-12); letter-spacing:-0.04em">Get Access</h2>
-      <p style="color:var(--Neutral-400); margin-bottom:var(--S-48); font-size:15px">Start your precision journey today.</p>
+    <div class="auth-card glass-card" style="width:400px">
+      <h2 style="font-size:32px; font-weight:800; margin-bottom:12px">Get Access</h2>
+      <p style="color:var(--Neutral-400); margin-bottom:48px">Start your precision journey today.</p>
       <form id="signUpForm">
-        <div class="form-group"><label class="form-label">PROFESSIONAL NAME</label><input type="text" class="form-input" id="upName"></div>
-        <div class="form-group"><label class="form-label">WORK EMAIL</label><input type="email" class="form-input" id="upEmail" required></div>
+        <div class="form-group"><label class="form-label">FULL NAME</label><input type="text" class="form-input" id="upName"></div>
+        <div class="form-group"><label class="form-label">EMAIL</label><input type="email" class="form-input" id="upEmail" required></div>
         <div class="form-group"><label class="form-label">CREATE KEY</label><input type="password" class="form-input" id="upPass" required></div>
         <button type="submit" class="btn btn-primary" style="width:100%">Initialize Account</button>
       </form>
@@ -394,10 +356,7 @@
   <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2/dist/umd/supabase-js.min.js"></script>
   <script>
     (function() {
-      const config = {
-        supabaseUrl: 'https://blsettabymllulsxtziw.supabase.co',
-        supabaseKey: 'sb_publishable_miCOIXHtlxLkfDgpwE0N-g_BA1Q-x8y'
-      };
+      const config = { supabaseUrl: 'https://blsettabymllulsxtziw.supabase.co', supabaseKey: 'sb_publishable_miCOIXHtlxLkfDgpwE0N-g_BA1Q-x8y' };
       const supabase = window.supabase.createClient(config.supabaseUrl, config.supabaseKey);
 
       function handleRoute() {
