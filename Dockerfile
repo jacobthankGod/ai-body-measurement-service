@@ -23,6 +23,9 @@ RUN pip install --no-cache-dir -r requirements.txt
 # Copy application source
 COPY . .
 
+# Download crucial ML models during build to bypass Git LFS quota
+RUN python scripts/download_models.py
+
 # Environment Defaults
 ENV PORT=5001
 ENV PYTHONPATH=/app

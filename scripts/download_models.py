@@ -61,6 +61,19 @@ def download_deeplab_model():
     print("  (Uses tensorflow hub or direct download)")
 
 
+def download_mediapipe_model():
+    """Download MediaPipe Pose Landmarker."""
+    mp_url = "https://storage.googleapis.com/mediapipe-models/pose_landmarker/pose_landmarker_full/float16/1/pose_landmarker_full.task"
+    mp_path = MODELS_DIR / "pose_landmarker_full.task"
+
+    print("Downloading MediaPipe model...")
+    try:
+        urllib.request.urlretrieve(mp_url, mp_path)
+        print("✅ MediaPipe model ready")
+    except Exception as e:
+        print(f"⚠️ MediaPipe download failed: {e}")
+
+
 def download_custom_body_points():
     """Download CustomBodyPoints.txt."""
     cb_url = "https://github.com/farazBhatti/Human-Body-Measurements-using-Computer-Vision/raw/main/data/customBodyPoints.txt"
@@ -93,7 +106,10 @@ if __name__ == "__main__":
     print("\n2. DeepLab Model (Background Removal)")
     download_deeplab_model()
     
-    print("\n3. Custom Body Points")
+    print("\n3. MediaPipe Model (Pose Detection)")
+    download_mediapipe_model()
+
+    print("\n4. Custom Body Points")
     download_custom_body_points()
     
     print("\n" + "=" * 50)
