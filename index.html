@@ -86,11 +86,10 @@
     .btn-outline:hover { background: var(--Glass); border-color: var(--White); }
     .btn-large { height: 64px; padding: 0 48px; font-size: 18px; border-radius: 20px; }
 
-    /* ABSOLUTE FIX: VIEW VISIBILITY */
     .view { display: none; width: 100%; min-height: 100vh; animation: viewIn 0.5s ease-out forwards; }
     .view.active { display: block; }
     .view.active.auth-view { display: flex !important; }
-    .view:not(.active) { display: none !important; } /* Ensures other pages never bleed into footer */
+    .view:not(.active) { display: none !important; }
 
     @keyframes viewIn { from { opacity: 0; transform: translateY(10px); } to { opacity: 1; transform: translateY(0); } }
 
@@ -99,17 +98,35 @@
     .section-title { font-size: 48px; font-weight: 900; line-height: 1.05; letter-spacing: -0.04em; margin: 0; }
     .section-desc { font-size: 18px; color: var(--Neutral-400); line-height: 1.6; margin: 24px 0 0; max-width: 600px; }
 
-    .hero { padding: 180px 60px 100px; text-align: center; position: relative; }
-    .hero-glow { position: absolute; top: -10%; left: 50%; transform: translateX(-50%); width: 1000px; height: 600px; background: radial-gradient(circle, rgba(87, 215, 192, 0.1) 0%, transparent 70%); pointer-events: none; }
-    .hero-headline { font-size: 84px; font-weight: 900; line-height: 0.95; letter-spacing: -0.06em; margin-bottom: 24px; }
+    /* Hero - SCREEN WIDTH RE-ARCHITECTURE */
+    .hero { padding: 180px 0 100px; text-align: center; position: relative; width: 100vw; left: 50%; right: 50%; margin-left: -50vw; margin-right: -50vw; }
+    .hero-glow { position: absolute; top: -10%; left: 50%; transform: translateX(-50%); width: 120vw; height: 800px; background: radial-gradient(circle, rgba(87, 215, 192, 0.12) 0%, transparent 70%); pointer-events: none; }
+    .hero-headline { font-size: 84px; font-weight: 900; line-height: 0.95; letter-spacing: -0.06em; margin-bottom: 24px; padding: 0 20px; }
     .hero-headline span { color: var(--Mint); }
-    .hero-visual { width: 100%; max-width: 900px; margin: 0 auto; height: 500px; position: relative; z-index: 1; }
-    .hero-visual img { width: 100%; height: 100%; object-fit: contain; animation: float 6s ease-in-out infinite; }
-    @keyframes float { 0%,100%{transform:translateY(0)} 50%{transform:translateY(-15px)} }
 
-    .hero-cta-card { width: 1100px; margin: -60px auto 0; background: rgba(255,255,255,0.03); border: 1px solid var(--Glass-Border); backdrop-filter: blur(24px); border-radius: 32px; padding: 48px 60px; display: flex; align-items: center; justify-content: space-between; text-align: left; z-index: 10; position: relative; }
+    /* Screen-Width Image Container */
+    .hero-visual { width: 100vw; margin: 0 auto; height: 700px; position: relative; z-index: 1; display: flex; align-items: center; justify-content: center; }
+    .hero-visual img { width: 100%; height: 100%; object-fit: contain; animation: float 6s ease-in-out infinite; }
+    @keyframes float { 0%,100%{transform:translateY(0)} 50%{transform:translateY(-20px)} }
+
+    /* COMPLETELY DARK CTA CARD */
+    .hero-cta-card {
+        width: 1100px;
+        margin: -80px auto 0;
+        background: #000; /* COMPLETELY DARK */
+        border: 1px solid var(--Glass-Border);
+        box-shadow: 0 40px 100px rgba(0,0,0,0.8);
+        border-radius: 32px;
+        padding: 56px 72px;
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        text-align: left;
+        z-index: 10;
+        position: relative;
+    }
     .bullet-list { display: flex; flex-direction: column; gap: 16px; margin-top: 32px; }
-    .bullet-item { display: flex; align-items: center; gap: 12px; font-weight: 700; color: var(--Neutral-400); font-size: 15px; }
+    .bullet-item { display: flex; align-items: center; gap: 12px; font-weight: 700; color: var(--Neutral-400); font-size: 16px; }
     .check-icon { color: var(--Mint); font-weight: 900; }
 
     .glass-card { background: var(--Glass); border: 1px solid var(--Glass-Border); border-radius: var(--Radius-L); padding: 40px; transition: 0.3s; }
@@ -135,7 +152,6 @@
     .footer-col a { display: block; color: var(--Neutral-400); text-decoration: none; margin-bottom: 12px; font-size: 14px; transition: 0.2s; }
     .footer-col a:hover { color: var(--White); }
 
-    /* Auth View specific centering */
     .auth-view { display: flex; align-items: center; justify-content: center; min-height: 100vh; padding: 120px 20px; background: #000; }
     .auth-card { width: 440px; }
     .form-group { margin-bottom: 24px; }
@@ -158,9 +174,14 @@
     .main-content { padding: 40px 60px; background: #000; }
 
     @media (max-width: 1200px) {
-      .container, .hero-cta-card, .grid-3, .grid-4, .final-banner { width: calc(100% - 60px); }
+      .hero-cta-card { width: calc(100% - 60px); flex-direction: column; text-align: center; gap: 32px; padding: 40px; }
       .hero-headline { font-size: 52px; }
-      .hero-cta-card { flex-direction: column; text-align: center; gap: 32px; padding: 40px; }
+      .grid-3, .grid-4, .final-banner { width: calc(100% - 60px); margin-left: auto; margin-right: auto; }
+    }
+    @media (max-width: 800px) {
+        .hero-visual { height: 450px; }
+        .hero-cta-card { margin-top: 0; padding: 32px 24px; }
+        .hero-headline { font-size: 42px; }
     }
   </style>
 </head>
@@ -195,7 +216,7 @@
 
   <!-- 1. HOME VIEW -->
   <div id="viewHome" class="view active">
-    <!-- Hero -->
+    <!-- Hero Section with Full Screen Width Image -->
     <section class="hero">
       <div class="hero-glow"></div>
       <h1 class="hero-headline">AI-powered body measuring<br><span>for an effortless, accurate fit.</span></h1>
@@ -205,9 +226,10 @@
         <img src="/assets/homepage_image.png?v=2.0.2" alt="3D Model Visual">
       </div>
 
+      <!-- COMPLETELY DARK CTA CARD -->
       <div class="hero-cta-card">
         <div>
-          <h3 style="font-size:32px; font-weight:900; margin:0">One scan. Perfectly fitted garments.</h3>
+          <h3 style="font-size:36px; font-weight:900; margin:0; line-height:1.1; color:#fff">One scan. Perfectly fitted garments.</h3>
           <div class="bullet-list">
             <div class="bullet-item"><span class="check-icon">✓</span> Get accurate 3D body measurements in under 60 seconds.</div>
             <div class="bullet-item"><span class="check-icon">✓</span> Works anytime, anywhere — just a smartphone required.</div>
@@ -362,7 +384,7 @@
     </footer>
   </div>
 
-  <!-- 2. SIGN IN VIEW (Dedicated Page) -->
+  <!-- 2. SIGN IN VIEW -->
   <div id="viewSignIn" class="view auth-view">
     <div class="auth-card glass-card">
       <h2 style="font-size:32px; font-weight:900; margin:0 0 8px">Welcome back</h2>
@@ -385,7 +407,7 @@
     </div>
   </div>
 
-  <!-- 3. SIGN UP VIEW (Dedicated Page) -->
+  <!-- 3. SIGN UP VIEW -->
   <div id="viewSignUp" class="view auth-view">
     <div class="auth-card glass-card" style="width:640px; padding:0; display:grid; grid-template-columns: 240px 1fr; overflow:hidden">
       <div style="background:var(--Teal-900); padding:40px; display:flex; flex-direction:column; justify-content:space-between; border-right: 1px solid var(--Glass-Border);">
@@ -481,6 +503,8 @@
       };
       const supabase = window.supabase.createClient(config.supabaseUrl, config.supabaseKey);
 
+      let onboardingData = { industry: '' };
+
       window.nextStep = (n) => {
         document.querySelectorAll('.onboarding-step').forEach(s => s.style.display = 'none');
         document.getElementById('step' + n).style.display = 'block';
@@ -489,6 +513,7 @@
       window.selectTile = (el, val) => {
         document.querySelectorAll('.tile').forEach(t => t.classList.remove('selected'));
         el.classList.add('selected');
+        onboardingData.industry = val;
       };
 
       function handleRoute() {
@@ -497,7 +522,7 @@
 
         if (hash === '#signin') document.getElementById('viewSignIn').classList.add('active');
         else if (hash === '#signup') document.getElementById('viewSignUp').classList.add('active');
-        else if (hash === '#dashboard') document.getElementById('viewApp').classList.add('active');
+        else if (hash === '#dashboard' || hash === '#workbench') document.getElementById('viewApp').classList.add('active');
         else document.getElementById('viewHome').classList.add('active');
 
         window.scrollTo(0,0);
@@ -506,12 +531,35 @@
 
       document.getElementById('signInForm').onsubmit = async (e) => {
         e.preventDefault();
+        const btn = document.getElementById('btnInSubmit');
+        btn.disabled = true; btn.textContent = 'Verifying...';
         const { data, error } = await supabase.auth.signInWithPassword({
           email: document.getElementById('inEmail').value,
           password: document.getElementById('inPass').value
         });
         if (error) alert(error.message);
         else window.location.hash = '#dashboard';
+        btn.disabled = false; btn.textContent = 'Enter Workbench';
+      };
+
+      document.getElementById('btnFinalSignUp').onclick = async (e) => {
+        e.preventDefault();
+        const { data, error } = await supabase.auth.signUp({
+          email: document.getElementById('upEmail').value,
+          password: document.getElementById('upPass').value,
+          options: {
+            data: {
+              full_name: document.getElementById('upName').value,
+              company_name: document.getElementById('upCompany').value,
+              industry: onboardingData.industry
+            }
+          }
+        });
+        if (error) alert(error.message);
+        else {
+          alert("Profile Created Successfully!");
+          window.location.hash = '#dashboard';
+        }
       };
 
       document.getElementById('btnSignOut').onclick = async () => {
@@ -529,14 +577,14 @@
         } else {
           bar.classList.remove('active');
           authBtns.style.display = 'flex';
+          if (window.location.hash === '#dashboard') window.location.hash = '#home';
         }
       });
 
       handleRoute();
       window.addEventListener('scroll', () => {
-        const header = document.getElementById('mainHeader');
-        if (window.scrollY > 40) header.classList.add('scrolled');
-        else header.classList.remove('scrolled');
+        if (window.scrollY > 40) document.getElementById('mainHeader').classList.add('scrolled');
+        else document.getElementById('mainHeader').classList.remove('scrolled');
       });
     })();
   </script>
