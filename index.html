@@ -37,6 +37,9 @@
     ::-webkit-scrollbar-track { background: var(--Obsidian); }
     ::-webkit-scrollbar-thumb { background: var(--Glass-Border); border-radius: 99px; }
 
+    /* GLOBAL CONTAINER: 1200px Standard */
+    .container { width: 1200px; margin: 0 auto; position: relative; }
+
     header {
       width: 100%;
       height: 80px;
@@ -84,28 +87,28 @@
     .btn-outline:hover { background: var(--Glass); border-color: var(--White); }
     .btn-large { height: 64px; padding: 0 48px; font-size: 18px; border-radius: 20px; }
 
-    /* VIEW VISIBILITY FIX */
     .view { display: none; width: 100%; min-height: 100vh; }
     .view.active { display: block !important; animation: viewIn 0.5s ease-out forwards; }
     .view.active.auth-view { display: flex !important; }
     @keyframes viewIn { from { opacity: 0; transform: translateY(10px); } to { opacity: 1; transform: translateY(0); } }
 
-    /* SECTION BASICS */
     section.block { padding: 120px 0; width: 100%; }
     .section-eyebrow { font-size: 12px; font-weight: 800; color: var(--Mint); text-transform: uppercase; letter-spacing: 0.2em; margin-bottom: 16px; }
     .section-title { font-size: 48px; font-weight: 900; line-height: 1.05; letter-spacing: -0.04em; margin: 0; }
     .section-desc { font-size: 18px; color: var(--Neutral-400); line-height: 1.6; margin: 24px 0 0; max-width: 600px; }
 
-    /* Hero - FULL SCREEN WIDTH */
-    .hero { padding: 180px 0 100px; text-align: center; position: relative; background: radial-gradient(circle at 70% 20%, rgba(87, 215, 192, 0.1), transparent 40%); }
+    /* HERO - ONLY THIS SECTION USES SCREEN WIDTH RE-ARCHITECTURE */
+    .hero { padding: 180px 0 100px; text-align: center; position: relative; width: 100vw; left: 50%; right: 50%; margin-left: -50vw; margin-right: -50vw; }
+    .hero-glow { position: absolute; top: -10%; left: 50%; transform: translateX(-50%); width: 120vw; height: 800px; background: radial-gradient(circle, rgba(87, 215, 192, 0.12) 0%, transparent 70%); pointer-events: none; }
     .hero-headline { font-size: 84px; font-weight: 900; line-height: 0.95; letter-spacing: -0.06em; margin-bottom: 24px; padding: 0 20px; }
     .hero-headline span { color: var(--Mint); }
     .hero-sub { font-size: 20px; color: var(--Neutral-400); max-width: 800px; margin: 0 auto 60px; line-height: 1.6; padding: 0 20px; }
 
+    /* BIGGER HERO IMAGE CONTAINER - ISOLATED */
     .hero-visual { width: 100vw; margin: 0 auto; height: 950px; position: relative; z-index: 1; display: flex; align-items: center; justify-content: center; overflow: hidden; }
     .hero-visual img { width: 100%; height: 100%; object-fit: contain; }
 
-    /* PREMIUM DARK CTA CARD WITH MINT BORDER */
+    /* CTA CARD - ISOLATED */
     .hero-cta-card {
         width: 1100px;
         margin: -80px auto 0;
@@ -126,7 +129,7 @@
     .bullet-item { display: flex; align-items: center; gap: 12px; font-weight: 700; color: var(--Neutral-400); font-size: 16px; }
     .check-icon { color: var(--Mint); font-weight: 900; font-size: 18px; }
 
-    /* Glass Cards */
+    /* OTHER SECTIONS: Restricted to 1200px for original luxury feel */
     .glass-card { background: var(--Glass); border: 1px solid var(--Glass-Border); border-radius: var(--Radius-L); padding: 40px; transition: 0.3s; }
     .glass-card:hover { border-color: var(--Mint); background: rgba(255,255,255,0.06); transform: translateY(-4px); }
 
@@ -134,7 +137,7 @@
     .grid-4 { display: grid; grid-template-columns: repeat(4, 1fr); gap: 24px; }
 
     /* Case Studies */
-    .case-logo { height: 48px; width: 120px; background: linear-gradient(135deg, rgba(87, 215, 192, 0.1), rgba(0, 77, 74, 0.05)); border-radius: 8px; margin-bottom: 24px; }
+    .case-logo { height: 48px; width: 120px; background: linear-gradient(135deg, rgba(87,215,192,0.1), rgba(0,77,74,0.05)); border-radius: 8px; margin-bottom: 24px; }
 
     /* Steps */
     .step-card { display: flex; flex-direction: column; justify-content: space-between; min-height: 200px; }
@@ -191,7 +194,7 @@
     @media (max-width: 800px) {
       .dashboard-layout { grid-template-columns: 1fr; }
       .sidebar { display: none; }
-      .hero-visual { height: 400px; }
+      .hero-visual { height: 450px; }
       .hero-cta-card { flex-direction: column; text-align: center; gap: 32px; padding: 40px 24px; margin-top: 0; }
       .grid-4, .grid-3 { grid-template-columns: 1fr; }
       .footer-links { grid-template-columns: 1fr 1fr; }
@@ -202,8 +205,9 @@
 </head>
 <body>
 
+  <!-- HEADER -->
   <header id="mainHeader">
-    <div class="logo" id="logoHome">
+    <div class="logo" onclick="window.location.hash='#home'">
       <div class="logo-mark"></div>
       <div class="logo-text">PrecisionFit 3D</div>
     </div>
@@ -231,7 +235,7 @@
     <section class="hero">
       <div class="hero-glow"></div>
       <h1 class="hero-headline">AI-powered body measuring<br><span>for an effortless, accurate fit.</span></h1>
-      <p class="hero-sub">"Unlock your pocket-sized fitting room. Precise 3D modeling with over 85 body measurements in seconds — no expertise or special equipment needed."</p>
+      <p class="hero-sub">"Unlock your pocket-sized fitting room. Precise 3D modeling with over 85 body measurements in seconds — no expertise needed."</p>
 
       <div class="hero-visual">
         <img src="/assets/homepage_image.png?v=2.0.2" alt="3D Model">
@@ -349,30 +353,6 @@
       </div>
     </section>
 
-    <!-- Audience -->
-    <section class="block container">
-      <div class="section-eyebrow">Audience</div>
-      <h2 class="section-title">Built for teams that need measurements at scale.</h2>
-      <div class="grid-4" style="margin-top:60px">
-        <div class="glass-card">
-          <h4 style="margin:0 0 16px; font-size:18px">Hybrid Capture</h4>
-          <p style="font-size:14px; opacity:0.6">Support for "With a Friend" or "Hands-Free" solo scanning with voice guidance.</p>
-        </div>
-        <div class="glass-card">
-          <h4 style="margin:0 0 16px; font-size:18px">Fitness tracking</h4>
-          <p style="font-size:14px; opacity:0.6">Track biometric change over time with high-precision 3D digital twins.</p>
-        </div>
-        <div class="glass-card">
-          <h4 style="margin:0 0 16px; font-size:18px">E-commerce sizing</h4>
-          <p style="font-size:14px; opacity:0.6">Increase recommendation confidence and reduce returns by up to 80%.</p>
-        </div>
-        <div class="glass-card">
-          <h4 style="margin:0 0 16px; font-size:18px">Wellness diagnostics</h4>
-          <p style="font-size:14px; opacity:0.6">Start with clinical-grade baselines for posture and biometric targets.</p>
-        </div>
-      </div>
-    </section>
-
     <!-- Final CTA -->
     <section class="block container">
       <div class="final-banner">
@@ -422,7 +402,7 @@
   <div id="viewSignIn" class="view auth-view">
     <div class="auth-card glass-card">
       <h2 style="font-size:32px; font-weight:900; margin:0 0 8px">Welcome back</h2>
-      <p style="color:var(--Neutral-400); margin:0 0 40px">Enter your credentials to enter the command center.</p>
+      <p style="color:var(--Neutral-400); margin:0 0 40px">Identify yourself to enter the command center.</p>
       <form id="signInForm">
         <div class="form-group"><label class="form-label">PROFESSIONAL EMAIL</label><input type="email" class="form-input" id="inEmail" required></div>
         <div class="form-group"><label class="form-label">ACCESS KEY</label><input type="password" class="form-input" id="inPass" required></div>
