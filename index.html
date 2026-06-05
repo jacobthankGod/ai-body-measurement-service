@@ -4,10 +4,12 @@
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
   <title>PrecisionFit 3D | Professional Body Measurement SaaS</title>
+
   <link rel="icon" type="image/png" href="/assets/body-capture.png">
   <link rel="preconnect" href="https://fonts.googleapis.com" />
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
-  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet" />
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800;900&display=swap" rel="stylesheet" />
+
   <style>
     :root{
       --Neutral-0:#FFFFFF;
@@ -17,221 +19,504 @@
       --Neutral-500:#6B6B6B;
       --Neutral-700:#2E2E2E;
       --Neutral-900:#0A0A0A;
+      --Mint-100:#DDF6F1;
+      --Mint-300:#9BE7D8;
       --Mint-500:#57D7C0;
       --Teal-700:#004D4A;
+      --Success:#28A745;
+      --Warning:#E67E22;
       --Error:#D63031;
+      --Radius-XS:8px;
+      --Radius-S:12px;
+      --Radius-M:20px;
+      --Radius-L:32px;
       --Radius-XL:999px;
       --SoftCardShadow: 0px 10px 30px rgba(0,0,0,0.04);
       --FloatingHeroShadow: 0px 24px 48px rgba(0,0,0,0.08);
       --PageBg:#F7F4EF;
     }
     *{box-sizing:border-box}
-    html,body{height:100%; margin:0; padding:0; font-family:Inter, sans-serif; background:var(--PageBg); color:var(--Neutral-900); overflow-x:hidden}
-    header{width:100%; height:84px; padding:0 40px; display:flex; align-items:center; justify-content:space-between; position:fixed; top:0; z-index:100; background:rgba(255,255,255,0.85); backdrop-filter: blur(12px); border-bottom:1px solid rgba(0,0,0,0.03)}
+    html,body{height:100%; margin:0; padding:0; font-family:'Inter', sans-serif; background:var(--PageBg); color:var(--Neutral-900); overflow-x:hidden}
+
+    /* Global Elements */
+    .container{width:1200px; margin:0 auto; position:relative}
+    header{width:100%; height:84px; padding:0 40px; display:flex; align-items:center; justify-content:space-between; position:fixed; top:0; z-index:1000; background:rgba(247,244,239,0.8); backdrop-filter: blur(20px); border-bottom:1px solid rgba(0,0,0,0.03); transition:all 0.3s ease}
+    header.scrolled{height:72px; background:rgba(255,255,255,0.9); box-shadow:0 4px 20px rgba(0,0,0,0.02)}
+
     .logo{display:flex; align-items:center; gap:16px; cursor:pointer}
-    .logoMark{width:40px; height:40px; border-radius:12px; background:linear-gradient(135deg,#9BE7D8,var(--Teal-700))}
-    .logoText{font-size:24px; font-weight:900; letter-spacing:-0.04em}
-    nav{display:flex; gap:32px}
-    nav a{font-size:13px; font-weight:700; color:var(--Neutral-900); text-decoration:none; text-transform:uppercase; opacity:0.6}
-    .btn{height:44px; padding:0 24px; border-radius:999px; border:none; font-size:14px; font-weight:700; cursor:pointer; display:inline-flex; align-items:center; justify-content:center; gap:8px; transition:all .2s ease; user-select:none; pointer-events: auto !important;}
-    .btnPrimary{background:var(--Neutral-900); color:#fff}
-    .btnGhost{background:rgba(255,255,255,0.7); border:1px solid var(--Neutral-200)}
+    .logoMark{width:40px; height:40px; border-radius:12px; background:linear-gradient(135deg,var(--Mint-300),var(--Teal-700)); position:relative; transform:rotate(-5deg)}
+    .logoText{font-size:24px; font-weight:900; letter-spacing:-0.04em; background:linear-gradient(135deg, var(--Neutral-900), var(--Teal-700)); -webkit-background-clip:text; -webkit-text-fill-color:transparent}
+
+    nav{display:flex; gap:32px; align-items:center}
+    nav a{font-size:13px; font-weight:700; color:var(--Neutral-900); text-decoration:none; text-transform:uppercase; letter-spacing:0.05em; opacity:0.6; transition:opacity 0.2s ease}
+    nav a:hover{opacity:1}
+
+    .btn{height:44px; padding:0 24px; border-radius:999px; border:none; font-size:14px; font-weight:700; cursor:pointer; display:inline-flex; align-items:center; justify-content:center; gap:8px; transition:all .2s ease; user-select:none}
+    .btnPrimary{background:var(--Neutral-900); color:#fff; box-shadow:0 10px 20px rgba(0,0,0,0.1)}
+    .btnPrimary:hover{transform:translateY(-2px); box-shadow:0 15px 30px rgba(0,0,0,0.15)}
+    .btnGhost{background:rgba(255,255,255,0.7); border:1px solid var(--Neutral-200); color:var(--Neutral-900)}
     .btnSmall{height:36px; padding:0 16px; font-size:12px}
+    .btnLarge{height:64px; padding:0 48px; font-size:18px; border-radius:20px}
 
-    .view{display:none}
+    /* Layout Views */
+    .view{display:none; animation:fadeIn 0.4s ease}
     .view.active{display:block}
+    @keyframes fadeIn { from{opacity:0; transform:translateY(10px)} to{opacity:1; transform:translateY(0)} }
 
-    .hero{padding:160px 0 100px; text-align:center; position:relative}
-    .heroHeadline{font-size:56px; font-weight:900; line-height:1.1; margin-bottom:24px}
-    .heroSub{font-size:18px; color:var(--Neutral-500); max-width:700px; margin:0 auto 48px}
-    .mannequin{width:100%; max-width:800px; margin:0 auto; height:500px; overflow:hidden}
-    .mannequin img{width:100%; height:100%; object-fit:contain}
+    /* Sections */
+    section.block{padding:120px 0; width:100%}
+    .sectionEyebrow{font-size:13px; font-weight:800; color:var(--Teal-700); text-transform:uppercase; letter-spacing:0.1em; margin-bottom:16px}
+    .sectionTitle{font-size:48px; font-weight:900; line-height:1.1; letter-spacing:-0.04em; margin:0}
+    .sectionDesc{font-size:18px; color:var(--Neutral-500); line-height:1.6; margin:24px 0 0}
 
-    .heroCta{width:900px; margin:60px auto 0; background:#fff; padding:40px; border-radius:24px; box-shadow:var(--FloatingHeroShadow); display:flex; align-items:center; justify-content:space-between; text-align:left}
+    /* Hero Section */
+    .hero{padding:180px 0 100px; text-align:center; min-height:100vh; background:radial-gradient(circle at 70% 20%, var(--Mint-100), transparent 40%), radial-gradient(circle at 10% 10%, rgba(221,246,241,0.5), transparent 30%)}
+    .heroHeadline{font-size:68px; font-weight:900; line-height:1.05; letter-spacing:-0.05em; margin-bottom:24px; max-width:900px; margin-left:auto; margin-right:auto}
+    .heroSub{font-size:20px; color:var(--Neutral-500); max-width:800px; margin:0 auto 60px; line-height:1.6}
 
-    .app-view{padding:120px 40px}
-    .quota-box{background:#fff; padding:32px; border-radius:20px; box-shadow:var(--SoftCardShadow); margin-bottom:40px}
+    .mannequin{width:100%; max-width:1000px; margin:0 auto; height:600px; position:relative; z-index:1}
+    .mannequin img{width:100%; height:100%; object-fit:contain; animation:float 6s ease-in-out infinite}
+    @keyframes float{ 0%,100%{transform:translateY(0)} 50%{transform:translateY(-20px)} }
 
-    .overlay{position:fixed; inset:0; background:rgba(0,0,0,0.6); backdrop-filter:blur(4px); display:none; align-items:center; justify-content:center; z-index:200}
-    .overlay.open{display:flex}
-    .modal{width:400px; background:#fff; border-radius:24px; padding:32px}
+    .heroCta{width:1100px; margin:-100px auto 0; background:rgba(255,255,255,0.85); backdrop-filter:blur(16px); padding:48px 60px; border-radius:32px; box-shadow:var(--FloatingHeroShadow); display:flex; align-items:center; justify-content:space-between; text-align:left; z-index:10; border:1px solid rgba(255,255,255,0.5)}
+    .heroCta h3{font-size:32px; font-weight:900; margin:0; letter-spacing:-0.03em}
+    .bulletList{margin-top:24px; display:flex; flex-direction:column; gap:12px}
+    .bulletItem{display:flex; align-items:center; gap:16px; font-weight:700; color:var(--Neutral-700)}
+    .iconCheck{width:24px; height:24px; border-radius:50%; background:var(--Mint-500); color:#fff; display:flex; align-items:center; justify-content:center; font-size:12px}
 
-    .signedBar{display:none; align-items:center; gap:12px}
-    .signedBar.show{display:flex}
+    /* Feature Grid */
+    .row3{display:grid; grid-template-columns:repeat(3, 1fr); gap:24px}
+    .row4{display:grid; grid-template-columns:repeat(4, 1fr); gap:20px}
 
-    @media (max-width: 800px) {
-      .heroHeadline{font-size:38px}
-      .heroCta{width:90%; flex-direction:column; gap:24px}
+    .featureCard{background:#fff; border-radius:24px; padding:40px; box-shadow:var(--SoftCardShadow); border:1px solid rgba(0,0,0,0.02); transition:transform 0.3s ease}
+    .featureCard:hover{transform:translateY(-8px)}
+    .featureCard h3{font-size:22px; font-weight:800; margin:0 0 16px; letter-spacing:-0.02em}
+    .featureCard p{font-size:16px; color:var(--Neutral-500); line-height:1.6; margin:0}
+
+    .caseCard{background:#fff; border-radius:24px; padding:32px; border:1px solid var(--Neutral-100); display:flex; flex-direction:column; gap:20px}
+    .caseCard .caseLogo{height:48px; width:120px; background:linear-gradient(135deg, rgba(87,215,192,0.1), rgba(0,77,74,0.05)); border-radius:8px}
+    .caseCard p{font-size:15px; color:var(--Neutral-700); line-height:1.5; margin:0}
+
+    .stepCard{background:#fff; border-radius:20px; padding:32px; min-height:180px; display:flex; flex-direction:column; justify-content:space-between; border:1px solid var(--Neutral-100)}
+    .stepLabel{font-size:12px; font-weight:800; color:var(--Teal-700); opacity:0.4}
+    .stepTitle{font-size:24px; font-weight:900; letter-spacing:-0.03em}
+
+    /* Wellness Mockup */
+    .wellnessGrid{display:grid; grid-template-columns: 1fr 1.2fr; gap:64px; align-items:center}
+    .wellnessCard{background:#fff; border-radius:24px; padding:32px; box-shadow:var(--SoftCardShadow); border:1px solid var(--Neutral-200); position:relative; overflow:hidden}
+    .targetValue{font-size:32px; font-weight:900; margin:8px 0}
+    .sliderTrack{height:6px; background:var(--Neutral-100); border-radius:99px; position:relative; margin:20px 0}
+    .sliderFill{height:100%; background:var(--Mint-500); border-radius:99px; width:72%}
+
+    /* Final Banner */
+    .ctaBanner{width:1200px; margin:0 auto; background:linear-gradient(135deg, var(--Teal-700), #002D2A); border-radius:32px; padding:80px; text-align:center; color:#fff; position:relative; overflow:hidden}
+    .ctaBanner h2{font-size:52px; font-weight:900; margin:0; letter-spacing:-0.04em}
+    .ctaBanner p{font-size:20px; opacity:0.7; margin:24px auto 48px; max-width:700px; line-height:1.6}
+
+    /* Footer */
+    footer{background:#000; padding:100px 0 60px; color:#fff; margin-top:120px}
+    .footerGrid{display:grid; grid-template-columns:repeat(4, 1fr); gap:80px}
+    .footerCol h4{font-size:14px; font-weight:800; text-transform:uppercase; letter-spacing:0.1em; margin:0 0 24px; opacity:0.5}
+    .footerCol a{display:block; color:rgba(255,255,255,0.7); text-decoration:none; margin-bottom:12px; font-size:15px; transition:color 0.2s}
+    .footerCol a:hover{color:#fff}
+
+    /* Auth Views */
+    .auth-view{min-height:100vh; display:flex; align-items:center; justify-content:center; padding:120px 20px; background:var(--Neutral-50)}
+    .auth-card{width:480px; background:#fff; border-radius:32px; padding:48px; box-shadow:0 40px 100px rgba(0,0,0,0.1); border:1px solid rgba(0,0,0,0.03)}
+    .form-group{margin-bottom:24px}
+    .form-group label{display:block; font-size:11px; font-weight:800; text-transform:uppercase; letter-spacing:0.05em; margin-bottom:10px; color:var(--Neutral-700)}
+    .form-input{width:100%; height:56px; border-radius:14px; border:1px solid var(--Neutral-200); padding:0 20px; font-size:16px; outline:none; transition:border-color 0.2s}
+    .form-input:focus{border-color:var(--Teal-700)}
+
+    /* Signed Bar */
+    .signedBar{display:none; align-items:center; gap:20px; background:rgba(255,255,255,0.8); border:1px solid var(--Neutral-200); padding:8px 16px; border-radius:999px}
+    .signedBar.active{display:flex}
+    .userEmail{font-weight:700; font-size:13px}
+
+    /* App View */
+    .app-container{width:1200px; margin:0 auto; padding:120px 0}
+    .quota-box{background:#fff; border-radius:24px; padding:40px; box-shadow:var(--SoftCardShadow); margin-bottom:48px}
+
+    @media (max-width:1240px){
+      .container, .heroInner, .heroCta, .row3, .row4, .footerGrid, .ctaBanner, .app-container {width:calc(100% - 80px)}
+      .heroHeadline{font-size:48px}
+      .heroCta{flex-direction:column; text-align:center; padding:40px}
+    }
+    @media (max-width:800px){
       header{padding:0 20px}
       nav{display:none}
+      .heroHeadline{font-size:38px}
+      .wellnessGrid{grid-template-columns:1fr}
+      .ctaBanner h2{font-size:32px}
+      .footerGrid{grid-template-columns:1fr 1fr; gap:40px}
     }
   </style>
 </head>
 <body>
 
-  <header>
+  <!-- 1. HEADER -->
+  <header id="mainHeader">
     <div class="logo" id="logoHome" onclick="window.location.hash='#home'">
       <div class="logoMark"></div>
       <div class="logoText">PrecisionFit 3D</div>
     </div>
-    <nav>
-      <a href="#services">Technology</a>
-      <a href="#about">About</a>
+
+    <nav id="marketingNav">
+      <a href="#services">Technology & Services</a>
+      <a href="#case-studies">Case studies</a>
+      <a href="#about">About us</a>
     </nav>
+
     <div style="flex:1"></div>
-    <div id="authButtons" style="display:flex; gap:12px">
-      <button class="btn btnGhost btnSmall" id="navSignIn">Sign In</button>
-      <button class="btn btnPrimary btnSmall" id="navSignUp">Sign Up</button>
+
+    <div id="authButtons" style="display:flex; gap:16px">
+      <button class="btn btnGhost btnSmall" id="btnGoSignIn">Sign In</button>
+      <button class="btn btnPrimary btnSmall" id="btnGoSignUp">Sign Up</button>
     </div>
+
     <div class="signedBar" id="signedBar">
-      <span style="font-weight:700; font-size:13px" id="userEmail"></span>
-      <button class="btn btnGhost btnSmall" id="btnSignOut" style="color:red">Sign Out</button>
+      <span class="userEmail" id="userEmailDisplay"></span>
+      <button class="btn btnGhost btnSmall" id="btnSignOut" style="color:var(--Error)">Sign Out</button>
     </div>
   </header>
 
-  <div id="viewMarketing" class="view active">
+  <!-- 2. MARKETING VIEW (Home) -->
+  <div id="viewHome" class="view active">
+    <!-- Hero -->
     <section class="hero">
-      <h1 class="heroHeadline">AI-powered body measuring<br><span style="color:var(--Teal-700)">for a perfect fit.</span></h1>
-      <p class="heroSub">"Experience clinical-grade 3D body measurements in seconds using just your smartphone camera."</p>
-      <div class="mannequin">
-        <img src="/assets/homepage_image.png?v=2.0.2" alt="AI Scan" id="heroImgTag">
-      </div>
-      <div class="heroCta">
-        <div>
-          <h3 style="margin:0; font-size:24px">Start your trial</h3>
-          <p style="margin:8px 0 0; color:var(--Neutral-500)">Get your first 10 scans for free.</p>
+      <div class="heroInner">
+        <h1 class="heroHeadline">
+          AI-powered body measuring<br>
+          <span style="color:var(--Teal-700)">for an effortless, accurate fit.</span>
+        </h1>
+        <p class="heroSub">
+          "Unlock your pocket-sized fitting room. Precise 3D modeling with over 85 body measurements in seconds — no expertise or special equipment needed."
+        </p>
+
+        <div class="mannequin">
+          <img src="/assets/homepage_image.png?v=2.0.2" alt="PrecisionFit 3D">
         </div>
-        <button class="btn btnPrimary" style="height:60px" id="heroGetStarted">Get API Keys</button>
+
+        <div class="heroCta">
+          <div style="flex:1">
+            <h3>One scan. Perfectly fitted garments.</h3>
+            <div class="bulletList">
+              <div class="bulletItem"><div class="iconCheck">✓</div><span>Get accurate 3D body measurements in under 60 seconds.</span></div>
+              <div class="bulletItem"><div class="iconCheck">✓</div><span>Works anytime, anywhere — just a smartphone required.</span></div>
+              <div class="bulletItem"><div class="iconCheck">✓</div><span>Eliminate manual measurements and reduce returns by up to 80%.</span></div>
+            </div>
+          </div>
+          <button class="btn btnPrimary btnLarge" id="btnHeroTrial">Start a 7-Day Trial</button>
+        </div>
       </div>
     </section>
+
+    <!-- Platform -->
+    <section class="block" id="services">
+      <div class="container" style="display:grid; grid-template-columns:1fr 1.1fr; gap:80px; align-items:center">
+        <div>
+          <div class="sectionEyebrow">Platform</div>
+          <h2 class="sectionTitle">Intelligent body scanning built for perfect fits.</h2>
+          <p class="sectionDesc">Boost fit confidence, solve sizing, and drive loyalty. From a single photo to precise 3D measurements, our AI instantly detects body contours for flawless garment fitting.</p>
+          <div style="margin-top:40px; display:flex; gap:16px">
+            <button class="btn btnPrimary" id="btnGetKeys">Get API Keys</button>
+            <button class="btn btnGhost">View Demo</button>
+          </div>
+        </div>
+        <div style="position:relative">
+          <img src="/assets/body-capture.png" alt="Visualization" style="width:100%; border-radius:32px; box-shadow:var(--FloatingHeroShadow)">
+          <div style="position:absolute; bottom:32px; right:32px; background:#fff; padding:16px 24px; border-radius:16px; box-shadow:var(--SoftCardShadow); font-weight:800; font-size:12px; color:var(--Teal-700)">Body Capture Visualization</div>
+        </div>
+      </div>
+    </section>
+
+    <!-- Case Studies -->
+    <section class="block" id="case-studies" style="background:var(--Neutral-100)">
+      <div class="container">
+        <div style="display:flex; justify-content:space-between; align-items:flex-end; margin-bottom:60px">
+          <div style="max-width:550px">
+            <div class="sectionEyebrow">Case studies</div>
+            <h2 class="sectionTitle">Trusted by brands solving fit challenges.</h2>
+            <p class="sectionDesc">Fashion brands, tailors, and retailers use AI Body Scan to eliminate fitting guesswork, reduce returns, and deliver the perfect fit every time.</p>
+          </div>
+          <div style="font-weight:900; opacity:0.3; font-size:14px">4 EXAMPLES</div>
+        </div>
+        <div class="row4">
+          <div class="caseCard"><div class="caseLogo"></div><p><b>Fashion Forward</b> reduced remakes by 90% and alteration costs by 50% with AI-powered fit recommendations.</p></div>
+          <div class="caseCard"><div class="caseLogo"></div><p><b>Custom Tailors</b> increased scan-to-pattern efficiency by 99% with instant accurate measurements.</p></div>
+          <div class="caseCard"><div class="caseLogo"></div><p><b>RetailChain</b> decreased product returns by 20% and improved customer loyalty through perfect fits.</p></div>
+          <div class="caseCard"><div class="caseLogo"></div><p><b>E-Commerce Plus</b> cut fit-related complaints by 85% using 3D digital twins for sizing.</p></div>
+        </div>
+      </div>
+    </section>
+
+    <!-- Benefits -->
+    <section class="block">
+      <div class="container">
+        <div style="max-width:600px; margin-bottom:60px">
+          <div class="sectionEyebrow">Benefits</div>
+          <h2 class="sectionTitle">Premium health-tech aesthetics, measurable trust.</h2>
+          <p class="sectionDesc">Designed to feel diagnostic — built to integrate with your backend.</p>
+        </div>
+        <div class="row3" style="margin-bottom:80px">
+          <div class="featureCard"><h3>Diagnostic confidence</h3><p>Support for "With a Friend" or "Hands-Free" solo scanning with gyroscope-guided voice instructions.</p></div>
+          <div class="featureCard"><h3>Superior Accuracy</h3><p>More consistent than manual measurements from expert tailors. Precise 3D digital twins in under 60 seconds.</p></div>
+          <div class="featureCard"><h3>Seamless Integration</h3><p>No-code SaaS widgets or robust API keys for direct backend integration into your e-commerce workflow.</p></div>
+        </div>
+        <div class="row4">
+          <div class="stepCard"><div class="stepLabel">STEP 01</div><div class="stepTitle">Capture</div></div>
+          <div class="stepCard"><div class="stepLabel">STEP 02</div><div class="stepTitle">Scan</div></div>
+          <div class="stepCard"><div class="stepLabel">STEP 03</div><div class="stepTitle">Analyze</div></div>
+          <div class="stepCard"><div class="stepLabel">STEP 04</div><div class="stepTitle">Act</div></div>
+        </div>
+      </div>
+    </section>
+
+    <!-- Demo Section -->
+    <section class="block" id="about" style="background:#fff">
+      <div class="container">
+        <div class="wellnessGrid">
+          <div class="wellnessCard" style="height:480px; background:linear-gradient(135deg, rgba(87,215,192,0.1), rgba(0,77,74,0.05)); display:flex; align-items:center; justify-content:center">
+             <!-- Interactive visual placeholder -->
+             <div style="width:300px; height:300px; border-radius:50%; background:radial-gradient(circle at 50% 50%, var(--Mint-300), transparent 70%); opacity:0.6; filter:blur(40px)"></div>
+             <div style="position:absolute; width:80%; height:70%; border:2px dashed var(--Teal-700); opacity:0.1; border-radius:24px"></div>
+          </div>
+          <div>
+            <div class="sectionEyebrow">Demo</div>
+            <h2 class="sectionTitle">See the interface in action before you build.</h2>
+            <p class="sectionDesc">Explore a premium scan experience designed around floating measurement cards, posture diagnostics, and body composition analysis.</p>
+            <button class="btn btnPrimary" style="margin-top:40px">Request Private Demo</button>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <!-- Wellness -->
+    <section class="block">
+      <div class="container">
+        <div class="wellnessGrid" style="grid-template-columns:1.2fr 1fr">
+          <div>
+            <div class="sectionEyebrow">Wellness</div>
+            <h2 class="sectionTitle">Turn scans into actionable targets.</h2>
+            <p class="sectionDesc">Slider-based body targets help you create goals aligned to measurable biometric baselines.</p>
+
+            <div style="margin-top:60px; max-width:440px">
+              <div class="wellnessCard">
+                <div style="display:flex; justify-content:space-between; align-items:center">
+                  <span style="font-weight:800; font-size:12px; color:var(--Neutral-500); text-transform:uppercase">Waist target</span>
+                  <div style="background:var(--Teal-700); color:#fff; padding:4px 10px; border-radius:99px; font-size:10px; font-weight:900">LIVE</div>
+                </div>
+                <div class="targetValue">72.0 cm</div>
+                <div class="sliderTrack"><div class="sliderFill"></div></div>
+                <div style="display:flex; justify-content:space-between; font-size:12px; font-weight:700; color:var(--Neutral-500)">
+                  <span>52 cm</span><span>96 cm</span>
+                </div>
+              </div>
+            </div>
+          </div>
+          <div class="wellnessCard" style="height:500px; display:flex; flex-direction:column; align-items:center; justify-content:center; gap:32px">
+            <div style="width:240px; height:240px; border-radius:50%; border:12px solid var(--Mint-100); border-top-color:var(--Mint-500); display:flex; align-items:center; justify-content:center">
+               <span style="font-weight:900; font-size:24px; color:var(--Teal-700)">3D ZONES</span>
+            </div>
+            <h3 style="margin:0; font-weight:900">Body target</h3>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <!-- Audience -->
+    <section class="block" style="background:var(--Neutral-900); color:#fff">
+      <div class="container">
+        <div style="max-width:700px; margin-bottom:80px">
+          <div class="sectionEyebrow" style="color:var(--Mint-500)">Audience</div>
+          <h2 class="sectionTitle" style="color:#fff">Built for teams that need measurements at scale.</h2>
+          <p class="sectionDesc" style="color:rgba(255,255,255,0.6)">Whether you’re tailoring, tracking fitness, or optimizing size recommendations — AI Body Scan helps you get consistent inputs.</p>
+        </div>
+        <div class="row4">
+          <div><h4 style="margin:0 0 16px; font-size:18px; font-weight:900">Hybrid Capture</h4><p style="opacity:0.6; font-size:14px; line-height:1.6">Support for "With a Friend" or "Hands-Free" solo scanning with voice guidance.</p></div>
+          <div><h4 style="margin:0 0 16px; font-size:18px; font-weight:900">Fitness tracking</h4><p style="opacity:0.6; font-size:14px; line-height:1.6">Track biometric change over time with high-precision 3D digital twins.</p></div>
+          <div><h4 style="margin:0 0 16px; font-size:18px; font-weight:900">E-commerce sizing</h4><p style="opacity:0.6; font-size:14px; line-height:1.6">Increase recommendation confidence and reduce returns by up to 80%.</p></div>
+          <div><h4 style="margin:0 0 16px; font-size:18px; font-weight:900">Wellness diagnostics</h4><p style="opacity:0.6; font-size:14px; line-height:1.6">Start with clinical-grade baselines for posture and biometric targets.</p></div>
+        </div>
+      </div>
+    </section>
+
+    <!-- Final CTA -->
+    <section class="block">
+      <div class="container">
+        <div class="ctaBanner">
+          <h2>Perfect fit starts with one scan.</h2>
+          <p>Join brands and tailors who are delivering flawless garments using AI-powered body scanning. No expertise needed. No special equipment. Just precision.</p>
+          <button class="btn btnPrimary btnLarge" style="background:#fff; color:var(--Teal-700)" id="btnFinalTrial">Start a 7-Day Trial</button>
+        </div>
+      </div>
+    </section>
+
+    <!-- Footer -->
+    <footer>
+      <div class="container">
+        <div class="footerGrid">
+          <div class="footerCol">
+            <h4>Product</h4>
+            <a href="#services">Technology</a>
+            <a href="#case-studies">Case studies</a>
+            <a href="#about">Demo</a>
+          </div>
+          <div class="footerCol">
+            <h4>Company</h4>
+            <a href="#about">About</a>
+            <a href="#">Blog</a>
+            <a href="#">Careers</a>
+          </div>
+          <div class="footerCol">
+            <h4>Resources</h4>
+            <a href="/docs/quickstart.html">Quickstart</a>
+            <a href="/docs/api-reference.html">API Reference</a>
+            <a href="/docs/sdk-javascript.html">SDKs</a>
+          </div>
+          <div class="footerCol">
+            <h4>Legal</h4>
+            <a href="#">Privacy</a>
+            <a href="#">Terms</a>
+            <a href="#">Security</a>
+          </div>
+        </div>
+        <div style="margin-top:80px; padding-top:40px; border-top:1px solid rgba(255,255,255,0.1); display:flex; justify-content:space-between; align-items:center">
+          <span style="opacity:0.5; font-size:13px">© 2026 PrecisionFit 3D AI. All rights reserved.</span>
+          <div style="display:flex; gap:24px"><a href="#" style="opacity:0.5; text-decoration:none; font-size:13px; color:#fff">Twitter</a><a href="#" style="opacity:0.5; text-decoration:none; font-size:13px; color:#fff">LinkedIn</a></div>
+        </div>
+      </div>
+    </footer>
   </div>
 
+  <!-- 3. AUTH VIEWS (Dedicated Pages) -->
+  <div id="viewSignIn" class="view auth-view">
+    <div class="auth-card">
+      <h2 style="font-size:32px; font-weight:900; margin:0 0 8px">Welcome back</h2>
+      <p style="color:var(--Neutral-500); margin:0 0 40px">Enter your credentials to access your workbench.</p>
+
+      <form id="signInForm">
+        <div class="form-group">
+          <label>EMAIL ADDRESS</label>
+          <input type="email" class="form-input" id="signInEmail" required placeholder="name@company.com">
+        </div>
+        <div class="form-group">
+          <label>PASSWORD</label>
+          <input type="password" class="form-input" id="signInPassword" required placeholder="••••••••">
+        </div>
+        <button type="submit" class="btn btnPrimary" style="width:100%; height:60px" id="btnSignInSubmit">Continue to Workbench</button>
+      </form>
+      <p style="text-align:center; margin-top:32px; font-size:14px; color:var(--Neutral-500)">
+        Don't have an account? <a href="#signup" style="color:var(--Teal-700); font-weight:800; text-decoration:none">Sign up for free</a>
+      </p>
+    </div>
+  </div>
+
+  <div id="viewSignUp" class="view auth-view">
+    <div class="auth-card">
+      <h2 style="font-size:32px; font-weight:900; margin:0 0 8px">Create your account</h2>
+      <p style="color:var(--Neutral-500); margin:0 0 40px">Start your 7-day trial of clinical-grade 3D scanning.</p>
+
+      <form id="signUpForm">
+        <div class="form-group">
+          <label>EMAIL ADDRESS</label>
+          <input type="email" class="form-input" id="signUpEmail" required placeholder="name@company.com">
+        </div>
+        <div class="form-group">
+          <label>CREATE PASSWORD</label>
+          <input type="password" class="form-input" id="signUpPassword" required minlength="6" placeholder="Min 6 characters">
+        </div>
+        <button type="submit" class="btn btnPrimary" style="width:100%; height:60px" id="btnSignUpSubmit">Start Trial Now</button>
+      </form>
+      <p style="text-align:center; margin-top:32px; font-size:14px; color:var(--Neutral-500)">
+        Already have an account? <a href="#signin" style="color:var(--Teal-700); font-weight:800; text-decoration:none">Sign in here</a>
+      </p>
+    </div>
+  </div>
+
+  <!-- 4. WORKBENCH VIEW -->
   <div id="viewApp" class="view">
-    <div class="app-view">
-      <h2 style="font-size:32px; font-weight:900">Merchant Workbench</h2>
+    <div class="app-container">
+      <div style="display:flex; justify-content:space-between; align-items:flex-end; margin-bottom:48px">
+        <div>
+          <div class="sectionEyebrow">Merchant Workbench</div>
+          <h2 class="sectionTitle">My AI Scans</h2>
+        </div>
+        <div style="display:flex; gap:16px">
+          <button class="btn btnGhost" id="btnKeys">API Keys</button>
+          <button class="btn btnPrimary">+ New Scan</button>
+        </div>
+      </div>
+
       <div class="quota-box">
         <div style="display:flex; justify-content:space-between; margin-bottom:12px">
-          <span style="font-weight:700">Monthly Usage</span>
-          <span id="quotaText">0 / 10 scans</span>
+          <span style="font-weight:800">SCAN QUOTA (TAILOR ELITE)</span>
+          <span id="quotaText">0 / 50 scans used</span>
         </div>
-        <div style="height:8px; background:var(--Neutral-100); border-radius:99px; overflow:hidden">
-          <div id="quotaBar" style="width:0%; height:100%; background:var(--Mint-500); transition:width 1s"></div>
+        <div style="height:10px; background:var(--Neutral-100); border-radius:99px; overflow:hidden">
+          <div id="quotaBar" style="width:0%; height:100%; background:var(--Mint-500); transition:width 1.5s ease"></div>
         </div>
       </div>
+
       <div id="scansGrid" style="display:grid; grid-template-columns:repeat(3, 1fr); gap:24px">
-        <div style="background:#fff; border-radius:24px; padding:60px; text-align:center; border:2px dashed #eee; grid-column:span 3">
-          <p style="color:#999">No scans recorded yet.</p>
+        <div style="background:#fff; border-radius:24px; padding:80px; text-align:center; border:2px dashed var(--Neutral-200); grid-column:span 3">
+          <div style="width:64px; height:64px; background:var(--Neutral-50); border-radius:50%; margin:0 auto 24px; display:flex; align-items:center; justify-content:center; color:var(--Neutral-200); font-size:32px">+</div>
+          <p style="color:var(--Neutral-500); font-weight:700">No scans recorded yet.</p>
         </div>
       </div>
     </div>
   </div>
 
-  <div class="overlay" id="authOverlay">
-    <div class="modal" onclick="event.stopPropagation()">
-      <h2 id="modalTitle" style="margin-top:0">Sign In</h2>
-      <form id="authForm">
-        <div style="margin-bottom:16px">
-          <label style="display:block; font-size:12px; font-weight:700; margin-bottom:8px">EMAIL</label>
-          <input type="email" id="email" required style="width:100%; height:44px; border-radius:12px; border:1px solid #ddd; padding:0 12px">
-        </div>
-        <div style="margin-bottom:24px">
-          <label style="display:block; font-size:12px; font-weight:700; margin-bottom:8px">PASSWORD</label>
-          <input type="password" id="password" required minlength="6" style="width:100%; height:44px; border-radius:12px; border:1px solid #ddd; padding:0 12px">
-        </div>
-        <button type="submit" class="btn btnPrimary" id="btnAuthSubmit" style="width:100%; height:52px">Continue</button>
-        <p style="text-align:center; margin-top:20px; font-size:13px">
-          <a href="#" id="toggleAuth" style="color:var(--Teal-700); font-weight:700; text-decoration:none">Need an account? Sign Up</a>
-        </p>
-      </form>
-    </div>
-  </div>
-
+  <!-- 5. SCRIPTS -->
   <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2/dist/umd/supabase-js.min.js"></script>
   <script>
     (function() {
-      console.log("PfDebug: App Script Start");
+      console.log("PfDebug: PrecisionFit Booting...");
 
-      const config = {
-        supabaseUrl: 'https://blsettabymllulsxtziw.supabase.co',
-        supabaseKey: 'sb_publishable_miCOIXHtlxLkfDgpwE0N-g_BA1Q-x8y'
-      };
+      const SUPABASE_URL = 'https://blsettabymllulsxtziw.supabase.co';
+      const SUPABASE_ANON_KEY = 'sb_publishable_miCOIXHtlxLkfDgpwE0N-g_BA1Q-x8y';
+      const supabase = window.supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
 
-      let supabase = null;
-      let authMode = 'signin';
+      // --- BULLETPROOF NAVIGATION & ROUTING ---
+      function handleRoute() {
+        const hash = window.location.hash || '#home';
+        console.log("PfDebug: Route Triggered ->", hash);
 
-      function initSupabase() {
-        try {
-          if (window.supabase) {
-            supabase = window.supabase.createClient(config.supabaseUrl, config.supabaseKey);
-            console.log("PfDebug: Supabase initialized");
-            setupAuthListener();
-          } else {
-            console.error("PfDebug: Supabase library not found in window");
-          }
-        } catch (e) {
-          console.error("PfDebug: Supabase init error", e);
-        }
-      }
+        // Clear all views
+        document.querySelectorAll('.view').forEach(v => v.classList.remove('active'));
 
-      function setupAuthListener() {
-        if (!supabase) return;
-        supabase.auth.onAuthStateChange((event, session) => {
-          console.log("PfDebug: Auth Change", event);
-          updateUI(session);
-        });
-      }
-
-      function updateUI(session) {
-        const authButtons = document.getElementById('authButtons');
-        const signedBar = document.getElementById('signedBar');
-        const userEmail = document.getElementById('userEmail');
-
-        if (session) {
-          if (authButtons) authButtons.style.display = 'none';
-          if (signedBar) signedBar.classList.add('show');
-          if (userEmail) userEmail.textContent = session.user.email;
+        if (hash === '#signin') {
+          document.getElementById('viewSignIn').classList.add('active');
+        } else if (hash === '#signup') {
+          document.getElementById('viewSignUp').classList.add('active');
+        } else if (hash === '#dashboard' || hash === '#workbench') {
+          document.getElementById('viewApp').classList.add('active');
         } else {
-          if (signedBar) signedBar.classList.remove('show');
-          if (authButtons) authButtons.style.display = 'flex';
+          document.getElementById('viewHome').classList.add('active');
         }
+
+        window.scrollTo(0,0);
       }
 
-      function openAuth(mode = 'signin') {
-        authMode = mode;
-        const modal = document.getElementById('authOverlay');
-        const title = document.getElementById('modalTitle');
-        const toggle = document.getElementById('toggleAuth');
+      window.addEventListener('hashchange', handleRoute);
 
-        if (title) title.textContent = mode === 'signin' ? 'Sign In' : 'Sign Up';
-        if (toggle) toggle.textContent = mode === 'signin' ? 'Need an account? Sign Up' : 'Already have an account? Sign In';
-        if (modal) modal.classList.add('open');
-      }
-
-      function closeAuth() {
-        const modal = document.getElementById('authOverlay');
-        if (modal) modal.classList.remove('open');
-      }
-
-      // --- RESILIENT GLOBAL LISTENER ---
-      document.addEventListener('click', function(e) {
-        const target = e.target.closest('button, a, .logo, .overlay');
+      // --- RESILIENT CLICK HANDLER ---
+      document.addEventListener('click', async function(e) {
+        const target = e.target.closest('button, a, .logo');
         if (!target) return;
 
         const id = target.id;
-        console.log("PfDebug: Global Click on", id || target.tagName);
+        console.log("PfDebug: UI Interaction on ->", id || "anonymous element");
 
-        if (id === 'navSignIn') openAuth('signin');
-        if (id === 'navSignUp' || id === 'heroGetStarted') openAuth('signup');
+        // Auth Navigation
+        if (id === 'btnGoSignIn') window.location.hash = '#signin';
+        if (id === 'btnGoSignUp' || id === 'btnHeroTrial' || id === 'btnFinalTrial') window.location.hash = '#signup';
+        if (id === 'btnGetKeys') window.location.hash = '#signup';
 
-        if (id === 'toggleAuth') {
-          e.preventDefault();
-          openAuth(authMode === 'signin' ? 'signup' : 'signin');
-        }
-
-        if (id === 'authOverlay') closeAuth();
-
+        // Functional buttons
         if (id === 'btnSignOut') {
-          if (supabase) supabase.auth.signOut();
+          await supabase.auth.signOut();
+          window.location.hash = '#home';
         }
 
         if (id === 'logoHome') {
@@ -239,66 +524,69 @@
         }
       }, true);
 
-      // --- AUTH FORM ---
-      const authForm = document.getElementById('authForm');
-      if (authForm) {
-        authForm.onsubmit = async function(e) {
-          e.preventDefault();
-          if (!supabase) {
-            alert("System still loading, please wait...");
-            return;
+      // --- FORM LOGIC ---
+      async function handleAuth(e, mode) {
+        e.preventDefault();
+        const email = document.getElementById(mode + 'Email').value;
+        const password = document.getElementById(mode + 'Password').value;
+        const btn = document.getElementById('btn' + (mode === 'signIn' ? 'SignIn' : 'SignUp') + 'Submit');
+
+        btn.disabled = true;
+        btn.textContent = 'Verifying...';
+
+        try {
+          const { data, error } = (mode === 'signIn')
+            ? await supabase.auth.signInWithPassword({ email, password })
+            : await supabase.auth.signUp({ email, password });
+
+          if (error) throw error;
+          if (data.user) {
+            window.location.hash = '#dashboard';
           }
-
-          const email = document.getElementById('email').value;
-          const password = document.getElementById('password').value;
-          const btn = document.getElementById('btnAuthSubmit');
-
-          btn.disabled = true;
-          btn.textContent = 'Processing...';
-
-          try {
-            const { data, error } = (authMode === 'signin')
-              ? await supabase.auth.signInWithPassword({ email, password })
-              : await supabase.auth.signUp({ email, password });
-
-            if (error) throw error;
-            if (data.user) {
-              closeAuth();
-              window.location.hash = '#dashboard';
-            }
-          } catch (err) {
-            alert(err.message);
-          } finally {
-            btn.disabled = false;
-            btn.textContent = 'Continue';
-          }
-        };
-      }
-
-      // --- ROUTING ---
-      function handleRoute() {
-        const hash = window.location.hash;
-        const marketing = document.getElementById('viewMarketing');
-        const app = document.getElementById('viewApp');
-
-        if (hash === '#dashboard' || hash === '#workbench') {
-          if (marketing) marketing.classList.remove('active');
-          if (app) app.classList.add('active');
-        } else {
-          if (app) app.classList.remove('active');
-          if (marketing) marketing.classList.add('active');
+        } catch (err) {
+          alert(err.message);
+        } finally {
+          btn.disabled = false;
+          btn.textContent = mode === 'signIn' ? 'Continue to Workbench' : 'Start Trial Now';
         }
       }
 
-      window.addEventListener('hashchange', handleRoute);
+      const signInForm = document.getElementById('signInForm');
+      const signUpForm = document.getElementById('signUpForm');
+      if (signInForm) signInForm.onsubmit = (e) => handleAuth(e, 'signIn');
+      if (signUpForm) signUpForm.onsubmit = (e) => handleAuth(e, 'signUp');
 
-      // Initialize
-      window.addEventListener('load', () => {
-        initSupabase();
-        handleRoute();
-        console.log("PfDebug: Fully Loaded");
+      // --- AUTH OBSERVER ---
+      supabase.auth.onAuthStateChange((event, session) => {
+        console.log("PfDebug: Auth Event ->", event);
+        const authButtons = document.getElementById('authButtons');
+        const signedBar = document.getElementById('signedBar');
+        const emailLabel = document.getElementById('userEmailDisplay');
+        const quotaBar = document.getElementById('quotaBar');
+
+        if (session) {
+          authButtons.style.display = 'none';
+          signedBar.classList.add('active');
+          emailLabel.textContent = session.user.email;
+          if (quotaBar) quotaBar.style.width = '30%';
+        } else {
+          signedBar.classList.remove('active');
+          authButtons.style.display = 'flex';
+          if (window.location.hash === '#dashboard') window.location.hash = '#home';
+        }
       });
 
+      // Initialize Page
+      handleRoute();
+
+      // Header scroll effect
+      window.addEventListener('scroll', () => {
+        const header = document.getElementById('mainHeader');
+        if (window.scrollY > 40) header.classList.add('scrolled');
+        else header.classList.remove('scrolled');
+      });
+
+      console.log("PfDebug: App Ready.");
     })();
   </script>
 </body>
