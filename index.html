@@ -37,8 +37,14 @@
     ::-webkit-scrollbar-track { background: var(--Obsidian); }
     ::-webkit-scrollbar-thumb { background: var(--Glass-Border); border-radius: 99px; }
 
-    /* HARDENED COMPACT GRID: 1000px matches Hero CTA precisely and never touches edges */
-    .container { width: 90%; max-width: 1000px; margin: 0 auto; position: relative; }
+    /* GLOBAL CONTAINER: 1100px with robust side-padding for "Breathing Room" */
+    .container {
+      width: 100%;
+      max-width: 1100px;
+      margin: 0 auto;
+      padding: 0 40px; /* Base breathing room */
+      position: relative;
+    }
 
     header {
       width: 100%;
@@ -54,7 +60,7 @@
       transition: all 0.3s ease;
     }
     header.scrolled { height: 64px; background: rgba(10, 10, 10, 0.95); }
-    header .container { display: flex; align-items: center; justify-content: space-between; }
+    header .container { display: flex; align-items: center; justify-content: space-between; padding: 0 40px; }
 
     .logo { display: flex; align-items: center; gap: 12px; cursor: pointer; }
     .logo-mark { width: 32px; height: 32px; border-radius: 8px; background: var(--Mint); transform: rotate(-8deg); }
@@ -65,8 +71,8 @@
     nav a:hover { opacity: 1; color: var(--Mint); }
 
     .btn {
-      height: 40px;
-      padding: 0 20px;
+      height: 44px;
+      padding: 0 24px;
       border-radius: var(--Radius-XL);
       border: 1px solid transparent;
       font-size: 12px;
@@ -98,10 +104,9 @@
     .section-title { font-size: 36px; font-weight: 900; line-height: 1.1; letter-spacing: -0.04em; margin: 0; }
     .section-desc { font-size: 16px; color: var(--Neutral-400); line-height: 1.6; margin: 16px 0 0; max-width: 500px; }
 
-    /* HERO - MAINTAINING FULL WIDTH FOR BACKGROUND ONLY */
+    /* HERO - Background spans 100vw, Content constrained to container */
     .hero { padding: 180px 0 100px; text-align: center; position: relative; background: radial-gradient(circle at 70% 20%, rgba(87, 215, 192, 0.1), transparent 40%); }
-    .hero .container { max-width: 1000px; }
-    .hero-headline { font-size: 72px; font-weight: 900; line-height: 0.95; letter-spacing: -0.06em; margin-bottom: 24px; padding: 0 20px; }
+    .hero-headline { font-size: 72px; font-weight: 900; line-height: 0.95; letter-spacing: -0.06em; margin-bottom: 24px; }
     .hero-headline span { color: var(--Mint); }
 
     .hero-visual { width: 100vw; margin: 0 auto; height: 850px; position: relative; z-index: 1; display: flex; align-items: center; justify-content: center; overflow: hidden; }
@@ -109,7 +114,7 @@
 
     .hero-cta-card {
         width: 100%;
-        max-width: 1000px;
+        max-width: 1000px; /* Constrained slightly more than container for premium inset */
         margin: -80px auto 0;
         background: #000;
         border: 1px solid var(--Mint);
@@ -128,6 +133,7 @@
     .bullet-item { display: flex; align-items: center; gap: 10px; font-weight: 700; color: var(--Neutral-400); font-size: 14px; }
     .check-icon { color: var(--Mint); font-weight: 900; font-size: 14px; }
 
+    /* COMPONENTS */
     .glass-card { background: var(--Glass); border: 1px solid var(--Glass-Border); border-radius: var(--Radius-M); padding: 28px; transition: 0.3s; }
     .glass-card:hover { border-color: var(--Mint); background: rgba(255,255,255,0.06); transform: translateY(-4px); }
 
@@ -152,6 +158,7 @@
     .footer-col h4 { font-size: 10px; font-weight: 900; text-transform: uppercase; letter-spacing: 0.15em; color: var(--Neutral-500); margin-bottom: 20px; }
     .footer-col a { display: block; color: var(--Neutral-400); text-decoration: none; margin-bottom: 10px; font-size: 12px; }
 
+    /* AUTH VIEWS */
     .auth-view { display: flex; align-items: center; justify-content: center; min-height: 100vh; padding: 120px 20px; background: #000; }
     .auth-card { width: 380px; }
     .form-group { margin-bottom: 20px; }
@@ -161,14 +168,17 @@
     #signedBar { display: none; align-items: center; gap: 16px; background: var(--Glass); border: 1px solid var(--Glass-Border); padding: 6px 16px; border-radius: 99px; }
     #signedBar.active { display: flex; }
 
-    @media (max-width: 1050px) {
+    /* MEDIA QUERIES - HARDENING SIDE PADDING */
+    @media (max-width: 1100px) {
+      .container, header .container { padding: 0 40px; }
       .hero-headline { font-size: 52px; }
-      nav { display: none; }
     }
     @media (max-width: 800px) {
-      .hero-visual { height: 400px; }
+      .container, header .container { padding: 0 24px; } /* Stronger side margins for mobile */
+      .hero-visual { height: 450px; }
       .hero-cta-card { flex-direction: column; text-align: center; gap: 24px; padding: 32px 20px; margin-top: 0; }
-      .grid-4, .grid-3 { grid-template-columns: 1fr; }
+      .grid-4, .grid-3, .footer-links { grid-template-columns: 1fr; }
+      nav { display: none; }
     }
   </style>
 </head>
@@ -201,12 +211,12 @@
 
   <!-- 1. HOME VIEW -->
   <div id="viewHome" class="view active">
-    <!-- Hero (Full Width Background Visual) -->
+    <!-- Hero (Background spans 100vw, Content spans 1000px) -->
     <section class="hero">
       <div class="hero-glow"></div>
       <div class="container">
         <h1 class="hero-headline">AI-powered body measuring<br><span>for an effortless, accurate fit.</span></h1>
-        <p class="hero-sub">"Unlock your pocket-sized fitting room. Precise 3D modeling with over 85 body measurements in seconds — no expertise needed."</p>
+        <p class="hero-sub" style="margin: 0 auto 60px;">"Unlock your pocket-sized fitting room. Precise 3D modeling with over 85 body measurements in seconds — no expertise needed."</p>
       </div>
 
       <div class="hero-visual">
@@ -228,7 +238,7 @@
       </div>
     </section>
 
-    <!-- Platform (STRICT 1000px WIDTH) -->
+    <!-- Platform -->
     <section class="block" id="services">
       <div class="container">
         <div style="display:grid; grid-template-columns: 1fr 1fr; gap:40px; align-items:center">
@@ -245,7 +255,7 @@
       </div>
     </section>
 
-    <!-- Case Studies (STRICT 1000px WIDTH) -->
+    <!-- Case Studies -->
     <section class="block" id="case-studies">
       <div class="container">
         <div style="display:flex; justify-content:space-between; align-items:flex-end; margin-bottom:40px">
@@ -261,7 +271,7 @@
       </div>
     </section>
 
-    <!-- Benefits (STRICT 1000px WIDTH) -->
+    <!-- Benefits -->
     <section class="block">
       <div class="container">
         <div style="max-width:550px; margin-bottom:40px">
@@ -282,7 +292,7 @@
       </div>
     </section>
 
-    <!-- Wellness (STRICT 1000px WIDTH) -->
+    <!-- Wellness -->
     <section class="block">
       <div class="container">
         <div style="display:grid; grid-template-columns: 1fr 1fr; gap:60px; align-items:center">
@@ -305,20 +315,6 @@
       </div>
     </section>
 
-    <!-- Audience (STRICT 1000px WIDTH) -->
-    <section class="block">
-      <div class="container">
-        <div class="section-eyebrow">Audience</div>
-        <h2 class="section-title">Built for teams that need precision.</h2>
-        <div class="grid-4" style="margin-top:40px">
-          <div class="glass-card"><h4 style="margin:0 0 12px; font-size:16px">Hybrid Capture</h4><p style="font-size:12px; opacity:0.6">Voice-guided solo scanning.</p></div>
-          <div class="glass-card"><h4 style="margin:0 0 12px; font-size:16px">Fitness tracking</h4><p style="font-size:12px; opacity:0.6">Track biometric change.</p></div>
-          <div class="glass-card"><h4 style="margin:0 0 12px; font-size:16px">E-commerce</h4><p style="font-size:12px; opacity:0.6">Increase fit confidence.</p></div>
-          <div class="glass-card"><h4 style="margin:0 0 12px; font-size:16px">Diagnostics</h4><p style="font-size:12px; opacity:0.6">Clinical-grade baselines.</p></div>
-        </div>
-      </div>
-    </section>
-
     <!-- Final CTA -->
     <section class="block">
       <div class="container">
@@ -330,6 +326,7 @@
       </div>
     </section>
 
+    <!-- Footer -->
     <footer>
       <div class="container">
         <div class="footer-links">
@@ -361,7 +358,7 @@
 
   <!-- 3. SIGN UP VIEW -->
   <div id="viewSignUp" class="view auth-view">
-    <div class="auth-card glass-card">
+    <div class="auth-card glass-card" style="width:400px">
       <h2 style="font-size:32px; font-weight:900; margin:0 0 8px">Get Access</h2>
       <p style="color:var(--Neutral-400); margin:0 0 40px">Start your precision journey today.</p>
       <form id="signUpForm">
@@ -421,8 +418,9 @@
 
       handleRoute();
       window.addEventListener('scroll', () => {
-        if (window.scrollY > 40) document.getElementById('mainHeader').classList.add('scrolled');
-        else document.getElementById('mainHeader').classList.remove('scrolled');
+        const header = document.getElementById('mainHeader');
+        if (window.scrollY > 40) header.classList.add('scrolled');
+        else header.classList.remove('scrolled');
       });
     })();
   </script>
