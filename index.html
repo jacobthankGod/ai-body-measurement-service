@@ -4,10 +4,7 @@
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
   <title>PrecisionFit 3D | Professional Body Measurement SaaS</title>
-
-  <!-- Favicon / Brand Icon -->
   <link rel="icon" type="image/png" href="/assets/body-capture.png">
-
   <link rel="preconnect" href="https://fonts.googleapis.com" />
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
   <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet" />
@@ -36,16 +33,14 @@
     .logoText{font-size:24px; font-weight:900; letter-spacing:-0.04em}
     nav{display:flex; gap:32px}
     nav a{font-size:13px; font-weight:700; color:var(--Neutral-900); text-decoration:none; text-transform:uppercase; opacity:0.6}
-    .btn{height:44px; padding:0 24px; border-radius:999px; border:none; font-size:14px; font-weight:700; cursor:pointer; display:inline-flex; align-items:center; justify-content:center; gap:8px; transition:all .2s ease; user-select:none}
+    .btn{height:44px; padding:0 24px; border-radius:999px; border:none; font-size:14px; font-weight:700; cursor:pointer; display:inline-flex; align-items:center; justify-content:center; gap:8px; transition:all .2s ease; user-select:none; pointer-events: auto !important;}
     .btnPrimary{background:var(--Neutral-900); color:#fff}
     .btnGhost{background:rgba(255,255,255,0.7); border:1px solid var(--Neutral-200)}
     .btnSmall{height:36px; padding:0 16px; font-size:12px}
 
-    /* Layout Views */
     .view{display:none}
     .view.active{display:block}
 
-    /* Hero */
     .hero{padding:160px 0 100px; text-align:center; position:relative}
     .heroHeadline{font-size:56px; font-weight:900; line-height:1.1; margin-bottom:24px}
     .heroSub{font-size:18px; color:var(--Neutral-500); max-width:700px; margin:0 auto 48px}
@@ -54,11 +49,9 @@
 
     .heroCta{width:900px; margin:60px auto 0; background:#fff; padding:40px; border-radius:24px; box-shadow:var(--FloatingHeroShadow); display:flex; align-items:center; justify-content:space-between; text-align:left}
 
-    /* Workbench */
     .app-view{padding:120px 40px}
     .quota-box{background:#fff; padding:32px; border-radius:20px; box-shadow:var(--SoftCardShadow); margin-bottom:40px}
 
-    /* Modal */
     .overlay{position:fixed; inset:0; background:rgba(0,0,0,0.6); backdrop-filter:blur(4px); display:none; align-items:center; justify-content:center; z-index:200}
     .overlay.open{display:flex}
     .modal{width:400px; background:#fff; border-radius:24px; padding:32px}
@@ -77,7 +70,7 @@
 <body>
 
   <header>
-    <div class="logo" id="logoHome">
+    <div class="logo" id="logoHome" onclick="window.location.hash='#home'">
       <div class="logoMark"></div>
       <div class="logoText">PrecisionFit 3D</div>
     </div>
@@ -96,7 +89,6 @@
     </div>
   </header>
 
-  <!-- Views -->
   <div id="viewMarketing" class="view active">
     <section class="hero">
       <h1 class="heroHeadline">AI-powered body measuring<br><span style="color:var(--Teal-700)">for a perfect fit.</span></h1>
@@ -134,9 +126,8 @@
     </div>
   </div>
 
-  <!-- Auth Modal -->
   <div class="overlay" id="authOverlay">
-    <div class="modal">
+    <div class="modal" onclick="event.stopPropagation()">
       <h2 id="modalTitle" style="margin-top:0">Sign In</h2>
       <form id="authForm">
         <div style="margin-bottom:16px">
@@ -157,121 +148,158 @@
 
   <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2/dist/umd/supabase-js.min.js"></script>
   <script>
-    window.addEventListener('DOMContentLoaded', () => {
-      console.log("PfDebug: App Boot Sequence Start");
+    (function() {
+      console.log("PfDebug: App Script Start");
 
-      const SUPABASE_URL = 'https://blsettabymllulsxtziw.supabase.co';
-      const SUPABASE_ANON_KEY = 'sb_publishable_miCOIXHtlxLkfDgpwE0N-g_BA1Q-x8y';
-      const supabase = window.supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
+      const config = {
+        supabaseUrl: 'https://blsettabymllulsxtziw.supabase.co',
+        supabaseKey: 'sb_publishable_miCOIXHtlxLkfDgpwE0N-g_BA1Q-x8y'
+      };
 
+      let supabase = null;
       let authMode = 'signin';
 
-      // --- BULLETPROOF EVENT DELEGATION ---
-      document.addEventListener('click', (e) => {
-        const target = e.target.closest('button, a, .logo');
+      function initSupabase() {
+        try {
+          if (window.supabase) {
+            supabase = window.supabase.createClient(config.supabaseUrl, config.supabaseKey);
+            console.log("PfDebug: Supabase initialized");
+            setupAuthListener();
+          } else {
+            console.error("PfDebug: Supabase library not found in window");
+          }
+        } catch (e) {
+          console.error("PfDebug: Supabase init error", e);
+        }
+      }
+
+      function setupAuthListener() {
+        if (!supabase) return;
+        supabase.auth.onAuthStateChange((event, session) => {
+          console.log("PfDebug: Auth Change", event);
+          updateUI(session);
+        });
+      }
+
+      function updateUI(session) {
+        const authButtons = document.getElementById('authButtons');
+        const signedBar = document.getElementById('signedBar');
+        const userEmail = document.getElementById('userEmail');
+
+        if (session) {
+          if (authButtons) authButtons.style.display = 'none';
+          if (signedBar) signedBar.classList.add('show');
+          if (userEmail) userEmail.textContent = session.user.email;
+        } else {
+          if (signedBar) signedBar.classList.remove('show');
+          if (authButtons) authButtons.style.display = 'flex';
+        }
+      }
+
+      function openAuth(mode = 'signin') {
+        authMode = mode;
+        const modal = document.getElementById('authOverlay');
+        const title = document.getElementById('modalTitle');
+        const toggle = document.getElementById('toggleAuth');
+
+        if (title) title.textContent = mode === 'signin' ? 'Sign In' : 'Sign Up';
+        if (toggle) toggle.textContent = mode === 'signin' ? 'Need an account? Sign Up' : 'Already have an account? Sign In';
+        if (modal) modal.classList.add('open');
+      }
+
+      function closeAuth() {
+        const modal = document.getElementById('authOverlay');
+        if (modal) modal.classList.remove('open');
+      }
+
+      // --- RESILIENT GLOBAL LISTENER ---
+      document.addEventListener('click', function(e) {
+        const target = e.target.closest('button, a, .logo, .overlay');
         if (!target) return;
 
         const id = target.id;
-        console.log("PfDebug: Click Detected on", id || "element without ID");
+        console.log("PfDebug: Global Click on", id || target.tagName);
 
-        // Auth Modals
-        if (['navSignIn', 'navSignUp', 'heroGetStarted'].includes(id)) {
-          authMode = (id === 'navSignIn') ? 'signin' : 'signup';
-          updateAuthModal();
-          document.getElementById('authOverlay').classList.add('open');
-        }
+        if (id === 'navSignIn') openAuth('signin');
+        if (id === 'navSignUp' || id === 'heroGetStarted') openAuth('signup');
 
         if (id === 'toggleAuth') {
           e.preventDefault();
-          authMode = (authMode === 'signin') ? 'signup' : 'signin';
-          updateAuthModal();
+          openAuth(authMode === 'signin' ? 'signup' : 'signin');
         }
 
-        if (target.classList.contains('overlay')) {
-          target.classList.remove('open');
-        }
+        if (id === 'authOverlay') closeAuth();
 
         if (id === 'btnSignOut') {
-          supabase.auth.signOut();
+          if (supabase) supabase.auth.signOut();
         }
 
         if (id === 'logoHome') {
           window.location.hash = '#home';
         }
-      });
+      }, true);
 
-      function updateAuthModal() {
-        document.getElementById('modalTitle').textContent = (authMode === 'signin') ? 'Sign In' : 'Sign Up';
-        document.getElementById('toggleAuth').textContent = (authMode === 'signin') ? 'Need an account? Sign Up' : 'Already have an account? Sign In';
+      // --- AUTH FORM ---
+      const authForm = document.getElementById('authForm');
+      if (authForm) {
+        authForm.onsubmit = async function(e) {
+          e.preventDefault();
+          if (!supabase) {
+            alert("System still loading, please wait...");
+            return;
+          }
+
+          const email = document.getElementById('email').value;
+          const password = document.getElementById('password').value;
+          const btn = document.getElementById('btnAuthSubmit');
+
+          btn.disabled = true;
+          btn.textContent = 'Processing...';
+
+          try {
+            const { data, error } = (authMode === 'signin')
+              ? await supabase.auth.signInWithPassword({ email, password })
+              : await supabase.auth.signUp({ email, password });
+
+            if (error) throw error;
+            if (data.user) {
+              closeAuth();
+              window.location.hash = '#dashboard';
+            }
+          } catch (err) {
+            alert(err.message);
+          } finally {
+            btn.disabled = false;
+            btn.textContent = 'Continue';
+          }
+        };
       }
 
-      // --- Close modal on overlay click ---
-      document.getElementById('authOverlay').addEventListener('click', (e) => {
-        if(e.target.id === 'authOverlay') e.target.classList.remove('open');
-      });
-
-      // --- Auth Logic ---
-      document.getElementById('authForm').addEventListener('submit', async (e) => {
-        e.preventDefault();
-        const email = document.getElementById('email').value;
-        const password = document.getElementById('password').value;
-        const btn = document.getElementById('btnAuthSubmit');
-
-        btn.disabled = true;
-        btn.textContent = 'Processing...';
-
-        try {
-          const { data, error } = (authMode === 'signin')
-            ? await supabase.auth.signInWithPassword({ email, password })
-            : await supabase.auth.signUp({ email, password });
-
-          if (error) throw error;
-          if (data.user) {
-            document.getElementById('authOverlay').classList.remove('open');
-            window.location.hash = '#dashboard';
-          }
-        } catch (err) {
-          alert(err.message);
-        } finally {
-          btn.disabled = false;
-          btn.textContent = 'Continue';
-        }
-      });
-
-      // --- SPA Routing ---
-      const handleRoute = () => {
+      // --- ROUTING ---
+      function handleRoute() {
         const hash = window.location.hash;
-        console.log("PfDebug: Routing to", hash);
+        const marketing = document.getElementById('viewMarketing');
+        const app = document.getElementById('viewApp');
+
         if (hash === '#dashboard' || hash === '#workbench') {
-          document.getElementById('viewMarketing').classList.remove('active');
-          document.getElementById('viewApp').classList.add('active');
-          window.scrollTo(0,0);
+          if (marketing) marketing.classList.remove('active');
+          if (app) app.classList.add('active');
         } else {
-          document.getElementById('viewApp').classList.remove('active');
-          document.getElementById('viewMarketing').classList.add('active');
+          if (app) app.classList.remove('active');
+          if (marketing) marketing.classList.add('active');
         }
-      };
+      }
 
       window.addEventListener('hashchange', handleRoute);
-      handleRoute();
 
-      // --- Auth Observer ---
-      supabase.auth.onAuthStateChange((event, session) => {
-        console.log("PfDebug: Auth Event", event);
-        if (session) {
-          document.getElementById('authButtons').style.display = 'none';
-          document.getElementById('signedBar').classList.add('show');
-          document.getElementById('userEmail').textContent = session.user.email;
-          document.getElementById('quotaBar').style.width = '20%';
-        } else {
-          document.getElementById('signedBar').classList.remove('show');
-          document.getElementById('authButtons').style.display = 'flex';
-          if (window.location.hash === '#dashboard') window.location.hash = '#home';
-        }
+      // Initialize
+      window.addEventListener('load', () => {
+        initSupabase();
+        handleRoute();
+        console.log("PfDebug: Fully Loaded");
       });
 
-      console.log("PfDebug: App Boot Sequence Complete");
-    });
+    })();
   </script>
 </body>
 </html>
