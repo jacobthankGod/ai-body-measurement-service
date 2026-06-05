@@ -12,6 +12,7 @@
 
   <style>
     :root {
+      /* PERFECTED COLORS - DO NOT TOUCH */
       --Obsidian: #0A0A0A;
       --Mint: #57D7C0;
       --Teal-900: #002D2A;
@@ -83,10 +84,14 @@
     .btn-primary:hover { background: #6effeb; transform: translateY(-2px); box-shadow: var(--Shadow-Neon); }
     .btn-outline { background: transparent; border-color: var(--Glass-Border); color: var(--White); }
     .btn-outline:hover { background: var(--Glass); border-color: var(--White); }
-    .btn-large { height: 60px; padding: 0 40px; font-size: 16px; border-radius: 16px; }
+    .btn-large { height: 64px; padding: 0 48px; font-size: 18px; border-radius: 20px; }
 
+    /* ABSOLUTE FIX: VIEW VISIBILITY */
     .view { display: none; width: 100%; min-height: 100vh; animation: viewIn 0.5s ease-out forwards; }
     .view.active { display: block; }
+    .view.active.auth-view { display: flex !important; }
+    .view:not(.active) { display: none !important; } /* Ensures other pages never bleed into footer */
+
     @keyframes viewIn { from { opacity: 0; transform: translateY(10px); } to { opacity: 1; transform: translateY(0); } }
 
     section.block { padding: 120px 0; }
@@ -96,7 +101,7 @@
 
     .hero { padding: 180px 60px 100px; text-align: center; position: relative; }
     .hero-glow { position: absolute; top: -10%; left: 50%; transform: translateX(-50%); width: 1000px; height: 600px; background: radial-gradient(circle, rgba(87, 215, 192, 0.1) 0%, transparent 70%); pointer-events: none; }
-    .hero-headline { font-size: 72px; font-weight: 900; line-height: 0.95; letter-spacing: -0.06em; margin-bottom: 24px; }
+    .hero-headline { font-size: 84px; font-weight: 900; line-height: 0.95; letter-spacing: -0.06em; margin-bottom: 24px; }
     .hero-headline span { color: var(--Mint); }
     .hero-visual { width: 100%; max-width: 900px; margin: 0 auto; height: 500px; position: relative; z-index: 1; }
     .hero-visual img { width: 100%; height: 100%; object-fit: contain; animation: float 6s ease-in-out infinite; }
@@ -130,7 +135,8 @@
     .footer-col a { display: block; color: var(--Neutral-400); text-decoration: none; margin-bottom: 12px; font-size: 14px; transition: 0.2s; }
     .footer-col a:hover { color: var(--White); }
 
-    .auth-view { display: flex; align-items: center; justify-content: center; min-height: 100vh; padding: 120px 20px; }
+    /* Auth View specific centering */
+    .auth-view { display: flex; align-items: center; justify-content: center; min-height: 100vh; padding: 120px 20px; background: #000; }
     .auth-card { width: 440px; }
     .form-group { margin-bottom: 24px; }
     .form-label { display: block; font-size: 11px; font-weight: 800; color: var(--Neutral-400); margin-bottom: 8px; letter-spacing: 0.05em; }
@@ -155,8 +161,6 @@
       .container, .hero-cta-card, .grid-3, .grid-4, .final-banner { width: calc(100% - 60px); }
       .hero-headline { font-size: 52px; }
       .hero-cta-card { flex-direction: column; text-align: center; gap: 32px; padding: 40px; }
-      .dashboard-layout { grid-template-columns: 1fr; }
-      .sidebar { display: none; }
     }
   </style>
 </head>
@@ -191,10 +195,11 @@
 
   <!-- 1. HOME VIEW -->
   <div id="viewHome" class="view active">
+    <!-- Hero -->
     <section class="hero">
       <div class="hero-glow"></div>
       <h1 class="hero-headline">AI-powered body measuring<br><span>for an effortless, accurate fit.</span></h1>
-      <p class="hero-sub">Unlock your pocket-sized fitting room. Precise 3D modeling with over 85 body measurements in seconds — no expertise or special equipment needed.</p>
+      <p class="hero-sub">"Unlock your pocket-sized fitting room. Precise 3D modeling with over 85 body measurements in seconds — no expertise or special equipment needed."</p>
 
       <div class="hero-visual">
         <img src="/assets/homepage_image.png?v=2.0.2" alt="3D Model Visual">
@@ -357,7 +362,7 @@
     </footer>
   </div>
 
-  <!-- 2. SIGN IN VIEW -->
+  <!-- 2. SIGN IN VIEW (Dedicated Page) -->
   <div id="viewSignIn" class="view auth-view">
     <div class="auth-card glass-card">
       <h2 style="font-size:32px; font-weight:900; margin:0 0 8px">Welcome back</h2>
@@ -380,7 +385,7 @@
     </div>
   </div>
 
-  <!-- 3. SIGN UP VIEW (Luxury Multi-Step) -->
+  <!-- 3. SIGN UP VIEW (Dedicated Page) -->
   <div id="viewSignUp" class="view auth-view">
     <div class="auth-card glass-card" style="width:640px; padding:0; display:grid; grid-template-columns: 240px 1fr; overflow:hidden">
       <div style="background:var(--Teal-900); padding:40px; display:flex; flex-direction:column; justify-content:space-between; border-right: 1px solid var(--Glass-Border);">
@@ -392,7 +397,6 @@
       </div>
 
       <div style="padding:40px" id="onboardingFlow">
-        <!-- Step 1 -->
         <div id="step1" class="onboarding-step active">
            <h3 style="margin:0 0 8px; font-size:24px; font-weight:900">Create Account</h3>
            <p style="color:var(--Neutral-500); font-size:14px; margin-bottom:32px">Start with your professional credentials.</p>
@@ -411,7 +415,6 @@
            <button class="btn btn-primary" style="width:100%; height:56px" onclick="nextStep(2)">Next: Business Info</button>
         </div>
 
-        <!-- Step 2 -->
         <div id="step2" class="onboarding-step" style="display:none">
            <h3 style="margin:0 0 8px; font-size:24px; font-weight:900">Business Details</h3>
            <p style="color:var(--Neutral-500); font-size:14px; margin-bottom:32px">Identify your specialization.</p>
@@ -435,8 +438,8 @@
     </div>
   </div>
 
-  <!-- 4. COMMAND CENTER (DASHBOARD) -->
-  <div id="viewApp" class="view" style="padding-top:80px">
+  <!-- 4. APP VIEW -->
+  <div id="viewApp" class="view">
     <div class="dashboard-layout">
       <div class="sidebar">
         <div style="font-size:11px; font-weight:900; letter-spacing:0.2em; color:var(--Mint); margin-bottom:40px">COMMAND CENTER</div>
@@ -449,42 +452,21 @@
       </div>
 
       <div class="main-content">
-        <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:60px">
+        <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 60px;">
           <div>
-            <h2 style="font-size:40px; font-weight:900; margin:0">Welcome back, <span id="userNameHeader" style="color:var(--Mint)">Merchant</span></h2>
-            <p style="color:var(--Neutral-400); margin-top:8px">Here is your real-time scan intelligence.</p>
+            <h2 style="font-size: 40px; font-weight: 900; margin: 0;">Welcome back, <span id="userNameHeader" style="color: var(--Mint);">Merchant</span></h2>
+            <p style="color: var(--Neutral-400); margin-top: 8px;">Here is your real-time scan intelligence.</p>
           </div>
-          <button class="btn btn-primary" style="height:56px; padding:0 32px">+ New AI Capture</button>
+          <button class="btn btn-primary" style="height: 56px; padding: 0 32px;">+ New AI Capture</button>
         </div>
 
-        <div class="grid-3" style="margin-bottom:60px">
-          <div class="glass-card" style="position:relative; overflow:hidden">
-            <div style="font-size:11px; font-weight:900; color:var(--Mint); margin-bottom:8px">MONTHLY CAPACITY</div>
-            <div style="font-size:40px; font-weight:900" id="usageCount">0 / 50</div>
-            <p style="color:var(--Neutral-500); font-size:12px; margin-top:8px">Plan: <span id="userTier" style="color:var(--White); font-weight:800">Elite</span></p>
-            <div class="target-track" style="margin-top:24px"><div class="target-fill" id="usageBar" style="width:5%"></div></div>
-          </div>
-
+        <div class="grid-3" style="margin-bottom: 60px;">
           <div class="glass-card">
-            <div style="font-size:11px; font-weight:900; color:var(--Mint); margin-bottom:8px">ACTIVE CLIENTS</div>
-            <div style="font-size:40px; font-weight:900">0</div>
-            <p style="color:var(--Neutral-500); font-size:12px; margin-top:8px">3D Twins stored in vault</p>
+            <div style="font-size: 11px; font-weight: 900; color: var(--Mint); margin-bottom: 8px;">MONTHLY CAPACITY</div>
+            <div style="font-size: 40px; font-weight: 900;" id="usageCount">0 / 50</div>
+            <p style="color: var(--Neutral-500); font-size: 12px; margin-top: 8px;">Plan: <span id="userTier" style="color: var(--White); font-weight: 800;">Elite</span></p>
+            <div class="target-track" style="margin-top: 24px;"><div class="target-fill" id="usageBar" style="width: 5%;"></div></div>
           </div>
-
-          <div class="glass-card">
-            <div style="font-size:11px; font-weight:900; color:var(--Mint); margin-bottom:8px">ACCURACY SCORE</div>
-            <div style="font-size:40px; font-weight:900">99.8%</div>
-            <p style="color:var(--Neutral-500); font-size:12px; margin-top:8px">Average biometric precision</p>
-          </div>
-        </div>
-
-        <h3 style="font-size:24px; font-weight:900; margin-bottom:32px">Recent Body Scans</h3>
-        <div id="scansGrid" style="display:grid; grid-template-columns:repeat(3, 1fr); gap:24px">
-           <div class="glass-card" style="grid-column: span 3; text-align:center; padding:100px 0; border:2px dashed var(--Glass-Border)">
-              <div style="width:64px; height:64px; background:var(--Glass); border-radius:50%; margin:0 auto 24px; display:flex; align-items:center; justify-content:center; color:var(--Neutral-500); font-size:32px">+</div>
-              <h4 style="margin:0; font-size:18px">No scans in the vault yet</h4>
-              <p style="color:var(--Neutral-400); margin-top:8px">Start your first AI body scan to see precision data here.</p>
-           </div>
         </div>
       </div>
     </div>
@@ -493,15 +475,12 @@
   <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2/dist/umd/supabase-js.min.js"></script>
   <script>
     (function() {
-      console.log("PfDebug: PrecisionFit v2.1 booting...");
+      const config = {
+        supabaseUrl: 'https://blsettabymllulsxtziw.supabase.co',
+        supabaseKey: 'sb_publishable_miCOIXHtlxLkfDgpwE0N-g_BA1Q-x8y'
+      };
+      const supabase = window.supabase.createClient(config.supabaseUrl, config.supabaseKey);
 
-      const SUPABASE_URL = 'https://blsettabymllulsxtziw.supabase.co';
-      const SUPABASE_ANON_KEY = 'sb_publishable_miCOIXHtlxLkfDgpwE0N-g_BA1Q-x8y';
-      const supabase = window.supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
-
-      let onboardingData = { industry: '' };
-
-      // --- UI UTILS ---
       window.nextStep = (n) => {
         document.querySelectorAll('.onboarding-step').forEach(s => s.style.display = 'none');
         document.getElementById('step' + n).style.display = 'block';
@@ -510,14 +489,10 @@
       window.selectTile = (el, val) => {
         document.querySelectorAll('.tile').forEach(t => t.classList.remove('selected'));
         el.classList.add('selected');
-        onboardingData.industry = val;
       };
 
-      // --- ROUTING ENGINE ---
       function handleRoute() {
         const hash = window.location.hash || '#home';
-        console.log("PfDebug: Route ->", hash);
-
         document.querySelectorAll('.view').forEach(v => v.classList.remove('active'));
 
         if (hash === '#signin') document.getElementById('viewSignIn').classList.add('active');
@@ -529,45 +504,14 @@
       }
       window.addEventListener('hashchange', handleRoute);
 
-      // --- AUTH LOGIC ---
       document.getElementById('signInForm').onsubmit = async (e) => {
         e.preventDefault();
-        const btn = document.getElementById('btnInSubmit');
-        btn.disabled = true; btn.textContent = 'Verifying...';
-
         const { data, error } = await supabase.auth.signInWithPassword({
           email: document.getElementById('inEmail').value,
           password: document.getElementById('inPass').value
         });
-
         if (error) alert(error.message);
         else window.location.hash = '#dashboard';
-        btn.disabled = false; btn.textContent = 'Enter Workbench';
-      };
-
-      document.getElementById('btnFinalSignUp').onclick = async (e) => {
-        e.preventDefault();
-        const btn = document.getElementById('btnFinalSignUp');
-        btn.disabled = true; btn.textContent = 'Creating Profile...';
-
-        const { data, error } = await supabase.auth.signUp({
-          email: document.getElementById('upEmail').value,
-          password: document.getElementById('upPass').value,
-          options: {
-            data: {
-              full_name: document.getElementById('upName').value,
-              company_name: document.getElementById('upCompany').value,
-              industry: onboardingData.industry
-            }
-          }
-        });
-
-        if (error) alert(error.message);
-        else {
-          alert("Elite Profile Initialized. Welcome to PrecisionFit.");
-          window.location.hash = '#dashboard';
-        }
-        btn.disabled = false; btn.textContent = 'Complete Setup';
       };
 
       document.getElementById('btnSignOut').onclick = async () => {
@@ -575,27 +519,16 @@
         window.location.hash = '#home';
       };
 
-      // --- STATE OBSERVER ---
       supabase.auth.onAuthStateChange((event, session) => {
         const authBtns = document.getElementById('authButtons');
         const bar = document.getElementById('signedBar');
-        const emailLabel = document.getElementById('userEmailDisplay');
-
         if (session) {
-          if (authBtns) authBtns.style.display = 'none';
-          if (bar) bar.classList.add('active');
-          if (emailLabel) emailLabel.textContent = session.user.email;
-          document.getElementById('userNameHeader').textContent = session.user.user_metadata.full_name || 'Merchant';
-
-          // Load live usage from DB (Simulated for this overhaul)
-          setTimeout(() => {
-             document.getElementById('usageBar').style.width = '12%';
-             document.getElementById('usageCount').textContent = '6 / 50';
-          }, 500);
+          authBtns.style.display = 'none';
+          bar.classList.add('active');
+          document.getElementById('userEmailDisplay').textContent = session.user.email;
         } else {
-          if (bar) bar.classList.remove('active');
-          if (authBtns) authBtns.style.display = 'flex';
-          if (window.location.hash === '#dashboard') window.location.hash = '#home';
+          bar.classList.remove('active');
+          authBtns.style.display = 'flex';
         }
       });
 
