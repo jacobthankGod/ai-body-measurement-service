@@ -469,13 +469,11 @@
   <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2/dist/umd/supabase-js.min.js"></script>
   <script>
     (function() {
-      // THE "SAFE BOOT" ARCHITECTURE
       window.onload = function() {
         console.log("PfDebug: KORRA Engine Booting...");
 
         if (typeof window.supabase === 'undefined') {
-          console.error("PfError: Supabase CDN failed to load. Re-attempting in 2s...");
-          setTimeout(window.onload, 2000);
+          console.error("PfError: Supabase CDN failed to load.");
           return;
         }
 
@@ -484,33 +482,18 @@
           supabaseKey: 'sb_publishable_miCOIXHtlxLkfDgpwE0N-g_BA1Q-x8y'
         };
 
-        let supabase;
-        try {
-          supabase = window.supabase.createClient(config.supabaseUrl, config.supabaseKey);
-          console.log("PfDebug: Supabase initialized successfully.");
-        } catch (e) {
-          console.error("PfError: createClient failed:", e);
-        }
+        const supabase = window.supabase.createClient(config.supabaseUrl, config.supabaseKey);
 
-        // --- SINGLE SOURCE OF TRUTH ROUTING ---
         function handleRoute() {
           const hash = window.location.hash || '#home';
-          console.log("PfDebug: Route change detected ->", hash);
-
           document.querySelectorAll('.view').forEach(v => v.classList.remove('active'));
-
-          if (hash === '#signin') {
-            document.getElementById('viewSignIn').classList.add('active');
-          } else if (hash === '#signup') {
-            document.getElementById('viewSignUp').classList.add('active');
-          } else {
-            document.getElementById('viewHome').classList.add('active');
-          }
+          if (hash === '#signin') document.getElementById('viewSignIn').classList.add('active');
+          else if (hash === '#signup') document.getElementById('viewSignUp').classList.add('active');
+          else document.getElementById('viewHome').classList.add('active');
           window.scrollTo(0,0);
         }
         window.addEventListener('hashchange', handleRoute);
 
-        // --- BULLETPROOF EVENT DELEGATION ---
         document.addEventListener('click', (e) => {
           const target = e.target.closest('button, .logo, a, .mosaic-card, .btn-view-more');
           if (!target) return;
@@ -518,9 +501,7 @@
           const id = target.id;
           const href = target.getAttribute('href');
 
-          // Case 1: Accordion Toggle
           if (id === 'btnToggleImpact' || target.classList.contains('btn-view-more')) {
-             console.log("PfDebug: Toggling Accordion");
              const accordion = document.getElementById('impactAccordion');
              const btn = document.getElementById('btnToggleImpact');
              accordion.classList.toggle('active');
@@ -528,39 +509,26 @@
              return;
           }
 
-          // Case 2: Routing Buttons (Update hash only)
-          if (id === 'btnNavSignIn' || href === '#signin') {
-            window.location.hash = '#signin';
-          } else if (id === 'btnNavSignUp' || id === 'btnHeroTrial' || id === 'btnFinalTrial' || id === 'btnParadoxFix' || id === 'btnDistanceFix' || id === 'btnEngineStart' || href === '#signup' || target.classList.contains('mosaic-card')) {
-            window.location.hash = '#signup';
-          } else if (id === 'logoHome' || target.classList.contains('logo')) {
-            window.location.hash = '#home';
-          }
+          if (id === 'btnNavSignIn' || href === '#signin') window.location.hash = '#signin';
+          else if (id === 'btnNavSignUp' || id === 'btnHeroTrial' || id === 'btnFinalTrial' || id === 'btnParadoxFix' || id === 'btnDistanceFix' || id === 'btnEngineStart' || href === '#signup' || target.classList.contains('mosaic-card')) window.location.hash = '#signup';
+          else if (id === 'logoHome' || target.classList.contains('logo')) window.location.hash = '#home';
 
-          // Case 3: Auth Actions
-          if (id === 'btnSignOut' && supabase) {
-            supabase.auth.signOut();
+          if (id === 'btnSignOut') supabase.auth.signOut();
+        });
+
+        supabase.auth.onAuthStateChange((event, session) => {
+          const authBtns = document.getElementById('authButtons');
+          const bar = document.getElementById('signedBar');
+          if (session) {
+            if(authBtns) authBtns.style.display = 'none';
+            if(bar) bar.classList.add('active');
+            document.getElementById('userEmailDisplay').textContent = session.user.email;
+          } else {
+            if(bar) bar.classList.remove('active');
+            if(authBtns) authBtns.style.display = 'flex';
           }
         });
 
-        // --- AUTH OBSERVER ---
-        if (supabase) {
-          supabase.auth.onAuthStateChange((event, session) => {
-            const authBtns = document.getElementById('authButtons');
-            const bar = document.getElementById('signedBar');
-            if (session) {
-              if(authBtns) authBtns.style.display = 'none';
-              if(bar) bar.classList.add('active');
-              const display = document.getElementById('userEmailDisplay');
-              if(display) display.textContent = session.user.email;
-            } else {
-              if(bar) bar.classList.remove('active');
-              if(authBtns) authBtns.style.display = 'flex';
-            }
-          });
-        }
-
-        // Finalize Boot
         handleRoute();
         window.addEventListener('scroll', () => {
           const header = document.getElementById('mainHeader');
