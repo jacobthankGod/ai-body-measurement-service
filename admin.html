@@ -58,7 +58,6 @@
     .tab-view.active { display: block; animation: fadeIn 0.3s ease-out; }
     @keyframes fadeIn { from { opacity: 0; transform: translateY(5px); } to { opacity: 1; transform: translateY(0); } }
 
-    /* SEARCH BAR STYLING (Phase 5) */
     .search-wrapper { position: relative; margin-bottom: 32px; }
     .search-input {
       width: 100%; height: 52px; background: rgba(255,255,255,0.05); border: 1px solid var(--Glass-Border);
@@ -76,6 +75,18 @@
 
     .btn-action { background: var(--Glass); border: 1px solid var(--Glass-Border); color: #fff; padding: 6px 12px; border-radius: 8px; font-size: 11px; cursor: pointer; transition: 0.2s; }
     .btn-action:hover { border-color: var(--Mint); color: var(--Mint); }
+    .btn-primary { background: var(--Mint); color: var(--Obsidian); border: none; padding: 12px 24px; border-radius: 12px; font-weight: 800; cursor: pointer; transition: 0.2s; }
+
+    /* MODAL (Phase 6) */
+    .modal-overlay {
+      position: fixed; inset: 0; background: rgba(0,0,0,0.9); z-index: 2000;
+      display: none; align-items: center; justify-content: center; backdrop-filter: blur(10px);
+    }
+    .modal-overlay.active { display: flex; }
+    .modal-card {
+      width: 100%; max-width: 440px; background: #0a0a0a; border: 1px solid var(--Glass-Border);
+      border-radius: 24px; padding: var(--S-48);
+    }
 
     #loadingOverlay {
         position: fixed; inset: 0; background: #000; z-index: 9999; display: flex; align-items: center; justify-content: center;
@@ -86,6 +97,27 @@
 <body>
 
   <div id="loadingOverlay">Verifying System Authority...</div>
+
+  <!-- CREDIT OVERRIDE MODAL (Phase 6) -->
+  <div class="modal-overlay" id="overrideModal">
+    <div class="modal-card">
+      <h2 style="font-size:24px; margin-bottom:12px">Credit Overdrive</h2>
+      <p style="color:var(--Neutral-400); margin-bottom:32px">Manually set merchant scan quota.</p>
+
+      <div style="display:flex; flex-direction:column; gap:20px">
+        <div>
+          <label style="font-size:10px; font-weight:900; color:var(--Neutral-500); display:block; margin-bottom:8px">MERCHANT BRAND</label>
+          <div id="targetMerchantName" style="font-weight:800; font-size:18px; color:var(--White)">--</div>
+        </div>
+        <div>
+          <label style="font-size:10px; font-weight:900; color:var(--Neutral-500); display:block; margin-bottom:8px">NEW CREDIT BALANCE</label>
+          <input type="number" id="newCreditValue" class="search-input" style="margin-bottom:0" placeholder="50">
+        </div>
+        <button class="btn-primary" id="btnConfirmOverride" style="height:52px">Apply Override</button>
+        <button class="btn-action" style="border:none" onclick="document.getElementById('overrideModal').classList.remove('active')">Cancel</button>
+      </div>
+    </div>
+  </div>
 
   <header>
     <div class="container">
@@ -115,8 +147,11 @@
           </div>
 
           <div class="sidebar-card" style="border-color:var(--Mint)">
-            <h4 style="font-size:10px; font-weight:900; color:var(--Mint); margin-bottom:8px">ADMIN KEY</h4>
-            <code style="font-size:11px; color:var(--Neutral-400)">korra_admin_****************</code>
+            <h4 style="font-size:10px; font-weight:900; color:var(--Mint); margin-bottom:8px">ADMIN KEY (REVEAL)</h4>
+            <div style="display:flex; align-items:center; gap:12px">
+              <code id="adminKeyDisplay" style="font-size:11px; color:var(--Neutral-400); flex:1">korra_admin_************</code>
+              <button id="btnRevealKey" style="background:none; border:none; color:var(--Mint); cursor:pointer; font-size:14px">👁</button>
+            </div>
           </div>
         </aside>
 
@@ -154,7 +189,6 @@
                 <div style="font-size:11px; color:var(--Neutral-500)">Real-time Global Ledger</div>
               </div>
 
-              <!-- MERCHANT SEARCH (Phase 5) -->
               <div class="search-wrapper">
                 <input type="text" id="merchantSearch" class="search-input" placeholder="Search by brand, artisan name, or industry...">
                 <div style="position:absolute; right:16px; top:16px; color:var(--Neutral-500); pointer-events:none">🔍</div>
@@ -210,8 +244,10 @@
     function switchTab(tabId) {
       document.querySelectorAll('.tab-view').forEach(t => t.classList.remove('active'));
       document.querySelectorAll('.sidebar-nav a').forEach(a => a.classList.remove('active'));
-      document.getElementById('view-' + tabId).classList.add('active');
-      document.getElementById('tab-' + tabId).classList.add('active');
+      const targetView = document.getElementById('view-' + tabId);
+      const targetTab = document.getElementById('tab-' + tabId);
+      if(targetView) targetView.classList.add('active');
+      if(targetTab) targetTab.classList.add('active');
       window.location.hash = tabId;
     }
 
@@ -222,6 +258,7 @@
       };
 
       let masterProfiles = [];
+      let targetUserId = null;
 
       async function initAdmin() {
         const client = window.supabase.createClient(config.url, config.key);
@@ -238,7 +275,19 @@
         document.getElementById('loadingOverlay').style.display = 'none';
         document.getElementById('adminUser').textContent = session.user.email;
 
-        // --- AI LATENCY HANDSHAKE (Phase 4) ---
+        // --- ADMIN KEY REVEAL (Phase 7) ---
+        const MASTER_ADMIN_KEY = "korra_admin_auth_01J0PK82X92K4"; // Simulation of env key
+        document.getElementById('btnRevealKey').addEventListener('click', () => {
+           const disp = document.getElementById('adminKeyDisplay');
+           if(disp.textContent.includes('****')) {
+             disp.textContent = MASTER_ADMIN_KEY;
+             document.getElementById('btnRevealKey').textContent = '🔒';
+           } else {
+             disp.textContent = 'korra_admin_************';
+             document.getElementById('btnRevealKey').textContent = '👁';
+           }
+        });
+
         async function measureLatency() {
           const start = Date.now();
           try {
@@ -248,14 +297,11 @@
               document.getElementById('statLatency').textContent = `${latency}ms`;
               document.getElementById('statLatency').style.color = latency < 200 ? 'var(--Mint)' : 'var(--Error)';
             }
-          } catch(e) {
-            document.getElementById('statLatency').textContent = 'Error';
-          }
+          } catch(e) { document.getElementById('statLatency').textContent = 'Error'; }
         }
-        setInterval(measureLatency, 5000); // Pulse every 5 seconds
+        setInterval(measureLatency, 5000);
         measureLatency();
 
-        // --- GLOBAL STAT ENGINE (Enhanced) ---
         async function loadGlobalStats() {
            const { data: profiles, count: merchantCount } = await client.from('profiles').select('*', { count: 'exact' });
            if(merchantCount !== null) document.getElementById('statMerchants').textContent = merchantCount;
@@ -269,14 +315,13 @@
               const totalRevenue = invoices.reduce((sum, inv) => sum + (inv.amount_paid || 0), 0);
               document.getElementById('statRevenue').textContent = '₦' + (totalRevenue / 100).toLocaleString();
            }
-
            renderMerchantList(masterProfiles);
         }
 
         function renderMerchantList(list) {
            const tbody = document.getElementById('merchantList');
            if(!list || list.length === 0) {
-              tbody.innerHTML = '<tr><td colspan="5" style="text-align:center; padding:40px;">No merchants found matching criteria.</td></tr>';
+              tbody.innerHTML = '<tr><td colspan="5" style="text-align:center; padding:40px;">No merchants found.</td></tr>';
               return;
            }
            tbody.innerHTML = list.map(p => `
@@ -285,12 +330,39 @@
                <td><span class="badge badge-merchant">${p.industry || 'Tailor'}</span></td>
                <td>${p.credits || 0}</td>
                <td>${new Date(p.created_at).toLocaleDateString()}</td>
-               <td><button class="btn-action">Override Credits</button></td>
+               <td><button class="btn-action" onclick="window.triggerOverride('${p.id}', '${p.company_name || p.full_name}')">Override Credits</button></td>
              </tr>
            `).join('');
         }
 
-        // --- MERCHANT SEARCH ENGINE (Phase 5) ---
+        // --- CREDIT OVERDRIVE (Phase 6) ---
+        window.triggerOverride = (id, name) => {
+           targetUserId = id;
+           document.getElementById('targetMerchantName').textContent = name;
+           document.getElementById('overrideModal').classList.add('active');
+        };
+
+        document.getElementById('btnConfirmOverride').addEventListener('click', async () => {
+           const newVal = parseInt(document.getElementById('newCreditValue').value);
+           if(isNaN(newVal)) return;
+
+           const btn = document.getElementById('btnConfirmOverride');
+           btn.disabled = true;
+           btn.textContent = 'Applying...';
+
+           const { error } = await client.from('profiles').update({ credits: newVal }).eq('id', targetUserId);
+
+           if(!error) {
+              alert("Credit Overdrive Successful.");
+              document.getElementById('overrideModal').classList.remove('active');
+              loadGlobalStats(); // Refresh
+           } else {
+              alert("Error: " + error.message);
+           }
+           btn.disabled = false;
+           btn.textContent = 'Apply Override';
+        });
+
         document.getElementById('merchantSearch').addEventListener('input', (e) => {
            const query = e.target.value.toLowerCase();
            const filtered = masterProfiles.filter(p =>
@@ -302,11 +374,10 @@
         });
 
         loadGlobalStats();
-
         const initialTab = window.location.hash.replace('#', '') || 'overview';
         switchTab(initialTab);
 
-        document.getElementById('btnExit').addEventListener('click', async () => {
+        document.getElementById('btnExit').addEventListener('click', () => {
           window.location.href = '/dashboard';
         });
       }
