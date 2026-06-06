@@ -27,13 +27,13 @@
     html, body { height: 100%; background: var(--Obsidian); color: var(--White); font-family: 'Inter', sans-serif; overflow-x: hidden; }
 
     header {
-      width: 100%; height: 80px; display: flex; align-items: center; position: fixed; top: 0; z-index: 1000;
+      width: 100%; height: 80px; display: flex; align-items: center; position: fixed; top: 0; z-index: 9999999; /* NUCLEAR AUTHORITY */
       background: rgba(0, 0, 0, 0.8); backdrop-filter: blur(20px); border-bottom: 1px solid var(--Glass-Border);
     }
     .container { width: 100%; max-width: 1400px; margin: 0 auto; padding: 0 48px; }
     header .container { display: flex; align-items: center; justify-content: space-between; padding: 0; }
 
-    .logo { display: flex; align-items: center; gap: 12px; text-decoration: none; color: inherit; }
+    .logo { display: flex; align-items: center; gap: 12px; text-decoration: none; color: inherit; pointer-events: all !important; }
     .logo-mark { width: 32px; height: 32px; border-radius: 8px; background: var(--Mint); transform: rotate(-8deg); }
     .logo-text { font-size: 20px; font-weight: 900; letter-spacing: -0.05em; }
 
@@ -73,9 +73,9 @@
     .badge { padding: 4px 12px; border-radius: 99px; font-size: 10px; font-weight: 900; text-transform: uppercase; }
     .badge-merchant { background: var(--Teal-900); color: var(--Mint); }
 
-    .btn-action { background: var(--Glass); border: 1px solid var(--Glass-Border); color: #fff; padding: 6px 12px; border-radius: 8px; font-size: 11px; cursor: pointer; transition: 0.2s; }
+    .btn-action { background: var(--Glass); border: 1px solid var(--Glass-Border); color: #fff; padding: 6px 12px; border-radius: 8px; font-size: 11px; cursor: pointer; transition: 0.2s; pointer-events: all !important; }
     .btn-action:hover { border-color: var(--Mint); color: var(--Mint); }
-    .btn-primary { background: var(--Mint); color: var(--Obsidian); border: none; padding: 12px 24px; border-radius: 12px; font-weight: 800; cursor: pointer; transition: 0.2s; }
+    .btn-primary { background: var(--Mint); color: var(--Obsidian); border: none; padding: 12px 24px; border-radius: 12px; font-weight: 800; cursor: pointer; transition: 0.2s; pointer-events: all !important; }
 
     .modal-overlay {
       position: fixed; inset: 0; background: rgba(0,0,0,0.9); z-index: 2000;
@@ -88,7 +88,7 @@
     }
 
     #loadingOverlay {
-        position: fixed; inset: 0; background: #000; z-index: 9999; display: flex; align-items: center; justify-content: center;
+        position: fixed; inset: 0; background: #000; z-index: 9999999; display: flex; align-items: center; justify-content: center;
         font-size: 12px; font-weight: 800; letter-spacing: 0.2em; text-transform: uppercase; color: var(--Mint);
     }
   </style>
@@ -97,7 +97,6 @@
 
   <div id="loadingOverlay">Verifying System Authority...</div>
 
-  <!-- CREDIT OVERRIDE MODAL -->
   <div class="modal-overlay" id="overrideModal">
     <div class="modal-card">
       <h2 style="font-size:24px; margin-bottom:12px">Credit Overdrive</h2>
@@ -263,6 +262,7 @@
     </div>
   </main>
 
+  <!-- --- PRODUCTION ASSETS --- -->
   <script src="/assets/supabase.min.js"></script>
   <script>
     function switchTab(tabId) {
@@ -290,8 +290,10 @@
 
         if (!session) { window.location.href = '/signin'; return; }
 
+        // --- SUPER-USER AUTHORITY LOCKDOWN (Phase 10) ---
         const ADMIN_LIST = ['springbionics@gmail.com', 'admin@korra.work'];
-        if (!ADMIN_LIST.includes(session.user.email)) {
+        if (!ADMIN_LIST.includes(session.user.email.toLowerCase())) {
+          console.error("PfError: Security breach detected. Unauthorized Admin access attempt.");
           window.location.href = '/dashboard';
           return;
         }
@@ -312,7 +314,7 @@
            }
         });
 
-        // --- SYSTEM HEALTH Handshake (Phase 9) ---
+        // --- PERFORMANCE MONITORING ---
         async function measureLatency() {
           const start = Date.now();
           try {
@@ -329,38 +331,40 @@
         setInterval(measureLatency, 5000);
         measureLatency();
 
-        // --- GLOBAL STAT & FINANCE ENGINE (Phase 8) ---
+        // --- SYSTEM INTELLIGENCE ---
         async function loadGlobalStats() {
-           const { data: profiles, count: merchantCount } = await client.from('profiles').select('*', { count: 'exact' });
-           if(merchantCount !== null) document.getElementById('statMerchants').textContent = merchantCount;
-           masterProfiles = profiles || [];
+           try {
+             const { data: profiles, count: merchantCount } = await client.from('profiles').select('*', { count: 'exact' });
+             if(merchantCount !== null) document.getElementById('statMerchants').textContent = merchantCount;
+             masterProfiles = profiles || [];
 
-           const { count: scanCount } = await client.from('measurements').select('*', { count: 'exact', head: true });
-           if(scanCount !== null) document.getElementById('statScans').textContent = scanCount;
+             const { count: scanCount } = await client.from('measurements').select('*', { count: 'exact', head: true });
+             if(scanCount !== null) document.getElementById('statScans').textContent = scanCount;
 
-           // Load Invoices for Finance Tab
-           const { data: invoices } = await client.from('invoices').select('*').order('paid_at', { ascending: false });
-           if(invoices) {
-              const totalRevenue = invoices.reduce((sum, inv) => sum + (inv.amount_paid || 0), 0);
-              document.getElementById('statRevenue').textContent = '₦' + (totalRevenue / 100).toLocaleString();
+             const { data: invoices } = await client.from('invoices').select('*').order('paid_at', { ascending: false });
+             if(invoices) {
+                const totalRevenue = invoices.reduce((sum, inv) => sum + (inv.amount_paid || 0), 0);
+                document.getElementById('statRevenue').textContent = '₦' + (totalRevenue / 100).toLocaleString();
 
-              // Render Finance Ledger
-              document.getElementById('financeList').innerHTML = invoices.map(inv => {
-                const profile = masterProfiles.find(p => p.id === inv.user_id);
-                return `
-                  <tr>
-                    <td>${new Date(inv.paid_at).toLocaleDateString()}</td>
-                    <td>${profile ? (profile.company_name || profile.full_name) : 'Unknown Merchant'}</td>
-                    <td style="color:var(--Mint); font-weight:800">₦${(inv.amount_paid / 100).toLocaleString()}</td>
-                    <td><code style="font-size:10px">${inv.paystack_reference || 'REF-MOCK'}</code></td>
-                    <td><span class="badge" style="background:var(--Teal-900); color:var(--Mint)">Verified</span></td>
-                  </tr>
-                `;
-              }).join('');
-           } else {
-              document.getElementById('financeList').innerHTML = '<tr><td colspan="5" style="text-align:center; padding:40px;">No transaction history found.</td></tr>';
+                document.getElementById('financeList').innerHTML = invoices.map(inv => {
+                  const profile = masterProfiles.find(p => p.id === inv.user_id);
+                  return `
+                    <tr>
+                      <td>${new Date(inv.paid_at).toLocaleDateString()}</td>
+                      <td>${profile ? (profile.company_name || profile.full_name) : 'Unknown Merchant'}</td>
+                      <td style="color:var(--Mint); font-weight:800">₦${(inv.amount_paid / 100).toLocaleString()}</td>
+                      <td><code style="font-size:10px">${inv.paystack_reference || 'REF-MOCK'}</code></td>
+                      <td><span class="badge" style="background:var(--Teal-900); color:var(--Mint)">Verified</span></td>
+                    </tr>
+                  `;
+                }).join('');
+             } else {
+                document.getElementById('financeList').innerHTML = '<tr><td colspan="5" style="text-align:center; padding:40px;">No transaction history found.</td></tr>';
+             }
+             renderMerchantList(masterProfiles);
+           } catch (err) {
+             console.error("PfError: Global ledger retrieval interrupted:", err);
            }
-           renderMerchantList(masterProfiles);
         }
 
         function renderMerchantList(list) {
