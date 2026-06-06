@@ -24,7 +24,7 @@
     }
 
     * { box-sizing: border-box; -webkit-font-smoothing: antialiased; margin: 0; padding: 0; }
-    html, body { height: 100%; background: var(--Obsidian); color: var(--White); font-family: 'Inter', sans-serif; overflow: hidden; }
+    html, body { height: 100%; background: var(--Obsidian); color: var(--White); font-family: 'Inter', sans-serif; overflow-x: hidden; }
 
     header {
       width: 100%; height: 80px; display: flex; align-items: center; position: fixed; top: 0; z-index: 1000;
@@ -40,14 +40,18 @@
     .btn-outline {
       height: 40px; padding: 0 20px; border-radius: 8px; border: 1px solid var(--Glass-Border);
       color: var(--White); font-size: 12px; font-weight: 800; text-transform: uppercase;
-      cursor: pointer; text-decoration: none; display: inline-flex; align-items: center; transition: 0.2s;
+      cursor: pointer; text-decoration: none; display: inline-flex; align-items: center; transition: 0.2s; background: none;
     }
     .btn-outline:hover { background: var(--Glass); border-color: var(--White); }
+
+    .btn-primary {
+      height: 40px; padding: 0 20px; border-radius: 8px; background: var(--Mint); color: var(--Obsidian);
+      font-size: 12px; font-weight: 800; text-transform: uppercase; cursor: pointer; border: none; transition: 0.2s;
+    }
 
     main { padding-top: 120px; height: 100vh; overflow-y: auto; }
     .grid-workbench { display: grid; grid-template-columns: 280px 1fr; gap: var(--S-48); align-items: start; }
 
-    /* SIDEBAR */
     .sidebar { position: sticky; top: 0; display: flex; flex-direction: column; gap: var(--S-32); }
     .sidebar-nav a {
       display: block; padding: 12px 16px; border-radius: 12px; color: var(--Neutral-400);
@@ -55,13 +59,12 @@
     }
     .sidebar-nav a:hover, .sidebar-nav a.active { background: var(--Glass); color: var(--Mint); }
 
-    /* CONTENT CARDS */
     .glass-card { background: var(--Glass); border: 1px solid var(--Glass-Border); border-radius: 20px; padding: var(--S-32); }
     .stat-grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: var(--S-24); margin-bottom: var(--S-48); }
     .stat-card h4 { font-size: 10px; font-weight: 900; color: var(--Neutral-500); text-transform: uppercase; margin-bottom: 8px; }
     .stat-card .value { font-size: 32px; font-weight: 900; color: var(--White); }
 
-    .scan-list { display: flex; flex-direction: column; gap: var(--S-16); }
+    .scan-list { display: flex; flex-direction: column; gap: 0; }
     .scan-item {
       display: flex; align-items: center; justify-content: space-between; padding: 20px;
       border-bottom: 1px solid var(--Glass-Border); transition: 0.2s;
@@ -69,9 +72,19 @@
     .scan-item:hover { background: rgba(255,255,255,0.02); }
     .scan-info h5 { font-size: 16px; font-weight: 700; margin-bottom: 4px; }
     .scan-info p { font-size: 12px; color: var(--Neutral-400); }
-    .scan-badge { background: var(--Teal-900); color: var(--Mint); padding: 4px 12px; border-radius: 99px; font-size: 10px; font-weight: 900; }
 
     .empty-state { text-align: center; padding: var(--S-80) 0; color: var(--Neutral-500); }
+
+    /* MODAL */
+    .modal-overlay {
+      position: fixed; inset: 0; background: rgba(0,0,0,0.9); z-index: 2000;
+      display: none; align-items: center; justify-content: center; backdrop-filter: blur(10px);
+    }
+    .modal-overlay.active { display: flex; }
+    .modal-card {
+      width: 100%; max-width: 500px; background: #0a0a0a; border: 1px solid var(--Glass-Border);
+      border-radius: 24px; padding: var(--S-48);
+    }
 
     #loadingOverlay {
         position: fixed; inset: 0; background: #000; z-index: 9999; display: flex; align-items: center; justify-content: center;
@@ -82,6 +95,26 @@
 <body>
 
   <div id="loadingOverlay">Initializing Workbench...</div>
+
+  <div class="modal-overlay" id="newScanModal">
+    <div class="modal-card">
+      <h2 style="font-size:24px; margin-bottom:12px">New Client Scan</h2>
+      <p style="color:var(--Neutral-400); margin-bottom:32px">Capture or upload photos to extract biometrics.</p>
+
+      <div style="display:flex; flex-direction:column; gap:20px">
+        <div>
+          <label style="font-size:10px; font-weight:900; color:var(--Neutral-500); display:block; margin-bottom:8px">CLIENT HEIGHT (CM)</label>
+          <input type="number" id="scanHeight" class="btn-outline" style="width:100%; text-align:left; background:rgba(255,255,255,0.05)" placeholder="175">
+        </div>
+        <div style="display:grid; grid-template-columns: 1fr 1fr; gap:16px">
+          <button class="btn-outline" style="height:100px; flex-direction:column; gap:8px">Front Photo</button>
+          <button class="btn-outline" style="height:100px; flex-direction:column; gap:8px">Side Photo</button>
+        </div>
+        <button class="btn-primary" style="height:52px" id="btnRunInference">Run AI Extraction</button>
+        <button class="btn-outline" style="border:none" onclick="document.getElementById('newScanModal').classList.remove('active')">Cancel</button>
+      </div>
+    </div>
+  </div>
 
   <header>
     <div class="container">
@@ -118,7 +151,7 @@
           <div class="stat-grid">
             <div class="glass-card stat-card">
               <h4>Total Scans</h4>
-              <div class="value">0</div>
+              <div class="value" id="statTotalScans">0</div>
             </div>
             <div class="glass-card stat-card">
               <h4>Accuracy Avg</h4>
@@ -126,14 +159,14 @@
             </div>
             <div class="glass-card stat-card">
               <h4>Credits</h4>
-              <div class="value">10</div>
+              <div class="value" id="statCredits">10</div>
             </div>
           </div>
 
           <div class="glass-card">
             <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:32px">
               <h2 style="font-size:24px;">Recent Measurements</h2>
-              <button class="btn-outline" style="border-color:var(--Mint); color:var(--Mint)">+ New Scan</button>
+              <button class="btn-primary" onclick="document.getElementById('newScanModal').classList.add('active')">+ New Scan</button>
             </div>
 
             <div class="scan-list" id="scanList">
@@ -156,19 +189,46 @@
         supabaseKey: 'sb_publishable_miCOIXHtlxLkfDgpwE0N-g_BA1Q-x8y'
       };
 
+      let supabase;
+
+      async function fetchScans(userId) {
+        const scanList = document.getElementById('scanList');
+        try {
+          // Attempt to fetch from 'measurements' table
+          const { data, error } = await supabase.table('measurements').select('*').eq('user_id', userId).order('created_at', { ascending: false });
+
+          if (error || !data || data.length === 0) {
+            return; // Keep empty state
+          }
+
+          document.getElementById('statTotalScans').textContent = data.length;
+          scanList.innerHTML = data.map(scan => `
+            <div class="scan-item">
+              <div class="scan-info">
+                <h5>${scan.client_name || 'Anonymous Client'}</h5>
+                <p>${new Date(scan.created_at).toLocaleDateString()} • ${scan.height}cm • ${scan.gender || 'male'}</p>
+              </div>
+              <div style="display:flex; gap:12px">
+                <button class="btn-outline" style="height:32px; font-size:10px">View Data</button>
+                <button class="btn-outline" style="height:32px; font-size:10px; border-color:var(--Mint); color:var(--Mint)">Export PDF</button>
+              </div>
+            </div>
+          `).join('');
+        } catch (e) {
+          console.warn("Real-time vault offline. Showing placeholder logic.");
+        }
+      }
+
       async function initDashboard() {
         if (typeof window.supabase === 'undefined') {
           setTimeout(initDashboard, 500);
           return;
         }
 
-        const supabase = window.supabase.createClient(config.supabaseUrl, config.supabaseKey);
+        supabase = window.supabase.createClient(config.supabaseUrl, config.supabaseKey);
 
-        // SESSION GUARD
         const { data: { session }, error } = await supabase.auth.getSession();
-
         if (!session) {
-          console.warn("Unauthenticated access. Redirecting to signin...");
           window.location.href = '/signin.html';
           return;
         }
@@ -176,9 +236,15 @@
         document.getElementById('loadingOverlay').style.display = 'none';
         document.getElementById('userDisplay').textContent = session.user.email;
 
+        fetchScans(session.user.id);
+
         document.getElementById('btnSignOut').addEventListener('click', async () => {
           await supabase.auth.signOut();
           window.location.href = '/';
+        });
+
+        document.getElementById('btnRunInference').addEventListener('click', () => {
+          alert("AI Measurement Engine: Initializing MediaPipe pipeline... (This requires camera permissions in production)");
         });
       }
 
