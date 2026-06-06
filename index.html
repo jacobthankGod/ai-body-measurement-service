@@ -132,6 +132,14 @@
 
     .badge-card { position: absolute; bottom: 24px; right: 24px; background: var(--Obsidian); border: 1px solid var(--Glass-Border); padding: 10px 16px; border-radius: 8px; font-size: 10px; font-weight: 800; color: var(--Mint); }
 
+    /* ACCORDION / VIEW MORE STYLING */
+    .accordion-content { max-height: 0; overflow: hidden; transition: max-height 0.6s cubic-bezier(0.4, 0, 0.2, 1); opacity: 0; }
+    .accordion-content.active { max-height: 500px; opacity: 1; margin-top: 24px; }
+    .btn-view-more {
+      display: inline-flex; align-items: center; gap: 8px; margin-top: 24px; color: var(--Mint); font-weight: 800; font-size: 12px; cursor: pointer; opacity: 0.7; transition: 0.2s; background: none; border: none; text-transform: uppercase; letter-spacing: 0.1em;
+    }
+    .btn-view-more:hover { opacity: 1; transform: translateX(4px); }
+
     @media (max-width: 1050px) {
       .hero-headline { font-size: 42px; white-space: normal; } nav { display: none; }
       .grid-impact, .grid-swapped, .mosaic-grid { grid-template-columns: 1fr; gap: var(--S-48); }
@@ -150,14 +158,14 @@
       </div>
       <nav id="marketingNav">
         <a href="#technology">Technology</a>
-        <a href="#case-studies">Case studies</a>
+        <a href="#merchant-success">Merchant Success</a>
         <a href="#about">About</a>
       </nav>
       <div style="flex:1"></div>
       <div style="display:flex; align-items:center; gap:var(--S-16)">
         <div id="authButtons" style="display:flex; gap:var(--S-12)">
           <button class="btn btn-outline" id="btnNavSignIn">Sign In</button>
-          <button class="btn btn-primary" id="btnNavSignUp">Get Started</button>
+          <button class="btn btn-primary" id="btnNavSignUp">Get Access</button>
         </div>
         <div id="signedBar">
           <span style="font-weight:700; font-size:12px; color:var(--Mint)" id="userEmailDisplay"></span>
@@ -169,11 +177,11 @@
 
   <!-- 1. HOME VIEW -->
   <div id="viewHome" class="view active">
-    <!-- SECTION 0: HERO (Final Blueprint Alignment) -->
+    <!-- SECTION 0: HERO -->
     <section class="hero">
       <div class="container">
         <h1 class="hero-headline">AI-powered body measuring for faster, better fit.</h1>
-        <p class="hero-sub">Get accurate body measurements with just a phone. Built for tailors, fashion businesses, and people who need their measurements fast.</p>
+        <p class="hero-sub">Get accurate body measurements with just a phone. Share them with any tailor — from anywhere. Whether your tailor is across town or across the country, KORRA makes sure the fit is right the first time.</p>
 
         <div style="display:flex; justify-content:center; gap:40px; margin-top:40px">
            <div style="text-align:center"><div style="font-size:32px; font-weight:900; color:var(--Mint)">60s</div><div style="font-size:11px; font-weight:900; opacity:0.5; text-transform:uppercase">To Capture</div></div>
@@ -199,7 +207,7 @@
       </div>
     </section>
 
-    <!-- SECTION 1: THE CORE PROBLEM (Manual Variance) -->
+    <!-- SECTION 1: THE CORE PROBLEM -->
     <section class="block">
       <div class="container">
         <div class="grid-impact">
@@ -216,7 +224,7 @@
       </div>
     </section>
 
-    <!-- SECTION 2: THE FRUSTRATION LOOP (Fit Still Goes Wrong) -->
+    <!-- SECTION 2: THE FRUSTRATION LOOP -->
     <section class="block" style="background:rgba(255,255,255,0.01)">
       <div class="container">
         <div style="display:flex; justify-content:space-between; align-items:flex-end; margin-bottom:var(--S-64)">
@@ -225,7 +233,7 @@
             <h2 class="section-title">Common problems.</h2>
             <p class="section-desc">For many people, there is no easy way to keep a reliable size record. This creates a cycle of failed expectations.</p>
           </div>
-          <button class="btn btn-primary" id="btnParadoxFix">Get Accurate Data</button>
+          <button class="btn btn-primary" id="btnParadoxFix">Get Started Now</button>
         </div>
         <div class="grid-3">
            <div class="glass-card">
@@ -244,8 +252,43 @@
       </div>
     </section>
 
-    <!-- SECTION 3: THE SOLUTION (A faster way) -->
+    <!-- SECTION 3: GLOBAL REACH (ACCORDION INTEGRATION) -->
     <section class="block">
+      <div class="container">
+        <div class="grid-impact grid-swapped">
+          <div class="glass-card image-card">
+             <img src="/assets/body-capture.png" alt="Global Connectivity">
+             <div class="badge-card">LMIC INCLUSION ENGINE</div>
+          </div>
+          <div>
+            <div class="section-eyebrow">Global Reach</div>
+            <h2 class="section-title">Bridging the Distance Factor.</h2>
+            <p class="section-desc">
+              Tailors in LMICs often work with customers who are far away — in another city, village, or country. Getting accurate body measurements becomes a guessing game through messages or old records.
+              <br><br>
+              <strong>London Client. Lagos Tailor. Perfect Fit.</strong> No travel, no tape measure, no guesswork needed.
+            </p>
+
+            <button class="btn-view-more" id="btnToggleImpact">View Detailed Impact ↓</button>
+
+            <div class="accordion-content" id="impactAccordion">
+               <p style="font-size:16px; color:var(--Neutral-400); line-height:1.6">
+                 Korra helps tailors in LMICs unlock access to customers beyond their immediate location. When measurements are shared through chats, photos, or outdated size records, fit becomes inconsistent, costly, and difficult to scale.
+                 <br><br>
+                 Korra makes remote tailoring more reliable by helping customers capture and share accurate body measurements directly from their phone. This gives tailors a more consistent way to work with remote clients, reduce rework, improve fit confidence, and serve more customers across cities and borders.
+                 <br><br>
+                 A customer in London can share measurements in minutes, while a tailor in Lagos delivers with greater accuracy — expanding access to opportunity without the limits of distance.
+               </p>
+            </div>
+
+            <button class="btn btn-primary" style="margin-top:40px" id="btnDistanceFix">Get Access</button>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <!-- SECTION 4: THE SOLUTION -->
+    <section class="block" style="background:rgba(255,255,255,0.01)">
       <div class="container">
         <div class="grid-impact">
           <div>
@@ -261,25 +304,7 @@
       </div>
     </section>
 
-    <!-- SECTION 4: BRIDGING THE DISTANCE FACTOR -->
-    <section class="block" style="background:rgba(255,255,255,0.01)">
-      <div class="container">
-        <div class="grid-impact grid-swapped">
-          <div class="glass-card image-card">
-             <img src="/assets/body-capture.png" alt="Global Connectivity">
-             <div class="badge-card">LMIC INCLUSION ENGINE</div>
-          </div>
-          <div>
-            <div class="section-eyebrow">Global Reach</div>
-            <h2 class="section-title">Bridging the Distance Factor.</h2>
-            <p class="section-desc">Tailors in LMICs often work with customers who are far away — in another city, village, or country. Getting accurate body measurements becomes a guessing game through messages or old records. London Client. Lagos Tailor. Perfect Fit. No travel, no tape measure, no guesswork needed.</p>
-            <button class="btn btn-primary" style="margin-top:40px" id="btnDistanceFix">Bridge the Gap</button>
-          </div>
-        </div>
-      </div>
-    </section>
-
-    <!-- SECTION 5: PRECISION AT SOURCE (HOW IT WORKS) -->
+    <!-- SECTION 5: HOW IT WORKS -->
     <section class="block" id="technology">
       <div class="container">
         <div style="text-align:center; max-width:700px; margin:0 auto 80px">
@@ -304,7 +329,7 @@
       </div>
     </section>
 
-    <!-- SECTION 6: GLOBAL SIZE PASSPORT (Individual Focus) -->
+    <!-- SECTION 6: GLOBAL SIZE PASSPORT -->
     <section class="block">
       <div class="container">
         <div class="grid-impact">
@@ -364,12 +389,12 @@
       </div>
     </section>
 
-    <!-- SECTION 8: THE ECONOMIC ENGINE -->
+    <!-- SECTION 8: ECONOMIC ENGINE -->
     <section class="block" id="merchant-success">
       <div class="container">
         <div style="display:flex; justify-content:space-between; align-items:flex-end; margin-bottom:60px">
           <div><div class="section-eyebrow">The Economic Engine</div><h2 class="section-title">Less time. Less waste.</h2></div>
-          <div><button class="btn btn-primary" id="btnEngineStart">Deploy AI Infrastructure</button></div>
+          <div><button class="btn btn-primary" id="btnEngineStart">Get Started</button></div>
         </div>
         <div class="grid-4">
           <div class="glass-card" style="padding:var(--S-32)">
@@ -386,13 +411,13 @@
           </div>
           <div class="glass-card" style="padding:var(--S-32)">
             <h4 style="color:var(--Mint); font-size:24px; font-weight:900; margin-bottom:8px">99%</h4>
-            <p style="font-size:13px; color:var(--Neutral-400)">More consistent results across different users and locations.</p>
+            <p style="font-size:13px; color:var(--Neutral-400)">More consistent results across different users.</p>
           </div>
         </div>
       </div>
     </section>
 
-    <!-- SECTION 9: FINAL CTA (Final Blueprint) -->
+    <!-- SECTION 9: FINAL CTA -->
     <section class="block">
       <div class="container">
         <div class="final-banner">
@@ -443,7 +468,7 @@
         <div class="form-group"><label class="form-label">FULL NAME</label><input type="text" class="form-input" id="upName"></div>
         <div class="form-group"><label class="form-label">EMAIL</label><input type="email" class="form-input" id="upEmail" required></div>
         <div class="form-group"><label class="form-label">CREATE KEY</label><input type="password" class="form-input" id="upPass" required></div>
-        <button type="submit" class="btn btn-primary" style="width:100%">Initialize Merchant Account</button>
+        <button type="submit" class="btn btn-primary" style="width:100%">Initialize Account</button>
       </form>
     </div>
   </div>
@@ -457,13 +482,9 @@
       function handleRoute() {
         const hash = window.location.hash || '#home';
         document.querySelectorAll('.view').forEach(v => v.classList.remove('active'));
-        if (hash === '#signin') {
-          document.getElementById('viewSignIn').classList.add('active');
-        } else if (hash === '#signup') {
-          document.getElementById('viewSignUp').classList.add('active');
-        } else {
-          document.getElementById('viewHome').classList.add('active');
-        }
+        if (hash === '#signin') document.getElementById('viewSignIn').classList.add('active');
+        else if (hash === '#signup') document.getElementById('viewSignUp').classList.add('active');
+        else document.getElementById('viewHome').classList.add('active');
         window.scrollTo(0,0);
       }
       window.addEventListener('hashchange', handleRoute);
@@ -473,6 +494,13 @@
         if (!target) return;
         const id = target.id;
         const href = target.getAttribute('href');
+
+        if (id === 'btnToggleImpact') {
+           const accordion = document.getElementById('impactAccordion');
+           accordion.classList.toggle('active');
+           target.textContent = accordion.classList.contains('active') ? 'View Less ↑' : 'View Detailed Impact ↓';
+           return;
+        }
 
         if (id === 'btnNavSignIn' || href === '#signin') {
           window.location.hash = '#signin';
