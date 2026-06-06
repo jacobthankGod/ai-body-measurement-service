@@ -13,7 +13,7 @@
   <style>
     :root {
       /* PERFECTED COLORS - DO NOT TOUCH */
-      --Obsidian: #000000; /* 100% BLACK */
+      --Obsidian: #000000;
       --Mint: #57D7C0;
       --Teal-900: #002D2A;
       --Glass: rgba(255, 255, 255, 0.04);
@@ -72,9 +72,21 @@
     .section-desc { font-size: 18px; color: var(--Neutral-400); line-height: 1.6; margin-top: var(--S-24); max-width: 550px; font-weight: 500; }
 
     .hero { padding: 180px 0 var(--S-80); text-align: center; position: relative; background: radial-gradient(circle at 70% 20%, rgba(87, 215, 192, 0.1), transparent 40%); }
-    /* ONE-LINE HERO HEADLINE */
-    .hero-headline { font-size: clamp(32px, 5vw, 64px); font-weight: 900; line-height: 1.1; letter-spacing: -0.05em; margin-bottom: var(--S-24); color: var(--Mint); white-space: nowrap; }
-    .hero-headline span { color: var(--Mint); }
+    /* REFINED & CENTRALIZED HERO HEADLINE */
+    .hero-headline {
+      font-size: clamp(32px, 4.5vw, 52px); /* Reduced for elegance */
+      font-weight: 900; line-height: 1.2; letter-spacing: -0.05em;
+      margin: 0 auto var(--S-24);
+      color: var(--Mint);
+      text-align: center;
+      max-width: 900px;
+    }
+    .hero-sub {
+      font-size: 18px; color: var(--Neutral-400);
+      max-width: 750px; margin: 0 auto var(--S-60);
+      line-height: 1.6; text-align: center;
+    }
+
     .hero-visual { width: 100vw; margin: 0 auto; height: 850px; position: relative; display: flex; align-items: center; justify-content: center; overflow: hidden; }
     .hero-visual img { width: 100%; height: 100%; object-fit: contain; }
 
@@ -85,7 +97,6 @@
     .hero-cta-card h3 { font-size: 32px; font-weight: 900; margin: 0; color: #fff; line-height: 1.05; }
 
     .grid-impact { display: grid; grid-template-columns: 1fr 1.5fr; gap: var(--S-80); align-items: center; }
-    /* SWAPPED GRID VERSION */
     .grid-swapped { grid-template-columns: 1.5fr 1fr; }
 
     .glass-card { background: var(--Glass); border: 1px solid var(--Glass-Border); border-radius: var(--Radius-L); padding: var(--S-48); transition: 0.3s; position: relative; overflow: hidden; }
@@ -112,7 +123,7 @@
     .badge-card { position: absolute; bottom: 24px; right: 24px; background: var(--Obsidian); border: 1px solid var(--Glass-Border); padding: 10px 16px; border-radius: 8px; font-size: 10px; font-weight: 800; color: var(--Mint); }
 
     @media (max-width: 1050px) {
-      .hero-headline { font-size: 52px; white-space: normal; } nav { display: none; }
+      .hero-headline { font-size: 42px; } nav { display: none; }
       .grid-impact, .grid-swapped { grid-template-columns: 1fr; gap: var(--S-48); }
       .final-banner { flex-direction: column; text-align: center; gap: var(--S-32); }
     }
@@ -147,11 +158,11 @@
 
   <!-- 1. HOME VIEW -->
   <div id="viewHome" class="view active">
-    <!-- HERO -->
+    <!-- HERO (Refined & Balanced) -->
     <section class="hero">
       <div class="container">
         <h1 class="hero-headline">AI-powered body measuring for faster, better fit.</h1>
-        <p class="hero-sub">Get accurate body measurements with just a phone.<br><br>Built for tailors, fashion businesses, and people who need their measurements fast.</p>
+        <p class="hero-sub">Get accurate body measurements with just a phone. <br><br> Built for tailors, fashion businesses, and emerging market entrepreneurs who need precision at the last mile.</p>
 
         <div style="display:flex; justify-content:center; gap:40px; margin-top:40px">
            <div style="text-align:center"><div style="font-size:32px; font-weight:900; color:var(--Mint)">60s</div><div style="font-size:11px; font-weight:900; opacity:0.5; text-transform:uppercase">To Capture</div></div>
@@ -166,7 +177,7 @@
             <h3>Eliminate Subjectivity.<br>Automate Fit.</h3>
             <div style="display:flex; flex-direction:column; gap:8px; margin-top:16px">
               <span style="font-size:14px; color:var(--Neutral-400)">✓ Clinical 3D Biometric Extraction</span>
-              <span style="font-size:14px; color:var(--Neutral-400)">✓ Edge-AI Powered Capture</span>
+              <span style="font-size:14px; color:var(--Neutral-400)">✓ Hardware-Free Infrastructure</span>
               <span style="font-size:14px; color:var(--Neutral-400)">✓ Persistent Global Size Registry</span>
             </div>
           </div>
@@ -182,7 +193,7 @@
           <div>
             <div class="section-eyebrow">The Status Quo</div>
             <h2 class="section-title">The Fragmented Cost of Manual Measurement.</h2>
-            <p class="section-desc">Subjective hand-tapes are the industrial bottleneck of the $1.5T fashion market. Inconsistent data creates a cycle of failed fits, toxic merchant-client disputes, and unsustainable waste. KORRA digitizes the source of truth.</p>
+            <p class="section-desc">Subjective hand-tapes are the industrial bottleneck of the $1.5T fashion market. KORRA digitizes the source of truth, specifically bridging the gap where expensive hardware cannot reach.</p>
           </div>
           <div class="glass-card image-card">
             <img src="/assets/body-capture.png" alt="Industrial Error">
@@ -198,16 +209,16 @@
         <div style="max-width:700px; margin-bottom:var(--S-64)">
           <div class="section-eyebrow">The Paradox</div>
           <h2 class="section-title">Fit Still Goes Wrong.</h2>
-          <p class="section-desc">Even with manual data, garments frequently come back too tight or too small—leading to disputes over measurement error. KORRA provides an objective clinical source of truth.</p>
+          <p class="section-desc">Manual data leads to toxic disputes and fabric waste. KORRA provides an objective clinical source of truth for both client and merchant.</p>
         </div>
         <div class="grid-3">
            <div class="glass-card">
-              <h4 style="color:var(--Mint); font-size:18px; font-weight:900; margin-bottom:16px">No More Disputes</h4>
+              <h4 style="color:var(--Mint); font-size:18px; font-weight:900; margin-bottom:16px">Dispute Resolution</h4>
               <p style="font-size:14px; color:var(--Neutral-400); line-height:1.5">Eliminate the "who measured wrong" argument. Clinical data doesn't lie.</p>
            </div>
            <div class="glass-card">
-              <h4 style="color:var(--Mint); font-size:18px; font-weight:900; margin-bottom:16px">Zero Delayed Delivery</h4>
-              <p style="font-size:14px; color:var(--Neutral-400); line-height:1.5">Scheduled trial fittings crush timelines. Stop missing delivery deadlines.</p>
+              <h4 style="color:var(--Mint); font-size:18px; font-weight:900; margin-bottom:16px">Delivery Precision</h4>
+              <p style="font-size:14px; color:var(--Neutral-400); line-height:1.5">Stop the cycle of delayed trial fittings. Get it right the first time.</p>
            </div>
            <div class="glass-card">
               <h4 style="color:var(--Mint); font-size:18px; font-weight:900; margin-bottom:16px">Standardized Sizing</h4>
@@ -217,18 +228,18 @@
       </div>
     </section>
 
-    <!-- CROSS-BORDER IMPACT (SWAPPED PLACES) -->
+    <!-- CROSS-BORDER IMPACT (LMIC Focused Integration) -->
     <section class="block">
       <div class="container">
         <div class="grid-impact grid-swapped">
           <div class="glass-card image-card">
              <img src="/assets/body-capture.png" alt="Global Connectivity">
-             <div class="badge-card">GLOBAL CONNECTIVITY</div>
+             <div class="badge-card">LMIC INCLUSION ENGINE</div>
           </div>
           <div>
-            <div class="section-eyebrow">Cross-Border Impact</div>
-            <h2 class="section-title">Bridging the Distance Factor.</h2>
-            <p class="section-desc">KORRA solves the "Distance Factor"—the inability to get measured accurately for tailors across different countries. Global artisans can now reach global clients with clinical-grade precision.</p>
+            <div class="section-eyebrow">Implementation Feasibility</div>
+            <h2 class="section-title">Bridging the Distance Factor in LMICs.</h2>
+            <p class="section-desc">By offloading 3D modeling to free smartphone hardware, KORRA enables artisans in low-to-middle income countries to reach global clients. High-fidelity data captured anywhere is identical to what the tailor receives, everywhere.</p>
           </div>
         </div>
       </div>
@@ -259,17 +270,17 @@
       </div>
     </section>
 
-    <!-- BIOMETRIC IDENTITY (STANDARDIZED IMAGE CARD) -->
+    <!-- BIOMETRIC IDENTITY -->
     <section class="block">
       <div class="container">
         <div class="grid-impact">
           <div>
-            <div class="section-eyebrow">Biometric Identity</div>
+            <div class="section-eyebrow">Resource-Light Infrastructure</div>
             <h2 class="section-title">Your Global Size Passport.</h2>
-            <p class="section-desc">Your biometric identity should belong to you. Measure once, use everywhere. KORRA provides individual users with a persistent digital twin for local artisans and online retail.</p>
+            <p class="section-desc">Measure once, use everywhere. KORRA provides individual users in emerging economies with a persistent digital twin for local artisans, international tailors, and online retail.</p>
             <div style="display:flex; flex-direction:column; gap:12px; margin-top:40px">
                <div style="display:flex; align-items:center; gap:12px; font-weight:700; color:var(--Neutral-400); font-size:14px"><span style="color:var(--Mint)">✓</span> Own Your Biometric Identity</div>
-               <div style="display:flex; align-items:center; gap:12px; font-weight:700; color:var(--Neutral-400); font-size:14px"><span style="color:var(--Mint)">✓</span> Avoid Re-Measuring Visits</div>
+               <div style="display:flex; align-items:center; gap:12px; font-weight:700; color:var(--Neutral-400); font-size:14px"><span style="color:var(--Mint)">✓</span> Universal Reach, Local Impact</div>
             </div>
           </div>
           <div class="glass-card image-card">
@@ -301,8 +312,8 @@
             <p style="font-size:13px; color:var(--Neutral-400)">More customers served per worker daily.</p>
           </div>
           <div class="glass-card" style="padding:var(--S-32)">
-            <h4 style="color:var(--Mint); font-size:24px; font-weight:900; margin-bottom:8px">99%</h4>
-            <p style="font-size:13px; color:var(--Neutral-400)">Consistency across global artisan locations.</p>
+            <h4 style="color:var(--Mint); font-size:24px; font-weight:900; margin-bottom:8px">1B+</h4>
+            <p style="font-size:13px; color:var(--Neutral-400)">Potential users reached in emerging economies.</p>
           </div>
         </div>
       </div>
@@ -314,7 +325,7 @@
         <div class="final-banner">
           <h2>Double Your<br>Output Today.</h2>
           <p>Join the thousands of merchants and users building the future of precise, sustainable production. Start your journey now.</p>
-          <button class="btn btn-primary btn-large" id="btnFinalTrial">Start Your 7-Day Trial</button>
+          <button class="btn btn-primary btn-large" style="background:#fff; color:var(--Obsidian)" id="btnFinalTrial">Start Your 7-Day Trial</button>
         </div>
       </div>
     </section>
@@ -323,7 +334,7 @@
       <div class="container">
         <div class="footer-links">
           <div class="footer-col"><h4>Infrastructure</h4><a href="#technology">Pattern Accuracy</a><a href="#merchant-success">Economic Engine</a></div>
-          <div class="footer-col"><h4>Organization</h4><a href="#about">About KORRA</a><a href="#">Merchant Blog</a></div>
+          <div class="footer-col"><h4>Organization</h4><a href="#about">About KORRA</a><a href="#">R&D Blog</a></div>
           <div class="footer-col"><h4>Resources</h4><a href="#">Size Passport</a><a href="#">API Integration</a></div>
           <div class="footer-col"><h4>Legal</h4><a href="#">Data Privacy</a><a href="#">Terms</a></div>
         </div>
@@ -389,15 +400,15 @@
 
         if (id === 'btnNavSignIn' || href === '#signin') {
           window.location.hash = '#signin';
-          handleRoute(); // Manual trigger for reliability
+          handleRoute();
         }
         if (id === 'btnNavSignUp' || id === 'btnHeroTrial' || id === 'btnFinalTrial' || id === 'btnGetKeys' || id === 'btnApiAccess' || href === '#signup') {
           window.location.hash = '#signup';
-          handleRoute(); // Manual trigger for reliability
+          handleRoute();
         }
         if (id === 'logoHome' || target.classList.contains('logo')) {
           window.location.hash = '#home';
-          handleRoute(); // Manual trigger for reliability
+          handleRoute();
         }
         if (id === 'btnSignOut') supabase.auth.signOut();
       }, true);
