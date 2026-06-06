@@ -13,7 +13,7 @@
   <style>
     :root {
       /* PERFECTED COLORS - DO NOT TOUCH */
-      --Obsidian: #0A0A0A;
+      --Obsidian: #000000; /* 100% BLACK */
       --Mint: #57D7C0;
       --Teal-900: #002D2A;
       --Glass: rgba(255, 255, 255, 0.04);
@@ -38,14 +38,14 @@
 
     header {
       width: 100%; height: 80px; display: flex; align-items: center; position: fixed; top: 0; z-index: 1000;
-      background: rgba(10, 10, 10, 0.8); backdrop-filter: blur(20px); border-bottom: 1px solid var(--Glass-Border); transition: all 0.3s ease;
+      background: rgba(0, 0, 0, 0.8); backdrop-filter: blur(20px); border-bottom: 1px solid var(--Glass-Border); transition: all 0.3s ease;
     }
-    header.scrolled { height: 64px; background: rgba(10, 10, 10, 0.95); }
+    header.scrolled { height: 64px; background: rgba(0, 0, 0, 0.95); }
     header .container { display: flex; align-items: center; justify-content: space-between; padding: 0; }
 
     .logo { display: flex; align-items: center; gap: var(--S-12); cursor: pointer; }
     .logo-mark { width: 32px; height: 32px; border-radius: 8px; background: var(--Mint); transform: rotate(-8deg); }
-    .logo-text { font-size: 24px; font-weight: 900; letter-spacing: -0.05em; }
+    .logo-text { font-size: 20px; font-weight: 900; letter-spacing: -0.05em; }
 
     nav { display: flex; gap: var(--S-32); margin-left: var(--S-48); }
     nav a { font-size: 11px; font-weight: 800; color: var(--White); text-decoration: none; text-transform: uppercase; letter-spacing: 0.1em; opacity: 0.5; transition: 0.2s; }
@@ -56,7 +56,6 @@
       cursor: pointer; display: inline-flex; align-items: center; justify-content: center; gap: 12px; transition: all 0.2s ease; text-decoration: none;
     }
     .btn-primary { background: var(--Mint); color: var(--Obsidian); }
-    .btn-primary:hover { background: #6effeb; transform: translateY(-1px); }
     .btn-outline { background: transparent; border: 1px solid var(--Glass-Border); color: var(--White); }
     .btn-outline:hover { background: var(--Glass); border-color: var(--White); }
     .btn-large { height: 64px; padding: 0 var(--S-48); font-size: 16px; }
@@ -65,7 +64,6 @@
     .view.active { display: block !important; animation: viewIn 0.5s ease-out forwards; }
     .view.active.auth-view { display: flex !important; }
     .view:not(.active) { display: none !important; }
-
     @keyframes viewIn { from { opacity: 0; transform: translateY(10px); } to { opacity: 1; transform: translateY(0); } }
 
     section.block { padding: var(--S-160) 0; }
@@ -74,7 +72,8 @@
     .section-desc { font-size: 18px; color: var(--Neutral-400); line-height: 1.6; margin-top: var(--S-24); max-width: 550px; font-weight: 500; }
 
     .hero { padding: 180px 0 var(--S-80); text-align: center; position: relative; background: radial-gradient(circle at 70% 20%, rgba(87, 215, 192, 0.1), transparent 40%); }
-    .hero-headline { font-size: 84px; font-weight: 900; line-height: 0.95; letter-spacing: -0.05em; margin-bottom: var(--S-24); }
+    /* ONE-LINE HERO HEADLINE */
+    .hero-headline { font-size: clamp(32px, 5vw, 64px); font-weight: 900; line-height: 1.1; letter-spacing: -0.05em; margin-bottom: var(--S-24); color: var(--Mint); white-space: nowrap; }
     .hero-headline span { color: var(--Mint); }
     .hero-visual { width: 100vw; margin: 0 auto; height: 850px; position: relative; display: flex; align-items: center; justify-content: center; overflow: hidden; }
     .hero-visual img { width: 100%; height: 100%; object-fit: contain; }
@@ -86,9 +85,11 @@
     .hero-cta-card h3 { font-size: 32px; font-weight: 900; margin: 0; color: #fff; line-height: 1.05; }
 
     .grid-impact { display: grid; grid-template-columns: 1fr 1.5fr; gap: var(--S-80); align-items: center; }
+    /* SWAPPED GRID VERSION */
+    .grid-swapped { grid-template-columns: 1.5fr 1fr; }
 
-    .glass-card { background: var(--Glass); border: 1px solid var(--Glass-Border); border-radius: var(--Radius-L); padding: var(--S-48); transition: 0.3s ease; position: relative; overflow: hidden; }
-    .glass-card:hover { border-color: var(--Mint); background: rgba(255,255,255,0.06); transform: translateY(-4px); }
+    .glass-card { background: var(--Glass); border: 1px solid var(--Glass-Border); border-radius: var(--Radius-L); padding: var(--S-48); transition: 0.3s; position: relative; overflow: hidden; }
+    .glass-card:hover { border-color: var(--Mint); }
 
     .image-card { padding: 12px !important; border-radius: 24px !important; width: 100%; height: auto; aspect-ratio: 4/3; display: flex; }
     .image-card img { width: 100%; height: 100%; object-fit: cover; border-radius: 16px; }
@@ -110,19 +111,10 @@
 
     .badge-card { position: absolute; bottom: 24px; right: 24px; background: var(--Obsidian); border: 1px solid var(--Glass-Border); padding: 10px 16px; border-radius: 8px; font-size: 10px; font-weight: 800; color: var(--Mint); }
 
-    .step-card { display: flex; flex-direction: column; justify-content: space-between; min-height: 240px; }
-    .step-num { font-size: 12px; font-weight: 900; opacity: 0.3; letter-spacing: 0.3em; }
-    .step-text { font-size: 28px; font-weight: 900; letter-spacing: -0.05em; }
-
     @media (max-width: 1050px) {
-      .hero-headline { font-size: 52px; } nav { display: none; }
-      .grid-impact { grid-template-columns: 1fr; gap: var(--S-48); }
+      .hero-headline { font-size: 52px; white-space: normal; } nav { display: none; }
+      .grid-impact, .grid-swapped { grid-template-columns: 1fr; gap: var(--S-48); }
       .final-banner { flex-direction: column; text-align: center; gap: var(--S-32); }
-    }
-    @media (max-width: 800px) {
-      .hero-visual { height: 450px; }
-      .hero-cta-card { flex-direction: column; text-align: center; gap: var(--S-40); padding: 48px 32px; margin-top: 0; }
-      .grid-4, .grid-3, .footer-links { grid-template-columns: 1fr; }
     }
   </style>
 </head>
@@ -158,7 +150,7 @@
     <!-- HERO -->
     <section class="hero">
       <div class="container">
-        <h1 class="hero-headline">AI-powered body measuring<br><span>for faster, better fit.</span></h1>
+        <h1 class="hero-headline">AI-powered body measuring for faster, better fit.</h1>
         <p class="hero-sub">Get accurate body measurements with just a phone.<br><br>Built for tailors, fashion businesses, and people who need their measurements fast.</p>
 
         <div style="display:flex; justify-content:center; gap:40px; margin-top:40px">
@@ -225,18 +217,18 @@
       </div>
     </section>
 
-    <!-- CROSS-BORDER IMPACT -->
+    <!-- CROSS-BORDER IMPACT (SWAPPED PLACES) -->
     <section class="block">
       <div class="container">
-        <div class="grid-impact" style="grid-template-columns: 1fr 1.5fr">
+        <div class="grid-impact grid-swapped">
+          <div class="glass-card image-card">
+             <img src="/assets/body-capture.png" alt="Global Connectivity">
+             <div class="badge-card">GLOBAL CONNECTIVITY</div>
+          </div>
           <div>
             <div class="section-eyebrow">Cross-Border Impact</div>
             <h2 class="section-title">Bridging the Distance Factor.</h2>
             <p class="section-desc">KORRA solves the "Distance Factor"—the inability to get measured accurately for tailors across different countries. Global artisans can now reach global clients with clinical-grade precision.</p>
-          </div>
-          <div class="glass-card image-card">
-             <img src="/assets/body-capture.png" alt="Global Connectivity">
-             <div class="badge-card">GLOBAL CONNECTIVITY</div>
           </div>
         </div>
       </div>
@@ -267,7 +259,7 @@
       </div>
     </section>
 
-    <!-- BIOMETRIC IDENTITY -->
+    <!-- BIOMETRIC IDENTITY (STANDARDIZED IMAGE CARD) -->
     <section class="block">
       <div class="container">
         <div class="grid-impact">
@@ -281,7 +273,7 @@
             </div>
           </div>
           <div class="glass-card image-card">
-             <img src="/assets/body-capture.png" alt="Identity Passport">
+             <img src="/assets/body-capture.png" alt="Size Passport Interface">
              <div class="badge-card">SIZE PASSPORT INTERFACE</div>
           </div>
         </div>
@@ -322,7 +314,7 @@
         <div class="final-banner">
           <h2>Double Your<br>Output Today.</h2>
           <p>Join the thousands of merchants and users building the future of precise, sustainable production. Start your journey now.</p>
-          <button class="btn btn-primary btn-large" style="background:#fff; color:var(--Obsidian)" id="btnFinalTrial">Start Your 7-Day Trial</button>
+          <button class="btn btn-primary btn-large" id="btnFinalTrial">Start Your 7-Day Trial</button>
         </div>
       </div>
     </section>
@@ -364,7 +356,7 @@
         <div class="form-group"><label class="form-label">FULL NAME</label><input type="text" class="form-input" id="upName"></div>
         <div class="form-group"><label class="form-label">EMAIL</label><input type="email" class="form-input" id="upEmail" required></div>
         <div class="form-group"><label class="form-label">CREATE KEY</label><input type="password" class="form-input" id="upPass" required></div>
-        <button type="submit" class="btn btn-primary" style="width:100%">Initialize Account</button>
+        <button type="submit" class="btn btn-primary" style="width:100%">Initialize Merchant Account</button>
       </form>
     </div>
   </div>
@@ -378,9 +370,13 @@
       function handleRoute() {
         const hash = window.location.hash || '#home';
         document.querySelectorAll('.view').forEach(v => v.classList.remove('active'));
-        if (hash === '#signin') document.getElementById('viewSignIn').classList.add('active');
-        else if (hash === '#signup') document.getElementById('viewSignUp').classList.add('active');
-        else document.getElementById('viewHome').classList.add('active');
+        if (hash === '#signin') {
+          document.getElementById('viewSignIn').classList.add('active');
+        } else if (hash === '#signup') {
+          document.getElementById('viewSignUp').classList.add('active');
+        } else {
+          document.getElementById('viewHome').classList.add('active');
+        }
         window.scrollTo(0,0);
       }
       window.addEventListener('hashchange', handleRoute);
@@ -390,9 +386,19 @@
         if (!target) return;
         const id = target.id;
         const href = target.getAttribute('href');
-        if (id === 'btnNavSignIn' || href === '#signin') window.location.hash = '#signin';
-        if (id === 'btnNavSignUp' || id === 'btnHeroTrial' || id === 'btnFinalTrial' || id === 'btnGetKeys' || id === 'btnApiAccess' || href === '#signup') window.location.hash = '#signup';
-        if (id === 'logoHome' || target.classList.contains('logo')) window.location.hash = '#home';
+
+        if (id === 'btnNavSignIn' || href === '#signin') {
+          window.location.hash = '#signin';
+          handleRoute(); // Manual trigger for reliability
+        }
+        if (id === 'btnNavSignUp' || id === 'btnHeroTrial' || id === 'btnFinalTrial' || id === 'btnGetKeys' || id === 'btnApiAccess' || href === '#signup') {
+          window.location.hash = '#signup';
+          handleRoute(); // Manual trigger for reliability
+        }
+        if (id === 'logoHome' || target.classList.contains('logo')) {
+          window.location.hash = '#home';
+          handleRoute(); // Manual trigger for reliability
+        }
         if (id === 'btnSignOut') supabase.auth.signOut();
       }, true);
 
