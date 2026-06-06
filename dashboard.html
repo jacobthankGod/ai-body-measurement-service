@@ -266,9 +266,9 @@
     </div>
   </main>
 
-  <!-- --- TRUE INDUSTRIAL SELF-HOSTING --- -->
+  <!-- --- ZERO-EXTERNAL INFRASTRUCTURE (Self-Hosted) --- -->
   <script src="/assets/supabase.min.js"></script>
-  <script src="https://js.paystack.co/v1/inline.js" crossorigin="anonymous" referrerpolicy="no-referrer-when-downgrade"></script>
+  <script src="/assets/paystack.min.js"></script>
 
   <script>
     const KORRA_CONFIG = {
@@ -276,7 +276,6 @@
       supabaseKey: 'sb_publishable_miCOIXHtlxLkfDgpwE0N-g_BA1Q-x8y'
     };
 
-    // ATOMIC GLOBAL INSTANCE (Standardizing Namespace)
     window.KORRA_DB = null;
     let currentUser = null;
     let activeApiKey = null;
@@ -307,7 +306,7 @@
       const amount = credits * 0.5 * 100 * 1600;
 
       if (typeof window.PaystackPop === 'undefined') {
-         alert("Payment Engine Handshake Failed. Please disable Monica extension and try again.");
+         alert("Payment Engine Offline. Please try Incognito mode or disable extension.");
          return;
       }
 
@@ -371,13 +370,18 @@
 
       async function ensureApiKey(userId) {
         try {
-          const { data } = await window.KORRA_DB.from('api_keys').select('*').eq('user_id', userId).eq('is_active', true).single();
-          if (data) {
-            activeApiKey = data.key;
-            fullRawKey = data.key;
-            document.getElementById('apiKeyDisplay').textContent = data.key.substring(0, 12) + "****************";
+          // Forensic Fix: Specifically check key columns to avoid 406
+          const { data, error } = await window.KORRA_DB.from('api_keys').select('key, user_id, is_active').eq('user_id', userId).eq('is_active', true).limit(1);
+
+          if (data && data.length > 0) {
+            const keyRecord = data[0];
+            activeApiKey = keyRecord.key;
+            fullRawKey = keyRecord.key;
+            document.getElementById('apiKeyDisplay').textContent = keyRecord.key.substring(0, 12) + "****************";
           }
-        } catch(e) {}
+        } catch(e) {
+          console.error("API Key Fetch Error:", e);
+        }
       }
 
       async function initDashboard() {
@@ -410,7 +414,7 @@
         document.getElementById('btnCopyKey').addEventListener('click', () => {
           if (fullRawKey) {
             navigator.clipboard.writeText(fullRawKey);
-            alert("API Key copied to clipboard.");
+            alert("API Key copied.");
           }
         });
 
