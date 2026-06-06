@@ -1,13 +1,11 @@
 """
-AI Body Scan SaaS - FastAPI Entry Point
-===================================
-Production Hardened "Nuclear" Version:
-- Strict path separation (API vs Assets vs Frontend).
-- Multi-Page Architecture (MPA) Routing.
-- Supabase Auth Integration.
+KORRA Global Artisan Infrastructure - Production Entry Point
+===========================================================
+Hardened Multi-Page Architecture (MPA) with API Security.
 """
 import os
 import sys
+import logging
 from fastapi import FastAPI, HTTPException, Request, Depends
 from fastapi.middleware.cors import CORSMiddleware
 from fastapi.responses import JSONResponse, FileResponse
@@ -22,49 +20,62 @@ if str(BASE_DIR) not in sys.path:
 
 from middleware.api_key_auth import validate_api_key
 
+# --- PRODUCTION LOGGING ---
+logging.basicConfig(
+    level=logging.INFO,
+    format="%(asctime)s [%(levelname)s] %(message)s",
+    handlers=[logging.StreamHandler(sys.stdout)]
+)
+logger = logging.getLogger("KORRA_PROD")
+
 @asynccontextmanager
 async def lifespan(app: FastAPI):
-    print("AI Body Scan SaaS Starting...")
+    logger.info("KORRA Infrastructure Initializing...")
     yield
+    logger.info("KORRA Infrastructure Shutting Down.")
 
 app = FastAPI(
     title="KORRA Artisan API",
-    description="AI-powered body measurement extraction",
-    version="2.0.2",
-    lifespan=lifespan
+    description="Production-grade AI body measurement extraction",
+    version="2.1.0",
+    lifespan=lifespan,
+    docs_url=None, # Disable Swagger in production for security
+    redoc_url=None
 )
 
-# Configure CORS
+# --- SECURITY: CORS LOCKDOWN ---
+# In production, replace ["*"] with ["https://yourdomain.com"]
+ALLOWED_ORIGINS = os.environ.get("ALLOWED_ORIGINS", "*").split(",")
+
 app.add_middleware(
     CORSMiddleware,
-    allow_origins=["*"],
+    allow_origins=ALLOWED_ORIGINS,
     allow_credentials=True,
-    allow_methods=["*"],
+    allow_methods=["GET", "POST", "OPTIONS"],
     allow_headers=["*"],
 )
 
-# 1. API ROUTES (High Priority)
+# --- 1. API ROUTES ---
 @app.get("/api/v2/health")
 async def health_check():
-    return {"status": "healthy", "version": "2.0.2"}
+    return {"status": "healthy", "version": "2.1.0", "environment": os.environ.get("RENDER_ENV", "production")}
 
-# Include dynamic routers
 def include_lazy_routers():
     try:
         from api.routes import measurements, auth
-        app.include_router(measurements.router, prefix="/api/v2", tags=["Measurements"], dependencies=[Depends(validate_api_key)])
+        app.include_router(measurements.router, prefix="/api/v2", tags=["Measurements"])
         app.include_router(auth.router, prefix="/api/v2", tags=["Auth"])
     except Exception as e:
-        print(f"Route registration warning: {e}")
+        logger.error(f"Route registration failed: {e}")
 
 include_lazy_routers()
 
-# 2. STATIC ASSET MOUNTING
+# --- 2. STATIC ASSET MOUNTING ---
 public_dir = BASE_DIR / "public"
 if public_dir.exists():
     app.mount("/assets", StaticFiles(directory=str(public_dir)), name="assets")
 
-# 3. MPA / FRONTEND RECOVERY (Multi-Page Logic)
+# --- 3. HARDENED MPA ROUTING ---
 @app.get("/")
 async def serve_index():
     return FileResponse(str(BASE_DIR / "index.html"))
@@ -83,37 +94,42 @@ async def serve_dashboard():
 
 @app.get("/{full_path:path}")
 async def catch_all(full_path: str):
+    # Security: Prevent directory traversal
+    if ".." in full_path or full_path.startswith("/"):
+        return JSONResponse(status_code=400, content={"error": "Invalid path request"})
+
     # 1. Map .html files in root natively (MPA Support)
     if full_path.endswith(".html"):
         local_file = BASE_DIR / full_path
-        if local_file.exists():
+        if local_file.exists() and local_file.is_file():
             return FileResponse(str(local_file))
 
     # 2. Map Clean URLs to their .html counterparts
-    potential_pages = ["signin", "signup", "dashboard"]
+    potential_pages = ["signin", "signup", "dashboard", "about", "casestudies", "theoryofchange", "sizepassport", "legal"]
     if full_path in potential_pages:
         return FileResponse(str(BASE_DIR / f"{full_path}.html"))
 
     # 3. Check for specific assets in public dir
     if "." in full_path:
         local_file = public_dir / full_path
-        if local_file.exists():
+        if local_file.exists() and local_file.is_file():
             return FileResponse(str(local_file))
-        return JSONResponse(status_code=404, content={"error": "Asset not found"})
+        return JSONResponse(status_code=404, content={"error": "Resource not found"})
 
-    # 4. Fallback to index for marketing routing
+    # 4. Final Fallback to index
     return FileResponse(str(BASE_DIR / "index.html"))
 
+# --- 4. GLOBAL ERROR HANDLER ---
 @app.exception_handler(Exception)
-async def generic_exception_handler(request, exc):
-    print(f"Unhandled error: {exc}")
+async def production_exception_handler(request: Request, exc: Exception):
+    logger.error(f"CRITICAL ERROR: {exc} | Path: {request.url.path}")
     return JSONResponse(
         status_code=500,
-        content={"error": {"code": 500, "message": str(exc)}}
+        content={"error": {"code": 500, "message": "Internal Infrastructure Error"}}
     )
 
 handler = app
 
 if __name__ == "__main__":
     import uvicorn
-    uvicorn.run(app, host="0.0.0.0", port=5001)
+    uvicorn.run(app, host="0.0.0.0", port=int(os.environ.get("PORT", 5001)))
