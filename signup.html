@@ -10,23 +10,8 @@
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
   <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800;900&display=swap" rel="stylesheet" />
 
-  <!-- --- UNIVERSAL TRIPLE-CDN FALLBACK SYSTEM --- -->
-  <script id="supabase-primary" src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2/dist/umd/supabase-js.min.js"></script>
-  <script>
-    (function() {
-      function loadFallback(url) {
-        console.warn("PfWait: Primary CDN blocked. Shifting to Global Reserve...");
-        const s = document.createElement('script');
-        s.src = url;
-        document.head.appendChild(s);
-      }
-      setTimeout(() => {
-        if (typeof window['supabase'] === 'undefined') {
-          loadFallback("https://unpkg.com/@supabase/supabase-js@2/dist/umd/supabase-js.min.js");
-        }
-      }, 1500);
-    })();
-  </script>
+  <!-- --- TRUE INDUSTRIAL SELF-HOSTING --- -->
+  <script src="/assets/supabase.min.js"></script>
 
   <style>
     :root {
@@ -70,7 +55,7 @@
       border-radius: 12px; font-size: 13px; font-weight: 800; cursor: pointer; transition: 0.2s;
     }
     .btn:hover { background: #6effeb; transform: translateY(-1px); }
-    .btn:disabled { opacity: 0.3; cursor: wait; filter: grayscale(1); }
+    .btn:disabled { opacity: 0.5; cursor: wait; }
 
     .switch-link { display: block; text-align: center; margin-top: 24px; font-size: 13px; color: var(--Neutral-400); text-decoration: none; transition: 0.2s; }
     .switch-link span { color: var(--Mint); font-weight: 700; }
@@ -88,7 +73,7 @@
       <h2>Get Access</h2>
       <p>Start your precision journey today.</p>
 
-      <form id="signUpForm" onsubmit="return false;">
+      <form id="signUpForm">
         <div class="form-group">
           <label class="form-label">Full Name</label>
           <input type="text" class="form-input" id="upName" placeholder="Full Name" required>
@@ -117,7 +102,7 @@
         </div>
 
         <div class="form-group">
-          <label class="form-label">Monthly Volume</label>
+          <label class="form-label">Monthly Volume (Scans)</label>
           <select id="upVolume" required>
             <option value="0-50">1 - 50 scans</option>
             <option value="51-200">51 - 200 scans</option>
@@ -131,7 +116,7 @@
           <input type="password" class="form-input" id="upPass" placeholder="••••••••" required>
         </div>
 
-        <button type="submit" class="btn" id="btnSignUp" disabled>Initializing System...</button>
+        <button type="submit" class="btn" id="btnSignUp">Initialize Merchant Account</button>
       </form>
 
       <a href="/signin" class="switch-link">Already have an account? <span>Sign In</span></a>
@@ -140,35 +125,19 @@
 
   <script>
     (function() {
+      // 1. ATOMIC CORE INITIALIZATION (Zero Latency)
+      const config = {
+        url: 'https://blsettabymllulsxtziw.supabase.co',
+        key: 'sb_publishable_miCOIXHtlxLkfDgpwE0N-g_BA1Q-x8y'
+      };
+      const KORRA_CORE = window.supabase.createClient(config.url, config.key);
+
       const form = document.getElementById('signUpForm');
       const btn = document.getElementById('btnSignUp');
-      let KORRA_ENGINE = null;
-
-      // 1. POLLING HANDSHAKE (Guarantees system is ready before button works)
-      function checkSystemReady() {
-        if (typeof window['supabase'] !== 'undefined' && window['supabase'].createClient) {
-          console.log("PfDebug: KORRA ENGINE ONLINE");
-          const config = {
-            url: 'https://blsettabymllulsxtziw.supabase.co',
-            key: 'sb_publishable_miCOIXHtlxLkfDgpwE0N-g_BA1Q-x8y'
-          };
-          KORRA_ENGINE = window['supabase'].createClient(config.url, config.key);
-          btn.disabled = false;
-          btn.textContent = 'Initialize Merchant Account';
-        } else {
-          setTimeout(checkSystemReady, 200);
-        }
-      }
-      checkSystemReady();
 
       form.addEventListener('submit', async (e) => {
         e.preventDefault();
         e.stopPropagation();
-
-        if (!KORRA_ENGINE) {
-          alert("Handshake Failure: System is still booting. Please wait 3 seconds.");
-          return;
-        }
 
         const email = document.getElementById('upEmail').value;
         const password = document.getElementById('upPass').value;
@@ -181,7 +150,7 @@
         btn.textContent = 'Linking Biometrics...';
 
         try {
-          const { data, error } = await KORRA_ENGINE.auth.signUp({
+          const { data, error } = await KORRA_CORE.auth.signUp({
             email,
             password,
             options: {
@@ -195,15 +164,13 @@
           });
 
           if (error) {
-            console.error("PfError:", error.message);
-            alert("Handshake Rejected: " + error.message);
+            alert(error.message);
           } else {
             alert("Success: Account created! Please check your email to verify your artisan portal.");
             window.location.href = '/signin';
           }
         } catch (err) {
-          console.error("PfError: Extension Conflict Detected:", err);
-          alert("Security Conflict: A browser extension (Monica/AI Copilot) is blocking the database handshake. Please try Incognito Mode or disable the extension.");
+          alert("Handshake Failure. Please check your internet connection.");
         } finally {
           btn.disabled = false;
           btn.textContent = 'Initialize Merchant Account';
