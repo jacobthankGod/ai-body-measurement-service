@@ -52,6 +52,7 @@
       border-radius: 12px; font-size: 13px; font-weight: 800; cursor: pointer; transition: 0.2s;
     }
     .btn:hover { background: #6effeb; transform: translateY(-1px); }
+    .btn:disabled { opacity: 0.5; cursor: wait; }
 
     .switch-link { display: block; text-align: center; margin-top: 24px; font-size: 13px; color: var(--Neutral-400); text-decoration: none; transition: 0.2s; }
     .switch-link span { color: var(--Mint); font-weight: 700; }
@@ -69,7 +70,7 @@
       <h2>Get Access</h2>
       <p>Start your precision journey today.</p>
 
-      <form id="signUpForm">
+      <form id="signUpForm" onsubmit="return false;">
         <div class="form-group">
           <label class="form-label">Full Name</label>
           <input type="text" class="form-input" id="upName" placeholder="Full Name" required>
@@ -112,41 +113,56 @@
           <input type="password" class="form-input" id="upPass" placeholder="••••••••" required>
         </div>
 
-        <button type="submit" class="btn">Initialize Merchant Account</button>
+        <button type="submit" class="btn" id="btnSignUp">Initialize Merchant Account</button>
       </form>
 
-      <a href="/signin.html" class="switch-link">Already have an account? <span>Sign In</span></a>
+      <a href="/signin" class="switch-link">Already have an account? <span>Sign In</span></a>
     </div>
   </div>
 
   <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2/dist/umd/supabase-js.min.js"></script>
   <script>
     (function() {
-      function initSupabase() {
-        if (typeof window.supabase === 'undefined') {
-          setTimeout(initSupabase, 500);
+      console.log("PfDebug: Signup Script Active");
+
+      const form = document.getElementById('signUpForm');
+      const btn = document.getElementById('btnSignUp');
+
+      // 1. ATOMIC ATTACHMENT (Prevents Reload immediately)
+      form.addEventListener('submit', async (e) => {
+        e.preventDefault();
+        e.stopPropagation();
+        console.log("PfDebug: Signup Submit Captured");
+
+        const email = document.getElementById('upEmail').value;
+        const password = document.getElementById('upPass').value;
+        const name = document.getElementById('upName').value;
+        const company = document.getElementById('upCompany').value;
+        const industry = document.getElementById('upIndustry').value;
+        const volume = document.getElementById('upVolume').value;
+
+        btn.disabled = true;
+        btn.textContent = 'Connecting to Vault...';
+
+        // 2. NAMESPACE GUARD (Wait for Supabase inside the click if needed)
+        if (typeof window['supabase'] === 'undefined' || !window['supabase'].createClient) {
+          console.error("PfError: Supabase namespace blocked or missing.");
+          alert("Security Handshake Delay: Please wait 2 seconds and try again.");
+          btn.disabled = false;
+          btn.textContent = 'Initialize Merchant Account';
           return;
         }
+
         const config = {
           supabaseUrl: 'https://blsettabymllulsxtziw.supabase.co',
           supabaseKey: 'sb_publishable_miCOIXHtlxLkfDgpwE0N-g_BA1Q-x8y'
         };
-        const supabase = window.supabase.createClient(config.supabaseUrl, config.supabaseKey);
 
-        document.getElementById('signUpForm').addEventListener('submit', async (e) => {
-          e.preventDefault();
-          const email = document.getElementById('upEmail').value;
-          const password = document.getElementById('upPass').value;
-          const name = document.getElementById('upName').value;
-          const company = document.getElementById('upCompany').value;
-          const industry = document.getElementById('upIndustry').value;
-          const volume = document.getElementById('upVolume').value;
+        try {
+          const client = window['supabase'].createClient(config.supabaseUrl, config.supabaseKey);
+          console.log("PfDebug: Supabase Client Initialized");
 
-          const btn = e.target.querySelector('button');
-          btn.textContent = 'Initializing...';
-          btn.style.opacity = '0.7';
-
-          const { data, error } = await supabase.auth.signUp({
+          const { data, error } = await client.auth.signUp({
             email,
             password,
             options: {
@@ -160,16 +176,21 @@
           });
 
           if (error) {
+            console.error("PfError: Supabase Reject:", error.message);
             alert(error.message);
-            btn.textContent = 'Initialize Merchant Account';
-            btn.style.opacity = '1';
           } else {
+            console.log("PfDebug: User Created Success");
             alert("Account created! Check your email for verification.");
             window.location.href = '/signin';
           }
-        });
-      }
-      initSupabase();
+        } catch (err) {
+          console.error("PfError: Fatal logic failure:", err);
+          alert("Connection Error. Please disable browser extensions (e.g. Monica) and try again.");
+        } finally {
+          btn.disabled = false;
+          btn.textContent = 'Initialize Merchant Account';
+        }
+      });
     })();
   </script>
 </body>
