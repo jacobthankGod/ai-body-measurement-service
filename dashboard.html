@@ -363,13 +363,46 @@
         } catch(e) {}
       }
 
-      // --- THE "KEY-READY" GUARD (Mauritius-Level Hardening) ---
+      // --- THE "SELF-HEALING" KEY PROVISIONER ---
+      async function provisionKey(userId) {
+        const statusLabel = document.getElementById('keyStatusLabel');
+        const btn = document.getElementById('btnRunInference');
+
+        statusLabel.innerHTML = `<span style="color:var(--Mint)">AUTOPROVISIONING MERCHANT KEY...</span>`;
+        const newKey = "korra_live_" + Math.random().toString(36).substring(2, 15) + Math.random().toString(36).substring(2, 15);
+
+        try {
+           const { error } = await window.KORRA_DB.from('api_keys').insert({
+             key: newKey,
+             user_id: userId,
+             tier: 'tailor_pro',
+             is_active: true
+           });
+
+           if (!error) {
+             console.log("PfDebug: Key Provisioned Successfully.");
+             activeApiKey = newKey;
+             fullRawKey = newKey;
+             document.getElementById('apiKeyDisplay').textContent = newKey.substring(0, 12) + "****************";
+             statusLabel.innerHTML = `<span style="color:var(--Mint)">✓ MERCHANT KEY READY: VAULT ACTIVATED</span>`;
+             btn.disabled = false;
+             btn.textContent = "Run AI Extraction";
+           } else {
+             throw error;
+           }
+        } catch (err) {
+           console.error("PfError: Provisioning Failed:", err);
+           statusLabel.innerHTML = `<span style="color:var(--Error)">! CRITICAL: DATABASE PERMISSION ERROR (406)</span>`;
+        }
+      }
+
       async function ensureApiKey(userId, retries = 3) {
         const statusLabel = document.getElementById('keyStatusLabel');
         const btn = document.getElementById('btnRunInference');
         const retryBtn = document.getElementById('btnManualSync');
 
         try {
+          // Forensic Fix: Specifically check key columns for existing key
           const { data, error } = await window.KORRA_DB.from('api_keys').select('key, user_id, is_active').eq('user_id', userId).eq('is_active', true).limit(1);
 
           if (data && data.length > 0) {
@@ -377,23 +410,20 @@
             activeApiKey = keyRecord.key;
             fullRawKey = keyRecord.key;
             document.getElementById('apiKeyDisplay').textContent = keyRecord.key.substring(0, 12) + "****************";
-
-            // ACTIVATE EXTRACTION ENGINE
             statusLabel.innerHTML = `<span style="color:var(--Mint)">✓ MERCHANT KEY VERIFIED: VAULT SYNCHRONIZED</span>`;
             btn.disabled = false;
             btn.textContent = "Run AI Extraction";
-            retryBtn.style.display = 'none';
           } else if (retries > 0) {
             console.warn(`PfRetry: Handshake attempt ${4 - retries}...`);
             setTimeout(() => ensureApiKey(userId, retries - 1), 1000);
           } else {
-            statusLabel.innerHTML = `<span style="color:var(--Error)">! HANDSHAKE TIMEOUT: API KEY NOT FOUND</span>`;
-            retryBtn.style.display = 'inline-block';
+            // SELF-HEAL: Create a key if none exist
+            provisionKey(userId);
           }
         } catch(e) {
-          console.error("API Key Fetch Error:", e);
-          statusLabel.innerHTML = `<span style="color:var(--Error)">! HANDSHAKE ERROR: CONNECTION TERMINATED</span>`;
-          retryBtn.style.display = 'inline-block';
+          console.error("API Key Handshake Failed:", e);
+          statusLabel.innerHTML = `<span style="color:var(--Error)">! HANDSHAKE ERROR: RETRYING...</span>`;
+          provisionKey(userId);
         }
       }
 
@@ -420,13 +450,10 @@
           switchTab(initialTab);
 
           document.getElementById('btnManualSync').addEventListener('click', () => {
-             document.getElementById('btnManualSync').textContent = "Synchronizing...";
              ensureApiKey(session.user.id);
           });
 
-        } catch (err) {
-          console.error("Critical Dashboard Failure:", err);
-        }
+        } catch (err) { console.error("Critical Dashboard Failure:", err); }
 
         document.getElementById('btnSignOut').addEventListener('click', async () => {
           await window.KORRA_DB.auth.signOut();
