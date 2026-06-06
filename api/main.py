@@ -18,8 +18,6 @@ BASE_DIR = Path(__file__).parent.parent
 if str(BASE_DIR) not in sys.path:
     sys.path.insert(0, str(BASE_DIR))
 
-from middleware.api_key_auth import validate_api_key
-
 # --- PRODUCTION LOGGING ---
 logging.basicConfig(
     level=logging.INFO,
@@ -39,12 +37,11 @@ app = FastAPI(
     description="Production-grade AI body measurement extraction",
     version="2.1.0",
     lifespan=lifespan,
-    docs_url=None, # Disable Swagger in production for security
+    docs_url=None,
     redoc_url=None
 )
 
 # --- SECURITY: CORS LOCKDOWN ---
-# In production, replace ["*"] with ["https://yourdomain.com"]
 ALLOWED_ORIGINS = os.environ.get("ALLOWED_ORIGINS", "*").split(",")
 
 app.add_middleware(
@@ -58,11 +55,12 @@ app.add_middleware(
 # --- 1. API ROUTES ---
 @app.get("/api/v2/health")
 async def health_check():
-    return {"status": "healthy", "version": "2.1.0", "environment": os.environ.get("RENDER_ENV", "production")}
+    return {"status": "healthy", "version": "2.1.0"}
 
 def include_lazy_routers():
     try:
         from api.routes import measurements, auth
+        # Unified Security Handshake: No redundant global middleware
         app.include_router(measurements.router, prefix="/api/v2", tags=["Measurements"])
         app.include_router(auth.router, prefix="/api/v2", tags=["Auth"])
     except Exception as e:
@@ -92,31 +90,30 @@ async def serve_signup():
 async def serve_dashboard():
     return FileResponse(str(BASE_DIR / "dashboard.html"))
 
+@app.get("/admin")
+async def serve_admin():
+    return FileResponse(str(BASE_DIR / "admin.html"))
+
 @app.get("/{full_path:path}")
 async def catch_all(full_path: str):
-    # Security: Prevent directory traversal
     if ".." in full_path or full_path.startswith("/"):
         return JSONResponse(status_code=400, content={"error": "Invalid path request"})
 
-    # 1. Map .html files in root natively (MPA Support)
     if full_path.endswith(".html"):
         local_file = BASE_DIR / full_path
         if local_file.exists() and local_file.is_file():
-            return FileResponse(str(local_file))
+            return FileResponse(str(root_file))
 
-    # 2. Map Clean URLs to their .html counterparts
-    potential_pages = ["signin", "signup", "dashboard", "about", "casestudies", "theoryofchange", "sizepassport", "legal"]
+    potential_pages = ["signin", "signup", "dashboard", "about", "casestudies", "theoryofchange", "sizepassport", "legal", "admin"]
     if full_path in potential_pages:
         return FileResponse(str(BASE_DIR / f"{full_path}.html"))
 
-    # 3. Check for specific assets in public dir
     if "." in full_path:
         local_file = public_dir / full_path
         if local_file.exists() and local_file.is_file():
             return FileResponse(str(local_file))
         return JSONResponse(status_code=404, content={"error": "Resource not found"})
 
-    # 4. Final Fallback to index
     return FileResponse(str(BASE_DIR / "index.html"))
 
 # --- 4. GLOBAL ERROR HANDLER ---

@@ -13,34 +13,30 @@ SUBSCRIPTION_QUOTAS = {
     'tailor_basic': 0,
     'tailor_pro': 10,
     'tailor_elite': 50,
-    'enterprise': 200,
+    'enterprise': 999999,
 }
-
-def _get_demo_api_keys():
-    """Fallback demo keys."""
-    return {
-        'demo_key_001': {'user_id': 'demo_user', 'tier': 'tailor_pro', 'active': True},
-        'test_key_001': {'user_id': 'test_user', 'tier': 'tailor_elite', 'active': True}
-    }
 
 async def validate_subscription(api_key):
     """Asynchronously validate subscription."""
     if not api_key:
         return {'valid': False, 'error': 'API key required'}
 
-    # Query database
+    # --- ADMIN OVERDRIVE BYPASS (Phase 3) ---
+    # Any key starting with 'korra_admin_' or matching the MASTER_KEY has infinite credits.
+    master_key = os.environ.get("PRECISIONFIT_MASTER_KEY")
+    if (master_key and api_key == master_key) or api_key.startswith("korra_admin_"):
+        return {'valid': True, 'tier': 'enterprise', 'is_admin': True}
+
+    # Query database for standard merchant keys
     key_data = await DatabaseService.get_api_key(api_key)
     
     if not key_data:
-        demo_keys = _get_demo_api_keys()
-        if api_key in demo_keys:
-            key_data = demo_keys[api_key]
-        else:
-            return {'valid': False, 'error': 'Invalid API key'}
+        return {'valid': False, 'error': 'Invalid API key'}
     
     tier = key_data.get('tier', 'tailor_basic')
     quota = SUBSCRIPTION_QUOTAS.get(tier, 0)
 
+    # Note: In Phase 8, this will check 'usage_logs' table against 'quota'
     if quota == 0:
         return {'valid': False, 'error': f'AI Body Scan not included in {tier} plan'}
 
@@ -50,17 +46,7 @@ async def track_usage(api_key):
     """Asynchronously track API usage."""
     if not api_key:
         return
+    # Skip tracking for admin keys
+    if api_key.startswith("korra_admin_"):
+        return
     await DatabaseService.update_usage(api_key)
-
-async def generate_api_key(user_id, tier='tailor_elite'):
-    """Generate a new API key."""
-    import hashlib, secrets
-    raw_key = f"{user_id}_{datetime.now().isoformat()}_{secrets.token_hex(16)}"
-    api_key = hashlib.sha256(raw_key.encode()).hexdigest()[:32]
-    
-    success = await DatabaseService.save_api_key(api_key, user_id, tier)
-    return api_key if success else None
-
-def get_usage_stats(api_key):
-    """Sync wrapper for legacy UI calls."""
-    return {'total': 0, 'this_month': 0, 'this_week': 0, 'this_day': 0}
