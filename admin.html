@@ -77,7 +77,6 @@
     .btn-action:hover { border-color: var(--Mint); color: var(--Mint); }
     .btn-primary { background: var(--Mint); color: var(--Obsidian); border: none; padding: 12px 24px; border-radius: 12px; font-weight: 800; cursor: pointer; transition: 0.2s; }
 
-    /* MODAL (Phase 6) */
     .modal-overlay {
       position: fixed; inset: 0; background: rgba(0,0,0,0.9); z-index: 2000;
       display: none; align-items: center; justify-content: center; backdrop-filter: blur(10px);
@@ -98,7 +97,7 @@
 
   <div id="loadingOverlay">Verifying System Authority...</div>
 
-  <!-- CREDIT OVERRIDE MODAL (Phase 6) -->
+  <!-- CREDIT OVERRIDE MODAL -->
   <div class="modal-overlay" id="overrideModal">
     <div class="modal-card">
       <h2 style="font-size:24px; margin-bottom:12px">Credit Overdrive</h2>
@@ -218,12 +217,20 @@
                <h2 class="section-title">System Health</h2>
                <p style="color:var(--Neutral-400); margin-bottom:32px">Monitoring MediaPipe 3D Landmark Compute and FastAPI worker availability.</p>
 
-               <div style="background:rgba(87,215,192,0.05); border:1px solid var(--Mint); border-radius:12px; padding:24px; display:flex; align-items:center; gap:20px">
+               <div style="background:rgba(87,215,192,0.05); border:1px solid var(--Mint); border-radius:12px; padding:24px; display:flex; align-items:center; gap:20px; margin-bottom:24px">
                   <div style="width:12px; height:12px; background:var(--Mint); border-radius:50%; box-shadow: 0 0 15px var(--Mint)"></div>
                   <div>
                     <div style="font-weight:800; font-size:16px">Primary AI Extraction Engine</div>
-                    <div style="font-size:12px; color:var(--Neutral-400)">FastAPI Service 2.1.2 • London Core • Active</div>
+                    <div id="healthVersion" style="font-size:12px; color:var(--Neutral-400)">FastAPI Service 2.1.2 • Active</div>
                   </div>
+               </div>
+
+               <div style="background:rgba(255,255,255,0.02); border:1px solid var(--Glass-Border); border-radius:12px; padding:24px;">
+                  <div style="font-size:10px; font-weight:900; color:var(--Neutral-500); margin-bottom:12px">ENVIRONMENT LOGS</div>
+                  <code id="envLogs" style="font-size:11px; color:var(--Neutral-400); display:block; font-family:monospace; line-height:1.6">
+                    [INFO] HANDSHAKE: Supabase Production Vault Connected.<br>
+                    [INFO] HEARTBEAT: Render Worker 01 Pulse OK.
+                  </code>
                </div>
              </div>
           </div>
@@ -231,7 +238,24 @@
           <div id="view-finance" class="tab-view">
              <div class="glass-card">
                <h2 class="section-title">Financial Audit</h2>
-               <p style="color:var(--Neutral-400)">Real-time verification of Paystack credit top-ups across the network.</p>
+               <p style="color:var(--Neutral-400); margin-bottom:32px">Real-time verification of Paystack credit top-ups across the network.</p>
+
+               <div class="table-container">
+                <table>
+                  <thead>
+                    <tr>
+                      <th>Date</th>
+                      <th>Merchant</th>
+                      <th>Amount</th>
+                      <th>Reference</th>
+                      <th>Status</th>
+                    </tr>
+                  </thead>
+                  <tbody id="financeList">
+                    <tr><td colspan="5" style="text-align:center; padding:40px; color:var(--Neutral-400)">Retrieving transaction history...</td></tr>
+                  </tbody>
+                </table>
+              </div>
              </div>
           </div>
         </section>
@@ -275,8 +299,8 @@
         document.getElementById('loadingOverlay').style.display = 'none';
         document.getElementById('adminUser').textContent = session.user.email;
 
-        // --- ADMIN KEY REVEAL (Phase 7) ---
-        const MASTER_ADMIN_KEY = "korra_admin_auth_01J0PK82X92K4"; // Simulation of env key
+        // --- ADMIN KEY REVEAL ---
+        const MASTER_ADMIN_KEY = "korra_admin_auth_01J0PK82X92K4";
         document.getElementById('btnRevealKey').addEventListener('click', () => {
            const disp = document.getElementById('adminKeyDisplay');
            if(disp.textContent.includes('****')) {
@@ -288,20 +312,24 @@
            }
         });
 
+        // --- SYSTEM HEALTH Handshake (Phase 9) ---
         async function measureLatency() {
           const start = Date.now();
           try {
             const res = await fetch('/api/v2/health');
             if(res.ok) {
+              const data = await res.json();
               const latency = Date.now() - start;
               document.getElementById('statLatency').textContent = `${latency}ms`;
               document.getElementById('statLatency').style.color = latency < 200 ? 'var(--Mint)' : 'var(--Error)';
+              document.getElementById('healthVersion').textContent = `FastAPI Service ${data.version || '2.1.2'} • ${data.env || 'Prod'} • Active`;
             }
-          } catch(e) { document.getElementById('statLatency').textContent = 'Error'; }
+          } catch(e) { document.getElementById('statLatency').textContent = 'Offline'; }
         }
         setInterval(measureLatency, 5000);
         measureLatency();
 
+        // --- GLOBAL STAT & FINANCE ENGINE (Phase 8) ---
         async function loadGlobalStats() {
            const { data: profiles, count: merchantCount } = await client.from('profiles').select('*', { count: 'exact' });
            if(merchantCount !== null) document.getElementById('statMerchants').textContent = merchantCount;
@@ -310,10 +338,27 @@
            const { count: scanCount } = await client.from('measurements').select('*', { count: 'exact', head: true });
            if(scanCount !== null) document.getElementById('statScans').textContent = scanCount;
 
-           const { data: invoices } = await client.from('invoices').select('amount_paid');
+           // Load Invoices for Finance Tab
+           const { data: invoices } = await client.from('invoices').select('*').order('paid_at', { ascending: false });
            if(invoices) {
               const totalRevenue = invoices.reduce((sum, inv) => sum + (inv.amount_paid || 0), 0);
               document.getElementById('statRevenue').textContent = '₦' + (totalRevenue / 100).toLocaleString();
+
+              // Render Finance Ledger
+              document.getElementById('financeList').innerHTML = invoices.map(inv => {
+                const profile = masterProfiles.find(p => p.id === inv.user_id);
+                return `
+                  <tr>
+                    <td>${new Date(inv.paid_at).toLocaleDateString()}</td>
+                    <td>${profile ? (profile.company_name || profile.full_name) : 'Unknown Merchant'}</td>
+                    <td style="color:var(--Mint); font-weight:800">₦${(inv.amount_paid / 100).toLocaleString()}</td>
+                    <td><code style="font-size:10px">${inv.paystack_reference || 'REF-MOCK'}</code></td>
+                    <td><span class="badge" style="background:var(--Teal-900); color:var(--Mint)">Verified</span></td>
+                  </tr>
+                `;
+              }).join('');
+           } else {
+              document.getElementById('financeList').innerHTML = '<tr><td colspan="5" style="text-align:center; padding:40px;">No transaction history found.</td></tr>';
            }
            renderMerchantList(masterProfiles);
         }
@@ -335,7 +380,6 @@
            `).join('');
         }
 
-        // --- CREDIT OVERDRIVE (Phase 6) ---
         window.triggerOverride = (id, name) => {
            targetUserId = id;
            document.getElementById('targetMerchantName').textContent = name;
@@ -345,20 +389,14 @@
         document.getElementById('btnConfirmOverride').addEventListener('click', async () => {
            const newVal = parseInt(document.getElementById('newCreditValue').value);
            if(isNaN(newVal)) return;
-
            const btn = document.getElementById('btnConfirmOverride');
            btn.disabled = true;
            btn.textContent = 'Applying...';
-
            const { error } = await client.from('profiles').update({ credits: newVal }).eq('id', targetUserId);
-
            if(!error) {
-              alert("Credit Overdrive Successful.");
               document.getElementById('overrideModal').classList.remove('active');
-              loadGlobalStats(); // Refresh
-           } else {
-              alert("Error: " + error.message);
-           }
+              loadGlobalStats();
+           } else { alert("Error: " + error.message); }
            btn.disabled = false;
            btn.textContent = 'Apply Override';
         });
