@@ -80,7 +80,7 @@
         <button type="submit" class="btn">Enter Workbench</button>
       </form>
 
-      <a href="/signup.html" class="switch-link">Don't have an account? <span>Get Access</span></a>
+      <a href="/signup" class="switch-link">Don't have an account? <span>Get Access</span></a>
     </div>
   </div>
 
@@ -88,6 +88,9 @@
   <script src="/assets/supabase.min.js"></script>
   <script>
     (function() {
+      // --- SUPER-USER AUTHORITY LIST ---
+      const ADMIN_LIST = ['springbionics@gmail.com', 'admin@korra.work'];
+
       function initSupabase() {
         if (typeof window.supabase === 'undefined') {
           setTimeout(initSupabase, 500);
@@ -104,17 +107,25 @@
           const email = document.getElementById('inEmail').value;
           const password = document.getElementById('inPass').value;
           const btn = e.target.querySelector('button');
-          btn.textContent = 'Verifying...';
+          btn.textContent = 'Verifying Authority...';
           btn.style.opacity = '0.7';
 
           const { data, error } = await supabase.auth.signInWithPassword({ email, password });
+
           if (error) {
             alert(error.message);
             btn.textContent = 'Enter Workbench';
             btn.style.opacity = '1';
           } else {
-            // REDIRECT TO DASHBOARD (Clean Path)
-            window.location.href = '/dashboard';
+            console.log("PfDebug: Auth Success. Routing for", email);
+
+            // --- SMART ROUTING (Mauritius-Level Hardening) ---
+            if (ADMIN_LIST.includes(email.toLowerCase())) {
+              console.log("PfDebug: Super-User Detected. Routing to Admin Terminal.");
+              window.location.href = '/admin';
+            } else {
+              window.location.href = '/dashboard';
+            }
           }
         });
       }
