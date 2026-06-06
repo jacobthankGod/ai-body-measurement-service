@@ -103,7 +103,6 @@
     .grid-4 { display: grid; grid-template-columns: repeat(4, 1fr); gap: var(--S-24); }
     .grid-3 { display: grid; grid-template-columns: repeat(3, 1fr); gap: var(--S-32); }
 
-    /* AUDIENCE MOSAIC */
     .mosaic-grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: var(--S-24); margin-top: var(--S-64); }
     .mosaic-card {
         height: 380px; border-radius: 24px; overflow: hidden; position: relative;
@@ -151,14 +150,14 @@
       </div>
       <nav id="marketingNav">
         <a href="#technology">Technology</a>
-        <a href="#merchant-success">Merchant Success</a>
+        <a href="#case-studies">Case studies</a>
         <a href="#about">About</a>
       </nav>
       <div style="flex:1"></div>
       <div style="display:flex; align-items:center; gap:var(--S-16)">
         <div id="authButtons" style="display:flex; gap:var(--S-12)">
           <button class="btn btn-outline" id="btnNavSignIn">Sign In</button>
-          <button class="btn btn-primary" id="btnNavSignUp">Get Access</button>
+          <button class="btn btn-primary" id="btnNavSignUp">Get Started</button>
         </div>
         <div id="signedBar">
           <span style="font-weight:700; font-size:12px; color:var(--Mint)" id="userEmailDisplay"></span>
@@ -170,11 +169,11 @@
 
   <!-- 1. HOME VIEW -->
   <div id="viewHome" class="view active">
-    <!-- HERO (Validated Centralization) -->
+    <!-- SECTION 0: HERO (Final Blueprint Alignment) -->
     <section class="hero">
       <div class="container">
         <h1 class="hero-headline">AI-powered body measuring for faster, better fit.</h1>
-        <p class="hero-sub">Get accurate body measurements with just a phone. Share them with any tailor — from anywhere. Whether your tailor is across town or across the country, KORRA makes sure the fit is right the first time.</p>
+        <p class="hero-sub">Get accurate body measurements with just a phone. Built for tailors, fashion businesses, and people who need their measurements fast.</p>
 
         <div style="display:flex; justify-content:center; gap:40px; margin-top:40px">
            <div style="text-align:center"><div style="font-size:32px; font-weight:900; color:var(--Mint)">60s</div><div style="font-size:11px; font-weight:900; opacity:0.5; text-transform:uppercase">To Capture</div></div>
@@ -188,23 +187,26 @@
           <div>
             <h3>Stop Guessing. Start Fitting.</h3>
             <div style="display:flex; flex-direction:column; gap:8px; margin-top:16px">
-              <span style="font-size:14px; color:var(--Neutral-400)">✓ Clinical 3D Biometric Extraction</span>
+              <span style="font-size:14px; color:var(--Neutral-400)">✓ Professional 3D Data</span>
               <span style="font-size:14px; color:var(--Neutral-400)">✓ Zero Latency Sharing</span>
             </div>
           </div>
-          <button class="btn btn-primary btn-large" id="btnHeroTrial">Start Your 7-Day Trial</button>
+          <div style="display:flex; gap:16px">
+             <button class="btn btn-outline" id="btnSeeWorks">See How It Works</button>
+             <button class="btn btn-primary btn-large" id="btnHeroTrial">Get Started</button>
+          </div>
         </div>
       </div>
     </section>
 
-    <!-- STATUS QUO -->
+    <!-- SECTION 1: THE CORE PROBLEM (Manual Variance) -->
     <section class="block">
       <div class="container">
         <div class="grid-impact">
           <div>
-            <div class="section-eyebrow">The Status Quo</div>
-            <h2 class="section-title">The Fragmented Cost of Manual Measurement.</h2>
-            <p class="section-desc">Subjective hand-tapes are the industrial bottleneck of the $1.5T fashion market. KORRA digitizes the source of truth, specifically bridging the gap where expensive hardware cannot reach.</p>
+            <div class="section-eyebrow">The Problem</div>
+            <h2 class="section-title">Manual measuring slows everything down.</h2>
+            <p class="section-desc">Taking measurements by hand takes time. It also creates mistakes, extra fittings, and more work. The bigger problem is that measurements are often not the same from one person to another. A customer can get different numbers depending on who measures them.</p>
           </div>
           <div class="glass-card image-card">
             <img src="/assets/body-capture.png" alt="Industrial Error">
@@ -214,36 +216,53 @@
       </div>
     </section>
 
-    <!-- THE CUSTOM TAILORING PARADOX (CTA Hardening) -->
+    <!-- SECTION 2: THE FRUSTRATION LOOP (Fit Still Goes Wrong) -->
     <section class="block" style="background:rgba(255,255,255,0.01)">
       <div class="container">
         <div style="display:flex; justify-content:space-between; align-items:flex-end; margin-bottom:var(--S-64)">
           <div style="max-width:700px">
-            <div class="section-eyebrow">The Paradox</div>
-            <h2 class="section-title">Fit Still Goes Wrong.</h2>
-            <p class="section-desc">Even with manual data, garments frequently come back too tight or too small. KORRA provides an objective clinical source of truth.</p>
+            <div class="section-eyebrow">The Frustration Loop</div>
+            <h2 class="section-title">Common problems.</h2>
+            <p class="section-desc">For many people, there is no easy way to keep a reliable size record. This creates a cycle of failed expectations.</p>
           </div>
           <button class="btn btn-primary" id="btnParadoxFix">Get Accurate Data</button>
         </div>
         <div class="grid-3">
            <div class="glass-card">
-              <h4 style="color:var(--Mint); font-size:18px; font-weight:900; margin-bottom:16px">No More Disputes</h4>
-              <p style="font-size:14px; color:var(--Neutral-400); line-height:1.5">Eliminate the "who measured wrong" argument. Clinical data doesn't lie.</p>
+              <h4 style="color:var(--Mint); font-size:18px; font-weight:900; margin-bottom:16px">Fit still goes wrong</h4>
+              <p style="font-size:14px; color:var(--Neutral-400); line-height:1.5">Even when measurements are provided, garments frequently come back too long, too small, or too tight — and disputes over measurement error add to the frustration.</p>
            </div>
            <div class="glass-card">
-              <h4 style="color:var(--Mint); font-size:18px; font-weight:900; margin-bottom:16px">Zero Delayed Delivery</h4>
-              <p style="font-size:14px; color:var(--Neutral-400); line-height:1.5">Scheduled trial fittings crush timelines. Stop missing delivery deadlines.</p>
+              <h4 style="color:var(--Mint); font-size:18px; font-weight:900; margin-bottom:16px">Delayed delivery</h4>
+              <p style="font-size:14px; color:var(--Neutral-400); line-height:1.5">Tailors and customers have to commit to a date and time for trial fittings, and the timeline frequently exceeds what was agreed. Multiple revision rounds compound this.</p>
            </div>
            <div class="glass-card">
-              <h4 style="color:var(--Mint); font-size:18px; font-weight:900; margin-bottom:16px">Standardized Sizing</h4>
-              <p style="font-size:14px; color:var(--Neutral-400); line-height:1.5">62% of consumers struggle with fit. We bridge the global standardization gap.</p>
+              <h4 style="color:var(--Mint); font-size:18px; font-weight:900; margin-bottom:16px">Sizing has no standard</h4>
+              <p style="font-size:14px; color:var(--Neutral-400); line-height:1.5">62% of consumers struggle to find clothing that fits, largely due to a lack of standardization — and even custom tailoring doesn't fully solve this when measurements are collected inconsistently.</p>
            </div>
         </div>
       </div>
     </section>
 
-    <!-- CROSS-BORDER IMPACT (CTA Hardening) -->
+    <!-- SECTION 3: THE SOLUTION (A faster way) -->
     <section class="block">
+      <div class="container">
+        <div class="grid-impact">
+          <div>
+            <div class="section-eyebrow">The Solution</div>
+            <h2 class="section-title">A faster way to measure people.</h2>
+            <p class="section-desc">Our phone-based tool helps capture body measurements quickly and clearly. KORRA provides the clinical source of truth across all users and locations.</p>
+          </div>
+          <div class="glass-card image-card">
+             <img src="/assets/body-capture.png" alt="Clinical Precision">
+             <div class="badge-card">CLINICAL AI PRECISION</div>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <!-- SECTION 4: BRIDGING THE DISTANCE FACTOR -->
+    <section class="block" style="background:rgba(255,255,255,0.01)">
       <div class="container">
         <div class="grid-impact grid-swapped">
           <div class="glass-card image-card">
@@ -251,72 +270,101 @@
              <div class="badge-card">LMIC INCLUSION ENGINE</div>
           </div>
           <div>
-            <div class="section-eyebrow">Distance Factor</div>
-            <h2 class="section-title">Distance is no longer a barrier.</h2>
-            <p class="section-desc">By offloading 3D modeling to free smartphone hardware, KORRA enables artisans in emerging economies to reach global clients. High-fidelity data captured anywhere is identical to what the tailor receives, everywhere.</p>
+            <div class="section-eyebrow">Global Reach</div>
+            <h2 class="section-title">Bridging the Distance Factor.</h2>
+            <p class="section-desc">Tailors in LMICs often work with customers who are far away — in another city, village, or country. Getting accurate body measurements becomes a guessing game through messages or old records. London Client. Lagos Tailor. Perfect Fit. No travel, no tape measure, no guesswork needed.</p>
             <button class="btn btn-primary" style="margin-top:40px" id="btnDistanceFix">Bridge the Gap</button>
           </div>
         </div>
       </div>
     </section>
 
-    <!-- AUDIENCE MOSAIC (New Webflow-Style Section) -->
-    <section class="block" style="background:rgba(255,255,255,0.01)">
+    <!-- SECTION 5: PRECISION AT SOURCE (HOW IT WORKS) -->
+    <section class="block" id="technology">
       <div class="container">
-        <div style="text-align:center; max-width:800px; margin:0 auto">
-          <div class="section-eyebrow">Industry Focus</div>
-          <h2 class="section-title">Built for brands dedicated to fit.</h2>
-          <p class="section-desc" style="margin-left:auto; margin-right:auto">KORRA serves a wide range of businesses globally, providing the infrastructure for clinical-grade precision.</p>
+        <div style="text-align:center; max-width:700px; margin:0 auto 80px">
+          <div class="section-eyebrow">How it works</div>
+          <h2 class="section-title">Precision at the source.</h2>
+          <p class="section-desc" style="margin-left:auto; margin-right:auto">Built for tailors who want speed and individuals who want fit.</p>
         </div>
-
-        <div class="mosaic-grid">
-          <div class="mosaic-card" onclick="window.location.hash='#signup'">
-            <img src="/assets/body-capture.png" class="mosaic-img" alt="Luxury MTM">
-            <div class="mosaic-overlay">
-              <div class="mosaic-title">Luxury Made-To-Measure</div>
-              <div class="mosaic-desc">For elite brands requiring ±1cm accuracy.</div>
-            </div>
+        <div class="grid-3">
+          <div class="glass-card step-card">
+            <span class="step-num">01. SCAN</span><br>
+            <span class="step-text" style="font-size:20px; margin-top:16px; display:block">Stand in front of your phone.</span>
           </div>
-          <div class="mosaic-card" onclick="window.location.hash='#signup'">
-            <img src="/assets/homepage_image.png" class="mosaic-img" alt="Manufacturing">
-            <div class="mosaic-overlay">
-              <div class="mosaic-title">On-Demand Manufacturing</div>
-              <div class="mosaic-desc">Automate production with biometric data.</div>
-            </div>
+          <div class="glass-card step-card">
+            <span class="step-num">02. MEASURE</span><br>
+            <span class="step-text" style="font-size:20px; margin-top:16px; display:block">The system captures your body measurements.</span>
           </div>
-          <div class="mosaic-card" onclick="window.location.hash='#signup'">
-            <img src="/assets/body-capture.png" class="mosaic-img" alt="RTW">
-            <div class="mosaic-overlay">
-              <div class="mosaic-title">Ready-To-Wear</div>
-              <div class="mosaic-desc">Reduce returns via size recommendation.</div>
-            </div>
-          </div>
-          <div class="mosaic-card" onclick="window.location.hash='#signup'">
-            <img src="/assets/homepage_image.png" class="mosaic-img" alt="Bridal">
-            <div class="mosaic-overlay">
-              <div class="mosaic-title">Bridal & Tuxedo</div>
-              <div class="mosaic-desc">Eliminate the stress of remote fittings.</div>
-            </div>
-          </div>
-          <div class="mosaic-card" onclick="window.location.hash='#signup'">
-            <img src="/assets/body-capture.png" class="mosaic-img" alt="Custom">
-            <div class="mosaic-overlay">
-              <div class="mosaic-title">Custom Apparel</div>
-              <div class="mosaic-desc">Scale your artisan workshop globally.</div>
-            </div>
-          </div>
-          <div class="mosaic-card" onclick="window.location.hash='#signup'">
-            <img src="/assets/homepage_image.png" class="mosaic-img" alt="Uniforms">
-            <div class="mosaic-overlay">
-              <div class="mosaic-title">Uniform Manufacturers</div>
-              <div class="mosaic-desc">Clinical precision for large-scale teams.</div>
-            </div>
+          <div class="glass-card step-card">
+            <span class="step-num">03. USE</span><br>
+            <span class="step-text" style="font-size:20px; margin-top:16px; display:block">Share measurements with your tailor or for shopping.</span>
           </div>
         </div>
       </div>
     </section>
 
-    <!-- ECONOMIC ENGINE (CTA Hardening) -->
+    <!-- SECTION 6: GLOBAL SIZE PASSPORT (Individual Focus) -->
+    <section class="block">
+      <div class="container">
+        <div class="grid-impact">
+          <div>
+            <div class="section-eyebrow">Biometric Identity</div>
+            <h2 class="section-title">Your Global Size Passport.</h2>
+            <p class="section-desc">Own your data. Measure once, use everywhere. KORRA empowers individual users with a persistent digital twin for local artisans, international tailors, or online shopping.</p>
+            <div style="display:flex; flex-direction:column; gap:12px; margin-top:40px">
+               <div style="display:flex; align-items:center; gap:12px; font-weight:700; color:var(--Neutral-400); font-size:14px"><span style="color:var(--Mint)">✓</span> Own Your Biometric Identity</div>
+               <div style="display:flex; align-items:center; gap:12px; font-weight:700; color:var(--Neutral-400); font-size:14px"><span style="color:var(--Mint)">✓</span> Avoid Re-Measuring Visits</div>
+               <div style="display:flex; align-items:center; gap:12px; font-weight:700; color:var(--Neutral-400); font-size:14px"><span style="color:var(--Mint)">✓</span> Share Globally with Any Artisan</div>
+            </div>
+          </div>
+          <div class="glass-card image-card">
+             <img src="/assets/body-capture.png" alt="Size Passport Interface">
+             <div class="badge-card">KORRA SIZE PASSPORT</div>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <!-- SECTION 7: AUDIENCE MOSAIC -->
+    <section class="block" style="background:rgba(255,255,255,0.01)">
+      <div class="container">
+        <div style="text-align:center; max-width:800px; margin:0 auto">
+          <div class="section-eyebrow">Industry Focus</div>
+          <h2 class="section-title">Built for brands dedicated to fit.</h2>
+          <p class="section-desc" style="margin-left:auto; margin-right:auto">We serve a wide range of businesses dedicated to delivering the best fit.</p>
+        </div>
+
+        <div class="mosaic-grid">
+          <div class="mosaic-card" onclick="window.location.hash='#signup'">
+            <img src="/assets/body-capture.png" class="mosaic-img" alt="Luxury MTM">
+            <div class="mosaic-overlay"><div class="mosaic-title">Luxury Made-To-Measure</div><div class="mosaic-desc">For luxury made to measure brands.</div></div>
+          </div>
+          <div class="mosaic-card" onclick="window.location.hash='#signup'">
+            <img src="/assets/homepage_image.png" class="mosaic-img" alt="Manufacturing">
+            <div class="mosaic-overlay"><div class="mosaic-title">On-Demand Manufacturing</div><div class="mosaic-desc">For on-demand manufacturing.</div></div>
+          </div>
+          <div class="mosaic-card" onclick="window.location.hash='#signup'">
+            <img src="/assets/body-capture.png" class="mosaic-img" alt="RTW">
+            <div class="mosaic-overlay"><div class="mosaic-title">Ready-To-Wear</div><div class="mosaic-desc">For ready-to-wear businesses.</div></div>
+          </div>
+          <div class="mosaic-card" onclick="window.location.hash='#signup'">
+            <img src="/assets/homepage_image.png" class="mosaic-img" alt="Bridal">
+            <div class="mosaic-overlay"><div class="mosaic-title">Bridal & Tuxedo</div><div class="mosaic-desc">For bridal and tuxedo businesses.</div></div>
+          </div>
+          <div class="mosaic-card" onclick="window.location.hash='#signup'">
+            <img src="/assets/body-capture.png" class="mosaic-img" alt="Custom">
+            <div class="mosaic-overlay"><div class="mosaic-title">Custom Apparel</div><div class="mosaic-desc">For custom apparel companies.</div></div>
+          </div>
+          <div class="mosaic-card" onclick="window.location.hash='#signup'">
+            <img src="/assets/homepage_image.png" class="mosaic-img" alt="Uniforms">
+            <div class="mosaic-overlay"><div class="mosaic-title">Uniform Manufacturers</div><div class="mosaic-desc">For uniform manufacturers.</div></div>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <!-- SECTION 8: THE ECONOMIC ENGINE -->
     <section class="block" id="merchant-success">
       <div class="container">
         <div style="display:flex; justify-content:space-between; align-items:flex-end; margin-bottom:60px">
@@ -325,32 +373,35 @@
         </div>
         <div class="grid-4">
           <div class="glass-card" style="padding:var(--S-32)">
-            <h4 style="color:var(--Mint); font-size:24px; font-weight:900; margin-bottom:8px">$0.50</h4>
-            <p style="font-size:13px; color:var(--Neutral-400)">Cost per scan—radically lower than $20k industrial hardware.</p>
-          </div>
-          <div class="glass-card" style="padding:var(--S-32)">
             <h4 style="color:var(--Mint); font-size:24px; font-weight:900; margin-bottom:8px">90%</h4>
-            <p style="font-size:13px; color:var(--Neutral-400)">Reduction in fabric waste from pattern error.</p>
+            <p style="font-size:13px; color:var(--Neutral-400)">Reduction in fabric waste from measurement error.</p>
           </div>
           <div class="glass-card" style="padding:var(--S-32)">
             <h4 style="color:var(--Mint); font-size:24px; font-weight:900; margin-bottom:8px">2X</h4>
             <p style="font-size:13px; color:var(--Neutral-400)">More customers served per worker daily.</p>
           </div>
           <div class="glass-card" style="padding:var(--S-32)">
-            <h4 style="color:var(--Mint); font-size:24px; font-weight:900; margin-bottom:8px">1B+</h4>
-            <p style="font-size:13px; color:var(--Neutral-400)">Potential users reached in emerging economies.</p>
+            <h4 style="color:var(--Mint); font-size:24px; font-weight:900; margin-bottom:8px">$0.50</h4>
+            <p style="font-size:13px; color:var(--Neutral-400)">Cost per measurement using smartphone AI.</p>
+          </div>
+          <div class="glass-card" style="padding:var(--S-32)">
+            <h4 style="color:var(--Mint); font-size:24px; font-weight:900; margin-bottom:8px">99%</h4>
+            <p style="font-size:13px; color:var(--Neutral-400)">More consistent results across different users and locations.</p>
           </div>
         </div>
       </div>
     </section>
 
-    <!-- FINAL CTA -->
+    <!-- SECTION 9: FINAL CTA (Final Blueprint) -->
     <section class="block">
       <div class="container">
         <div class="final-banner">
-          <h2>Double Your<br>Output Today.</h2>
-          <p>Join the thousands of merchants and users building the future of precise, sustainable production. Start your journey now.</p>
-          <button class="btn btn-primary btn-large" style="background:#fff; color:var(--Obsidian)" id="btnFinalTrial">Start Your 7-Day Trial</button>
+          <h2>Fast measurements.<br>Better fit. Less waste.</h2>
+          <p>Built for tailors and customers who want accuracy without the hassle.</p>
+          <div style="display:flex; gap:16px">
+             <button class="btn btn-outline" style="background:#000; border-color:#fff">Request a Demo</button>
+             <button class="btn btn-primary btn-large" style="background:#fff; color:var(--Obsidian)" id="btnFinalTrial">Try It Now</button>
+          </div>
         </div>
       </div>
     </section>
@@ -360,7 +411,7 @@
         <div class="footer-links">
           <div class="footer-col"><h4>Infrastructure</h4><a href="#technology">Pattern Accuracy</a><a href="#merchant-success">Economic Engine</a></div>
           <div class="footer-col"><h4>Organization</h4><a href="#about">About KORRA</a><a href="#">Merchant Blog</a></div>
-          <div class="footer-col"><h4>Resources</h4><a href="#">Size Passport</a><a href="#">API Integration</a></div>
+          <div class="footer-col"><h4>Resources</h4><a href="#">Size Passport</a><a href="#">Theory of Change</a></div>
           <div class="footer-col"><h4>Legal</h4><a href="#">Data Privacy</a><a href="#">Terms</a></div>
         </div>
         <div style="margin-top:80px; padding-top:40px; border-top:1px solid var(--Glass-Border); display:flex; justify-content:space-between; align-items:center; font-size:13px; opacity:0.3">
@@ -375,7 +426,7 @@
   <div id="viewSignIn" class="view auth-view">
     <div class="auth-card glass-card">
       <h2 style="font-size:32px; font-weight:800; margin-bottom:12px">Welcome back</h2>
-      <p style="color:var(--Neutral-400); margin-bottom:48px">Log in to enter your tailoring command center.</p>
+      <p style="color:var(--Neutral-400); margin-bottom:48px">Identify yourself to enter the command center.</p>
       <form id="signInForm">
         <div class="form-group"><label class="form-label">EMAIL</label><input type="email" class="form-input" id="inEmail" required></div>
         <div class="form-group"><label class="form-label">PASSWORD</label><input type="password" class="form-input" id="inPass" required></div>
