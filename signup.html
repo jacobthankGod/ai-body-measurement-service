@@ -22,12 +22,12 @@
     }
 
     * { box-sizing: border-box; -webkit-font-smoothing: antialiased; margin: 0; padding: 0; }
-    html, body { height: 100%; background: var(--Obsidian); color: var(--White); font-family: 'Inter', sans-serif; overflow: hidden; }
+    html, body { height: 100%; background: var(--Obsidian); color: var(--White); font-family: 'Inter', sans-serif; }
 
-    .auth-container { width: 100%; height: 100vh; display: flex; align-items: center; justify-content: center; padding: 20px; }
+    .auth-container { width: 100%; min-height: 100vh; display: flex; align-items: center; justify-content: center; padding: 60px 20px; overflow-y: auto; }
 
     .auth-card {
-      width: 100%; max-width: 440px; background: var(--Glass); border: 1px solid var(--Glass-Border);
+      width: 100%; max-width: 500px; background: var(--Glass); border: 1px solid var(--Glass-Border);
       border-radius: 24px; padding: var(--S-48); backdrop-filter: blur(20px);
     }
 
@@ -40,11 +40,12 @@
 
     .form-group { margin-bottom: 24px; }
     .form-label { display: block; font-size: 10px; font-weight: 900; text-transform: uppercase; color: var(--Neutral-400); letter-spacing: 0.1em; margin-bottom: 8px; }
-    .form-input {
+    .form-input, select {
       width: 100%; height: 52px; background: rgba(255,255,255,0.05); border: 1px solid var(--Glass-Border);
       border-radius: 12px; padding: 0 16px; color: #fff; font-size: 14px; transition: 0.2s;
     }
-    .form-input:focus { outline: none; border-color: var(--Mint); background: rgba(255,255,255,0.08); }
+    .form-input:focus, select:focus { outline: none; border-color: var(--Mint); background: rgba(255,255,255,0.08); }
+    select option { background: #000; color: #fff; }
 
     .btn {
       width: 100%; height: 52px; background: var(--Mint); color: var(--Obsidian); border: none;
@@ -73,14 +74,44 @@
           <label class="form-label">Full Name</label>
           <input type="text" class="form-input" id="upName" placeholder="Full Name" required>
         </div>
+
         <div class="form-group">
           <label class="form-label">Email Address</label>
           <input type="email" class="form-input" id="upEmail" placeholder="name@company.com" required>
         </div>
+
+        <div style="display:grid; grid-template-columns: 1fr 1fr; gap: 20px;">
+          <div class="form-group">
+            <label class="form-label">Company Name</label>
+            <input type="text" class="form-input" id="upCompany" placeholder="Brand Name" required>
+          </div>
+          <div class="form-group">
+            <label class="form-label">Industry</label>
+            <select id="upIndustry" required>
+              <option value="luxury_mtm">Luxury MTM</option>
+              <option value="manufacturing">Manufacturing</option>
+              <option value="bridal">Bridal & Tuxedo</option>
+              <option value="ready_to_wear">Ready-To-Wear</option>
+              <option value="custom_apparel">Custom Apparel</option>
+            </select>
+          </div>
+        </div>
+
         <div class="form-group">
-          <label class="form-label">Create Key</label>
+          <label class="form-label">Monthly Volume (Scans)</label>
+          <select id="upVolume" required>
+            <option value="0-50">1 - 50 scans</option>
+            <option value="51-200">51 - 200 scans</option>
+            <option value="201-1000">201 - 1,000 scans</option>
+            <option value="1000+">1,000+ scans</option>
+          </select>
+        </div>
+
+        <div class="form-group">
+          <label class="form-label">Create Key (Password)</label>
           <input type="password" class="form-input" id="upPass" placeholder="••••••••" required>
         </div>
+
         <button type="submit" class="btn">Initialize Merchant Account</button>
       </form>
 
@@ -107,15 +138,25 @@
           const email = document.getElementById('upEmail').value;
           const password = document.getElementById('upPass').value;
           const name = document.getElementById('upName').value;
-          const btn = e.target.querySelector('button');
+          const company = document.getElementById('upCompany').value;
+          const industry = document.getElementById('upIndustry').value;
+          const volume = document.getElementById('upVolume').value;
 
+          const btn = e.target.querySelector('button');
           btn.textContent = 'Initializing...';
           btn.style.opacity = '0.7';
 
           const { data, error } = await supabase.auth.signUp({
             email,
             password,
-            options: { data: { full_name: name } }
+            options: {
+              data: {
+                full_name: name,
+                company_name: company,
+                industry: industry,
+                monthly_volume: volume
+              }
+            }
           });
 
           if (error) {
