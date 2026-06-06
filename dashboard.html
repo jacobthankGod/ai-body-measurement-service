@@ -390,21 +390,51 @@
           return;
         }
 
-        window.KORRA_DB = window.supabase.createClient(KORRA_CONFIG.supabaseUrl, KORRA_CONFIG.supabaseKey);
-        const { data: { session } } = await window.KORRA_DB.auth.getSession();
-        if (!session) { window.location.href = '/signin'; return; }
+        try {
+          // --- STEALTH HANDSHAKE (Mauritius-Level Hardening) ---
+          window.KORRA_DB = window.supabase.createClient(KORRA_CONFIG.supabaseUrl, KORRA_CONFIG.supabaseKey, {
+            auth: {
+              persistSession: true,
+              autoRefreshToken: true,
+              detectSessionInUrl: true
+            }
+          });
 
-        currentUser = session.user;
-        document.getElementById('loadingOverlay').style.display = 'none';
-        document.getElementById('userDisplay').textContent = session.user.email;
-        document.getElementById('settingsEmail').value = session.user.email;
+          // Forensic connection test to detect "Man-in-the-Middle" extensions
+          const { data: { session }, error: sessionError } = await window.KORRA_DB.auth.getSession();
 
-        fetchScans(session.user.id);
-        fetchProfile(session.user.id);
-        ensureApiKey(session.user.id);
+          if (sessionError) throw sessionError;
 
-        const initialTab = window.location.hash.replace('#', '') || 'vault';
-        switchTab(initialTab);
+          if (!session) {
+            console.warn("No active session found.");
+            window.location.href = '/signin';
+            return;
+          }
+
+          currentUser = session.user;
+          document.getElementById('loadingOverlay').style.display = 'none';
+          document.getElementById('userDisplay').textContent = session.user.email;
+          document.getElementById('settingsEmail').value = session.user.email;
+
+          fetchScans(session.user.id);
+          fetchProfile(session.user.id);
+          ensureApiKey(session.user.id);
+
+          const initialTab = window.location.hash.replace('#', '') || 'vault';
+          switchTab(initialTab);
+
+        } catch (err) {
+          console.error("PfError: KORRA Infrastructure Terminated by Browser Extension:", err);
+          document.getElementById('loadingOverlay').innerHTML = `
+            <div style="text-align:center; padding: 40px; color: #fff;">
+              <h2 style="color: var(--Error); margin-bottom: 16px;">Security Handshake Interrupted</h2>
+              <p style="color: var(--Neutral-400); margin-bottom: 24px;">A browser extension (e.g., Monica AI, VPN, or Proxy) has terminated the connection to the Biometrics Vault.</p>
+              <button class="btn-primary" onclick="location.reload()">Retry Connection</button>
+              <p style="font-size: 11px; margin-top: 20px; opacity: 0.5;">TIP: Try using <strong>Incognito Mode</strong> for total artisan reliability.</p>
+            </div>
+          `;
+          return;
+        }
 
         document.getElementById('btnSignOut').addEventListener('click', async () => {
           await window.KORRA_DB.auth.signOut();
