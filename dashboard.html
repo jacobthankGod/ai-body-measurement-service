@@ -49,7 +49,7 @@
       height: 40px; padding: 0 20px; border-radius: 8px; background: var(--Mint); color: var(--Obsidian);
       font-size: 12px; font-weight: 800; text-transform: uppercase; cursor: pointer; border: none; transition: 0.2s;
     }
-    .btn-primary:disabled { opacity: 0.5; cursor: not-allowed; }
+    .btn-primary:disabled { opacity: 0.3; cursor: not-allowed; filter: grayscale(1); }
 
     main { padding-top: 120px; height: 100vh; overflow-y: auto; }
     .grid-workbench { display: grid; grid-template-columns: 280px 1fr; gap: var(--S-48); align-items: start; }
@@ -118,6 +118,10 @@
       <p style="color:var(--Neutral-400); margin-bottom:32px">Upload photos to extract clinical biometrics.</p>
 
       <form id="scanForm" style="display:flex; flex-direction:column; gap:20px">
+        <div id="keyStatusLabel" style="font-size:10px; font-weight:800; color:var(--Neutral-500); text-align:center; padding:8px; background:rgba(255,255,255,0.03); border-radius:8px">
+           SYNCHRONIZING MERCHANT HANDSHAKE...
+        </div>
+
         <div>
           <label style="font-size:10px; font-weight:900; color:var(--Neutral-500); display:block; margin-bottom:8px">CLIENT FULL NAME</label>
           <input type="text" id="scanClientName" class="btn-outline" style="width:100%; text-align:left; background:rgba(255,255,255,0.05)" placeholder="e.g. John Smith" required>
@@ -136,8 +140,13 @@
             <span>Side Photo</span>
           </label>
         </div>
-        <button type="submit" class="btn-primary" style="height:52px" id="btnRunInference">Run AI Extraction</button>
-        <button type="button" class="btn-outline" style="border:none" onclick="document.getElementById('newScanModal').classList.remove('active')">Cancel</button>
+
+        <button type="submit" class="btn-primary" style="height:52px" id="btnRunInference" disabled>Handshaking Vault...</button>
+
+        <div style="text-align:center">
+          <button type="button" class="btn-outline" style="border:none" onclick="document.getElementById('newScanModal').classList.remove('active')">Cancel</button>
+          <button type="button" id="btnManualSync" style="font-size:10px; color:var(--Mint); background:none; border:none; cursor:pointer; display:none">Manual Retry Handshake</button>
+        </div>
       </form>
     </div>
   </div>
@@ -266,7 +275,7 @@
     </div>
   </main>
 
-  <!-- --- ZERO-EXTERNAL INFRASTRUCTURE (Self-Hosted) --- -->
+  <!-- --- ZERO-EXTERNAL INFRASTRUCTURE --- -->
   <script src="/assets/supabase.min.js"></script>
   <script src="/assets/paystack.min.js"></script>
 
@@ -304,12 +313,6 @@
     function payWithPaystack(credits) {
       if (!currentUser) return;
       const amount = credits * 0.5 * 100 * 1600;
-
-      if (typeof window.PaystackPop === 'undefined') {
-         alert("Payment Engine Offline. Please try Incognito mode or disable extension.");
-         return;
-      }
-
       const handler = window.PaystackPop.setup({
         key: 'pk_test_placeholder_key',
         email: currentUser.email,
@@ -317,11 +320,7 @@
         currency: "NGN",
         ref: 'KORRA_' + Math.floor((Math.random() * 1000000000) + 1),
         callback: function(response){
-          alert('Payment complete! Reference: ' + response.reference);
           updateCreditsInDb(credits);
-        },
-        onClose: function(){
-          alert('Transaction cancelled.');
         }
       });
       handler.openIframe();
@@ -340,18 +339,14 @@
         try {
           const { data, error } = await window.KORRA_DB.from('measurements').select('*').eq('user_id', userId).order('created_at', { ascending: false });
           if (error || !data || data.length === 0) return;
-
           document.getElementById('statTotalScans').textContent = data.length;
           scanList.innerHTML = data.map(scan => `
             <div class="scan-item">
               <div class="scan-info">
                 <h5>${scan.client_name || 'Remote Client'}</h5>
-                <p>${new Date(scan.created_at).toLocaleDateString()} • ${scan.height}cm • ${scan.gender || 'male'}</p>
+                <p>${new Date(scan.created_at).toLocaleDateString()} • ${scan.height}cm</p>
               </div>
-              <div style="display:flex; gap:12px">
-                <button class="btn-outline" style="height:32px; font-size:10px">View Data</button>
-                <button class="btn-outline" style="height:32px; font-size:10px; border-color:var(--Mint); color:var(--Mint)">Export PDF</button>
-              </div>
+              <button class="btn-outline" style="height:32px; font-size:10px">View Data</button>
             </div>
           `).join('');
         } catch (e) {}
@@ -368,9 +363,13 @@
         } catch(e) {}
       }
 
-      async function ensureApiKey(userId) {
+      // --- THE "KEY-READY" GUARD (Mauritius-Level Hardening) ---
+      async function ensureApiKey(userId, retries = 3) {
+        const statusLabel = document.getElementById('keyStatusLabel');
+        const btn = document.getElementById('btnRunInference');
+        const retryBtn = document.getElementById('btnManualSync');
+
         try {
-          // Forensic Fix: Specifically check key columns to avoid 406
           const { data, error } = await window.KORRA_DB.from('api_keys').select('key, user_id, is_active').eq('user_id', userId).eq('is_active', true).limit(1);
 
           if (data && data.length > 0) {
@@ -378,38 +377,35 @@
             activeApiKey = keyRecord.key;
             fullRawKey = keyRecord.key;
             document.getElementById('apiKeyDisplay').textContent = keyRecord.key.substring(0, 12) + "****************";
+
+            // ACTIVATE EXTRACTION ENGINE
+            statusLabel.innerHTML = `<span style="color:var(--Mint)">✓ MERCHANT KEY VERIFIED: VAULT SYNCHRONIZED</span>`;
+            btn.disabled = false;
+            btn.textContent = "Run AI Extraction";
+            retryBtn.style.display = 'none';
+          } else if (retries > 0) {
+            console.warn(`PfRetry: Handshake attempt ${4 - retries}...`);
+            setTimeout(() => ensureApiKey(userId, retries - 1), 1000);
+          } else {
+            statusLabel.innerHTML = `<span style="color:var(--Error)">! HANDSHAKE TIMEOUT: API KEY NOT FOUND</span>`;
+            retryBtn.style.display = 'inline-block';
           }
         } catch(e) {
           console.error("API Key Fetch Error:", e);
+          statusLabel.innerHTML = `<span style="color:var(--Error)">! HANDSHAKE ERROR: CONNECTION TERMINATED</span>`;
+          retryBtn.style.display = 'inline-block';
         }
       }
 
       async function initDashboard() {
-        if (typeof window.supabase === 'undefined') {
-          setTimeout(initDashboard, 500);
-          return;
-        }
+        if (typeof window.supabase === 'undefined') { setTimeout(initDashboard, 500); return; }
 
         try {
-          // --- STEALTH HANDSHAKE (Mauritius-Level Hardening) ---
           window.KORRA_DB = window.supabase.createClient(KORRA_CONFIG.supabaseUrl, KORRA_CONFIG.supabaseKey, {
-            auth: {
-              persistSession: true,
-              autoRefreshToken: true,
-              detectSessionInUrl: true
-            }
+            auth: { persistSession: true, autoRefreshToken: true }
           });
-
-          // Forensic connection test to detect "Man-in-the-Middle" extensions
           const { data: { session }, error: sessionError } = await window.KORRA_DB.auth.getSession();
-
-          if (sessionError) throw sessionError;
-
-          if (!session) {
-            console.warn("No active session found.");
-            window.location.href = '/signin';
-            return;
-          }
+          if (sessionError || !session) { window.location.href = '/signin'; return; }
 
           currentUser = session.user;
           document.getElementById('loadingOverlay').style.display = 'none';
@@ -423,17 +419,13 @@
           const initialTab = window.location.hash.replace('#', '') || 'vault';
           switchTab(initialTab);
 
+          document.getElementById('btnManualSync').addEventListener('click', () => {
+             document.getElementById('btnManualSync').textContent = "Synchronizing...";
+             ensureApiKey(session.user.id);
+          });
+
         } catch (err) {
-          console.error("PfError: KORRA Infrastructure Terminated by Browser Extension:", err);
-          document.getElementById('loadingOverlay').innerHTML = `
-            <div style="text-align:center; padding: 40px; color: #fff;">
-              <h2 style="color: var(--Error); margin-bottom: 16px;">Security Handshake Interrupted</h2>
-              <p style="color: var(--Neutral-400); margin-bottom: 24px;">A browser extension (e.g., Monica AI, VPN, or Proxy) has terminated the connection to the Biometrics Vault.</p>
-              <button class="btn-primary" onclick="location.reload()">Retry Connection</button>
-              <p style="font-size: 11px; margin-top: 20px; opacity: 0.5;">TIP: Try using <strong>Incognito Mode</strong> for total artisan reliability.</p>
-            </div>
-          `;
-          return;
+          console.error("Critical Dashboard Failure:", err);
         }
 
         document.getElementById('btnSignOut').addEventListener('click', async () => {
@@ -455,8 +447,6 @@
           const height = document.getElementById('scanHeight').value;
           const front = document.getElementById('frontPhoto').files[0];
           const side = document.getElementById('sidePhoto').files[0];
-
-          if (!activeApiKey) { alert("Merchant API Key not ready."); return; }
 
           btn.disabled = true;
           btn.textContent = "AI EXTRACTING...";
@@ -480,9 +470,7 @@
             } else {
               alert("Extraction failed. Check credits.");
             }
-          } catch (err) {
-            alert("Connection error.");
-          } finally {
+          } catch (err) { alert("Connection error."); } finally {
             btn.disabled = false;
             btn.textContent = "Run AI Extraction";
           }
