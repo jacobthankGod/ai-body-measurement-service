@@ -3,7 +3,7 @@
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>PrecisionFit 3D | Master Your Patterns. Scale Your Shop.</title>
+  <title>KORRA | AI-powered body measuring for faster, better fit</title>
 
   <link rel="icon" type="image/png" href="/assets/body-capture.png">
   <link rel="preconnect" href="https://fonts.googleapis.com" />
@@ -45,7 +45,7 @@
 
     .logo { display: flex; align-items: center; gap: var(--S-12); cursor: pointer; }
     .logo-mark { width: 32px; height: 32px; border-radius: 8px; background: var(--Mint); transform: rotate(-8deg); }
-    .logo-text { font-size: 20px; font-weight: 900; letter-spacing: -0.04em; }
+    .logo-text { font-size: 24px; font-weight: 900; letter-spacing: -0.05em; }
 
     nav { display: flex; gap: var(--S-32); margin-left: var(--S-48); }
     nav a { font-size: 11px; font-weight: 800; color: var(--White); text-decoration: none; text-transform: uppercase; letter-spacing: 0.1em; opacity: 0.5; transition: 0.2s; }
@@ -83,7 +83,7 @@
     }
     .hero-cta-card h3 { font-size: 32px; font-weight: 900; margin: 0; color: #fff; }
 
-    .grid-nops { display: grid; grid-template-columns: 1fr 1.5fr; gap: var(--S-80); align-items: center; }
+    .grid-impact { display: grid; grid-template-columns: 1fr 1.5fr; gap: var(--S-80); align-items: center; }
     .glass-card { background: var(--Glass); border: 1px solid var(--Glass-Border); border-radius: var(--Radius-L); padding: var(--S-48); transition: 0.3s; }
     .glass-card:hover { border-color: var(--Mint); }
 
@@ -104,7 +104,7 @@
 
     @media (max-width: 1050px) {
       .hero-headline { font-size: 52px; } nav { display: none; }
-      .grid-nops { grid-template-columns: 1fr; gap: var(--S-48); }
+      .grid-impact { grid-template-columns: 1fr; gap: var(--S-48); }
       .final-banner { flex-direction: column; text-align: center; gap: var(--S-32); }
     }
   </style>
@@ -115,7 +115,7 @@
     <div class="container">
       <div class="logo" onclick="window.location.hash='#home'">
         <div class="logo-mark"></div>
-        <div class="logo-text">PrecisionFit 3D</div>
+        <div class="logo-text">KORRA</div>
       </div>
       <nav id="marketingNav">
         <a href="#services">Technology</a>
@@ -126,7 +126,7 @@
       <div style="display:flex; align-items:center; gap:var(--S-16)">
         <div id="authButtons" style="display:flex; gap:var(--S-12)">
           <button class="btn btn-outline" id="btnNavSignIn">Sign In</button>
-          <button class="btn btn-primary" id="btnNavSignUp">Get Access</button>
+          <button class="btn btn-primary" id="btnNavSignUp">Get Started</button>
         </div>
         <div id="signedBar">
           <span style="font-weight:700; font-size:12px; color:var(--Mint)" id="userEmailDisplay"></span>
@@ -138,20 +138,26 @@
 
   <!-- 1. HOME VIEW -->
   <div id="viewHome" class="view active">
-    <!-- Hero (Dual Impact Alignment) -->
+    <!-- Hero (KORRA Brand Debut) -->
     <section class="hero">
       <div class="container">
         <h1 class="hero-headline">Master Your Patterns.<br><span>Double Your Income.</span></h1>
-        <p class="hero-sub">Clinical-grade 3D scanning as economic infrastructure for solo tailors. Get clinical-grade 3D data in 60 seconds using only your smartphone to eliminate remakes and scale your shop.</p>
+        <p class="hero-sub">KORRA is the AI-powered measurement engine built for faster, better fit. Get accurate 3D body data in seconds using only your phone—eliminating remakes for good.</p>
+
+        <div style="display:flex; justify-content:center; gap:40px; margin-top:40px">
+           <div style="text-align:center"><div style="font-size:32px; font-weight:900; color:var(--Mint)">60s</div><div style="font-size:11px; font-weight:900; opacity:0.5; text-transform:uppercase">To Capture</div></div>
+           <div style="text-align:center"><div style="font-size:32px; font-weight:900; color:var(--Mint)">90%</div><div style="font-size:11px; font-weight:900; opacity:0.5; text-transform:uppercase">Time Saved</div></div>
+           <div style="text-align:center"><div style="font-size:32px; font-weight:900; color:var(--Mint)">10k+</div><div style="font-size:11px; font-weight:900; opacity:0.5; text-transform:uppercase">Daily Scans</div></div>
+        </div>
       </div>
       <div class="hero-visual"><img src="/assets/homepage_image.png?v=2.0.2" alt="3D Model"></div>
       <div class="container">
         <div class="hero-cta-card">
           <div>
-            <h3>Grow Your Shop.</h3>
+            <h3>Stop Guessing. Start Fitting.</h3>
             <div style="display:flex; gap:24px; margin-top:16px">
-              <span style="font-size:14px; color:var(--Neutral-400)">✓ Clinical-Grade Patterns</span>
-              <span style="font-size:14px; color:var(--Neutral-400)">✓ Zero Hardware Cost</span>
+              <span style="font-size:14px; color:var(--Neutral-400)">✓ Professional 3D Data</span>
+              <span style="font-size:14px; color:var(--Neutral-400)">✓ Lifetime Size Records</span>
             </div>
           </div>
           <button class="btn btn-primary btn-large" id="btnHeroTrial">Start Your 7-Day Trial</button>
@@ -159,70 +165,70 @@
       </div>
     </section>
 
-    <!-- Platform (Cost-Effectiveness Case) -->
+    <!-- The Problem (Manual Inconsistency) -->
     <section class="block" id="services">
       <div class="container">
-        <div class="grid-nops">
+        <div class="grid-impact">
           <div>
-            <div class="section-eyebrow">Pattern Profitability</div>
-            <h2 class="section-title">Radically reducing your production costs.</h2>
-            <p class="section-desc">By replacing $20,000 industrial scanners with free smartphone AI, we enable tailors to achieve 99% pattern accuracy, doubling daily throughput and revenue.</p>
-            <button class="btn btn-primary" style="margin-top:var(--S-48)" id="btnGetKeys">Get Merchant Keys</button>
+            <div class="section-eyebrow">The Problem</div>
+            <h2 class="section-title">Manual measuring slows everything down.</h2>
+            <p class="section-desc">Taking measurements by hand creates mistakes, extra fittings, and inconsistency. A customer can get different numbers depending on who measures them. Korra solves this variance with clinical AI precision.</p>
+            <button class="btn btn-primary" style="margin-top:var(--S-48)" id="btnGetKeys">Fix Your Inconsistency</button>
           </div>
           <div class="glass-card" style="padding:12px; border-radius:24px; position:relative">
             <img src="/assets/body-capture.png" style="width:100%; border-radius:16px">
-            <div style="position:absolute; bottom:24px; right:24px; background:var(--Obsidian); border:1px solid var(--Glass-Border); padding:10px 16px; border-radius:8px; font-size:10px; font-weight:800; color:var(--Mint)">AI IMPACT VISUALIZATION</div>
+            <div style="position:absolute; bottom:24px; right:24px; background:var(--Obsidian); border:1px solid var(--Glass-Border); padding:10px 16px; border-radius:8px; font-size:10px; font-weight:800; color:var(--Mint)">AI VS MANUAL VARIANCE</div>
           </div>
         </div>
       </div>
     </section>
 
-    <!-- Case Studies (Evidence of Impact) -->
+    <!-- Case Studies (Success Metrics) -->
     <section class="block" id="case-studies">
       <div class="container">
         <div style="display:flex; justify-content:space-between; align-items:flex-end; margin-bottom:var(--S-64)">
-          <div><div class="section-eyebrow">Evidence of Impact</div><h2 class="section-title">Proven with 1,000+ Solo Tailors.</h2></div>
+          <div><div class="section-eyebrow">Real Results</div><h2 class="section-title">Trusted by Tailors globally.</h2></div>
         </div>
         <div class="grid-4">
           <div class="glass-card" style="padding:var(--S-32)">
-            <p style="font-size:14px; font-weight:600; color:var(--Neutral-400)"><b>Lagos Success</b>: Solo tailors increased monthly income by 42% through first-time fit accuracy.</p>
+            <p style="font-size:14px; font-weight:600; color:var(--Neutral-400)"><b>40% Fewer</b> repeat fittings through clinical-grade accuracy.</p>
           </div>
           <div class="glass-card" style="padding:var(--S-32)">
-            <p style="font-size:14px; font-weight:600; color:var(--Neutral-400)"><b>Waste Reduction</b>: Boutique shops cut fabric waste by 30% using precise digital body data.</p>
+            <p style="font-size:14px; font-weight:600; color:var(--Neutral-400)"><b>99% Consistency</b> across different users and locations.</p>
           </div>
           <div class="glass-card" style="padding:var(--S-32)">
-            <p style="font-size:14px; font-weight:600; color:var(--Neutral-400)"><b>Shop Scale</b>: Enabled artisans to manage 3x more clients without increasing labor costs.</p>
+            <p style="font-size:14px; font-weight:600; color:var(--Neutral-400)"><b>2x More</b> clients served per worker daily.</p>
           </div>
           <div class="glass-card" style="padding:var(--S-32)">
-            <p style="font-size:14px; font-weight:600; color:var(--Neutral-400)"><b>Digital Shift</b>: 2,000+ artisans transitioned to high-margin bespoke production.</p>
+            <p style="font-size:14px; font-weight:600; color:var(--Neutral-400)"><b>Zero Waste</b>: Eliminated fabric loss from measurement error.</p>
           </div>
         </div>
       </div>
     </section>
 
-    <!-- Benefits (Theory of Change) -->
+    <!-- Benefits (The Workflow) -->
     <section class="block">
       <div class="container">
         <div style="max-width:600px; margin-bottom:var(--S-64)">
-          <div class="section-eyebrow">The Master's Workbench</div>
-          <h2 class="section-title">Clinical precision for artisanal masters.</h2>
-          <p class="section-desc">Our discovery engine calibrates advanced biometric AI to give individual merchants the infrastructure to build global tailoring brands.</p>
+          <div class="section-eyebrow">The Workflow</div>
+          <h2 class="section-title">A faster way to measure people.</h2>
+          <p class="section-desc">KORRA helps you capture body measurements quickly and clearly. Stand. Scan. Measure. Done.</p>
         </div>
         <div class="grid-3" style="margin-bottom:var(--S-64)">
-          <div class="glass-card"><h3>Evidence-Driven</h3><p style="font-size:14px; color:var(--Neutral-400); margin-top:var(--S-16)">Verified impact on artisan household income through clinical fit accuracy.</p></div>
-          <div class="glass-card"><h3>Durable Scale</h3><p style="font-size:14px; color:var(--Neutral-400); margin-top:var(--S-16)">A system built to support 1 million+ tailors via commercial and public adoption.</p></div>
-          <div class="glass-card"><h3>Clinical Precision</h3><p style="font-size:14px; color:var(--Neutral-400); margin-top:var(--S-16)">Untouchable 3D body data delivering perfection at a fraction of the cost.</p></div>
+          <div class="glass-card"><h3>1. Scan</h3><p style="font-size:14px; color:var(--Neutral-400); margin-top:var(--S-16)">Stand in front of your phone. AI handles the rest.</p></div>
+          <div class="glass-card"><h3>2. Measure</h3><p style="font-size:14px; color:var(--Neutral-400); margin-top:var(--S-16)">The system captures over 85 biometric points instantly.</p></div>
+          <div class="glass-card"><h3>3. Grow</h3><p style="font-size:14px; color:var(--Neutral-400); margin-top:var(--S-16)">Keep one simple size record you can use again and again.</p></div>
         </div>
       </div>
     </section>
 
-    <!-- Final CTA (The Growth Banner) -->
+    <!-- Final CTA (Merchant Growth) -->
     <section class="block">
       <div class="container">
         <div class="final-banner">
           <h2>Double Your<br>Output Today.</h2>
-          <p>Join the movement of thousands of master tailors scaling their livelihoods through clinical-grade AI. No expertise needed.</p>
-          <button class="btn btn-primary btn-large" style="background:#fff; color:var(--Obsidian)" id="btnFinalTrial">Start Your 7-Day Trial</button>
+          <p>Join the fashion brands and tailors delivering flawless garments with Korra AI. No expertise needed. No hassle.</p>
+          <button class="btn btn-primary btn-large" style="background:#fff; color:var(--Obsidian)" id="btnFinalTrial">Try It Now</button>
         </div>
       </div>
     </section>
@@ -230,13 +236,13 @@
     <footer>
       <div class="container">
         <div class="footer-links">
-          <div class="footer-col"><h4>Merchant Tools</h4><a href="#services">Pattern Accuracy</a><a href="#case-studies">Impact Evidence</a></div>
+          <div class="footer-col"><h4>Tools</h4><a href="#services">Pattern Accuracy</a><a href="#case-studies">Real Results</a></div>
           <div class="footer-col"><h4>Company</h4><a href="#about">About</a><a href="#">Merchant Blog</a></div>
-          <div class="footer-col"><h4>Resources</h4><a href="#">R&D Guides</a><a href="#">Theory of Change</a></div>
+          <div class="footer-col"><h4>Resources</h4><a href="#">Integration Guides</a><a href="#">Support</a></div>
           <div class="footer-col"><h4>Legal</h4><a href="#">Data Privacy</a><a href="#">Terms</a></div>
         </div>
         <div style="margin-top:80px; padding-top:40px; border-top:1px solid var(--Glass-Border); display:flex; justify-content:space-between; align-items:center; font-size:13px; opacity:0.3">
-          <span>© 2026 PrecisionFit 3D AI. Empowering Solo Merchants.</span>
+          <span>© 2026 KORRA AI. Empowering Solo Tailors Globally.</span>
           <div style="display:flex; gap:32px"><span>Twitter</span><span>LinkedIn</span></div>
         </div>
       </div>
@@ -264,7 +270,7 @@
         <div class="form-group"><label class="form-label">FULL NAME</label><input type="text" class="form-input" id="upName"></div>
         <div class="form-group"><label class="form-label">EMAIL</label><input type="email" class="form-input" id="upEmail" required></div>
         <div class="form-group"><label class="form-label">CREATE KEY</label><input type="password" class="form-input" id="upPass" required></div>
-        <button type="submit" class="btn btn-primary" style="width:100%">Initialize Merchant Account</button>
+        <button type="submit" class="btn btn-primary" style="width:100%">Initialize Account</button>
       </form>
     </div>
   </div>
