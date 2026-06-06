@@ -31,7 +31,7 @@
 
     .auth-card {
       width: 100%; max-width: 500px; background: var(--Glass); border: 1px solid var(--Glass-Border);
-      border-radius: 24px; padding: var(--S-48); backdrop-filter: blur(20px);
+      border-radius: 24px; padding: var(--S-48); backdrop-filter: blur(20px); transition: 0.4s cubic-bezier(0.4, 0, 0.2, 1);
     }
 
     .logo-area { display: flex; align-items: center; gap: 12px; margin-bottom: 40px; text-decoration: none; color: inherit; }
@@ -60,72 +60,91 @@
     .switch-link { display: block; text-align: center; margin-top: 24px; font-size: 13px; color: var(--Neutral-400); text-decoration: none; transition: 0.2s; }
     .switch-link span { color: var(--Mint); font-weight: 700; }
     .switch-link:hover { color: #fff; }
+
+    /* SUCCESS STATE UI */
+    #successView { display: none; text-align: center; }
+    .success-icon {
+      width: 80px; height: 80px; background: var(--Mint); border-radius: 50%; margin: 0 auto 32px;
+      display: flex; align-items: center; justify-content: center; font-size: 32px; color: var(--Obsidian);
+      box-shadow: 0 0 40px rgba(87, 215, 192, 0.3);
+    }
   </style>
 </head>
 <body>
 
   <div class="auth-container">
-    <div class="auth-card">
+    <!-- PRIMARY SIGNUP VIEW -->
+    <div class="auth-card" id="signupCard">
       <a href="/" class="logo-area">
         <div class="logo-mark"></div>
         <div class="logo-text">KORRA</div>
       </a>
-      <h2>Get Access</h2>
-      <p>Start your precision journey today.</p>
 
-      <form id="signUpForm">
-        <div class="form-group">
-          <label class="form-label">Full Name</label>
-          <input type="text" class="form-input" id="upName" placeholder="Full Name" required>
-        </div>
+      <div id="formContent">
+        <h2>Get Access</h2>
+        <p>Start your precision journey today.</p>
 
-        <div class="form-group">
-          <label class="form-label">Email Address</label>
-          <input type="email" class="form-input" id="upEmail" placeholder="name@company.com" required>
-        </div>
-
-        <div style="display:grid; grid-template-columns: 1fr 1fr; gap: 20px;">
+        <form id="signUpForm">
           <div class="form-group">
-            <label class="form-label">Company Name</label>
-            <input type="text" class="form-input" id="upCompany" placeholder="Brand Name" required>
+            <label class="form-label">Full Name</label>
+            <input type="text" class="form-input" id="upName" placeholder="Full Name" required>
           </div>
+
           <div class="form-group">
-            <label class="form-label">Industry</label>
-            <select id="upIndustry" required>
-              <option value="luxury_mtm">Luxury MTM</option>
-              <option value="manufacturing">Manufacturing</option>
-              <option value="bridal">Bridal & Tuxedo</option>
-              <option value="ready_to_wear">Ready-To-Wear</option>
-              <option value="custom_apparel">Custom Apparel</option>
+            <label class="form-label">Email Address</label>
+            <input type="email" class="form-input" id="upEmail" placeholder="name@company.com" required>
+          </div>
+
+          <div style="display:grid; grid-template-columns: 1fr 1fr; gap: 20px;">
+            <div class="form-group">
+              <label class="form-label">Company Name</label>
+              <input type="text" class="form-input" id="upCompany" placeholder="Brand Name" required>
+            </div>
+            <div class="form-group">
+              <label class="form-label">Industry</label>
+              <select id="upIndustry" required>
+                <option value="luxury_mtm">Luxury MTM</option>
+                <option value="manufacturing">Manufacturing</option>
+                <option value="bridal">Bridal & Tuxedo</option>
+                <option value="ready_to_wear">Ready-To-Wear</option>
+                <option value="custom_apparel">Custom Apparel</option>
+              </select>
+            </div>
+          </div>
+
+          <div class="form-group">
+            <label class="form-label">Monthly Volume (Scans)</label>
+            <select id="upVolume" required>
+              <option value="0-50">1 - 50 scans</option>
+              <option value="51-200">51 - 200 scans</option>
+              <option value="201-1000">201 - 1,000 scans</option>
+              <option value="1000+">1,000+ scans</option>
             </select>
           </div>
-        </div>
 
-        <div class="form-group">
-          <label class="form-label">Monthly Volume (Scans)</label>
-          <select id="upVolume" required>
-            <option value="0-50">1 - 50 scans</option>
-            <option value="51-200">51 - 200 scans</option>
-            <option value="201-1000">201 - 1,000 scans</option>
-            <option value="1000+">1,000+ scans</option>
-          </select>
-        </div>
+          <div class="form-group">
+            <label class="form-label">Create Key (Password)</label>
+            <input type="password" class="form-input" id="upPass" placeholder="••••••••" required>
+          </div>
 
-        <div class="form-group">
-          <label class="form-label">Create Key (Password)</label>
-          <input type="password" class="form-input" id="upPass" placeholder="••••••••" required>
-        </div>
+          <button type="submit" class="btn" id="btnSignUp">Initialize Merchant Account</button>
+        </form>
 
-        <button type="submit" class="btn" id="btnSignUp">Initialize Merchant Account</button>
-      </form>
+        <a href="/signin" class="switch-link">Already have an account? <span>Sign In</span></a>
+      </div>
 
-      <a href="/signin" class="switch-link">Already have an account? <span>Sign In</span></a>
+      <!-- CINEMATIC SUCCESS VIEW -->
+      <div id="successView">
+        <div class="success-icon">✓</div>
+        <h2 style="color:var(--Mint)">Account Created</h2>
+        <p>Your precision workbench is almost ready. Please check your email to verify your artisan portal before logging in.</p>
+        <a href="/signin" class="btn" style="text-decoration:none; display:flex; align-items:center; justify-content:center">Go to Sign In</a>
+      </div>
     </div>
   </div>
 
   <script>
     (function() {
-      // 1. ATOMIC CORE INITIALIZATION (Zero Latency)
       const config = {
         url: 'https://blsettabymllulsxtziw.supabase.co',
         key: 'sb_publishable_miCOIXHtlxLkfDgpwE0N-g_BA1Q-x8y'
@@ -134,6 +153,8 @@
 
       const form = document.getElementById('signUpForm');
       const btn = document.getElementById('btnSignUp');
+      const formContent = document.getElementById('formContent');
+      const successView = document.getElementById('successView');
 
       form.addEventListener('submit', async (e) => {
         e.preventDefault();
@@ -166,8 +187,13 @@
           if (error) {
             alert(error.message);
           } else {
-            alert("Success: Account created! Please check your email to verify your artisan portal.");
-            window.location.href = '/signin';
+            // CINEMATIC TRANSITION
+            formContent.style.opacity = '0';
+            setTimeout(() => {
+              formContent.style.display = 'none';
+              successView.style.display = 'block';
+              setTimeout(() => { successView.style.opacity = '1'; }, 50);
+            }, 400);
           }
         } catch (err) {
           alert("Handshake Failure. Please check your internet connection.");
