@@ -158,10 +158,11 @@
 
         if (!session) { window.location.href = '/signin'; return; }
 
-        // MOCK ADMIN LIST - In production, this checks a 'role' column in profiles
-        const ADMIN_LIST = ['admin@korra.ai', 'jacob@desby.com'];
+        // --- SUPER-USER AUTHORITY LIST ---
+        const ADMIN_LIST = ['springbionics@gmail.com', 'admin@korra.work'];
         if (!ADMIN_LIST.includes(session.user.email)) {
-          alert("Authority Denied: Insufficient Permissions.");
+          console.error("PfError: Unauthorized System Access Attempted by", session.user.email);
+          alert("Authority Denied: This terminal is restricted to KORRA Super-Users.");
           window.location.href = '/dashboard';
           return;
         }
