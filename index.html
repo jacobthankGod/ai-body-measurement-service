@@ -56,17 +56,17 @@
       cursor: pointer; display: inline-flex; align-items: center; justify-content: center; gap: 12px; transition: all 0.2s ease; text-decoration: none;
     }
     .btn-primary { background: var(--Mint); color: var(--Obsidian); }
+    .btn-primary:hover { background: #6effeb; transform: translateY(-1px); }
     .btn-outline { background: transparent; border: 1px solid var(--Glass-Border); color: var(--White); }
     .btn-outline:hover { background: var(--Glass); border-color: var(--White); }
     .btn-large { height: 64px; padding: 0 var(--S-48); font-size: 16px; }
 
     .view { display: none; width: 100%; min-height: 100vh; }
-    .view.active { display: block !important; }
+    .view.active { display: block !important; animation: viewIn 0.5s ease-out forwards; }
+    .view.active.auth-view { display: flex !important; }
     .view:not(.active) { display: none !important; }
 
-    /* ROBUST REVEAL SYSTEM */
-    .reveal { opacity: 0; transform: translateY(30px); transition: all 0.8s cubic-bezier(0.2, 0.8, 0.2, 1); will-change: opacity, transform; }
-    .reveal.active { opacity: 1; transform: translateY(0); }
+    @keyframes viewIn { from { opacity: 0; transform: translateY(10px); } to { opacity: 1; transform: translateY(0); } }
 
     section.block { padding: var(--S-160) 0; }
     .section-eyebrow { font-size: 11px; font-weight: 900; color: var(--Mint); text-transform: uppercase; letter-spacing: 0.2em; margin-bottom: var(--S-16); }
@@ -87,7 +87,6 @@
 
     .grid-impact { display: grid; grid-template-columns: 1fr 1.5fr; gap: var(--S-80); align-items: center; }
 
-    /* THE "STATUS QUO" BLUEPRINT FOR ALL CARDS */
     .glass-card { background: var(--Glass); border: 1px solid var(--Glass-Border); border-radius: var(--Radius-L); padding: var(--S-48); transition: 0.3s ease; position: relative; overflow: hidden; }
     .glass-card:hover { border-color: var(--Mint); background: rgba(255,255,255,0.06); transform: translateY(-4px); }
 
@@ -111,10 +110,19 @@
 
     .badge-card { position: absolute; bottom: 24px; right: 24px; background: var(--Obsidian); border: 1px solid var(--Glass-Border); padding: 10px 16px; border-radius: 8px; font-size: 10px; font-weight: 800; color: var(--Mint); }
 
+    .step-card { display: flex; flex-direction: column; justify-content: space-between; min-height: 240px; }
+    .step-num { font-size: 12px; font-weight: 900; opacity: 0.3; letter-spacing: 0.3em; }
+    .step-text { font-size: 28px; font-weight: 900; letter-spacing: -0.05em; }
+
     @media (max-width: 1050px) {
       .hero-headline { font-size: 52px; } nav { display: none; }
       .grid-impact { grid-template-columns: 1fr; gap: var(--S-48); }
       .final-banner { flex-direction: column; text-align: center; gap: var(--S-32); }
+    }
+    @media (max-width: 800px) {
+      .hero-visual { height: 450px; }
+      .hero-cta-card { flex-direction: column; text-align: center; gap: var(--S-40); padding: 48px 32px; margin-top: 0; }
+      .grid-4, .grid-3, .footer-links { grid-template-columns: 1fr; }
     }
   </style>
 </head>
@@ -176,7 +184,7 @@
     </section>
 
     <!-- THE STATUS QUO -->
-    <section class="block reveal">
+    <section class="block">
       <div class="container">
         <div class="grid-impact">
           <div>
@@ -193,7 +201,7 @@
     </section>
 
     <!-- THE CUSTOM TAILORING PARADOX -->
-    <section class="block reveal" style="background:rgba(255,255,255,0.01)">
+    <section class="block" style="background:rgba(255,255,255,0.01)">
       <div class="container">
         <div style="max-width:700px; margin-bottom:var(--S-64)">
           <div class="section-eyebrow">The Paradox</div>
@@ -217,8 +225,8 @@
       </div>
     </section>
 
-    <!-- CROSS-BORDER IMPACT (UNIFIED STYLE) -->
-    <section class="block reveal">
+    <!-- CROSS-BORDER IMPACT -->
+    <section class="block">
       <div class="container">
         <div class="grid-impact" style="grid-template-columns: 1fr 1.5fr">
           <div>
@@ -235,7 +243,7 @@
     </section>
 
     <!-- PRECISION AT SOURCE -->
-    <section class="block reveal" id="technology">
+    <section class="block" id="technology">
       <div class="container">
         <div style="text-align:center; max-width:700px; margin:0 auto 80px">
           <div class="section-eyebrow">The Capture Pipeline</div>
@@ -259,8 +267,8 @@
       </div>
     </section>
 
-    <!-- BIOMETRIC IDENTITY (UNIFIED STYLE) -->
-    <section class="block reveal">
+    <!-- BIOMETRIC IDENTITY -->
+    <section class="block">
       <div class="container">
         <div class="grid-impact">
           <div>
@@ -281,7 +289,7 @@
     </section>
 
     <!-- ECONOMIC ENGINE -->
-    <section class="block reveal" id="merchant-success">
+    <section class="block" id="merchant-success">
       <div class="container">
         <div style="display:flex; justify-content:space-between; align-items:flex-end; margin-bottom:60px">
           <div><div class="section-eyebrow">The Economic Engine</div><h2 class="section-title">Less time. Less waste.</h2></div>
@@ -309,7 +317,7 @@
     </section>
 
     <!-- FINAL CTA -->
-    <section class="block reveal">
+    <section class="block">
       <div class="container">
         <div class="final-banner">
           <h2>Double Your<br>Output Today.</h2>
@@ -356,7 +364,7 @@
         <div class="form-group"><label class="form-label">FULL NAME</label><input type="text" class="form-input" id="upName"></div>
         <div class="form-group"><label class="form-label">EMAIL</label><input type="email" class="form-input" id="upEmail" required></div>
         <div class="form-group"><label class="form-label">CREATE KEY</label><input type="password" class="form-input" id="upPass" required></div>
-        <button type="submit" class="btn btn-primary" style="width:100%">Initialize Merchant Account</button>
+        <button type="submit" class="btn btn-primary" style="width:100%">Initialize Account</button>
       </form>
     </div>
   </div>
@@ -367,40 +375,12 @@
       const config = { supabaseUrl: 'https://blsettabymllulsxtziw.supabase.co', supabaseKey: 'sb_publishable_miCOIXHtlxLkfDgpwE0N-g_BA1Q-x8y' };
       const supabase = window.supabase.createClient(config.supabaseUrl, config.supabaseKey);
 
-      // Animation Observer with Forced Reveal logic
-      let observer;
-      function setupObserver() {
-        const observerOptions = { threshold: 0.05 };
-        observer = new IntersectionObserver((entries) => {
-          entries.forEach(entry => {
-            if (entry.isIntersecting) {
-              entry.target.classList.add('active');
-            }
-          });
-        }, observerOptions);
-        document.querySelectorAll('.reveal').forEach(el => observer.observe(el));
-      }
-
-      function forcedReveal() {
-        // Find all visible reveal elements and force active if in viewport
-        document.querySelectorAll('.view.active .reveal').forEach(el => {
-          const rect = el.getBoundingClientRect();
-          if (rect.top < window.innerHeight) {
-            el.classList.add('active');
-          }
-        });
-      }
-
       function handleRoute() {
         const hash = window.location.hash || '#home';
         document.querySelectorAll('.view').forEach(v => v.classList.remove('active'));
         if (hash === '#signin') document.getElementById('viewSignIn').classList.add('active');
         else if (hash === '#signup') document.getElementById('viewSignUp').classList.add('active');
-        else {
-           document.getElementById('viewHome').classList.add('active');
-           // Re-trigger observer or forced reveal when landing page becomes active
-           setTimeout(forcedReveal, 100);
-        }
+        else document.getElementById('viewHome').classList.add('active');
         window.scrollTo(0,0);
       }
       window.addEventListener('hashchange', handleRoute);
@@ -429,7 +409,6 @@
         }
       });
 
-      setupObserver();
       handleRoute();
       window.addEventListener('scroll', () => {
         const header = document.getElementById('mainHeader');
