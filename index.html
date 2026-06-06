@@ -469,11 +469,9 @@
             const bar = document.getElementById('signedBar');
             if (session) {
               if(authBtns) authBtns.style.display = 'none';
-              if(bar) bar.classList.add('active');
-              const display = document.getElementById('userEmailDisplay');
-              if(display) display.textContent = session.user.email;
+              if(bar) bar.style.display = 'flex';
             } else {
-              if(bar) bar.classList.remove('active');
+              if(bar) bar.style.display = 'none';
               if(authBtns) authBtns.style.display = 'flex';
             }
           });

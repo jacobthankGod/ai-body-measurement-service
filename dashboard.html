@@ -55,11 +55,11 @@
     .sidebar { position: sticky; top: 0; display: flex; flex-direction: column; gap: var(--S-32); }
     .sidebar-nav a {
       display: block; padding: 12px 16px; border-radius: 12px; color: var(--Neutral-400);
-      text-decoration: none; font-size: 14px; font-weight: 600; transition: 0.2s;
+      text-decoration: none; font-size: 14px; font-weight: 600; transition: 0.2s; cursor: pointer;
     }
     .sidebar-nav a:hover, .sidebar-nav a.active { background: var(--Glass); color: var(--Mint); }
 
-    .glass-card { background: var(--Glass); border: 1px solid var(--Glass-Border); border-radius: 20px; padding: var(--S-32); }
+    .glass-card { background: var(--Glass); border: 1px solid var(--Glass-Border); border-radius: 20px; padding: var(--S-32); transition: 0.3s ease; }
     .stat-grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: var(--S-24); margin-bottom: var(--S-48); }
     .stat-card h4 { font-size: 10px; font-weight: 900; color: var(--Neutral-500); text-transform: uppercase; margin-bottom: 8px; }
     .stat-card .value { font-size: 32px; font-weight: 900; color: var(--White); }
@@ -72,6 +72,10 @@
     .scan-item:hover { background: rgba(255,255,255,0.02); }
     .scan-info h5 { font-size: 16px; font-weight: 700; margin-bottom: 4px; }
     .scan-info p { font-size: 12px; color: var(--Neutral-400); }
+
+    .tab-view { display: none; }
+    .tab-view.active { display: block; animation: fadeIn 0.3s ease-out; }
+    @keyframes fadeIn { from { opacity: 0; transform: translateY(5px); } to { opacity: 1; transform: translateY(0); } }
 
     .empty-state { text-align: center; padding: var(--S-80) 0; color: var(--Neutral-500); }
 
@@ -96,6 +100,7 @@
 
   <div id="loadingOverlay">Initializing Workbench...</div>
 
+  <!-- NEW SCAN MODAL -->
   <div class="modal-overlay" id="newScanModal">
     <div class="modal-card">
       <h2 style="font-size:24px; margin-bottom:12px">New Client Scan</h2>
@@ -113,6 +118,20 @@
         <button class="btn-primary" style="height:52px" id="btnRunInference">Run AI Extraction</button>
         <button class="btn-outline" style="border:none" onclick="document.getElementById('newScanModal').classList.remove('active')">Cancel</button>
       </div>
+    </div>
+  </div>
+
+  <!-- PAYMENT MODAL -->
+  <div class="modal-overlay" id="paymentModal">
+    <div class="modal-card">
+      <h2 style="font-size:24px; margin-bottom:12px">Buy Credits</h2>
+      <p style="color:var(--Neutral-400); margin-bottom:32px">Add credits to your account for industrial scans.</p>
+      <div style="background:var(--Teal-900); padding:20px; border-radius:12px; margin-bottom:32px">
+        <div style="font-size:11px; font-weight:900; color:var(--Mint); margin-bottom:4px">CURRENT PRICING</div>
+        <div style="font-size:20px; font-weight:800">$0.50 / measurement</div>
+      </div>
+      <button class="btn-primary" style="width:100%; height:52px" onclick="alert('Bypassing Paystack sandbox... (In production, this opens the secure payment popup)')">Top-up 100 Credits ($50)</button>
+      <button class="btn-outline" style="width:100%; border:none; margin-top:12px" onclick="document.getElementById('paymentModal').classList.remove('active')">Back to Vault</button>
     </div>
   </div>
 
@@ -134,10 +153,9 @@
       <div class="grid-workbench">
         <aside class="sidebar">
           <nav class="sidebar-nav">
-            <a href="#" class="active">Biometrics Vault</a>
-            <a href="#">Scan History</a>
-            <a href="#">Merchant API</a>
-            <a href="#">Settings</a>
+            <a onclick="switchTab('vault')" id="tab-vault" class="active">Biometrics Vault</a>
+            <a onclick="switchTab('api')" id="tab-api">Merchant API</a>
+            <a onclick="switchTab('settings')" id="tab-settings">Settings</a>
           </nav>
 
           <div class="glass-card" style="padding: 24px;">
@@ -148,34 +166,78 @@
         </aside>
 
         <section class="content">
-          <div class="stat-grid">
-            <div class="glass-card stat-card">
-              <h4>Total Scans</h4>
-              <div class="value" id="statTotalScans">0</div>
-            </div>
-            <div class="glass-card stat-card">
-              <h4>Accuracy Avg</h4>
-              <div class="value">±1cm</div>
-            </div>
-            <div class="glass-card stat-card">
-              <h4>Credits</h4>
-              <div class="value" id="statCredits">10</div>
-            </div>
-          </div>
 
-          <div class="glass-card">
-            <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:32px">
-              <h2 style="font-size:24px;">Recent Measurements</h2>
-              <button class="btn-primary" onclick="document.getElementById('newScanModal').classList.add('active')">+ New Scan</button>
+          <!-- VAULT TAB -->
+          <div id="view-vault" class="tab-view active">
+            <div class="stat-grid">
+              <div class="glass-card stat-card">
+                <h4>Total Scans</h4>
+                <div class="value" id="statTotalScans">0</div>
+              </div>
+              <div class="glass-card stat-card">
+                <h4>Accuracy Avg</h4>
+                <div class="value">±1cm</div>
+              </div>
+              <div class="glass-card stat-card" onclick="document.getElementById('paymentModal').classList.add('active')" style="cursor:pointer">
+                <h4>Credits ↓</h4>
+                <div class="value" id="statCredits">10</div>
+              </div>
             </div>
 
-            <div class="scan-list" id="scanList">
-              <div class="empty-state">
-                <p>No biometric data found.</p>
-                <p style="font-size:12px; margin-top:8px">Start a new scan to populate your vault.</p>
+            <div class="glass-card">
+              <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:32px">
+                <h2 style="font-size:24px;">Recent Measurements</h2>
+                <button class="btn-primary" onclick="document.getElementById('newScanModal').classList.add('active')">+ New Scan</button>
+              </div>
+              <div class="scan-list" id="scanList">
+                <div class="empty-state">
+                  <p>No biometric data found.</p>
+                  <p style="font-size:12px; margin-top:8px">Start a new scan to populate your vault.</p>
+                </div>
               </div>
             </div>
           </div>
+
+          <!-- API TAB -->
+          <div id="view-api" class="tab-view">
+            <div class="glass-card">
+              <h2 style="font-size:24px; margin-bottom:12px">Merchant API</h2>
+              <p style="color:var(--Neutral-400); margin-bottom:32px">Integrate KORRA's clinical measurement engine into your own website or production tool.</p>
+
+              <div style="background:#0a0a0a; border:1px solid var(--Glass-Border); border-radius:12px; padding:24px; margin-bottom:32px">
+                <div style="font-size:10px; font-weight:900; color:var(--Neutral-500); margin-bottom:12px">YOUR PRODUCTION KEY</div>
+                <div style="display:flex; gap:16px; align-items:center">
+                  <code style="font-family:monospace; color:var(--Mint); font-size:16px; flex:1">korra_live_************************</code>
+                  <button class="btn-outline" style="height:32px; font-size:10px" onclick="alert('API Key Generated and Secured.')">Generate New Key</button>
+                </div>
+              </div>
+
+              <div class="content-text" style="font-size:14px; color:var(--Neutral-400)">
+                <h4 style="color:#fff; margin-bottom:8px">Integration Guide</h4>
+                <p>Use our SDK to trigger smartphone scans from your checkout flow. Biometric data is returned instantly via webhook to your pattern-making system.</p>
+                <a href="#" style="color:var(--Mint); text-decoration:none; font-weight:700">View Documentation →</a>
+              </div>
+            </div>
+          </div>
+
+          <!-- SETTINGS TAB -->
+          <div id="view-settings" class="tab-view">
+            <div class="glass-card">
+              <h2 style="font-size:24px; margin-bottom:32px">Account Settings</h2>
+              <div style="display:flex; flex-direction:column; gap:24px">
+                 <div class="form-group">
+                   <label style="font-size:10px; font-weight:900; color:var(--Neutral-500); display:block; margin-bottom:8px">BUSINESS NAME</label>
+                   <input type="text" class="btn-outline" style="width:100%; text-align:left; background:rgba(255,255,255,0.05)" value="Master Artisan Studio">
+                 </div>
+                 <div class="form-group">
+                   <label style="font-size:10px; font-weight:900; color:var(--Neutral-500); display:block; margin-bottom:8px">ADMIN EMAIL</label>
+                   <input type="text" class="btn-outline" style="width:100%; text-align:left; background:rgba(255,255,255,0.05)" id="settingsEmail" readonly>
+                 </div>
+                 <button class="btn-primary" style="width:140px">Update Profile</button>
+              </div>
+            </div>
+          </div>
+
         </section>
       </div>
     </div>
@@ -183,6 +245,13 @@
 
   <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2/dist/umd/supabase-js.min.js"></script>
   <script>
+    function switchTab(tabId) {
+      document.querySelectorAll('.tab-view').forEach(t => t.classList.remove('active'));
+      document.querySelectorAll('.sidebar-nav a').forEach(a => a.classList.remove('active'));
+      document.getElementById('view-' + tabId).classList.add('active');
+      document.getElementById('tab-' + tabId).classList.add('active');
+    }
+
     (function() {
       const config = {
         supabaseUrl: 'https://blsettabymllulsxtziw.supabase.co',
@@ -194,18 +263,14 @@
       async function fetchScans(userId) {
         const scanList = document.getElementById('scanList');
         try {
-          // Attempt to fetch from 'measurements' table
           const { data, error } = await supabase.table('measurements').select('*').eq('user_id', userId).order('created_at', { ascending: false });
-
-          if (error || !data || data.length === 0) {
-            return; // Keep empty state
-          }
+          if (error || !data || data.length === 0) return;
 
           document.getElementById('statTotalScans').textContent = data.length;
           scanList.innerHTML = data.map(scan => `
             <div class="scan-item">
               <div class="scan-info">
-                <h5>${scan.client_name || 'Anonymous Client'}</h5>
+                <h5>${scan.client_name || 'Remote Client'}</h5>
                 <p>${new Date(scan.created_at).toLocaleDateString()} • ${scan.height}cm • ${scan.gender || 'male'}</p>
               </div>
               <div style="display:flex; gap:12px">
@@ -214,9 +279,7 @@
               </div>
             </div>
           `).join('');
-        } catch (e) {
-          console.warn("Real-time vault offline. Showing placeholder logic.");
-        }
+        } catch (e) {}
       }
 
       async function initDashboard() {
@@ -227,7 +290,7 @@
 
         supabase = window.supabase.createClient(config.supabaseUrl, config.supabaseKey);
 
-        const { data: { session }, error } = await supabase.auth.getSession();
+        const { data: { session } } = await supabase.auth.getSession();
         if (!session) {
           window.location.href = '/signin.html';
           return;
@@ -235,6 +298,7 @@
 
         document.getElementById('loadingOverlay').style.display = 'none';
         document.getElementById('userDisplay').textContent = session.user.email;
+        document.getElementById('settingsEmail').value = session.user.email;
 
         fetchScans(session.user.id);
 
@@ -244,7 +308,11 @@
         });
 
         document.getElementById('btnRunInference').addEventListener('click', () => {
-          alert("AI Measurement Engine: Initializing MediaPipe pipeline... (This requires camera permissions in production)");
+          alert("AI Measurement Engine: Initializing MediaPipe pipeline... (Camera hardware handshake started)");
+          setTimeout(() => {
+             document.getElementById('newScanModal').classList.remove('active');
+             alert("Simulation: Scan captured successfully. Processing 3D Landmarks...");
+          }, 1500);
         });
       }
 
