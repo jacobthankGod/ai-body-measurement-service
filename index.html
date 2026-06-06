@@ -123,6 +123,7 @@
     .footer-links { display: grid; grid-template-columns: repeat(4, 1fr); gap: var(--S-64); }
     .footer-col h4 { font-size: 10px; font-weight: 900; text-transform: uppercase; color: var(--Neutral-500); margin-bottom: var(--S-24); }
     .footer-col a { display: block; color: var(--Neutral-400); text-decoration: none; margin-bottom: var(--S-12); font-size: 13px; }
+    .footer-col a:hover { color: var(--Mint); }
 
     .badge-card { position: absolute; bottom: 24px; right: 24px; background: var(--Obsidian); border: 1px solid var(--Glass-Border); padding: 10px 16px; border-radius: 8px; font-size: 10px; font-weight: 800; color: var(--Mint); }
 
@@ -421,10 +422,10 @@
   <footer>
     <div class="container">
       <div class="footer-links">
-        <div class="footer-col"><h4>Infrastructure</h4><a href="#technology">Pattern Accuracy</a><a href="#merchant-success">Economic Engine</a></div>
-        <div class="footer-col"><h4>Organization</h4><a href="#about">About KORRA</a><a href="#">Merchant Blog</a></div>
-        <div class="footer-col"><h4>Resources</h4><a href="#">Size Passport</a><a href="#">Theory of Change</a></div>
-        <div class="footer-col"><h4>Legal</h4><a href="#">Data Privacy</a><a href="#">Terms</a></div>
+        <div class="footer-col"><h4>Infrastructure</h4><a href="#technology">Pattern Accuracy</a><a href="/dashboard.html#api">Merchant API</a></div>
+        <div class="footer-col"><h4>Organization</h4><a href="/about.html">About KORRA</a><a href="/casestudies.html">Case Studies</a></div>
+        <div class="footer-col"><h4>Resources</h4><a href="/sizepassport.html">Size Passport</a><a href="/theoryofchange.html">Theory of Change</a></div>
+        <div class="footer-col"><h4>Legal</h4><a href="/legal.html">Data Privacy</a><a href="/legal.html">Terms</a></div>
       </div>
       <div style="margin-top:80px; padding-top:40px; border-top:1px solid var(--Glass-Border); display:flex; justify-content:space-between; align-items:center; font-size:13px; opacity:0.3">
         <span>© 2026 KORRA AI. Scaling Global Artisan Infrastructure.</span>
@@ -452,7 +453,7 @@
         }
       });
 
-      // 2. AUTH OBSERVER (Only for Header state)
+      // 2. AUTH OBSERVER (Header State)
       function initSupabase() {
         if (typeof window.supabase === 'undefined') {
           setTimeout(initSupabase, 500);
