@@ -69,21 +69,35 @@ public_dir = BASE_DIR / "public"
 if public_dir.exists():
     app.mount("/assets", StaticFiles(directory=str(public_dir)), name="assets")
 
-# 3. SPA / FRONTEND RECOVERY
+# 3. MPA / SPA / FRONTEND RECOVERY
 @app.get("/")
 async def serve_index():
     return FileResponse(str(BASE_DIR / "index.html"))
 
+@app.get("/signin")
+async def serve_signin():
+    return FileResponse(str(BASE_DIR / "signin.html"))
+
+@app.get("/signup")
+async def serve_signup():
+    return FileResponse(str(BASE_DIR / "signup.html"))
+
 @app.get("/{full_path:path}")
 async def catch_all(full_path: str):
-    # Only serve index.html for routes that don't look like file requests
+    # 1. Check if the file exists in root (MPA support)
+    root_file = BASE_DIR / full_path
+    if root_file.exists() and root_file.is_file():
+        return FileResponse(str(root_file))
+
+    # 2. Check for routes that don't look like file requests (SPA fallback)
     if "." in full_path:
-        # If it's a file request that wasn't caught by /assets/, check public dir
+        # Check public dir for assets
         local_file = public_dir / full_path
         if local_file.exists():
             return FileResponse(str(local_file))
         return JSONResponse(status_code=404, content={"error": "Asset not found"})
 
+    # 3. Default to index.html for dashboard/clean routes
     return FileResponse(str(BASE_DIR / "index.html"))
 
 @app.exception_handler(Exception)
