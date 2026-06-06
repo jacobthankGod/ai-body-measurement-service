@@ -486,15 +486,16 @@
       window.addEventListener('hashchange', handleRoute);
 
       document.addEventListener('click', (e) => {
-        const target = e.target.closest('button, .logo, a, .mosaic-card');
+        const target = e.target.closest('button, .logo, a, .mosaic-card, .btn-view-more');
         if (!target) return;
         const id = target.id;
         const href = target.getAttribute('href');
 
-        if (id === 'btnToggleImpact') {
+        if (id === 'btnToggleImpact' || target.classList.contains('btn-view-more')) {
            const accordion = document.getElementById('impactAccordion');
+           const btn = document.getElementById('btnToggleImpact');
            accordion.classList.toggle('active');
-           target.textContent = accordion.classList.contains('active') ? 'View Less ↑' : 'View Detailed Impact ↓';
+           btn.textContent = accordion.classList.contains('active') ? 'View Less ↑' : 'View Detailed Impact ↓';
            return;
         }
 
