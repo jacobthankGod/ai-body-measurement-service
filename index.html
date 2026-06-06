@@ -37,23 +37,24 @@
     .container { width: 100%; max-width: 1150px; margin: 0 auto; padding: 0 var(--S-48); position: relative; }
 
     header {
-      width: 100%; height: 80px; display: flex; align-items: center; position: fixed; top: 0; z-index: 1000;
+      width: 100%; height: 80px; display: flex; align-items: center; position: fixed; top: 0; z-index: 999999; /* NUCLEAR Z-INDEX */
       background: rgba(0, 0, 0, 0.8); backdrop-filter: blur(20px); border-bottom: 1px solid var(--Glass-Border); transition: all 0.3s ease;
     }
     header.scrolled { height: 64px; background: rgba(0, 0, 0, 0.95); }
     header .container { display: flex; align-items: center; justify-content: space-between; padding: 0; }
 
-    .logo { display: flex; align-items: center; gap: var(--S-12); cursor: pointer; }
+    .logo { display: flex; align-items: center; gap: var(--S-12); cursor: pointer; pointer-events: all !important; }
     .logo-mark { width: 32px; height: 32px; border-radius: 8px; background: var(--Mint); transform: rotate(-8deg); }
     .logo-text { font-size: 20px; font-weight: 900; letter-spacing: -0.05em; }
 
     nav { display: flex; gap: var(--S-32); margin-left: var(--S-48); }
-    nav a { font-size: 11px; font-weight: 800; color: var(--White); text-decoration: none; text-transform: uppercase; letter-spacing: 0.1em; opacity: 0.5; transition: 0.2s; }
+    nav a { font-size: 11px; font-weight: 800; color: var(--White); text-decoration: none; text-transform: uppercase; letter-spacing: 0.1em; opacity: 0.5; transition: 0.2s; pointer-events: all !important; }
     nav a:hover { opacity: 1; color: var(--Mint); }
 
     .btn {
       height: 52px; padding: 0 var(--S-24); border-radius: 12px; border: 1px solid transparent; font-size: 13px; font-weight: 800;
       cursor: pointer; display: inline-flex; align-items: center; justify-content: center; gap: 12px; transition: all 0.2s ease; text-decoration: none;
+      pointer-events: all !important; /* PREVENT CLOAKING */
     }
     .btn-primary { background: var(--Mint); color: var(--Obsidian); }
     .btn-outline { background: transparent; border: 1px solid var(--Glass-Border); color: var(--White); }
@@ -61,8 +62,8 @@
     .btn-large { height: 64px; padding: 0 var(--S-48); font-size: 16px; }
 
     .view { display: none; width: 100%; min-height: 100vh; }
-    .view.active { display: block !important; animation: viewIn 0.5s ease-out forwards; }
-    .view.active.auth-view { display: flex !important; }
+    .view.active { display: block !important; animation: viewIn 0.4s ease-out forwards; }
+    .view.active.auth-view { display: flex !important; align-items: center; justify-content: center; padding-top: 100px; }
     .view:not(.active) { display: none !important; }
     @keyframes viewIn { from { opacity: 0; transform: translateY(10px); } to { opacity: 1; transform: translateY(0); } }
 
@@ -132,7 +133,6 @@
 
     .badge-card { position: absolute; bottom: 24px; right: 24px; background: var(--Obsidian); border: 1px solid var(--Glass-Border); padding: 10px 16px; border-radius: 8px; font-size: 10px; font-weight: 800; color: var(--Mint); }
 
-    /* ACCORDION / VIEW MORE STYLING */
     .accordion-content { max-height: 0; overflow: hidden; transition: max-height 0.6s cubic-bezier(0.4, 0, 0.2, 1); opacity: 0; }
     .accordion-content.active { max-height: 800px; opacity: 1; margin-top: 24px; }
     .btn-view-more {
@@ -152,10 +152,10 @@
 
   <header id="mainHeader">
     <div class="container">
-      <div class="logo" id="logoHome" onclick="window.location.hash='#home'">
+      <a class="logo" href="#home" id="logoHome">
         <div class="logo-mark"></div>
         <div class="logo-text">KORRA</div>
-      </div>
+      </a>
       <nav id="marketingNav">
         <a href="#technology">Technology</a>
         <a href="#merchant-success">Merchant Success</a>
@@ -164,8 +164,8 @@
       <div style="flex:1"></div>
       <div style="display:flex; align-items:center; gap:var(--S-16)">
         <div id="authButtons" style="display:flex; gap:var(--S-12)">
-          <button class="btn btn-outline" id="btnNavSignIn">Sign In</button>
-          <button class="btn btn-primary" id="btnNavSignUp">Get Access</button>
+          <a class="btn btn-outline" href="#signin" id="btnNavSignIn">Sign In</a>
+          <a class="btn btn-primary" href="#signup" id="btnNavSignUp">Get Access</a>
         </div>
         <div id="signedBar">
           <span style="font-weight:700; font-size:12px; color:var(--Mint)" id="userEmailDisplay"></span>
@@ -199,7 +199,10 @@
               <span style="font-size:14px; color:var(--Neutral-400)">✓ Zero Latency Sharing</span>
             </div>
           </div>
-          <button class="btn btn-primary btn-large" id="btnHeroTrial">Start Your 7-Day Trial</button>
+          <div style="display:flex; gap:16px">
+             <a class="btn btn-outline" href="#technology">See How It Works</a>
+             <a class="btn btn-primary btn-large" href="#signup">Get Started</a>
+          </div>
         </div>
       </div>
     </section>
@@ -230,7 +233,7 @@
             <h2 class="section-title">Common problems.</h2>
             <p class="section-desc">For many people, there is no easy way to keep a reliable size record. This creates a cycle of failed expectations.</p>
           </div>
-          <button class="btn btn-primary" id="btnParadoxFix">Get Started Now</button>
+          <a class="btn btn-primary" href="#signup">Get Started Now</a>
         </div>
         <div class="grid-3">
            <div class="glass-card">
@@ -274,7 +277,7 @@
                </p>
             </div>
 
-            <button class="btn btn-primary" style="margin-top:40px" id="btnDistanceFix">Get Started</button>
+            <a class="btn btn-primary" style="margin-top:40px" href="#signup">Get Started</a>
           </div>
         </div>
       </div>
@@ -354,30 +357,30 @@
         </div>
 
         <div class="mosaic-grid">
-          <div class="mosaic-card" onclick="window.location.hash='#signup'">
+          <a class="mosaic-card" href="#signup">
             <img src="/assets/body-capture.png" class="mosaic-img" alt="Luxury MTM">
             <div class="mosaic-overlay"><div class="mosaic-title">Luxury Made-To-Measure</div><div class="mosaic-desc">For luxury made to measure brands.</div></div>
-          </div>
-          <div class="mosaic-card" onclick="window.location.hash='#signup'">
+          </a>
+          <a class="mosaic-card" href="#signup">
             <img src="/assets/homepage_image.png" class="mosaic-img" alt="Manufacturing">
             <div class="mosaic-overlay"><div class="mosaic-title">On-Demand Manufacturing</div><div class="mosaic-desc">For on-demand manufacturing.</div></div>
-          </div>
-          <div class="mosaic-card" onclick="window.location.hash='#signup'">
+          </a>
+          <a class="mosaic-card" href="#signup">
             <img src="/assets/body-capture.png" class="mosaic-img" alt="RTW">
             <div class="mosaic-overlay"><div class="mosaic-title">Ready-To-Wear</div><div class="mosaic-desc">For ready-to-wear businesses.</div></div>
-          </div>
-          <div class="mosaic-card" onclick="window.location.hash='#signup'">
+          </a>
+          <a class="mosaic-card" href="#signup">
             <img src="/assets/homepage_image.png" class="mosaic-img" alt="Bridal">
             <div class="mosaic-overlay"><div class="mosaic-title">Bridal & Tuxedo</div><div class="mosaic-desc">For bridal and tuxedo businesses.</div></div>
-          </div>
-          <div class="mosaic-card" onclick="window.location.hash='#signup'">
+          </a>
+          <a class="mosaic-card" href="#signup">
             <img src="/assets/body-capture.png" class="mosaic-img" alt="Custom">
             <div class="mosaic-overlay"><div class="mosaic-title">Custom Apparel</div><div class="mosaic-desc">For custom apparel companies.</div></div>
-          </div>
-          <div class="mosaic-card" onclick="window.location.hash='#signup'">
+          </a>
+          <a class="mosaic-card" href="#signup">
             <img src="/assets/homepage_image.png" class="mosaic-img" alt="Uniforms">
             <div class="mosaic-overlay"><div class="mosaic-title">Uniform Manufacturers</div><div class="mosaic-desc">For uniform manufacturers.</div></div>
-          </div>
+          </a>
         </div>
       </div>
     </section>
@@ -387,7 +390,7 @@
       <div class="container">
         <div style="display:flex; justify-content:space-between; align-items:flex-end; margin-bottom:60px">
           <div><div class="section-eyebrow">The Economic Engine</div><h2 class="section-title">Less time. Less waste.</h2></div>
-          <div><button class="btn btn-primary" id="btnEngineStart">Get Started Now</button></div>
+          <a class="btn btn-primary" href="#signup">Get Started Now</a>
         </div>
         <div class="grid-4">
           <div class="glass-card" style="padding:var(--S-32)">
@@ -418,7 +421,7 @@
           <p>Built for tailors and customers who want accuracy without the hassle.</p>
           <div style="display:flex; gap:16px">
              <button class="btn btn-outline" style="background:#000; border-color:#fff">Request a Demo</button>
-             <button class="btn btn-primary btn-large" style="background:#fff; color:var(--Obsidian)" id="btnFinalTrial">Try It Now</button>
+             <a class="btn btn-primary btn-large" style="background:#fff; color:var(--Obsidian)" href="#signup">Try It Now</a>
           </div>
         </div>
       </div>
@@ -469,73 +472,92 @@
   <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2/dist/umd/supabase-js.min.js"></script>
   <script>
     (function() {
-      window.onload = function() {
-        console.log("PfDebug: KORRA Engine Booting...");
+      // 1. ATOMIC ROUTING (Immediate & Independent)
+      function handleRoute() {
+        const hash = window.location.hash || '#home';
+        console.log("PfDebug: Atomic Routing ->", hash);
 
+        document.querySelectorAll('.view').forEach(v => v.classList.remove('active'));
+
+        if (hash === '#signin') {
+          document.getElementById('viewSignIn').classList.add('active');
+        } else if (hash === '#signup') {
+          document.getElementById('viewSignUp').classList.add('active');
+        } else {
+          document.getElementById('viewHome').classList.add('active');
+        }
+        window.scrollTo(0,0);
+      }
+
+      // Attach routing immediately to prevent "Dead UI"
+      window.addEventListener('hashchange', handleRoute);
+      handleRoute(); // Execute first pass
+
+      // 2. BULLETPROOF INTERACTION (Native Priority)
+      document.addEventListener('click', (e) => {
+        const target = e.target.closest('button, .btn-view-more');
+        if (!target) return;
+
+        // Case: Accordion (Requires JS)
+        if (target.id === 'btnToggleImpact' || target.classList.contains('btn-view-more')) {
+           const accordion = document.getElementById('impactAccordion');
+           const btn = document.getElementById('btnToggleImpact');
+           accordion.classList.toggle('active');
+           target.textContent = accordion.classList.contains('active') ? 'View Less ↑' : 'View Detailed Impact ↓';
+        }
+
+        // Case: Sign Out
+        if (target.id === 'btnSignOut' && window.korraSupabase) {
+          window.korraSupabase.auth.signOut();
+        }
+      });
+
+      // 3. LAZY SUPABASE (Non-Blocking)
+      function initSupabase() {
         if (typeof window.supabase === 'undefined') {
-          console.error("PfError: Supabase CDN failed to load.");
+          console.warn("PfWait: Supabase not ready, retrying...");
+          setTimeout(initSupabase, 500);
           return;
         }
 
-        const config = {
-          supabaseUrl: 'https://blsettabymllulsxtziw.supabase.co',
-          supabaseKey: 'sb_publishable_miCOIXHtlxLkfDgpwE0N-g_BA1Q-x8y'
-        };
+        try {
+          const config = {
+            supabaseUrl: 'https://blsettabymllulsxtziw.supabase.co',
+            supabaseKey: 'sb_publishable_miCOIXHtlxLkfDgpwE0N-g_BA1Q-x8y'
+          };
+          window.korraSupabase = window.supabase.createClient(config.supabaseUrl, config.supabaseKey);
 
-        const supabase = window.supabase.createClient(config.supabaseUrl, config.supabaseKey);
-
-        function handleRoute() {
-          const hash = window.location.hash || '#home';
-          document.querySelectorAll('.view').forEach(v => v.classList.remove('active'));
-          if (hash === '#signin') document.getElementById('viewSignIn').classList.add('active');
-          else if (hash === '#signup') document.getElementById('viewSignUp').classList.add('active');
-          else document.getElementById('viewHome').classList.add('active');
-          window.scrollTo(0,0);
+          window.korraSupabase.auth.onAuthStateChange((event, session) => {
+            const authBtns = document.getElementById('authButtons');
+            const bar = document.getElementById('signedBar');
+            if (session) {
+              if(authBtns) authBtns.style.display = 'none';
+              if(bar) bar.classList.add('active');
+              document.getElementById('userEmailDisplay').textContent = session.user.email;
+            } else {
+              if(bar) bar.classList.remove('active');
+              if(authBtns) authBtns.style.display = 'flex';
+            }
+          });
+          console.log("PfDebug: Supabase Connected.");
+        } catch (err) {
+          console.error("PfError: Supabase Init Failure:", err);
         }
-        window.addEventListener('hashchange', handleRoute);
+      }
 
-        document.addEventListener('click', (e) => {
-          const target = e.target.closest('button, .logo, a, .mosaic-card, .btn-view-more');
-          if (!target) return;
+      // Safe Boot for Supabase only
+      if (document.readyState === 'complete') {
+        initSupabase();
+      } else {
+        window.addEventListener('load', initSupabase);
+      }
 
-          const id = target.id;
-          const href = target.getAttribute('href');
-
-          if (id === 'btnToggleImpact' || target.classList.contains('btn-view-more')) {
-             const accordion = document.getElementById('impactAccordion');
-             const btn = document.getElementById('btnToggleImpact');
-             accordion.classList.toggle('active');
-             btn.textContent = accordion.classList.contains('active') ? 'View Less ↑' : 'View Detailed Impact ↓';
-             return;
-          }
-
-          if (id === 'btnNavSignIn' || href === '#signin') window.location.hash = '#signin';
-          else if (id === 'btnNavSignUp' || id === 'btnHeroTrial' || id === 'btnFinalTrial' || id === 'btnParadoxFix' || id === 'btnDistanceFix' || id === 'btnEngineStart' || href === '#signup' || target.classList.contains('mosaic-card')) window.location.hash = '#signup';
-          else if (id === 'logoHome' || target.classList.contains('logo')) window.location.hash = '#home';
-
-          if (id === 'btnSignOut') supabase.auth.signOut();
-        });
-
-        supabase.auth.onAuthStateChange((event, session) => {
-          const authBtns = document.getElementById('authButtons');
-          const bar = document.getElementById('signedBar');
-          if (session) {
-            if(authBtns) authBtns.style.display = 'none';
-            if(bar) bar.classList.add('active');
-            document.getElementById('userEmailDisplay').textContent = session.user.email;
-          } else {
-            if(bar) bar.classList.remove('active');
-            if(authBtns) authBtns.style.display = 'flex';
-          }
-        });
-
-        handleRoute();
-        window.addEventListener('scroll', () => {
-          const header = document.getElementById('mainHeader');
-          if (window.scrollY > 40) header.classList.add('scrolled');
-          else header.classList.remove('scrolled');
-        });
-      };
+      // Header Scroll Logic
+      window.addEventListener('scroll', () => {
+        const header = document.getElementById('mainHeader');
+        if (window.scrollY > 40) header.classList.add('scrolled');
+        else header.classList.remove('scrolled');
+      });
     })();
   </script>
 </body>
