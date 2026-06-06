@@ -3,7 +3,7 @@
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>KORRA | The Anatomy of Precision Fit</title>
+  <title>KORRA | AI-powered body measuring for faster, better fit</title>
 
   <link rel="icon" type="image/png" href="/assets/body-capture.png">
   <link rel="preconnect" href="https://fonts.googleapis.com" />
@@ -24,7 +24,7 @@
       --Error: #D63031;
 
       --S-8: 8px; --S-16: 16px; --S-24: 24px; --S-32: 32px; --S-48: 48px; --S-64: 64px; --S-80: 80px; --S-120: 120px; --S-160: 160px; --S-200: 200px;
-      --Radius-M: 12px; --Radius-L: 20px; --Radius-XL: 999px;
+      --Radius-M: 12px; --Radius-L: 24px; --Radius-XL: 999px;
     }
 
     * { box-sizing: border-box; -webkit-font-smoothing: antialiased; margin: 0; padding: 0; }
@@ -64,7 +64,12 @@
     .view.active { display: block !important; animation: viewIn 0.5s ease-out forwards; }
     .view.active.auth-view { display: flex !important; }
     .view:not(.active) { display: none !important; }
+
     @keyframes viewIn { from { opacity: 0; transform: translateY(10px); } to { opacity: 1; transform: translateY(0); } }
+
+    /* REVEAL ANIMATION SYSTEM */
+    .reveal { opacity: 0; transform: translateY(40px); transition: all 0.8s cubic-bezier(0.4, 0, 0.2, 1); }
+    .reveal.active { opacity: 1; transform: translateY(0); }
 
     section.block { padding: var(--S-160) 0; }
     .section-eyebrow { font-size: 11px; font-weight: 900; color: var(--Mint); text-transform: uppercase; letter-spacing: 0.2em; margin-bottom: var(--S-16); }
@@ -84,8 +89,13 @@
     .hero-cta-card h3 { font-size: 32px; font-weight: 900; margin: 0; color: #fff; line-height: 1.05; }
 
     .grid-impact { display: grid; grid-template-columns: 1fr 1.5fr; gap: var(--S-80); align-items: center; }
+
+    /* UNIFIED IMAGE CARD STYLING */
     .glass-card { background: var(--Glass); border: 1px solid var(--Glass-Border); border-radius: var(--Radius-L); padding: var(--S-48); transition: 0.3s; position: relative; overflow: hidden; }
     .glass-card:hover { border-color: var(--Mint); }
+
+    .image-card { padding: 12px !important; border-radius: 24px !important; }
+    .image-card img { width: 100%; height: 100%; object-fit: cover; border-radius: 16px; }
 
     .grid-4 { display: grid; grid-template-columns: repeat(4, 1fr); gap: var(--S-24); }
     .grid-3 { display: grid; grid-template-columns: repeat(3, 1fr); gap: var(--S-32); }
@@ -101,9 +111,6 @@
     .footer-links { display: grid; grid-template-columns: repeat(4, 1fr); gap: var(--S-64); }
     .footer-col h4 { font-size: 10px; font-weight: 900; text-transform: uppercase; color: var(--Neutral-500); margin-bottom: var(--S-24); }
     .footer-col a { display: block; color: var(--Neutral-400); text-decoration: none; margin-bottom: var(--S-12); font-size: 13px; }
-
-    .image-card { padding: 0 !important; background: transparent !important; }
-    .image-card img { width: 100%; height: 100%; object-fit: cover; border-radius: var(--Radius-L); }
 
     @media (max-width: 1050px) {
       .hero-headline { font-size: 52px; } nav { display: none; }
@@ -141,11 +148,11 @@
 
   <!-- 1. HOME VIEW -->
   <div id="viewHome" class="view active">
-    <!-- SECTION 0: HERO (Startup Hardened Headline) -->
+    <!-- SECTION 0: HERO -->
     <section class="hero">
       <div class="container">
-        <h1 class="hero-headline">The Anatomy of<br><span>Precision Fit.</span></h1>
-        <p class="hero-sub">Clinical-grade 3D body modeling for bespoke artisans and global commerce. Capture ±1cm accurate biometric data in seconds with nothing but a smartphone.</p>
+        <h1 class="hero-headline">AI-powered body measuring<br><span>for faster, better fit.</span></h1>
+        <p class="hero-sub">Get accurate body measurements with just a phone.<br><br>Built for tailors, fashion businesses, and people who need their measurements fast.</p>
 
         <div style="display:flex; justify-content:center; gap:40px; margin-top:40px">
            <div style="text-align:center"><div style="font-size:32px; font-weight:900; color:var(--Mint)">60s</div><div style="font-size:11px; font-weight:900; opacity:0.5; text-transform:uppercase">To Capture</div></div>
@@ -169,8 +176,8 @@
       </div>
     </section>
 
-    <!-- SECTION 1: THE STATUS QUO (Startup Hardened Narrative) -->
-    <section class="block">
+    <!-- SECTION 1: THE STATUS QUO -->
+    <section class="block reveal">
       <div class="container">
         <div class="grid-impact">
           <div>
@@ -178,8 +185,8 @@
             <h2 class="section-title">The Fragmented Cost of Manual Measurement.</h2>
             <p class="section-desc">Subjective hand-tapes are the industrial bottleneck of the $1.5T fashion market. Inconsistent data creates a cycle of failed fits, toxic merchant-client disputes, and unsustainable waste. KORRA digitizes the source of truth.</p>
           </div>
-          <div class="glass-card" style="padding:12px; border-radius:24px; position:relative">
-            <img src="/assets/body-capture.png" style="width:100%; border-radius:16px">
+          <div class="glass-card image-card">
+            <img src="/assets/body-capture.png" alt="Industrial Error Visualization">
             <div style="position:absolute; bottom:24px; right:24px; background:var(--Obsidian); border:1px solid var(--Glass-Border); padding:10px 16px; border-radius:8px; font-size:10px; font-weight:800; color:var(--Mint)">INDUSTRIAL ERROR VISUALIZATION</div>
           </div>
         </div>
@@ -187,7 +194,7 @@
     </section>
 
     <!-- SECTION 2: THE CUSTOM TAILORING PARADOX -->
-    <section class="block" style="background:rgba(255,255,255,0.01)">
+    <section class="block reveal" style="background:rgba(255,255,255,0.01)">
       <div class="container">
         <div style="max-width:700px; margin-bottom:var(--S-64)">
           <div class="section-eyebrow">The Paradox</div>
@@ -211,29 +218,25 @@
       </div>
     </section>
 
-    <!-- SECTION 3: GLOBAL CONNECTIVITY (Image Card Refactor) -->
-    <section class="block">
+    <!-- SECTION 3: GLOBAL CONNECTIVITY (Standardized Image Card) -->
+    <section class="block reveal">
       <div class="container">
-        <div class="grid-impact" style="grid-template-columns: 1.5fr 1fr">
-          <div class="glass-card image-card" style="height:400px">
-             <img src="/assets/body-capture.png" alt="Global Connectivity Visualization" style="opacity:0.6; mix-blend-mode: overlay;">
-             <div style="position:absolute; inset:0; display:flex; flex-direction:column; justify-content:center; align-items:center; text-align:center; padding:40px">
-                <div style="font-size:11px; font-weight:900; color:var(--Mint); margin-bottom:24px; letter-spacing:0.2em">GLOBAL CONNECTIVITY</div>
-                <h2 style="font-size:48px; font-weight:900; color:var(--White); line-height:1.1">Bridging the Distance Factor.</h2>
-                <p style="font-size:18px; color:var(--Neutral-400); margin-top:24px">London Client. Lagos Tailor. Perfect Fit.</p>
-             </div>
-          </div>
+        <div class="grid-impact" style="grid-template-columns: 1fr 1.5fr">
           <div>
             <div class="section-eyebrow">Cross-Border Impact</div>
-            <h2 class="section-title">Distance is no longer a barrier.</h2>
+            <h2 class="section-title">Bridging the Distance Factor.</h2>
             <p class="section-desc">KORRA solves the "Distance Factor"—the inability to get measured accurately for tailors across different countries. Global artisans can now reach global clients with clinical-grade precision.</p>
+          </div>
+          <div class="glass-card image-card">
+             <img src="/assets/body-capture.png" alt="Global Connectivity Visualization">
+             <div style="position:absolute; bottom:24px; right:24px; background:var(--Obsidian); border:1px solid var(--Glass-Border); padding:10px 16px; border-radius:8px; font-size:10px; font-weight:800; color:var(--Mint)">GLOBAL CONNECTIVITY</div>
           </div>
         </div>
       </div>
     </section>
 
-    <!-- SECTION 4: PRECISION AT SOURCE (Workflow) -->
-    <section class="block" id="technology">
+    <!-- SECTION 4: PRECISION AT SOURCE -->
+    <section class="block reveal" id="technology">
       <div class="container">
         <div style="text-align:center; max-width:700px; margin:0 auto 80px">
           <div class="section-eyebrow">The Capture Pipeline</div>
@@ -263,8 +266,8 @@
       </div>
     </section>
 
-    <!-- SECTION 5: GLOBAL SIZE PASSPORT (Image Card Refactor) -->
-    <section class="block">
+    <!-- SECTION 5: GLOBAL SIZE PASSPORT (Standardized Image Card) -->
+    <section class="block reveal">
       <div class="container">
         <div class="grid-impact">
           <div>
@@ -274,24 +277,18 @@
             <div style="display:flex; flex-direction:column; gap:12px; margin-top:40px">
                <div style="display:flex; align-items:center; gap:12px; font-weight:700; color:var(--Neutral-400); font-size:14px"><span style="color:var(--Mint)">✓</span> Own Your Biometric Identity</div>
                <div style="display:flex; align-items:center; gap:12px; font-weight:700; color:var(--Neutral-400); font-size:14px"><span style="color:var(--Mint)">✓</span> Avoid Re-Measuring Visits</div>
-               <div style="display:flex; align-items:center; gap:12px; font-weight:700; color:var(--Neutral-400); font-size:14px"><span style="color:var(--Mint)">✓</span> Share Globally with Any Artisan</div>
             </div>
           </div>
-          <div class="glass-card image-card" style="height:440px; background: var(--Teal-900) !important;">
-             <div style="padding:48px; text-align:center; height:100%; display:flex; flex-direction:column; justify-content:center">
-                <div style="font-size:11px; font-weight:900; color:var(--Mint); margin-bottom:24px; letter-spacing:0.2em">KORRA SIZE PASSPORT</div>
-                <div style="font-size:32px; font-weight:900; color:var(--White)">CHEST: 104.2cm</div>
-                <div style="font-size:32px; font-weight:900; color:var(--Mint); margin:12px 0">WAIST: 88.5cm</div>
-                <div style="font-size:32px; font-weight:900; color:var(--White)">INSEAM: 78.0cm</div>
-                <div style="margin-top:32px; font-size:10px; font-weight:800; opacity:0.3">ID: KR-882-PRECISION</div>
-             </div>
+          <div class="glass-card image-card">
+             <img src="/assets/body-capture.png" alt="KORRA Size Passport Visualization">
+             <div style="position:absolute; bottom:24px; right:24px; background:var(--Obsidian); border:1px solid var(--Glass-Border); padding:10px 16px; border-radius:8px; font-size:10px; font-weight:800; color:var(--Mint)">SIZE PASSPORT INTERFACE</div>
           </div>
         </div>
       </div>
     </section>
 
     <!-- SECTION 6: ECONOMIC ENGINE -->
-    <section class="block" id="merchant-success">
+    <section class="block reveal" id="merchant-success">
       <div class="container">
         <div style="display:flex; justify-content:space-between; align-items:flex-end; margin-bottom:60px">
           <div><div class="section-eyebrow">The Economic Engine</div><h2 class="section-title">Less time. Less waste.</h2></div>
@@ -319,7 +316,7 @@
     </section>
 
     <!-- SECTION 7: FINAL CTA -->
-    <section class="block">
+    <section class="block reveal">
       <div class="container">
         <div class="final-banner">
           <h2>Double Your<br>Output Today.</h2>
@@ -410,6 +407,18 @@
           if(authBtns) authBtns.style.display = 'flex';
         }
       });
+
+      // Intersection Observer for Modern Slide-In Animations
+      const observerOptions = { threshold: 0.1 };
+      const observer = new IntersectionObserver((entries) => {
+        entries.forEach(entry => {
+          if (entry.isIntersecting) {
+            entry.target.classList.add('active');
+          }
+        });
+      }, observerOptions);
+
+      document.querySelectorAll('.reveal').forEach(el => observer.observe(el));
 
       handleRoute();
       window.addEventListener('scroll', () => {
