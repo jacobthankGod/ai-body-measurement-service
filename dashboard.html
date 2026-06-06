@@ -149,8 +149,13 @@
         <div style="font-size:11px; font-weight:900; color:var(--Mint); margin-bottom:4px">CURRENT PRICING</div>
         <div style="font-size:20px; font-weight:800">$0.50 / measurement</div>
       </div>
-      <button class="btn-primary" style="width:100%; height:52px" onclick="alert('Redirecting to Paystack Secure Checkout...')">Top-up 100 Credits ($50)</button>
-      <button class="btn-outline" style="width:100%; border:none; margin-top:12px" onclick="document.getElementById('paymentModal').classList.remove('active')">Back to Vault</button>
+
+      <div style="display:flex; flex-direction:column; gap:16px">
+        <button class="btn-primary" style="width:100%; height:52px" onclick="payWithPaystack(100)">Top-up 100 Credits ($50)</button>
+        <button class="btn-outline" style="width:100%; height:52px" onclick="payWithPaystack(500)">Top-up 500 Credits ($250)</button>
+      </div>
+
+      <button class="btn-outline" style="width:100%; border:none; margin-top:24px" onclick="document.getElementById('paymentModal').classList.remove('active')">Back to Vault</button>
     </div>
   </div>
 
@@ -260,6 +265,7 @@
     </div>
   </main>
 
+  <script src="https://js.paystack.co/v1/inline.js"></script>
   <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2/dist/umd/supabase-js.min.js"></script>
   <script>
     const config = {
@@ -267,6 +273,7 @@
       supabaseKey: 'sb_publishable_miCOIXHtlxLkfDgpwE0N-g_BA1Q-x8y'
     };
     let supabase;
+    let currentUser = null;
     let activeApiKey = null;
     let fullRawKey = null;
 
@@ -288,6 +295,35 @@
       if(targetView) targetView.classList.add('active');
       if(targetTab) targetTab.classList.add('active');
       window.location.hash = tabId;
+    }
+
+    // --- ECONOMIC INFRASTRUCTURE (Phase 8) ---
+    function payWithPaystack(credits) {
+      const amount = credits * 0.5 * 100 * 1600; // Mock calculation: credits * price * kobo * NGN_Rate
+
+      const handler = PaystackPop.setup({
+        key: 'pk_test_placeholder_key', // Replace with real key in Render environment
+        email: currentUser.email,
+        amount: amount,
+        currency: "NGN",
+        ref: 'KORRA_' + Math.floor((Math.random() * 1000000000) + 1),
+        callback: function(response){
+          alert('Payment complete! Reference: ' + response.reference);
+          // In production: POST to /api/v2/payments/verify
+          updateCreditsInDb(credits);
+        },
+        onClose: function(){
+          alert('Transaction cancelled.');
+        }
+      });
+      handler.openIframe();
+    }
+
+    async function updateCreditsInDb(count) {
+        const { data } = await supabase.from('profiles').select('credits').eq('id', currentUser.id).single();
+        const newTotal = (data.credits || 0) + count;
+        await supabase.from('profiles').update({ credits: newTotal }).eq('id', currentUser.id);
+        location.reload();
     }
 
     (function() {
@@ -313,19 +349,24 @@
         } catch (e) {}
       }
 
+      async function fetchProfile(userId) {
+        try {
+          const { data } = await supabase.from('profiles').select('*').eq('id', userId).single();
+          if(data) {
+            document.getElementById('setCompany').value = data.company_name || "Artisan Studio";
+            document.getElementById('subTier').textContent = data.industry ? data.industry.replace('_', ' ').toUpperCase() : "Merchant Pro";
+            document.getElementById('statCredits').textContent = data.credits || 0;
+          }
+        } catch(e) {}
+      }
+
       async function ensureApiKey(userId) {
         try {
-          const { data, error } = await supabase.from('api_keys').select('*').eq('user_id', userId).eq('is_active', true).single();
+          const { data } = await supabase.from('api_keys').select('*').eq('user_id', userId).eq('is_active', true).single();
           if (data) {
             activeApiKey = data.key;
             fullRawKey = data.key;
             document.getElementById('apiKeyDisplay').textContent = data.key.substring(0, 12) + "****************";
-          } else {
-            const newKey = "korra_live_" + Math.random().toString(36).substring(2, 15) + Math.random().toString(36).substring(2, 15);
-            await supabase.from('api_keys').insert({ key: newKey, user_id: userId, tier: 'tailor_pro' });
-            activeApiKey = newKey;
-            fullRawKey = newKey;
-            document.getElementById('apiKeyDisplay').textContent = newKey.substring(0, 12) + "****************";
           }
         } catch(e) {}
       }
@@ -339,11 +380,13 @@
         const { data: { session } } = await supabase.auth.getSession();
         if (!session) { window.location.href = '/signin.html'; return; }
 
+        currentUser = session.user;
         document.getElementById('loadingOverlay').style.display = 'none';
         document.getElementById('userDisplay').textContent = session.user.email;
         document.getElementById('settingsEmail').value = session.user.email;
 
         fetchScans(session.user.id);
+        fetchProfile(session.user.id);
         ensureApiKey(session.user.id);
 
         const initialTab = window.location.hash.replace('#', '') || 'vault';
@@ -354,20 +397,11 @@
           window.location.href = '/';
         });
 
-        // --- MERCHANT API COMMANDS (Phase 7) ---
         document.getElementById('btnCopyKey').addEventListener('click', () => {
           if (fullRawKey) {
             navigator.clipboard.writeText(fullRawKey);
-            alert("API Key copied to clipboard. Keep it secure.");
+            alert("API Key copied to clipboard.");
           }
-        });
-
-        document.getElementById('btnRevokeKey').addEventListener('click', async () => {
-           if(confirm("Are you sure you want to revoke this production key? Any existing integrations will stop working.")) {
-              await supabase.from('api_keys').update({ is_active: false }).eq('key', fullRawKey);
-              alert("Key Revoked. Generate a new key to resume API access.");
-              location.reload();
-           }
         });
 
         document.getElementById('scanForm').addEventListener('submit', async (e) => {
@@ -381,7 +415,7 @@
           if (!activeApiKey) { alert("Merchant API Key not ready."); return; }
 
           btn.disabled = true;
-          btn.textContent = "AI EXTRACTING (Handshaking)...";
+          btn.textContent = "AI EXTRACTING...";
 
           const formData = new FormData();
           formData.append('front', front);
@@ -400,11 +434,10 @@
               alert("Extraction Successful!");
               location.reload();
             } else {
-              const err = await response.json();
-              alert("Extraction Error: " + (err.detail || "Engine Timeout"));
+              alert("Extraction failed. Check credits.");
             }
           } catch (err) {
-            alert("Connection error to AI Engine.");
+            alert("Connection error.");
           } finally {
             btn.disabled = false;
             btn.textContent = "Run AI Extraction";
