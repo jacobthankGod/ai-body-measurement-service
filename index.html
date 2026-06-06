@@ -37,35 +37,28 @@
     .container { width: 100%; max-width: 1150px; margin: 0 auto; padding: 0 var(--S-48); position: relative; }
 
     header {
-      width: 100%; height: 80px; display: flex; align-items: center; position: fixed; top: 0; z-index: 999999; /* NUCLEAR Z-INDEX */
+      width: 100%; height: 80px; display: flex; align-items: center; position: fixed; top: 0; z-index: 999999;
       background: rgba(0, 0, 0, 0.8); backdrop-filter: blur(20px); border-bottom: 1px solid var(--Glass-Border); transition: all 0.3s ease;
     }
     header.scrolled { height: 64px; background: rgba(0, 0, 0, 0.95); }
     header .container { display: flex; align-items: center; justify-content: space-between; padding: 0; }
 
-    .logo { display: flex; align-items: center; gap: var(--S-12); cursor: pointer; pointer-events: all !important; }
+    .logo { display: flex; align-items: center; gap: var(--S-12); cursor: pointer; text-decoration: none; color: inherit; }
     .logo-mark { width: 32px; height: 32px; border-radius: 8px; background: var(--Mint); transform: rotate(-8deg); }
     .logo-text { font-size: 20px; font-weight: 900; letter-spacing: -0.05em; }
 
     nav { display: flex; gap: var(--S-32); margin-left: var(--S-48); }
-    nav a { font-size: 11px; font-weight: 800; color: var(--White); text-decoration: none; text-transform: uppercase; letter-spacing: 0.1em; opacity: 0.5; transition: 0.2s; pointer-events: all !important; }
+    nav a { font-size: 11px; font-weight: 800; color: var(--White); text-decoration: none; text-transform: uppercase; letter-spacing: 0.1em; opacity: 0.5; transition: 0.2s; }
     nav a:hover { opacity: 1; color: var(--Mint); }
 
     .btn {
       height: 52px; padding: 0 var(--S-24); border-radius: 12px; border: 1px solid transparent; font-size: 13px; font-weight: 800;
       cursor: pointer; display: inline-flex; align-items: center; justify-content: center; gap: 12px; transition: all 0.2s ease; text-decoration: none;
-      pointer-events: all !important; /* PREVENT CLOAKING */
     }
     .btn-primary { background: var(--Mint); color: var(--Obsidian); }
     .btn-outline { background: transparent; border: 1px solid var(--Glass-Border); color: var(--White); }
     .btn-outline:hover { background: var(--Glass); border-color: var(--White); }
     .btn-large { height: 64px; padding: 0 var(--S-48); font-size: 16px; }
-
-    .view { display: none; width: 100%; min-height: 100vh; }
-    .view.active { display: block !important; animation: viewIn 0.4s ease-out forwards; }
-    .view.active.auth-view { display: flex !important; align-items: center; justify-content: center; padding-top: 100px; }
-    .view:not(.active) { display: none !important; }
-    @keyframes viewIn { from { opacity: 0; transform: translateY(10px); } to { opacity: 1; transform: translateY(0); } }
 
     section.block { padding: var(--S-160) 0; }
     .section-eyebrow { font-size: 11px; font-weight: 900; color: var(--Mint); text-transform: uppercase; letter-spacing: 0.2em; margin-bottom: var(--S-16); }
@@ -107,7 +100,7 @@
     .mosaic-grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: var(--S-24); margin-top: var(--S-64); }
     .mosaic-card {
         height: 380px; border-radius: 24px; overflow: hidden; position: relative;
-        border: 1px solid var(--Glass-Border); transition: 0.4s cubic-bezier(0.4, 0, 0.2, 1); cursor: pointer;
+        border: 1px solid var(--Glass-Border); transition: 0.4s cubic-bezier(0.4, 0, 0.2, 1); cursor: pointer; text-decoration: none; display: block;
     }
     .mosaic-card:hover { transform: scale(1.02); border-color: var(--Mint); z-index: 2; box-shadow: 0 20px 40px rgba(0,0,0,0.5); }
     .mosaic-img { width: 100%; height: 100%; object-fit: cover; opacity: 0.6; transition: 0.4s; }
@@ -152,7 +145,7 @@
 
   <header id="mainHeader">
     <div class="container">
-      <a class="logo" href="#home" id="logoHome">
+      <a class="logo" href="/">
         <div class="logo-mark"></div>
         <div class="logo-text">KORRA</div>
       </a>
@@ -164,8 +157,8 @@
       <div style="flex:1"></div>
       <div style="display:flex; align-items:center; gap:var(--S-16)">
         <div id="authButtons" style="display:flex; gap:var(--S-12)">
-          <a class="btn btn-outline" href="#signin" id="btnNavSignIn">Sign In</a>
-          <a class="btn btn-primary" href="#signup" id="btnNavSignUp">Get Access</a>
+          <a class="btn btn-outline" href="/signin.html">Sign In</a>
+          <a class="btn btn-primary" href="/signup.html">Get Access</a>
         </div>
         <div id="signedBar">
           <span style="font-weight:700; font-size:12px; color:var(--Mint)" id="userEmailDisplay"></span>
@@ -175,8 +168,7 @@
     </div>
   </header>
 
-  <!-- 1. HOME VIEW -->
-  <div id="viewHome" class="view active">
+  <div id="viewHome">
     <!-- SECTION 0: HERO -->
     <section class="hero">
       <div class="container">
@@ -201,7 +193,7 @@
           </div>
           <div style="display:flex; gap:16px">
              <a class="btn btn-outline" href="#technology">See How It Works</a>
-             <a class="btn btn-primary btn-large" href="#signup">Get Started</a>
+             <a class="btn btn-primary btn-large" href="/signup.html">Get Started</a>
           </div>
         </div>
       </div>
@@ -233,7 +225,7 @@
             <h2 class="section-title">Common problems.</h2>
             <p class="section-desc">For many people, there is no easy way to keep a reliable size record. This creates a cycle of failed expectations.</p>
           </div>
-          <a class="btn btn-primary" href="#signup">Get Started Now</a>
+          <a class="btn btn-primary" href="/signup.html">Get Started Now</a>
         </div>
         <div class="grid-3">
            <div class="glass-card">
@@ -277,7 +269,7 @@
                </p>
             </div>
 
-            <a class="btn btn-primary" style="margin-top:40px" href="#signup">Get Started</a>
+            <a class="btn btn-primary" style="margin-top:40px" href="/signup.html">Get Started</a>
           </div>
         </div>
       </div>
@@ -357,27 +349,27 @@
         </div>
 
         <div class="mosaic-grid">
-          <a class="mosaic-card" href="#signup">
+          <a class="mosaic-card" href="/signup.html">
             <img src="/assets/body-capture.png" class="mosaic-img" alt="Luxury MTM">
             <div class="mosaic-overlay"><div class="mosaic-title">Luxury Made-To-Measure</div><div class="mosaic-desc">For luxury made to measure brands.</div></div>
           </a>
-          <a class="mosaic-card" href="#signup">
+          <a class="mosaic-card" href="/signup.html">
             <img src="/assets/homepage_image.png" class="mosaic-img" alt="Manufacturing">
             <div class="mosaic-overlay"><div class="mosaic-title">On-Demand Manufacturing</div><div class="mosaic-desc">For on-demand manufacturing.</div></div>
           </a>
-          <a class="mosaic-card" href="#signup">
+          <a class="mosaic-card" href="/signup.html">
             <img src="/assets/body-capture.png" class="mosaic-img" alt="RTW">
             <div class="mosaic-overlay"><div class="mosaic-title">Ready-To-Wear</div><div class="mosaic-desc">For ready-to-wear businesses.</div></div>
           </a>
-          <a class="mosaic-card" href="#signup">
+          <a class="mosaic-card" href="/signup.html">
             <img src="/assets/homepage_image.png" class="mosaic-img" alt="Bridal">
             <div class="mosaic-overlay"><div class="mosaic-title">Bridal & Tuxedo</div><div class="mosaic-desc">For bridal and tuxedo businesses.</div></div>
           </a>
-          <a class="mosaic-card" href="#signup">
+          <a class="mosaic-card" href="/signup.html">
             <img src="/assets/body-capture.png" class="mosaic-img" alt="Custom">
             <div class="mosaic-overlay"><div class="mosaic-title">Custom Apparel</div><div class="mosaic-desc">For custom apparel companies.</div></div>
           </a>
-          <a class="mosaic-card" href="#signup">
+          <a class="mosaic-card" href="/signup.html">
             <img src="/assets/homepage_image.png" class="mosaic-img" alt="Uniforms">
             <div class="mosaic-overlay"><div class="mosaic-title">Uniform Manufacturers</div><div class="mosaic-desc">For uniform manufacturers.</div></div>
           </a>
@@ -390,7 +382,7 @@
       <div class="container">
         <div style="display:flex; justify-content:space-between; align-items:flex-end; margin-bottom:60px">
           <div><div class="section-eyebrow">The Economic Engine</div><h2 class="section-title">Less time. Less waste.</h2></div>
-          <a class="btn btn-primary" href="#signup">Get Started Now</a>
+          <a class="btn btn-primary" href="/signup.html">Get Started Now</a>
         </div>
         <div class="grid-4">
           <div class="glass-card" style="padding:var(--S-32)">
@@ -421,7 +413,7 @@
           <p>Built for tailors and customers who want accuracy without the hassle.</p>
           <div style="display:flex; gap:16px">
              <button class="btn btn-outline" style="background:#000; border-color:#fff">Request a Demo</button>
-             <a class="btn btn-primary btn-large" style="background:#fff; color:var(--Obsidian)" href="#signup">Try It Now</a>
+             <a class="btn btn-primary btn-large" style="background:#fff; color:var(--Obsidian)" href="/signup.html">Try It Now</a>
           </div>
         </div>
       </div>
@@ -443,79 +435,28 @@
     </footer>
   </div>
 
-  <!-- AUTH VIEWS -->
-  <div id="viewSignIn" class="view auth-view">
-    <div class="auth-card glass-card">
-      <h2 style="font-size:32px; font-weight:800; margin-bottom:12px">Welcome back</h2>
-      <p style="color:var(--Neutral-400); margin-bottom:48px">Identify yourself to enter the command center.</p>
-      <form id="signInForm">
-        <div class="form-group"><label class="form-label">EMAIL</label><input type="email" class="form-input" id="inEmail" required></div>
-        <div class="form-group"><label class="form-label">PASSWORD</label><input type="password" class="form-input" id="inPass" required></div>
-        <button type="submit" class="btn btn-primary" style="width:100%">Enter Workbench</button>
-      </form>
-    </div>
-  </div>
-
-  <div id="viewSignUp" class="view auth-view">
-    <div class="auth-card glass-card" style="width:400px">
-      <h2 style="font-size:32px; font-weight:800; margin-bottom:12px">Get Access</h2>
-      <p style="color:var(--Neutral-400); margin-bottom:48px">Start your precision journey today.</p>
-      <form id="signUpForm">
-        <div class="form-group"><label class="form-label">FULL NAME</label><input type="text" class="form-input" id="upName"></div>
-        <div class="form-group"><label class="form-label">EMAIL</label><input type="email" class="form-input" id="upEmail" required></div>
-        <div class="form-group"><label class="form-label">CREATE KEY</label><input type="password" class="form-input" id="upPass" required></div>
-        <button type="submit" class="btn btn-primary" style="width:100%">Initialize Account</button>
-      </form>
-    </div>
-  </div>
-
   <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2/dist/umd/supabase-js.min.js"></script>
   <script>
     (function() {
-      // 1. ATOMIC ROUTING (Immediate & Independent)
-      function handleRoute() {
-        const hash = window.location.hash || '#home';
-        console.log("PfDebug: Atomic Routing ->", hash);
-
-        document.querySelectorAll('.view').forEach(v => v.classList.remove('active'));
-
-        if (hash === '#signin') {
-          document.getElementById('viewSignIn').classList.add('active');
-        } else if (hash === '#signup') {
-          document.getElementById('viewSignUp').classList.add('active');
-        } else {
-          document.getElementById('viewHome').classList.add('active');
-        }
-        window.scrollTo(0,0);
-      }
-
-      // Attach routing immediately to prevent "Dead UI"
-      window.addEventListener('hashchange', handleRoute);
-      handleRoute(); // Execute first pass
-
-      // 2. BULLETPROOF INTERACTION (Native Priority)
+      // ATOMIC INTERACTION SYSTEM
       document.addEventListener('click', (e) => {
         const target = e.target.closest('button, .btn-view-more');
         if (!target) return;
 
-        // Case: Accordion (Requires JS)
         if (target.id === 'btnToggleImpact' || target.classList.contains('btn-view-more')) {
            const accordion = document.getElementById('impactAccordion');
-           const btn = document.getElementById('btnToggleImpact');
            accordion.classList.toggle('active');
            target.textContent = accordion.classList.contains('active') ? 'View Less ↑' : 'View Detailed Impact ↓';
         }
 
-        // Case: Sign Out
         if (target.id === 'btnSignOut' && window.korraSupabase) {
-          window.korraSupabase.auth.signOut();
+          window.korraSupabase.auth.signOut().then(() => window.location.reload());
         }
       });
 
-      // 3. LAZY SUPABASE (Non-Blocking)
+      // LAZY SUPABASE (Authentication Observer Only)
       function initSupabase() {
         if (typeof window.supabase === 'undefined') {
-          console.warn("PfWait: Supabase not ready, retrying...");
           setTimeout(initSupabase, 500);
           return;
         }
@@ -533,26 +474,19 @@
             if (session) {
               if(authBtns) authBtns.style.display = 'none';
               if(bar) bar.classList.add('active');
-              document.getElementById('userEmailDisplay').textContent = session.user.email;
+              const display = document.getElementById('userEmailDisplay');
+              if(display) display.textContent = session.user.email;
             } else {
               if(bar) bar.classList.remove('active');
               if(authBtns) authBtns.style.display = 'flex';
             }
           });
-          console.log("PfDebug: Supabase Connected.");
         } catch (err) {
-          console.error("PfError: Supabase Init Failure:", err);
+          console.error("Auth System failed to init:", err);
         }
       }
+      initSupabase();
 
-      // Safe Boot for Supabase only
-      if (document.readyState === 'complete') {
-        initSupabase();
-      } else {
-        window.addEventListener('load', initSupabase);
-      }
-
-      // Header Scroll Logic
       window.addEventListener('scroll', () => {
         const header = document.getElementById('mainHeader');
         if (window.scrollY > 40) header.classList.add('scrolled');
