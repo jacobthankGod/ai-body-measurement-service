@@ -225,7 +225,8 @@
                 <div style="font-size:10px; font-weight:900; color:var(--Neutral-500); margin-bottom:12px">YOUR PRODUCTION KEY</div>
                 <div style="display:flex; gap:16px; align-items:center">
                   <code id="apiKeyDisplay" style="font-family:monospace; color:var(--Mint); font-size:16px; flex:1">korra_live_************************</code>
-                  <button class="btn-outline" style="height:32px; font-size:10px" id="btnGenKey">Generate Key</button>
+                  <button class="btn-outline" style="height:32px; font-size:10px" id="btnCopyKey">Copy Key</button>
+                  <button class="btn-outline" style="height:32px; font-size:10px; color:var(--Error)" id="btnRevokeKey">Revoke</button>
                 </div>
               </div>
 
@@ -267,6 +268,7 @@
     };
     let supabase;
     let activeApiKey = null;
+    let fullRawKey = null;
 
     function handleFileChange(input, wrapperId) {
         const wrapper = document.getElementById(wrapperId);
@@ -316,12 +318,13 @@
           const { data, error } = await supabase.from('api_keys').select('*').eq('user_id', userId).eq('is_active', true).single();
           if (data) {
             activeApiKey = data.key;
+            fullRawKey = data.key;
             document.getElementById('apiKeyDisplay').textContent = data.key.substring(0, 12) + "****************";
           } else {
-            // Auto-generate if missing
-            const newKey = "korra_live_" + Math.random().toString(36).substring(2, 15);
+            const newKey = "korra_live_" + Math.random().toString(36).substring(2, 15) + Math.random().toString(36).substring(2, 15);
             await supabase.from('api_keys').insert({ key: newKey, user_id: userId, tier: 'tailor_pro' });
             activeApiKey = newKey;
+            fullRawKey = newKey;
             document.getElementById('apiKeyDisplay').textContent = newKey.substring(0, 12) + "****************";
           }
         } catch(e) {}
@@ -351,7 +354,22 @@
           window.location.href = '/';
         });
 
-        // --- AI EXTRACTION HANDSHAKE (Phase 6) ---
+        // --- MERCHANT API COMMANDS (Phase 7) ---
+        document.getElementById('btnCopyKey').addEventListener('click', () => {
+          if (fullRawKey) {
+            navigator.clipboard.writeText(fullRawKey);
+            alert("API Key copied to clipboard. Keep it secure.");
+          }
+        });
+
+        document.getElementById('btnRevokeKey').addEventListener('click', async () => {
+           if(confirm("Are you sure you want to revoke this production key? Any existing integrations will stop working.")) {
+              await supabase.from('api_keys').update({ is_active: false }).eq('key', fullRawKey);
+              alert("Key Revoked. Generate a new key to resume API access.");
+              location.reload();
+           }
+        });
+
         document.getElementById('scanForm').addEventListener('submit', async (e) => {
           e.preventDefault();
           const btn = document.getElementById('btnRunInference');
@@ -360,7 +378,7 @@
           const front = document.getElementById('frontPhoto').files[0];
           const side = document.getElementById('sidePhoto').files[0];
 
-          if (!activeApiKey) { alert("Merchant API Key not ready. Please try again."); return; }
+          if (!activeApiKey) { alert("Merchant API Key not ready."); return; }
 
           btn.disabled = true;
           btn.textContent = "AI EXTRACTING (Handshaking)...";
@@ -379,17 +397,14 @@
             });
 
             if (response.ok) {
-              const result = await response.json();
-              alert("Extraction Successful! Biometrics saved to vault.");
-              document.getElementById('newScanModal').classList.remove('active');
-              location.reload(); // Refresh to show new scan
+              alert("Extraction Successful!");
+              location.reload();
             } else {
               const err = await response.json();
               alert("Extraction Error: " + (err.detail || "Engine Timeout"));
             }
           } catch (err) {
-            console.error("AI Engine failure:", err);
-            alert("Connection error to AI Engine. Please check server logs.");
+            alert("Connection error to AI Engine.");
           } finally {
             btn.disabled = false;
             btn.textContent = "Run AI Extraction";
