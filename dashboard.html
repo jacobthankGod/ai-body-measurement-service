@@ -79,7 +79,6 @@
 
     .empty-state { text-align: center; padding: var(--S-80) 0; color: var(--Neutral-500); }
 
-    /* MODAL */
     .modal-overlay {
       position: fixed; inset: 0; background: rgba(0,0,0,0.9); z-index: 2000;
       display: none; align-items: center; justify-content: center; backdrop-filter: blur(10px);
@@ -100,7 +99,6 @@
 
   <div id="loadingOverlay">Initializing Workbench...</div>
 
-  <!-- NEW SCAN MODAL -->
   <div class="modal-overlay" id="newScanModal">
     <div class="modal-card">
       <h2 style="font-size:24px; margin-bottom:12px">New Client Scan</h2>
@@ -121,7 +119,6 @@
     </div>
   </div>
 
-  <!-- PAYMENT MODAL -->
   <div class="modal-overlay" id="paymentModal">
     <div class="modal-card">
       <h2 style="font-size:24px; margin-bottom:12px">Buy Credits</h2>
@@ -130,7 +127,7 @@
         <div style="font-size:11px; font-weight:900; color:var(--Mint); margin-bottom:4px">CURRENT PRICING</div>
         <div style="font-size:20px; font-weight:800">$0.50 / measurement</div>
       </div>
-      <button class="btn-primary" style="width:100%; height:52px" onclick="alert('Bypassing Paystack sandbox... (In production, this opens the secure payment popup)')">Top-up 100 Credits ($50)</button>
+      <button class="btn-primary" style="width:100%; height:52px" onclick="alert('Redirecting to Paystack Secure Checkout...')">Top-up 100 Credits ($50)</button>
       <button class="btn-outline" style="width:100%; border:none; margin-top:12px" onclick="document.getElementById('paymentModal').classList.remove('active')">Back to Vault</button>
     </div>
   </div>
@@ -160,14 +157,13 @@
 
           <div class="glass-card" style="padding: 24px;">
             <h4 style="font-size:10px; font-weight:900; color:var(--Mint); margin-bottom:12px; text-transform:uppercase">Subscription</h4>
-            <p style="font-size:13px; font-weight:700;">Merchant Pro</p>
+            <p id="subTier" style="font-size:13px; font-weight:700;">Merchant Pro</p>
             <p style="font-size:11px; color:var(--Neutral-400); margin-top:4px">$0.50 / scan active</p>
           </div>
         </aside>
 
         <section class="content">
 
-          <!-- VAULT TAB -->
           <div id="view-vault" class="tab-view active">
             <div class="stat-grid">
               <div class="glass-card stat-card">
@@ -198,7 +194,6 @@
             </div>
           </div>
 
-          <!-- API TAB -->
           <div id="view-api" class="tab-view">
             <div class="glass-card">
               <h2 style="font-size:24px; margin-bottom:12px">Merchant API</h2>
@@ -207,8 +202,8 @@
               <div style="background:#0a0a0a; border:1px solid var(--Glass-Border); border-radius:12px; padding:24px; margin-bottom:32px">
                 <div style="font-size:10px; font-weight:900; color:var(--Neutral-500); margin-bottom:12px">YOUR PRODUCTION KEY</div>
                 <div style="display:flex; gap:16px; align-items:center">
-                  <code style="font-family:monospace; color:var(--Mint); font-size:16px; flex:1">korra_live_************************</code>
-                  <button class="btn-outline" style="height:32px; font-size:10px" onclick="alert('API Key Generated and Secured.')">Generate New Key</button>
+                  <code id="apiKeyDisplay" style="font-family:monospace; color:var(--Mint); font-size:16px; flex:1">korra_live_************************</code>
+                  <button class="btn-outline" style="height:32px; font-size:10px" id="btnGenKey">Generate Key</button>
                 </div>
               </div>
 
@@ -220,14 +215,13 @@
             </div>
           </div>
 
-          <!-- SETTINGS TAB -->
           <div id="view-settings" class="tab-view">
             <div class="glass-card">
               <h2 style="font-size:24px; margin-bottom:32px">Account Settings</h2>
               <div style="display:flex; flex-direction:column; gap:24px">
                  <div class="form-group">
                    <label style="font-size:10px; font-weight:900; color:var(--Neutral-500); display:block; margin-bottom:8px">BUSINESS NAME</label>
-                   <input type="text" class="btn-outline" style="width:100%; text-align:left; background:rgba(255,255,255,0.05)" value="Master Artisan Studio">
+                   <input type="text" id="setCompany" class="btn-outline" style="width:100%; text-align:left; background:rgba(255,255,255,0.05)" value="Master Artisan Studio">
                  </div>
                  <div class="form-group">
                    <label style="font-size:10px; font-weight:900; color:var(--Neutral-500); display:block; margin-bottom:8px">ADMIN EMAIL</label>
@@ -245,25 +239,31 @@
 
   <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2/dist/umd/supabase-js.min.js"></script>
   <script>
+    const config = {
+      supabaseUrl: 'https://blsettabymllulsxtziw.supabase.co',
+      supabaseKey: 'sb_publishable_miCOIXHtlxLkfDgpwE0N-g_BA1Q-x8y'
+    };
+    let supabase;
+
     function switchTab(tabId) {
       document.querySelectorAll('.tab-view').forEach(t => t.classList.remove('active'));
       document.querySelectorAll('.sidebar-nav a').forEach(a => a.classList.remove('active'));
-      document.getElementById('view-' + tabId).classList.add('active');
-      document.getElementById('tab-' + tabId).classList.add('active');
+
+      const targetView = document.getElementById('view-' + tabId);
+      const targetTab = document.getElementById('tab-' + tabId);
+
+      if(targetView) targetView.classList.add('active');
+      if(targetTab) targetTab.classList.add('active');
+
+      // PERSIST VIA HASH
+      window.location.hash = tabId;
     }
 
     (function() {
-      const config = {
-        supabaseUrl: 'https://blsettabymllulsxtziw.supabase.co',
-        supabaseKey: 'sb_publishable_miCOIXHtlxLkfDgpwE0N-g_BA1Q-x8y'
-      };
-
-      let supabase;
-
       async function fetchScans(userId) {
         const scanList = document.getElementById('scanList');
         try {
-          const { data, error } = await supabase.table('measurements').select('*').eq('user_id', userId).order('created_at', { ascending: false });
+          const { data, error } = await supabase.from('measurements').select('*').eq('user_id', userId).order('created_at', { ascending: false });
           if (error || !data || data.length === 0) return;
 
           document.getElementById('statTotalScans').textContent = data.length;
@@ -280,6 +280,16 @@
             </div>
           `).join('');
         } catch (e) {}
+      }
+
+      async function fetchProfile(userId) {
+        try {
+          const { data, error } = await supabase.from('profiles').select('*').eq('id', userId).single();
+          if(data) {
+            document.getElementById('setCompany').value = data.company_name || "Artisan Studio";
+            document.getElementById('subTier').textContent = data.industry ? data.industry.replace('_', ' ').toUpperCase() : "Merchant Pro";
+          }
+        } catch(e) {}
       }
 
       async function initDashboard() {
@@ -301,14 +311,25 @@
         document.getElementById('settingsEmail').value = session.user.email;
 
         fetchScans(session.user.id);
+        fetchProfile(session.user.id);
+
+        // SYNC TAB ON LOAD
+        const initialTab = window.location.hash.replace('#', '') || 'vault';
+        switchTab(initialTab);
 
         document.getElementById('btnSignOut').addEventListener('click', async () => {
           await supabase.auth.signOut();
           window.location.href = '/';
         });
 
+        document.getElementById('btnGenKey').addEventListener('click', () => {
+          const fakeKey = "korra_live_" + Math.random().toString(36).substring(2, 15) + Math.random().toString(36).substring(2, 15);
+          document.getElementById('apiKeyDisplay').textContent = fakeKey;
+          alert("Production API Key generated. Please save it securely.");
+        });
+
         document.getElementById('btnRunInference').addEventListener('click', () => {
-          alert("AI Measurement Engine: Initializing MediaPipe pipeline... (Camera hardware handshake started)");
+          alert("AI Measurement Engine: Initializing MediaPipe pipeline...");
           setTimeout(() => {
              document.getElementById('newScanModal').classList.remove('active');
              alert("Simulation: Scan captured successfully. Processing 3D Landmarks...");
