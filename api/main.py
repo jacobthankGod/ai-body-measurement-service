@@ -1,7 +1,7 @@
 """
 KORRA Global Artisan Infrastructure - Production Entry Point
 ===========================================================
-Expert implementation featuring Autonomous Brain Restoration.
+Expert implementation featuring Autonomous Brain Restoration and Prioritized Routing.
 """
 import os
 import sys
@@ -66,7 +66,7 @@ async def lifespan(app: FastAPI):
 app = FastAPI(
     title="KORRA Artisan API",
     description="Production-grade AI body measurement extraction infrastructure.",
-    version="2.1.10",
+    version="2.1.11",
     lifespan=lifespan,
     docs_url="/docs",
     redoc_url="/redoc"
@@ -81,7 +81,8 @@ app.add_middleware(
     allow_headers=["*"],
 )
 
-# --- API ROUTES ---
+# --- API ROUTE REGISTRATION ---
+# CRITICAL: Routes are registered BEFORE the catch-all HTML fallback
 def include_routers():
     try:
         from api.routes import measurements, auth, health, qrcode, sharing
@@ -107,6 +108,7 @@ if public_dir.exists():
 app.mount("/meshes", StaticFiles(directory=str(mesh_dir)), name="meshes")
 
 # --- MPA ROUTING ---
+
 def get_safe_file(filename: str):
     target = BASE_DIR / filename
     if target.exists() and target.is_file():
@@ -134,12 +136,30 @@ async def serve_widget(): return get_safe_file("widget.html")
 @app.get("/share")
 async def serve_share(): return get_safe_file("share.html")
 
+# --- PRIORITIZED CATCH-ALL ---
 @app.get("/{full_path:path}")
-async def catch_all(full_path: str):
-    if ".." in full_path: return JSONResponse(status_code=400, content={"error": "Illegal access"})
-    if full_path.endswith(".html"): return get_safe_file(full_path)
+async def catch_all(request: Request, full_path: str):
+    # 1. Block API leakage to HTML fallback
+    if full_path.startswith("api/v2"):
+        return JSONResponse(
+            status_code=404,
+            content={"error": f"API Endpoint /api/v2/{full_path} not found. Check router registration."}
+        )
+
+    # 2. Block path traversal
+    if ".." in full_path:
+        return JSONResponse(status_code=400, content={"error": "Illegal access"})
+
+    # 3. Serve specific HTML pages if explicitly requested
+    if full_path.endswith(".html"):
+        return get_safe_file(full_path)
+
+    # 4. Check for Static Assets
     asset_file = public_dir / full_path
-    if asset_file.exists() and asset_file.is_file(): return FileResponse(str(asset_file))
+    if asset_file.exists() and asset_file.is_file():
+        return FileResponse(str(asset_file))
+
+    # 5. Default Fallback (SPA behavior)
     return get_safe_file("index.html")
 
 # --- GLOBAL ERROR HANDLER ---
