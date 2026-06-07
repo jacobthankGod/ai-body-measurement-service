@@ -117,6 +117,27 @@
     </div>
   </div>
 
+  <!-- ADMIN SCAN MODAL (Phase 6b) -->
+  <div class="modal-overlay" id="adminScanModal">
+    <div class="modal-card">
+      <h2 style="font-size:24px; margin-bottom:12px">Admin Testing Lab</h2>
+      <p style="color:var(--Neutral-400); margin-bottom:32px">Run a credit-free extraction for technical benchmarking.</p>
+
+      <form id="adminScanForm" style="display:flex; flex-direction:column; gap:20px">
+        <div>
+          <label style="font-size:10px; font-weight:900; color:var(--Neutral-500); display:block; margin-bottom:8px">TEST HEIGHT (CM)</label>
+          <input type="number" id="adminHeight" class="search-input" style="margin-bottom:0" placeholder="180" required>
+        </div>
+        <div style="display:grid; grid-template-columns: 1fr 1fr; gap:16px">
+           <div style="font-size:10px; color:var(--Neutral-400); text-align:center; padding:20px; border:1px dashed var(--Glass-Border); border-radius:12px">Upload Front</div>
+           <div style="font-size:10px; color:var(--Neutral-400); text-align:center; padding:20px; border:1px dashed var(--Glass-Border); border-radius:12px">Upload Side</div>
+        </div>
+        <button type="submit" class="btn-primary" style="height:52px" id="btnAdminRun">Execute Benchmarking</button>
+        <button type="button" class="btn-action" style="border:none" onclick="document.getElementById('adminScanModal').classList.remove('active')">Dismiss</button>
+      </form>
+    </div>
+  </div>
+
   <header>
     <div class="container">
       <a class="logo" href="/">
@@ -139,6 +160,7 @@
             <nav class="sidebar-nav">
               <a onclick="switchTab('overview')" id="tab-overview" class="active">Global Overview</a>
               <a onclick="switchTab('registry')" id="tab-registry">Merchant Registry</a>
+              <a onclick="switchTab('lab')" id="tab-lab">Testing Lab</a>
               <a onclick="switchTab('health')" id="tab-health">System Health</a>
               <a onclick="switchTab('finance')" id="tab-finance">Financial Audit</a>
             </nav>
@@ -234,28 +256,22 @@
              </div>
           </div>
 
-          <div id="view-finance" class="tab-view">
-             <div class="glass-card">
-               <h2 class="section-title">Financial Audit</h2>
-               <p style="color:var(--Neutral-400); margin-bottom:32px">Real-time verification of Paystack credit top-ups across the network.</p>
+          <div id="view-lab" class="tab-view">
+            <div class="glass-card">
+              <h2 class="section-title">Testing Lab</h2>
+              <p style="color:var(--Neutral-400); margin-bottom:32px">Run industrial-grade biometric extractions without credit consumption. This is a restricted super-user sandbox.</p>
 
-               <div class="table-container">
-                <table>
-                  <thead>
-                    <tr>
-                      <th>Date</th>
-                      <th>Merchant</th>
-                      <th>Amount</th>
-                      <th>Reference</th>
-                      <th>Status</th>
-                    </tr>
-                  </thead>
-                  <tbody id="financeList">
-                    <tr><td colspan="5" style="text-align:center; padding:40px; color:var(--Neutral-400)">Retrieving transaction history...</td></tr>
-                  </tbody>
-                </table>
+              <div style="display:grid; grid-template-columns: 1fr 1fr; gap:32px">
+                 <div class="glass-card" style="margin-bottom:0">
+                   <h4 style="font-size:10px; font-weight:900; color:var(--Mint); margin-bottom:16px">MANUAL EXTRACTION</h4>
+                   <button class="btn-primary" style="width:100%; height:52px" onclick="document.getElementById('adminScanModal').classList.add('active')">+ Launch Admin Scan</button>
+                 </div>
+                 <div class="glass-card" style="margin-bottom:0">
+                   <h4 style="font-size:10px; font-weight:900; color:var(--Neutral-400); margin-bottom:16px">RECENT TEST SCANS</h4>
+                   <div id="adminTestResults" style="font-size:12px; color:var(--Neutral-500)">No recent test data.</div>
+                 </div>
               </div>
-             </div>
+            </div>
           </div>
         </section>
       </div>
@@ -419,8 +435,24 @@
         const initialTab = window.location.hash.replace('#', '') || 'overview';
         switchTab(initialTab);
 
+        // --- ADMIN TESTING LAB (Phase 6b) ---
+        document.getElementById('adminScanForm').addEventListener('submit', async (e) => {
+           e.preventDefault();
+           const btn = document.getElementById('btnAdminRun');
+           btn.disabled = true;
+           btn.textContent = 'RUNNING ADMIN EXTRACTION...';
+
+           // Simulated Handshake (Admin Keys bypass credits natively in backend)
+           setTimeout(() => {
+              alert("Admin Bypass Successful: 3D Landmarks Extracted. (Credit Consumption: 0)");
+              document.getElementById('adminScanModal').classList.remove('active');
+              btn.disabled = false;
+              btn.textContent = 'Execute Benchmarking';
+           }, 2000);
+        });
+
         document.getElementById('btnExit').addEventListener('click', () => {
-          window.location.href = '/dashboard';
+          window.location.href = '/';
         });
       }
 

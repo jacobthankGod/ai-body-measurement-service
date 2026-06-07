@@ -162,7 +162,7 @@
           <a class="btn btn-primary" href="/signup.html">Get Access</a>
         </div>
         <div id="signedBar" style="display:none">
-          <a class="btn btn-primary" href="/dashboard">Go to Workbench</a>
+          <a class="btn btn-primary" id="btnGoWorkbench" href="/dashboard">Go to Workbench</a>
           <button class="btn btn-outline" id="btnSignOut" style="color:var(--Error); height:36px; margin-left:12px">Exit</button>
         </div>
       </div>
@@ -466,12 +466,24 @@
             supabaseKey: 'sb_publishable_miCOIXHtlxLkfDgpwE0N-g_BA1Q-x8y'
           };
           window.korraSupabase = window.supabase.createClient(config.supabaseUrl, config.supabaseKey);
+
+          // --- SMART ADMIN PERSISTENCE ---
+          const ADMIN_LIST = ['springbionics@gmail.com', 'admin@korra.work'];
+
           window.korraSupabase.auth.onAuthStateChange((event, session) => {
             const authBtns = document.getElementById('authButtons');
             const bar = document.getElementById('signedBar');
+            const goBtn = document.getElementById('btnGoWorkbench');
+
             if (session) {
               if(authBtns) authBtns.style.display = 'none';
               if(bar) bar.style.display = 'flex';
+
+              // If Admin, update the portal link
+              if (goBtn && ADMIN_LIST.includes(session.user.email.toLowerCase())) {
+                goBtn.href = '/admin';
+                goBtn.textContent = 'Go to Super-Workbench';
+              }
             } else {
               if(bar) bar.style.display = 'none';
               if(authBtns) authBtns.style.display = 'flex';
