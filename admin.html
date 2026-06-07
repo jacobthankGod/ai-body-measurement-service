@@ -84,7 +84,7 @@
 
     #loadingOverlay {
         position: fixed; inset: 0; background: #000; z-index: 9999999; display: flex; align-items: center; justify-content: center;
-        font-size: 12px; font-weight: 800; letter-spacing: 0.2em; text-transform: uppercase; color: var(--Mint);
+        font-size: 12px; font-weight: 800; letter-spacing: 0.2em; color: var(--Mint);
     }
 
     .preview-box { width: 100%; height: 120px; border-radius: 12px; border: 1px dashed var(--Glass-Border); display: flex; align-items: center; justify-content: center; overflow: hidden; position: relative; cursor: pointer; }
@@ -223,7 +223,6 @@
                 </div>
               </div>
 
-              <!-- QR DISPLAY BOX -->
               <div class="qr-container" id="qrBox">
                 <img id="qrImg" src="" alt="Scan QR">
                 <div class="qr-url" id="qrUrl"></div>
@@ -242,7 +241,7 @@
                  </div>
                  <div class="glass-card" style="margin-bottom:0; background:rgba(255,255,255,0.02)">
                    <h4 style="font-size:10px; font-weight:900; color:var(--Neutral-400); margin-bottom:24px">HISTORICAL BENCHMARK COMPARISON</h4>
-                   <div class="table-container"><table><thead><tr><th>Time</th><th>Subject</th><th>Profile</th><th>Chest</th><th>Waist</th><th>Hips</th></tr></thead><tbody id="testHistoryList"></tbody></table></div>
+                   <div class="table-container"><table><thead><tr><th>Time</th><th>Subject</th><th>Profile</th><th>Chest</th><th>Waist</th><th>Hips</th><th>Actions</th></tr></thead><tbody id="testHistoryList"></tbody></table></div>
                  </div>
               </div>
             </div>
@@ -282,6 +281,8 @@
   <script src="/assets/korra_viz.js"></script>
   <script src="/assets/chart.min.js"></script>
   <script src="/assets/korra_analytics.js"></script>
+  <script src="/assets/jspdf.min.js"></script>
+  <script src="/assets/korra_export.js"></script>
 
   <script>
     function handleAdminFile(input, labelId) {
@@ -350,8 +351,26 @@
                 }
               }
 
-              const { count: sCount, error: sErr } = await client.from('measurements').select('*', { count: 'exact', head: true });
-              if (!sErr) document.getElementById('statScans').textContent = sCount || 0;
+              const { data: scans, count: sCount, error: sErr } = await client.from('measurements').select('*', { count: 'exact' });
+              if (!sErr) {
+                document.getElementById('statScans').textContent = sCount || 0;
+                const sList = document.getElementById('testHistoryList');
+                if (sList && scans) {
+                  sList.innerHTML = scans.map(s => `
+                    <tr>
+                      <td>${new Date(s.created_at).toLocaleTimeString()}</td>
+                      <td style="color:var(--Mint)">${s.client_name}</td>
+                      <td>${s.height}cm • ${s.gender}</td>
+                      <td>${s.biometrics['Chest Round']}</td>
+                      <td>${s.biometrics['Waist Round']}</td>
+                      <td>${s.biometrics['Hip Round']}</td>
+                      <td>
+                        <button class="btn-action" onclick="window.KORRA_VIZ.loadMesh('${s.mesh_url}'); window.scrollTo({top:0, behavior:'smooth'})">View</button>
+                      </td>
+                    </tr>
+                  `).join('');
+                }
+              }
 
               const { data: invoices, error: iErr } = await client.from('invoices').select('*');
               if (!iErr && invoices) {
@@ -378,15 +397,12 @@
           }
           loadGlobalStats();
 
-          // QR GENERATION HANDSHAKER
           document.getElementById('btnGenerateQR').addEventListener('click', async () => {
              const btn = document.getElementById('btnGenerateQR');
              btn.disabled = true; btn.textContent = 'GENERATING...';
-
              const fd = new FormData();
              fd.append('merchant_id', session.user.id);
              fd.append('client_name', 'In-Store Customer');
-
              try {
                 const res = await fetch('/api/v2/qrcode/generate', { method: 'POST', body: fd });
                 if(res.ok) {

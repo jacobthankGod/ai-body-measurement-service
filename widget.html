@@ -4,118 +4,111 @@
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
   <title>KORRA | Get Measured</title>
-
   <link rel="preconnect" href="https://fonts.googleapis.com" />
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
   <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800;900&display=swap" rel="stylesheet" />
-
   <style>
     :root {
-      --Obsidian: #000000;
-      --Mint: #57D7C0;
-      --Teal-900: #002D2A;
-      --Glass: rgba(255, 255, 255, 0.04);
-      --Glass-Border: rgba(255, 255, 255, 0.1);
-      --Neutral-400: #A3A3A3;
-      --Neutral-500: #737373;
-      --White: #FFFFFF;
-      --Error: #D63031;
+      --Obsidian: #000000; --Mint: #57D7C0; --Glass: rgba(255, 255, 255, 0.04); --Glass-Border: rgba(255, 255, 255, 0.1);
+      --Neutral-400: #A3A3A3; --Neutral-500: #737373; --White: #FFFFFF; --Error: #D63031;
     }
-
     * { box-sizing: border-box; -webkit-font-smoothing: antialiased; margin: 0; padding: 0; }
     html, body { height: 100%; background: var(--Obsidian); color: var(--White); font-family: 'Inter', sans-serif; overflow: hidden; }
-
-    .widget-viewport {
-      height: 100vh; display: flex; flex-direction: column; align-items: center; justify-content: center;
-      padding: 24px; animation: fadeIn 0.4s ease-out;
-    }
-
-    .widget-card {
-      width: 100%; max-width: 420px; background: var(--Glass); border: 1px solid var(--Glass-Border);
-      border-radius: 24px; padding: 32px; backdrop-filter: blur(10px);
-    }
-
-    .title { font-size: 20px; font-weight: 800; text-align: center; margin-bottom: 8px; letter-spacing: -0.02em; }
-    .subtitle { font-size: 13px; color: var(--Neutral-400); text-align: center; margin-bottom: 32px; }
-
-    .input-group { margin-bottom: 20px; }
-    .label { font-size: 10px; font-weight: 900; color: var(--Neutral-500); text-transform: uppercase; margin-bottom: 8px; display: block; }
-    .input { width: 100%; height: 52px; background: rgba(255,255,255,0.05); border: 1px solid var(--Glass-Border); border-radius: 12px; padding: 0 16px; color: #fff; font-size: 14px; transition: 0.2s; outline: none; }
+    .widget-viewport { height: 100vh; display: flex; flex-direction: column; align-items: center; justify-content: center; padding: 20px; }
+    .widget-card { width: 100%; max-width: 400px; background: var(--Glass); border: 1px solid var(--Glass-Border); border-radius: 24px; padding: 32px; position: relative; overflow: hidden; backdrop-filter: blur(10px); }
+    .title { font-size: 18px; font-weight: 800; text-align: center; margin-bottom: 8px; }
+    .subtitle { font-size: 12px; color: var(--Neutral-400); text-align: center; margin-bottom: 32px; }
+    .input { width: 100%; height: 50px; background: rgba(255,255,255,0.05); border: 1px solid var(--Glass-Border); border-radius: 12px; padding: 0 16px; color: #fff; font-size: 14px; margin-bottom: 16px; outline: none; transition: 0.2s; }
     .input:focus { border-color: var(--Mint); }
-
-    .photo-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 16px; margin-bottom: 32px; }
-    .photo-box {
-      height: 110px; border: 1px dashed var(--Glass-Border); border-radius: 16px;
-      display: flex; flex-direction: column; align-items: center; justify-content: center;
-      cursor: pointer; position: relative; overflow: hidden; transition: 0.2s;
-    }
-    .photo-box:hover { border-color: var(--Mint); background: rgba(87,215,192,0.05); }
-    .photo-box span { font-size: 10px; font-weight: 800; color: var(--Neutral-500); }
+    .photo-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; margin-bottom: 24px; }
+    .photo-box { height: 100px; border: 1px dashed var(--Glass-Border); border-radius: 16px; display: flex; flex-direction: column; align-items: center; justify-content: center; cursor: pointer; position: relative; overflow: hidden; }
+    .photo-box span { font-size: 9px; font-weight: 800; color: var(--Neutral-500); text-transform: uppercase; }
     .photo-box input { position: absolute; inset: 0; opacity: 0; cursor: pointer; z-index: 10; }
     .preview-img { position: absolute; inset: 0; width: 100%; height: 100%; object-fit: cover; display: none; z-index: 5; }
+    .btn-submit { width: 100%; height: 52px; background: var(--Mint); color: var(--Obsidian); border: none; border-radius: 12px; font-weight: 800; cursor: pointer; transition: 0.2s; text-transform: uppercase; font-size: 12px; letter-spacing: 0.05em; }
+    .btn-outline { width: 100%; height: 44px; background: none; border: 1px solid var(--Glass-Border); border-radius: 12px; color: #fff; font-weight: 700; font-size: 10px; cursor: pointer; margin-top: 10px; text-transform: uppercase; }
 
-    .btn-submit { width: 100%; height: 52px; background: var(--Mint); color: var(--Obsidian); border: none; border-radius: 12px; font-weight: 800; cursor: pointer; transition: 0.2s; }
-    .btn-submit:disabled { opacity: 0.5; filter: grayscale(1); cursor: not-allowed; }
+    .ghost-overlay { position: absolute; inset: 0; border: 2px solid var(--Mint); border-radius: 16px; pointer-events: none; z-index: 8; opacity: 0.15; display: flex; align-items: center; justify-content: center; }
+    .ghost-shape { width: 40%; height: 80%; border: 1px solid var(--Mint); border-radius: 50% 50% 40% 40%; }
 
-    #loadingOverlay {
-        position: absolute; inset: 0; background: rgba(0,0,0,0.9); z-index: 100;
-        display: none; align-items: center; justify-content: center; border-radius: 24px;
-        font-size: 11px; font-weight: 900; letter-spacing: 0.1em; color: var(--Mint);
-    }
+    #loadingOverlay { position: absolute; inset: 0; background: #000; z-index: 100; display: none; flex-direction: column; align-items: center; justify-content: center; text-align: center; padding: 24px; }
+    .mesh-loader { width: 40px; height: 40px; border: 1px solid var(--Mint); position: relative; animation: rotate 4s linear infinite; margin-bottom: 24px; }
+    @keyframes rotate { from { transform: rotateX(0deg) rotateY(0deg); } to { transform: rotateX(360deg) rotateY(360deg); } }
 
-    @keyframes fadeIn { from { opacity: 0; transform: scale(0.98); } to { opacity: 1; transform: scale(1); } }
+    .progress-track { width: 100%; height: 2px; background: rgba(255,255,255,0.1); border-radius: 99px; margin-top: 12px; overflow: hidden; }
+    .progress-fill { width: 0%; height: 100%; background: var(--Mint); transition: 0.3s; }
+
+    #widget-3d-viewport { width: 100%; height: 220px; background: #000; border-radius: 16px; border: 1px solid var(--Glass-Border); margin-bottom: 20px; position: relative; overflow: hidden; display: none; }
+    #widget-3d-viewport span { position: absolute; top: 10px; left: 12px; font-size: 7px; font-weight: 900; color: var(--Mint); text-transform: uppercase; letter-spacing: 0.2em; z-index: 10; background: rgba(0,0,0,0.5); padding: 3px 6px; border-radius: 4px; }
+
+    .result-view { display: none; text-align: center; }
+    .result-view.active { display: block; animation: fadeIn 0.3s ease-out; }
+    @keyframes fadeIn { from { opacity: 0; transform: translateY(10px); } to { opacity: 1; transform: translateY(0); } }
   </style>
 </head>
 <body>
 
   <div class="widget-viewport">
-    <div class="widget-card">
-      <div id="loadingOverlay">EXTRACTING BIOMETRICS...</div>
+    <div class="widget-card" id="mainCard">
 
-      <h1 class="title">Get Measured</h1>
-      <p class="subtitle">AI Biometrics for a perfect fit.</p>
+      <div id="loadingOverlay">
+        <div class="mesh-loader"></div>
+        <div style="font-size:9px; font-weight:900; letter-spacing:0.2em; color:var(--Mint)">EXTRACTING BIOMETRICS</div>
+        <div class="progress-track"><div class="progress-fill" id="pFill"></div></div>
+      </div>
 
-      <form id="widgetForm">
-        <div class="input-group">
-          <label class="label">Height (CM)</label>
-          <input type="number" id="height" class="input" placeholder="e.g. 180" required>
-        </div>
+      <div id="scanFormView">
+        <h1 class="title">KORRA | AI Scan</h1>
+        <p class="subtitle">Clinical grade biometrics from photos.</p>
 
-        <div class="input-group">
-          <label class="label">Gender</label>
-          <select id="gender" class="input" style="appearance: none; cursor: pointer;">
-            <option value="male">Male</option>
-            <option value="female">Female</option>
-          </select>
-        </div>
+        <form id="widgetForm">
+          <input type="number" id="height" class="input" placeholder="Height in CM" required>
+          <select id="gender" class="input" style="appearance:none;"><option value="male">Male</option><option value="female">Female</option></select>
 
-        <div class="photo-grid">
-          <div class="photo-box">
-            <img class="preview-img" id="frontPrev">
-            <span>Front View</span>
-            <input type="file" id="front" accept="image/*" required onchange="handlePreview(this, 'frontPrev')">
+          <div class="photo-grid">
+            <div class="photo-box">
+              <div class="ghost-overlay"><div class="ghost-shape"></div></div>
+              <img class="preview-img" id="fPrev">
+              <span>Front Photo</span>
+              <input type="file" id="front" accept="image/*" required onchange="preview(this, 'fPrev')">
+            </div>
+            <div class="photo-box">
+              <div class="ghost-overlay"><div class="ghost-shape" style="width:25%"></div></div>
+              <img class="preview-img" id="sPrev">
+              <span>Side Photo</span>
+              <input type="file" id="side" accept="image/*" required onchange="preview(this, 'sPrev')">
+            </div>
           </div>
-          <div class="photo-box">
-            <img class="preview-img" id="sidePrev">
-            <span>Side View</span>
-            <input type="file" id="side" accept="image/*" required onchange="handlePreview(this, 'sidePrev')">
-          </div>
-        </div>
 
-        <button type="submit" class="btn-submit" id="btnSubmit">Calculate My Size</button>
-      </form>
+          <button type="submit" class="btn-submit">Generate Profile</button>
+        </form>
+      </div>
+
+      <div id="successView" class="result-view">
+        <div id="widget-3d-viewport"><span>Digital Twin Handshake</span></div>
+        <h2 class="title" style="color:var(--Mint); margin-bottom:12px">Sync Complete</h2>
+        <p class="subtitle" style="margin-bottom:20px">Measurements locked in merchant vault.</p>
+
+        <div style="display:grid; grid-template-columns: 1fr 1fr; gap:10px">
+            <button class="btn-submit" id="btnPdf" style="height:44px">PDF Sheet</button>
+            <button class="btn-outline" id="btnObj" style="margin-top:0">3D OBJ</button>
+        </div>
+        <button class="btn-outline" style="width:100%; border:none; color:var(--Neutral-400)" onclick="location.reload()">New Client Scan</button>
+      </div>
+
     </div>
   </div>
 
+  <script src="/assets/three.min.js"></script>
+  <script src="/assets/korra_viz.js"></script>
+  <script src="/assets/jspdf.min.js"></script>
+  <script src="/assets/korra_export.js"></script>
+
   <script>
-    function handlePreview(input, imgId) {
+    function preview(input, id) {
       if (input.files && input.files[0]) {
         const reader = new FileReader();
-        reader.onload = (e) => {
-          const img = document.getElementById(imgId);
-          img.src = e.target.result;
-          img.style.display = 'block';
-        };
+        reader.onload = e => { const img = document.getElementById(id); img.src = e.target.result; img.style.display = 'block'; };
         reader.readAsDataURL(input.files[0]);
       }
     }
@@ -123,43 +116,47 @@
     document.getElementById('widgetForm').addEventListener('submit', async (e) => {
       e.preventDefault();
       const loader = document.getElementById('loadingOverlay');
+      const pFill = document.getElementById('pFill');
       const params = new URLSearchParams(window.location.search);
       const merchantId = params.get('merchant') || 'PUBLIC_WIDGET';
 
       loader.style.display = 'flex';
+      let progress = 0;
+      const interval = setInterval(() => { progress += 5; if(progress > 90) clearInterval(interval); pFill.style.width = progress + '%'; }, 200);
 
       const fd = new FormData();
       fd.append('front', document.getElementById('front').files[0]);
       fd.append('side', document.getElementById('side').files[0]);
-      fd.append('height', document.getElementById('height').value);
-      fd.append('gender', document.getElementById('gender').value);
+      const h = document.getElementById('height').value;
+      const g = document.getElementById('gender').value;
+      fd.append('height', h);
+      fd.append('gender', g);
       fd.append('merchant_id', merchantId);
-      fd.append('client_name', 'Widget Customer');
 
       try {
         const res = await fetch('/api/v2/measurements/extract-widget', { method: 'POST', body: fd });
+        clearInterval(interval);
         if (res.ok) {
+          pFill.style.width = '100%';
           const data = await res.json();
-          // Handshake back to host site
           window.parent.postMessage({ type: 'KORRA_RESULT', measurements: data.measurements }, '*');
 
-          document.querySelector('.widget-card').innerHTML = `
-            <div style="text-align:center; padding: 20px 0;">
-              <div style="font-size:40px; margin-bottom:24px;">✅</div>
-              <h2 class="title">Sync Complete</h2>
-              <p class="subtitle">Biometrics transmitted successfully.</p>
-              <button class="btn-submit" onclick="location.reload()">New Scan</button>
-            </div>
-          `;
-        } else {
-          const err = await res.json();
-          alert("Handshake Failure: " + (err.detail?.error || "Low quality"));
+          document.getElementById('scanFormView').style.display = 'none';
+          document.getElementById('successView').classList.add('active');
+
+          if (window.KORRA_VIZ) {
+             document.getElementById('widget-3d-viewport').style.display = 'block';
+             window.KORRA_VIZ.init('widget-3d-viewport');
+             if (data.mesh_url) window.KORRA_VIZ.loadMesh(data.mesh_url);
+          }
+
+          document.getElementById('btnPdf').onclick = () => window.KORRA_EXPORT.pdf('Customer', data.measurements, g, h);
+          document.getElementById('btnObj').onclick = () => window.KORRA_EXPORT.obj(data.mesh_url, 'Customer');
+
           loader.style.display = 'none';
-        }
-      } catch (err) {
-        alert("Connection Error. Please check network.");
-        loader.style.display = 'none';
-      }
+        } else alert("AI rejection. Check photo quality.");
+      } catch { alert("Connection Error."); }
+      finally { loader.style.display = 'none'; }
     });
   </script>
 </body>
