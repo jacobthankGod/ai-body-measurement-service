@@ -101,6 +101,8 @@
     .viz-canvas { position: absolute; inset: 0; width: 100%; height: 100%; z-index: 2; pointer-events: none; }
     .viz-img { position: absolute; inset: 0; width: 100%; height: 100%; object-fit: contain; opacity: 0.6; z-index: 1; }
 
+    #korra-3d-viewport { width: 100%; height: 400px; background: #000; border-radius: 12px; margin-top: 24px; border: 1px solid var(--Glass-Border); overflow: hidden; }
+
     .preview-box { width: 100%; height: 120px; border-radius: 12px; border: 1px dashed var(--Glass-Border); background-size: cover; background-position: center; display: flex; align-items: center; justify-content: center; overflow: hidden; position: relative; cursor: pointer; }
     .preview-box span { font-size: 10px; font-weight: 900; color: var(--Neutral-500); text-transform: uppercase; z-index: 1; }
     .preview-box img { position: absolute; inset: 0; width: 100%; height: 100%; object-fit: cover; }
@@ -251,6 +253,12 @@
                    <div>
                      <h4 style="font-size:10px; font-weight:900; color:var(--Mint); margin-bottom:8px">INDUSTRIAL BENCHMARK</h4>
                      <p style="font-size:12px; color:var(--Neutral-500)">Upload two body views for personalized biometric computation.</p>
+
+                     <div id="korra-3d-viewport">
+                        <div style="width:100%; height:100%; display:flex; align-items:center; justify-content:center; color:var(--Neutral-500); font-size:10px; font-weight:900; text-transform:uppercase; letter-spacing:0.2em">
+                          3D Digital Twin: Primed
+                        </div>
+                     </div>
                    </div>
                    <button class="btn-primary" onclick="document.getElementById('adminScanModal').classList.add('active')">+ Launch Admin Scan</button>
                  </div>
@@ -308,6 +316,8 @@
   </main>
 
   <script src="/assets/supabase.min.js"></script>
+  <script src="/assets/three.min.js"></script>
+  <script src="/assets/korra_viz.js"></script>
   <script>
     function handleAdminFile(input, labelId) {
       const label = document.getElementById(labelId);
@@ -527,6 +537,11 @@
                 history.push({ time: new Date().toLocaleTimeString(), gender: g, height: h, measurements: data.measurements });
                 localStorage.setItem('korra_admin_tests', JSON.stringify(history.slice(-10)));
 
+                // --- PHASE 15: 3D DIGITAL TWIN ACTIVATION ---
+                if (window.KORRA_VIZ) {
+                   window.KORRA_VIZ.loadMesh(null);
+                }
+
                 renderTestHistory();
                 loadGlobalStats();
                 btn.textContent = 'Session Complete';
@@ -536,6 +551,11 @@
 
         document.getElementById('btnExit').addEventListener('click', () => { window.location.href = '/'; });
         loadGlobalStats(); switchTab(window.location.hash.replace('#', '') || 'overview');
+
+        // --- PHASE 11: INITIALIZE 3D ENGINE ---
+        if (window.KORRA_VIZ) {
+          window.KORRA_VIZ.init('korra-3d-viewport');
+        }
       }
       initAdmin();
     })();
