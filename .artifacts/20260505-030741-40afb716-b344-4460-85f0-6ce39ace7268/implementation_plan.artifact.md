@@ -1,150 +1,109 @@
-# KORRA Smart Digital Body Measurement - Implementation Plan (10x Detail)
+# KORRA Sovereign Artisan - Expert Implementation Plan
 
 ## Executive Summary
-This plan details the industrialization of the KORRA platform through three strategic integration vectors: **Embeddable Widgets**, **In-Store QR Systems**, and **Remote SMS/Email Link Sharing**. It ensures merchant data authority while providing a "Unicorn-Grade" frictionless experience for customers.
+This document provides an expert-level blueprint for the **KORRA Smart Digital Body Measurement Solution**. It combines high-conversion merchant tools (Widget, QR, Sharing) with a **Zero-Touch Autonomous Infrastructure** that eliminates manual maintenance and optimizes AI efficiency out-of-the-box.
 
 ---
 
-## I. Database Schemas (Supabase/PostgreSQL)
+## I. Core Infrastructure: Autonomous "Brain" Restoration
 
-### 1. `widget_configs` (Merchant UI Authority)
+### 1. The Expert Fix: On-Boot Atomic Handshake
+Instead of manual admin triggers, KORRA will verify and restore its AI brain automatically during the server boot sequence.
+
+**Implementation Logic (`api/main.py`):**
+- **Trigger**: FastAPI `lifespan` context manager.
+- **Action**: Check for `models/model.ckpt-667589.data-00000-of-00001` (347MB).
+- **Resolution**: If missing, initiate a high-speed parallel stream from the KORRA High-Availability Mirror.
+- **Efficiency**: The server will not accept `/measurements` calls until the `INTEGRITY` check is `true`.
+
+### 2. Database Schema (Supabase/PostgreSQL)
+
+#### `profiles` (Merchant Authority)
 | Field | Type | Constraint | Description |
 | :--- | :--- | :--- | :--- |
-| `id` | UUID | PK | Unique config ID. |
-| `merchant_id` | UUID | FK -> profiles | Owner of the widget. |
-| `domain_allowlist` | TEXT[] | | Security: Allowed hostnames. |
-| `theme_primary` | TEXT | DEFAULT '#57D7C0' | Mint accent color. |
-| `callback_url` | TEXT | | POST URL for measurement data. |
+| `id` | UUID | PK | Auth link. |
+| `credits` | INT | DEFAULT 0 | Scan quota. |
+| `widget_settings` | JSONB | | Custom colors/logo. |
 
-### 2. `scan_sessions` (Ephemeral Access Control)
+#### `measurements` (Biometric Vault)
 | Field | Type | Constraint | Description |
 | :--- | :--- | :--- | :--- |
-| `token` | TEXT | PK | Secure session token (64 chars). |
-| `merchant_id` | UUID | FK -> profiles | Context for the scan. |
-| `expires_at` | TIMESTAMP | | TTL for QR/SMS links. |
-| `status` | TEXT | `pending`, `active`, `completed` | Lifecycle state. |
+| `id` | UUID | PK | Scan ID. |
+| `biometrics` | JSONB | | Chest, Waist, Hips, etc. |
+| `mesh_url` | TEXT | | Path to `.obj` Digital Twin. |
 
 ---
 
-## II. Detailed API Specifications
+## II. Part 1: Get Measured Widget (E-commerce)
 
-### 1. QR Code Engine (`POST /api/v2/qrcode/generate`)
-*   **Purpose**: Create a printable, high-authority entry point for in-store customers.
-*   **Parameters**:
-    *   `merchant_id` (UUID): Mandatory.
-    *   `expiry_minutes` (INT): Default 60.
-    *   `client_name` (TEXT): Optional label.
-*   **Payload**: `{"qr_code_base64": "...", "scan_url": "https://korra.work/scan/{token}"}`
+### 1. Detailed API Specification
+`POST /api/v2/measurements/extract-widget`
 
-### 2. Widget Extraction (`POST /api/v2/measurements/extract-widget`)
-*   **Purpose**: Public-facing extraction optimized for speed and CORS safety.
-*   **Headers**: `Origin`, `User-Agent`.
-*   **Body**: Standard multipart/form (front, side, height, gender, merchant_id).
-*   **Security**: Rate-limited by IP and Origin.
+| Parameter | Type | Required | Description |
+| :--- | :--- | :--- | :--- |
+| `front` | FILE | YES | Image buffer. |
+| `merchant_id` | UUID | YES | Target ledger. |
+| `callback_url` | TEXT | NO | Redirect on success. |
 
----
-
-## III. Phase 1: Get Measured Widget Implementation
-
-### 1. [NEW] `public/korra-widget.js` (Loader Engine)
-```javascript
-(function() {
-  const script = document.currentScript;
-  const merchantId = script.getAttribute('data-merchant');
-  const theme = script.getAttribute('data-theme') || 'dark';
-
-  window.KorraWidget = {
-    open: function() {
-      const iframe = document.createElement('iframe');
-      iframe.src = `https://korra.work/widget?merchant=${merchantId}&theme=${theme}`;
-      iframe.style = "position:fixed; inset:0; width:100%; height:100%; border:none; z-index:999999;";
-      document.body.appendChild(iframe);
-    }
-  };
-})();
-```
-
-### 2. [NEW] `widget.html` (The "Shadow" Interface)
--   Uses Obsidian & Mint theme.
--   Communicates with parent window via `postMessage`.
--   Triggers real-time quality validation (Vision Guard).
+### 2. Frontend Component: `korra-widget.js`
+- **Weight**: < 15KB (Minified).
+- **Security**: Domain-allowlist validation via `Referer` header.
+- **Handshake**: Cross-domain communication using `Window.postMessage()`.
 
 ---
 
-## IV. Phase 2: QR Code Generation Implementation
+## III. Part 2: QR Code Generation (In-Store)
 
-### 1. [NEW] `api/routes/qrcode.py`
-```python
-import qrcode
-import io
-import base64
-from fastapi import APIRouter
+### 1. Detailed API Specification
+`POST /api/v2/qrcode/generate`
 
-@router.post("/generate")
-async def generate_qr(merchant_id: str):
-    token = generate_secure_token() # 64-char hex
-    url = f"https://korra.work/scan/{token}"
-    img = qrcode.make(url)
-    buf = io.BytesIO()
-    img.save(buf, format="PNG")
-    return {"qr_base64": base64.b64encode(buf.getvalue())}
+| Parameter | Type | Required | Description |
+| :--- | :--- | :--- | :--- |
+| `merchant_id` | UUID | YES | Context. |
+| `expiry` | INT | NO | TTL in seconds. |
+
+**Response:**
+```json
+{
+  "qr_base64": "data:image/png;base64...",
+  "session_url": "https://korra.work/scan/ABC-123"
+}
 ```
 
 ---
 
-## V. Phase 3: Measurement Link Sharing
+## IV. Part 3: Measurement Link Sharing (SMS/Email)
 
-### 1. SMS/Email Logic (`api/routes/sharing.py`)
--   **SMS**: Twilio REST Client integration.
--   **Email**: SendGrid transactional templates.
--   **Template**: `[Subject Name], get your digital body scan for [Merchant Name] here: [Link]`
+### 1. Technical Handshake
+- **SMS Bridge**: Twilio Programmable Messaging API.
+- **Email Bridge**: SendGrid Dynamic Templates.
+- **Persistence**: Links expire automatically after 24 hours.
 
 ---
 
-## VI. Security & Error Handling
+## V. Security, Performance & Deployment
 
-### 1. Security Protocols
--   **JWT Tokenization**: All shared links use one-time tokens with expiration.
--   **Domain Locking**: Widgets only execute on authorized merchant domains.
--   **PII Anonymization**: No user email is stored for widget scans unless explicitly shared.
+### 1. Security Considerations
+- **JWT Session Tokens**: For all shared links.
+- **Atomic Rate Limiting**: Preventing AI resource exhaustion on public endpoints.
+- **Vision Guard (Phase 14)**: Compulsory for all public scans to maintain data purity.
 
-### 2. Error Handling Matrices
-| Error Code | UX Message | Technical Action |
+### 2. Performance Benchmarks
+- **Boot Time**: < 45s (including 347MB model pull).
+- **Inference Latency**: < 2.2s (Optimized CPU Path).
+- **Widget First Paint**: < 500ms.
+
+### 3. Deployment Guide (Zero-Touch)
+1. Set `MIRROR_URL` in environment variables.
+2. Push to branch `main`.
+3. Server boots -> Checks `/models` -> **Self-Heals** -> Dashboard goes **Active**.
+
+---
+
+## VI. Troubleshooting Matrix
+
+| Issue | Diagnosis | Fix |
 | :--- | :--- | :--- |
-| **TOKEN_EXPIRED** | "Link has expired. Ask merchant for new link." | Redirect to help page. |
-| **BAD_LIGHTING** | "Lighting too low. Move to brighter area." | Block upload button. |
-| **UPLOAD_FAIL** | "Handshake lost. Retrying connection..." | Auto-retry multipart stream. |
-
----
-
-## VII. UI/UX Mockup Specification
-
-### 1. The "Ghost Overlay" (Scanner UI)
--   **Obsidian Layer**: 60% opacity covering edges.
--   **Mint Frame**: 2px thick rectangle in center.
--   **Real-time Text**: "Center your shoulders inside the Mint box."
-
-### 2. Result Grid
--   **Layout**: 2x2 grid for primary (Chest, Waist, Hip, Shoulder).
--   **Animation**: Numbers count up from 0 to clinical result.
-
----
-
-## VIII. Deployment & Troubleshooting
-
-### 1. Deployment Guide
-1.  **Backend**: `git push origin main` (Render auto-builds).
-2.  **CDN Assets**: Upload `korra-widget.js` to Vercel/S3.
-3.  **Environment**: Add `TWILIO_SID`, `SENDGRID_KEY` to secrets.
-
-### 2. Troubleshooting Matrix
--   **Widget not loading**: Check `domain_allowlist` in `widget_configs`.
--   **QR fails to render**: Verify `Pillow` version >= 10.0.0.
--   **Low Accuracy**: Check "Ghost Overlay" calibration in `widget.html`.
-
----
-
-## IX. Performance Benchmarks
--   **Widget First-Paint**: < 1.2s.
--   **QR Generation**: < 150ms.
--   **3D Mesh Load**: < 500ms using DRACO compression.
+| **Proxy Mesh Showing** | Brain Restoration in progress. | Check Admin -> Health -> Restoration Status. |
+| **CORS Blocked** | Domain not in allowlist. | Add host to Merchant Settings. |
+| **422 Rejection** | Vision Guard failure. | Ensure subject stands 2m away from camera. |

@@ -1,5 +1,5 @@
 """
-System Health Routes | Phase 18: Self-Healing Infrastructure
+System Health Routes | Phase 18: Autonomous Infrastructure
 =========================================================
 """
 from fastapi import APIRouter, BackgroundTasks
@@ -20,17 +20,16 @@ async def health_check():
     """Returns absolute infrastructure status."""
     return {
         "status": "active",
-        "version": "2.1.7",
+        "version": "2.1.8",
         "environment": os.environ.get("RENDER_EXTERNAL_URL", "development"),
         "platform": platform.system(),
-        "acceleration": "TensorRT Warning Active (Optimizing...)" if "Linux" in platform.system() else "CPU-Stable",
+        "acceleration": "CPU-Stable (Optimized)" if "Linux" in platform.system() else "Native",
         "ai_integrity": get_brain_integrity()
     }
 
 def restore_brain_sync():
     """High-speed restoration of 347MB HMR weights."""
-    print("🚀 UNICORN RESTORATION: Fetching AI Brain Assets...")
-    # Using the high-reliability Dropbox mirror for the 347MB weights
+    print("🚀 UNICORN RESTORATION: Manually Fetching AI Brain Assets...")
     url = "https://dl.dropboxusercontent.com/s/e8s7q5bq7a5s1bq/hmr_model.tar.gz"
     dest = MODELS_DIR / "hmr_restore.tar.gz"
     try:
@@ -39,12 +38,12 @@ def restore_brain_sync():
         with tarfile.open(dest, 'r:gz') as tar:
             tar.extractall(MODELS_DIR)
         os.remove(dest)
-        print("✅ RESTORATION COMPLETE: AI Brain Locked in Cloud Vault.")
+        print("✅ RESTORATION COMPLETE: AI Brain Locked.")
     except Exception as e:
         print(f"❌ RESTORATION FAILED: {e}")
 
 @router.post("/health/restore")
 async def restore_health(background_tasks: BackgroundTasks):
-    """Triggers the Unicorn-grade self-healing process."""
+    """Fallback restoration trigger (Admin UI)."""
     background_tasks.add_task(restore_brain_sync)
-    return {"status": "Restoration Initiated", "message": "Fetching 347MB Weights in background."}
+    return {"status": "Restoration Initiated", "message": "Fetching 347MB Weights."}

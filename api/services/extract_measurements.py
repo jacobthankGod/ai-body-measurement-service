@@ -36,10 +36,11 @@ ROOT_DIR = BASE_DIR.parent.parent
 MODELS_DIR = ROOT_DIR / "models"
 DATA_DIR = ROOT_DIR / "data"
 
-# Research Checkpoint Assets
-CHECKPOINT_BASE = MODELS_DIR / "model.ckpt-667589"
-CHECKPOINT_INDEX = CHECKPOINT_BASE.with_suffix('.index')
-CHECKPOINT_DATA = MODELS_DIR / "model.ckpt-667589.data-00000-of-00001"
+# Research Checkpoint Assets (Fixed explicit pathing)
+CKPT_NAME = "model.ckpt-667589"
+CHECKPOINT_BASE = MODELS_DIR / CKPT_NAME
+CHECKPOINT_INDEX = MODELS_DIR / f"{CKPT_NAME}.index"
+CHECKPOINT_DATA = MODELS_DIR / f"{CKPT_NAME}.data-00000-of-00001"
 SMPL_MODEL_PATH = MODELS_DIR / "neutral_smpl_with_cocoplus_reg.pkl"
 INDEX_FILE_PATH = DATA_DIR / "customBodyPoints.txt"
 
