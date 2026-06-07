@@ -56,7 +56,6 @@
 
     .tab-view { display: none; }
     .tab-view.active { display: block; animation: fadeIn 0.3s ease-out; }
-    @keyframes fadeIn { from { opacity: 0; transform: translateY(5px); } to { opacity: 1; transform: translateY(0); } }
 
     .search-input {
       width: 100%; height: 52px; background: rgba(255,255,255,0.05); border: 1px solid var(--Glass-Border);
@@ -69,13 +68,9 @@
     th { font-size: 10px; font-weight: 900; color: var(--Neutral-400); text-transform: uppercase; padding: 16px; border-bottom: 1px solid var(--Glass-Border); }
     td { padding: 16px; border-bottom: 1px solid var(--Glass-Border); font-size: 14px; }
 
-    .badge { padding: 4px 12px; border-radius: 99px; font-size: 10px; font-weight: 900; text-transform: uppercase; }
-    .badge-merchant { background: var(--Teal-900); color: var(--Mint); }
-
     .btn-action { background: var(--Glass); border: 1px solid var(--Glass-Border); color: #fff; padding: 6px 12px; border-radius: 8px; font-size: 11px; cursor: pointer; transition: 0.2s; }
     .btn-action:hover { border-color: var(--Mint); color: var(--Mint); }
     .btn-primary { background: var(--Mint); color: var(--Obsidian); border: none; padding: 12px 24px; border-radius: 12px; font-weight: 800; cursor: pointer; transition: 0.2s; }
-    .btn-primary:disabled { opacity: 0.5; filter: grayscale(1); cursor: not-allowed; }
 
     .modal-overlay {
       position: fixed; inset: 0; background: rgba(0,0,0,0.9); z-index: 9999999;
@@ -100,6 +95,12 @@
 
     .console-box { background: #000; border: 1px solid var(--Glass-Border); border-radius: 8px; padding: 12px; font-family: monospace; font-size: 10px; color: var(--Neutral-400); margin-top: 20px; height: 120px; overflow-y: auto; }
     .log-entry { margin-bottom: 4px; border-left: 2px solid var(--Mint); padding-left: 8px; }
+
+    .health-item { display: flex; align-items: center; justify-content: space-between; padding: 16px; border-radius: 12px; background: rgba(255,255,255,0.02); margin-bottom: 12px; border: 1px solid var(--Glass-Border); }
+    .health-label { font-size: 12px; font-weight: 700; }
+    .health-status { font-size: 10px; font-weight: 900; text-transform: uppercase; padding: 4px 8px; border-radius: 4px; }
+    .status-ok { color: var(--Mint); background: rgba(87,215,192,0.1); }
+    .status-err { color: var(--Error); background: rgba(214,48,49,0.1); }
   </style>
 </head>
 <body>
@@ -107,7 +108,6 @@
   <div id="loadingOverlay">
     <div style="text-align:center">
       <div id="loadingText" style="font-size:12px; font-weight:800; letter-spacing:0.2em; color:var(--Mint); margin-bottom:16px">INITIALIZING AUTHORITY...</div>
-      <button onclick="location.reload()" class="btn-primary" style="display:none" id="btnRetryOverlay">Retry Connection</button>
     </div>
   </div>
 
@@ -120,7 +120,7 @@
       <form id="adminScanForm">
         <div style="margin-bottom:20px">
           <label style="font-size:10px; font-weight:900; color:var(--Neutral-500); display:block; margin-bottom:8px">SUBJECT FULL NAME</label>
-          <input type="text" id="adminSubjectName" class="search-input" style="width:100%" placeholder="e.g. Test Subject Alpha" required>
+          <input type="text" id="adminSubjectName" class="search-input" style="width:100%" placeholder="e.g. James" required>
         </div>
         <div style="display:grid; grid-template-columns: 1fr 1fr; gap:16px; margin-bottom:20px">
           <div>
@@ -205,10 +205,6 @@
                    <canvas id="chartIndustry"></canvas>
                 </div>
              </div>
-             <div class="glass-card">
-               <h2 class="section-title">Operational Status</h2>
-               <p style="color:var(--Neutral-400); line-height:1.6">Technical infrastructure is active. System performing at clinical standards.</p>
-             </div>
           </div>
 
           <div id="view-lab" class="tab-view">
@@ -217,7 +213,6 @@
                 <h2 class="section-title" style="margin-bottom:0">Testing Lab</h2>
                 <button class="btn-action" onclick="localStorage.removeItem('korra_admin_tests'); location.reload();">Clear History</button>
               </div>
-
               <div style="display:flex; flex-direction:column; gap:32px">
                  <div class="glass-card" style="margin-bottom:0; display:flex; justify-content:space-between; align-items:center">
                    <div style="flex:1; margin-right:48px">
@@ -227,17 +222,9 @@
                    </div>
                    <button class="btn-primary" onclick="document.getElementById('adminScanModal').classList.add('active')">+ Launch Admin Scan</button>
                  </div>
-
                  <div class="glass-card" style="margin-bottom:0; background:rgba(255,255,255,0.02)">
                    <h4 style="font-size:10px; font-weight:900; color:var(--Neutral-400); margin-bottom:24px">HISTORICAL BENCHMARK COMPARISON</h4>
-                   <div class="table-container">
-                      <table>
-                        <thead>
-                          <tr><th>Time</th><th>Subject</th><th>Profile</th><th>Chest</th><th>Waist</th><th>Hips</th><th>Shoulder</th></tr>
-                        </thead>
-                        <tbody id="testHistoryList"></tbody>
-                      </table>
-                   </div>
+                   <div class="table-container"><table><thead><tr><th>Time</th><th>Subject</th><th>Profile</th><th>Chest</th><th>Waist</th><th>Hips</th></tr></thead><tbody id="testHistoryList"></tbody></table></div>
                  </div>
               </div>
             </div>
@@ -246,35 +233,29 @@
           <div id="view-registry" class="tab-view">
             <div class="glass-card">
               <h2 class="section-title">Registry</h2>
-              <div class="table-container">
-                <table>
-                  <thead><tr><th>Brand</th><th>Industry</th><th>Credits</th><th>Date</th></tr></thead>
-                  <tbody id="merchantList"></tbody>
-                </table>
-              </div>
+              <div class="table-container"><table><thead><tr><th>Brand</th><th>Industry</th><th>Credits</th><th>Date</th></tr></thead><tbody id="merchantList"></tbody></table></div>
             </div>
           </div>
 
-          <div id="view-health" class="tab-view"><div class="glass-card"><h2 class="section-title">Health</h2><div id="healthVersion" style="font-size:14px; color:var(--Neutral-400)">FastAPI Service 2.1.5 • Active</div></div></div>
+          <div id="view-health" class="tab-view">
+             <div class="glass-card">
+               <h2 class="section-title">Brain Integrity Monitor</h2>
+               <div id="healthAssets"></div>
+               <div id="healthVersion" style="font-size:11px; color:var(--Neutral-500); margin-top:24px">Handshaking...</div>
+             </div>
+          </div>
 
           <div id="view-finance" class="tab-view">
             <div class="glass-card">
               <h2 class="section-title">Finance</h2>
-              <div class="table-container">
-                <table>
-                  <thead><tr><th>Date</th><th>Merchant</th><th>Amount</th><th>Ref</th></tr></thead>
-                  <tbody id="financeList"></tbody>
-                </table>
-              </div>
+              <div class="table-container"><table><thead><tr><th>Date</th><th>Merchant</th><th>Amount</th><th>Ref</th></tr></thead><tbody id="financeList"></tbody></table></div>
             </div>
           </div>
-
         </section>
       </div>
     </div>
   </main>
 
-  <!-- --- PRODUCTION ASSETS --- -->
   <script src="/assets/supabase.min.js"></script>
   <script src="/assets/three.min.js"></script>
   <script src="/assets/korra_viz.js"></script>
@@ -331,37 +312,33 @@
           document.getElementById('loadingOverlay').style.display = 'none';
           document.getElementById('adminUser').textContent = session.user.email;
 
-          // --- GLOBAL DATA SYNC ENGINE ---
           async function loadGlobalStats() {
             try {
-              // 1. Merchants (Profiles)
-              const { data: profiles, count: mCount, error: pErr } = await client.from('profiles').select('*', { count: 'exact' });
-              if (!pErr) {
-                document.getElementById('statMerchants').textContent = mCount || 0;
-                const mList = document.getElementById('merchantList');
-                if (mList && profiles) {
-                  mList.innerHTML = profiles.map(p => `<tr><td>${p.company_name || 'Artisan'}</td><td>${p.industry}</td><td>${p.credits}</td><td>${new Date(p.created_at).toLocaleDateString()}</td></tr>`).join('');
-                }
-              } else { console.error("Profile Sync Error:", pErr); }
+              const { data: profiles, count: mCount } = await client.from('profiles').select('*', { count: 'exact' });
+              document.getElementById('statMerchants').textContent = mCount || 0;
+              const mList = document.getElementById('merchantList');
+              if (mList && profiles) { mList.innerHTML = profiles.map(p => `<tr><td>${p.company_name || 'Artisan'}</td><td>${p.industry}</td><td>${p.credits}</td><td>${new Date(p.created_at).toLocaleDateString()}</td></tr>`).join(''); }
 
-              // 2. Scans (Measurements)
-              const { count: sCount, error: sErr } = await client.from('measurements').select('*', { count: 'exact', head: true });
-              if (!sErr) document.getElementById('statScans').textContent = sCount || 0;
+              const { count: sCount } = await client.from('measurements').select('*', { count: 'exact', head: true });
+              document.getElementById('statScans').textContent = sCount || 0;
 
-              // 3. Revenue (Invoices)
-              const { data: invoices, error: iErr } = await client.from('invoices').select('*');
-              if (!iErr && invoices) {
+              const { data: invoices } = await client.from('invoices').select('*');
+              if (invoices) {
                 const total = invoices.reduce((sum, inv) => sum + (inv.amount_paid || 0), 0);
                 document.getElementById('statRevenue').textContent = '₦' + (total / 100).toLocaleString();
-                const fList = document.getElementById('financeList');
-                if (fList) {
-                  fList.innerHTML = invoices.map(inv => `<tr><td>${new Date(inv.paid_at).toLocaleDateString()}</td><td>${inv.user_id.split('-')[0]}...</td><td>₦${(inv.amount_paid/100).toLocaleString()}</td><td>${inv.paystack_reference}</td></tr>`).join('');
-                }
               }
 
-              // 4. Charts
-              if (window.KORRA_ANALYTICS) {
-                window.KORRA_ANALYTICS.initPlatformTrends('chartTrends', ['M', 'T', 'W', 'T', 'F', 'S', 'S'], [45, 78, 120, 89, 156, 210, 195], [2, 5, 8, 10, 14, 22, 28]);
+              const res = await fetch('/api/v2/health');
+              if (res.ok) {
+                const d = await res.json();
+                document.getElementById('healthVersion').textContent = `FastAPI v${d.version} • ${d.environment} environment`;
+                const container = document.getElementById('healthAssets');
+                container.innerHTML = Object.entries(d.ai_integrity).map(([asset, ok]) => `
+                  <div class="health-item">
+                    <span class="health-label">${asset.replace(/_/g, ' ').toUpperCase()}</span>
+                    <span class="health-status ${ok ? 'status-ok' : 'status-err'}">${ok ? 'Active' : 'Missing'}</span>
+                  </div>
+                `).join('');
               }
             } catch (err) { console.error("Handshake Failure:", err); }
           }
@@ -369,7 +346,6 @@
 
           if (window.KORRA_VIZ) window.KORRA_VIZ.init('korra-3d-viewport');
 
-          // --- FORM HANDLER ---
           const form = document.getElementById('adminScanForm');
           form.addEventListener('submit', async (e) => {
              e.preventDefault();
@@ -378,7 +354,6 @@
              const g = document.getElementById('adminGender').value;
              const fInput = document.getElementById('adminFrontPhoto');
              const sInput = document.getElementById('adminSidePhoto');
-
              if(fInput.files.length === 0 || sInput.files.length === 0) { alert("Photos required."); return; }
 
              const btn = document.getElementById('btnAdminRun');
@@ -386,11 +361,8 @@
              adminLog("INITIATING HANDSHAKE...");
 
              const fd = new FormData();
-             fd.append('front', fInput.files[0]);
-             fd.append('side', sInput.files[0]);
-             fd.append('height', h);
-             fd.append('gender', g);
-             fd.append('client_name', name);
+             fd.append('front', fInput.files[0]); fd.append('side', sInput.files[0]);
+             fd.append('height', h); fd.append('gender', g); fd.append('client_name', name);
 
              try {
                const res = await fetch('/api/v2/measurements/extract', { method: 'POST', headers: { 'X-API-Key': ADMIN_BYPASS_KEY }, body: fd });
@@ -399,19 +371,16 @@
                   if (window.KORRA_VIZ) window.KORRA_VIZ.loadMesh(data.mesh_url);
                   adminLog("SUCCESS: BIOMETRICS CALCULATED.");
                   btn.textContent = 'Complete';
-                  loadGlobalStats(); // Refresh stats
+                  loadGlobalStats();
                } else {
                  const errData = await res.json();
-                 alert("AI Quality Error: " + (errData.detail?.error || "Rejection"));
+                 alert("Quality Error: " + (errData.detail?.error || "Rejection"));
                }
              } catch (err) { adminLog("FATAL: CONNECTION CLOSED."); } finally { btn.disabled = false; }
           });
 
           document.getElementById('btnExit').addEventListener('click', () => { window.location.href = '/'; });
-
-        } catch (err) {
-          document.getElementById('loadingOverlay').innerHTML = `<div style="text-align:center; padding:40px;"><h2 style="color:var(--Error)">Security Interrupted</h2><p>Please use Incognito mode.</p></div>`;
-        }
+        } catch (err) { document.getElementById('loadingOverlay').innerHTML = `<div style="text-align:center; padding:40px;"><h2 style="color:var(--Error)">Security Interrupted</h2></div>`; }
       }
       initAdmin();
     })();
