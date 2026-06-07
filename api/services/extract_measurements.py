@@ -2,7 +2,7 @@
 HMR-based 3D Body Measurement Extraction | MASTER ARTISAN 1:1 ALIGNMENT
 =====================================================================
 Strict implementation of the Faraz Bhatti research paper methodology.
-Hardened with Atomic Integrity Diagnostics for Cloud Infrastructure.
+Hardened with Atomic Integrity Diagnostics and TF1 Compatibility Bridge.
 """
 import os
 import sys
@@ -11,12 +11,41 @@ import logging
 from pathlib import Path
 from typing import Dict, Optional, Tuple, List
 
-# --- NUCLEAR TENSORFLOW BRIDGE ---
+# --- NUCLEAR TENSORFLOW LEGACY BRIDGE ---
 try:
     import tensorflow as tf
     if int(tf.__version__.split('.')[0]) >= 2:
         import tensorflow.compat.v1 as tf1
         tf1.disable_v2_behavior()
+
+        # SATISFY RESEARCH DEPENDENCIES (CONTRIB)
+        try:
+            import tf_slim as slim
+            # Monkey-patch tf.contrib.slim
+            if not hasattr(tf1, 'contrib'):
+                class Contrib: pass
+                tf1.contrib = Contrib()
+
+            tf1.contrib.slim = slim
+
+            # Additional Mocking for layers/framework
+            class Framework:
+                def get_variables(self, scope): return tf1.get_collection(tf1.GraphKeys.GLOBAL_VARIABLES, scope=scope)
+            tf1.contrib.framework = Framework()
+
+            class Layers:
+                from tensorflow.python.ops import init_ops
+                # Research often uses variance_scaling_initializer from contrib
+                variance_scaling_initializer = init_ops.variance_scaling_initializer
+            tf1.contrib.layers = Layers()
+
+            # Map into sys.modules for direct imports
+            sys.modules['tensorflow.contrib'] = tf1.contrib
+            sys.modules['tensorflow.contrib.slim'] = slim
+
+        except ImportError:
+            print("⚠️ tf_slim missing. Some features may fail.")
+
         sys.modules['tensorflow'] = tf1
         tf = tf1
     logger = logging.getLogger("KORRA_HMR")
@@ -36,7 +65,6 @@ ROOT_DIR = BASE_DIR.parent.parent
 MODELS_DIR = ROOT_DIR / "models"
 DATA_DIR = ROOT_DIR / "data"
 
-# Research Checkpoint Assets (Fixed explicit pathing)
 CKPT_NAME = "model.ckpt-667589"
 CHECKPOINT_BASE = MODELS_DIR / CKPT_NAME
 CHECKPOINT_INDEX = MODELS_DIR / f"{CKPT_NAME}.index"
@@ -44,7 +72,6 @@ CHECKPOINT_DATA = MODELS_DIR / f"{CKPT_NAME}.data-00000-of-00001"
 SMPL_MODEL_PATH = MODELS_DIR / "neutral_smpl_with_cocoplus_reg.pkl"
 INDEX_FILE_PATH = DATA_DIR / "customBodyPoints.txt"
 
-# Atomic Integrity Status
 INTEGRITY = {
     "checkpoint_index": CHECKPOINT_INDEX.exists(),
     "checkpoint_data": CHECKPOINT_DATA.exists(),
@@ -66,11 +93,10 @@ class HMRMasterEngine:
 
     def initialize(self):
         if not HMR_ACTIVE:
-            missing = [k for k, v in INTEGRITY.items() if not v]
-            print(f"⚠️ HMR MILESTONE GAP: Infrastructure incomplete. Missing: {missing}")
             return False
 
         try:
+            # Absolute Import instead of relative to bypass visibility issues
             from src.RunModel import RunModel
             self.model = RunModel()
             self.model.load_path = str(CHECKPOINT_BASE)
@@ -94,6 +120,7 @@ class HMRMasterEngine:
             img_normalized = 2 * ((img_resized / 255.0) - 0.5)
             img_batch = np.expand_dims(img_normalized, 0)
 
+            # Execution
             results = self.model.predict_dict(img_batch)
             vertices = results['verts'][0]
             joints = results['joints'][0]
