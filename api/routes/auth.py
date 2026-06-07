@@ -1,7 +1,7 @@
 """
 Authentication & API Key Routes
 =============================
-Handles Supabase JWT validation, API key issuance, and Automated Comms.
+Handles Supabase JWT validation and API key issuance.
 """
 import json
 import hashlib
@@ -16,8 +16,6 @@ from fastapi import APIRouter, HTTPException, Security, Header, Body
 from fastapi.security import HTTPBearer, HTTPAuthorizationCredentials
 import httpx
 
-from api.services.email_service import EmailService
-
 router = APIRouter()
 security = HTTPBearer(auto_error=False)
 logger = logging.getLogger("KORRA_AUTH")
@@ -25,25 +23,6 @@ logger = logging.getLogger("KORRA_AUTH")
 # Configuration
 SUPABASE_URL = os.environ.get('SUPABASE_URL', 'https://blsettabymllulsxtziw.supabase.co')
 SUPABASE_ANON_KEY = os.environ.get('SUPABASE_ANON_KEY', '')
-
-# --- PHASE 16: NOTIFICATIONS ---
-
-@router.post("/auth/notifications/welcome")
-async def trigger_welcome_email(
-    payload: dict = Body(...)
-):
-    """
-    Explicit trigger for the Phase 16 Welcome series.
-    Can be called by the frontend success state or a DB trigger.
-    """
-    email = payload.get("email")
-    name = payload.get("name", "Artisan")
-
-    if not email:
-        raise HTTPException(status_code=400, detail="Recipient email required")
-
-    result = await EmailService.send_welcome_email(email, name)
-    return {"success": True, "dispatch": result}
 
 # ============ EXISTING AUTH LOGIC ============
 
