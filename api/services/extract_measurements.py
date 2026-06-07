@@ -69,32 +69,33 @@ class HMRMasterEngine:
             print(f"❌ HMR Alignment Failure: {e}")
             return False
 
-    def extract(self, image: np.ndarray, height_cm: float, gender: str = 'male') -> Dict[str, float]:
+    def extract(self, image: np.ndarray, height_cm: float, gender: str = 'male') -> Tuple[Dict[str, float], Optional[np.ndarray]]:
         """
         Performs 1:1 Vertex-based extraction.
+        Returns: (measurements, vertices)
         """
         if not self.initialized:
             if not self.initialize():
-                return self._fallback_ratios(height_cm, gender)
+                return self._fallback_ratios(height_cm, gender), None
 
         try:
-            # 1. Preprocess for ResNet encoder (224x224, [-1, 1])
+            # 1. Preprocess
             import cv2
             img_resized = cv2.resize(image, (224, 224))
             img_normalized = 2 * ((img_resized / 255.0) - 0.5)
             img_batch = np.expand_dims(img_normalized, 0)
 
-            # 2. HMR 3D Prediction (Vertex Regression)
-            # joints: 2D projection, verts: 6890 3D vertices, cams: camera params, Js: 3D joints
+            # 2. HMR 3D Prediction
             joints, verts, cams, Js = self.model.predict(img_batch)
-            vertices = verts[0] # Single subject
+            vertices = verts[0]
 
-            # 3. Vertex-to-Measurement Translation (Research Methodology)
-            return self._calculate_from_vertices(vertices, height_cm, gender)
+            # 3. Translation
+            measurements = self._calculate_from_vertices(vertices, height_cm, gender)
+            return measurements, vertices
 
         except Exception as e:
             print(f"⚠️ HMR Pipeline Error: {e}")
-            return self._fallback_ratios(height_cm, gender)
+            return self._fallback_ratios(height_cm, gender), None
 
     def _calculate_from_vertices(self, vertices: np.ndarray, user_height_cm: float, gender: str) -> Dict[str, float]:
         """

@@ -537,9 +537,9 @@
                 history.push({ time: new Date().toLocaleTimeString(), gender: g, height: h, measurements: data.measurements });
                 localStorage.setItem('korra_admin_tests', JSON.stringify(history.slice(-10)));
 
-                // --- PHASE 15: 3D DIGITAL TWIN ACTIVATION ---
+                // --- PHASE 16: 3D DIGITAL TWIN ACTIVATION ---
                 if (window.KORRA_VIZ) {
-                   window.KORRA_VIZ.loadMesh(null);
+                   window.KORRA_VIZ.loadMesh(data.mesh_url);
                 }
 
                 renderTestHistory();

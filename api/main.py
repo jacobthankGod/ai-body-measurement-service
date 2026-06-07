@@ -71,8 +71,14 @@ include_lazy_routers()
 
 # --- 2. STATIC ASSET MOUNTING ---
 public_dir = BASE_DIR / "public"
+mesh_dir = BASE_DIR / "data" / "mesh_cache"
+mesh_dir.mkdir(parents=True, exist_ok=True)
+
 if public_dir.exists():
     app.mount("/assets", StaticFiles(directory=str(public_dir)), name="assets")
+
+# Mount mesh cache for technical diagnostics
+app.mount("/meshes", StaticFiles(directory=str(mesh_dir)), name="meshes")
 else:
     logger.warning("WARN: /public directory missing. Asset serving may fail.")
 

@@ -1,5 +1,5 @@
 """
-Measurement Routes | Phase 10: Digital Twin Handshake
+Measurement Routes | Phase 16: Digital Twin Activation
 ===================================================
 """
 from fastapi import APIRouter, UploadFile, File, Form, Header, HTTPException, Depends
@@ -39,7 +39,7 @@ async def extract_measurements(
     gender: str = Form("male"),
     user: dict = Depends(get_current_user)
 ):
-    """Extract measurements + Mesh Generation for Digital Twin."""
+    """Extract measurements + REAL OBJ GENERATION."""
     
     # Process images
     front_bytes = await front.read()
@@ -62,44 +62,37 @@ async def extract_measurements(
 
     await track_usage(user['api_key'])
 
-    # --- PHASE 11/15: VOLUMETRIC EXTRACTION ---
-    # In Phase 13, this uses HMR vertices. Currently using Mediapipe + Enhanced Ratios.
-    # To support the Digital Twin, we trigger the HMR engine directly if available.
+    scan_id = str(uuid.uuid4())
+    mesh_filename = f"korra_twin_{scan_id}.obj"
+    mesh_path = TEMP_MESH_DIR / mesh_filename
+    mesh_generated = False
+
+    # --- PHASE 13/16: HMR VERTEX EXTRACTION ---
     try:
         from api.services.extract_measurements import extract_measurements_from_hmr, HMR_ACTIVE
         if HMR_ACTIVE:
             # Full HMR Path (Phase 13 Active)
-            measurements = extract_measurements_from_hmr(front_arr, height, gender)
-            # Future Phase: Capture vertices from HMR and call MeshExporter.save_to_obj
+            measurements, vertices = extract_measurements_from_hmr(front_arr, height, gender)
+
+            # PHASE 16: Physical OBJ Generation
+            if vertices is not None:
+                MeshExporter.save_to_obj(vertices, str(mesh_path))
+                mesh_generated = True
         else:
+            # Fallback to Mediapipe (No real mesh yet)
             measurements, landmarks = extract_measurements_from_dual_photos(front_arr, side_arr, height, gender)
     except Exception as e:
+        print(f"⚠️ Extraction Handshake Failure: {e}")
         measurements, landmarks = extract_measurements_from_dual_photos(front_arr, side_arr, height, gender)
-
-    # --- PHASE 7/10: MESH GENERATION HANDSHAKE ---
-    # Create a unique ID for this scan session
-    scan_id = str(uuid.uuid4())
-    mesh_filename = f"korra_twin_{scan_id}.obj"
-    mesh_path = TEMP_MESH_DIR / mesh_filename
-
-    # Simulation for Phase 10: In full HMR production, real vertices are passed here.
-    # MeshExporter.save_to_obj(vertices, str(mesh_path))
 
     return {
         "success": True,
         "measurements": measurements,
         "scan_id": scan_id,
+        "mesh_url": f"/meshes/{mesh_filename}" if mesh_generated else None,
         "metadata": {
-            "mode": "digital-twin-ready",
+            "mode": "digital-twin-activated",
             "vision_guard": "active",
-            "mesh_status": "generated" if HMR_ACTIVE else "proportional"
+            "mesh_status": "real" if mesh_generated else "proportional"
         }
     }
-
-@router.post("/measurements/validate")
-async def validate_measurements(
-    measurements: Dict[str, float],
-    height: float,
-    user: dict = Depends(get_current_user)
-):
-    return {"valid": True, "issues": []}
