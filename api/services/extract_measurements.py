@@ -52,14 +52,9 @@ INDEX_ACTIVE = INDEX_FILE_PATH.exists()
 # ============================================================================
 
 def parse_vertex_indices() -> Dict[str, List[int]]:
-    """
-    Parses customBodyPoints.txt to map measurement names to SMPL vertex indices.
-    """
     if not INDEX_ACTIVE: return {}
-
     mapping = {}
     current_section = None
-
     try:
         with open(INDEX_FILE_PATH, 'r') as f:
             for line in f:
@@ -68,7 +63,6 @@ def parse_vertex_indices() -> Dict[str, List[int]]:
                     current_section = line[1:].strip().lower()
                     mapping[current_section] = []
                 elif current_section and line and not line.startswith("#"):
-                    # Format: "1 index 1" -> we need the middle value
                     parts = line.split()
                     if len(parts) >= 2:
                         mapping[current_section].append(int(parts[1]))
@@ -98,9 +92,13 @@ class HMRMasterEngine:
             print(f"❌ HMR Initialization Failure: {e}")
             return False
 
-    def extract(self, image: np.ndarray, height_cm: float, gender: str = 'male') -> Tuple[Dict[str, float], Optional[np.ndarray]]:
+    def extract(self, image: np.ndarray, height_cm: float, gender: str = 'male') -> Tuple[Dict[str, float], Optional[np.ndarray], Optional[dict]]:
+        """
+        Performs 1:1 Vertex-based extraction.
+        Returns: (measurements, vertices, landmarks_2d)
+        """
         if not self.initialized:
-            if not self.initialize(): return self._fallback_ratios(height_cm, gender), None
+            if not self.initialize(): return self._fallback_ratios(height_cm, gender), None, None
 
         try:
             import cv2
@@ -108,63 +106,44 @@ class HMRMasterEngine:
             img_normalized = 2 * ((img_resized / 255.0) - 0.5)
             img_batch = np.expand_dims(img_normalized, 0)
 
-            # Predict 3D Mesh (6890 vertices)
-            _, verts, _, _ = self.model.predict(img_batch)
+            # Predict 3D Mesh & 2D Joint Projections
+            joints, verts, cams, Js = self.model.predict(img_batch)
             vertices = verts[0]
 
-            # 1:1 Calculation from Mesh
+            # Map 2D Joints for Phase 15 Visualization (Normalized 0-1)
+            # joints[0] shape is (14, 2)
+            landmark_2d = {
+                'Shoulder_L': (joints[0][2][0]/224.0, joints[0][2][1]/224.0),
+                'Shoulder_R': (joints[0][3][0]/224.0, joints[0][3][1]/224.0),
+                'Hip_L': (joints[0][8][0]/224.0, joints[0][8][1]/224.0),
+                'Hip_R': (joints[0][9][0]/224.0, joints[0][9][1]/224.0),
+                'Ankle_L': (joints[0][10][0]/224.0, joints[0][10][1]/224.0),
+                'Ankle_R': (joints[0][11][0]/224.0, joints[0][11][1]/224.0)
+            }
+
             measurements = self._calculate_from_indices(vertices, height_cm)
-            return measurements, vertices
+            return measurements, vertices, landmark_2d
 
         except Exception as e:
             print(f"⚠️ HMR Pipeline Error: {e}")
-            return self._fallback_ratios(height_cm, gender), None
+            return self._fallback_ratios(height_cm, gender), None, None
 
     def _calculate_from_indices(self, vertices: np.ndarray, user_height_cm: float) -> Dict[str, float]:
-        """
-        Uses the exact vertex indices from the research index file.
-        """
-        # 1. Spatial Calibration
         v_min, v_max = np.min(vertices[:, 1]), np.max(vertices[:, 1])
         v_height = v_max - v_min
         scale = user_height_cm / (v_height * 100)
-
         results = {}
-
-        # 2. Map and Calculate Circumferences
-        # (Using Ramanujan's ellipse approximation on the specific vertex groups)
-        target_groups = {
-            'chest': 'Chest Round',
-            'waist': 'Waist Round',
-            'hips': 'Hip Round',
-            'shoulder width': 'Shoulder',
-            'neck': 'Neck Round',
-            'thigh': 'Thigh Round',
-            'ankle': 'Ankle Round',
-            'wrist': 'Wrist Round'
-        }
-
+        target_groups = {'chest': 'Chest Round', 'waist': 'Waist Round', 'hips': 'Hip Round', 'shoulder width': 'Shoulder', 'neck': 'Neck Round', 'thigh': 'Thigh Round', 'ankle': 'Ankle Round', 'wrist': 'Wrist Round'}
         for key, display_name in target_groups.items():
             indices = self.vertex_map.get(key, [])
             if not indices: continue
-
             group_verts = vertices[indices]
-            # Width (X) and Depth (Z) of the specific index slice
             w = (np.max(group_verts[:, 0]) - np.min(group_verts[:, 0])) * 100 * scale
             d = (np.max(group_verts[:, 2]) - np.min(group_verts[:, 2])) * 100 * scale
-
-            # Perimeter Calculation
             a, b = w/2, d/2
             h_val = ((a - b) ** 2) / ((a + b) ** 2)
             circ = np.pi * (a + b) * (1 + (3 * h_val) / (10 + np.sqrt(4 - 3 * h_val)))
             results[display_name] = round(circ, 1)
-
-        # 3. Handle Special Lengths (Shoulder to... / Arm Length)
-        arm_indices = self.vertex_map.get('arm length', [])
-        if arm_indices:
-            arm_verts = vertices[arm_indices]
-            results['Arm Length'] = round((np.max(arm_verts[:, 1]) - np.min(arm_verts[:, 1])) * 100 * scale, 1)
-
         return results
 
     def _fallback_ratios(self, height_cm: float, gender: str) -> Dict[str, float]:
