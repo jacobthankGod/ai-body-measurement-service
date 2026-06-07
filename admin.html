@@ -113,7 +113,12 @@
 </head>
 <body>
 
-  <div id="loadingOverlay">Verifying System Authority...</div>
+<div id="loadingOverlay">
+    <div style="text-align:center">
+      <div style="font-size:14px; margin-bottom:16px">Verifying System Authority...</div>
+      <button id="btnRetryConnection" style="background:var(--Mint); color:var(--Obsidian); border:none; padding:12px 24px; border-radius:8px; font-weight:800; cursor:pointer; display:none">Retry Connection</button>
+    </div>
+  </div>
 
   <!-- ADMIN SCAN MODAL -->
   <div class="modal-overlay" id="adminScanModal">
@@ -122,14 +127,14 @@
       <p style="color:var(--Neutral-400); margin-bottom:32px">Run industrial-grade benchmarking with real-time landmark visualization.</p>
 
 <form id="adminScanForm" novalidate style="display:flex; flex-direction:column; gap:20px">
-        <div style="display:grid; grid-template-columns: 1fr 1fr; gap:16px">
-          <div>
-            <label style="font-size:10px; font-weight:900; color:var(--Neutral-500); display:block; margin-bottom:8px">HEIGHT (CM)</label>
-            <input type="number" id="adminHeight" class="search-input" placeholder="180"
+<div style="display:grid; grid-template-columns: 1fr 1fr; gap:16px">
+<div>
+            <label for="adminHeight" style="font-size:10px; font-weight:900; color:var(--Neutral-500); display:block; margin-bottom:8px">HEIGHT (CM)</label>
+            <input type="number" id="adminHeight" class="search-input" placeholder="180" required>
           </div>
-          <div>
-            <label style="font-size:10px; font-weight:900; color:var(--Neutral-500); display:block; margin-bottom:8px">GENDER</label>
-            <select id="adminGender" class="search-input" style="appearance:none; cursor:pointer">
+<div>
+            <label for="adminGender" style="font-size:10px; font-weight:900; color:var(--Neutral-500); display:block; margin-bottom:8px">GENDER</label>
+            <select id="adminGender" class="search-input" style="appearance:none; cursor:pointer" required>
               <option value="male">Male</option>
               <option value="female">Female</option>
             </select>
@@ -137,11 +142,11 @@
         </div>
 
 <div style="display:grid; grid-template-columns: 1fr 1fr; gap:16px">
-          <label class="preview-box" id="adminFrontLabel">
+<label for="adminFrontPhoto" class="preview-box" id="adminFrontLabel">
             <input type="file" id="adminFrontPhoto" accept="image/*" style="display:none" onchange="handleAdminFile(this, 'adminFrontLabel')">
             <span>Upload Front</span>
           </label>
-          <label class="preview-box" id="adminSideLabel">
+          <label for="adminSidePhoto" class="preview-box" id="adminSideLabel">
             <input type="file" id="adminSidePhoto" accept="image/*" style="display:none" onchange="handleAdminFile(this, 'adminSideLabel')">
             <span>Upload Side</span>
           </label>
@@ -166,9 +171,9 @@
     <div class="modal-card">
       <h2 style="font-size:24px; margin-bottom:12px">Credit Overdrive</h2>
       <p style="color:var(--Neutral-400); margin-bottom:32px">Manually set merchant scan quota.</p>
-      <div style="display:flex; flex-direction:column; gap:20px">
-        <div><label style="font-size:10px; font-weight:900; color:var(--Neutral-500); display:block; margin-bottom:8px">MERCHANT BRAND</label><div id="targetMerchantName" style="font-weight:800; font-size:18px; color:var(--White)">--</div></div>
-        <div><label style="font-size:10px; font-weight:900; color:var(--Neutral-500); display:block; margin-bottom:8px">NEW CREDIT BALANCE</label><input type="number" id="newCreditValue" class="search-input" style="width:100%" placeholder="50"></div>
+<div style="display:flex; flex-direction:column; gap:20px">
+<div><label for="targetMerchantName" style="font-size:10px; font-weight:900; color:var(--Neutral-500); display:block; margin-bottom:8px">MERCHANT BRAND</label><div id="targetMerchantName" style="font-weight:800; font-size:18px; color:var(--White)">--</div></div>
+<div><label for="newCreditValue" style="font-size:10px; font-weight:900; color:var(--Neutral-500); display:block; margin-bottom:8px">NEW CREDIT BALANCE</label><input type="number" id="newCreditValue" class="search-input" style="width:100%" placeholder="50" required></div>
         <button class="btn-primary" id="btnConfirmOverride" style="height:52px">Apply Override</button>
         <button class="btn-action" style="border:none" onclick="document.getElementById('overrideModal').classList.remove('active')">Cancel</button>
       </div>
@@ -383,14 +388,14 @@
       consoleEl.scrollTop = consoleEl.scrollHeight;
     }
 
-    function clearTestHistory() {
+function clearTestHistory() {
       if(confirm("Permanently wipe all benchmarking history?")) {
         localStorage.removeItem('korra_admin_tests');
         location.reload();
       }
     }
 
-    (function() {
+(function() {
       const config = {
         url: 'https://blsettabymllulsxtziw.supabase.co',
         key: 'sb_publishable_miCOIXHtlxLkfDgpwE0N-g_BA1Q-x8y'
@@ -399,18 +404,46 @@
       let masterProfiles = [];
       let targetUserId = null;
       window.KORRA_DB = null;
+      let retryCount = 0;
+      const MAX_RETRIES = 3;
 
-      async function initAdmin() {
-        if (typeof window.supabase === 'undefined') { setTimeout(initAdmin, 500); return; }
+      function showRetryButton() {
+        const btn = document.getElementById('btnRetryConnection');
+        if (btn) btn.style.display = 'inline-block';
+      }
+
+      function hideLoading() {
+        document.getElementById('loadingOverlay').style.display = 'none';
+      }
+
+      // Expose initAdmin globally for retry button
+      window.initAdmin = async function() {
+        if (typeof window.supabase === 'undefined') { 
+          if (retryCount < MAX_RETRIES) {
+            retryCount++;
+            setTimeout(initAdmin, 1000);
+          } else {
+            showRetryButton();
+          }
+          return; 
+        }
 
         try {
           window.KORRA_DB = window.supabase.createClient(config.url, config.key);
           const { data: { session }, error: sessionError } = await window.KORRA_DB.auth.getSession();
 
-          if (sessionError || !session) { window.location.href = '/signin'; return; }
+          if (sessionError || !session) { 
+            // Try refreshing session first
+            const { data: refreshData, error: refreshError } = await window.KORRA_DB.auth.refreshSession();
+            if (refreshError || !refreshData.session) { 
+              window.location.href = '/signin'; 
+              return; 
+            }
+          }
 
           const ADMIN_LIST = ['springbionics@gmail.com', 'admin@korra.work'];
-          if (!ADMIN_LIST.includes(session.user.email.toLowerCase())) { window.location.href = '/dashboard'; return; }
+          const currentSession = session || (await window.KORRA_DB.auth.getSession()).data?.session;
+          if (!currentSession || !ADMIN_LIST.includes(currentSession.user.email.toLowerCase())) { window.location.href = '/dashboard'; return; }
 
           document.getElementById('loadingOverlay').style.display = 'none';
           document.getElementById('adminUser').textContent = session.user.email;
@@ -609,8 +642,16 @@
           document.getElementById('loadingOverlay').innerHTML = `<div style="text-align:center; padding:40px;"><h2 style="color:var(--Error)">Security Interrupted</h2><p>Please use Incognito mode to bypass extension conflicts.</p></div>`;
         }
       }
-      initAdmin();
+initAdmin();
     })();
+
+    // Add retry button handler AFTER IIFE completes
+    document.getElementById('btnRetryConnection')?.addEventListener('click', function() {
+      this.style.display = 'none';
+      if (typeof window.initAdmin === 'function') {
+        window.initAdmin();
+      }
+    });
   </script>
 </body>
 </html>
