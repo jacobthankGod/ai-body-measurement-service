@@ -337,31 +337,25 @@
   <script src="/assets/korra_analytics.js"></script>
 
   <script>
-// Store file references at module level - survives DOM element destruction!
-    let storedFrontFile = null;
-    let storedSideFile = null;
-
+// NON-DESTRUCTIVE: Preserve input element while showing image preview
     function handleAdminFile(input, labelId) {
       const label = document.getElementById(labelId);
       if (input && input.files && input.files[0]) {
-        // Store reference BEFORE potential DOM destruction
         const file = input.files[0];
-        if (labelId === 'adminFrontLabel') storedFrontFile = file;
-        if (labelId === 'adminSideLabel') storedSideFile = file;
-        
         const reader = new FileReader();
         reader.onload = (e) => {
-           // Clear only text nodes, preserve input element
-           const inputEl = label.querySelector('input[type="file"]');
+           // Hide the upload text, keep input element
            const uploadText = label.querySelector('span');
-           label.innerHTML = '';
-           if (inputEl) label.appendChild(inputEl);
-           if (uploadText) { uploadText.textContent = ''; uploadText.style.display = 'none'; }
-           // Add image
+           if (uploadText) { uploadText.style.display = 'none'; }
+           
+           // Add image as background overlay (input stays interactive!)
+           const existingImg = label.querySelector('img');
+           if (existingImg) existingImg.remove();
+           
            const img = document.createElement('img');
            img.src = e.target.result;
-           img.style.cssText = 'position:absolute;inset:0;width:100%;height:100%;object-fit:cover;border-radius:12px';
-           label.appendChild(img);
+           img.style.cssText = 'position:absolute;inset:0;width:100%;height:100%;object-fit:cover;border-radius:12px;z-index:0';
+           label.insertBefore(img, label.firstChild);
            label.classList.add('has-image');
         };
         reader.readAsDataURL(file);
@@ -560,48 +554,22 @@
             document.body.appendChild(overlay);
           }
 
-// Enhanced form handler with proper DOM readiness check
+// Form handler - now input element is preserved!
           document.getElementById('adminScanForm').addEventListener('submit', async (e) => {
              e.preventDefault();
-             
-             // Mauritius-Level: Wait for DOM complete before accessing input elements
-             if(document.readyState !== 'complete') {
-               adminLog("WAIT: DOM not ready...");
-               await new Promise(r => setTimeout(r, 100));
-             }
 
              const btn = document.getElementById('btnAdminRun');
-             const h = document.getElementById('adminHeight');
-             const g = document.getElementById('adminGender');
-             
-             // Use optional chaining for null safety
-             const hVal = h?.value;
-             const gVal = g?.value;
+             const hVal = document.getElementById('adminHeight')?.value;
+             const gVal = document.getElementById('adminGender')?.value;
              
              const fInput = document.getElementById('adminFrontPhoto');
              const sInput = document.getElementById('adminSidePhoto');
-
-             // Try to get files from DOM first, fall back to stored references
-             let fFile = null;
-             let sFile = null;
              
-             if(fInput && fInput.files && fInput.files[0]) {
-               fFile = fInput.files[0];
-             } else if(storedFrontFile) {
-               fFile = storedFrontFile;
-               adminLog("RECOVERED: Front file from memory cache.");
-             }
+             // Input element is preserved now - direct access works!
+             const fFile = fInput?.files?.[0];
+             const sFile = sInput?.files?.[0];
              
-             if(sInput && sInput.files && sInput.files[0]) {
-               sFile = sInput.files[0];
-             } else if(storedSideFile) {
-               sFile = storedSideFile;
-               adminLog("RECOVERED: Side file from memory cache.");
-             }
-
-             // If still no files, show error
              if(!fFile || !sFile) { 
-               adminLog("FATAL: No photos found. Please re-upload both images.");
                alert("Please upload both front and side photos.");
                return; 
              }
@@ -620,7 +588,6 @@
                const res = await fetch('/api/v2/measurements/extract', { method: 'POST', headers: { 'X-API-Key': ADMIN_BYPASS_KEY }, body: fd });
                if (res.ok) {
                   const data = await res.json();
-                  // Draw landmarks with fFile (uses stored reference if DOM destroyed)
                   if(data.landmarks) drawSkeleton(data.landmarks, fFile);
 
                   const history = JSON.parse(localStorage.getItem('korra_admin_tests') || '[]');
