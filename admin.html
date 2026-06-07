@@ -101,7 +101,8 @@
     .viz-canvas { position: absolute; inset: 0; width: 100%; height: 100%; z-index: 2; pointer-events: none; }
     .viz-img { position: absolute; inset: 0; width: 100%; height: 100%; object-fit: contain; opacity: 0.6; z-index: 1; }
 
-    #korra-3d-viewport { width: 100%; height: 400px; background: #000; border-radius: 12px; margin-top: 24px; border: 1px solid var(--Glass-Border); overflow: hidden; }
+    #korra-3d-viewport { width: 100%; height: 400px; background: #000; border-radius: 12px; margin-top: 24px; border: 1px solid var(--Glass-Border); overflow: hidden; position: relative; }
+    #korra-3d-viewport span { position: absolute; top: 12px; left: 16px; font-size: 9px; font-weight: 900; color: var(--Mint); z-index: 10; text-transform: uppercase; letter-spacing: 0.2em; background: rgba(0,0,0,0.5); padding: 4px 8px; border-radius: 4px; }
 
     .preview-box { width: 100%; height: 120px; border-radius: 12px; border: 1px dashed var(--Glass-Border); background-size: cover; background-position: center; display: flex; align-items: center; justify-content: center; overflow: hidden; position: relative; cursor: pointer; }
     .preview-box span { font-size: 10px; font-weight: 900; color: var(--Neutral-500); text-transform: uppercase; z-index: 1; }
@@ -161,8 +162,22 @@
         <div id="adminConsole" class="console-box" style="display:none"></div>
 
         <button type="submit" class="btn-primary" style="height:52px" id="btnAdminRun">Execute Benchmarking</button>
-        <button type="button" class="btn-action" style="border:none" onclick="document.getElementById('adminScanModal').classList.remove('active')">Dismiss</button>
+        <button type="button" class="btn-action" style="border:none" onclick="location.reload()">Dismiss</button>
       </form>
+    </div>
+  </div>
+
+  <!-- CREDIT OVERRIDE MODAL -->
+  <div class="modal-overlay" id="overrideModal">
+    <div class="modal-card">
+      <h2 style="font-size:24px; margin-bottom:12px">Credit Overdrive</h2>
+      <p style="color:var(--Neutral-400); margin-bottom:32px">Manually set merchant scan quota.</p>
+      <div style="display:flex; flex-direction:column; gap:20px">
+        <div><label style="font-size:10px; font-weight:900; color:var(--Neutral-500); display:block; margin-bottom:8px">MERCHANT BRAND</label><div id="targetMerchantName" style="font-weight:800; font-size:18px; color:var(--White)">--</div></div>
+        <div><label style="font-size:10px; font-weight:900; color:var(--Neutral-500); display:block; margin-bottom:8px">NEW CREDIT BALANCE</label><input type="number" id="newCreditValue" class="search-input" style="width:100%" placeholder="50"></div>
+        <button class="btn-primary" id="btnConfirmOverride" style="height:52px">Apply Override</button>
+        <button class="btn-action" style="border:none" onclick="document.getElementById('overrideModal').classList.remove('active')">Cancel</button>
+      </div>
     </div>
   </div>
 
@@ -193,13 +208,20 @@
               <a onclick="switchTab('finance')" id="tab-finance">Financial Audit</a>
             </nav>
           </div>
+          <div class="sidebar-card" style="border-color:var(--Mint)">
+            <h4 style="font-size:10px; font-weight:900; color:var(--Mint); margin-bottom:8px">ADMIN KEY</h4>
+            <div style="display:flex; align-items:center; gap:12px">
+              <code id="adminKeyDisplay" style="font-size:11px; color:var(--Neutral-400); flex:1">korra_admin_************</code>
+              <button id="btnRevealKey" style="background:none; border:none; color:var(--Mint); cursor:pointer">👁</button>
+            </div>
+          </div>
         </aside>
 
         <section>
           <div class="stat-row">
-            <div class="glass-card stat-card"><h4>Merchants</h4><div class="value" id="statMerchants">--</div></div>
-            <div class="glass-card stat-card"><h4>Global Scans</h4><div class="value" id="statScans">--</div></div>
-            <div class="glass-card stat-card"><h4>Revenue</h4><div class="value" id="statRevenue">--</div></div>
+            <div class="glass-card stat-card"><h4>Merchants</h4><div class="value" id="statMerchants">0</div></div>
+            <div class="glass-card stat-card"><h4>Global Scans</h4><div class="value" id="statScans">0</div></div>
+            <div class="glass-card stat-card"><h4>Revenue</h4><div class="value" id="statRevenue">₦0.00</div></div>
             <div class="glass-card stat-card"><h4>AI Latency</h4><div class="value" id="statLatency">--ms</div></div>
           </div>
 
@@ -214,21 +236,48 @@
                    <canvas id="chartIndustry"></canvas>
                 </div>
              </div>
+             <div class="glass-card">
+               <h2 class="section-title">System Status</h2>
+               <p style="color:var(--Neutral-400); line-height:1.6">Connected to KORRA Digital Artisan Infrastructure. All industrial extraction engines operational.</p>
+             </div>
+          </div>
+
+          <div id="view-registry" class="tab-view">
+            <div class="glass-card">
+              <h2 class="section-title">Merchant Registry</h2>
+              <input type="text" id="merchantSearch" class="search-input" style="width:100%; margin-bottom:24px" placeholder="Search by brand or industry...">
+              <div class="table-container">
+                <table>
+                  <thead><tr><th>Brand</th><th>Industry</th><th>Credits</th><th>Date</th><th>Actions</th></tr></thead>
+                  <tbody id="merchantList"><tr><td colspan="5" style="text-align:center; padding:40px;">Syncing ledger...</td></tr></tbody>
+                </table>
+              </div>
+            </div>
           </div>
 
           <div id="view-lab" class="tab-view">
             <div class="glass-card">
               <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:32px">
                 <h2 class="section-title" style="margin-bottom:0">Testing Lab</h2>
-                <button class="btn-action" onclick="clearTestHistory()">Clear All Results</button>
+                <div style="display:flex; gap:12px">
+                  <button class="btn-action" onclick="window.exportCSVHistory()">Export CSV</button>
+                  <button class="btn-action" onclick="clearTestHistory()">Clear All Results</button>
+                </div>
               </div>
+              <p style="color:var(--Neutral-400); margin-bottom:32px">Run benchmarking extractions with dual-perspective volumetric analysis.</p>
 
               <div style="display:flex; flex-direction:column; gap:32px">
                  <div class="glass-card" style="margin-bottom:0; display:flex; justify-content:space-between; align-items:center">
-                   <div>
+                   <div style="flex:1; margin-right:48px">
                      <h4 style="font-size:10px; font-weight:900; color:var(--Mint); margin-bottom:8px">INDUSTRIAL BENCHMARK</h4>
-                     <p style="font-size:12px; color:var(--Neutral-500)">Upload two body views for personalized biometric computation.</p>
-                     <div id="korra-3d-viewport"></div>
+                     <p style="font-size:12px; color:var(--Neutral-500); margin-bottom:24px">Capture two perspectives for 3D digital twin regression.</p>
+
+                     <div id="korra-3d-viewport">
+                        <span>3D Digital Twin: Global Core Active</span>
+                        <div style="width:100%; height:100%; display:flex; align-items:center; justify-content:center; color:var(--Neutral-500); font-size:10px; font-weight:900; text-transform:uppercase; letter-spacing:0.2em">
+                          3D Viewport Ready
+                        </div>
+                     </div>
                    </div>
                    <button class="btn-primary" onclick="document.getElementById('adminScanModal').classList.add('active')">+ Launch Admin Scan</button>
                  </div>
@@ -240,7 +289,9 @@
                         <thead>
                           <tr><th>Time</th><th>Profile</th><th>Chest</th><th>Waist</th><th>Hips</th><th>Shoulder</th><th>Status</th></tr>
                         </thead>
-                        <tbody id="testHistoryList"></tbody>
+                        <tbody id="testHistoryList">
+                          <tr><td colspan="7" style="text-align:center; padding:40px; color:var(--Neutral-500)">No historical data found in this lab session.</td></tr>
+                        </tbody>
                       </table>
                    </div>
                  </div>
@@ -248,18 +299,34 @@
             </div>
           </div>
 
-          <!-- OTHER TABS (STUBS) -->
-          <div id="view-registry" class="tab-view">
-            <div class="glass-card"><h2 class="section-title">Merchant Registry</h2><div id="merchantList"></div></div>
+          <div id="view-health" class="tab-view">
+             <div class="glass-card">
+               <h2 class="section-title">System Health</h2>
+               <div style="background:rgba(87,215,192,0.05); border:1px solid var(--Mint); border-radius:12px; padding:24px; display:flex; align-items:center; gap:20px; margin-bottom:24px">
+                  <div style="width:12px; height:12px; background:var(--Mint); border-radius:50%; box-shadow: 0 0 15px var(--Mint)"></div>
+                  <div><div style="font-weight:800; font-size:16px">Primary AI Extraction Engine</div><div id="healthVersion" style="font-size:12px; color:var(--Neutral-400)">FastAPI Service 2.1.4 • Active</div></div>
+               </div>
+               <code id="envLogs" style="font-size:11px; color:var(--Neutral-400); display:block; font-family:monospace; line-height:1.6">[INFO] HEARTBEAT: Render Worker OK.</code>
+             </div>
           </div>
-          <div id="view-health" class="tab-view"><div class="glass-card"><h2>System Health</h2><div id="healthVersion"></div></div></div>
-          <div id="view-finance" class="tab-view"><div class="glass-card"><h2>Financial Audit</h2><div id="financeList"></div></div></div>
 
+          <div id="view-finance" class="tab-view">
+             <div class="glass-card">
+               <h2 class="section-title">Financial Audit</h2>
+               <div class="table-container">
+                <table>
+                  <thead><tr><th>Date</th><th>Merchant</th><th>Amount</th><th>Ref</th><th>Status</th></tr></thead>
+                  <tbody id="financeList"><tr><td colspan="5" style="text-align:center; padding:40px;">Syncing transactions...</td></tr></tbody>
+                </table>
+              </div>
+             </div>
+          </div>
         </section>
       </div>
     </div>
   </main>
 
+  <!-- --- PRODUCTION ASSETS --- -->
   <script src="/assets/supabase.min.js"></script>
   <script src="/assets/three.min.js"></script>
   <script src="/assets/korra_viz.js"></script>
@@ -286,17 +353,26 @@
       document.querySelectorAll('.sidebar-nav a').forEach(a => a.classList.remove('active'));
       const view = document.getElementById('view-' + tabId);
       if(view) view.classList.add('active');
+      const tab = document.getElementById('tab-' + tabId);
+      if(tab) tab.classList.add('active');
       window.location.hash = tabId;
     }
 
-    function adminLog(text) {
+    function adminLog(text, isMeta = false) {
       const consoleEl = document.getElementById('adminConsole');
       if(!consoleEl) return;
       consoleEl.style.display = 'block';
       const entry = document.createElement('div');
-      entry.className = 'log-entry';
+      entry.className = 'log-entry' + (isMeta ? ' log-meta' : '');
       entry.textContent = `[${new Date().toLocaleTimeString()}] ${text}`;
       consoleEl.appendChild(entry);
+    }
+
+    function clearTestHistory() {
+      if(confirm("Permanently wipe all benchmarking history?")) {
+        localStorage.removeItem('korra_admin_tests');
+        location.reload();
+      }
     }
 
     (function() {
@@ -305,6 +381,8 @@
         key: 'sb_publishable_miCOIXHtlxLkfDgpwE0N-g_BA1Q-x8y'
       };
       const ADMIN_BYPASS_KEY = "korra_admin_auth_01J0PK82X92K4";
+      let masterProfiles = [];
+      let targetUserId = null;
 
       async function initAdmin() {
         if (typeof window.supabase === 'undefined') { setTimeout(initAdmin, 500); return; }
@@ -321,16 +399,129 @@
           document.getElementById('loadingOverlay').style.display = 'none';
           document.getElementById('adminUser').textContent = session.user.email;
 
-          // Stats Loading
-          const { data: profiles, count: mCount } = await client.from('profiles').select('*', { count: 'exact' });
-          document.getElementById('statMerchants').textContent = mCount || 0;
+          // Render History
+          function renderTestHistory() {
+            const list = JSON.parse(localStorage.getItem('korra_admin_tests') || '[]');
+            const tbody = document.getElementById('testHistoryList');
+            if(!tbody || list.length === 0) return;
 
-          // 3D Initialization
-          if (window.KORRA_VIZ) window.KORRA_VIZ.init('korra-3d-viewport');
+            tbody.innerHTML = list.map(t => `
+              <tr>
+                <td>${t.time}</td>
+                <td style="font-weight:700">${t.gender.toUpperCase()} / ${t.height}cm</td>
+                <td style="color:var(--Mint); font-weight:800">${t.measurements['Chest Round'] || '--'}</td>
+                <td>${t.measurements['Waist Round'] || '--'}</td>
+                <td>${t.measurements['Hip Round'] || '--'}</td>
+                <td>${t.measurements['Shoulder'] || '--'}</td>
+                <td><span class="badge" style="background:var(--Teal-900); color:var(--Mint)">Bypass OK</span></td>
+              </tr>
+            `).reverse().join('');
+          }
+          renderTestHistory();
 
-          // Form Handling (Hardened)
-          const form = document.getElementById('adminScanForm');
-          form.addEventListener('submit', async (e) => {
+          window.exportCSVHistory = () => {
+             const list = JSON.parse(localStorage.getItem('korra_admin_tests') || '[]');
+             if (window.KORRA_EXPORT) window.KORRA_EXPORT.csv(list);
+          };
+
+          document.getElementById('btnRevealKey').addEventListener('click', () => {
+             const disp = document.getElementById('adminKeyDisplay');
+             disp.textContent = disp.textContent.includes('****') ? ADMIN_BYPASS_KEY : 'korra_admin_************';
+          });
+
+          async function measureLatency() {
+            const start = Date.now();
+            try {
+              const res = await fetch('/api/v2/health');
+              if(res.ok) {
+                const d = await res.json();
+                document.getElementById('statLatency').textContent = `${Date.now() - start}ms`;
+                document.getElementById('healthVersion').textContent = `FastAPI Service ${d.version} • Active`;
+              }
+            } catch(e) { document.getElementById('statLatency').textContent = 'Offline'; }
+          }
+          setInterval(measureLatency, 5000); measureLatency();
+
+          async function loadGlobalStats() {
+             try {
+               const { data: profiles, count: merchantCount } = await client.from('profiles').select('*', { count: 'exact' });
+               masterProfiles = profiles || [];
+               document.getElementById('statMerchants').textContent = merchantCount || 0;
+
+               const { count: scanCount } = await client.from('measurements').select('*', { count: 'exact', head: true });
+               document.getElementById('statScans').textContent = scanCount || 0;
+
+               const { data: invoices } = await client.from('invoices').select('*').order('paid_at', { ascending: false });
+               if(invoices) {
+                  const totalRevenue = invoices.reduce((sum, inv) => sum + (inv.amount_paid || 0), 0);
+                  document.getElementById('statRevenue').textContent = '₦' + (totalRevenue / 100).toLocaleString();
+
+                  const fList = document.getElementById('financeList');
+                  if(fList) {
+                    fList.innerHTML = invoices.map(inv => {
+                      const p = masterProfiles.find(x => x.id === inv.user_id);
+                      return `<tr><td>${new Date(inv.paid_at).toLocaleDateString()}</td><td>${p ? (p.company_name || p.full_name) : 'Unknown'}</td><td style="color:var(--Mint)">₦${(inv.amount_paid / 100).toLocaleString()}</td><td>${inv.paystack_reference}</td><td>Verified</td></tr>`;
+                    }).join('');
+                  }
+               }
+               renderMerchantList(masterProfiles);
+
+               if (window.KORRA_ANALYTICS) {
+                  const labels = ['MON', 'TUE', 'WED', 'THU', 'FRI', 'SAT', 'SUN'];
+                  const scanVelocity = [45, 78, 120, 89, 156, 210, 195];
+                  const merchantGrowth = [2, 5, 8, 10, 14, 22, 28];
+                  window.KORRA_ANALYTICS.initPlatformTrends('chartTrends', labels, scanVelocity, merchantGrowth);
+                  const industries = [...new Set(masterProfiles.map(p => p.industry || 'Tailor'))];
+                  const industryCounts = industries.map(ind => masterProfiles.filter(p => p.industry === ind).length);
+                  window.KORRA_ANALYTICS.initIndustryMix('chartIndustry', industries, industryCounts);
+               }
+
+             } catch (err) { console.error("PfError: Global Sync Failure", err); }
+          }
+
+          function renderMerchantList(list) {
+             const tbody = document.getElementById('merchantList');
+             if(!tbody) return;
+             tbody.innerHTML = list.map(p => `<tr><td>${p.company_name || p.full_name || 'Artisan'}</td><td>${p.industry || 'Tailor'}</td><td>${p.credits || 0}</td><td>${new Date(p.created_at).toLocaleDateString()}</td><td><button class="btn-action" onclick="window.triggerOverride('${p.id}', '${p.company_name || p.full_name}')">Override</button></td></tr>`).join('');
+          }
+
+          window.triggerOverride = (id, name) => {
+             targetUserId = id;
+             document.getElementById('targetMerchantName').textContent = name;
+             document.getElementById('overrideModal').classList.add('active');
+          };
+
+          document.getElementById('btnConfirmOverride').addEventListener('click', async () => {
+             const val = parseInt(document.getElementById('newCreditValue').value);
+             if(isNaN(val)) return;
+             const { error } = await client.from('profiles').update({ credits: val }).eq('id', targetUserId);
+             if(!error) { document.getElementById('overrideModal').classList.remove('active'); loadGlobalStats(); }
+          });
+
+          // LANDMARK UI (Phase 15)
+          function drawSkeleton(landmarks, imgFile) {
+            const viz = document.getElementById('landmarkViz');
+            const canvas = document.getElementById('vizCanvas');
+            const imgEl = document.getElementById('vizImg');
+            const ctx = canvas.getContext('2d');
+            viz.style.display = 'block';
+            const reader = new FileReader();
+            reader.onload = (e) => {
+              imgEl.src = e.target.result;
+              imgEl.onload = () => {
+                canvas.width = imgEl.clientWidth; canvas.height = imgEl.clientHeight;
+                ctx.clearRect(0, 0, canvas.width, canvas.height);
+                ctx.fillStyle = '#57D7C0'; ctx.shadowBlur = 10; ctx.shadowColor = '#57D7C0';
+                for (const [name, pt] of Object.entries(landmarks)) {
+                   const x = pt[0] * canvas.width; const y = pt[1] * canvas.height;
+                   ctx.beginPath(); ctx.arc(x, y, 4, 0, Math.PI * 2); ctx.fill();
+                }
+              };
+            };
+            reader.readAsDataURL(imgFile);
+          }
+
+          document.getElementById('adminScanForm').addEventListener('submit', async (e) => {
              e.preventDefault();
              const btn = document.getElementById('btnAdminRun');
              const h = document.getElementById('adminHeight').value;
@@ -341,7 +532,7 @@
              if(!fInput?.files[0] || !sInput?.files[0]) { alert("Photos required."); return; }
 
              btn.disabled = true; btn.textContent = 'EXTRACTING...';
-             adminLog("INITIATING HANDSHAKE...");
+             adminLog("INITIATING VOLUMETRIC HANDSHAKE...");
 
              const fd = new FormData();
              fd.append('front', fInput.files[0]);
@@ -350,22 +541,27 @@
              fd.append('gender', g);
 
              try {
-               const res = await fetch('/api/v2/measurements/extract', {
-                  method: 'POST',
-                  headers: { 'X-API-Key': ADMIN_BYPASS_KEY },
-                  body: fd
-               });
-               
+               const res = await fetch('/api/v2/measurements/extract', { method: 'POST', headers: { 'X-API-Key': ADMIN_BYPASS_KEY }, body: fd });
                if (res.ok) {
                   const data = await res.json();
+                  if(data.landmarks) drawSkeleton(data.landmarks, fInput.files[0]);
+
+                  const history = JSON.parse(localStorage.getItem('korra_admin_tests') || '[]');
+                  history.push({ time: new Date().toLocaleTimeString(), gender: g, height: h, measurements: data.measurements });
+                  localStorage.setItem('korra_admin_tests', JSON.stringify(history.slice(-10)));
+                  renderTestHistory();
                   if (window.KORRA_VIZ) window.KORRA_VIZ.loadMesh(data.mesh_url);
-                  adminLog("SUCCESS: BIOMETRICS CALCULATED.");
-                  btn.textContent = 'Complete';
-               } else { alert("AI Core rejection. Check pose."); }
+                  adminLog("SUCCESS: BIOMETRICS CALCULATED.", true);
+                  loadGlobalStats();
+                  btn.textContent = 'Benchmark Complete';
+               } else { alert("AI core rejection. Stand straight."); }
              } catch (err) { adminLog("FATAL: CONNECTION CLOSED."); } finally { btn.disabled = false; }
           });
 
           document.getElementById('btnExit').addEventListener('click', () => { window.location.href = '/'; });
+          loadGlobalStats();
+          switchTab(window.location.hash.replace('#', '') || 'overview');
+          if (window.KORRA_VIZ) window.KORRA_VIZ.init('korra-3d-viewport');
 
         } catch (err) {
           console.error("Admin Handshake Failure:", err);
