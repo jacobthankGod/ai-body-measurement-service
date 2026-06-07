@@ -106,17 +106,14 @@
         font-size: 12px; font-weight: 800; letter-spacing: 0.2em; text-transform: uppercase; color: var(--Mint);
     }
 
-/* DIGITAL TWIN STYLES (Block 5) */
     #dashboard-3d-viewport { width: 100%; height: 350px; background: #000; border-radius: 16px; border: 1px solid var(--Glass-Border); margin-bottom: 32px; overflow: hidden; position: relative; }
     #dashboard-3d-viewport span { position: absolute; top: 12px; left: 16px; font-size: 9px; font-weight: 900; color: var(--Mint); text-transform: uppercase; letter-spacing: 0.2em; z-index: 10; background: rgba(0,0,0,0.5); padding: 4px 8px; border-radius: 4px; }
 
-    /* LANDMARK VISUALIZATION STYLES */
     .viz-container { position: relative; width: 100%; height: 300px; background: #000; border-radius: 12px; overflow: hidden; margin-top: 24px; border: 1px solid var(--Glass-Border); display: none; }
     .viz-canvas { position: absolute; inset: 0; width: 100%; height: 100%; z-index: 2; pointer-events: none; }
     .viz-img { position: absolute; inset: 0; width: 100%; height: 100%; object-fit: contain; opacity: 0.6; z-index: 1; }
     .viz-label { position: absolute; bottom: 12px; right: 12px; font-size: 9px; font-weight: 900; color: var(--Mint); z-index: 3; background: rgba(0,0,0,0.5); padding: 4px 8px; border-radius: 4px; }
 
-    /* MEASUREMENT RESULTS GRID */
     .result-grid { display: grid; grid-template-columns: repeat(4, 1fr); gap: 12px; margin-top: 24px; }
     .result-item { background: rgba(255,255,255,0.05); padding: 16px; border-radius: 12px; border: 1px solid var(--Glass-Border); display: flex; flex-direction: column; justify-content: center; }
     .result-label { font-size: 10px; font-weight: 900; color: var(--Neutral-500); text-transform: uppercase; margin-bottom: 8px; }
@@ -127,7 +124,6 @@
 
   <div id="loadingOverlay">Initializing Workbench...</div>
 
-  <!-- NEW SCAN MODAL -->
   <div class="modal-overlay" id="newScanModal">
     <div class="modal-card">
       <h2 style="font-size:24px; margin-bottom:12px">New Client Scan</h2>
@@ -138,12 +134,12 @@
            SYNCHRONIZING MERCHANT HANDSHAKE...
         </div>
 
-<div>
+        <div>
           <label for="scanClientName" style="font-size:10px; font-weight:900; color:var(--Neutral-500); display:block; margin-bottom:8px">CLIENT FULL NAME</label>
           <input type="text" id="scanClientName" class="btn-outline" style="width:100%; text-align:left; background:rgba(255,255,255,0.05)" placeholder="e.g. John Smith" required>
         </div>
         <div style="display:grid; grid-template-columns: 1fr 1fr; gap:16px">
-<div>
+          <div>
             <label for="scanHeight" style="font-size:10px; font-weight:900; color:var(--Neutral-500); display:block; margin-bottom:8px">HEIGHT (CM)</label>
             <input type="number" id="scanHeight" class="btn-outline" style="width:100%; text-align:left; background:rgba(255,255,255,0.05)" placeholder="175" required>
           </div>
@@ -155,7 +151,7 @@
             </select>
           </div>
         </div>
-<div style="display:grid; grid-template-columns: 1fr 1fr; gap:16px">
+        <div style="display:grid; grid-template-columns: 1fr 1fr; gap:16px">
           <label class="file-input-wrapper" id="frontWrapper">
             <input type="file" id="frontPhoto" accept="image/*" required onchange="handleFileChange(this, 'frontWrapper')">
             <span>Front Photo</span>
@@ -166,14 +162,12 @@
           </label>
         </div>
 
-        <!-- LANDMARK VISUALIZATION CONTAINER -->
         <div id="landmarkViz" class="viz-container">
           <img id="vizImg" class="viz-img">
           <canvas id="vizCanvas" class="viz-canvas"></canvas>
           <div class="viz-label">LIVE LANDMARK MAP</div>
         </div>
 
-        <!-- MEASUREMENT RESULTS GRID -->
         <div id="measurementResults" class="result-grid" style="display:none">
           <div class="result-item">
             <div class="result-label">Chest Round</div>
@@ -254,8 +248,6 @@
         <section class="content">
 
           <div id="view-vault" class="tab-view active">
-
-            <!-- DIGITAL TWIN HERO VIEWPORT (Block 5) -->
             <div id="dashboard-3d-viewport">
               <span>3D Digital Twin: Global Artisan Core</span>
               <div style="width:100%; height:100%; display:flex; align-items:center; justify-content:center; color:var(--Neutral-500); font-size:10px; font-weight:800; text-transform:uppercase; letter-spacing:0.2em">
@@ -285,22 +277,17 @@
               </div>
               <div class="scan-list" id="scanList">
                 <div class="empty-state">
-                  <p>No biometric data found.</p>
-                  <p style="font-size:12px; margin-top:8px">Start a new scan to populate your vault.</p>
+                  <p>Syncing Biometric Vault...</p>
                 </div>
               </div>
             </div>
-          </div>
-
-          <div id="view-api" class="tab-view">
-            <!-- Redirected to /developers portal in Block 18 -->
           </div>
 
           <div id="view-settings" class="tab-view">
             <div class="glass-card">
               <h2 style="font-size:24px; margin-bottom:32px">Account Settings</h2>
               <div style="display:flex; flex-direction:column; gap:24px">
-<div class="form-group">
+                 <div class="form-group">
                    <label for="setCompany" style="font-size:10px; font-weight:900; color:var(--Neutral-500); display:block; margin-bottom:8px">BUSINESS NAME</label>
                    <input type="text" id="setCompany" class="btn-outline" style="width:100%; text-align:left; background:rgba(255,255,255,0.05)" value="Master Artisan Studio">
                  </div>
@@ -318,7 +305,6 @@
     </div>
   </main>
 
-  <!-- --- ZERO-EXTERNAL INFRASTRUCTURE --- -->
   <script src="/assets/supabase.min.js"></script>
   <script src="/assets/paystack.min.js"></script>
   <script src="/assets/three.min.js"></script>
@@ -335,48 +321,6 @@
     window.KORRA_DB = null;
     let currentUser = null;
     let activeApiKey = null;
-    let fullRawKey = null;
-
-    // LANDMARK VISUALIZATION FUNCTION
-    function drawSkeleton(landmarks, imgFile) {
-      const viz = document.getElementById('landmarkViz');
-      const canvas = document.getElementById('vizCanvas');
-      const imgEl = document.getElementById('vizImg');
-      const ctx = canvas.getContext('2d');
-      viz.style.display = 'block';
-      const reader = new FileReader();
-      reader.onload = (e) => {
-        imgEl.src = e.target.result;
-        imgEl.onload = () => {
-          canvas.width = imgEl.clientWidth;
-          canvas.height = imgEl.clientHeight;
-          ctx.clearRect(0, 0, canvas.width, canvas.height);
-          ctx.fillStyle = '#57D7C0';
-          ctx.shadowBlur = 10;
-          ctx.shadowColor = '#57D7C0';
-          for (const [name, pt] of Object.entries(landmarks)) {
-            const x = pt[0] * canvas.width;
-            const y = pt[1] * canvas.height;
-            ctx.beginPath();
-            ctx.arc(x, y, 4, 0, Math.PI * 2);
-            ctx.fill();
-          }
-        };
-      };
-      reader.readAsDataURL(imgFile);
-    }
-
-    // UPDATE MEASUREMENT RESULTS GRID
-    function updateMeasurementResults(measurements) {
-      const resultsGrid = document.getElementById('measurementResults');
-      if (resultsGrid && measurements) {
-        resultsGrid.style.display = 'grid';
-        document.getElementById('resultChest').textContent = measurements['Chest Round'] || '--';
-        document.getElementById('resultWaist').textContent = measurements['Waist Round'] || '--';
-        document.getElementById('resultHip').textContent = measurements['Hip Round'] || '--';
-        document.getElementById('resultShoulder').textContent = measurements['Shoulder'] || '--';
-      }
-    }
 
     function handleFileChange(input, wrapperId) {
         const wrapper = document.getElementById(wrapperId);
@@ -398,35 +342,18 @@
       window.location.hash = tabId;
     }
 
-    function payWithPaystack(credits) {
-      if (!currentUser) return;
-      const amount = credits * 0.5 * 100 * 1600;
-      const handler = window.PaystackPop.setup({
-        key: 'pk_test_placeholder_key',
-        email: currentUser.email,
-        amount: amount,
-        currency: "NGN",
-        ref: 'KORRA_' + Math.floor((Math.random() * 1000000000) + 1),
-        callback: function(response){
-          updateCreditsInDb(credits);
-        }
-      });
-      handler.openIframe();
-    }
-
-    async function updateCreditsInDb(count) {
-        const { data } = await window.KORRA_DB.from('profiles').select('credits').eq('id', currentUser.id).single();
-        const newTotal = (data.credits || 0) + count;
-        await window.KORRA_DB.from('profiles').update({ credits: newTotal }).eq('id', currentUser.id);
-        location.reload();
-    }
-
     (function() {
       async function fetchScans(userId) {
         const scanList = document.getElementById('scanList');
         try {
           const { data, error } = await window.KORRA_DB.from('measurements').select('*').eq('user_id', userId).order('created_at', { ascending: false });
-          if (error || !data || data.length === 0) return;
+          if (error) throw error;
+
+          if (!data || data.length === 0) {
+            scanList.innerHTML = `<div class="empty-state"><p>No biometric data found.</p></div>`;
+            return;
+          }
+
           document.getElementById('statTotalScans').textContent = data.length;
 
           scanList.innerHTML = data.map(scan => `
@@ -437,12 +364,14 @@
               </div>
               <div style="display:flex; gap:12px">
                 <button class="btn-outline" style="height:32px; font-size:10px" onclick="window.loadHistoricalTwin('${scan.mesh_url}')">View 3D</button>
-                <button class="btn-outline" style="height:32px; font-size:10px; border-color:var(--Mint); color:var(--Mint)" onclick="window.exportPDF('${scan.client_name}', ${JSON.stringify(scan.biometrics || {})}, '${scan.gender}', ${scan.height})">Export PDF</button>
+                <button class="btn-outline" style="height:32px; font-size:10px; border-color:var(--Mint); color:var(--Mint)" onclick="window.exportPDF('${scan.client_name}', ${JSON.stringify(scan.biometrics || {})}, '${scan.gender}', ${scan.height})">PDF</button>
                 <button class="btn-outline" style="height:32px; font-size:10px" onclick="window.downloadOBJ('${scan.mesh_url}', '${scan.client_name}')">OBJ</button>
               </div>
             </div>
           `).join('');
-        } catch (e) {}
+        } catch (e) {
+          scanList.innerHTML = `<div class="empty-state"><p style="color:var(--Error)">Failed to sync vault.</p></div>`;
+        }
       }
 
       window.exportPDF = (name, data, gender, h) => {
@@ -471,42 +400,26 @@
         } catch(e) {}
       }
 
-      async function provisionKey(userId) {
+      async function ensureApiKey(userId) {
         const statusLabel = document.getElementById('keyStatusLabel');
         const btn = document.getElementById('btnRunInference');
-        statusLabel.innerHTML = `<span style="color:var(--Mint)">AUTOPROVISIONING MERCHANT KEY...</span>`;
-        const newKey = "korra_live_" + Math.random().toString(36).substring(2, 15) + Math.random().toString(36).substring(2, 15);
         try {
-           const { error } = await window.KORRA_DB.from('api_keys').insert({ key: newKey, user_id: userId, tier: 'tailor_pro', is_active: true });
-           if (!error) {
-             activeApiKey = newKey;
-             fullRawKey = newKey;
-             document.getElementById('apiKeyDisplay').textContent = newKey.substring(0, 12) + "****************";
-             statusLabel.innerHTML = `<span style="color:var(--Mint)">✓ MERCHANT KEY READY: VAULT ACTIVATED</span>`;
-             btn.disabled = false;
-             btn.textContent = "Run AI Extraction";
-           } else { throw error; }
-        } catch (err) { statusLabel.innerHTML = `<span style="color:var(--Error)">! CRITICAL: DATABASE PERMISSION ERROR</span>`; }
-      }
-
-      async function ensureApiKey(userId, retries = 3) {
-        const statusLabel = document.getElementById('keyStatusLabel');
-        const btn = document.getElementById('btnRunInference');
-        const retryBtn = document.getElementById('btnManualSync');
-        try {
-          const { data, error } = await window.KORRA_DB.from('api_keys').select('key, user_id, is_active').eq('user_id', userId).eq('is_active', true).limit(1);
+          const { data } = await window.KORRA_DB.from('api_keys').select('key').eq('user_id', userId).eq('is_active', true).limit(1);
           if (data && data.length > 0) {
-            const keyRecord = data[0];
-            activeApiKey = keyRecord.key;
-            fullRawKey = keyRecord.key;
-            document.getElementById('apiKeyDisplay').textContent = keyRecord.key.substring(0, 12) + "****************";
+            activeApiKey = data[0].key;
             statusLabel.innerHTML = `<span style="color:var(--Mint)">✓ MERCHANT KEY VERIFIED: VAULT SYNCHRONIZED</span>`;
             btn.disabled = false;
             btn.textContent = "Run AI Extraction";
-          } else if (retries > 0) {
-            setTimeout(() => ensureApiKey(userId, retries - 1), 1000);
-          } else { provisionKey(userId); }
-        } catch(e) { provisionKey(userId); }
+          } else {
+             // Auto-provision if missing
+             const newKey = "korra_live_" + Math.random().toString(36).substring(2, 15);
+             await window.KORRA_DB.from('api_keys').insert({ key: newKey, user_id: userId, tier: 'tailor_pro', is_active: true });
+             activeApiKey = newKey;
+             statusLabel.innerHTML = `<span style="color:var(--Mint)">✓ MERCHANT KEY PROVISIONED</span>`;
+             btn.disabled = false;
+             btn.textContent = "Run AI Extraction";
+          }
+        } catch(e) { statusLabel.innerHTML = `<span style="color:var(--Error)">! VAULT SYNC ERROR</span>`; }
       }
 
       async function initDashboard() {
@@ -532,39 +445,24 @@
           window.location.href = '/signin';
         });
 
-        document.getElementById('btnCopyKey').addEventListener('click', () => {
-          if (fullRawKey) { navigator.clipboard.writeText(fullRawKey); alert("API Key copied."); }
-        });
-
-document.getElementById('scanForm').addEventListener('submit', async (e) => {
+        document.getElementById('scanForm').addEventListener('submit', async (e) => {
           e.preventDefault();
           const btn = document.getElementById('btnRunInference');
           const clientName = document.getElementById('scanClientName').value;
           const height = document.getElementById('scanHeight').value;
           const gender = document.getElementById('scanGender').value;
-          const frontInput = document.getElementById('frontPhoto');
-          const sideInput = document.getElementById('sidePhoto');
-          const front = frontInput.files[0];
-          const side = sideInput.files[0];
+          const front = document.getElementById('frontPhoto').files[0];
+          const side = document.getElementById('sidePhoto').files[0];
+
           btn.disabled = true; btn.textContent = "AI EXTRACTING...";
           const formData = new FormData();
           formData.append('front', front); formData.append('side', side);
           formData.append('height', height); formData.append('gender', gender);
           formData.append('client_name', clientName);
+
           try {
             const response = await fetch('/api/v2/measurements/extract', { method: 'POST', headers: { 'X-API-Key': activeApiKey }, body: formData });
             if (response.ok) {
-              const resData = await response.json();
-              // Draw landmarks on the front image
-              if (resData.landmarks && frontInput.files && frontInput.files[0]) {
-                drawSkeleton(resData.landmarks, frontInput.files[0]);
-              }
-              // Display measurement results
-              if (resData.measurements) {
-                updateMeasurementResults(resData.measurements);
-              }
-              // Load 3D mesh if available
-              if (window.KORRA_VIZ && resData.mesh_url) window.KORRA_VIZ.loadMesh(resData.mesh_url);
               alert("Extraction Successful! 3D Twin Generated.");
               location.reload();
             } else { alert("Extraction failed. Check credits."); }
