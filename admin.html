@@ -239,7 +239,10 @@
 
           <div id="view-health" class="tab-view">
              <div class="glass-card">
-               <h2 class="section-title">Brain Integrity Monitor</h2>
+               <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:32px">
+                  <h2 class="section-title" style="margin-bottom:0">Brain Integrity Monitor</h2>
+                  <button class="btn-primary" id="btnRestoreBrain" style="background:var(--Teal-900); color:var(--Mint); border:1px solid var(--Mint)">🚀 Restore AI Brain</button>
+               </div>
                <div id="healthAssets"></div>
                <div id="healthVersion" style="font-size:11px; color:var(--Neutral-500); margin-top:24px">Handshaking...</div>
              </div>
@@ -331,7 +334,7 @@
               const res = await fetch('/api/v2/health');
               if (res.ok) {
                 const d = await res.json();
-                document.getElementById('healthVersion').textContent = `FastAPI v${d.version} • ${d.environment} environment`;
+                document.getElementById('healthVersion').textContent = `FastAPI v${d.version} • ${d.acceleration} acceleration`;
                 const container = document.getElementById('healthAssets');
                 container.innerHTML = Object.entries(d.ai_integrity).map(([asset, ok]) => `
                   <div class="health-item">
@@ -343,6 +346,19 @@
             } catch (err) { console.error("Handshake Failure:", err); }
           }
           loadGlobalStats();
+
+          document.getElementById('btnRestoreBrain').addEventListener('click', async () => {
+             const btn = document.getElementById('btnRestoreBrain');
+             btn.disabled = true; btn.textContent = 'RESTORING...';
+             try {
+                const res = await fetch('/api/v2/health/restore', { method: 'POST' });
+                if(res.ok) {
+                  alert("Unicorn Restoration Initiated. Checking for 347MB Weights. Please wait 1-2 minutes.");
+                  setTimeout(loadGlobalStats, 10000);
+                }
+             } catch(e) { alert("Restoration sequence failed."); }
+             finally { btn.disabled = false; btn.textContent = '🚀 Restore AI Brain'; }
+          });
 
           if (window.KORRA_VIZ) window.KORRA_VIZ.init('korra-3d-viewport');
 
@@ -374,7 +390,7 @@
                   loadGlobalStats();
                } else {
                  const errData = await res.json();
-                 alert("Quality Error: " + (errData.detail?.error || "Rejection"));
+                 alert("AI Quality Error: " + (errData.detail?.error || "Rejection"));
                }
              } catch (err) { adminLog("FATAL: CONNECTION CLOSED."); } finally { btn.disabled = false; }
           });
