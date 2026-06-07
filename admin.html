@@ -537,24 +537,7 @@
             reader.readAsDataURL(imgFile);
           }
 
-// Mauritius-Level recovery UI - Show graceful error modal
-          function showRecoveryUI(message, isNetwork = false) {
-            const overlay = document.createElement('div');
-            overlay.id = 'mauritiusRecovery';
-            overlay.style.cssText = 'position:fixed;inset:0;background:rgba(0,0,0,0.95);z-index:99999999;display:flex;align-items:center;justify-content:center;';
-            overlay.innerHTML = `
-              <div style="background:#0a0a0a;border:1px solid var(--Glass-Border);border-radius:24px;padding:40px;max-width:500px;text-align:center">
-                <div style="font-size:48px;margin-bottom:20px">🛡️</div>
-                <h2 style="color:var(--Error);font-size:24px;margin-bottom:12px">Connection Protected</h2>
-                <p style="color:var(--Neutral-400);margin-bottom:24px;line-height:1.6">${message}</p>
-                ${isNetwork ? '<p style="color:var(--Mint);font-size:12px;margin-bottom:24px">建议使用无痕模式 bypass extension conflicts</p>' : ''}
-                <button onclick="this.closest('#mauritiusRecovery').remove();location.reload()" class="btn-primary" style="height:52px;width:100%">Retry Connection</button>
-              </div>
-            `;
-            document.body.appendChild(overlay);
-          }
-
-// Form handler - now input element is preserved!
+// Form handler
           document.getElementById('adminScanForm').addEventListener('submit', async (e) => {
              e.preventDefault();
 
