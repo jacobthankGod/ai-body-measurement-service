@@ -140,10 +140,10 @@ async def serve_share(): return get_safe_file("share.html")
 @app.get("/{full_path:path}")
 async def catch_all(request: Request, full_path: str):
     # 1. Block API leakage to HTML fallback
-    if full_path.startswith("api/v2"):
+    if full_path.startswith("api/v2") or "/api/" in full_path:
         return JSONResponse(
             status_code=404,
-            content={"error": f"API Endpoint /api/v2/{full_path} not found. Check router registration."}
+            content={"error": f"API Endpoint /{full_path} not found. Check router registration."}
         )
 
     # 2. Block path traversal
