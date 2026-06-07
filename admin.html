@@ -338,10 +338,28 @@
         if (typeof window.supabase === 'undefined') { setTimeout(initAdmin, 500); return; }
 
         try {
-          const client = window.supabase.createClient(config.url, config.key);
+          // IMPLEMENT ATOMIC HANDSHAKE RECOVERY
+          const client = window.supabase.createClient(config.url, config.key, {
+              auth: {
+                  persistSession: true,
+                  autoRefreshToken: true,
+                  detectSessionInUrl: true
+              }
+          });
           window.KORRA_DB = client;
 
-          const { data: { session }, error: sessionError } = await client.auth.getSession();
+          // Attempt session fetch with specific catch for refresh_token failure
+          let sessionResponse;
+          try {
+              sessionResponse = await client.auth.getSession();
+          } catch (fetchErr) {
+              console.error("💎 KORRA: Supabase Sync Failed. Wiping session cache.");
+              localStorage.clear(); // Nuclear reset for corrupted tokens
+              window.location.href = '/signin';
+              return;
+          }
+
+          const { data: { session }, error: sessionError } = sessionResponse;
 
           if (sessionError || !session) {
             window.location.href = '/signin';
