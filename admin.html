@@ -75,15 +75,16 @@
     .btn-action { background: var(--Glass); border: 1px solid var(--Glass-Border); color: #fff; padding: 6px 12px; border-radius: 8px; font-size: 11px; cursor: pointer; transition: 0.2s; }
     .btn-action:hover { border-color: var(--Mint); color: var(--Mint); }
     .btn-primary { background: var(--Mint); color: var(--Obsidian); border: none; padding: 12px 24px; border-radius: 12px; font-weight: 800; cursor: pointer; transition: 0.2s; }
+    .btn-primary:disabled { opacity: 0.5; filter: grayscale(1); cursor: not-allowed; }
 
     .modal-overlay {
       position: fixed; inset: 0; background: rgba(0,0,0,0.9); z-index: 9999999;
-      display: none; align-items: center; justify-content: center; backdrop-filter: blur(10px);
+      display: none; align-items: center; justify-content: center; backdrop-filter: blur(10px); padding: 20px;
     }
     .modal-overlay.active { display: flex; }
     .modal-card {
-      width: 100%; max-width: 440px; background: #0a0a0a; border: 1px solid var(--Glass-Border);
-      border-radius: 24px; padding: 48px;
+      width: 100%; max-width: 500px; background: #0a0a0a; border: 1px solid var(--Glass-Border);
+      border-radius: 24px; padding: 40px; max-height: 90vh; overflow-y: auto;
     }
 
     #loadingOverlay {
@@ -92,9 +93,17 @@
     }
 
     .result-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; margin-top: 24px; }
-    .result-item { background: rgba(255,255,255,0.05); padding: 12px; border-radius: 8px; border: 1px solid var(--Glass-Border); }
+    .result-item { background: rgba(255,255,255,0.05); padding: 12px; border-radius: 8px; border: 1px solid var(--Glass-Border); display: flex; flex-direction: column; justify-content: center; }
     .result-label { font-size: 9px; font-weight: 900; color: var(--Neutral-500); text-transform: uppercase; margin-bottom: 4px; }
     .result-value { font-size: 16px; font-weight: 800; color: var(--Mint); }
+
+    .preview-box { width: 100%; height: 120px; border-radius: 12px; border: 1px dashed var(--Glass-Border); background-size: cover; background-position: center; display: flex; align-items: center; justify-content: center; overflow: hidden; position: relative; cursor: pointer; }
+    .preview-box span { font-size: 10px; font-weight: 900; color: var(--Neutral-500); text-transform: uppercase; z-index: 1; }
+    .preview-box.has-image span { opacity: 0; }
+    .preview-box img { position: absolute; inset: 0; width: 100%; height: 100%; object-fit: cover; }
+
+    .console-box { background: #000; border: 1px solid var(--Glass-Border); border-radius: 8px; padding: 12px; font-family: monospace; font-size: 10px; color: var(--Neutral-400); margin-top: 20px; height: 80px; overflow-y: auto; }
+    .console-box .log-entry { margin-bottom: 4px; border-left: 2px solid var(--Mint); padding-left: 8px; }
   </style>
 </head>
 <body>
@@ -110,27 +119,31 @@
       <form id="adminScanForm" style="display:flex; flex-direction:column; gap:20px">
         <div style="display:grid; grid-template-columns: 1fr 1fr; gap:16px">
           <div>
-            <label style="font-size:10px; font-weight:900; color:var(--Neutral-500); display:block; margin-bottom:8px">TEST HEIGHT (CM)</label>
-            <input type="number" id="adminHeight" class="search-input" style="width:100%" placeholder="180" required>
+            <label style="font-size:10px; font-weight:900; color:var(--Neutral-500); display:block; margin-bottom:8px">HEIGHT (CM)</label>
+            <input type="number" id="adminHeight" class="search-input" placeholder="180" required>
           </div>
           <div>
-            <label style="font-size:10px; font-weight:900; color:var(--Neutral-500); display:block; margin-bottom:8px">CLIENT GENDER</label>
-            <select id="adminGender" class="search-input" style="width:100%; appearance:none; cursor:pointer">
+            <label style="font-size:10px; font-weight:900; color:var(--Neutral-500); display:block; margin-bottom:8px">GENDER</label>
+            <select id="adminGender" class="search-input" style="appearance:none; cursor:pointer">
               <option value="male">Male</option>
               <option value="female">Female</option>
             </select>
           </div>
         </div>
+
         <div style="display:grid; grid-template-columns: 1fr 1fr; gap:16px">
-           <label class="btn-action" style="height:100px; display:flex; align-items:center; justify-content:center; text-align:center; flex-direction:column; border:1px dashed var(--Glass-Border)" id="adminFrontLabel">
+           <label class="preview-box" id="adminFrontLabel">
              <input type="file" id="adminFrontPhoto" accept="image/*" required style="display:none" onchange="handleAdminFile(this, 'adminFrontLabel')">
              <span>Upload Front</span>
            </label>
-           <label class="btn-action" style="height:100px; display:flex; align-items:center; justify-content:center; text-align:center; flex-direction:column; border:1px dashed var(--Glass-Border)" id="adminSideLabel">
+           <label class="preview-box" id="adminSideLabel">
              <input type="file" id="adminSidePhoto" accept="image/*" required style="display:none" onchange="handleAdminFile(this, 'adminSideLabel')">
              <span>Upload Side</span>
            </label>
         </div>
+
+        <div id="adminConsole" class="console-box" style="display:none"></div>
+
         <button type="submit" class="btn-primary" style="height:52px" id="btnAdminRun">Execute Benchmarking</button>
         <button type="button" class="btn-action" style="border:none" onclick="document.getElementById('adminScanModal').classList.remove('active')">Dismiss</button>
       </form>
@@ -217,14 +230,17 @@
 
           <div id="view-lab" class="tab-view">
             <div class="glass-card">
-              <h2 class="section-title">Testing Lab</h2>
-              <p style="color:var(--Neutral-400); margin-bottom:32px">Run benchmarking extractions without credit consumption.</p>
+              <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:32px">
+                <h2 class="section-title" style="margin-bottom:0">Testing Lab</h2>
+                <button class="btn-action" onclick="localStorage.removeItem('korra_admin_history'); location.reload();">Clear History</button>
+              </div>
+              <p style="color:var(--Neutral-400); margin-bottom:32px">Run benchmarking extractions without credit consumption. Persistence enabled.</p>
               <div style="display:grid; grid-template-columns: 1fr 1fr; gap:32px">
                  <div>
                    <h4 style="font-size:10px; font-weight:900; color:var(--Mint); margin-bottom:16px">BENCHMARK ENGINE</h4>
                    <button class="btn-primary" style="width:100%; height:52px" onclick="document.getElementById('adminScanModal').classList.add('active')">+ Launch Admin Scan</button>
                  </div>
-                 <div class="glass-card" style="margin-bottom:0; background:rgba(255,255,255,0.02)">
+                 <div class="glass-card" style="margin-bottom:0; background:rgba(255,255,255,0.02); min-height: 200px;">
                    <h4 style="font-size:10px; font-weight:900; color:var(--Neutral-400); margin-bottom:16px">LATEST RESULT</h4>
                    <div id="adminTestResults">
                       <p style="font-size:12px; color:var(--Neutral-500)">No data extracted in this session.</p>
@@ -266,9 +282,12 @@
     function handleAdminFile(input, labelId) {
       const label = document.getElementById(labelId);
       if (input.files && input.files[0]) {
-        label.style.borderColor = 'var(--Mint)';
-        label.querySelector('span').textContent = input.files[0].name.substring(0, 12) + '...';
-        label.querySelector('span').style.color = 'var(--Mint)';
+        const reader = new FileReader();
+        reader.onload = (e) => {
+           label.innerHTML = `<img src="${e.target.result}">`;
+           label.classList.add('has-image');
+        };
+        reader.readAsDataURL(input.files[0]);
       }
     }
 
@@ -280,6 +299,16 @@
       const tab = document.getElementById('tab-' + tabId);
       if(tab) tab.classList.add('active');
       window.location.hash = tabId;
+    }
+
+    function adminLog(text) {
+      const consoleEl = document.getElementById('adminConsole');
+      consoleEl.style.display = 'block';
+      const entry = document.createElement('div');
+      entry.className = 'log-entry';
+      entry.textContent = `[${new Date().toLocaleTimeString()}] ${text}`;
+      consoleEl.appendChild(entry);
+      consoleEl.scrollTop = consoleEl.scrollHeight;
     }
 
     (function() {
@@ -301,6 +330,12 @@
 
         document.getElementById('loadingOverlay').style.display = 'none';
         document.getElementById('adminUser').textContent = session.user.email;
+
+        // Restore History
+        const history = localStorage.getItem('korra_admin_history');
+        if(history) {
+           document.getElementById('adminTestResults').innerHTML = history;
+        }
 
         document.getElementById('btnRevealKey').addEventListener('click', () => {
            const disp = document.getElementById('adminKeyDisplay');
@@ -386,42 +421,69 @@
            const f = document.getElementById('adminFrontPhoto').files[0];
            const s = document.getElementById('adminSidePhoto').files[0];
 
-           btn.disabled = true; btn.textContent = 'EXTRACTING...';
+           btn.disabled = true;
+           btn.textContent = 'EXTRACTING...';
+
+           document.getElementById('adminConsole').innerHTML = '';
+           adminLog("INITIATING MEDIAPIPE CORE...");
+           adminLog("UPLOADING DUAL PERSPECTIVES...");
+
            const fd = new FormData();
            fd.append('front', f);
            fd.append('side', s);
            fd.append('height', h);
            fd.append('gender', g);
-           fd.append('client_name', 'ADMIN_TEST');
+           fd.append('client_name', 'ADMIN_BENCHMARK');
 
            try {
+             adminLog("DETECTING LANDMARKS...");
              const res = await fetch('/api/v2/measurements/extract', { method: 'POST', headers: { 'X-API-Key': ADMIN_BYPASS_KEY }, body: fd });
+
              if (res.ok) {
+                adminLog("COMPUTING ANTHROPOMETRIC RATIOS...");
                 const data = await res.json();
                 const m = data.measurements || {};
-                const resDiv = document.getElementById('adminTestResults');
-                if(resDiv) {
-                  resDiv.innerHTML = `
+
+                adminLog("SUCCESS: EXTRACTION VERIFIED.");
+
+                const resultHtml = `
+                    <div style="font-size:10px; color:var(--Mint); margin-bottom:12px; font-weight:900">${g.toUpperCase()} • ${h}CM • ${new Date().toLocaleTimeString()}</div>
                     <div class="result-grid">
-                      <div class="result-item"><div class="result-label">Shoulder</div><div class="result-value">${m.Shoulder || '--'} cm</div></div>
-                      <div class="result-item"><div class="result-label">Chest Round</div><div class="result-value">${m['Chest Round'] || '--'} cm</div></div>
-                      <div class="result-item"><div class="result-label">Waist Round</div><div class="result-value">${m['Waist Round'] || '--'} cm</div></div>
-                      <div class="result-item"><div class="result-label">Hip Round</div><div class="result-value">${m['Hip Round'] || '--'} cm</div></div>
-                      <div class="result-item"><div class="result-label">Inseam</div><div class="result-value">${m.Inseam || '--'} cm</div></div>
-                      <div class="result-item"><div class="result-label">Trouser Length</div><div class="result-value">${m['Trouser Length'] || '--'} cm</div></div>
+                      ${Object.entries(m).map(([key, val]) => `
+                        <div class="result-item">
+                          <div class="result-label">${key}</div>
+                          <div class="result-value">${val} cm</div>
+                        </div>
+                      `).join('')}
                     </div>
-                    <p style="font-size:10px; color:var(--Mint); margin-top:16px">✓ Authenticated Extraction: 0 Credits Consumed.</p>
-                  `;
-                }
-                const aMod = document.getElementById('adminScanModal');
-                if(aMod) aMod.classList.remove('active');
+                    <p style="font-size:10px; color:var(--Mint); margin-top:16px">✓ Admin Handshake: 0 Credits Consumed.</p>
+                `;
+
+                document.getElementById('adminTestResults').innerHTML = resultHtml;
+                localStorage.setItem('korra_admin_history', resultHtml);
+
+                setTimeout(() => {
+                  document.getElementById('adminScanModal').classList.remove('active');
+                  document.getElementById('adminConsole').style.display = 'none';
+                }, 1500);
+
                 loadGlobalStats();
-             } else { alert("Extraction failed on AI core."); }
-           } catch (err) { alert("AI Engine connection error."); } finally { btn.disabled = false; btn.textContent = 'Execute Benchmarking'; }
+             } else {
+               adminLog("ERROR: BACKEND HANDSHAKE FAILED.");
+               alert("Extraction failed on AI core.");
+             }
+           } catch (err) {
+             adminLog("FATAL: CONNECTION TERMINATED.");
+             alert("AI Engine connection error.");
+           } finally {
+             btn.disabled = false;
+             btn.textContent = 'Execute Benchmarking';
+           }
         });
 
         document.getElementById('btnExit').addEventListener('click', () => { window.location.href = '/'; });
-        loadGlobalStats(); switchTab(window.location.hash.replace('#', '') || 'overview');
+        loadGlobalStats();
+        switchTab(window.location.hash.replace('#', '') || 'overview');
       }
       initAdmin();
     })();
