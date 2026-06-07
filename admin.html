@@ -118,6 +118,10 @@
       <p style="color:var(--Neutral-400); margin-bottom:32px">Run technical benchmarks. Photos remain interactive during preview.</p>
 
       <form id="adminScanForm">
+        <div style="margin-bottom:20px">
+          <label style="font-size:10px; font-weight:900; color:var(--Neutral-500); display:block; margin-bottom:8px">SUBJECT FULL NAME</label>
+          <input type="text" id="adminSubjectName" class="search-input" style="width:100%" placeholder="e.g. Test Subject Alpha" required>
+        </div>
         <div style="display:grid; grid-template-columns: 1fr 1fr; gap:16px; margin-bottom:20px">
           <div>
             <label style="font-size:10px; font-weight:900; color:var(--Neutral-500); display:block; margin-bottom:8px">HEIGHT (CM)</label>
@@ -311,12 +315,13 @@
              e.preventDefault();
              console.log("🚀 KORRA DEBUG: Form Submission Initiated");
 
+             const name = document.getElementById('adminSubjectName').value;
              const h = document.getElementById('adminHeight').value;
              const g = document.getElementById('adminGender').value;
              const fInput = document.getElementById('adminFrontPhoto');
              const sInput = document.getElementById('adminSidePhoto');
 
-             console.log("🔧 KORRA DEBUG: Form Inputs -> H:", h, "G:", g);
+             console.log("🔧 KORRA DEBUG: Form Inputs -> Name:", name, "H:", h, "G:", g);
              console.log("🔧 KORRA DEBUG: File State -> F:", fInput.files.length, "S:", sInput.files.length);
 
              if(fInput.files.length === 0 || sInput.files.length === 0) {
@@ -334,6 +339,7 @@
              fd.append('side', sInput.files[0]);
              fd.append('height', h);
              fd.append('gender', g);
+             fd.append('client_name', name);
 
              try {
                const res = await fetch('/api/v2/measurements/extract', {
