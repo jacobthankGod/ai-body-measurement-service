@@ -79,7 +79,7 @@
     .tab-view.active { display: block; animation: fadeIn 0.3s ease-out; }
     @keyframes fadeIn { from { opacity: 0; transform: translateY(5px); } to { opacity: 1; transform: translateY(0); } }
 
-    .empty-state { text-align: center; padding: var(--S-80) 0; color: var(--Neutral-500); }
+    .empty-state { text-align: center; padding: 80px 0; color: var(--Neutral-500); }
 
     .modal-overlay {
       position: fixed; inset: 0; background: rgba(0,0,0,0.9); z-index: 2000;
@@ -105,6 +105,10 @@
         position: fixed; inset: 0; background: #000; z-index: 9999; display: flex; align-items: center; justify-content: center;
         font-size: 12px; font-weight: 800; letter-spacing: 0.2em; text-transform: uppercase; color: var(--Mint);
     }
+
+    /* DIGITAL TWIN STYLES (Block 5) */
+    #dashboard-3d-viewport { width: 100%; height: 350px; background: #000; border-radius: 16px; border: 1px solid var(--Glass-Border); margin-bottom: 32px; overflow: hidden; position: relative; }
+    #dashboard-3d-viewport span { position: absolute; top: 12px; left: 16px; font-size: 9px; font-weight: 900; color: var(--Mint); text-transform: uppercase; letter-spacing: 0.2em; z-index: 10; background: rgba(0,0,0,0.5); padding: 4px 8px; border-radius: 4px; }
   </style>
 </head>
 <body>
@@ -115,7 +119,7 @@
   <div class="modal-overlay" id="newScanModal">
     <div class="modal-card">
       <h2 style="font-size:24px; margin-bottom:12px">New Client Scan</h2>
-      <p style="color:var(--Neutral-400); margin-bottom:32px">Upload photos to extract clinical biometrics.</p>
+      <p style="color:var(--Neutral-400); margin-bottom:32px">Upload photos to extract clinical biometrics and 3D mesh.</p>
 
       <form id="scanForm" style="display:flex; flex-direction:column; gap:20px">
         <div id="keyStatusLabel" style="font-size:10px; font-weight:800; color:var(--Neutral-500); text-align:center; padding:8px; background:rgba(255,255,255,0.03); border-radius:8px">
@@ -126,9 +130,18 @@
           <label style="font-size:10px; font-weight:900; color:var(--Neutral-500); display:block; margin-bottom:8px">CLIENT FULL NAME</label>
           <input type="text" id="scanClientName" class="btn-outline" style="width:100%; text-align:left; background:rgba(255,255,255,0.05)" placeholder="e.g. John Smith" required>
         </div>
-        <div>
-          <label style="font-size:10px; font-weight:900; color:var(--Neutral-500); display:block; margin-bottom:8px">CLIENT HEIGHT (CM)</label>
-          <input type="number" id="scanHeight" class="btn-outline" style="width:100%; text-align:left; background:rgba(255,255,255,0.05)" placeholder="175" required>
+        <div style="display:grid; grid-template-columns: 1fr 1fr; gap:16px">
+          <div>
+            <label style="font-size:10px; font-weight:900; color:var(--Neutral-500); display:block; margin-bottom:8px">HEIGHT (CM)</label>
+            <input type="number" id="scanHeight" class="btn-outline" style="width:100%; text-align:left; background:rgba(255,255,255,0.05)" placeholder="175" required>
+          </div>
+          <div>
+            <label style="font-size:10px; font-weight:900; color:var(--Neutral-500); display:block; margin-bottom:8px">GENDER</label>
+            <select id="scanGender" class="btn-outline" style="width:100%; appearance:none; background:rgba(255,255,255,0.05)">
+              <option value="male">Male</option>
+              <option value="female">Female</option>
+            </select>
+          </div>
         </div>
         <div style="display:grid; grid-template-columns: 1fr 1fr; gap:16px">
           <label class="file-input-wrapper" id="frontWrapper">
@@ -202,6 +215,15 @@
         <section class="content">
 
           <div id="view-vault" class="tab-view active">
+
+            <!-- DIGITAL TWIN HERO VIEWPORT (Block 5) -->
+            <div id="dashboard-3d-viewport">
+              <span>3D Digital Twin: Global Artisan Core</span>
+              <div style="width:100%; height:100%; display:flex; align-items:center; justify-content:center; color:var(--Neutral-500); font-size:10px; font-weight:800; text-transform:uppercase; letter-spacing:0.2em">
+                Ready for technical visualization.
+              </div>
+            </div>
+
             <div class="stat-grid">
               <div class="glass-card stat-card">
                 <h4>Total Scans</h4>
@@ -213,7 +235,7 @@
               </div>
               <div class="glass-card stat-card" onclick="document.getElementById('paymentModal').classList.add('active')" style="cursor:pointer">
                 <h4>Credits ↓</h4>
-                <div class="value" id="statCredits">10</div>
+                <div class="value" id="statCredits">0</div>
               </div>
             </div>
 
@@ -278,6 +300,8 @@
   <!-- --- ZERO-EXTERNAL INFRASTRUCTURE --- -->
   <script src="/assets/supabase.min.js"></script>
   <script src="/assets/paystack.min.js"></script>
+  <script src="/assets/three.min.js"></script>
+  <script src="/assets/korra_viz.js"></script>
 
   <script>
     const KORRA_CONFIG = {
@@ -340,17 +364,28 @@
           const { data, error } = await window.KORRA_DB.from('measurements').select('*').eq('user_id', userId).order('created_at', { ascending: false });
           if (error || !data || data.length === 0) return;
           document.getElementById('statTotalScans').textContent = data.length;
+
           scanList.innerHTML = data.map(scan => `
             <div class="scan-item">
               <div class="scan-info">
                 <h5>${scan.client_name || 'Remote Client'}</h5>
-                <p>${new Date(scan.created_at).toLocaleDateString()} • ${scan.height}cm</p>
+                <p>${new Date(scan.created_at).toLocaleDateString()} • ${scan.height}cm • ${scan.gender || 'male'}</p>
               </div>
-              <button class="btn-outline" style="height:32px; font-size:10px">View Data</button>
+              <div style="display:flex; gap:12px">
+                <button class="btn-outline" style="height:32px; font-size:10px" onclick="window.loadHistoricalTwin('${scan.mesh_url}')">View 3D</button>
+                <button class="btn-outline" style="height:32px; font-size:10px; border-color:var(--Mint); color:var(--Mint)">Export Data</button>
+              </div>
             </div>
           `).join('');
         } catch (e) {}
       }
+
+      window.loadHistoricalTwin = (meshUrl) => {
+         if (window.KORRA_VIZ && meshUrl) {
+            window.KORRA_VIZ.loadMesh(meshUrl);
+            window.scrollTo({ top: 0, behavior: 'smooth' });
+         }
+      };
 
       async function fetchProfile(userId) {
         try {
@@ -363,48 +398,30 @@
         } catch(e) {}
       }
 
-      // --- THE "SELF-HEALING" KEY PROVISIONER ---
       async function provisionKey(userId) {
         const statusLabel = document.getElementById('keyStatusLabel');
         const btn = document.getElementById('btnRunInference');
-
         statusLabel.innerHTML = `<span style="color:var(--Mint)">AUTOPROVISIONING MERCHANT KEY...</span>`;
         const newKey = "korra_live_" + Math.random().toString(36).substring(2, 15) + Math.random().toString(36).substring(2, 15);
-
         try {
-           const { error } = await window.KORRA_DB.from('api_keys').insert({
-             key: newKey,
-             user_id: userId,
-             tier: 'tailor_pro',
-             is_active: true
-           });
-
+           const { error } = await window.KORRA_DB.from('api_keys').insert({ key: newKey, user_id: userId, tier: 'tailor_pro', is_active: true });
            if (!error) {
-             console.log("PfDebug: Key Provisioned Successfully.");
              activeApiKey = newKey;
              fullRawKey = newKey;
              document.getElementById('apiKeyDisplay').textContent = newKey.substring(0, 12) + "****************";
              statusLabel.innerHTML = `<span style="color:var(--Mint)">✓ MERCHANT KEY READY: VAULT ACTIVATED</span>`;
              btn.disabled = false;
              btn.textContent = "Run AI Extraction";
-           } else {
-             throw error;
-           }
-        } catch (err) {
-           console.error("PfError: Provisioning Failed:", err);
-           statusLabel.innerHTML = `<span style="color:var(--Error)">! CRITICAL: DATABASE PERMISSION ERROR (406)</span>`;
-        }
+           } else { throw error; }
+        } catch (err) { statusLabel.innerHTML = `<span style="color:var(--Error)">! CRITICAL: DATABASE PERMISSION ERROR</span>`; }
       }
 
       async function ensureApiKey(userId, retries = 3) {
         const statusLabel = document.getElementById('keyStatusLabel');
         const btn = document.getElementById('btnRunInference');
         const retryBtn = document.getElementById('btnManualSync');
-
         try {
-          // Forensic Fix: Specifically check key columns for existing key
           const { data, error } = await window.KORRA_DB.from('api_keys').select('key, user_id, is_active').eq('user_id', userId).eq('is_active', true).limit(1);
-
           if (data && data.length > 0) {
             const keyRecord = data[0];
             activeApiKey = keyRecord.key;
@@ -414,45 +431,27 @@
             btn.disabled = false;
             btn.textContent = "Run AI Extraction";
           } else if (retries > 0) {
-            console.warn(`PfRetry: Handshake attempt ${4 - retries}...`);
             setTimeout(() => ensureApiKey(userId, retries - 1), 1000);
-          } else {
-            // SELF-HEAL: Create a key if none exist
-            provisionKey(userId);
-          }
-        } catch(e) {
-          console.error("API Key Handshake Failed:", e);
-          statusLabel.innerHTML = `<span style="color:var(--Error)">! HANDSHAKE ERROR: RETRYING...</span>`;
-          provisionKey(userId);
-        }
+          } else { provisionKey(userId); }
+        } catch(e) { provisionKey(userId); }
       }
 
       async function initDashboard() {
         if (typeof window.supabase === 'undefined') { setTimeout(initDashboard, 500); return; }
-
         try {
-          window.KORRA_DB = window.supabase.createClient(KORRA_CONFIG.supabaseUrl, KORRA_CONFIG.supabaseKey, {
-            auth: { persistSession: true, autoRefreshToken: true }
-          });
-          const { data: { session }, error: sessionError } = await window.KORRA_DB.auth.getSession();
-          if (sessionError || !session) { window.location.href = '/signin'; return; }
-
+          window.KORRA_DB = window.supabase.createClient(KORRA_CONFIG.supabaseUrl, KORRA_CONFIG.supabaseKey);
+          const { data: { session } } = await window.KORRA_DB.auth.getSession();
+          if (!session) { window.location.href = '/signin'; return; }
           currentUser = session.user;
           document.getElementById('loadingOverlay').style.display = 'none';
           document.getElementById('userDisplay').textContent = session.user.email;
           document.getElementById('settingsEmail').value = session.user.email;
-
           fetchScans(session.user.id);
           fetchProfile(session.user.id);
           ensureApiKey(session.user.id);
-
           const initialTab = window.location.hash.replace('#', '') || 'vault';
           switchTab(initialTab);
-
-          document.getElementById('btnManualSync').addEventListener('click', () => {
-             ensureApiKey(session.user.id);
-          });
-
+          if (window.KORRA_VIZ) window.KORRA_VIZ.init('dashboard-3d-viewport');
         } catch (err) { console.error("Critical Dashboard Failure:", err); }
 
         document.getElementById('btnSignOut').addEventListener('click', async () => {
@@ -461,10 +460,7 @@
         });
 
         document.getElementById('btnCopyKey').addEventListener('click', () => {
-          if (fullRawKey) {
-            navigator.clipboard.writeText(fullRawKey);
-            alert("API Key copied.");
-          }
+          if (fullRawKey) { navigator.clipboard.writeText(fullRawKey); alert("API Key copied."); }
         });
 
         document.getElementById('scanForm').addEventListener('submit', async (e) => {
@@ -472,38 +468,25 @@
           const btn = document.getElementById('btnRunInference');
           const clientName = document.getElementById('scanClientName').value;
           const height = document.getElementById('scanHeight').value;
+          const gender = document.getElementById('scanGender').value;
           const front = document.getElementById('frontPhoto').files[0];
           const side = document.getElementById('sidePhoto').files[0];
-
-          btn.disabled = true;
-          btn.textContent = "AI EXTRACTING...";
-
+          btn.disabled = true; btn.textContent = "AI EXTRACTING...";
           const formData = new FormData();
-          formData.append('front', front);
-          formData.append('side', side);
-          formData.append('height', height);
+          formData.append('front', front); formData.append('side', side);
+          formData.append('height', height); formData.append('gender', gender);
           formData.append('client_name', clientName);
-
           try {
-            const response = await fetch('/api/v2/measurements/extract', {
-              method: 'POST',
-              headers: { 'X-API-Key': activeApiKey },
-              body: formData
-            });
-
+            const response = await fetch('/api/v2/measurements/extract', { method: 'POST', headers: { 'X-API-Key': activeApiKey }, body: formData });
             if (response.ok) {
-              alert("Extraction Successful!");
+              const resData = await response.json();
+              if (window.KORRA_VIZ && resData.mesh_url) window.KORRA_VIZ.loadMesh(resData.mesh_url);
+              alert("Extraction Successful! 3D Twin Generated.");
               location.reload();
-            } else {
-              alert("Extraction failed. Check credits.");
-            }
-          } catch (err) { alert("Connection error."); } finally {
-            btn.disabled = false;
-            btn.textContent = "Run AI Extraction";
-          }
+            } else { alert("Extraction failed. Check credits."); }
+          } catch (err) { alert("Connection error."); } finally { btn.disabled = false; btn.textContent = "Run AI Extraction"; }
         });
       }
-
       initDashboard();
     })();
   </script>
