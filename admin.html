@@ -99,7 +99,6 @@
 
     .preview-box { width: 100%; height: 120px; border-radius: 12px; border: 1px dashed var(--Glass-Border); background-size: cover; background-position: center; display: flex; align-items: center; justify-content: center; overflow: hidden; position: relative; cursor: pointer; }
     .preview-box span { font-size: 10px; font-weight: 900; color: var(--Neutral-500); text-transform: uppercase; z-index: 1; }
-    .preview-box.has-image span { opacity: 0; }
     .preview-box img { position: absolute; inset: 0; width: 100%; height: 100%; object-fit: cover; }
 
     .console-box { background: #000; border: 1px solid var(--Glass-Border); border-radius: 8px; padding: 12px; font-family: monospace; font-size: 10px; color: var(--Neutral-400); margin-top: 20px; height: 80px; overflow-y: auto; }
@@ -232,18 +231,38 @@
             <div class="glass-card">
               <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:32px">
                 <h2 class="section-title" style="margin-bottom:0">Testing Lab</h2>
-                <button class="btn-action" onclick="localStorage.removeItem('korra_admin_history'); location.reload();">Clear History</button>
+                <button class="btn-action" onclick="clearTestHistory()">Clear All Results</button>
               </div>
-              <p style="color:var(--Neutral-400); margin-bottom:32px">Run benchmarking extractions without credit consumption. Persistence enabled.</p>
-              <div style="display:grid; grid-template-columns: 1fr 1fr; gap:32px">
-                 <div>
-                   <h4 style="font-size:10px; font-weight:900; color:var(--Mint); margin-bottom:16px">BENCHMARK ENGINE</h4>
-                   <button class="btn-primary" style="width:100%; height:52px" onclick="document.getElementById('adminScanModal').classList.add('active')">+ Launch Admin Scan</button>
+              <p style="color:var(--Neutral-400); margin-bottom:32px">Run benchmarking extractions with dual-perspective volumetric analysis. (Phase 12 Tabular Persistence Active)</p>
+
+              <div style="display:flex; flex-direction:column; gap:32px">
+                 <div class="glass-card" style="margin-bottom:0; display:flex; justify-content:space-between; align-items:center">
+                   <div>
+                     <h4 style="font-size:10px; font-weight:900; color:var(--Mint); margin-bottom:8px">INDUSTRIAL BENCHMARK</h4>
+                     <p style="font-size:12px; color:var(--Neutral-500)">Upload two body views for personalized biometric computation.</p>
+                   </div>
+                   <button class="btn-primary" onclick="document.getElementById('adminScanModal').classList.add('active')">+ Launch Admin Scan</button>
                  </div>
-                 <div class="glass-card" style="margin-bottom:0; background:rgba(255,255,255,0.02); min-height: 200px;">
-                   <h4 style="font-size:10px; font-weight:900; color:var(--Neutral-400); margin-bottom:16px">LATEST RESULT</h4>
-                   <div id="adminTestResults">
-                      <p style="font-size:12px; color:var(--Neutral-500)">No data extracted in this session.</p>
+
+                 <div class="glass-card" style="margin-bottom:0; background:rgba(255,255,255,0.02)">
+                   <h4 style="font-size:10px; font-weight:900; color:var(--Neutral-400); margin-bottom:24px">HISTORICAL BENCHMARK COMPARISON</h4>
+                   <div class="table-container">
+                      <table>
+                        <thead>
+                          <tr>
+                            <th>Timestamp</th>
+                            <th>Profile</th>
+                            <th>Chest Round</th>
+                            <th>Waist Round</th>
+                            <th>Hip Round</th>
+                            <th>Shoulder</th>
+                            <th>Status</th>
+                          </tr>
+                        </thead>
+                        <tbody id="testHistoryList">
+                          <tr><td colspan="7" style="text-align:center; padding:40px; color:var(--Neutral-500)">No historical data in this lab session.</td></tr>
+                        </tbody>
+                      </table>
                    </div>
                  </div>
               </div>
@@ -303,12 +322,20 @@
 
     function adminLog(text) {
       const consoleEl = document.getElementById('adminConsole');
+      if(!consoleEl) return;
       consoleEl.style.display = 'block';
       const entry = document.createElement('div');
       entry.className = 'log-entry';
       entry.textContent = `[${new Date().toLocaleTimeString()}] ${text}`;
       consoleEl.appendChild(entry);
       consoleEl.scrollTop = consoleEl.scrollHeight;
+    }
+
+    function clearTestHistory() {
+      if(confirm("Permanently wipe all benchmarking history?")) {
+        localStorage.removeItem('korra_admin_tests');
+        location.reload();
+      }
     }
 
     (function() {
@@ -331,11 +358,26 @@
         document.getElementById('loadingOverlay').style.display = 'none';
         document.getElementById('adminUser').textContent = session.user.email;
 
-        // Restore History
-        const history = localStorage.getItem('korra_admin_history');
-        if(history) {
-           document.getElementById('adminTestResults').innerHTML = history;
+        // Render Historical Tests (Phase 12)
+        function renderTestHistory() {
+          const list = JSON.parse(localStorage.getItem('korra_admin_tests') || '[]');
+          const tbody = document.getElementById('testHistoryList');
+          if(!tbody) return;
+          if(list.length === 0) return;
+
+          tbody.innerHTML = list.map(t => `
+            <tr>
+              <td>${t.time}</td>
+              <td style="font-weight:700">${t.gender.toUpperCase()} / ${t.height}cm</td>
+              <td style="color:var(--Mint); font-weight:800">${t.measurements['Chest Round'] || '--'}</td>
+              <td>${t.measurements['Waist Round'] || '--'}</td>
+              <td>${t.measurements['Hip Round'] || '--'}</td>
+              <td>${t.measurements['Shoulder'] || '--'}</td>
+              <td><span class="badge" style="background:var(--Teal-900); color:var(--Mint)">Bypass OK</span></td>
+            </tr>
+          `).reverse().join('');
         }
+        renderTestHistory();
 
         document.getElementById('btnRevealKey').addEventListener('click', () => {
            const disp = document.getElementById('adminKeyDisplay');
@@ -361,7 +403,6 @@
            try {
              const { data: profiles, count: merchantCount } = await client.from('profiles').select('*', { count: 'exact' });
              masterProfiles = profiles || [];
-
              const mEl = document.getElementById('statMerchants');
              if(mEl) mEl.textContent = merchantCount || 0;
 
@@ -402,15 +443,10 @@
         };
 
         document.getElementById('btnConfirmOverride').addEventListener('click', async () => {
-           const nVal = document.getElementById('newCreditValue');
-           const val = parseInt(nVal.value);
+           const val = parseInt(document.getElementById('newCreditValue').value);
            if(isNaN(val)) return;
            const { error } = await client.from('profiles').update({ credits: val }).eq('id', targetUserId);
-           if(!error) {
-             const oMod = document.getElementById('overrideModal');
-             if(oMod) oMod.classList.remove('active');
-             loadGlobalStats();
-           }
+           if(!error) { document.getElementById('overrideModal').classList.remove('active'); loadGlobalStats(); }
         });
 
         document.getElementById('adminScanForm').addEventListener('submit', async (e) => {
@@ -421,69 +457,44 @@
            const f = document.getElementById('adminFrontPhoto').files[0];
            const s = document.getElementById('adminSidePhoto').files[0];
 
-           btn.disabled = true;
-           btn.textContent = 'EXTRACTING...';
+           btn.disabled = true; btn.textContent = 'RUNNING EXTRACTION...';
+           adminLog("INITIATING VOLUMETRIC HANDSHAKE...");
 
-           document.getElementById('adminConsole').innerHTML = '';
-           adminLog("INITIATING MEDIAPIPE CORE...");
-           adminLog("UPLOADING DUAL PERSPECTIVES...");
-
-           const fd = new FormData();
-           fd.append('front', f);
-           fd.append('side', s);
-           fd.append('height', h);
-           fd.append('gender', g);
-           fd.append('client_name', 'ADMIN_BENCHMARK');
+           const fd = new FormData(); fd.append('front', f); fd.append('side', s); fd.append('height', h); fd.append('gender', g); fd.append('client_name', 'ADMIN_LAB_TEST');
 
            try {
-             adminLog("DETECTING LANDMARKS...");
+             adminLog("DETECTING DUAL-PERSPECTIVE LANDMARKS...");
              const res = await fetch('/api/v2/measurements/extract', { method: 'POST', headers: { 'X-API-Key': ADMIN_BYPASS_KEY }, body: fd });
 
              if (res.ok) {
-                adminLog("COMPUTING ANTHROPOMETRIC RATIOS...");
+                adminLog("SUCCESS: BIOMETRICS CALCULATED.");
                 const data = await res.json();
-                const m = data.measurements || {};
 
-                adminLog("SUCCESS: EXTRACTION VERIFIED.");
+                // Persistence Logic (Phase 12)
+                const history = JSON.parse(localStorage.getItem('korra_admin_tests') || '[]');
+                history.push({
+                   time: new Date().toLocaleTimeString(),
+                   gender: g,
+                   height: h,
+                   measurements: data.measurements
+                });
+                localStorage.setItem('korra_admin_tests', JSON.stringify(history.slice(-10))); // Keep last 10
 
-                const resultHtml = `
-                    <div style="font-size:10px; color:var(--Mint); margin-bottom:12px; font-weight:900">${g.toUpperCase()} • ${h}CM • ${new Date().toLocaleTimeString()}</div>
-                    <div class="result-grid">
-                      ${Object.entries(m).map(([key, val]) => `
-                        <div class="result-item">
-                          <div class="result-label">${key}</div>
-                          <div class="result-value">${val} cm</div>
-                        </div>
-                      `).join('')}
-                    </div>
-                    <p style="font-size:10px; color:var(--Mint); margin-top:16px">✓ Admin Handshake: 0 Credits Consumed.</p>
-                `;
-
-                document.getElementById('adminTestResults').innerHTML = resultHtml;
-                localStorage.setItem('korra_admin_history', resultHtml);
+                renderTestHistory();
 
                 setTimeout(() => {
                   document.getElementById('adminScanModal').classList.remove('active');
                   document.getElementById('adminConsole').style.display = 'none';
-                }, 1500);
+                  alert("Benchmarking Session Persistent. See history table.");
+                }, 1000);
 
                 loadGlobalStats();
-             } else {
-               adminLog("ERROR: BACKEND HANDSHAKE FAILED.");
-               alert("Extraction failed on AI core.");
-             }
-           } catch (err) {
-             adminLog("FATAL: CONNECTION TERMINATED.");
-             alert("AI Engine connection error.");
-           } finally {
-             btn.disabled = false;
-             btn.textContent = 'Execute Benchmarking';
-           }
+             } else { adminLog("ERROR: BACKEND HANDSHAKE FAILED."); }
+           } catch (err) { adminLog("FATAL: CONNECTION TERMINATED."); } finally { btn.disabled = false; btn.textContent = 'Execute Benchmarking'; }
         });
 
         document.getElementById('btnExit').addEventListener('click', () => { window.location.href = '/'; });
-        loadGlobalStats();
-        switchTab(window.location.hash.replace('#', '') || 'overview');
+        loadGlobalStats(); switchTab(window.location.hash.replace('#', '') || 'overview');
       }
       initAdmin();
     })();
