@@ -1,8 +1,7 @@
 """
-MediaPipe-based Body Measurement Engine | PHASE 11: DEPTH-AWARE PERSONALIZATION
-=============================================================================
-Calculates personalized circumferences using Front (Width) and Side (Depth) photos.
-Moves beyond static ratios into individualized volumetric extraction.
+MediaPipe-based Body Measurement Engine | PHASE 15: LANDMARK EXPORT
+===================================================================
+Calculates personalized circumferences and exports landmark maps for UI visualization.
 """
 
 import os
@@ -74,9 +73,14 @@ def detect_pose_landmarks(image: np.ndarray) -> Optional[Dict[str, Tuple[float, 
         if not result or not result.pose_landmarks: return None
         landmarks = result.pose_landmarks[0]
         
+        # Extended mapping for Phase 15 visualization
         landmark_mapping = {
-            0: 'nose', 11: 'left_shoulder', 12: 'right_shoulder',
-            23: 'left_hip', 24: 'right_hip', 27: 'left_ankle', 28: 'right_ankle',
+            0: 'nose',
+            11: 'left_shoulder', 12: 'right_shoulder',
+            13: 'left_elbow', 14: 'right_elbow',
+            23: 'left_hip', 24: 'right_hip',
+            25: 'left_knee', 26: 'right_knee',
+            27: 'left_ankle', 28: 'right_ankle',
         }
         
         landmark_dict = {}
@@ -90,7 +94,6 @@ def detect_pose_landmarks(image: np.ndarray) -> Optional[Dict[str, Tuple[float, 
         return None
 
 def calculate_pixels_per_cm(landmarks, img_height, user_height_cm):
-    """Calibrate the spatial scale of the image."""
     try:
         nose = landmarks.get('nose')
         left_ankle = landmarks.get('left_ankle')
@@ -98,20 +101,14 @@ def calculate_pixels_per_cm(landmarks, img_height, user_height_cm):
         
         if nose and left_ankle and right_ankle:
             ankle_mid_y = (left_ankle[1] + right_ankle[1]) / 2
-            # Body span from nose to ankles in normalized coords
             body_span_norm = abs(ankle_mid_y - nose[1])
             body_pixels = body_span_norm * img_height
-            # Estimate nose-to-ankle as ~90% of total height
             return body_pixels / (user_height_cm * 0.9)
     except:
         pass
     return (img_height * 0.7) / user_height_cm
 
 def compute_elliptical_circumference(width_cm, depth_cm):
-    """
-    Ramanujan's approximation for the perimeter of an ellipse.
-    A body cross-section is better modeled as an ellipse than a circle.
-    """
     a = width_cm / 2
     b = depth_cm / 2
     h = ((a - b) ** 2) / ((a + b) ** 2)
@@ -122,74 +119,53 @@ def extract_measurements_from_dual_photos(
     side_image: np.ndarray,
     user_height_cm: float,
     gender: str = 'male'
-) -> Dict[str, float]:
+) -> Tuple[Dict[str, float], Dict[str, Tuple[float, float]]]:
     """
-    PHASE 11: DEPTH-AWARE EXTRACTION.
-    Uses Front Width and Side Depth to calculate personalized volume.
+    PHASE 15: Volumetric Extraction + Landmark Export.
+    Returns: (measurements_dict, landmarks_for_ui)
     """
-    # 1. Detect Landmarks for both perspectives
     front_lms = detect_pose_landmarks(front_image)
     side_lms = detect_pose_landmarks(side_image)
     
-    # Fallback if detection fails
     if not front_lms:
-        return _extract_proportional_measurements(user_height_cm, gender)
+        return _extract_proportional_measurements(user_height_cm, gender), {}
 
-    # 2. Scale Calibration (Pixels per CM)
     px_cm_front = calculate_pixels_per_cm(front_lms, front_image.shape[0], user_height_cm)
-    
-    # If side detection fails, we fallback to width-based estimation for that perspective
     px_cm_side = px_cm_front
     if side_lms:
         px_cm_side = calculate_pixels_per_cm(side_lms, side_image.shape[0], user_height_cm)
 
-    # 3. Width Extraction (Front)
     def get_width(lms, px_cm, img_width):
         l_sh = lms.get('left_shoulder')
         r_sh = lms.get('right_shoulder')
         l_hp = lms.get('left_hip')
         r_hp = lms.get('right_hip')
-
         shoulder_w = abs(r_sh[0] - l_sh[0]) * img_width / px_cm if l_sh and r_sh else 0
         hip_w = abs(r_hp[0] - l_hp[0]) * img_width / px_cm if l_hp and r_hp else 0
         return shoulder_w, hip_w
 
     f_sh_w, f_hp_w = get_width(front_lms, px_cm_front, front_image.shape[1])
-    
-    # 4. Depth Extraction (Side)
-    # In a side view, the distance between the two detected shoulder/hip points
-    # represents the body depth (sagittal diameter).
     s_sh_d, s_hp_d = 0, 0
     if side_lms:
         s_sh_d, s_hp_d = get_width(side_lms, px_cm_side, side_image.shape[1])
 
-    # Fallback depths based on common width/depth ratios if side fails
     if s_sh_d == 0: s_sh_d = f_sh_w * 0.65
     if s_hp_d == 0: s_hp_d = f_hp_w * 0.85
 
-    # 5. Volumetric Calculation
     measurements = {}
-
-    # Personalize Primary Circumferences
-    # We use Hip Width as a proxy for Waist/Chest width variations if specific
-    # landmark segmentation isn't available.
     measurements['Shoulder'] = round(f_sh_w, 1)
     measurements['Chest Round'] = round(compute_elliptical_circumference(f_sh_w * 1.1, s_sh_d * 1.2), 1)
     measurements['Waist Round'] = round(compute_elliptical_circumference(f_hp_w * 0.9, s_hp_d * 0.95), 1)
     measurements['Hip Round'] = round(compute_elliptical_circumference(f_hp_w * 1.05, s_hp_d * 1.1), 1)
 
-    # 6. Proportional Fallback for minor measurements
-    # (These will be individualized in Phase 12)
     base_m = _extract_proportional_measurements(user_height_cm, gender)
     for k, v in base_m.items():
-        if k not in measurements:
-            measurements[k] = v
+        if k not in measurements: measurements[k] = v
 
-    print(f"✅ Phase 11: Personalization Success. Front-Width: {f_sh_w:.1f}cm, Side-Depth: {s_sh_d:.1f}cm")
-    return measurements
+    print(f"✅ Phase 15: Volumetric Extraction Success.")
+    return measurements, front_lms
 
 def _extract_proportional_measurements(user_height_cm: float, gender: str = 'male') -> Dict[str, float]:
-    """Base proportional dataset (Standard Clinical Ratios)."""
     if gender == 'male':
         ratios = {
             'Shoulder': 0.265, 'Neck Round': 0.224, 'Chest Round': 0.588, 'Stomach Round': 0.500,
@@ -219,5 +195,3 @@ def validate_image(image_array):
     if gray < 50: return False, "Image too dark"
     if gray > 220: return False, "Image too bright"
     return True, "OK"
-
-__all__ = ['extract_measurements_from_dual_photos', 'validate_image']
