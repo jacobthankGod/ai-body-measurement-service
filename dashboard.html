@@ -21,7 +21,6 @@
       --Neutral-500: #737373;
       --White: #FFFFFF;
       --Error: #D63031;
-      --S-16: 16px; --S-24: 24px; --S-32: 32px; --S-48: 48px;
     }
 
     * { box-sizing: border-box; -webkit-font-smoothing: antialiased; margin: 0; padding: 0; }
@@ -31,7 +30,7 @@
       width: 100%; height: 80px; display: flex; align-items: center; position: fixed; top: 0; z-index: 1000;
       background: rgba(0, 0, 0, 0.8); backdrop-filter: blur(20px); border-bottom: 1px solid var(--Glass-Border);
     }
-    .container { width: 100%; max-width: 1200px; margin: 0 auto; padding: 0 var(--S-48); }
+    .container { width: 100%; max-width: 1200px; margin: 0 auto; padding: 0 48px; }
     header .container { display: flex; align-items: center; justify-content: space-between; padding: 0; }
 
     .logo { display: flex; align-items: center; gap: 12px; text-decoration: none; color: inherit; }
@@ -49,37 +48,30 @@
       height: 40px; padding: 0 20px; border-radius: 8px; background: var(--Mint); color: var(--Obsidian);
       font-size: 12px; font-weight: 800; text-transform: uppercase; cursor: pointer; border: none; transition: 0.2s;
     }
-    .btn-primary:disabled { opacity: 0.3; cursor: not-allowed; filter: grayscale(1); }
 
     main { padding-top: 120px; height: 100vh; overflow-y: auto; }
-    .grid-workbench { display: grid; grid-template-columns: 280px 1fr; gap: var(--S-48); align-items: start; }
+    .grid-workbench { display: grid; grid-template-columns: 280px 1fr; gap: 48px; align-items: start; }
 
-    .sidebar { position: sticky; top: 0; display: flex; flex-direction: column; gap: var(--S-32); }
     .sidebar-nav a {
       display: block; padding: 12px 16px; border-radius: 12px; color: var(--Neutral-400);
       text-decoration: none; font-size: 14px; font-weight: 600; transition: 0.2s; cursor: pointer;
     }
     .sidebar-nav a:hover, .sidebar-nav a.active { background: var(--Glass); color: var(--Mint); }
 
-    .glass-card { background: var(--Glass); border: 1px solid var(--Glass-Border); border-radius: 20px; padding: var(--S-32); transition: 0.3s ease; }
-    .stat-grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: var(--S-24); margin-bottom: var(--S-48); }
+    .glass-card { background: var(--Glass); border: 1px solid var(--Glass-Border); border-radius: 20px; padding: 32px; }
+    .stat-grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 24px; margin-bottom: 48px; }
     .stat-card h4 { font-size: 10px; font-weight: 900; color: var(--Neutral-500); text-transform: uppercase; margin-bottom: 8px; }
     .stat-card .value { font-size: 32px; font-weight: 900; color: var(--White); }
 
-    .scan-list { display: flex; flex-direction: column; gap: 0; }
     .scan-item {
       display: flex; align-items: center; justify-content: space-between; padding: 20px;
-      border-bottom: 1px solid var(--Glass-Border); transition: 0.2s;
+      border-bottom: 1px solid var(--Glass-Border);
     }
-    .scan-item:hover { background: rgba(255,255,255,0.02); }
     .scan-info h5 { font-size: 16px; font-weight: 700; margin-bottom: 4px; }
     .scan-info p { font-size: 12px; color: var(--Neutral-400); }
 
     .tab-view { display: none; }
     .tab-view.active { display: block; animation: fadeIn 0.3s ease-out; }
-    @keyframes fadeIn { from { opacity: 0; transform: translateY(5px); } to { opacity: 1; transform: translateY(0); } }
-
-    .empty-state { text-align: center; padding: 80px 0; color: var(--Neutral-500); }
 
     .modal-overlay {
       position: fixed; inset: 0; background: rgba(0,0,0,0.9); z-index: 2000;
@@ -87,142 +79,46 @@
     }
     .modal-overlay.active { display: flex; }
     .modal-card {
-      width: 100%; max-width: 500px; background: #0a0a0a; border: 1px solid var(--Glass-Border);
-      border-radius: 24px; padding: var(--S-48);
+      width: 100%; max-width: 480px; background: #0a0a0a; border: 1px solid var(--Glass-Border);
+      border-radius: 24px; padding: 40px;
     }
 
-    .file-input-wrapper {
-        position: relative; overflow: hidden; display: flex; flex-direction: column; align-items: center; justify-content: center;
-        height: 120px; border: 2px dashed var(--Glass-Border); border-radius: 12px; cursor: pointer; transition: 0.2s;
-    }
-    .file-input-wrapper:hover { border-color: var(--Mint); background: rgba(255,255,255,0.02); }
-    .file-input-wrapper input { position: absolute; inset: 0; opacity: 0; cursor: pointer; }
-    .file-input-wrapper span { font-size: 11px; font-weight: 800; color: var(--Neutral-400); text-transform: uppercase; margin-top: 8px; }
-    .file-input-wrapper.has-file { border-color: var(--Mint); background: var(--Teal-900); }
-    .file-input-wrapper.has-file span { color: var(--Mint); }
+    .input-field { width: 100%; height: 52px; background: rgba(255,255,255,0.05); border: 1px solid var(--Glass-Border); border-radius: 12px; padding: 0 16px; color: #fff; font-size: 14px; margin-bottom: 20px; }
 
-    #loadingOverlay {
-        position: fixed; inset: 0; background: #000; z-index: 9999; display: flex; align-items: center; justify-content: center;
-        font-size: 12px; font-weight: 800; letter-spacing: 0.2em; text-transform: uppercase; color: var(--Mint);
-    }
-
-    #dashboard-3d-viewport { width: 100%; height: 350px; background: #000; border-radius: 16px; border: 1px solid var(--Glass-Border); margin-bottom: 32px; overflow: hidden; position: relative; }
+    #dashboard-3d-viewport { width: 100%; height: 350px; background: #000; border-radius: 16px; border: 1px solid var(--Glass-Border); margin-bottom: 32px; position: relative; overflow: hidden; }
     #dashboard-3d-viewport span { position: absolute; top: 12px; left: 16px; font-size: 9px; font-weight: 900; color: var(--Mint); text-transform: uppercase; letter-spacing: 0.2em; z-index: 10; background: rgba(0,0,0,0.5); padding: 4px 8px; border-radius: 4px; }
 
-    .viz-container { position: relative; width: 100%; height: 300px; background: #000; border-radius: 12px; overflow: hidden; margin-top: 24px; border: 1px solid var(--Glass-Border); display: none; }
-    .viz-canvas { position: absolute; inset: 0; width: 100%; height: 100%; z-index: 2; pointer-events: none; }
-    .viz-img { position: absolute; inset: 0; width: 100%; height: 100%; object-fit: contain; opacity: 0.6; z-index: 1; }
-    .viz-label { position: absolute; bottom: 12px; right: 12px; font-size: 9px; font-weight: 900; color: var(--Mint); z-index: 3; background: rgba(0,0,0,0.5); padding: 4px 8px; border-radius: 4px; }
-
-    .result-grid { display: grid; grid-template-columns: repeat(4, 1fr); gap: 12px; margin-top: 24px; }
-    .result-item { background: rgba(255,255,255,0.05); padding: 16px; border-radius: 12px; border: 1px solid var(--Glass-Border); display: flex; flex-direction: column; justify-content: center; }
-    .result-label { font-size: 10px; font-weight: 900; color: var(--Neutral-500); text-transform: uppercase; margin-bottom: 8px; }
-    .result-value { font-size: 20px; font-weight: 800; color: var(--Mint); }
+    #loadingOverlay { position: fixed; inset: 0; background: #000; z-index: 9999; display: flex; align-items: center; justify-content: center; font-size: 12px; font-weight: 800; letter-spacing: 0.2em; color: var(--Mint); text-transform: uppercase; }
   </style>
 </head>
 <body>
 
-  <div id="loadingOverlay">Initializing Workbench...</div>
+  <div id="loadingOverlay">Syncing Vault...</div>
 
-  <div class="modal-overlay" id="newScanModal">
+  <!-- EMAIL SHARE MODAL -->
+  <div class="modal-overlay" id="shareModal">
     <div class="modal-card">
-      <h2 style="font-size:24px; margin-bottom:12px">New Client Scan</h2>
-      <p style="color:var(--Neutral-400); margin-bottom:32px">Upload photos to extract clinical biometrics and 3D mesh.</p>
+      <h2 style="font-size:24px; margin-bottom:12px">Invite Client</h2>
+      <p style="color:var(--Neutral-400); margin-bottom:32px">Send a secure scan link to your client's email.</p>
 
-      <form id="scanForm" style="display:flex; flex-direction:column; gap:20px">
-        <div id="keyStatusLabel" style="font-size:10px; font-weight:800; color:var(--Neutral-500); text-align:center; padding:8px; background:rgba(255,255,255,0.03); border-radius:8px">
-           SYNCHRONIZING MERCHANT HANDSHAKE...
-        </div>
+      <form id="shareForm">
+        <label style="font-size:10px; font-weight:900; color:var(--Neutral-500); display:block; margin-bottom:8px">CLIENT NAME</label>
+        <input type="text" id="shareName" class="input-field" placeholder="e.g. James" required>
 
-        <div>
-          <label for="scanClientName" style="font-size:10px; font-weight:900; color:var(--Neutral-500); display:block; margin-bottom:8px">CLIENT FULL NAME</label>
-          <input type="text" id="scanClientName" class="btn-outline" style="width:100%; text-align:left; background:rgba(255,255,255,0.05)" placeholder="e.g. John Smith" required>
-        </div>
-        <div style="display:grid; grid-template-columns: 1fr 1fr; gap:16px">
-          <div>
-            <label for="scanHeight" style="font-size:10px; font-weight:900; color:var(--Neutral-500); display:block; margin-bottom:8px">HEIGHT (CM)</label>
-            <input type="number" id="scanHeight" class="btn-outline" style="width:100%; text-align:left; background:rgba(255,255,255,0.05)" placeholder="175" required>
-          </div>
-          <div>
-            <label for="scanGender" style="font-size:10px; font-weight:900; color:var(--Neutral-500); display:block; margin-bottom:8px">GENDER</label>
-            <select id="scanGender" class="btn-outline" style="width:100%; appearance:none; background:rgba(255,255,255,0.05)">
-              <option value="male">Male</option>
-              <option value="female">Female</option>
-            </select>
-          </div>
-        </div>
-        <div style="display:grid; grid-template-columns: 1fr 1fr; gap:16px">
-          <label class="file-input-wrapper" id="frontWrapper">
-            <input type="file" id="frontPhoto" accept="image/*" required onchange="handleFileChange(this, 'frontWrapper')">
-            <span>Front Photo</span>
-          </label>
-          <label class="file-input-wrapper" id="sideWrapper">
-            <input type="file" id="sidePhoto" accept="image/*" required onchange="handleFileChange(this, 'sideWrapper')">
-            <span>Side Photo</span>
-          </label>
-        </div>
+        <label style="font-size:10px; font-weight:900; color:var(--Neutral-500); display:block; margin-bottom:8px">CLIENT EMAIL</label>
+        <input type="email" id="shareEmail" class="input-field" placeholder="james@example.com" required>
 
-        <div id="landmarkViz" class="viz-container">
-          <img id="vizImg" class="viz-img">
-          <canvas id="vizCanvas" class="viz-canvas"></canvas>
-          <div class="viz-label">LIVE LANDMARK MAP</div>
-        </div>
-
-        <div id="measurementResults" class="result-grid" style="display:none">
-          <div class="result-item">
-            <div class="result-label">Chest Round</div>
-            <div class="result-value" id="resultChest">--</div>
-          </div>
-          <div class="result-item">
-            <div class="result-label">Waist Round</div>
-            <div class="result-value" id="resultWaist">--</div>
-          </div>
-          <div class="result-item">
-            <div class="result-label">Hip Round</div>
-            <div class="result-value" id="resultHip">--</div>
-          </div>
-          <div class="result-item">
-            <div class="result-label">Shoulder</div>
-            <div class="result-value" id="resultShoulder">--</div>
-          </div>
-        </div>
-
-        <button type="submit" class="btn-primary" style="height:52px; margin-top:24px" id="btnRunInference" disabled>Handshaking Vault...</button>
-
-        <div style="text-align:center">
-          <button type="button" class="btn-outline" style="border:none" onclick="document.getElementById('newScanModal').classList.remove('active')">Cancel</button>
-          <button type="button" id="btnManualSync" style="font-size:10px; color:var(--Mint); background:none; border:none; cursor:pointer; display:none">Manual Retry Handshake</button>
-        </div>
+        <button type="submit" class="btn-primary" id="btnSendInvite" style="width:100%; height:52px">Send Scan Invitation</button>
+        <button type="button" class="btn-outline" style="width:100%; border:none; margin-top:12px" onclick="document.getElementById('shareModal').classList.remove('active')">Cancel</button>
       </form>
-    </div>
-  </div>
-
-  <div class="modal-overlay" id="paymentModal">
-    <div class="modal-card">
-      <h2 style="font-size:24px; margin-bottom:12px">Buy Credits</h2>
-      <p style="color:var(--Neutral-400); margin-bottom:32px">Add credits to your account for industrial scans.</p>
-      <div style="background:var(--Teal-900); padding:20px; border-radius:12px; margin-bottom:32px">
-        <div style="font-size:11px; font-weight:900; color:var(--Mint); margin-bottom:4px">CURRENT PRICING</div>
-        <div style="font-size:20px; font-weight:800">$0.50 / measurement</div>
-      </div>
-
-      <div style="display:flex; flex-direction:column; gap:16px">
-        <button class="btn-primary" style="width:100%; height:52px" onclick="payWithPaystack(100)">Top-up 100 Credits ($50)</button>
-        <button class="btn-outline" style="width:100%; height:52px" onclick="payWithPaystack(500)">Top-up 500 Credits ($250)</button>
-      </div>
-
-      <button class="btn-outline" style="width:100%; border:none; margin-top:24px" onclick="document.getElementById('paymentModal').classList.remove('active')">Back to Vault</button>
     </div>
   </div>
 
   <header>
     <div class="container">
-      <a class="logo" href="/">
-        <div class="logo-mark"></div>
-        <div class="logo-text">KORRA</div>
-      </a>
-      <div style="display:flex; align-items:center; gap:var(--S-24)">
-        <span id="userDisplay" style="font-size:12px; font-weight:700; color:var(--Mint)"></span>
+      <a class="logo" href="/"><div class="logo-mark"></div><div class="logo-text">KORRA</div></a>
+      <div style="display:flex; align-items:center; gap:24px">
+        <span id="userEmail" style="font-size:12px; font-weight:700; color:var(--Mint)"></span>
         <button class="btn-outline" id="btnSignOut">Exit</button>
       </div>
     </div>
@@ -231,246 +127,113 @@
   <main>
     <div class="container">
       <div class="grid-workbench">
-        <aside class="sidebar">
+        <aside>
           <nav class="sidebar-nav">
             <a onclick="switchTab('vault')" id="tab-vault" class="active">Biometrics Vault</a>
-            <a href="/developers">Developer Center</a>
+            <a href="/developers">Developer API</a>
             <a onclick="switchTab('settings')" id="tab-settings">Settings</a>
           </nav>
-
-          <div class="glass-card" style="padding: 24px;">
-            <h4 style="font-size:10px; font-weight:900; color:var(--Mint); margin-bottom:12px; text-transform:uppercase">Subscription</h4>
-            <p id="subTier" style="font-size:13px; font-weight:700;">Merchant Pro</p>
-            <p style="font-size:11px; color:var(--Neutral-400); margin-top:4px">$0.50 / scan active</p>
-          </div>
         </aside>
 
-        <section class="content">
-
+        <section>
           <div id="view-vault" class="tab-view active">
-            <div id="dashboard-3d-viewport">
-              <span>3D Digital Twin: Global Artisan Core</span>
-              <div style="width:100%; height:100%; display:flex; align-items:center; justify-content:center; color:var(--Neutral-500); font-size:10px; font-weight:800; text-transform:uppercase; letter-spacing:0.2em">
-                Ready for technical visualization.
-              </div>
-            </div>
+            <div id="dashboard-3d-viewport"><span>3D Digital Twin Viewer</span></div>
 
             <div class="stat-grid">
-              <div class="glass-card stat-card">
-                <h4>Total Scans</h4>
-                <div class="value" id="statTotalScans">0</div>
-              </div>
-              <div class="glass-card stat-card">
-                <h4>Accuracy Avg</h4>
-                <div class="value">±1cm</div>
-              </div>
-              <div class="glass-card stat-card" onclick="document.getElementById('paymentModal').classList.add('active')" style="cursor:pointer">
-                <h4>Credits ↓</h4>
-                <div class="value" id="statCredits">0</div>
-              </div>
+              <div class="glass-card stat-card"><h4>Vault Capacity</h4><div class="value" id="statTotal">0</div></div>
+              <div class="glass-card stat-card"><h4>Avg Precision</h4><div class="value">±1cm</div></div>
+              <div class="glass-card stat-card"><h4>Credits</h4><div class="value" id="statCredits">0</div></div>
             </div>
 
             <div class="glass-card">
               <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:32px">
-                <h2 style="font-size:24px;">Recent Measurements</h2>
-                <button class="btn-primary" onclick="document.getElementById('newScanModal').classList.add('active')">+ New Scan</button>
+                <h2 style="font-size:24px;">Measurement Ledger</h2>
+                <button class="btn-primary" onclick="document.getElementById('shareModal').classList.add('active')">+ Invite Client</button>
               </div>
-              <div class="scan-list" id="scanList">
-                <div class="empty-state">
-                  <p>Syncing Biometric Vault...</p>
-                </div>
-              </div>
+              <div id="scanList"></div>
             </div>
           </div>
-
-          <div id="view-settings" class="tab-view">
-            <div class="glass-card">
-              <h2 style="font-size:24px; margin-bottom:32px">Account Settings</h2>
-              <div style="display:flex; flex-direction:column; gap:24px">
-                 <div class="form-group">
-                   <label for="setCompany" style="font-size:10px; font-weight:900; color:var(--Neutral-500); display:block; margin-bottom:8px">BUSINESS NAME</label>
-                   <input type="text" id="setCompany" class="btn-outline" style="width:100%; text-align:left; background:rgba(255,255,255,0.05)" value="Master Artisan Studio">
-                 </div>
-                 <div class="form-group">
-                   <label for="settingsEmail" style="font-size:10px; font-weight:900; color:var(--Neutral-500); display:block; margin-bottom:8px">ADMIN EMAIL</label>
-                   <input type="text" class="btn-outline" style="width:100%; text-align:left; background:rgba(255,255,255,0.05)" id="settingsEmail" readonly>
-                 </div>
-                 <button class="btn-primary" style="width:140px">Update Profile</button>
-              </div>
-            </div>
-          </div>
-
         </section>
       </div>
     </div>
   </main>
 
   <script src="/assets/supabase.min.js"></script>
-  <script src="/assets/paystack.min.js"></script>
   <script src="/assets/three.min.js"></script>
   <script src="/assets/korra_viz.js"></script>
-  <script src="/assets/jspdf.min.js"></script>
   <script src="/assets/korra_export.js"></script>
 
-<script>
-    const KORRA_CONFIG = {
-      supabaseUrl: 'https://blsettabymllulsxtziw.supabase.co',
-      supabaseKey: 'sb_publishable_miCOIXHtlxLkfDgpwE0N-g_BA1Q-x8y'
+  <script>
+    const CONFIG = {
+      url: 'https://blsettabymllulsxtziw.supabase.co',
+      key: 'sb_publishable_miCOIXHtlxLkfDgpwE0N-g_BA1Q-x8y'
     };
 
     window.KORRA_DB = null;
-    let currentUser = null;
-    let activeApiKey = null;
+    let userId = null;
 
-    function handleFileChange(input, wrapperId) {
-        const wrapper = document.getElementById(wrapperId);
-        if (input.files && input.files[0]) {
-            wrapper.classList.add('has-file');
-            wrapper.querySelector('span').textContent = input.files[0].name.substring(0, 15) + '...';
-        } else {
-            wrapper.classList.remove('has-file');
-        }
-    }
-
-    function switchTab(tabId) {
+    function switchTab(id) {
       document.querySelectorAll('.tab-view').forEach(t => t.classList.remove('active'));
       document.querySelectorAll('.sidebar-nav a').forEach(a => a.classList.remove('active'));
-      const targetView = document.getElementById('view-' + tabId);
-      const targetTab = document.getElementById('tab-' + tabId);
-      if(targetView) targetView.classList.add('active');
-      if(targetTab) targetTab.classList.add('active');
-      window.location.hash = tabId;
+      document.getElementById('view-' + id).classList.add('active');
+      document.getElementById('tab-' + id).classList.add('active');
     }
 
     (function() {
-      async function fetchScans(userId) {
-        const scanList = document.getElementById('scanList');
-        try {
-          const { data, error } = await window.KORRA_DB.from('measurements').select('*').eq('user_id', userId).order('created_at', { ascending: false });
-          if (error) throw error;
-
-          if (!data || data.length === 0) {
-            scanList.innerHTML = `<div class="empty-state"><p>No biometric data found.</p></div>`;
-            return;
-          }
-
-          document.getElementById('statTotalScans').textContent = data.length;
-
-          scanList.innerHTML = data.map(scan => `
-            <div class="scan-item">
-              <div class="scan-info">
-                <h5>${scan.client_name || 'Remote Client'}</h5>
-                <p>${new Date(scan.created_at).toLocaleDateString()} • ${scan.height}cm • ${scan.gender || 'male'}</p>
-              </div>
-              <div style="display:flex; gap:12px">
-                <button class="btn-outline" style="height:32px; font-size:10px" onclick="window.loadHistoricalTwin('${scan.mesh_url}')">View 3D</button>
-                <button class="btn-outline" style="height:32px; font-size:10px; border-color:var(--Mint); color:var(--Mint)" onclick="window.exportPDF('${scan.client_name}', ${JSON.stringify(scan.biometrics || {})}, '${scan.gender}', ${scan.height})">PDF</button>
-                <button class="btn-outline" style="height:32px; font-size:10px" onclick="window.downloadOBJ('${scan.mesh_url}', '${scan.client_name}')">OBJ</button>
-              </div>
+      async function fetchHistory() {
+        const { data } = await window.KORRA_DB.from('measurements').select('*').eq('user_id', userId).order('created_at', { ascending: false });
+        if(!data) return;
+        document.getElementById('statTotal').textContent = data.length;
+        document.getElementById('scanList').innerHTML = data.map(s => `
+          <div class="scan-item">
+            <div class="scan-info">
+              <h5>${s.client_name}</h5>
+              <p>${new Date(s.created_at).toLocaleDateString()} • ${s.height}cm • ${s.gender}</p>
             </div>
-          `).join('');
-        } catch (e) {
-          scanList.innerHTML = `<div class="empty-state"><p style="color:var(--Error)">Failed to sync vault.</p></div>`;
-        }
+            <div style="display:flex; gap:12px">
+              <button class="btn-outline" style="height:32px; font-size:10px" onclick="window.KORRA_VIZ.loadMesh('${s.mesh_url}')">View 3D</button>
+            </div>
+          </div>
+        `).join('');
       }
 
-      window.exportPDF = (name, data, gender, h) => {
-        if(window.KORRA_EXPORT) window.KORRA_EXPORT.pdf(name, data, gender, h);
-      };
+      async function init() {
+        if (typeof window.supabase === 'undefined') { setTimeout(init, 500); return; }
+        window.KORRA_DB = window.supabase.createClient(CONFIG.url, CONFIG.key);
+        const { data: { session } } = await window.KORRA_DB.auth.getSession();
+        if (!session) { window.location.href = '/signin'; return; }
 
-      window.downloadOBJ = (url, name) => {
-        if(window.KORRA_EXPORT) window.KORRA_EXPORT.obj(url, name);
-      };
+        userId = session.user.id;
+        document.getElementById('loadingOverlay').style.display = 'none';
+        document.getElementById('userEmail').textContent = session.user.email;
 
-      window.loadHistoricalTwin = (meshUrl) => {
-         if (window.KORRA_VIZ && meshUrl) {
-            window.KORRA_VIZ.loadMesh(meshUrl);
-            window.scrollTo({ top: 0, behavior: 'smooth' });
-         }
-      };
+        fetchHistory();
+        if (window.KORRA_VIZ) window.KORRA_VIZ.init('dashboard-3d-viewport');
+      }
 
-      async function fetchProfile(userId) {
+      document.getElementById('shareForm').addEventListener('submit', async (e) => {
+        e.preventDefault();
+        const btn = document.getElementById('btnSendInvite');
+        btn.disabled = true; btn.textContent = 'SENDING...';
+
+        const fd = new FormData();
+        fd.append('merchant_id', userId);
+        fd.append('customer_email', document.getElementById('shareEmail').value);
+        fd.append('client_name', document.getElementById('shareName').value);
+
         try {
-          const { data } = await window.KORRA_DB.from('profiles').select('*').eq('id', userId).single();
-          if(data) {
-            document.getElementById('setCompany').value = data.company_name || "Artisan Studio";
-            document.getElementById('subTier').textContent = data.industry ? data.industry.replace('_', ' ').toUpperCase() : "Merchant Pro";
-            document.getElementById('statCredits').textContent = data.credits || 0;
-          }
-        } catch(e) {}
-      }
+          const res = await fetch('/api/v2/share/send-email', { method: 'POST', body: fd });
+          if(res.ok) {
+            alert("Scan invitation sent successfully!");
+            document.getElementById('shareModal').classList.remove('active');
+          } else { alert("Email Handshake Failed. Check SendGrid Config."); }
+        } catch(e) { alert("Sync Error."); }
+        finally { btn.disabled = false; btn.textContent = 'Send Scan Invitation'; }
+      });
 
-      async function ensureApiKey(userId) {
-        const statusLabel = document.getElementById('keyStatusLabel');
-        const btn = document.getElementById('btnRunInference');
-        try {
-          const { data } = await window.KORRA_DB.from('api_keys').select('key').eq('user_id', userId).eq('is_active', true).limit(1);
-          if (data && data.length > 0) {
-            activeApiKey = data[0].key;
-            statusLabel.innerHTML = `<span style="color:var(--Mint)">✓ MERCHANT KEY VERIFIED: VAULT SYNCHRONIZED</span>`;
-            btn.disabled = false;
-            btn.textContent = "Run AI Extraction";
-          } else {
-             // Auto-provision if missing
-             const newKey = "korra_live_" + Math.random().toString(36).substring(2, 15);
-             await window.KORRA_DB.from('api_keys').insert({ key: newKey, user_id: userId, tier: 'tailor_pro', is_active: true });
-             activeApiKey = newKey;
-             statusLabel.innerHTML = `<span style="color:var(--Mint)">✓ MERCHANT KEY PROVISIONED</span>`;
-             btn.disabled = false;
-             btn.textContent = "Run AI Extraction";
-          }
-        } catch(e) { statusLabel.innerHTML = `<span style="color:var(--Error)">! VAULT SYNC ERROR</span>`; }
-      }
-
-      async function initDashboard() {
-        if (typeof window.supabase === 'undefined') { setTimeout(initDashboard, 500); return; }
-        try {
-          window.KORRA_DB = window.supabase.createClient(KORRA_CONFIG.supabaseUrl, KORRA_CONFIG.supabaseKey);
-          const { data: { session } } = await window.KORRA_DB.auth.getSession();
-          if (!session) { window.location.href = '/signin'; return; }
-          currentUser = session.user;
-          document.getElementById('loadingOverlay').style.display = 'none';
-          document.getElementById('userDisplay').textContent = session.user.email;
-          document.getElementById('settingsEmail').value = session.user.email;
-          fetchScans(session.user.id);
-          fetchProfile(session.user.id);
-          ensureApiKey(session.user.id);
-          const initialTab = window.location.hash.replace('#', '') || 'vault';
-          switchTab(initialTab);
-          if (window.KORRA_VIZ) window.KORRA_VIZ.init('dashboard-3d-viewport');
-        } catch (err) { console.error("Critical Dashboard Failure:", err); }
-
-        document.getElementById('btnSignOut').addEventListener('click', async () => {
-          await window.KORRA_DB.auth.signOut();
-          window.location.href = '/signin';
-        });
-
-        document.getElementById('scanForm').addEventListener('submit', async (e) => {
-          e.preventDefault();
-          const btn = document.getElementById('btnRunInference');
-          const clientName = document.getElementById('scanClientName').value;
-          const height = document.getElementById('scanHeight').value;
-          const gender = document.getElementById('scanGender').value;
-          const front = document.getElementById('frontPhoto').files[0];
-          const side = document.getElementById('sidePhoto').files[0];
-
-          btn.disabled = true; btn.textContent = "AI EXTRACTING...";
-          const formData = new FormData();
-          formData.append('front', front); formData.append('side', side);
-          formData.append('height', height); formData.append('gender', gender);
-          formData.append('client_name', clientName);
-
-          try {
-            const response = await fetch('/api/v2/measurements/extract', { method: 'POST', headers: { 'X-API-Key': activeApiKey }, body: formData });
-            if (response.ok) {
-              alert("Extraction Successful! 3D Twin Generated.");
-              location.reload();
-            } else { alert("Extraction failed. Check credits."); }
-          } catch (err) { alert("Connection error."); } finally { btn.disabled = false; btn.textContent = "Run AI Extraction"; }
-        });
-      }
-      initDashboard();
+      document.getElementById('btnSignOut').onclick = async () => { await window.KORRA_DB.auth.signOut(); window.location.href = '/signin'; };
+      init();
     })();
-</script>
+  </script>
 </body>
 </html>

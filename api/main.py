@@ -44,7 +44,9 @@ def autonomous_restoration():
         dest = MODELS_DIR / "hmr_auto_restore.tar.gz"
         try:
             MODELS_DIR.mkdir(exist_ok=True)
+            logger.info(f"📥 Pulling 347MB weights from secure mirror...")
             urllib.request.urlretrieve(url, dest)
+            logger.info("📦 Extracting AI Brain...")
             with tarfile.open(dest, 'r:gz') as tar:
                 tar.extractall(MODELS_DIR)
             os.remove(dest)
@@ -64,7 +66,7 @@ async def lifespan(app: FastAPI):
 app = FastAPI(
     title="KORRA Artisan API",
     description="Production-grade AI body measurement extraction infrastructure.",
-    version="2.1.9",
+    version="2.1.10",
     lifespan=lifespan,
     docs_url="/docs",
     redoc_url="/redoc"
@@ -82,12 +84,13 @@ app.add_middleware(
 # --- API ROUTES ---
 def include_routers():
     try:
-        from api.routes import measurements, auth, health, qrcode
+        from api.routes import measurements, auth, health, qrcode, sharing
         app.include_router(measurements.router, prefix="/api/v2", tags=["Measurements"])
         app.include_router(auth.router, prefix="/api/v2", tags=["Auth"])
         app.include_router(health.router, prefix="/api/v2", tags=["Health"])
         app.include_router(qrcode.router, prefix="/api/v2/qrcode", tags=["QR Systems"])
-        logger.info("✅ API Routers Synchronized.")
+        app.include_router(sharing.router, prefix="/api/v2/share", tags=["Sharing"])
+        logger.info("✅ ALL API Routers Synchronized.")
     except Exception as e:
         logger.error(f"❌ Router registration failed: {e}")
 
@@ -127,6 +130,9 @@ async def serve_admin(): return get_safe_file("admin.html")
 
 @app.get("/widget")
 async def serve_widget(): return get_safe_file("widget.html")
+
+@app.get("/share")
+async def serve_share(): return get_safe_file("share.html")
 
 @app.get("/{full_path:path}")
 async def catch_all(full_path: str):
