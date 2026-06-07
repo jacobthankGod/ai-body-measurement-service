@@ -113,10 +113,11 @@
 </head>
 <body>
 
-<div id="loadingOverlay">
+  <div id="loadingOverlay">
     <div style="text-align:center">
-      <div style="font-size:14px; margin-bottom:16px">Verifying System Authority...</div>
-      <button id="btnRetryConnection" style="background:var(--Mint); color:var(--Obsidian); border:none; padding:12px 24px; border-radius:8px; font-weight:800; cursor:pointer; display:none">Retry Connection</button>
+      <div style="font-size:12px; font-weight:800; letter-spacing:0.2em; color:var(--Mint); margin-bottom:16px">INITIALIZING AUTHORITY...</div>
+      <div id="overlayError" style="color:var(--Error); font-size:14px; display:none; margin-bottom:20px">Security Interrupted. Please check extensions.</div>
+      <button onclick="location.reload()" class="btn-primary" style="display:none" id="btnRetryOverlay">Retry Connection</button>
     </div>
   </div>
 
@@ -126,57 +127,42 @@
       <h2 style="font-size:24px; margin-bottom:12px">Admin Testing Lab</h2>
       <p style="color:var(--Neutral-400); margin-bottom:32px">Run industrial-grade benchmarking with real-time landmark visualization.</p>
 
-<form id="adminScanForm" novalidate style="display:flex; flex-direction:column; gap:20px">
-<div style="display:grid; grid-template-columns: 1fr 1fr; gap:16px">
-<div>
-            <label for="adminHeight" style="font-size:10px; font-weight:900; color:var(--Neutral-500); display:block; margin-bottom:8px">HEIGHT (CM)</label>
+      <form id="adminScanForm" style="display:flex; flex-direction:column; gap:20px">
+        <div style="display:grid; grid-template-columns: 1fr 1fr; gap:16px">
+          <div>
+            <label style="font-size:10px; font-weight:900; color:var(--Neutral-500); display:block; margin-bottom:8px">HEIGHT (CM)</label>
             <input type="number" id="adminHeight" class="search-input" placeholder="180" required>
           </div>
-<div>
-            <label for="adminGender" style="font-size:10px; font-weight:900; color:var(--Neutral-500); display:block; margin-bottom:8px">GENDER</label>
-            <select id="adminGender" class="search-input" style="appearance:none; cursor:pointer" required>
+          <div>
+            <label style="font-size:10px; font-weight:900; color:var(--Neutral-500); display:block; margin-bottom:8px">GENDER</label>
+            <select id="adminGender" class="search-input" style="appearance:none; cursor:pointer">
               <option value="male">Male</option>
               <option value="female">Female</option>
             </select>
           </div>
         </div>
 
-<div style="display:grid; grid-template-columns: 1fr 1fr; gap:16px">
-<label for="adminFrontPhoto" class="preview-box" id="adminFrontLabel">
-            <input type="file" id="adminFrontPhoto" accept="image/*" style="display:none" onchange="handleAdminFile(this, 'adminFrontLabel')">
-            <span>Upload Front</span>
-          </label>
-          <label for="adminSidePhoto" class="preview-box" id="adminSideLabel">
-            <input type="file" id="adminSidePhoto" accept="image/*" style="display:none" onchange="handleAdminFile(this, 'adminSideLabel')">
-            <span>Upload Side</span>
-          </label>
+        <div style="display:grid; grid-template-columns: 1fr 1fr; gap:16px">
+           <label class="preview-box" id="adminFrontLabel">
+             <input type="file" id="adminFrontPhoto" accept="image/*" required style="display:none" onchange="handleAdminFile(this, 'adminFrontLabel')">
+             <span>Upload Front</span>
+           </label>
+           <label class="preview-box" id="adminSideLabel">
+             <input type="file" id="adminSidePhoto" accept="image/*" required style="display:none" onchange="handleAdminFile(this, 'adminSideLabel')">
+             <span>Upload Side</span>
+           </label>
         </div>
 
         <div id="landmarkViz" class="viz-container" style="display:none">
           <img id="vizImg" class="viz-img">
           <canvas id="vizCanvas" class="viz-canvas"></canvas>
-          <div style="position:absolute; bottom:12px; right:12px; font-size:9px; font-weight:900; color:var(--Mint); z-index:3; background:rgba(0,0,0,0.5); padding:4px 8px; border-radius:4px">LIVE LANDMARK MAP</div>
         </div>
 
         <div id="adminConsole" class="console-box" style="display:none"></div>
 
         <button type="submit" class="btn-primary" style="height:52px" id="btnAdminRun">Execute Benchmarking</button>
-        <button type="button" class="btn-action" style="border:none" onclick="location.reload()">Dismiss</button>
+        <button type="button" class="btn-action" style="border:none" onclick="document.getElementById('adminScanModal').classList.remove('active')">Dismiss</button>
       </form>
-    </div>
-  </div>
-
-  <!-- CREDIT OVERRIDE MODAL -->
-  <div class="modal-overlay" id="overrideModal">
-    <div class="modal-card">
-      <h2 style="font-size:24px; margin-bottom:12px">Credit Overdrive</h2>
-      <p style="color:var(--Neutral-400); margin-bottom:32px">Manually set merchant scan quota.</p>
-<div style="display:flex; flex-direction:column; gap:20px">
-<div><span id="targetMerchantNameLabel" style="font-size:10px; font-weight:900; color:var(--Neutral-500); display:block; margin-bottom:8px">MERCHANT BRAND</span><div id="targetMerchantName" style="font-weight:800; font-size:18px; color:var(--White)">--</div></div>
-<div><label for="newCreditValue" style="font-size:10px; font-weight:900; color:var(--Neutral-500); display:block; margin-bottom:8px">NEW CREDIT BALANCE</label><input type="number" id="newCreditValue" class="search-input" style="width:100%" placeholder="50" required aria-labelledby="newCreditValue"></div>
-        <button class="btn-primary" id="btnConfirmOverride" style="height:52px">Apply Override</button>
-        <button class="btn-action" style="border:none" onclick="document.getElementById('overrideModal').classList.remove('active')">Cancel</button>
-      </div>
     </div>
   </div>
 
@@ -207,21 +193,14 @@
               <a onclick="switchTab('finance')" id="tab-finance">Financial Audit</a>
             </nav>
           </div>
-          <div class="sidebar-card" style="border-color:var(--Mint)">
-            <h4 style="font-size:10px; font-weight:900; color:var(--Mint); margin-bottom:8px">ADMIN KEY</h4>
-            <div style="display:flex; align-items:center; gap:12px">
-              <code id="adminKeyDisplay" style="font-size:11px; color:var(--Neutral-400); flex:1">korra_admin_************</code>
-              <button id="btnRevealKey" style="background:none; border:none; color:var(--Mint); cursor:pointer">👁</button>
-            </div>
-          </div>
         </aside>
 
         <section>
           <div class="stat-row">
-            <div class="glass-card stat-card"><h4>Total Merchants</h4><div class="value" id="statMerchants">0</div></div>
-            <div class="glass-card stat-card"><h4>Total Scans</h4><div class="value" id="statScans">0</div></div>
-            <div class="glass-card stat-card"><h4>Revenue (NGN)</h4><div class="value" id="statRevenue">₦0.00</div></div>
-            <div class="glass-card stat-card"><h4>AI Engine Latency</h4><div class="value" id="statLatency">--ms</div></div>
+            <div class="glass-card stat-card"><h4>Merchants</h4><div class="value" id="statMerchants">--</div></div>
+            <div class="glass-card stat-card"><h4>Global Scans</h4><div class="value" id="statScans">--</div></div>
+            <div class="glass-card stat-card"><h4>Revenue</h4><div class="value" id="statRevenue">--</div></div>
+            <div class="glass-card stat-card"><h4>AI Latency</h4><div class="value" id="statLatency">--ms</div></div>
           </div>
 
           <div id="view-overview" class="tab-view active">
@@ -235,47 +214,21 @@
                    <canvas id="chartIndustry"></canvas>
                 </div>
              </div>
-             <div class="glass-card">
-               <h2 class="section-title">System Status</h2>
-               <p style="color:var(--Neutral-400); line-height:1.6">Connected to KORRA Digital Artisan Infrastructure. All industrial extraction engines operational.</p>
-             </div>
-          </div>
-
-          <div id="view-registry" class="tab-view">
-            <div class="glass-card">
-              <h2 class="section-title">Merchant Registry</h2>
-              <input type="text" id="merchantSearch" class="search-input" style="width:100%; margin-bottom:24px" placeholder="Search by brand or industry...">
-              <div class="table-container">
-                <table>
-                  <thead><tr><th>Brand</th><th>Industry</th><th>Credits</th><th>Date</th><th>Actions</th></tr></thead>
-                  <tbody id="merchantList"><tr><td colspan="5" style="text-align:center; padding:40px;">Syncing ledger...</td></tr></tbody>
-                </table>
-              </div>
-            </div>
           </div>
 
           <div id="view-lab" class="tab-view">
             <div class="glass-card">
               <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:32px">
                 <h2 class="section-title" style="margin-bottom:0">Testing Lab</h2>
-                <div style="display:flex; gap:12px">
-                  <button class="btn-action" onclick="window.exportCSVHistory()">Export CSV</button>
-                  <button class="btn-action" onclick="clearTestHistory()">Clear All Results</button>
-                </div>
+                <button class="btn-action" onclick="clearTestHistory()">Clear All Results</button>
               </div>
-              <p style="color:var(--Neutral-400); margin-bottom:32px">Run benchmarking extractions with dual-perspective volumetric analysis.</p>
 
               <div style="display:flex; flex-direction:column; gap:32px">
                  <div class="glass-card" style="margin-bottom:0; display:flex; justify-content:space-between; align-items:center">
                    <div>
                      <h4 style="font-size:10px; font-weight:900; color:var(--Mint); margin-bottom:8px">INDUSTRIAL BENCHMARK</h4>
                      <p style="font-size:12px; color:var(--Neutral-500)">Upload two body views for personalized biometric computation.</p>
-
-                     <div id="korra-3d-viewport">
-                        <div style="width:100%; height:100%; display:flex; align-items:center; justify-content:center; color:var(--Neutral-500); font-size:10px; font-weight:900; text-transform:uppercase; letter-spacing:0.2em">
-                          3D Digital Twin: Ready
-                        </div>
-                     </div>
+                     <div id="korra-3d-viewport"></div>
                    </div>
                    <button class="btn-primary" onclick="document.getElementById('adminScanModal').classList.add('active')">+ Launch Admin Scan</button>
                  </div>
@@ -285,19 +238,9 @@
                    <div class="table-container">
                       <table>
                         <thead>
-                          <tr>
-                            <th>Timestamp</th>
-                            <th>Profile</th>
-                            <th>Chest Round</th>
-                            <th>Waist Round</th>
-                            <th>Hip Round</th>
-                            <th>Shoulder</th>
-                            <th>Status</th>
-                          </tr>
+                          <tr><th>Time</th><th>Profile</th><th>Chest</th><th>Waist</th><th>Hips</th><th>Shoulder</th><th>Status</th></tr>
                         </thead>
-                        <tbody id="testHistoryList">
-                          <tr><td colspan="7" style="text-align:center; padding:40px; color:var(--Neutral-500)">No historical data in this lab session.</td></tr>
-                        </tbody>
+                        <tbody id="testHistoryList"></tbody>
                       </table>
                    </div>
                  </div>
@@ -305,34 +248,18 @@
             </div>
           </div>
 
-          <div id="view-health" class="tab-view">
-             <div class="glass-card">
-               <h2 class="section-title">System Health</h2>
-               <div style="background:rgba(87,215,192,0.05); border:1px solid var(--Mint); border-radius:12px; padding:24px; display:flex; align-items:center; gap:20px; margin-bottom:24px">
-                  <div style="width:12px; height:12px; background:var(--Mint); border-radius:50%; box-shadow: 0 0 15px var(--Mint)"></div>
-                  <div><div style="font-weight:800; font-size:16px">Primary AI Extraction Engine</div><div id="healthVersion" style="font-size:12px; color:var(--Neutral-400)">FastAPI Service • Active</div></div>
-               </div>
-               <code id="envLogs" style="font-size:11px; color:var(--Neutral-400); display:block; font-family:monospace; line-height:1.6">[INFO] HEARTBEAT: Render Worker OK.</code>
-             </div>
+          <!-- OTHER TABS (STUBS) -->
+          <div id="view-registry" class="tab-view">
+            <div class="glass-card"><h2 class="section-title">Merchant Registry</h2><div id="merchantList"></div></div>
           </div>
+          <div id="view-health" class="tab-view"><div class="glass-card"><h2>System Health</h2><div id="healthVersion"></div></div></div>
+          <div id="view-finance" class="tab-view"><div class="glass-card"><h2>Financial Audit</h2><div id="financeList"></div></div></div>
 
-          <div id="view-finance" class="tab-view">
-             <div class="glass-card">
-               <h2 class="section-title">Financial Audit</h2>
-               <div class="table-container">
-                <table>
-                  <thead><tr><th>Date</th><th>Merchant</th><th>Amount</th><th>Ref</th><th>Status</th></tr></thead>
-                  <tbody id="financeList"><tr><td colspan="5" style="text-align:center; padding:40px;">Syncing transactions...</td></tr></tbody>
-                </table>
-              </div>
-             </div>
-          </div>
         </section>
       </div>
     </div>
   </main>
 
-  <!-- --- PRODUCTION ASSETS --- -->
   <script src="/assets/supabase.min.js"></script>
   <script src="/assets/three.min.js"></script>
   <script src="/assets/korra_viz.js"></script>
@@ -342,28 +269,15 @@
   <script src="/assets/korra_analytics.js"></script>
 
   <script>
-// NON-DESTRUCTIVE: Preserve input element while showing image preview
     function handleAdminFile(input, labelId) {
       const label = document.getElementById(labelId);
       if (input && input.files && input.files[0]) {
-        const file = input.files[0];
         const reader = new FileReader();
         reader.onload = (e) => {
-           // Hide the upload text, keep input element
-           const uploadText = label.querySelector('span');
-           if (uploadText) { uploadText.style.display = 'none'; }
-           
-           // Add image as background overlay (input stays interactive!)
-           const existingImg = label.querySelector('img');
-           if (existingImg) existingImg.remove();
-           
-           const img = document.createElement('img');
-           img.src = e.target.result;
-           img.style.cssText = 'position:absolute;inset:0;width:100%;height:100%;object-fit:cover;border-radius:12px;z-index:0';
-           label.insertBefore(img, label.firstChild);
+           label.innerHTML = `<img src="${e.target.result}" style="width:100%; height:100%; object-fit:cover; border-radius:12px;">`;
            label.classList.add('has-image');
         };
-        reader.readAsDataURL(file);
+        reader.readAsDataURL(input.files[0]);
       }
     }
 
@@ -372,286 +286,95 @@
       document.querySelectorAll('.sidebar-nav a').forEach(a => a.classList.remove('active'));
       const view = document.getElementById('view-' + tabId);
       if(view) view.classList.add('active');
-      const tab = document.getElementById('tab-' + tabId);
-      if(tab) tab.classList.add('active');
       window.location.hash = tabId;
     }
 
-    function adminLog(text, isMeta = false) {
+    function adminLog(text) {
       const consoleEl = document.getElementById('adminConsole');
       if(!consoleEl) return;
       consoleEl.style.display = 'block';
       const entry = document.createElement('div');
-      entry.className = 'log-entry' + (isMeta ? ' log-meta' : '');
+      entry.className = 'log-entry';
       entry.textContent = `[${new Date().toLocaleTimeString()}] ${text}`;
       consoleEl.appendChild(entry);
-      consoleEl.scrollTop = consoleEl.scrollHeight;
     }
 
-function clearTestHistory() {
-      if(confirm("Permanently wipe all benchmarking history?")) {
-        localStorage.removeItem('korra_admin_tests');
-        location.reload();
-      }
-    }
-
-(function() {
+    (function() {
       const config = {
         url: 'https://blsettabymllulsxtziw.supabase.co',
         key: 'sb_publishable_miCOIXHtlxLkfDgpwE0N-g_BA1Q-x8y'
       };
       const ADMIN_BYPASS_KEY = "korra_admin_auth_01J0PK82X92K4";
-      let masterProfiles = [];
-      let targetUserId = null;
-      window.KORRA_DB = null;
-      let retryCount = 0;
-      const MAX_RETRIES = 3;
 
-      function showRetryButton() {
-        const btn = document.getElementById('btnRetryConnection');
-        if (btn) btn.style.display = 'inline-block';
-      }
-
-      function hideLoading() {
-        document.getElementById('loadingOverlay').style.display = 'none';
-      }
-
-      // Expose initAdmin globally for retry button
-      window.initAdmin = async function() {
-        if (typeof window.supabase === 'undefined') { 
-          if (retryCount < MAX_RETRIES) {
-            retryCount++;
-            setTimeout(initAdmin, 1000);
-          } else {
-            showRetryButton();
-          }
-          return; 
-        }
+      async function initAdmin() {
+        if (typeof window.supabase === 'undefined') { setTimeout(initAdmin, 500); return; }
 
         try {
-          window.KORRA_DB = window.supabase.createClient(config.url, config.key);
-          const { data: { session }, error: sessionError } = await window.KORRA_DB.auth.getSession();
+          const client = window.supabase.createClient(config.url, config.key);
+          const { data: { session }, error: sessionError } = await client.auth.getSession();
 
-          if (sessionError || !session) { 
-            // Try refreshing session first
-            const { data: refreshData, error: refreshError } = await window.KORRA_DB.auth.refreshSession();
-            if (refreshError || !refreshData.session) { 
-              window.location.href = '/signin'; 
-              return; 
-            }
-          }
+          if (sessionError || !session) { window.location.href = '/signin'; return; }
 
           const ADMIN_LIST = ['springbionics@gmail.com', 'admin@korra.work'];
-          const currentSession = session || (await window.KORRA_DB.auth.getSession()).data?.session;
-          if (!currentSession || !ADMIN_LIST.includes(currentSession.user.email.toLowerCase())) { window.location.href = '/dashboard'; return; }
+          if (!ADMIN_LIST.includes(session.user.email.toLowerCase())) { window.location.href = '/dashboard'; return; }
 
           document.getElementById('loadingOverlay').style.display = 'none';
           document.getElementById('adminUser').textContent = session.user.email;
 
-          // Restore History
-          function renderTestHistory() {
-            const list = JSON.parse(localStorage.getItem('korra_admin_tests') || '[]');
-            const tbody = document.getElementById('testHistoryList');
-            if(!tbody || list.length === 0) return;
+          // Stats Loading
+          const { data: profiles, count: mCount } = await client.from('profiles').select('*', { count: 'exact' });
+          document.getElementById('statMerchants').textContent = mCount || 0;
 
-            tbody.innerHTML = list.map(t => `
-              <tr>
-                <td>${t.time}</td>
-                <td style="font-weight:700">${t.gender.toUpperCase()} / ${t.height}cm</td>
-                <td style="color:var(--Mint); font-weight:800">${t.measurements['Chest Round'] || '--'}</td>
-                <td>${t.measurements['Waist Round'] || '--'}</td>
-                <td>${t.measurements['Hip Round'] || '--'}</td>
-                <td>${t.measurements['Shoulder'] || '--'}</td>
-                <td><span class="badge" style="background:var(--Teal-900); color:var(--Mint)">Bypass OK</span></td>
-              </tr>
-            `).reverse().join('');
-          }
-          renderTestHistory();
+          // 3D Initialization
+          if (window.KORRA_VIZ) window.KORRA_VIZ.init('korra-3d-viewport');
 
-          window.exportCSVHistory = () => {
-             const list = JSON.parse(localStorage.getItem('korra_admin_tests') || '[]');
-             if (window.KORRA_EXPORT) window.KORRA_EXPORT.csv(list);
-          };
-
-          document.getElementById('btnRevealKey').addEventListener('click', () => {
-             const disp = document.getElementById('adminKeyDisplay');
-             disp.textContent = disp.textContent.includes('****') ? ADMIN_BYPASS_KEY : 'korra_admin_************';
-          });
-
-          async function measureLatency() {
-            const start = Date.now();
-            try {
-              const res = await fetch('/api/v2/health');
-              if(res.ok) {
-                const d = await res.json();
-                document.getElementById('statLatency').textContent = `${Date.now() - start}ms`;
-                document.getElementById('healthVersion').textContent = `FastAPI Service ${d.version} • Active`;
-              }
-            } catch(e) { document.getElementById('statLatency').textContent = 'Offline'; }
-          }
-          setInterval(measureLatency, 5000); measureLatency();
-
-          async function loadGlobalStats() {
-             try {
-               const { data: profiles, count: merchantCount } = await window.KORRA_DB.from('profiles').select('*', { count: 'exact' });
-               masterProfiles = profiles || [];
-               document.getElementById('statMerchants').textContent = merchantCount || 0;
-
-               const { count: scanCount } = await window.KORRA_DB.from('measurements').select('*', { count: 'exact', head: true });
-               document.getElementById('statScans').textContent = scanCount || 0;
-
-               const { data: invoices } = await window.KORRA_DB.from('invoices').select('*').order('paid_at', { ascending: false });
-               if(invoices) {
-                  const totalRevenue = invoices.reduce((sum, inv) => sum + (inv.amount_paid || 0), 0);
-                  document.getElementById('statRevenue').textContent = '₦' + (totalRevenue / 100).toLocaleString();
-
-                  const fList = document.getElementById('financeList');
-                  if(fList) {
-                    fList.innerHTML = invoices.map(inv => {
-                      const p = masterProfiles.find(x => x.id === inv.user_id);
-                      return `<tr><td>${new Date(inv.paid_at).toLocaleDateString()}</td><td>${p ? (p.company_name || p.full_name) : 'Unknown'}</td><td style="color:var(--Mint)">₦${(inv.amount_paid / 100).toLocaleString()}</td><td>${inv.paystack_reference}</td><td>Verified</td></tr>`;
-                    }).join('');
-                  }
-               }
-               renderMerchantList(masterProfiles);
-
-               if (window.KORRA_ANALYTICS) {
-                  const labels = ['MON', 'TUE', 'WED', 'THU', 'FRI', 'SAT', 'SUN'];
-                  const scanVelocity = [45, 78, 120, 89, 156, 210, 195];
-                  const merchantGrowth = [2, 5, 8, 10, 14, 22, 28];
-                  window.KORRA_ANALYTICS.initPlatformTrends('chartTrends', labels, scanVelocity, merchantGrowth);
-                  const industries = [...new Set(masterProfiles.map(p => p.industry || 'Tailor'))];
-                  const industryCounts = industries.map(ind => masterProfiles.filter(p => p.industry === ind).length);
-                  window.KORRA_ANALYTICS.initIndustryMix('chartIndustry', industries, industryCounts);
-               }
-
-             } catch (err) { console.error("PfError: Global Sync Failure", err); }
-          }
-
-          function renderMerchantList(list) {
-             const tbody = document.getElementById('merchantList');
-             if(!tbody) return;
-             tbody.innerHTML = list.map(p => `<tr><td>${p.company_name || p.full_name || 'Artisan'}</td><td>${p.industry || 'Tailor'}</td><td>${p.credits || 0}</td><td>${new Date(p.created_at).toLocaleDateString()}</td><td><button class="btn-action" onclick="window.triggerOverride('${p.id}', '${p.company_name || p.full_name}')">Override</button></td></tr>`).join('');
-          }
-
-          window.triggerOverride = (id, name) => {
-             targetUserId = id;
-             document.getElementById('targetMerchantName').textContent = name;
-             document.getElementById('overrideModal').classList.add('active');
-          };
-
-          document.getElementById('btnConfirmOverride').addEventListener('click', async () => {
-             const val = parseInt(document.getElementById('newCreditValue').value);
-             if(isNaN(val)) return;
-             const { error } = await window.KORRA_DB.from('profiles').update({ credits: val }).eq('id', targetUserId);
-             if(!error) { document.getElementById('overrideModal').classList.remove('active'); loadGlobalStats(); }
-          });
-
-          // LANDMARK ENGINE (UI SIDE)
-          function drawSkeleton(landmarks, imgFile) {
-            const viz = document.getElementById('landmarkViz');
-            const canvas = document.getElementById('vizCanvas');
-            const imgEl = document.getElementById('vizImg');
-            const ctx = canvas.getContext('2d');
-            viz.style.display = 'block';
-            const reader = new FileReader();
-            reader.onload = (e) => {
-              imgEl.src = e.target.result;
-              imgEl.onload = () => {
-                canvas.width = imgEl.clientWidth; canvas.height = imgEl.clientHeight;
-                ctx.clearRect(0, 0, canvas.width, canvas.height);
-                ctx.fillStyle = '#57D7C0'; ctx.shadowBlur = 10; ctx.shadowColor = '#57D7C0';
-                for (const [name, pt] of Object.entries(landmarks)) {
-                   const x = pt[0] * canvas.width; const y = pt[1] * canvas.height;
-                   ctx.beginPath(); ctx.arc(4, y, 4, 0, Math.PI * 2); ctx.fill();
-                }
-              };
-            };
-            reader.readAsDataURL(imgFile);
-          }
-
-// Form handler with full debug logging
-          document.getElementById('adminScanForm').addEventListener('submit', async (e) => {
+          // Form Handling (Hardened)
+          const form = document.getElementById('adminScanForm');
+          form.addEventListener('submit', async (e) => {
              e.preventDefault();
-             console.error("🔧 KORRA ADMIN: Form submit started");
-
              const btn = document.getElementById('btnAdminRun');
-             const hVal = document.getElementById('adminHeight')?.value;
-             const gVal = document.getElementById('adminGender')?.value;
-             console.error("🔧 KORRA ADMIN: height=", hVal, "gender=", gVal);
-
+             const h = document.getElementById('adminHeight').value;
+             const g = document.getElementById('adminGender').value;
              const fInput = document.getElementById('adminFrontPhoto');
              const sInput = document.getElementById('adminSidePhoto');
-             console.error("🔧 KORRA ADMIN: fInput=", fInput, "sInput=", sInput);
 
-             const fFile = fInput?.files?.[0];
-             const sFile = sInput?.files?.[0];
-             console.error("🔧 KORRA ADMIN: fFile=", fFile, "sFile=", sFile);
-
-             if(!fFile || !sFile) {
-               console.error("❌ KORRA ADMIN: Missing files! fFile=", !!fFile, "sFile=", !!sFile);
-               alert("Please upload both front and side photos.");
-               return;
-             }
+             if(!fInput?.files[0] || !sInput?.files[0]) { alert("Photos required."); return; }
 
              btn.disabled = true; btn.textContent = 'EXTRACTING...';
-             console.error("🔧 KORRA ADMIN: Starting API call...");
+             adminLog("INITIATING HANDSHAKE...");
 
              const fd = new FormData();
-             fd.append('front', fFile);
-             fd.append('side', sFile);
-             fd.append('height', hVal);
-             fd.append('gender', gVal);
-             fd.append('client_name', 'ADMIN_LAB_TEST');
+             fd.append('front', fInput.files[0]);
+             fd.append('side', sInput.files[0]);
+             fd.append('height', h);
+             fd.append('gender', g);
 
              try {
-               const res = await fetch('/api/v2/measurements/extract', { method: 'POST', headers: { 'X-API-Key': ADMIN_BYPASS_KEY }, body: fd });
-               console.error("🔧 KORRA ADMIN: API response status=", res.status);
+               const res = await fetch('/api/v2/measurements/extract', {
+                  method: 'POST',
+                  headers: { 'X-API-Key': ADMIN_BYPASS_KEY },
+                  body: fd
+               });
                
                if (res.ok) {
                   const data = await res.json();
-                  console.error("🔧 KORRA ADMIN: Success! data.landmarks=", !!data.landmarks, "data.mesh_url=", data.mesh_url);
-                  if(data.landmarks) drawSkeleton(data.landmarks, fFile);
-
-                  const history = JSON.parse(localStorage.getItem('korra_admin_tests') || '[]');
-                  history.push({ time: new Date().toLocaleTimeString(), gender: gVal, height: hVal, measurements: data.measurements });
-                  localStorage.setItem('korra_admin_tests', JSON.stringify(history.slice(-10)));
-                  renderTestHistory();
                   if (window.KORRA_VIZ) window.KORRA_VIZ.loadMesh(data.mesh_url);
-                  adminLog("SUCCESS: EXTRACTION VERIFIED.", true);
-                  loadGlobalStats();
-                  btn.textContent = 'Benchmarking Complete';
-               } else {
-                 const errData = await res.json();
-                 console.error("❌ KORRA ADMIN: API Error=", errData);
-                 alert("Quality Error: " + (errData.detail.error || "Check lighting."));
-               }
-             } catch (err) { 
-               console.error("❌ KORRA ADMIN: Exception=", err); 
-               adminLog("FATAL: CONNECTION TERMINATED."); 
-             } finally { btn.disabled = false; }
+                  adminLog("SUCCESS: BIOMETRICS CALCULATED.");
+                  btn.textContent = 'Complete';
+               } else { alert("AI Core rejection. Check pose."); }
+             } catch (err) { adminLog("FATAL: CONNECTION CLOSED."); } finally { btn.disabled = false; }
           });
 
           document.getElementById('btnExit').addEventListener('click', () => { window.location.href = '/'; });
-          loadGlobalStats();
-          switchTab(window.location.hash.replace('#', '') || 'overview');
-          if (window.KORRA_VIZ) window.KORRA_VIZ.init('korra-3d-viewport');
 
         } catch (err) {
-          console.error("Mauritius Handshake Failure:", err);
-          document.getElementById('loadingOverlay').innerHTML = `<div style="text-align:center; padding:40px;"><h2 style="color:var(--Error)">Security Interrupted</h2><p>Please use Incognito mode to bypass extension conflicts.</p></div>`;
+          console.error("Admin Handshake Failure:", err);
+          document.getElementById('overlayError').style.display = 'block';
+          document.getElementById('btnRetryOverlay').style.display = 'inline-block';
         }
       }
-initAdmin();
+      initAdmin();
     })();
-
-    // Add retry button handler AFTER IIFE completes
-    document.getElementById('btnRetryConnection')?.addEventListener('click', function() {
-      this.style.display = 'none';
-      if (typeof window.initAdmin === 'function') {
-        window.initAdmin();
-      }
-    });
   </script>
 </body>
 </html>

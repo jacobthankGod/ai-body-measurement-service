@@ -138,17 +138,17 @@
            SYNCHRONIZING MERCHANT HANDSHAKE...
         </div>
 
-        <div>
-          <label style="font-size:10px; font-weight:900; color:var(--Neutral-500); display:block; margin-bottom:8px">CLIENT FULL NAME</label>
+<div>
+          <label for="scanClientName" style="font-size:10px; font-weight:900; color:var(--Neutral-500); display:block; margin-bottom:8px">CLIENT FULL NAME</label>
           <input type="text" id="scanClientName" class="btn-outline" style="width:100%; text-align:left; background:rgba(255,255,255,0.05)" placeholder="e.g. John Smith" required>
         </div>
         <div style="display:grid; grid-template-columns: 1fr 1fr; gap:16px">
-          <div>
-            <label style="font-size:10px; font-weight:900; color:var(--Neutral-500); display:block; margin-bottom:8px">HEIGHT (CM)</label>
+<div>
+            <label for="scanHeight" style="font-size:10px; font-weight:900; color:var(--Neutral-500); display:block; margin-bottom:8px">HEIGHT (CM)</label>
             <input type="number" id="scanHeight" class="btn-outline" style="width:100%; text-align:left; background:rgba(255,255,255,0.05)" placeholder="175" required>
           </div>
           <div>
-            <label style="font-size:10px; font-weight:900; color:var(--Neutral-500); display:block; margin-bottom:8px">GENDER</label>
+            <label for="scanGender" style="font-size:10px; font-weight:900; color:var(--Neutral-500); display:block; margin-bottom:8px">GENDER</label>
             <select id="scanGender" class="btn-outline" style="width:100%; appearance:none; background:rgba(255,255,255,0.05)">
               <option value="male">Male</option>
               <option value="female">Female</option>
@@ -300,12 +300,12 @@
             <div class="glass-card">
               <h2 style="font-size:24px; margin-bottom:32px">Account Settings</h2>
               <div style="display:flex; flex-direction:column; gap:24px">
-                 <div class="form-group">
-                   <label style="font-size:10px; font-weight:900; color:var(--Neutral-500); display:block; margin-bottom:8px">BUSINESS NAME</label>
+<div class="form-group">
+                   <label for="setCompany" style="font-size:10px; font-weight:900; color:var(--Neutral-500); display:block; margin-bottom:8px">BUSINESS NAME</label>
                    <input type="text" id="setCompany" class="btn-outline" style="width:100%; text-align:left; background:rgba(255,255,255,0.05)" value="Master Artisan Studio">
                  </div>
                  <div class="form-group">
-                   <label style="font-size:10px; font-weight:900; color:var(--Neutral-500); display:block; margin-bottom:8px">ADMIN EMAIL</label>
+                   <label for="settingsEmail" style="font-size:10px; font-weight:900; color:var(--Neutral-500); display:block; margin-bottom:8px">ADMIN EMAIL</label>
                    <input type="text" class="btn-outline" style="width:100%; text-align:left; background:rgba(255,255,255,0.05)" id="settingsEmail" readonly>
                  </div>
                  <button class="btn-primary" style="width:140px">Update Profile</button>
