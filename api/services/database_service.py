@@ -1,19 +1,18 @@
 """
 Supabase Database Service | UNICORN-GRADE PERSISTENCE
 =====================================================
-Handles atomic persistence for API keys, usage, and 3D Biometrics.
-Uses high-privilege Service Role for critical infrastructure handshakes.
+Handles atomic persistence for API keys, usage, 3D Biometrics, and Invitations.
 """
 import os
 import json
 import logging
-from datetime import datetime
+import uuid
+from datetime import datetime, timedelta
 from typing import Dict, Optional, Any
 from supabase import create_client, Client
 
 logger = logging.getLogger("KORRA_DB")
 
-# Environment variables
 SUPABASE_URL = os.environ.get("SUPABASE_URL")
 SUPABASE_KEY = os.environ.get("SUPABASE_SERVICE_ROLE_KEY") or os.environ.get("SUPABASE_ANON_KEY")
 
@@ -23,15 +22,56 @@ class DatabaseService:
     @classmethod
     def get_client(cls) -> Optional[Client]:
         if cls._instance is None:
-            if not SUPABASE_URL or not SUPABASE_KEY:
-                logger.error("❌ Infrastructure Failure: Supabase Credentials Missing.")
-                return None
+            if not SUPABASE_URL or not SUPABASE_KEY: return None
             try:
                 cls._instance = create_client(SUPABASE_URL, SUPABASE_KEY)
-            except Exception as e:
-                logger.error(f"❌ Handshake Error: {e}")
-                return None
+            except Exception as e: return None
         return cls._instance
+
+    @classmethod
+    async def create_invitation(cls, merchant_id: str, client_name: str) -> str:
+        """Atomic Invitation Persistence."""
+        client = cls.get_client()
+        token = str(uuid.uuid4())
+        expires_at = datetime.utcnow() + timedelta(days=1)
+        try:
+            client.table("invitations").insert({
+                "token": token,
+                "merchant_id": merchant_id,
+                "client_name": client_name,
+                "expires_at": expires_at.isoformat()
+            }).execute()
+            return token
+        except Exception as e:
+            logger.error(f"Invite Persistence Failed: {e}")
+            return None
+
+    @classmethod
+    async def verify_invitation(cls, token: str) -> Optional[dict]:
+        """Verify invitation against PostgreSQL vault."""
+        client = cls.get_client()
+        try:
+            res = client.table("invitations").select("*").eq("token", token).execute()
+            if not res.data: return None
+            invite = res.data[0]
+            if datetime.fromisoformat(invite["expires_at"]) < datetime.utcnow():
+                return None
+            return invite
+        except Exception as e: return None
+
+    @classmethod
+    async def save_measurement(cls, user_id: str, client_name: str, height: float, gender: str, biometrics: dict, landmarks: dict = None, mesh_url: str = None):
+        client = cls.get_client()
+        if not client: return None
+        try:
+            payload = {
+                "user_id": user_id, "client_name": client_name, "height": height,
+                "gender": gender, "biometrics": biometrics, "landmarks_3d": landmarks if landmarks else {},
+                "mesh_url": mesh_url, "created_at": datetime.utcnow().isoformat()
+            }
+            response = client.table("measurements").insert(payload).execute()
+            return response.data[0] if response.data else None
+        except Exception as e: return None
 
     @classmethod
     async def get_api_key(cls, api_key: str) -> Optional[Dict[str, Any]]:
@@ -39,66 +79,17 @@ class DatabaseService:
         if not client: return None
         try:
             response = client.table("api_keys").select("*").eq("key", api_key).eq("is_active", True).execute()
-            if response.data: return response.data[0]
-        except Exception as e: logger.error(f"PfError: API Key Lookup Failed: {e}")
-        return None
-
-    @classmethod
-    async def save_measurement(cls, user_id: str, client_name: str, height: float, gender: str, biometrics: dict, landmarks: dict = None, mesh_url: str = None):
-        """
-        UNICORN-GRADE ATOMIC SAVE
-        Persists full biometric record to the global PostgreSQL vault.
-        """
-        client = cls.get_client()
-        if not client: return None
-
-        try:
-            payload = {
-                "user_id": user_id,
-                "client_name": client_name,
-                "height": height,
-                "gender": gender,
-                "biometrics": biometrics,
-                "landmarks_3d": landmarks if landmarks else {},
-                "mesh_url": mesh_url,
-                "created_at": datetime.utcnow().isoformat()
-            }
-
-            response = client.table("measurements").insert(payload).execute()
-            if response.data:
-                logger.info(f"✅ UNICORN PERSISTENCE: Record {response.data[0]['id']} locked in vault.")
-                return response.data[0]
-        except Exception as e:
-            logger.error(f"❌ ATOMIC SAVE FAILED: {e}")
-            return None
+            return response.data[0] if response.data else None
+        except: return None
 
     @classmethod
     async def update_usage(cls, api_key: str):
         client = cls.get_client()
         if not client: return
-        now = datetime.now()
-        day_key = now.strftime('%Y-%m-%d')
         try:
-            response = client.table("usage_logs").select("*").eq("api_key", api_key).execute()
-            if response.data:
-                log = response.data[0]
-                client.table("usage_logs").update({
-                    "total_count": log.get("total_count", 0) + 1,
-                    "last_used": now.isoformat()
-                }).eq("api_key", api_key).execute()
+            res = client.table("usage_logs").select("*").eq("api_key", api_key).execute()
+            if res.data:
+                client.table("usage_logs").update({"total_count": res.data[0]["total_count"] + 1, "last_used": datetime.now().isoformat()}).eq("api_key", api_key).execute()
             else:
-                client.table("usage_logs").insert({
-                    "api_key": api_key, "total_count": 1, "last_used": now.isoformat()
-                }).execute()
-        except Exception as e: logger.error(f"Usage Update Failed: {e}")
-
-    @classmethod
-    async def save_api_key(cls, api_key: str, user_id: str, tier: str = "tailor_pro"):
-        client = cls.get_client()
-        if not client: return False
-        try:
-            client.table("api_keys").insert({
-                "key": api_key, "user_id": user_id, "tier": tier, "is_active": True
-            }).execute()
-            return True
-        except Exception as e: logger.error(f"Key Persistence Failed: {e}"); return False
+                client.table("usage_logs").insert({"api_key": api_key, "total_count": 1, "last_used": datetime.now().isoformat()}).execute()
+        except: pass
