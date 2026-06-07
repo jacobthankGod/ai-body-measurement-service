@@ -121,11 +121,11 @@
       <h2 style="font-size:24px; margin-bottom:12px">Admin Testing Lab</h2>
       <p style="color:var(--Neutral-400); margin-bottom:32px">Run industrial-grade benchmarking with real-time landmark visualization.</p>
 
-      <form id="adminScanForm" style="display:flex; flex-direction:column; gap:20px">
+<form id="adminScanForm" novalidate style="display:flex; flex-direction:column; gap:20px">
         <div style="display:grid; grid-template-columns: 1fr 1fr; gap:16px">
           <div>
             <label style="font-size:10px; font-weight:900; color:var(--Neutral-500); display:block; margin-bottom:8px">HEIGHT (CM)</label>
-            <input type="number" id="adminHeight" class="search-input" placeholder="180" required>
+            <input type="number" id="adminHeight" class="search-input" placeholder="180"
           </div>
           <div>
             <label style="font-size:10px; font-weight:900; color:var(--Neutral-500); display:block; margin-bottom:8px">GENDER</label>
@@ -136,15 +136,15 @@
           </div>
         </div>
 
-        <div style="display:grid; grid-template-columns: 1fr 1fr; gap:16px">
-           <label class="preview-box" id="adminFrontLabel">
-             <input type="file" id="adminFrontPhoto" accept="image/*" required style="display:none" onchange="handleAdminFile(this, 'adminFrontLabel')">
-             <span>Upload Front</span>
-           </label>
-           <label class="preview-box" id="adminSideLabel">
-             <input type="file" id="adminSidePhoto" accept="image/*" required style="display:none" onchange="handleAdminFile(this, 'adminSideLabel')">
-             <span>Upload Side</span>
-           </label>
+<div style="display:grid; grid-template-columns: 1fr 1fr; gap:16px">
+          <label class="preview-box" id="adminFrontLabel">
+            <input type="file" id="adminFrontPhoto" accept="image/*" style="display:none" onchange="handleAdminFile(this, 'adminFrontLabel')">
+            <span>Upload Front</span>
+          </label>
+          <label class="preview-box" id="adminSideLabel">
+            <input type="file" id="adminSidePhoto" accept="image/*" style="display:none" onchange="handleAdminFile(this, 'adminSideLabel')">
+            <span>Upload Side</span>
+          </label>
         </div>
 
         <div id="landmarkViz" class="viz-container" style="display:none">
