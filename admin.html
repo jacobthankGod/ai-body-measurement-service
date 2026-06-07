@@ -312,12 +312,11 @@
 
         try {
           const client = window.supabase.createClient(config.url, config.key);
-          window.KORRA_DB = client; // Global reference for signOut
+          window.KORRA_DB = client;
 
           const { data: { session }, error: sessionError } = await client.auth.getSession();
 
           if (sessionError || !session) {
-            console.warn("Session error or missing:", sessionError);
             window.location.href = '/signin';
             return;
           }
@@ -327,7 +326,6 @@
 
           async function loadGlobalStats() {
             try {
-              // Fetch profiles with count
               const { data: profiles, count: mCount, error: pErr } = await client.from('profiles').select('*', { count: 'exact' });
               if (!pErr) {
                 document.getElementById('statMerchants').textContent = mCount || 0;
@@ -337,25 +335,23 @@
                 }
               }
 
-              // Fetch scans count
               const { count: sCount, error: sErr } = await client.from('measurements').select('*', { count: 'exact', head: true });
               if (!sErr) document.getElementById('statScans').textContent = sCount || 0;
 
-              // Fetch revenue
               const { data: invoices, error: iErr } = await client.from('invoices').select('*');
               if (!iErr && invoices) {
                 const total = invoices.reduce((sum, inv) => sum + (inv.amount_paid || 0), 0);
                 document.getElementById('statRevenue').textContent = '₦' + (total / 100).toLocaleString();
               }
 
-              // Health integrity check (Harden against missing integrity object)
               const res = await fetch('/api/v2/health');
               if (res.ok) {
                 const d = await res.json();
                 document.getElementById('healthVersion').textContent = `FastAPI v${d.version} • ${d.acceleration || 'CPU-Stable'} acceleration`;
                 const container = document.getElementById('healthAssets');
-                if (container && d.ai_integrity) {
-                  container.innerHTML = Object.entries(d.ai_integrity).map(([asset, ok]) => `
+                const integrity = d.ai_integrity || {};
+                if (container) {
+                  container.innerHTML = Object.entries(integrity).map(([asset, ok]) => `
                     <div class="health-item">
                       <span class="health-label">${asset.replace(/_/g, ' ').toUpperCase()}</span>
                       <span class="health-status ${ok ? 'status-ok' : 'status-err'}">${ok ? 'Active' : 'Missing'}</span>
@@ -363,9 +359,7 @@
                   `).join('');
                 }
               }
-            } catch (err) {
-              console.error("Handshake Failure:", err);
-            }
+            } catch (err) { console.error("Handshake Failure:", err); }
           }
           loadGlobalStats();
 
@@ -406,7 +400,7 @@
                const res = await fetch('/api/v2/measurements/extract', { method: 'POST', headers: { 'X-API-Key': ADMIN_BYPASS_KEY }, body: fd });
                if (res.ok) {
                   const data = await res.json();
-                  if (window.KORRA_VIZ) window.KORRA_VIZ.loadMesh(data.mesh_url);
+                  if (window.KORRA_VIZ && data.mesh_url) window.KORRA_VIZ.loadMesh(data.mesh_url);
                   adminLog("SUCCESS: BIOMETRICS CALCULATED.");
                   btn.textContent = 'Complete';
                   loadGlobalStats();
@@ -423,7 +417,6 @@
           });
 
         } catch (err) {
-          console.error("Critical Admin Handshake Failure:", err);
           document.getElementById('loadingText').style.display = 'none';
           document.getElementById('overlayError').style.display = 'block';
           document.getElementById('btnRetryOverlay').style.display = 'inline-block';
