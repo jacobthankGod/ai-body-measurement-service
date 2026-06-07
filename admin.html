@@ -108,6 +108,8 @@
   <div id="loadingOverlay">
     <div style="text-align:center">
       <div id="loadingText" style="font-size:12px; font-weight:800; letter-spacing:0.2em; color:var(--Mint); margin-bottom:16px">INITIALIZING AUTHORITY...</div>
+      <div id="overlayError" style="color:var(--Error); font-size:14px; display:none; margin-bottom:20px">Connection Interrupted. Please check extensions.</div>
+      <button onclick="location.reload()" class="btn-primary" style="display:none" id="btnRetryOverlay">Retry Handshake</button>
     </div>
   </div>
 
@@ -259,6 +261,7 @@
     </div>
   </main>
 
+  <!-- --- PRODUCTION ASSETS --- -->
   <script src="/assets/supabase.min.js"></script>
   <script src="/assets/three.min.js"></script>
   <script src="/assets/korra_viz.js"></script>
@@ -309,41 +312,60 @@
 
         try {
           const client = window.supabase.createClient(config.url, config.key);
-          const { data: { session } } = await client.auth.getSession();
-          if (!session) { window.location.href = '/signin'; return; }
+          window.KORRA_DB = client; // Global reference for signOut
+
+          const { data: { session }, error: sessionError } = await client.auth.getSession();
+
+          if (sessionError || !session) {
+            console.warn("Session error or missing:", sessionError);
+            window.location.href = '/signin';
+            return;
+          }
 
           document.getElementById('loadingOverlay').style.display = 'none';
           document.getElementById('adminUser').textContent = session.user.email;
 
           async function loadGlobalStats() {
             try {
-              const { data: profiles, count: mCount } = await client.from('profiles').select('*', { count: 'exact' });
-              document.getElementById('statMerchants').textContent = mCount || 0;
-              const mList = document.getElementById('merchantList');
-              if (mList && profiles) { mList.innerHTML = profiles.map(p => `<tr><td>${p.company_name || 'Artisan'}</td><td>${p.industry}</td><td>${p.credits}</td><td>${new Date(p.created_at).toLocaleDateString()}</td></tr>`).join(''); }
+              // Fetch profiles with count
+              const { data: profiles, count: mCount, error: pErr } = await client.from('profiles').select('*', { count: 'exact' });
+              if (!pErr) {
+                document.getElementById('statMerchants').textContent = mCount || 0;
+                const mList = document.getElementById('merchantList');
+                if (mList && profiles) {
+                  mList.innerHTML = profiles.map(p => `<tr><td>${p.company_name || 'Artisan'}</td><td>${p.industry || 'Tailor'}</td><td>${p.credits || 0}</td><td>${new Date(p.created_at).toLocaleDateString()}</td></tr>`).join('');
+                }
+              }
 
-              const { count: sCount } = await client.from('measurements').select('*', { count: 'exact', head: true });
-              document.getElementById('statScans').textContent = sCount || 0;
+              // Fetch scans count
+              const { count: sCount, error: sErr } = await client.from('measurements').select('*', { count: 'exact', head: true });
+              if (!sErr) document.getElementById('statScans').textContent = sCount || 0;
 
-              const { data: invoices } = await client.from('invoices').select('*');
-              if (invoices) {
+              // Fetch revenue
+              const { data: invoices, error: iErr } = await client.from('invoices').select('*');
+              if (!iErr && invoices) {
                 const total = invoices.reduce((sum, inv) => sum + (inv.amount_paid || 0), 0);
                 document.getElementById('statRevenue').textContent = '₦' + (total / 100).toLocaleString();
               }
 
+              // Health integrity check (Harden against missing integrity object)
               const res = await fetch('/api/v2/health');
               if (res.ok) {
                 const d = await res.json();
-                document.getElementById('healthVersion').textContent = `FastAPI v${d.version} • ${d.acceleration} acceleration`;
+                document.getElementById('healthVersion').textContent = `FastAPI v${d.version} • ${d.acceleration || 'CPU-Stable'} acceleration`;
                 const container = document.getElementById('healthAssets');
-                container.innerHTML = Object.entries(d.ai_integrity).map(([asset, ok]) => `
-                  <div class="health-item">
-                    <span class="health-label">${asset.replace(/_/g, ' ').toUpperCase()}</span>
-                    <span class="health-status ${ok ? 'status-ok' : 'status-err'}">${ok ? 'Active' : 'Missing'}</span>
-                  </div>
-                `).join('');
+                if (container && d.ai_integrity) {
+                  container.innerHTML = Object.entries(d.ai_integrity).map(([asset, ok]) => `
+                    <div class="health-item">
+                      <span class="health-label">${asset.replace(/_/g, ' ').toUpperCase()}</span>
+                      <span class="health-status ${ok ? 'status-ok' : 'status-err'}">${ok ? 'Active' : 'Missing'}</span>
+                    </div>
+                  `).join('');
+                }
               }
-            } catch (err) { console.error("Handshake Failure:", err); }
+            } catch (err) {
+              console.error("Handshake Failure:", err);
+            }
           }
           loadGlobalStats();
 
@@ -354,7 +376,7 @@
                 const res = await fetch('/api/v2/health/restore', { method: 'POST' });
                 if(res.ok) {
                   alert("Unicorn Restoration Initiated. Checking for 347MB Weights. Please wait 1-2 minutes.");
-                  setTimeout(loadGlobalStats, 10000);
+                  setTimeout(loadGlobalStats, 15000);
                 }
              } catch(e) { alert("Restoration sequence failed."); }
              finally { btn.disabled = false; btn.textContent = '🚀 Restore AI Brain'; }
@@ -370,7 +392,7 @@
              const g = document.getElementById('adminGender').value;
              const fInput = document.getElementById('adminFrontPhoto');
              const sInput = document.getElementById('adminSidePhoto');
-             if(fInput.files.length === 0 || sInput.files.length === 0) { alert("Photos required."); return; }
+             if(!fInput.files[0] || !sInput.files[0]) { alert("Photos required."); return; }
 
              const btn = document.getElementById('btnAdminRun');
              btn.disabled = true; btn.textContent = 'EXTRACTING...';
@@ -395,8 +417,17 @@
              } catch (err) { adminLog("FATAL: CONNECTION CLOSED."); } finally { btn.disabled = false; }
           });
 
-          document.getElementById('btnExit').addEventListener('click', () => { window.location.href = '/'; });
-        } catch (err) { document.getElementById('loadingOverlay').innerHTML = `<div style="text-align:center; padding:40px;"><h2 style="color:var(--Error)">Security Interrupted</h2></div>`; }
+          document.getElementById('btnExit').addEventListener('click', async () => {
+            if(window.KORRA_DB) await window.KORRA_DB.auth.signOut();
+            window.location.href = '/signin';
+          });
+
+        } catch (err) {
+          console.error("Critical Admin Handshake Failure:", err);
+          document.getElementById('loadingText').style.display = 'none';
+          document.getElementById('overlayError').style.display = 'block';
+          document.getElementById('btnRetryOverlay').style.display = 'inline-block';
+        }
       }
       initAdmin();
     })();

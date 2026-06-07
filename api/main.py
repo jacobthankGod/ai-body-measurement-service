@@ -38,7 +38,7 @@ async def lifespan(app: FastAPI):
 app = FastAPI(
     title="KORRA Artisan API",
     description="Production-grade AI body measurement extraction infrastructure.",
-    version="2.1.5",
+    version="2.1.7",
     lifespan=lifespan,
     docs_url="/docs",
     redoc_url="/redoc"
@@ -54,16 +54,13 @@ app.add_middleware(
 )
 
 # --- 1. API ROUTES ---
-@app.get("/api/v2/health")
-async def health_check():
-    return {"status": "healthy", "version": "2.1.5", "env": "production"}
-
 def include_lazy_routers():
     try:
-        from api.routes import measurements, auth
+        from api.routes import measurements, auth, health
         app.include_router(measurements.router, prefix="/api/v2", tags=["Measurements"])
         app.include_router(auth.router, prefix="/api/v2", tags=["Auth"])
-        logger.info("✅ API Routers Registered Successfully.")
+        app.include_router(health.router, prefix="/api/v2", tags=["Health"])
+        logger.info("✅ ALL API Routers Registered Successfully.")
     except Exception as e:
         logger.error(f"❌ Route registration failed: {e}")
         traceback.print_exc()

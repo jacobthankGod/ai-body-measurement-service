@@ -1,0 +1,23 @@
+# Task Management - Smart Digital Measurement Solution
+
+- [ ] Part 1: Get Measured Widget (E-commerce Integration)
+    - [ ] Create `widget.html` lightweight interface
+    - [ ] Develop `public/korra-widget.js` embed script
+    - [ ] Implement `POST /measurements/extract-widget` endpoint
+- [ ] Part 2: QR Code Generation (In-Store)
+    - [ ] Implement `api/routes/qrcode.py` generation logic
+    - [ ] Add QR UI to `admin.html` (Testing Lab)
+    - [ ] Create session management logic in database
+- [ ] Part 3: Measurement Link Sharing (SMS/Email)
+    - [ ] Implement `api/routes/sharing.py` (Twilio/SendGrid)
+    - [ ] Add sharing UI to `dashboard.html`
+    - [ ] Create `share.html` public landing page
+- [ ] Part 4: Quick Scanning Process Optimization
+    - [ ] Add pose guide overlays
+    - [ ] Implement real-time quality feedback
+- [ ] Part 5: Result & Export Enhancements
+    - [ ] Multi-format export (PDF/OBJ/JSON)
+    - [ ] Interactive 3D results page
+- [ ] Deployment & Final Verification
+    - [ ] Run performance benchmarks
+    - [ ] Conduct security audit
