@@ -172,8 +172,8 @@
       <h2 style="font-size:24px; margin-bottom:12px">Credit Overdrive</h2>
       <p style="color:var(--Neutral-400); margin-bottom:32px">Manually set merchant scan quota.</p>
 <div style="display:flex; flex-direction:column; gap:20px">
-<div><label for="targetMerchantName" style="font-size:10px; font-weight:900; color:var(--Neutral-500); display:block; margin-bottom:8px">MERCHANT BRAND</label><div id="targetMerchantName" style="font-weight:800; font-size:18px; color:var(--White)">--</div></div>
-<div><label for="newCreditValue" style="font-size:10px; font-weight:900; color:var(--Neutral-500); display:block; margin-bottom:8px">NEW CREDIT BALANCE</label><input type="number" id="newCreditValue" class="search-input" style="width:100%" placeholder="50" required></div>
+<div><span id="targetMerchantNameLabel" style="font-size:10px; font-weight:900; color:var(--Neutral-500); display:block; margin-bottom:8px">MERCHANT BRAND</span><div id="targetMerchantName" style="font-weight:800; font-size:18px; color:var(--White)">--</div></div>
+<div><label for="newCreditValue" style="font-size:10px; font-weight:900; color:var(--Neutral-500); display:block; margin-bottom:8px">NEW CREDIT BALANCE</label><input type="number" id="newCreditValue" class="search-input" style="width:100%" placeholder="50" required aria-labelledby="newCreditValue"></div>
         <button class="btn-primary" id="btnConfirmOverride" style="height:52px">Apply Override</button>
         <button class="btn-action" style="border:none" onclick="document.getElementById('overrideModal').classList.remove('active')">Cancel</button>
       </div>
