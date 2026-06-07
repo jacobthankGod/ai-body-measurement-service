@@ -302,6 +302,8 @@
   <script src="/assets/paystack.min.js"></script>
   <script src="/assets/three.min.js"></script>
   <script src="/assets/korra_viz.js"></script>
+  <script src="/assets/jspdf.min.js"></script>
+  <script src="/assets/korra_export.js"></script>
 
   <script>
     const KORRA_CONFIG = {
@@ -373,12 +375,21 @@
               </div>
               <div style="display:flex; gap:12px">
                 <button class="btn-outline" style="height:32px; font-size:10px" onclick="window.loadHistoricalTwin('${scan.mesh_url}')">View 3D</button>
-                <button class="btn-outline" style="height:32px; font-size:10px; border-color:var(--Mint); color:var(--Mint)">Export Data</button>
+                <button class="btn-outline" style="height:32px; font-size:10px; border-color:var(--Mint); color:var(--Mint)" onclick="window.exportPDF('${scan.client_name}', ${JSON.stringify(scan.biometrics || {})}, '${scan.gender}', ${scan.height})">Export PDF</button>
+                <button class="btn-outline" style="height:32px; font-size:10px" onclick="window.downloadOBJ('${scan.mesh_url}', '${scan.client_name}')">OBJ</button>
               </div>
             </div>
           `).join('');
         } catch (e) {}
       }
+
+      window.exportPDF = (name, data, gender, h) => {
+        if(window.KORRA_EXPORT) window.KORRA_EXPORT.pdf(name, data, gender, h);
+      };
+
+      window.downloadOBJ = (url, name) => {
+        if(window.KORRA_EXPORT) window.KORRA_EXPORT.obj(url, name);
+      };
 
       window.loadHistoricalTwin = (meshUrl) => {
          if (window.KORRA_VIZ && meshUrl) {

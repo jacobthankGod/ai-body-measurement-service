@@ -244,7 +244,10 @@
             <div class="glass-card">
               <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:32px">
                 <h2 class="section-title" style="margin-bottom:0">Testing Lab</h2>
-                <button class="btn-action" onclick="clearTestHistory()">Clear All Results</button>
+                <div style="display:flex; gap:12px">
+                  <button class="btn-action" onclick="window.exportCSVHistory()">Export CSV</button>
+                  <button class="btn-action" onclick="clearTestHistory()">Clear All Results</button>
+                </div>
               </div>
               <p style="color:var(--Neutral-400); margin-bottom:32px">Run benchmarking extractions with dual-perspective volumetric analysis. (Phase 15 Visualization Active)</p>
 
@@ -318,6 +321,8 @@
   <script src="/assets/supabase.min.js"></script>
   <script src="/assets/three.min.js"></script>
   <script src="/assets/korra_viz.js"></script>
+  <script src="/assets/jspdf.min.js"></script>
+  <script src="/assets/korra_export.js"></script>
   <script>
     function handleAdminFile(input, labelId) {
       const label = document.getElementById(labelId);
@@ -378,6 +383,11 @@
 
         document.getElementById('loadingOverlay').style.display = 'none';
         document.getElementById('adminUser').textContent = session.user.email;
+
+        const history = JSON.parse(localStorage.getItem('korra_admin_tests') || '[]');
+        window.exportCSVHistory = () => {
+          if (window.KORRA_EXPORT) window.KORRA_EXPORT.csv(history);
+        };
 
         function renderTestHistory() {
           const list = JSON.parse(localStorage.getItem('korra_admin_tests') || '[]');
