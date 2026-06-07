@@ -187,6 +187,15 @@
           if (error) {
             alert(error.message);
           } else {
+            // --- PHASE 16: TRIGGER AUTOMATED WELCOME ---
+            try {
+              fetch('/api/v2/auth/notifications/welcome', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ email: email, name: name })
+              });
+            } catch(e) {}
+
             // CINEMATIC TRANSITION
             formContent.style.opacity = '0';
             setTimeout(() => {
