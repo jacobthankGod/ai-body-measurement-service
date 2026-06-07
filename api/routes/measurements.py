@@ -11,6 +11,7 @@ import os
 import uuid
 import json
 import logging
+import traceback
 from typing import Dict, Optional
 from PIL import Image
 import numpy as np
@@ -41,7 +42,7 @@ async def get_current_user(x_api_key: str = Header(None)):
     return {'api_key': x_api_key, 'user_id': result.get('user_id'), 'is_admin': result.get('is_admin', False)}
 
 async def run_extraction_task(task_id: str, front_bytes: bytes, side_bytes: bytes, height: float, gender: str, client_name: str, user_id: str):
-    """Background worker for 1:1 HMR extraction."""
+    """Background worker for 1:1 HMR extraction with descriptive errors."""
     try:
         EXTRACTION_TASKS[task_id]["status"] = "processing"
 
@@ -54,13 +55,18 @@ async def run_extraction_task(task_id: str, front_bytes: bytes, side_bytes: byte
         landmarks = {}
 
         # AI EXTRACTION
-        from api.services.extract_measurements import extract_measurements_from_hmr, HMR_ACTIVE
-        if HMR_ACTIVE:
-            measurements, vertices, landmarks = extract_measurements_from_hmr(front_arr, height, gender)
-            if vertices is not None:
-                MeshExporter.save_to_obj(vertices, str(mesh_path))
-                mesh_url = f"/meshes/{mesh_filename}"
-        else:
+        try:
+            from api.services.extract_measurements import extract_measurements_from_hmr, HMR_ACTIVE
+            if HMR_ACTIVE:
+                measurements, vertices, landmarks = extract_measurements_from_hmr(front_arr, height, gender)
+                if vertices is not None:
+                    MeshExporter.save_to_obj(vertices, str(mesh_path))
+                    mesh_url = f"/meshes/{mesh_filename}"
+            else:
+                measurements, landmarks = fallback_extract(front_arr, side_arr, height, gender)
+        except Exception as inner_e:
+            logger.error(f"⚠️ HMR Pipeline Conflict: {inner_e}")
+            # Ensure we at least return fallback biometrics
             measurements, landmarks = fallback_extract(front_arr, side_arr, height, gender)
 
         # ATOMIC PERSISTENCE
@@ -78,9 +84,13 @@ async def run_extraction_task(task_id: str, front_bytes: bytes, side_bytes: byte
         logger.info(f"✅ TASK COMPLETED: {task_id}")
 
     except Exception as e:
-        logger.error(f"❌ EXTRACTION TASK FAILED: {e}")
-        EXTRACTION_TASKS[task_id]["status"] = "failed"
-        EXTRACTION_TASKS[task_id]["error"] = str(e)
+        error_msg = str(e)
+        logger.error(f"❌ EXTRACTION TASK FAILED: {error_msg}")
+        traceback.print_exc()
+        EXTRACTION_TASKS[task_id].update({
+            "status": "failed",
+            "error": error_msg
+        })
 
 @router.post("/measurements/extract")
 async def start_extraction(

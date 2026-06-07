@@ -157,6 +157,18 @@ class HMRMasterEngine:
         return {'Shoulder': round(0.265 * height_cm, 1), 'Chest Round': round(0.588 * height_cm, 1), 'Waist Round': round(0.471 * height_cm, 1)}
 
 ENGINE = HMRMasterEngine()
+HMR_ACTIVE = True
+
 def extract_measurements_from_hmr(image, height, gender='male'):
     return ENGINE.extract(image, height, gender)
-def get_brain_integrity(): return {"status": "synced"}
+
+def get_brain_integrity():
+    """Returns absolute technical status of AI weights."""
+    root = Path(__file__).parent.parent.parent.resolve()
+    m_dir = root / "models"
+    status = {
+        "hmr_weights": (m_dir / "model.ckpt-667589.index").exists(),
+        "smpl_model": (m_dir / "neutral_smpl_with_cocoplus_reg.pkl").exists(),
+        "vertex_map": (root / "data" / "customBodyPoints.txt").exists()
+    }
+    return status

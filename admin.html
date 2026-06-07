@@ -471,9 +471,12 @@
                         setTimeout(() => { overlay.style.display = 'none'; btn.disabled = false; btn.textContent = 'Complete'; }, 1000);
                     } else if (data.status === 'failed') {
                         clearInterval(interval);
-                        alert("AI Core Rejection: Task Failed.");
+                        const reason = data.error || "Unknown Technical Conflict";
+                        alert("AI Core Rejection: " + reason);
+                        adminLog("TASK FAILED: " + reason);
                         overlay.style.display = 'none';
                         btn.disabled = false;
+                        btn.textContent = 'Retry Benchmarking';
                     }
                     fill.style.width = progress + '%';
                 } catch (e) { console.error("Poll Error:", e); }
