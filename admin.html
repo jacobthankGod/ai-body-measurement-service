@@ -129,8 +129,14 @@
           <input type="number" id="adminHeight" class="search-input" style="margin-bottom:0" placeholder="180" required>
         </div>
         <div style="display:grid; grid-template-columns: 1fr 1fr; gap:16px">
-           <div style="font-size:10px; color:var(--Neutral-400); text-align:center; padding:20px; border:1px dashed var(--Glass-Border); border-radius:12px">Upload Front</div>
-           <div style="font-size:10px; color:var(--Neutral-400); text-align:center; padding:20px; border:1px dashed var(--Glass-Border); border-radius:12px">Upload Side</div>
+           <label class="btn-action" style="height:100px; display:flex; align-items:center; justify-content:center; text-align:center; flex-direction:column; border:1px dashed var(--Glass-Border)" id="adminFrontLabel">
+             <input type="file" id="adminFrontPhoto" accept="image/*" required style="display:none" onchange="handleAdminFile(this, 'adminFrontLabel', 'Front Photo')">
+             <span>Upload Front</span>
+           </label>
+           <label class="btn-action" style="height:100px; display:flex; align-items:center; justify-content:center; text-align:center; flex-direction:column; border:1px dashed var(--Glass-Border)" id="adminSideLabel">
+             <input type="file" id="adminSidePhoto" accept="image/*" required style="display:none" onchange="handleAdminFile(this, 'adminSideLabel', 'Side Photo')">
+             <span>Upload Side</span>
+           </label>
         </div>
         <button type="submit" class="btn-primary" style="height:52px" id="btnAdminRun">Execute Benchmarking</button>
         <button type="button" class="btn-action" style="border:none" onclick="document.getElementById('adminScanModal').classList.remove('active')">Dismiss</button>
@@ -291,11 +297,22 @@
       window.location.hash = tabId;
     }
 
+    function handleAdminFile(input, labelId, text) {
+      const label = document.getElementById(labelId);
+      if (input.files && input.files[0]) {
+        label.style.borderColor = 'var(--Mint)';
+        label.querySelector('span').textContent = input.files[0].name.substring(0, 10) + '...';
+        label.querySelector('span').style.color = 'var(--Mint)';
+      }
+    }
+
     (function() {
       const config = {
         url: 'https://blsettabymllulsxtziw.supabase.co',
         key: 'sb_publishable_miCOIXHtlxLkfDgpwE0N-g_BA1Q-x8y'
       };
+
+      const ADMIN_BYPASS_KEY = "korra_admin_auth_01J0PK82X92K4";
 
       let masterProfiles = [];
       let targetUserId = null;
@@ -435,20 +452,43 @@
         const initialTab = window.location.hash.replace('#', '') || 'overview';
         switchTab(initialTab);
 
-        // --- ADMIN TESTING LAB (Phase 6b) ---
+        // --- ADMIN TESTING LAB (Phase 6b - HARDENED) ---
         document.getElementById('adminScanForm').addEventListener('submit', async (e) => {
            e.preventDefault();
            const btn = document.getElementById('btnAdminRun');
+           const height = document.getElementById('adminHeight').value;
+           const front = document.getElementById('adminFrontPhoto').files[0];
+           const side = document.getElementById('adminSidePhoto').files[0];
+
            btn.disabled = true;
            btn.textContent = 'RUNNING ADMIN EXTRACTION...';
 
-           // Simulated Handshake (Admin Keys bypass credits natively in backend)
-           setTimeout(() => {
-              alert("Admin Bypass Successful: 3D Landmarks Extracted. (Credit Consumption: 0)");
-              document.getElementById('adminScanModal').classList.remove('active');
-              btn.disabled = false;
-              btn.textContent = 'Execute Benchmarking';
-           }, 2000);
+           const formData = new FormData();
+           formData.append('front', front);
+           formData.append('side', side);
+           formData.append('height', height);
+           formData.append('client_name', 'ADMIN_BENCHMARK');
+
+           try {
+             const response = await fetch('/api/v2/measurements/extract', {
+               method: 'POST',
+               headers: { 'X-API-Key': ADMIN_BYPASS_KEY },
+               body: formData
+             });
+
+             if (response.ok) {
+               alert("Admin Extraction Successful! (0 Credits Used)");
+               document.getElementById('adminScanModal').classList.remove('active');
+               loadGlobalStats(); // Refresh stats
+             } else {
+               alert("Extraction Failed: Backend handshaking error.");
+             }
+           } catch (err) {
+             alert("Connection error to AI Engine.");
+           } finally {
+             btn.disabled = false;
+             btn.textContent = 'Execute Benchmarking';
+           }
         });
 
         document.getElementById('btnExit').addEventListener('click', () => {
