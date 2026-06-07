@@ -1,6 +1,6 @@
 """
-Measurement Routes | UNICORN-GRADE DATA PERSISTENCE
-===================================================
+Measurement Routes | SMART WIDGET INTEGRATION
+============================================
 """
 from fastapi import APIRouter, UploadFile, File, Form, Header, HTTPException, Depends
 from datetime import datetime
@@ -31,10 +31,9 @@ async def get_current_user(x_api_key: str = Header(None)):
     if not result.get('valid'):
         raise HTTPException(status_code=403, detail=result.get('error', 'Unauthorized'))
 
-    # Unicorn Handshake: Map API key to real User UUID
     return {
         'api_key': x_api_key,
-        'user_id': result.get('user_id'), # Inferred from the API Key owner
+        'user_id': result.get('user_id'),
         'tier': result.get('tier'),
         'is_admin': result.get('is_admin', False)
     }
@@ -48,15 +47,12 @@ async def extract_measurements(
     client_name: str = Form("Unnamed Client"),
     user: dict = Depends(get_current_user)
 ):
-    """Extract measurements + ATOMIC CLOUD PERSISTENCE."""
-    
-    # Process images
+    """Internal Dashboard Extraction."""
     front_bytes = await front.read()
     side_bytes = await side.read()
     front_arr = np.array(Image.open(io.BytesIO(front_bytes)))
     side_arr = np.array(Image.open(io.BytesIO(side_bytes)))
 
-    # --- VISION GUARD ---
     if not user.get('is_admin'):
         is_front_valid, front_reason = VisionGuard.validate_photo(front_arr, "front")
         if not is_front_valid: raise HTTPException(status_code=422, detail={"error": front_reason})
@@ -69,43 +65,64 @@ async def extract_measurements(
     mesh_url = None
     landmarks = {}
 
-    # --- EXTRACTION PIPELINE ---
     try:
         from api.services.extract_measurements import extract_measurements_from_hmr, HMR_ACTIVE
         if HMR_ACTIVE:
             measurements, vertices, landmarks = extract_measurements_from_hmr(front_arr, height, gender)
             if vertices is not None:
                 MeshExporter.save_to_obj(vertices, str(mesh_path))
-                # For Block 5 verification, we use relative URL.
-                # In Full production, this triggers the S3 upload bridge.
                 mesh_url = f"/meshes/{mesh_filename}"
         else:
             measurements, landmarks = fallback_extract(front_arr, side_arr, height, gender)
-    except Exception as e:
+    except:
         measurements, landmarks = fallback_extract(front_arr, side_arr, height, gender)
 
-    # --- UNICORN ATOMIC SAVE (DATABASE VAULT) ---
-    # We persist the scan to Supabase before returning success.
-    db_record = await DatabaseService.save_measurement(
-        user_id=user['user_id'],
-        client_name=client_name,
-        height=height,
-        gender=gender,
-        biometrics=measurements,
-        landmarks=landmarks,
-        mesh_url=mesh_url
+    await DatabaseService.save_measurement(
+        user_id=user['user_id'], client_name=client_name, height=height,
+        gender=gender, biometrics=measurements, landmarks=landmarks, mesh_url=mesh_url
     )
 
-    return {
-        "success": True,
-        "measurements": measurements,
-        "landmarks": landmarks,
-        "scan_id": scan_id,
-        "record_id": db_record.get('id') if db_record else None,
-        "mesh_url": mesh_url,
-        "metadata": {
-            "mode": "digital-twin-activated",
-            "vision_guard": "bypassed" if user.get('is_admin') else "verified",
-            "persistence": "atomic-cloud-locked"
-        }
-    }
+    return { "success": True, "measurements": measurements, "mesh_url": mesh_url }
+
+@router.post("/measurements/extract-widget")
+async def extract_widget(
+    front: UploadFile = File(...),
+    side: UploadFile = File(...),
+    height: float = Form(...),
+    gender: str = Form("male"),
+    merchant_id: str = Form(...)
+):
+    """Public Widget Extraction with Merchant Attribution."""
+    front_bytes = await front.read()
+    side_bytes = await side.read()
+    front_arr = np.array(Image.open(io.BytesIO(front_bytes)))
+    side_arr = np.array(Image.open(io.BytesIO(side_bytes)))
+
+    # Compulsory Vision Guard for Public Inputs
+    is_front_valid, front_reason = VisionGuard.validate_photo(front_arr, "front")
+    if not is_front_valid: raise HTTPException(status_code=422, detail={"error": front_reason})
+
+    scan_id = str(uuid.uuid4())
+    mesh_filename = f"korra_twin_widget_{scan_id}.obj"
+    mesh_path = TEMP_MESH_DIR / mesh_filename
+    mesh_url = None
+
+    try:
+        from api.services.extract_measurements import extract_measurements_from_hmr, HMR_ACTIVE
+        if HMR_ACTIVE:
+            measurements, vertices, _ = extract_measurements_from_hmr(front_arr, height, gender)
+            if vertices is not None:
+                MeshExporter.save_to_obj(vertices, str(mesh_path))
+                mesh_url = f"/meshes/{mesh_filename}"
+        else:
+            measurements, _ = fallback_extract(front_arr, side_arr, height, gender)
+    except:
+        measurements, _ = fallback_extract(front_arr, side_arr, height, gender)
+
+    # Persist to Merchant Account
+    await DatabaseService.save_measurement(
+        user_id=merchant_id, client_name="Widget Customer", height=height,
+        gender=gender, biometrics=measurements, mesh_url=mesh_url
+    )
+
+    return { "success": True, "measurements": measurements, "mesh_url": mesh_url }

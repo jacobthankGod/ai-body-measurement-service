@@ -4,9 +4,11 @@
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
   <title>KORRA | Get Measured</title>
+
   <link rel="preconnect" href="https://fonts.googleapis.com" />
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
   <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800;900&display=swap" rel="stylesheet" />
+
   <style>
     :root {
       --Obsidian: #000000;
@@ -19,65 +21,98 @@
       --White: #FFFFFF;
       --Error: #D63031;
     }
+
     * { box-sizing: border-box; -webkit-font-smoothing: antialiased; margin: 0; padding: 0; }
     html, body { height: 100%; background: var(--Obsidian); color: var(--White); font-family: 'Inter', sans-serif; overflow: hidden; }
-    .widget-container { height: 100vh; display: flex; flex-direction: column; padding: 24px; justify-content: center; }
-    .card { background: var(--Glass); border: 1px solid var(--Glass-Border); border-radius: 24px; padding: 32px; width: 100%; max-width: 440px; margin: 0 auto; }
-    .title { font-size: 20px; font-weight: 800; margin-bottom: 8px; text-align: center; }
+
+    .widget-viewport {
+      height: 100vh; display: flex; flex-direction: column; align-items: center; justify-content: center;
+      padding: 24px; animation: fadeIn 0.4s ease-out;
+    }
+
+    .widget-card {
+      width: 100%; max-width: 420px; background: var(--Glass); border: 1px solid var(--Glass-Border);
+      border-radius: 24px; padding: 32px; backdrop-filter: blur(10px);
+    }
+
+    .title { font-size: 20px; font-weight: 800; text-align: center; margin-bottom: 8px; letter-spacing: -0.02em; }
     .subtitle { font-size: 13px; color: var(--Neutral-400); text-align: center; margin-bottom: 32px; }
+
+    .input-group { margin-bottom: 20px; }
     .label { font-size: 10px; font-weight: 900; color: var(--Neutral-500); text-transform: uppercase; margin-bottom: 8px; display: block; }
-    .input { width: 100%; height: 52px; background: rgba(255,255,255,0.05); border: 1px solid var(--Glass-Border); border-radius: 12px; padding: 0 16px; color: #fff; font-size: 14px; transition: 0.2s; margin-bottom: 20px; }
-    .input:focus { outline: none; border-color: var(--Mint); }
-    .file-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 16px; margin-bottom: 32px; }
-    .file-box { height: 100px; border: 1px dashed var(--Glass-Border); border-radius: 12px; display: flex; flex-direction: column; align-items: center; justify-content: center; cursor: pointer; position: relative; overflow: hidden; }
-    .file-box span { font-size: 10px; font-weight: 800; color: var(--Neutral-500); }
-    .file-box input { position: absolute; inset: 0; opacity: 0; cursor: pointer; }
-    .preview-img { position: absolute; inset: 0; width: 100%; height: 100%; object-fit: cover; display: none; z-index: 2; }
-    .btn-primary { width: 100%; height: 52px; background: var(--Mint); color: var(--Obsidian); border: none; border-radius: 12px; font-weight: 800; cursor: pointer; transition: 0.2s; }
-    .btn-primary:disabled { opacity: 0.5; filter: grayscale(1); cursor: not-allowed; }
-    #loader { display: none; text-align: center; font-size: 11px; font-weight: 900; letter-spacing: 0.1em; color: var(--Mint); }
+    .input { width: 100%; height: 52px; background: rgba(255,255,255,0.05); border: 1px solid var(--Glass-Border); border-radius: 12px; padding: 0 16px; color: #fff; font-size: 14px; transition: 0.2s; outline: none; }
+    .input:focus { border-color: var(--Mint); }
+
+    .photo-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 16px; margin-bottom: 32px; }
+    .photo-box {
+      height: 110px; border: 1px dashed var(--Glass-Border); border-radius: 16px;
+      display: flex; flex-direction: column; align-items: center; justify-content: center;
+      cursor: pointer; position: relative; overflow: hidden; transition: 0.2s;
+    }
+    .photo-box:hover { border-color: var(--Mint); background: rgba(87,215,192,0.05); }
+    .photo-box span { font-size: 10px; font-weight: 800; color: var(--Neutral-500); }
+    .photo-box input { position: absolute; inset: 0; opacity: 0; cursor: pointer; z-index: 10; }
+    .preview-img { position: absolute; inset: 0; width: 100%; height: 100%; object-fit: cover; display: none; z-index: 5; }
+
+    .btn-submit { width: 100%; height: 52px; background: var(--Mint); color: var(--Obsidian); border: none; border-radius: 12px; font-weight: 800; cursor: pointer; transition: 0.2s; }
+    .btn-submit:disabled { opacity: 0.5; filter: grayscale(1); cursor: not-allowed; }
+
+    #loadingOverlay {
+        position: absolute; inset: 0; background: rgba(0,0,0,0.9); z-index: 100;
+        display: none; align-items: center; justify-content: center; border-radius: 24px;
+        font-size: 11px; font-weight: 900; letter-spacing: 0.1em; color: var(--Mint);
+    }
+
+    @keyframes fadeIn { from { opacity: 0; transform: scale(0.98); } to { opacity: 1; transform: scale(1); } }
   </style>
 </head>
 <body>
-  <div class="widget-container">
-    <div class="card" id="widgetCard">
+
+  <div class="widget-viewport">
+    <div class="widget-card">
+      <div id="loadingOverlay">EXTRACTING BIOMETRICS...</div>
+
       <h1 class="title">Get Measured</h1>
-      <p class="subtitle">AI Biometrics Handshake.</p>
+      <p class="subtitle">AI Biometrics for a perfect fit.</p>
 
       <form id="widgetForm">
-        <label class="label">Height (CM)</label>
-        <input type="number" id="h" class="input" placeholder="180" required>
+        <div class="input-group">
+          <label class="label">Height (CM)</label>
+          <input type="number" id="height" class="input" placeholder="e.g. 180" required>
+        </div>
 
-        <label class="label">Gender</label>
-        <select id="g" class="input" style="appearance: none;">
-          <option value="male">Male</option>
-          <option value="female">Female</option>
-        </select>
+        <div class="input-group">
+          <label class="label">Gender</label>
+          <select id="gender" class="input" style="appearance: none; cursor: pointer;">
+            <option value="male">Male</option>
+            <option value="female">Female</option>
+          </select>
+        </div>
 
-        <div class="file-grid">
-          <div class="file-box">
-            <img class="preview-img" id="fPrev">
-            <span>Front Photo</span>
-            <input type="file" id="f" accept="image/*" required onchange="preview(this, 'fPrev')">
+        <div class="photo-grid">
+          <div class="photo-box">
+            <img class="preview-img" id="frontPrev">
+            <span>Front View</span>
+            <input type="file" id="front" accept="image/*" required onchange="handlePreview(this, 'frontPrev')">
           </div>
-          <div class="file-box">
-            <img class="preview-img" id="sPrev">
-            <span>Side Photo</span>
-            <input type="file" id="s" accept="image/*" required onchange="preview(this, 'sPrev')">
+          <div class="photo-box">
+            <img class="preview-img" id="sidePrev">
+            <span>Side View</span>
+            <input type="file" id="side" accept="image/*" required onchange="handlePreview(this, 'sidePrev')">
           </div>
         </div>
-        <button type="submit" class="btn-primary" id="btn">Calculate</button>
+
+        <button type="submit" class="btn-submit" id="btnSubmit">Calculate My Size</button>
       </form>
-      <div id="loader">EXTRACTING BIOMETRICS...</div>
     </div>
   </div>
 
   <script>
-    function preview(input, prevId) {
+    function handlePreview(input, imgId) {
       if (input.files && input.files[0]) {
         const reader = new FileReader();
         reader.onload = (e) => {
-          const img = document.getElementById(prevId);
+          const img = document.getElementById(imgId);
           img.src = e.target.result;
           img.style.display = 'block';
         };
@@ -87,46 +122,44 @@
 
     document.getElementById('widgetForm').addEventListener('submit', async (e) => {
       e.preventDefault();
-      const btn = document.getElementById('btn');
-      const form = document.getElementById('widgetForm');
-      const loader = document.getElementById('loader');
-      const urlParams = new URLSearchParams(window.location.search);
-      const merchantId = urlParams.get('merchant') || 'WIDGET_TEST';
+      const loader = document.getElementById('loadingOverlay');
+      const params = new URLSearchParams(window.location.search);
+      const merchantId = params.get('merchant') || 'PUBLIC_WIDGET';
 
-      btn.style.display = 'none';
-      form.style.opacity = '0.1';
-      form.style.pointerEvents = 'none';
-      loader.style.display = 'block';
+      loader.style.display = 'flex';
 
       const fd = new FormData();
-      fd.append('front', document.getElementById('f').files[0]);
-      fd.append('side', document.getElementById('s').files[0]);
-      fd.append('height', document.getElementById('h').value);
-      fd.append('gender', document.getElementById('g').value);
-      fd.append('client_name', 'Widget Client');
+      fd.append('front', document.getElementById('front').files[0]);
+      fd.append('side', document.getElementById('side').files[0]);
+      fd.append('height', document.getElementById('height').value);
+      fd.append('gender', document.getElementById('gender').value);
+      fd.append('merchant_id', merchantId);
+      fd.append('client_name', 'Widget Customer');
 
       try {
-        // Use standard extraction endpoint with widget identity
-        const res = await fetch('/api/v2/measurements/extract', {
-            method: 'POST',
-            headers: { 'X-API-Key': 'korra_admin_auth_01J0PK82X92K4' }, // Auto-bypass for widget
-            body: fd
-        });
-
+        const res = await fetch('/api/v2/measurements/extract-widget', { method: 'POST', body: fd });
         if (res.ok) {
           const data = await res.json();
-          window.parent.postMessage({ type: 'KORRA_SUCCESS', data: data }, '*');
-          document.getElementById('widgetCard').innerHTML = `
-            <div style="text-align:center">
-              <div style="font-size:48px; margin-bottom:24px">✅</div>
+          // Handshake back to host site
+          window.parent.postMessage({ type: 'KORRA_RESULT', measurements: data.measurements }, '*');
+
+          document.querySelector('.widget-card').innerHTML = `
+            <div style="text-align:center; padding: 20px 0;">
+              <div style="font-size:40px; margin-bottom:24px;">✅</div>
               <h2 class="title">Sync Complete</h2>
-              <p class="subtitle">Biometrics logged in artisan vault.</p>
-              <button class="btn-primary" onclick="location.reload()">New Scan</button>
+              <p class="subtitle">Biometrics transmitted successfully.</p>
+              <button class="btn-submit" onclick="location.reload()">New Scan</button>
             </div>
           `;
-        } else { alert("AI Quality Rejection. Please stand straight."); }
-      } catch (err) { alert("Handshake Error."); }
-      finally { btn.style.display = 'block'; form.style.opacity = '1'; form.style.pointerEvents = 'auto'; loader.style.display = 'none'; }
+        } else {
+          const err = await res.json();
+          alert("Handshake Failure: " + (err.detail?.error || "Low quality"));
+          loader.style.display = 'none';
+        }
+      } catch (err) {
+        alert("Connection Error. Please check network.");
+        loader.style.display = 'none';
+      }
     });
   </script>
 </body>
