@@ -512,6 +512,13 @@
                 const data = await res.json();
                 adminLog("SUCCESS: BIOMETRICS CALCULATED.", true);
 
+                if (!data.success && data.code === "POSE_UNSTABLE") {
+                  adminLog("POSE ERROR: " + data.error);
+                  alert("Quality Warning: " + data.error + " Landmarks shown for diagnosis.");
+                  if(data.landmarks) drawSkeleton(data.landmarks, f);
+                  return;
+                }
+
                 if(data.landmarks) {
                   drawSkeleton(data.landmarks, f);
                 }
