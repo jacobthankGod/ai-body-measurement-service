@@ -337,15 +337,34 @@
   <script src="/assets/korra_analytics.js"></script>
 
   <script>
+// Store file references at module level - survives DOM element destruction!
+    let storedFrontFile = null;
+    let storedSideFile = null;
+
     function handleAdminFile(input, labelId) {
       const label = document.getElementById(labelId);
       if (input && input.files && input.files[0]) {
+        // Store reference BEFORE potential DOM destruction
+        const file = input.files[0];
+        if (labelId === 'adminFrontLabel') storedFrontFile = file;
+        if (labelId === 'adminSideLabel') storedSideFile = file;
+        
         const reader = new FileReader();
         reader.onload = (e) => {
-           label.innerHTML = `<img src="${e.target.result}" style="width:100%; height:100%; object-fit:cover; border-radius:12px;">`;
+           // Clear only text nodes, preserve input element
+           const inputEl = label.querySelector('input[type="file"]');
+           const uploadText = label.querySelector('span');
+           label.innerHTML = '';
+           if (inputEl) label.appendChild(inputEl);
+           if (uploadText) { uploadText.textContent = ''; uploadText.style.display = 'none'; }
+           // Add image
+           const img = document.createElement('img');
+           img.src = e.target.result;
+           img.style.cssText = 'position:absolute;inset:0;width:100%;height:100%;object-fit:cover;border-radius:12px';
+           label.appendChild(img);
            label.classList.add('has-image');
         };
-        reader.readAsDataURL(input.files[0]);
+        reader.readAsDataURL(file);
       }
     }
 
@@ -541,7 +560,7 @@
             document.body.appendChild(overlay);
           }
 
-          // Enhanced form handler with proper DOM readiness check
+// Enhanced form handler with proper DOM readiness check
           document.getElementById('adminScanForm').addEventListener('submit', async (e) => {
              e.preventDefault();
              
@@ -562,18 +581,28 @@
              const fInput = document.getElementById('adminFrontPhoto');
              const sInput = document.getElementById('adminSidePhoto');
 
-             // Mauritius-Level null safety: Check elements exist with optional chaining before accessing .files
-             if(!fInput || !sInput) { 
-               adminLog("FATAL: Input elements not found in DOM."); 
-               showRecoveryUI("Form elements failed to initialize. Please refresh the page.");
-               return; 
+             // Try to get files from DOM first, fall back to stored references
+             let fFile = null;
+             let sFile = null;
+             
+             if(fInput && fInput.files && fInput.files[0]) {
+               fFile = fInput.files[0];
+             } else if(storedFrontFile) {
+               fFile = storedFrontFile;
+               adminLog("RECOVERED: Front file from memory cache.");
              }
              
-             const fFiles = fInput?.files;
-             const sFiles = sInput?.files;
-             
-             if(!fFiles || !fFiles[0] || !sFiles || !sFiles[0]) { 
-               alert("Photos required."); 
+             if(sInput && sInput.files && sInput.files[0]) {
+               sFile = sInput.files[0];
+             } else if(storedSideFile) {
+               sFile = storedSideFile;
+               adminLog("RECOVERED: Side file from memory cache.");
+             }
+
+             // If still no files, show error
+             if(!fFile || !sFile) { 
+               adminLog("FATAL: No photos found. Please re-upload both images.");
+               alert("Please upload both front and side photos.");
                return; 
              }
 
@@ -581,8 +610,8 @@
              adminLog("INITIATING VOLUMETRIC HANDSHAKE...");
 
              const fd = new FormData();
-fd.append('front', fFiles[0]);
-             fd.append('side', sFiles[0]);
+             fd.append('front', fFile);
+             fd.append('side', sFile);
              fd.append('height', hVal);
              fd.append('gender', gVal);
              fd.append('client_name', 'ADMIN_LAB_TEST');
@@ -591,10 +620,11 @@ fd.append('front', fFiles[0]);
                const res = await fetch('/api/v2/measurements/extract', { method: 'POST', headers: { 'X-API-Key': ADMIN_BYPASS_KEY }, body: fd });
                if (res.ok) {
                   const data = await res.json();
-if(data.landmarks && fInput && fInput.files && fInput.files[0]) drawSkeleton(data.landmarks, fInput.files[0]);
+                  // Draw landmarks with fFile (uses stored reference if DOM destroyed)
+                  if(data.landmarks) drawSkeleton(data.landmarks, fFile);
 
                   const history = JSON.parse(localStorage.getItem('korra_admin_tests') || '[]');
-                  history.push({ time: new Date().toLocaleTimeString(), gender: g, height: h, measurements: data.measurements });
+                  history.push({ time: new Date().toLocaleTimeString(), gender: gVal, height: hVal, measurements: data.measurements });
                   localStorage.setItem('korra_admin_tests', JSON.stringify(history.slice(-10)));
                   renderTestHistory();
                   if (window.KORRA_VIZ) window.KORRA_VIZ.loadMesh(data.mesh_url);
