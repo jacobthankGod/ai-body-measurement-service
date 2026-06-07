@@ -221,9 +221,20 @@
           </div>
 
           <div id="view-overview" class="tab-view active">
+             <div style="display:grid; grid-template-columns: 1.5fr 1fr; gap:32px; margin-bottom:32px">
+                <div class="glass-card" style="margin-bottom:0; height:350px">
+                   <h4 style="font-size:10px; font-weight:900; color:var(--Mint); margin-bottom:24px">PLATFORM VELOCITY</h4>
+                   <canvas id="chartTrends"></canvas>
+                </div>
+                <div class="glass-card" style="margin-bottom:0; height:350px">
+                   <h4 style="font-size:10px; font-weight:900; color:var(--Neutral-400); margin-bottom:24px">INDUSTRY ADOPTION</h4>
+                   <canvas id="chartIndustry"></canvas>
+                </div>
+             </div>
+
              <div class="glass-card">
-               <h2 class="section-title">System Status</h2>
-               <p style="color:var(--Neutral-400); line-height:1.6">Connected to KORRA Digital Artisan Infrastructure. All industrial extraction engines operational.</p>
+               <h2 class="section-title">Operational Overview</h2>
+               <p style="color:var(--Neutral-400); line-height:1.6">You are connected to the KORRA Digital Artisan Infrastructure core. Technical benchmarking, volumetric analysis, and global merchant growth are performing at industrial standards.</p>
              </div>
           </div>
 
@@ -323,6 +334,8 @@
   <script src="/assets/korra_viz.js"></script>
   <script src="/assets/jspdf.min.js"></script>
   <script src="/assets/korra_export.js"></script>
+  <script src="/assets/chart.min.js"></script>
+  <script src="/assets/korra_analytics.js"></script>
   <script>
     function handleAdminFile(input, labelId) {
       const label = document.getElementById(labelId);
@@ -455,6 +468,21 @@
                 }
              }
              renderMerchantList(masterProfiles);
+
+             // --- PHASE 17: ANALYTICS TRIGGER ---
+             if (window.KORRA_ANALYTICS) {
+                // Generate Mock Trends (In Phase 17b, these pull from DB aggregate functions)
+                const labels = ['MON', 'TUE', 'WED', 'THU', 'FRI', 'SAT', 'SUN'];
+                const scanVelocity = [45, 78, 120, 89, 156, 210, 195];
+                const merchantGrowth = [2, 5, 8, 10, 14, 22, 28];
+                window.KORRA_ANALYTICS.initPlatformTrends('chartTrends', labels, scanVelocity, merchantGrowth);
+
+                // Industry Mix
+                const industries = [...new Set(masterProfiles.map(p => p.industry || 'Tailor'))];
+                const industryCounts = industries.map(ind => masterProfiles.filter(p => p.industry === ind).length);
+                window.KORRA_ANALYTICS.initIndustryMix('chartIndustry', industries, industryCounts);
+             }
+
            } catch (err) { console.error("PfError: Global Sync Failure", err); }
         }
 
