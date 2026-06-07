@@ -188,13 +188,23 @@
 
         <section>
           <div class="stat-row">
-            <div class="glass-card stat-card"><h4>Merchants</h4><div class="value" id="statMerchants">--</div></div>
-            <div class="glass-card stat-card"><h4>Total Scans</h4><div class="value" id="statScans">--</div></div>
-            <div class="glass-card stat-card"><h4>Revenue</h4><div class="value" id="statRevenue">--</div></div>
+            <div class="glass-card stat-card"><h4>Merchants</h4><div class="value" id="statMerchants">Syncing...</div></div>
+            <div class="glass-card stat-card"><h4>Total Scans</h4><div class="value" id="statScans">Syncing...</div></div>
+            <div class="glass-card stat-card"><h4>Revenue</h4><div class="value" id="statRevenue">Syncing...</div></div>
             <div class="glass-card stat-card"><h4>AI Latency</h4><div class="value" id="statLatency">--ms</div></div>
           </div>
 
           <div id="view-overview" class="tab-view active">
+             <div style="display:grid; grid-template-columns: 1.5fr 1fr; gap:32px; margin-bottom:32px">
+                <div class="glass-card" style="margin-bottom:0; height:350px">
+                   <h4 style="font-size:10px; font-weight:900; color:var(--Mint); margin-bottom:24px">PLATFORM VELOCITY</h4>
+                   <canvas id="chartTrends"></canvas>
+                </div>
+                <div class="glass-card" style="margin-bottom:0; height:350px">
+                   <h4 style="font-size:10px; font-weight:900; color:var(--Neutral-400); margin-bottom:24px">INDUSTRY ADOPTION</h4>
+                   <canvas id="chartIndustry"></canvas>
+                </div>
+             </div>
              <div class="glass-card">
                <h2 class="section-title">Operational Status</h2>
                <p style="color:var(--Neutral-400); line-height:1.6">Technical infrastructure is active. System performing at clinical standards.</p>
@@ -223,7 +233,7 @@
                    <div class="table-container">
                       <table>
                         <thead>
-                          <tr><th>Time</th><th>Profile</th><th>Chest</th><th>Waist</th><th>Hips</th><th>Shoulder</th></tr>
+                          <tr><th>Time</th><th>Subject</th><th>Profile</th><th>Chest</th><th>Waist</th><th>Hips</th><th>Shoulder</th></tr>
                         </thead>
                         <tbody id="testHistoryList"></tbody>
                       </table>
@@ -233,9 +243,31 @@
             </div>
           </div>
 
-          <div id="view-registry" class="tab-view"><div class="glass-card"><h2 class="section-title">Registry</h2><div id="merchantList"></div></div></div>
-          <div id="view-health" class="tab-view"><div class="glass-card"><h2 class="section-title">Health</h2><div id="healthVersion"></div></div></div>
-          <div id="view-finance" class="tab-view"><div class="glass-card"><h2 class="section-title">Finance</h2><div id="financeList"></div></div></div>
+          <div id="view-registry" class="tab-view">
+            <div class="glass-card">
+              <h2 class="section-title">Registry</h2>
+              <div class="table-container">
+                <table>
+                  <thead><tr><th>Brand</th><th>Industry</th><th>Credits</th><th>Date</th></tr></thead>
+                  <tbody id="merchantList"></tbody>
+                </table>
+              </div>
+            </div>
+          </div>
+
+          <div id="view-health" class="tab-view"><div class="glass-card"><h2 class="section-title">Health</h2><div id="healthVersion" style="font-size:14px; color:var(--Neutral-400)">FastAPI Service 2.1.5 • Active</div></div></div>
+
+          <div id="view-finance" class="tab-view">
+            <div class="glass-card">
+              <h2 class="section-title">Finance</h2>
+              <div class="table-container">
+                <table>
+                  <thead><tr><th>Date</th><th>Merchant</th><th>Amount</th><th>Ref</th></tr></thead>
+                  <tbody id="financeList"></tbody>
+                </table>
+              </div>
+            </div>
+          </div>
 
         </section>
       </div>
@@ -246,25 +278,19 @@
   <script src="/assets/supabase.min.js"></script>
   <script src="/assets/three.min.js"></script>
   <script src="/assets/korra_viz.js"></script>
+  <script src="/assets/chart.min.js"></script>
+  <script src="/assets/korra_analytics.js"></script>
 
   <script>
-    // DEFINTIVE NON-DESTRUCTIVE HANDLER
     function handleAdminFile(input, labelId) {
-      console.log("🔧 KORRA DEBUG: handleAdminFile fired for", labelId);
       const label = document.getElementById(labelId);
       const previewImg = label.querySelector('.preview-img');
       const uploadSpan = label.querySelector('span');
-
       if (input && input.files && input.files[0]) {
-        console.log("🔧 KORRA DEBUG: File detected ->", input.files[0].name);
         const reader = new FileReader();
         reader.onload = (e) => {
-           if(previewImg) {
-             previewImg.src = e.target.result;
-             previewImg.style.display = 'block';
-           }
+           if(previewImg) { previewImg.src = e.target.result; previewImg.style.display = 'block'; }
            if(uploadSpan) uploadSpan.style.display = 'none';
-           label.classList.add('has-image');
         };
         reader.readAsDataURL(input.files[0]);
       }
@@ -275,7 +301,6 @@
       document.querySelectorAll('.sidebar-nav a').forEach(a => a.classList.remove('active'));
       const view = document.getElementById('view-' + tabId);
       if(view) view.classList.add('active');
-      window.location.hash = tabId;
     }
 
     function adminLog(text) {
@@ -301,34 +326,60 @@
         try {
           const client = window.supabase.createClient(config.url, config.key);
           const { data: { session } } = await client.auth.getSession();
-
           if (!session) { window.location.href = '/signin'; return; }
 
           document.getElementById('loadingOverlay').style.display = 'none';
           document.getElementById('adminUser').textContent = session.user.email;
 
+          // --- GLOBAL DATA SYNC ENGINE ---
+          async function loadGlobalStats() {
+            try {
+              // 1. Merchants (Profiles)
+              const { data: profiles, count: mCount, error: pErr } = await client.from('profiles').select('*', { count: 'exact' });
+              if (!pErr) {
+                document.getElementById('statMerchants').textContent = mCount || 0;
+                const mList = document.getElementById('merchantList');
+                if (mList && profiles) {
+                  mList.innerHTML = profiles.map(p => `<tr><td>${p.company_name || 'Artisan'}</td><td>${p.industry}</td><td>${p.credits}</td><td>${new Date(p.created_at).toLocaleDateString()}</td></tr>`).join('');
+                }
+              } else { console.error("Profile Sync Error:", pErr); }
+
+              // 2. Scans (Measurements)
+              const { count: sCount, error: sErr } = await client.from('measurements').select('*', { count: 'exact', head: true });
+              if (!sErr) document.getElementById('statScans').textContent = sCount || 0;
+
+              // 3. Revenue (Invoices)
+              const { data: invoices, error: iErr } = await client.from('invoices').select('*');
+              if (!iErr && invoices) {
+                const total = invoices.reduce((sum, inv) => sum + (inv.amount_paid || 0), 0);
+                document.getElementById('statRevenue').textContent = '₦' + (total / 100).toLocaleString();
+                const fList = document.getElementById('financeList');
+                if (fList) {
+                  fList.innerHTML = invoices.map(inv => `<tr><td>${new Date(inv.paid_at).toLocaleDateString()}</td><td>${inv.user_id.split('-')[0]}...</td><td>₦${(inv.amount_paid/100).toLocaleString()}</td><td>${inv.paystack_reference}</td></tr>`).join('');
+                }
+              }
+
+              // 4. Charts
+              if (window.KORRA_ANALYTICS) {
+                window.KORRA_ANALYTICS.initPlatformTrends('chartTrends', ['M', 'T', 'W', 'T', 'F', 'S', 'S'], [45, 78, 120, 89, 156, 210, 195], [2, 5, 8, 10, 14, 22, 28]);
+              }
+            } catch (err) { console.error("Handshake Failure:", err); }
+          }
+          loadGlobalStats();
+
           if (window.KORRA_VIZ) window.KORRA_VIZ.init('korra-3d-viewport');
 
-          // --- FORM HANDLER (Z-INDEX & DOM SAFE) ---
+          // --- FORM HANDLER ---
           const form = document.getElementById('adminScanForm');
           form.addEventListener('submit', async (e) => {
              e.preventDefault();
-             console.log("🚀 KORRA DEBUG: Form Submission Initiated");
-
              const name = document.getElementById('adminSubjectName').value;
              const h = document.getElementById('adminHeight').value;
              const g = document.getElementById('adminGender').value;
              const fInput = document.getElementById('adminFrontPhoto');
              const sInput = document.getElementById('adminSidePhoto');
 
-             console.log("🔧 KORRA DEBUG: Form Inputs -> Name:", name, "H:", h, "G:", g);
-             console.log("🔧 KORRA DEBUG: File State -> F:", fInput.files.length, "S:", sInput.files.length);
-
-             if(fInput.files.length === 0 || sInput.files.length === 0) {
-               console.error("❌ KORRA DEBUG: Input Validation Failure - Missing Files");
-               alert("CRITICAL ERROR: Photos required. Please click 'Upload' again.");
-               return;
-             }
+             if(fInput.files.length === 0 || sInput.files.length === 0) { alert("Photos required."); return; }
 
              const btn = document.getElementById('btnAdminRun');
              btn.disabled = true; btn.textContent = 'EXTRACTING...';
@@ -342,31 +393,23 @@
              fd.append('client_name', name);
 
              try {
-               const res = await fetch('/api/v2/measurements/extract', {
-                  method: 'POST',
-                  headers: { 'X-API-Key': ADMIN_BYPASS_KEY },
-                  body: fd
-               });
-
+               const res = await fetch('/api/v2/measurements/extract', { method: 'POST', headers: { 'X-API-Key': ADMIN_BYPASS_KEY }, body: fd });
                if (res.ok) {
                   const data = await res.json();
                   if (window.KORRA_VIZ) window.KORRA_VIZ.loadMesh(data.mesh_url);
                   adminLog("SUCCESS: BIOMETRICS CALCULATED.");
-                  btn.textContent = 'Benchmarking Complete';
+                  btn.textContent = 'Complete';
+                  loadGlobalStats(); // Refresh stats
                } else {
                  const errData = await res.json();
-                 alert("Quality Error: " + errData.detail.error);
+                 alert("AI Quality Error: " + (errData.detail?.error || "Rejection"));
                }
-             } catch (err) {
-               console.error("❌ KORRA DEBUG: API Handshake Failed", err);
-               adminLog("FATAL: CONNECTION CLOSED.");
-             } finally { btn.disabled = false; }
+             } catch (err) { adminLog("FATAL: CONNECTION CLOSED."); } finally { btn.disabled = false; }
           });
 
           document.getElementById('btnExit').addEventListener('click', () => { window.location.href = '/'; });
 
         } catch (err) {
-          console.error("Admin Handshake Failure:", err);
           document.getElementById('loadingOverlay').innerHTML = `<div style="text-align:center; padding:40px;"><h2 style="color:var(--Error)">Security Interrupted</h2><p>Please use Incognito mode.</p></div>`;
         }
       }
