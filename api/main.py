@@ -42,14 +42,18 @@ app = FastAPI(
     redoc_url="/redoc"
 )
 
-# --- SECURITY: CORS ---
-ALLOWED_ORIGINS = os.environ.get("ALLOWED_ORIGINS", "*").split(",")
+# --- SECURITY: CORS (Hardened for Production) ---
+ALLOWED_ORIGINS = os.environ.get(
+    "ALLOWED_ORIGINS", 
+    "http://localhost:3000,http://localhost:5001,https://ai-body-scan-saas.vercel.app"
+).split(",")
+
 app.add_middleware(
     CORSMiddleware,
     allow_origins=ALLOWED_ORIGINS,
     allow_credentials=True,
     allow_methods=["*"],
-    allow_headers=["*"],
+    allow_headers=["X-API-Key", "Content-Type", "Authorization"],
 )
 
 # --- 1. API ROUTES ---
