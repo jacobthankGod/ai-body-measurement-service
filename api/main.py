@@ -34,10 +34,7 @@ logger = logging.getLogger("KORRA_PROD")
 
 # --- AUTONOMOUS BRAIN RESTORATION ---
 def autonomous_restoration():
-    """
-    Zero-Touch Atomic Handshake
-    Ensures AI Brain (347MB) is present on-boot.
-    """
+    """Ensures AI Brain is present on-boot."""
     checkpoint_idx = MODELS_DIR / "model.ckpt-667589.index"
     checkpoint_data = MODELS_DIR / "model.ckpt-667589.data-00000-of-00001"
 
@@ -47,9 +44,7 @@ def autonomous_restoration():
         dest = MODELS_DIR / "hmr_auto_restore.tar.gz"
         try:
             MODELS_DIR.mkdir(exist_ok=True)
-            logger.info(f"📥 Pulling 347MB weights from secure mirror...")
             urllib.request.urlretrieve(url, dest)
-            logger.info("📦 Extracting AI Brain...")
             with tarfile.open(dest, 'r:gz') as tar:
                 tar.extractall(MODELS_DIR)
             os.remove(dest)
@@ -61,7 +56,6 @@ def autonomous_restoration():
 
 @asynccontextmanager
 async def lifespan(app: FastAPI):
-    # Perform on-boot expert fix
     autonomous_restoration()
     logger.info(f"KORRA Infrastructure Booting. Root: {BASE_DIR}")
     yield
@@ -70,7 +64,7 @@ async def lifespan(app: FastAPI):
 app = FastAPI(
     title="KORRA Artisan API",
     description="Production-grade AI body measurement extraction infrastructure.",
-    version="2.1.8",
+    version="2.1.9",
     lifespan=lifespan,
     docs_url="/docs",
     redoc_url="/redoc"
@@ -88,10 +82,11 @@ app.add_middleware(
 # --- API ROUTES ---
 def include_routers():
     try:
-        from api.routes import measurements, auth, health
+        from api.routes import measurements, auth, health, qrcode
         app.include_router(measurements.router, prefix="/api/v2", tags=["Measurements"])
         app.include_router(auth.router, prefix="/api/v2", tags=["Auth"])
         app.include_router(health.router, prefix="/api/v2", tags=["Health"])
+        app.include_router(qrcode.router, prefix="/api/v2/qrcode", tags=["QR Systems"])
         logger.info("✅ API Routers Synchronized.")
     except Exception as e:
         logger.error(f"❌ Router registration failed: {e}")
@@ -113,8 +108,7 @@ def get_safe_file(filename: str):
     target = BASE_DIR / filename
     if target.exists() and target.is_file():
         return FileResponse(str(target))
-    fallback = BASE_DIR / "index.html"
-    return FileResponse(str(fallback))
+    return FileResponse(str(BASE_DIR / "index.html"))
 
 @app.get("/")
 async def serve_root(): return get_safe_file("index.html")
@@ -130,6 +124,9 @@ async def serve_dashboard(): return get_safe_file("dashboard.html")
 
 @app.get("/admin")
 async def serve_admin(): return get_safe_file("admin.html")
+
+@app.get("/widget")
+async def serve_widget(): return get_safe_file("widget.html")
 
 @app.get("/{full_path:path}")
 async def catch_all(full_path: str):

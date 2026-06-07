@@ -101,6 +101,10 @@
     .health-status { font-size: 10px; font-weight: 900; text-transform: uppercase; padding: 4px 8px; border-radius: 4px; }
     .status-ok { color: var(--Mint); background: rgba(87,215,192,0.1); }
     .status-err { color: var(--Error); background: rgba(214,48,49,0.1); }
+
+    .qr-container { display: none; text-align: center; margin-top: 32px; padding: 24px; border-radius: 16px; background: #fff; border: 1px solid #eee; }
+    .qr-container img { width: 200px; height: 200px; margin-bottom: 16px; }
+    .qr-url { font-size: 10px; color: #666; font-family: monospace; word-break: break-all; }
   </style>
 </head>
 <body>
@@ -213,8 +217,20 @@
             <div class="glass-card">
               <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:32px">
                 <h2 class="section-title" style="margin-bottom:0">Testing Lab</h2>
-                <button class="btn-action" onclick="localStorage.removeItem('korra_admin_tests'); location.reload();">Clear History</button>
+                <div style="display:flex; gap:12px">
+                   <button class="btn-action" id="btnGenerateQR" style="border-color:var(--Mint); color:var(--Mint)">Generate In-Store QR</button>
+                   <button class="btn-action" onclick="localStorage.removeItem('korra_admin_tests'); location.reload();">Clear History</button>
+                </div>
               </div>
+
+              <!-- QR DISPLAY BOX -->
+              <div class="qr-container" id="qrBox">
+                <img id="qrImg" src="" alt="Scan QR">
+                <div class="qr-url" id="qrUrl"></div>
+                <button class="btn-action" style="margin-top:16px" onclick="window.print()">Print for Store</button>
+                <button class="btn-action" style="margin-top:16px; border:none" onclick="document.getElementById('qrBox').style.display='none'">Dismiss</button>
+              </div>
+
               <div style="display:flex; flex-direction:column; gap:32px">
                  <div class="glass-card" style="margin-bottom:0; display:flex; justify-content:space-between; align-items:center">
                    <div style="flex:1; margin-right:48px">
@@ -261,7 +277,6 @@
     </div>
   </main>
 
-  <!-- --- PRODUCTION ASSETS --- -->
   <script src="/assets/supabase.min.js"></script>
   <script src="/assets/three.min.js"></script>
   <script src="/assets/korra_viz.js"></script>
@@ -362,6 +377,28 @@
             } catch (err) { console.error("Handshake Failure:", err); }
           }
           loadGlobalStats();
+
+          // QR GENERATION HANDSHAKER
+          document.getElementById('btnGenerateQR').addEventListener('click', async () => {
+             const btn = document.getElementById('btnGenerateQR');
+             btn.disabled = true; btn.textContent = 'GENERATING...';
+
+             const fd = new FormData();
+             fd.append('merchant_id', session.user.id);
+             fd.append('client_name', 'In-Store Customer');
+
+             try {
+                const res = await fetch('/api/v2/qrcode/generate', { method: 'POST', body: fd });
+                if(res.ok) {
+                   const data = await res.json();
+                   document.getElementById('qrImg').src = data.qr_code_base64;
+                   document.getElementById('qrUrl').textContent = data.scan_url;
+                   document.getElementById('qrBox').style.display = 'block';
+                   window.scrollTo({ top: 0, behavior: 'smooth' });
+                }
+             } catch(e) { alert("QR Engine Handshake Failed."); }
+             finally { btn.disabled = false; btn.textContent = 'Generate In-Store QR'; }
+          });
 
           document.getElementById('btnRestoreBrain').addEventListener('click', async () => {
              const btn = document.getElementById('btnRestoreBrain');
