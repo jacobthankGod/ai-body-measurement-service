@@ -15,7 +15,6 @@ from contextlib import asynccontextmanager
 from pathlib import Path
 
 # --- CORE PATH RESOLUTION ---
-# Use getcwd() for absolute reliability in container environments like Render
 BASE_DIR = Path(os.getcwd()).resolve()
 if str(BASE_DIR) not in sys.path:
     sys.path.insert(0, str(BASE_DIR))
@@ -36,11 +35,11 @@ async def lifespan(app: FastAPI):
 
 app = FastAPI(
     title="KORRA Artisan API",
-    description="Production-grade AI body measurement extraction",
+    description="Production-grade AI body measurement extraction infrastructure. (Phase 18 Active)",
     version="2.1.2",
     lifespan=lifespan,
-    docs_url=None,
-    redoc_url=None
+    docs_url="/docs", # Activated for Phase 18
+    redoc_url="/redoc"
 )
 
 # --- SECURITY: CORS ---
@@ -77,15 +76,11 @@ mesh_dir.mkdir(parents=True, exist_ok=True)
 if public_dir.exists():
     app.mount("/assets", StaticFiles(directory=str(public_dir)), name="assets")
 
-# Mount mesh cache for technical diagnostics
 app.mount("/meshes", StaticFiles(directory=str(mesh_dir)), name="meshes")
-else:
-    logger.warning("WARN: /public directory missing. Asset serving may fail.")
 
-# --- 3. HARDENED MPA ROUTING (Zero-Recursion) ---
+# --- 3. HARDENED MPA ROUTING ---
 
 def get_safe_file(filename: str):
-    """Natively serve a file from root with existence validation."""
     target = BASE_DIR / filename
     if target.exists() and target.is_file():
         return FileResponse(str(target))
@@ -107,29 +102,27 @@ async def serve_dashboard(): return get_safe_file("dashboard.html")
 @app.get("/admin")
 async def serve_admin(): return get_safe_file("admin.html")
 
+@app.get("/developers")
+async def serve_api_portal(): return get_safe_file("api.html")
+
 @app.get("/{full_path:path}")
 async def catch_all(full_path: str):
-    # 1. Security Check
     if ".." in full_path or full_path.startswith("/"):
         return JSONResponse(status_code=400, content={"error": "Illegal path access"})
 
-    # 2. Support direct .html hits
     if full_path.endswith(".html"):
         return get_safe_file(full_path)
 
-    # 3. Check for public assets
     asset_file = public_dir / full_path
     if asset_file.exists() and asset_file.is_file():
         return FileResponse(str(asset_file))
 
-    # 4. Final Fallback (SPA Style for dashboard hashes etc)
     return get_safe_file("index.html")
 
 # --- 4. GLOBAL ERROR HANDLER ---
 @app.exception_handler(Exception)
 async def production_exception_handler(request: Request, exc: Exception):
     logger.error(f"CRITICAL SYSTEM ERROR: {exc}")
-    traceback.print_exc()
     return JSONResponse(
         status_code=500,
         content={"error": "Infrastructure Error. Please contact KORRA technical support."}
@@ -139,6 +132,5 @@ handler = app
 
 if __name__ == "__main__":
     import uvicorn
-    # Render standard: listen on 0.0.0.0 and use PORT env
     port = int(os.environ.get("PORT", 5001))
     uvicorn.run(app, host="0.0.0.0", port=port)
