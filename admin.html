@@ -300,14 +300,16 @@
 
         async function measureLatency() {
           const start = Date.now();
+          const latencyEl = document.getElementById('statLatency');
+          const healthEl = document.getElementById('healthVersion');
           try {
             const res = await fetch('/api/v2/health');
             if(res.ok) {
               const d = await res.json();
-              document.getElementById('statLatency').textContent = `${Date.now() - start}ms`;
-              document.getElementById('healthVersion').textContent = `FastAPI Service ${d.version} • Active`;
+              if(latencyEl) latencyEl.textContent = `${Date.now() - start}ms`;
+              if(healthEl) healthEl.textContent = `FastAPI Service ${d.version} • Active`;
             }
-          } catch(e) { document.getElementById('statLatency').textContent = 'Offline'; }
+          } catch(e) { if(latencyEl) latencyEl.textContent = 'Offline'; }
         }
         setInterval(measureLatency, 5000); measureLatency();
 
@@ -315,15 +317,19 @@
            try {
              const { data: profiles, count: merchantCount } = await client.from('profiles').select('*', { count: 'exact' });
              masterProfiles = profiles || [];
-             if(document.getElementById('statMerchants')) document.getElementById('statMerchants').textContent = merchantCount || 0;
+
+             const mEl = document.getElementById('statMerchants');
+             if(mEl) mEl.textContent = merchantCount || 0;
 
              const { count: scanCount } = await client.from('measurements').select('*', { count: 'exact', head: true });
-             if(document.getElementById('statScans')) document.getElementById('statScans').textContent = scanCount || 0;
+             const sEl = document.getElementById('statScans');
+             if(sEl) sEl.textContent = scanCount || 0;
 
              const { data: invoices } = await client.from('invoices').select('*').order('paid_at', { ascending: false });
              if(invoices) {
                 const totalRevenue = invoices.reduce((sum, inv) => sum + (inv.amount_paid || 0), 0);
-                if(document.getElementById('statRevenue')) document.getElementById('statRevenue').textContent = '₦' + (totalRevenue / 100).toLocaleString();
+                const rEl = document.getElementById('statRevenue');
+                if(rEl) rEl.textContent = '₦' + (totalRevenue / 100).toLocaleString();
 
                 const fList = document.getElementById('financeList');
                 if(fList) {
@@ -345,15 +351,22 @@
 
         window.triggerOverride = (id, name) => {
            targetUserId = id;
-           document.getElementById('targetMerchantName').textContent = name;
-           document.getElementById('overrideModal').classList.add('active');
+           const tName = document.getElementById('targetMerchantName');
+           if(tName) tName.textContent = name;
+           const oMod = document.getElementById('overrideModal');
+           if(oMod) oMod.classList.add('active');
         };
 
         document.getElementById('btnConfirmOverride').addEventListener('click', async () => {
-           const val = parseInt(document.getElementById('newCreditValue').value);
+           const nVal = document.getElementById('newCreditValue');
+           const val = parseInt(nVal.value);
            if(isNaN(val)) return;
            const { error } = await client.from('profiles').update({ credits: val }).eq('id', targetUserId);
-           if(!error) { document.getElementById('overrideModal').classList.remove('active'); loadGlobalStats(); }
+           if(!error) {
+             const oMod = document.getElementById('overrideModal');
+             if(oMod) oMod.classList.remove('active');
+             loadGlobalStats();
+           }
         });
 
         document.getElementById('adminScanForm').addEventListener('submit', async (e) => {
@@ -370,17 +383,23 @@
              const res = await fetch('/api/v2/measurements/extract', { method: 'POST', headers: { 'X-API-Key': ADMIN_BYPASS_KEY }, body: fd });
              if (res.ok) {
                 const data = await res.json();
-                const m = data.biometrics || {};
-                document.getElementById('adminTestResults').innerHTML = `
-                  <div class="result-grid">
-                    <div class="result-item"><div class="result-label">Chest</div><div class="result-value">${m.chest || '--'} cm</div></div>
-                    <div class="result-item"><div class="result-label">Waist</div><div class="result-value">${m.waist || '--'} cm</div></div>
-                    <div class="result-item"><div class="result-label">Hips</div><div class="result-value">${m.hips || '--'} cm</div></div>
-                    <div class="result-item"><div class="result-label">Inseam</div><div class="result-value">${m.inseam || '--'} cm</div></div>
-                  </div>
-                  <p style="font-size:10px; color:var(--Mint); margin-top:16px">✓ Admin Handshake: 0 Credits Consumed.</p>
-                `;
-                document.getElementById('adminScanModal').classList.remove('active');
+                const m = data.measurements || {};
+                const resDiv = document.getElementById('adminTestResults');
+                if(resDiv) {
+                  resDiv.innerHTML = `
+                    <div class="result-grid">
+                      <div class="result-item"><div class="result-label">Shoulder</div><div class="result-value">${m.Shoulder || '--'} cm</div></div>
+                      <div class="result-item"><div class="result-label">Chest Round</div><div class="result-value">${m['Chest Round'] || '--'} cm</div></div>
+                      <div class="result-item"><div class="result-label">Waist Round</div><div class="result-value">${m['Waist Round'] || '--'} cm</div></div>
+                      <div class="result-item"><div class="result-label">Hip Round</div><div class="result-value">${m['Hip Round'] || '--'} cm</div></div>
+                      <div class="result-item"><div class="result-label">Inseam</div><div class="result-value">${m.Inseam || '--'} cm</div></div>
+                      <div class="result-item"><div class="result-label">Trouser Length</div><div class="result-value">${m['Trouser Length'] || '--'} cm</div></div>
+                    </div>
+                    <p style="font-size:10px; color:var(--Mint); margin-top:16px">✓ Authenticated Extraction: 0 Credits Consumed.</p>
+                  `;
+                }
+                const aMod = document.getElementById('adminScanModal');
+                if(aMod) aMod.classList.remove('active');
                 loadGlobalStats();
              } else { alert("Extraction failed on AI core."); }
            } catch (err) { alert("AI Engine connection error."); } finally { btn.disabled = false; btn.textContent = 'Execute Benchmarking'; }
