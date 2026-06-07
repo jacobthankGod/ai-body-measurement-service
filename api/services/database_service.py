@@ -1,17 +1,20 @@
 """
-Supabase Database Service
-========================
-Handles persistence for API keys and usage logs.
+Supabase Database Service | UNICORN-GRADE PERSISTENCE
+=====================================================
+Handles atomic persistence for API keys, usage, and 3D Biometrics.
+Uses high-privilege Service Role for critical infrastructure handshakes.
 """
 import os
 import json
+import logging
 from datetime import datetime
 from typing import Dict, Optional, Any
 from supabase import create_client, Client
 
+logger = logging.getLogger("KORRA_DB")
+
 # Environment variables
 SUPABASE_URL = os.environ.get("SUPABASE_URL")
-# Use Service Role Key for backend administrative tasks
 SUPABASE_KEY = os.environ.get("SUPABASE_SERVICE_ROLE_KEY") or os.environ.get("SUPABASE_ANON_KEY")
 
 class DatabaseService:
@@ -19,94 +22,83 @@ class DatabaseService:
 
     @classmethod
     def get_client(cls) -> Optional[Client]:
-        """Initialize and return the Supabase client."""
         if cls._instance is None:
             if not SUPABASE_URL or not SUPABASE_KEY:
-                print("Warning: Supabase credentials missing. Database functionality disabled.")
+                logger.error("❌ Infrastructure Failure: Supabase Credentials Missing.")
                 return None
             try:
                 cls._instance = create_client(SUPABASE_URL, SUPABASE_KEY)
             except Exception as e:
-                print(f"Error initializing Supabase client: {e}")
+                logger.error(f"❌ Handshake Error: {e}")
                 return None
         return cls._instance
 
     @classmethod
     async def get_api_key(cls, api_key: str) -> Optional[Dict[str, Any]]:
-        """Fetch API key details from Supabase."""
         client = cls.get_client()
-        if not client:
-            return None
-
+        if not client: return None
         try:
             response = client.table("api_keys").select("*").eq("key", api_key).eq("is_active", True).execute()
-            if response.data:
-                return response.data[0]
-        except Exception as e:
-            print(f"Error fetching API key from Supabase: {e}")
+            if response.data: return response.data[0]
+        except Exception as e: logger.error(f"PfError: API Key Lookup Failed: {e}")
         return None
 
     @classmethod
-    async def update_usage(cls, api_key: str):
-        """Update usage stats in Supabase."""
+    async def save_measurement(cls, user_id: str, client_name: str, height: float, gender: str, biometrics: dict, landmarks: dict = None, mesh_url: str = None):
+        """
+        UNICORN-GRADE ATOMIC SAVE
+        Persists full biometric record to the global PostgreSQL vault.
+        """
         client = cls.get_client()
-        if not client:
-            return
-
-        now = datetime.now()
-        month_key = f"{now.year}-{now.month:02d}"
-        day_key = now.strftime('%Y-%m-%d')
+        if not client: return None
 
         try:
-            # 1. Fetch current usage log
-            response = client.table("usage_logs").select("*").eq("api_key", api_key).execute()
+            payload = {
+                "user_id": user_id,
+                "client_name": client_name,
+                "height": height,
+                "gender": gender,
+                "biometrics": biometrics,
+                "landmarks_3d": landmarks if landmarks else {},
+                "mesh_url": mesh_url,
+                "created_at": datetime.utcnow().isoformat()
+            }
 
+            response = client.table("measurements").insert(payload).execute()
+            if response.data:
+                logger.info(f"✅ UNICORN PERSISTENCE: Record {response.data[0]['id']} locked in vault.")
+                return response.data[0]
+        except Exception as e:
+            logger.error(f"❌ ATOMIC SAVE FAILED: {e}")
+            return None
+
+    @classmethod
+    async def update_usage(cls, api_key: str):
+        client = cls.get_client()
+        if not client: return
+        now = datetime.now()
+        day_key = now.strftime('%Y-%m-%d')
+        try:
+            response = client.table("usage_logs").select("*").eq("api_key", api_key).execute()
             if response.data:
                 log = response.data[0]
-                monthly_usage = log.get("monthly_usage", {})
-                daily_usage = log.get("daily_usage", {})
-
-                # Increment counts
-                monthly_usage[month_key] = monthly_usage.get(month_key, 0) + 1
-                daily_usage[day_key] = daily_usage.get(day_key, 0) + 1
-
-                # Update record
                 client.table("usage_logs").update({
                     "total_count": log.get("total_count", 0) + 1,
-                    "monthly_usage": monthly_usage,
-                    "daily_usage": daily_usage,
                     "last_used": now.isoformat()
                 }).eq("api_key", api_key).execute()
             else:
-                # Create initial record
                 client.table("usage_logs").insert({
-                    "api_key": api_key,
-                    "total_count": 1,
-                    "monthly_usage": {month_key: 1},
-                    "daily_usage": {day_key: 1},
-                    "last_used": now.isoformat(),
-                    "created_at": now.isoformat()
+                    "api_key": api_key, "total_count": 1, "last_used": now.isoformat()
                 }).execute()
-
-        except Exception as e:
-            print(f"Error updating usage in Supabase: {e}")
+        except Exception as e: logger.error(f"Usage Update Failed: {e}")
 
     @classmethod
-    async def save_api_key(cls, api_key: str, user_id: str, tier: str = "tailor_elite"):
-        """Save a new API key to Supabase."""
+    async def save_api_key(cls, api_key: str, user_id: str, tier: str = "tailor_pro"):
         client = cls.get_client()
-        if not client:
-            return False
-
+        if not client: return False
         try:
             client.table("api_keys").insert({
-                "key": api_key,
-                "user_id": user_id,
-                "tier": tier,
-                "created_at": datetime.now().isoformat(),
-                "is_active": True
+                "key": api_key, "user_id": user_id, "tier": tier, "is_active": True
             }).execute()
             return True
-        except Exception as e:
-            print(f"Error saving API key to Supabase: {e}")
-            return False
+        except Exception as e: logger.error(f"Key Persistence Failed: {e}"); return False
