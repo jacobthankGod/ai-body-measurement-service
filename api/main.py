@@ -58,15 +58,17 @@ def autonomous_restoration():
 
 @asynccontextmanager
 async def lifespan(app: FastAPI):
-    autonomous_restoration()
+    # Log the root for debugging
     logger.info(f"KORRA Infrastructure Booting. Root: {BASE_DIR}")
+    # Perform on-boot expert fix
+    autonomous_restoration()
     yield
     logger.info("KORRA Infrastructure Shutting Down.")
 
 app = FastAPI(
     title="KORRA Artisan API",
     description="Production-grade AI body measurement extraction infrastructure.",
-    version="2.1.11",
+    version="2.1.12",
     lifespan=lifespan,
     docs_url="/docs",
     redoc_url="/redoc"
@@ -83,19 +85,37 @@ app.add_middleware(
 
 # --- API ROUTE REGISTRATION ---
 # CRITICAL: Routes are registered BEFORE the catch-all HTML fallback
-def include_routers():
+
+def register_routers(app: FastAPI):
     try:
         from api.routes import measurements, auth, health, qrcode, sharing
-        app.include_router(measurements.router, prefix="/api/v2", tags=["Measurements"])
-        app.include_router(auth.router, prefix="/api/v2", tags=["Auth"])
-        app.include_router(health.router, prefix="/api/v2", tags=["Health"])
-        app.include_router(qrcode.router, prefix="/api/v2/qrcode", tags=["QR Systems"])
-        app.include_router(sharing.router, prefix="/api/v2/share", tags=["Sharing"])
-        logger.info("✅ ALL API Routers Synchronized.")
-    except Exception as e:
-        logger.error(f"❌ Router registration failed: {e}")
 
-include_routers()
+        # 1. Health (Mapped explicitly to /api/v2/health)
+        app.include_router(health.router, prefix="/api/v2", tags=["Health"])
+        logger.info("✅ Route Registered: /api/v2/health")
+
+        # 2. Measurements
+        app.include_router(measurements.router, prefix="/api/v2", tags=["Measurements"])
+        logger.info("✅ Route Registered: /api/v2/measurements")
+
+        # 3. Auth
+        app.include_router(auth.router, prefix="/api/v2", tags=["Auth"])
+        logger.info("✅ Route Registered: /api/v2/auth")
+
+        # 4. QR Systems
+        app.include_router(qrcode.router, prefix="/api/v2/qrcode", tags=["QR Systems"])
+        logger.info("✅ Route Registered: /api/v2/qrcode")
+
+        # 5. Sharing
+        app.include_router(sharing.router, prefix="/api/v2/share", tags=["Sharing"])
+        logger.info("✅ Route Registered: /api/v2/share")
+
+        logger.info("✅ ALL API Routers Handshaked Successfully.")
+    except Exception as e:
+        logger.error(f"❌ CRITICAL: Router handshake failed: {e}")
+        traceback.print_exc()
+
+register_routers(app)
 
 # --- STATIC ASSET MOUNTING ---
 public_dir = BASE_DIR / "public"
