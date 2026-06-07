@@ -1,56 +1,21 @@
 """
-Health Routes
-============
+System Health Routes | Phase 17: Infrastructure Diagnostics
+========================================================
 """
 from fastapi import APIRouter
-from datetime import datetime
+from api.services.extract_measurements import get_brain_integrity
 import os
-from pathlib import Path
+import platform
 
 router = APIRouter()
 
-# Check module availability
-BASE_DIR = Path(__file__).parent.parent.parent
-
-def check_modules():
-    """Check which measurement modules are available."""
-    modules = {
-        'hmr_3d': (BASE_DIR / 'api' / 'services' / 'extract_measurements.py').exists(),
-        'mediapipe': (BASE_DIR / 'api' / 'services' / 'mediapipe_measurement_engine.py').exists(),
-        'ratios': True,  # Always available as fallback
-    }
-    
-# Check for models - multiple naming patterns
-    models_dir = BASE_DIR / 'models'
-    if models_dir.exists():
-        hmr_patterns = [
-            models_dir / 'hmr_model.ckpt.index',
-            models_dir / 'model.ckpt-667589.index',
-        ]
-        modules['hmr_models'] = any(p.exists() for p in hmr_patterns)
-    else:
-        modules['hmr_models'] = False
-    
-    return modules
-
 @router.get("/health")
 async def health_check():
-    """Health check endpoint with cascade status."""
-    modules = check_modules()
-    
+    """Returns absolute infrastructure status."""
     return {
-        "status": "healthy",
-        "version": "2.0.0",
-        "timestamp": datetime.now().isoformat(),
-        "cascade": {
-            "enabled": True,
-            "priority": ["hmr_3d", "mediapipe", "ratios"],
-            "available": modules,
-            "accuracies": {
-                "hmr_3d": "±1-2cm",
-                "mediapipe": "±3-5cm", 
-                "ratios": "±5-10cm"
-            }
-        },
-        "api_version": "v2"
+        "status": "active",
+        "version": "2.1.6",
+        "environment": os.environ.get("RENDER_EXTERNAL_URL", "development"),
+        "platform": platform.system(),
+        "ai_integrity": get_brain_integrity()
     }
