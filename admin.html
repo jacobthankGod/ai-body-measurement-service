@@ -537,28 +537,32 @@
             reader.readAsDataURL(imgFile);
           }
 
-// Form handler
+// Form handler with full debug logging
           document.getElementById('adminScanForm').addEventListener('submit', async (e) => {
              e.preventDefault();
+             console.error("🔧 KORRA ADMIN: Form submit started");
 
              const btn = document.getElementById('btnAdminRun');
              const hVal = document.getElementById('adminHeight')?.value;
              const gVal = document.getElementById('adminGender')?.value;
-             
+             console.error("🔧 KORRA ADMIN: height=", hVal, "gender=", gVal);
+
              const fInput = document.getElementById('adminFrontPhoto');
              const sInput = document.getElementById('adminSidePhoto');
-             
-             // Input element is preserved now - direct access works!
+             console.error("🔧 KORRA ADMIN: fInput=", fInput, "sInput=", sInput);
+
              const fFile = fInput?.files?.[0];
              const sFile = sInput?.files?.[0];
-             
-             if(!fFile || !sFile) { 
+             console.error("🔧 KORRA ADMIN: fFile=", fFile, "sFile=", sFile);
+
+             if(!fFile || !sFile) {
+               console.error("❌ KORRA ADMIN: Missing files! fFile=", !!fFile, "sFile=", !!sFile);
                alert("Please upload both front and side photos.");
-               return; 
+               return;
              }
 
              btn.disabled = true; btn.textContent = 'EXTRACTING...';
-             adminLog("INITIATING VOLUMETRIC HANDSHAKE...");
+             console.error("🔧 KORRA ADMIN: Starting API call...");
 
              const fd = new FormData();
              fd.append('front', fFile);
@@ -569,8 +573,11 @@
 
              try {
                const res = await fetch('/api/v2/measurements/extract', { method: 'POST', headers: { 'X-API-Key': ADMIN_BYPASS_KEY }, body: fd });
+               console.error("🔧 KORRA ADMIN: API response status=", res.status);
+               
                if (res.ok) {
                   const data = await res.json();
+                  console.error("🔧 KORRA ADMIN: Success! data.landmarks=", !!data.landmarks, "data.mesh_url=", data.mesh_url);
                   if(data.landmarks) drawSkeleton(data.landmarks, fFile);
 
                   const history = JSON.parse(localStorage.getItem('korra_admin_tests') || '[]');
@@ -583,9 +590,13 @@
                   btn.textContent = 'Benchmarking Complete';
                } else {
                  const errData = await res.json();
+                 console.error("❌ KORRA ADMIN: API Error=", errData);
                  alert("Quality Error: " + (errData.detail.error || "Check lighting."));
                }
-             } catch (err) { adminLog("FATAL: CONNECTION TERMINATED."); } finally { btn.disabled = false; }
+             } catch (err) { 
+               console.error("❌ KORRA ADMIN: Exception=", err); 
+               adminLog("FATAL: CONNECTION TERMINATED."); 
+             } finally { btn.disabled = false; }
           });
 
           document.getElementById('btnExit').addEventListener('click', () => { window.location.href = '/'; });
