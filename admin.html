@@ -109,7 +109,6 @@
 
     .console-box { background: #000; border: 1px solid var(--Glass-Border); border-radius: 8px; padding: 12px; font-family: monospace; font-size: 10px; color: var(--Neutral-400); margin-top: 20px; height: 120px; overflow-y: auto; }
     .console-box .log-entry { margin-bottom: 4px; border-left: 2px solid var(--Mint); padding-left: 8px; }
-    .console-box .log-meta { color: var(--Mint); font-weight: 800; }
   </style>
 </head>
 <body>
@@ -168,7 +167,7 @@
       <h2 style="font-size:24px; margin-bottom:12px">Credit Overdrive</h2>
       <p style="color:var(--Neutral-400); margin-bottom:32px">Manually set merchant scan quota.</p>
       <div style="display:flex; flex-direction:column; gap:20px">
-        <div><label style="font-size:10px; font-weight:900; color:var(--Neutral-500); display:block; margin-bottom:8px">MERCHANT BRAND</label><div id="targetMerchantName" style="font-weight:800; font-size:18px">--</div></div>
+        <div><label style="font-size:10px; font-weight:900; color:var(--Neutral-500); display:block; margin-bottom:8px">MERCHANT BRAND</label><div id="targetMerchantName" style="font-weight:800; font-size:18px; color:var(--White)">--</div></div>
         <div><label style="font-size:10px; font-weight:900; color:var(--Neutral-500); display:block; margin-bottom:8px">NEW CREDIT BALANCE</label><input type="number" id="newCreditValue" class="search-input" style="width:100%" placeholder="50"></div>
         <button class="btn-primary" id="btnConfirmOverride" style="height:52px">Apply Override</button>
         <button class="btn-action" style="border:none" onclick="document.getElementById('overrideModal').classList.remove('active')">Cancel</button>
@@ -231,10 +230,9 @@
                    <canvas id="chartIndustry"></canvas>
                 </div>
              </div>
-
              <div class="glass-card">
-               <h2 class="section-title">Operational Overview</h2>
-               <p style="color:var(--Neutral-400); line-height:1.6">You are connected to the KORRA Digital Artisan Infrastructure core. Technical benchmarking, volumetric analysis, and global merchant growth are performing at industrial standards.</p>
+               <h2 class="section-title">System Status</h2>
+               <p style="color:var(--Neutral-400); line-height:1.6">Connected to KORRA Digital Artisan Infrastructure. All industrial extraction engines operational.</p>
              </div>
           </div>
 
@@ -260,7 +258,7 @@
                   <button class="btn-action" onclick="clearTestHistory()">Clear All Results</button>
                 </div>
               </div>
-              <p style="color:var(--Neutral-400); margin-bottom:32px">Run benchmarking extractions with dual-perspective volumetric analysis. (Phase 15 Visualization Active)</p>
+              <p style="color:var(--Neutral-400); margin-bottom:32px">Run benchmarking extractions with dual-perspective volumetric analysis.</p>
 
               <div style="display:flex; flex-direction:column; gap:32px">
                  <div class="glass-card" style="margin-bottom:0; display:flex; justify-content:space-between; align-items:center">
@@ -270,7 +268,7 @@
 
                      <div id="korra-3d-viewport">
                         <div style="width:100%; height:100%; display:flex; align-items:center; justify-content:center; color:var(--Neutral-500); font-size:10px; font-weight:900; text-transform:uppercase; letter-spacing:0.2em">
-                          3D Digital Twin: Primed
+                          3D Digital Twin: Ready
                         </div>
                      </div>
                    </div>
@@ -329,6 +327,7 @@
     </div>
   </main>
 
+  <!-- --- PRODUCTION ASSETS --- -->
   <script src="/assets/supabase.min.js"></script>
   <script src="/assets/three.min.js"></script>
   <script src="/assets/korra_viz.js"></script>
@@ -336,13 +335,14 @@
   <script src="/assets/korra_export.js"></script>
   <script src="/assets/chart.min.js"></script>
   <script src="/assets/korra_analytics.js"></script>
+
   <script>
     function handleAdminFile(input, labelId) {
       const label = document.getElementById(labelId);
-      if (input.files && input.files[0]) {
+      if (input && input.files && input.files[0]) {
         const reader = new FileReader();
         reader.onload = (e) => {
-           label.innerHTML = `<img src="${e.target.result}">`;
+           label.innerHTML = `<img src="${e.target.result}" style="width:100%; height:100%; object-fit:cover; border-radius:12px;">`;
            label.classList.add('has-image');
         };
         reader.readAsDataURL(input.files[0]);
@@ -385,214 +385,194 @@
       const ADMIN_BYPASS_KEY = "korra_admin_auth_01J0PK82X92K4";
       let masterProfiles = [];
       let targetUserId = null;
+      window.KORRA_DB = null;
 
       async function initAdmin() {
-        const client = window.supabase.createClient(config.url, config.key);
-        const { data: { session } } = await client.auth.getSession();
-        if (!session) { window.location.href = '/signin'; return; }
+        if (typeof window.supabase === 'undefined') { setTimeout(initAdmin, 500); return; }
 
-        const ADMIN_LIST = ['springbionics@gmail.com', 'admin@korra.work'];
-        if (!ADMIN_LIST.includes(session.user.email.toLowerCase())) { window.location.href = '/dashboard'; return; }
+        try {
+          window.KORRA_DB = window.supabase.createClient(config.url, config.key);
+          const { data: { session }, error: sessionError } = await window.KORRA_DB.auth.getSession();
 
-        document.getElementById('loadingOverlay').style.display = 'none';
-        document.getElementById('adminUser').textContent = session.user.email;
+          if (sessionError || !session) { window.location.href = '/signin'; return; }
 
-        const history = JSON.parse(localStorage.getItem('korra_admin_tests') || '[]');
-        window.exportCSVHistory = () => {
-          if (window.KORRA_EXPORT) window.KORRA_EXPORT.csv(history);
-        };
+          const ADMIN_LIST = ['springbionics@gmail.com', 'admin@korra.work'];
+          if (!ADMIN_LIST.includes(session.user.email.toLowerCase())) { window.location.href = '/dashboard'; return; }
 
-        function renderTestHistory() {
-          const list = JSON.parse(localStorage.getItem('korra_admin_tests') || '[]');
-          const tbody = document.getElementById('testHistoryList');
-          if(!tbody) return;
-          if(list.length === 0) return;
+          document.getElementById('loadingOverlay').style.display = 'none';
+          document.getElementById('adminUser').textContent = session.user.email;
 
-          tbody.innerHTML = list.map(t => `
-            <tr>
-              <td>${t.time}</td>
-              <td style="font-weight:700">${t.gender.toUpperCase()} / ${t.height}cm</td>
-              <td style="color:var(--Mint); font-weight:800">${t.measurements['Chest Round'] || '--'}</td>
-              <td>${t.measurements['Waist Round'] || '--'}</td>
-              <td>${t.measurements['Hip Round'] || '--'}</td>
-              <td>${t.measurements['Shoulder'] || '--'}</td>
-              <td><span class="badge" style="background:var(--Teal-900); color:var(--Mint)">Bypass OK</span></td>
-            </tr>
-          `).reverse().join('');
-        }
-        renderTestHistory();
+          // Restore History
+          function renderTestHistory() {
+            const list = JSON.parse(localStorage.getItem('korra_admin_tests') || '[]');
+            const tbody = document.getElementById('testHistoryList');
+            if(!tbody || list.length === 0) return;
 
-        document.getElementById('btnRevealKey').addEventListener('click', () => {
-           const disp = document.getElementById('adminKeyDisplay');
-           disp.textContent = disp.textContent.includes('****') ? ADMIN_BYPASS_KEY : 'korra_admin_************';
-        });
+            tbody.innerHTML = list.map(t => `
+              <tr>
+                <td>${t.time}</td>
+                <td style="font-weight:700">${t.gender.toUpperCase()} / ${t.height}cm</td>
+                <td style="color:var(--Mint); font-weight:800">${t.measurements['Chest Round'] || '--'}</td>
+                <td>${t.measurements['Waist Round'] || '--'}</td>
+                <td>${t.measurements['Hip Round'] || '--'}</td>
+                <td>${t.measurements['Shoulder'] || '--'}</td>
+                <td><span class="badge" style="background:var(--Teal-900); color:var(--Mint)">Bypass OK</span></td>
+              </tr>
+            `).reverse().join('');
+          }
+          renderTestHistory();
 
-        async function measureLatency() {
-          const start = Date.now();
-          const latencyEl = document.getElementById('statLatency');
-          const healthEl = document.getElementById('healthVersion');
-          try {
-            const res = await fetch('/api/v2/health');
-            if(res.ok) {
-              const d = await res.json();
-              if(latencyEl) latencyEl.textContent = `${Date.now() - start}ms`;
-              if(healthEl) healthEl.textContent = `FastAPI Service ${d.version} • Active`;
-            }
-          } catch(e) { if(latencyEl) latencyEl.textContent = 'Offline'; }
-        }
-        setInterval(measureLatency, 5000); measureLatency();
-
-        async function loadGlobalStats() {
-           try {
-             const { data: profiles, count: merchantCount } = await client.from('profiles').select('*', { count: 'exact' });
-             masterProfiles = profiles || [];
-             const mEl = document.getElementById('statMerchants');
-             if(mEl) mEl.textContent = merchantCount || 0;
-
-             const { count: scanCount } = await client.from('measurements').select('*', { count: 'exact', head: true });
-             const sEl = document.getElementById('statScans');
-             if(sEl) sEl.textContent = scanCount || 0;
-
-             const { data: invoices } = await client.from('invoices').select('*').order('paid_at', { ascending: false });
-             if(invoices) {
-                const totalRevenue = invoices.reduce((sum, inv) => sum + (inv.amount_paid || 0), 0);
-                const rEl = document.getElementById('statRevenue');
-                if(rEl) rEl.textContent = '₦' + (totalRevenue / 100).toLocaleString();
-
-                const fList = document.getElementById('financeList');
-                if(fList) {
-                  fList.innerHTML = invoices.map(inv => {
-                    const p = masterProfiles.find(x => x.id === inv.user_id);
-                    return `<tr><td>${new Date(inv.paid_at).toLocaleDateString()}</td><td>${p ? (p.company_name || p.full_name) : 'Unknown'}</td><td style="color:var(--Mint)">₦${(inv.amount_paid / 100).toLocaleString()}</td><td>${inv.paystack_reference}</td><td>Verified</td></tr>`;
-                  }).join('');
-                }
-             }
-             renderMerchantList(masterProfiles);
-
-             // --- PHASE 17: ANALYTICS TRIGGER ---
-             if (window.KORRA_ANALYTICS) {
-                // Generate Mock Trends (In Phase 17b, these pull from DB aggregate functions)
-                const labels = ['MON', 'TUE', 'WED', 'THU', 'FRI', 'SAT', 'SUN'];
-                const scanVelocity = [45, 78, 120, 89, 156, 210, 195];
-                const merchantGrowth = [2, 5, 8, 10, 14, 22, 28];
-                window.KORRA_ANALYTICS.initPlatformTrends('chartTrends', labels, scanVelocity, merchantGrowth);
-
-                // Industry Mix
-                const industries = [...new Set(masterProfiles.map(p => p.industry || 'Tailor'))];
-                const industryCounts = industries.map(ind => masterProfiles.filter(p => p.industry === ind).length);
-                window.KORRA_ANALYTICS.initIndustryMix('chartIndustry', industries, industryCounts);
-             }
-
-           } catch (err) { console.error("PfError: Global Sync Failure", err); }
-        }
-
-        function renderMerchantList(list) {
-           const tbody = document.getElementById('merchantList');
-           if(!tbody) return;
-           tbody.innerHTML = list.map(p => `<tr><td>${p.company_name || p.full_name || 'Artisan'}</td><td>${p.industry || 'Tailor'}</td><td>${p.credits || 0}</td><td>${new Date(p.created_at).toLocaleDateString()}</td><td><button class="btn-action" onclick="window.triggerOverride('${p.id}', '${p.company_name || p.full_name}')">Override</button></td></tr>`).join('');
-        }
-
-        window.triggerOverride = (id, name) => {
-           targetUserId = id;
-           const tName = document.getElementById('targetMerchantName');
-           if(tName) tName.textContent = name;
-           const oMod = document.getElementById('overrideModal');
-           if(oMod) oMod.classList.add('active');
-        };
-
-        document.getElementById('btnConfirmOverride').addEventListener('click', async () => {
-           const val = parseInt(document.getElementById('newCreditValue').value);
-           if(isNaN(val)) return;
-           const { error } = await client.from('profiles').update({ credits: val }).eq('id', targetUserId);
-           if(!error) { document.getElementById('overrideModal').classList.remove('active'); loadGlobalStats(); }
-        });
-
-        // --- PHASE 15: BONE-MAPPING VISUALIZER ---
-        function drawSkeleton(landmarks, imgFile) {
-          const viz = document.getElementById('landmarkViz');
-          const canvas = document.getElementById('vizCanvas');
-          const imgEl = document.getElementById('vizImg');
-          const ctx = canvas.getContext('2d');
-
-          viz.style.display = 'block';
-          const reader = new FileReader();
-          reader.onload = (e) => {
-            imgEl.src = e.target.result;
-            imgEl.onload = () => {
-              canvas.width = imgEl.clientWidth;
-              canvas.height = imgEl.clientHeight;
-              ctx.clearRect(0, 0, canvas.width, canvas.height);
-              ctx.fillStyle = '#57D7C0';
-              ctx.shadowBlur = 10;
-              ctx.shadowColor = '#57D7C0';
-
-              for (const [name, pt] of Object.entries(landmarks)) {
-                 const x = pt[0] * canvas.width;
-                 const y = pt[1] * canvas.height;
-                 ctx.beginPath();
-                 ctx.arc(x, y, 4, 0, Math.PI * 2);
-                 ctx.fill();
-              }
-              adminLog("VISUAL PROOF: LANDMARKS ALIGNED.", true);
-            };
+          window.exportCSVHistory = () => {
+             const list = JSON.parse(localStorage.getItem('korra_admin_tests') || '[]');
+             if (window.KORRA_EXPORT) window.KORRA_EXPORT.csv(list);
           };
-          reader.readAsDataURL(imgFile);
-        }
 
-        document.getElementById('adminScanForm').addEventListener('submit', async (e) => {
-           e.preventDefault();
-           const btn = document.getElementById('btnAdminRun');
-           const h = document.getElementById('adminHeight').value;
-           const g = document.getElementById('adminGender').value;
-           const f = document.getElementById('adminFrontPhoto').files[0];
-           const s = document.getElementById('adminSidePhoto').files[0];
+          document.getElementById('btnRevealKey').addEventListener('click', () => {
+             const disp = document.getElementById('adminKeyDisplay');
+             disp.textContent = disp.textContent.includes('****') ? ADMIN_BYPASS_KEY : 'korra_admin_************';
+          });
 
-           btn.disabled = true; btn.textContent = 'EXTRACTING...';
-           adminLog("INITIATING VOLUMETRIC HANDSHAKE...");
+          async function measureLatency() {
+            const start = Date.now();
+            try {
+              const res = await fetch('/api/v2/health');
+              if(res.ok) {
+                const d = await res.json();
+                document.getElementById('statLatency').textContent = `${Date.now() - start}ms`;
+                document.getElementById('healthVersion').textContent = `FastAPI Service ${d.version} • Active`;
+              }
+            } catch(e) { document.getElementById('statLatency').textContent = 'Offline'; }
+          }
+          setInterval(measureLatency, 5000); measureLatency();
 
-           const fd = new FormData(); fd.append('front', f); fd.append('side', s); fd.append('height', h); fd.append('gender', g); fd.append('client_name', 'ADMIN_LAB_TEST');
+          async function loadGlobalStats() {
+             try {
+               const { data: profiles, count: merchantCount } = await window.KORRA_DB.from('profiles').select('*', { count: 'exact' });
+               masterProfiles = profiles || [];
+               document.getElementById('statMerchants').textContent = merchantCount || 0;
 
-           try {
-             adminLog("DETECTING DUAL-PERSPECTIVE LANDMARKS...");
-             const res = await fetch('/api/v2/measurements/extract', { method: 'POST', headers: { 'X-API-Key': ADMIN_BYPASS_KEY }, body: fd });
+               const { count: scanCount } = await window.KORRA_DB.from('measurements').select('*', { count: 'exact', head: true });
+               document.getElementById('statScans').textContent = scanCount || 0;
 
-             if (res.ok) {
-                const data = await res.json();
-                adminLog("SUCCESS: BIOMETRICS CALCULATED.", true);
+               const { data: invoices } = await window.KORRA_DB.from('invoices').select('*').order('paid_at', { ascending: false });
+               if(invoices) {
+                  const totalRevenue = invoices.reduce((sum, inv) => sum + (inv.amount_paid || 0), 0);
+                  document.getElementById('statRevenue').textContent = '₦' + (totalRevenue / 100).toLocaleString();
 
-                if (!data.success && data.code === "POSE_UNSTABLE") {
-                  adminLog("POSE ERROR: " + data.error);
-                  alert("Quality Warning: " + data.error + " Landmarks shown for diagnosis.");
-                  if(data.landmarks) drawSkeleton(data.landmarks, f);
-                  return;
+                  const fList = document.getElementById('financeList');
+                  if(fList) {
+                    fList.innerHTML = invoices.map(inv => {
+                      const p = masterProfiles.find(x => x.id === inv.user_id);
+                      return `<tr><td>${new Date(inv.paid_at).toLocaleDateString()}</td><td>${p ? (p.company_name || p.full_name) : 'Unknown'}</td><td style="color:var(--Mint)">₦${(inv.amount_paid / 100).toLocaleString()}</td><td>${inv.paystack_reference}</td><td>Verified</td></tr>`;
+                    }).join('');
+                  }
+               }
+               renderMerchantList(masterProfiles);
+
+               if (window.KORRA_ANALYTICS) {
+                  const labels = ['MON', 'TUE', 'WED', 'THU', 'FRI', 'SAT', 'SUN'];
+                  const scanVelocity = [45, 78, 120, 89, 156, 210, 195];
+                  const merchantGrowth = [2, 5, 8, 10, 14, 22, 28];
+                  window.KORRA_ANALYTICS.initPlatformTrends('chartTrends', labels, scanVelocity, merchantGrowth);
+                  const industries = [...new Set(masterProfiles.map(p => p.industry || 'Tailor'))];
+                  const industryCounts = industries.map(ind => masterProfiles.filter(p => p.industry === ind).length);
+                  window.KORRA_ANALYTICS.initIndustryMix('chartIndustry', industries, industryCounts);
+               }
+
+             } catch (err) { console.error("PfError: Global Sync Failure", err); }
+          }
+
+          function renderMerchantList(list) {
+             const tbody = document.getElementById('merchantList');
+             if(!tbody) return;
+             tbody.innerHTML = list.map(p => `<tr><td>${p.company_name || p.full_name || 'Artisan'}</td><td>${p.industry || 'Tailor'}</td><td>${p.credits || 0}</td><td>${new Date(p.created_at).toLocaleDateString()}</td><td><button class="btn-action" onclick="window.triggerOverride('${p.id}', '${p.company_name || p.full_name}')">Override</button></td></tr>`).join('');
+          }
+
+          window.triggerOverride = (id, name) => {
+             targetUserId = id;
+             document.getElementById('targetMerchantName').textContent = name;
+             document.getElementById('overrideModal').classList.add('active');
+          };
+
+          document.getElementById('btnConfirmOverride').addEventListener('click', async () => {
+             const val = parseInt(document.getElementById('newCreditValue').value);
+             if(isNaN(val)) return;
+             const { error } = await window.KORRA_DB.from('profiles').update({ credits: val }).eq('id', targetUserId);
+             if(!error) { document.getElementById('overrideModal').classList.remove('active'); loadGlobalStats(); }
+          });
+
+          // LANDMARK ENGINE (UI SIDE)
+          function drawSkeleton(landmarks, imgFile) {
+            const viz = document.getElementById('landmarkViz');
+            const canvas = document.getElementById('vizCanvas');
+            const imgEl = document.getElementById('vizImg');
+            const ctx = canvas.getContext('2d');
+            viz.style.display = 'block';
+            const reader = new FileReader();
+            reader.onload = (e) => {
+              imgEl.src = e.target.result;
+              imgEl.onload = () => {
+                canvas.width = imgEl.clientWidth; canvas.height = imgEl.clientHeight;
+                ctx.clearRect(0, 0, canvas.width, canvas.height);
+                ctx.fillStyle = '#57D7C0'; ctx.shadowBlur = 10; ctx.shadowColor = '#57D7C0';
+                for (const [name, pt] of Object.entries(landmarks)) {
+                   const x = pt[0] * canvas.width; const y = pt[1] * canvas.height;
+                   ctx.beginPath(); ctx.arc(4, y, 4, 0, Math.PI * 2); ctx.fill();
                 }
+              };
+            };
+            reader.readAsDataURL(imgFile);
+          }
 
-                if(data.landmarks) {
-                  drawSkeleton(data.landmarks, f);
-                }
+          document.getElementById('adminScanForm').addEventListener('submit', async (e) => {
+             e.preventDefault();
+             const btn = document.getElementById('btnAdminRun');
+             const h = document.getElementById('adminHeight').value;
+             const g = document.getElementById('adminGender').value;
+             const fInput = document.getElementById('adminFrontPhoto');
+             const sInput = document.getElementById('adminSidePhoto');
 
-                const history = JSON.parse(localStorage.getItem('korra_admin_tests') || '[]');
-                history.push({ time: new Date().toLocaleTimeString(), gender: g, height: h, measurements: data.measurements });
-                localStorage.setItem('korra_admin_tests', JSON.stringify(history.slice(-10)));
+             if(!fInput.files[0] || !sInput.files[0]) { alert("Photos required."); return; }
 
-                // --- PHASE 16: 3D DIGITAL TWIN ACTIVATION ---
-                if (window.KORRA_VIZ) {
-                   window.KORRA_VIZ.loadMesh(data.mesh_url);
-                }
+             btn.disabled = true; btn.textContent = 'EXTRACTING...';
+             adminLog("INITIATING VOLUMETRIC HANDSHAKE...");
 
-                renderTestHistory();
-                loadGlobalStats();
-                btn.textContent = 'Session Complete';
-             } else { adminLog("ERROR: BACKEND HANDSHAKE FAILED."); }
-           } catch (err) { adminLog("FATAL: CONNECTION TERMINATED."); } finally { btn.disabled = false; }
-        });
+             const fd = new FormData();
+             fd.append('front', fInput.files[0]);
+             fd.append('side', sInput.files[0]);
+             fd.append('height', h);
+             fd.append('gender', g);
+             fd.append('client_name', 'ADMIN_LAB_TEST');
 
-        document.getElementById('btnExit').addEventListener('click', () => { window.location.href = '/'; });
-        loadGlobalStats(); switchTab(window.location.hash.replace('#', '') || 'overview');
+             try {
+               const res = await fetch('/api/v2/measurements/extract', { method: 'POST', headers: { 'X-API-Key': ADMIN_BYPASS_KEY }, body: fd });
+               if (res.ok) {
+                  const data = await res.json();
+                  if(data.landmarks) drawSkeleton(data.landmarks, fInput.files[0]);
 
-        // --- PHASE 11: INITIALIZE 3D ENGINE ---
-        if (window.KORRA_VIZ) {
-          window.KORRA_VIZ.init('korra-3d-viewport');
+                  const history = JSON.parse(localStorage.getItem('korra_admin_tests') || '[]');
+                  history.push({ time: new Date().toLocaleTimeString(), gender: g, height: h, measurements: data.measurements });
+                  localStorage.setItem('korra_admin_tests', JSON.stringify(history.slice(-10)));
+                  renderTestHistory();
+                  if (window.KORRA_VIZ) window.KORRA_VIZ.loadMesh(data.mesh_url);
+                  adminLog("SUCCESS: EXTRACTION VERIFIED.", true);
+                  loadGlobalStats();
+                  btn.textContent = 'Benchmarking Complete';
+               } else {
+                 const errData = await res.json();
+                 alert("Quality Error: " + (errData.detail.error || "Check lighting."));
+               }
+             } catch (err) { adminLog("FATAL: CONNECTION TERMINATED."); } finally { btn.disabled = false; }
+          });
+
+          document.getElementById('btnExit').addEventListener('click', () => { window.location.href = '/'; });
+          loadGlobalStats();
+          switchTab(window.location.hash.replace('#', '') || 'overview');
+          if (window.KORRA_VIZ) window.KORRA_VIZ.init('korra-3d-viewport');
+
+        } catch (err) {
+          console.error("Mauritius Handshake Failure:", err);
+          document.getElementById('loadingOverlay').innerHTML = `<div style="text-align:center; padding:40px;"><h2 style="color:var(--Error)">Security Interrupted</h2><p>Please use Incognito mode to bypass extension conflicts.</p></div>`;
         }
       }
       initAdmin();
