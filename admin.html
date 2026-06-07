@@ -524,31 +524,74 @@
             reader.readAsDataURL(imgFile);
           }
 
+// Mauritius-Level recovery UI - Show graceful error modal
+          function showRecoveryUI(message, isNetwork = false) {
+            const overlay = document.createElement('div');
+            overlay.id = 'mauritiusRecovery';
+            overlay.style.cssText = 'position:fixed;inset:0;background:rgba(0,0,0,0.95);z-index:99999999;display:flex;align-items:center;justify-content:center;';
+            overlay.innerHTML = `
+              <div style="background:#0a0a0a;border:1px solid var(--Glass-Border);border-radius:24px;padding:40px;max-width:500px;text-align:center">
+                <div style="font-size:48px;margin-bottom:20px">🛡️</div>
+                <h2 style="color:var(--Error);font-size:24px;margin-bottom:12px">Connection Protected</h2>
+                <p style="color:var(--Neutral-400);margin-bottom:24px;line-height:1.6">${message}</p>
+                ${isNetwork ? '<p style="color:var(--Mint);font-size:12px;margin-bottom:24px">建议使用无痕模式 bypass extension conflicts</p>' : ''}
+                <button onclick="this.closest('#mauritiusRecovery').remove();location.reload()" class="btn-primary" style="height:52px;width:100%">Retry Connection</button>
+              </div>
+            `;
+            document.body.appendChild(overlay);
+          }
+
+          // Enhanced form handler with proper DOM readiness check
           document.getElementById('adminScanForm').addEventListener('submit', async (e) => {
              e.preventDefault();
+             
+             // Mauritius-Level: Wait for DOM complete before accessing input elements
+             if(document.readyState !== 'complete') {
+               adminLog("WAIT: DOM not ready...");
+               await new Promise(r => setTimeout(r, 100));
+             }
+
              const btn = document.getElementById('btnAdminRun');
-             const h = document.getElementById('adminHeight').value;
-             const g = document.getElementById('adminGender').value;
+             const h = document.getElementById('adminHeight');
+             const g = document.getElementById('adminGender');
+             
+             // Use optional chaining for null safety
+             const hVal = h?.value;
+             const gVal = g?.value;
+             
              const fInput = document.getElementById('adminFrontPhoto');
              const sInput = document.getElementById('adminSidePhoto');
 
-             if(!fInput.files[0] || !sInput.files[0]) { alert("Photos required."); return; }
+             // Mauritius-Level null safety: Check elements exist with optional chaining before accessing .files
+             if(!fInput || !sInput) { 
+               adminLog("FATAL: Input elements not found in DOM."); 
+               showRecoveryUI("Form elements failed to initialize. Please refresh the page.");
+               return; 
+             }
+             
+             const fFiles = fInput?.files;
+             const sFiles = sInput?.files;
+             
+             if(!fFiles || !fFiles[0] || !sFiles || !sFiles[0]) { 
+               alert("Photos required."); 
+               return; 
+             }
 
              btn.disabled = true; btn.textContent = 'EXTRACTING...';
              adminLog("INITIATING VOLUMETRIC HANDSHAKE...");
 
              const fd = new FormData();
-             fd.append('front', fInput.files[0]);
-             fd.append('side', sInput.files[0]);
-             fd.append('height', h);
-             fd.append('gender', g);
+fd.append('front', fFiles[0]);
+             fd.append('side', sFiles[0]);
+             fd.append('height', hVal);
+             fd.append('gender', gVal);
              fd.append('client_name', 'ADMIN_LAB_TEST');
 
              try {
                const res = await fetch('/api/v2/measurements/extract', { method: 'POST', headers: { 'X-API-Key': ADMIN_BYPASS_KEY }, body: fd });
                if (res.ok) {
                   const data = await res.json();
-                  if(data.landmarks) drawSkeleton(data.landmarks, fInput.files[0]);
+if(data.landmarks && fInput && fInput.files && fInput.files[0]) drawSkeleton(data.landmarks, fInput.files[0]);
 
                   const history = JSON.parse(localStorage.getItem('korra_admin_tests') || '[]');
                   history.push({ time: new Date().toLocaleTimeString(), gender: g, height: h, measurements: data.measurements });
