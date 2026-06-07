@@ -38,13 +38,13 @@ async def lifespan(app: FastAPI):
 app = FastAPI(
     title="KORRA Artisan API",
     description="Production-grade AI body measurement extraction infrastructure.",
-    version="2.1.4",
+    version="2.1.5",
     lifespan=lifespan,
     docs_url="/docs",
     redoc_url="/redoc"
 )
 
-# --- SECURITY: CORS (Nuclear Open for Availability) ---
+# --- SECURITY: CORS (Nuclear Open) ---
 app.add_middleware(
     CORSMiddleware,
     allow_origins=["*"],
@@ -56,7 +56,7 @@ app.add_middleware(
 # --- 1. API ROUTES ---
 @app.get("/api/v2/health")
 async def health_check():
-    return {"status": "healthy", "version": "2.1.4", "env": "production"}
+    return {"status": "healthy", "version": "2.1.5", "env": "production"}
 
 def include_lazy_routers():
     try:
@@ -72,36 +72,27 @@ include_lazy_routers()
 
 # --- 2. STATIC ASSET MOUNTING ---
 public_dir = BASE_DIR / "public"
-# Use /tmp for mesh cache to avoid permission errors on Render
 mesh_dir = Path("/tmp/korra_mesh_cache")
 mesh_dir.mkdir(parents=True, exist_ok=True)
 
 if public_dir.exists():
     app.mount("/assets", StaticFiles(directory=str(public_dir)), name="assets")
 
-# Serve meshes from /tmp
 app.mount("/meshes", StaticFiles(directory=str(mesh_dir)), name="meshes")
 
 # --- 3. HARDENED MPA ROUTING ---
 
 def get_safe_file(filename: str):
-    """Natively serve a file from root with existence validation."""
     target = BASE_DIR / filename
     if target.exists() and target.is_file():
         return FileResponse(str(target))
 
-    # Check public folder
     public_target = public_dir / filename
     if public_target.exists() and public_target.is_file():
         return FileResponse(str(public_target))
 
-    logger.warning(f"File not found: {filename} at {target}")
-    # Return index.html as a last resort for clean routing
-    index_path = BASE_DIR / "index.html"
-    if index_path.exists():
-        return FileResponse(str(index_path))
-
-    return JSONResponse(status_code=404, content={"error": "Resource not found"})
+    logger.warning(f"File not found: {filename}. Fallback to index.html")
+    return FileResponse(str(BASE_DIR / "index.html"))
 
 @app.get("/")
 async def serve_root(): return get_safe_file("index.html")
@@ -133,7 +124,6 @@ async def catch_all(full_path: str):
     if asset_file.exists() and asset_file.is_file():
         return FileResponse(str(asset_file))
 
-    # Clean URLs fallback to index
     return get_safe_file("index.html")
 
 # --- 4. GLOBAL ERROR HANDLER ---
@@ -142,7 +132,7 @@ async def production_exception_handler(request: Request, exc: Exception):
     logger.error(f"CRITICAL SYSTEM ERROR: {exc}")
     return JSONResponse(
         status_code=500,
-        content={"error": "System error. Please refresh."}
+        content={"error": "KORRA Engine conflict. Please refresh."}
     )
 
 handler = app

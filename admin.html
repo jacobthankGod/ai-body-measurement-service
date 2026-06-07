@@ -92,32 +92,21 @@
         font-size: 12px; font-weight: 800; letter-spacing: 0.2em; text-transform: uppercase; color: var(--Mint);
     }
 
-    .result-grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 12px; margin-top: 24px; }
-    .result-item { background: rgba(255,255,255,0.05); padding: 12px; border-radius: 8px; border: 1px solid var(--Glass-Border); display: flex; flex-direction: column; justify-content: center; }
-    .result-label { font-size: 9px; font-weight: 900; color: var(--Neutral-500); text-transform: uppercase; margin-bottom: 4px; }
-    .result-value { font-size: 16px; font-weight: 800; color: var(--Mint); }
-
-    .viz-container { position: relative; width: 100%; height: 300px; background: #000; border-radius: 12px; overflow: hidden; margin-top: 24px; border: 1px solid var(--Glass-Border); }
-    .viz-canvas { position: absolute; inset: 0; width: 100%; height: 100%; z-index: 2; pointer-events: none; }
-    .viz-img { position: absolute; inset: 0; width: 100%; height: 100%; object-fit: contain; opacity: 0.6; z-index: 1; }
+    .preview-box { width: 100%; height: 120px; border-radius: 12px; border: 1px dashed var(--Glass-Border); display: flex; align-items: center; justify-content: center; overflow: hidden; position: relative; cursor: pointer; }
+    .preview-box span { font-size: 10px; font-weight: 900; color: var(--Neutral-500); text-transform: uppercase; z-index: 1; }
+    .preview-img { position: absolute; inset: 0; width: 100%; height: 100%; object-fit: cover; z-index: 2; display: none; }
 
     #korra-3d-viewport { width: 100%; height: 400px; background: #000; border-radius: 12px; margin-top: 24px; border: 1px solid var(--Glass-Border); overflow: hidden; position: relative; }
-    #korra-3d-viewport span { position: absolute; top: 12px; left: 16px; font-size: 9px; font-weight: 900; color: var(--Mint); z-index: 10; text-transform: uppercase; letter-spacing: 0.2em; background: rgba(0,0,0,0.5); padding: 4px 8px; border-radius: 4px; }
-
-    .preview-box { width: 100%; height: 120px; border-radius: 12px; border: 1px dashed var(--Glass-Border); background-size: cover; background-position: center; display: flex; align-items: center; justify-content: center; overflow: hidden; position: relative; cursor: pointer; }
-    .preview-box span { font-size: 10px; font-weight: 900; color: var(--Neutral-500); text-transform: uppercase; z-index: 1; }
-    .preview-box img { position: absolute; inset: 0; width: 100%; height: 100%; object-fit: cover; }
 
     .console-box { background: #000; border: 1px solid var(--Glass-Border); border-radius: 8px; padding: 12px; font-family: monospace; font-size: 10px; color: var(--Neutral-400); margin-top: 20px; height: 120px; overflow-y: auto; }
-    .console-box .log-entry { margin-bottom: 4px; border-left: 2px solid var(--Mint); padding-left: 8px; }
+    .log-entry { margin-bottom: 4px; border-left: 2px solid var(--Mint); padding-left: 8px; }
   </style>
 </head>
 <body>
 
   <div id="loadingOverlay">
     <div style="text-align:center">
-      <div style="font-size:12px; font-weight:800; letter-spacing:0.2em; color:var(--Mint); margin-bottom:16px">INITIALIZING AUTHORITY...</div>
-      <div id="overlayError" style="color:var(--Error); font-size:14px; display:none; margin-bottom:20px">Security Interrupted. Please check extensions.</div>
+      <div id="loadingText" style="font-size:12px; font-weight:800; letter-spacing:0.2em; color:var(--Mint); margin-bottom:16px">INITIALIZING AUTHORITY...</div>
       <button onclick="location.reload()" class="btn-primary" style="display:none" id="btnRetryOverlay">Retry Connection</button>
     </div>
   </div>
@@ -126,43 +115,40 @@
   <div class="modal-overlay" id="adminScanModal">
     <div class="modal-card">
       <h2 style="font-size:24px; margin-bottom:12px">Admin Testing Lab</h2>
-      <p style="color:var(--Neutral-400); margin-bottom:32px">Run industrial-grade benchmarking with real-time landmark visualization.</p>
+      <p style="color:var(--Neutral-400); margin-bottom:32px">Run technical benchmarks. Photos remain interactive during preview.</p>
 
-      <form id="adminScanForm" style="display:flex; flex-direction:column; gap:20px">
-        <div style="display:grid; grid-template-columns: 1fr 1fr; gap:16px">
+      <form id="adminScanForm">
+        <div style="display:grid; grid-template-columns: 1fr 1fr; gap:16px; margin-bottom:20px">
           <div>
             <label style="font-size:10px; font-weight:900; color:var(--Neutral-500); display:block; margin-bottom:8px">HEIGHT (CM)</label>
-            <input type="number" id="adminHeight" class="search-input" placeholder="180" required>
+            <input type="number" id="adminHeight" class="search-input" style="width:100%" placeholder="180" required>
           </div>
           <div>
             <label style="font-size:10px; font-weight:900; color:var(--Neutral-500); display:block; margin-bottom:8px">GENDER</label>
-            <select id="adminGender" class="search-input" style="appearance:none; cursor:pointer">
+            <select id="adminGender" class="search-input" style="width:100%; appearance:none; cursor:pointer">
               <option value="male">Male</option>
               <option value="female">Female</option>
             </select>
           </div>
         </div>
 
-        <div style="display:grid; grid-template-columns: 1fr 1fr; gap:16px">
+        <div style="display:grid; grid-template-columns: 1fr 1fr; gap:16px; margin-bottom:20px">
            <label class="preview-box" id="adminFrontLabel">
              <input type="file" id="adminFrontPhoto" accept="image/*" required style="display:none" onchange="handleAdminFile(this, 'adminFrontLabel')">
+             <img class="preview-img">
              <span>Upload Front</span>
            </label>
            <label class="preview-box" id="adminSideLabel">
              <input type="file" id="adminSidePhoto" accept="image/*" required style="display:none" onchange="handleAdminFile(this, 'adminSideLabel')">
+             <img class="preview-img">
              <span>Upload Side</span>
            </label>
         </div>
 
-        <div id="landmarkViz" class="viz-container" style="display:none">
-          <img id="vizImg" class="viz-img">
-          <canvas id="vizCanvas" class="viz-canvas"></canvas>
-        </div>
-
         <div id="adminConsole" class="console-box" style="display:none"></div>
 
-        <button type="submit" class="btn-primary" style="height:52px" id="btnAdminRun">Execute Benchmarking</button>
-        <button type="button" class="btn-action" style="border:none" onclick="location.reload()">Dismiss</button>
+        <button type="submit" class="btn-primary" style="height:52px; width:100%" id="btnAdminRun">Execute Benchmarking</button>
+        <button type="button" class="btn-action" style="border:none; width:100%; margin-top:12px" onclick="document.getElementById('adminScanModal').classList.remove('active')">Dismiss</button>
       </form>
     </div>
   </div>
@@ -198,22 +184,16 @@
 
         <section>
           <div class="stat-row">
-            <div class="glass-card stat-card"><h4>Merchants</h4><div class="value" id="statMerchants">0</div></div>
-            <div class="glass-card stat-card"><h4>Global Scans</h4><div class="value" id="statScans">0</div></div>
-            <div class="glass-card stat-card"><h4>Revenue</h4><div class="value" id="statRevenue">₦0.00</div></div>
+            <div class="glass-card stat-card"><h4>Merchants</h4><div class="value" id="statMerchants">--</div></div>
+            <div class="glass-card stat-card"><h4>Total Scans</h4><div class="value" id="statScans">--</div></div>
+            <div class="glass-card stat-card"><h4>Revenue</h4><div class="value" id="statRevenue">--</div></div>
             <div class="glass-card stat-card"><h4>AI Latency</h4><div class="value" id="statLatency">--ms</div></div>
           </div>
 
           <div id="view-overview" class="tab-view active">
-             <div style="display:grid; grid-template-columns: 1.5fr 1fr; gap:32px; margin-bottom:32px">
-                <div class="glass-card" style="margin-bottom:0; height:350px">
-                   <h4 style="font-size:10px; font-weight:900; color:var(--Mint); margin-bottom:24px">PLATFORM VELOCITY</h4>
-                   <canvas id="chartTrends"></canvas>
-                </div>
-                <div class="glass-card" style="margin-bottom:0; height:350px">
-                   <h4 style="font-size:10px; font-weight:900; color:var(--Neutral-400); margin-bottom:24px">INDUSTRY ADOPTION</h4>
-                   <canvas id="chartIndustry"></canvas>
-                </div>
+             <div class="glass-card">
+               <h2 class="section-title">Operational Status</h2>
+               <p style="color:var(--Neutral-400); line-height:1.6">Technical infrastructure is active. System performing at clinical standards.</p>
              </div>
           </div>
 
@@ -221,14 +201,14 @@
             <div class="glass-card">
               <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:32px">
                 <h2 class="section-title" style="margin-bottom:0">Testing Lab</h2>
-                <button class="btn-action" onclick="clearTestHistory()">Clear All Results</button>
+                <button class="btn-action" onclick="localStorage.removeItem('korra_admin_tests'); location.reload();">Clear History</button>
               </div>
 
               <div style="display:flex; flex-direction:column; gap:32px">
                  <div class="glass-card" style="margin-bottom:0; display:flex; justify-content:space-between; align-items:center">
                    <div style="flex:1; margin-right:48px">
                      <h4 style="font-size:10px; font-weight:900; color:var(--Mint); margin-bottom:8px">INDUSTRIAL BENCHMARK</h4>
-                     <p style="font-size:12px; color:var(--Neutral-500); margin-bottom:24px">Capture two perspectives for 3D digital twin regression.</p>
+                     <p style="font-size:12px; color:var(--Neutral-500); margin-bottom:24px">Volumetric 3D Twin Regression Engine.</p>
                      <div id="korra-3d-viewport"></div>
                    </div>
                    <button class="btn-primary" onclick="document.getElementById('adminScanModal').classList.add('active')">+ Launch Admin Scan</button>
@@ -239,7 +219,7 @@
                    <div class="table-container">
                       <table>
                         <thead>
-                          <tr><th>Time</th><th>Profile</th><th>Chest</th><th>Waist</th><th>Hips</th><th>Shoulder</th><th>Status</th></tr>
+                          <tr><th>Time</th><th>Profile</th><th>Chest</th><th>Waist</th><th>Hips</th><th>Shoulder</th></tr>
                         </thead>
                         <tbody id="testHistoryList"></tbody>
                       </table>
@@ -249,35 +229,38 @@
             </div>
           </div>
 
-          <div id="view-registry" class="tab-view">
-            <div class="glass-card"><h2 class="section-title">Merchant Registry</h2><div id="merchantList"></div></div>
-          </div>
+          <div id="view-registry" class="tab-view"><div class="glass-card"><h2 class="section-title">Registry</h2><div id="merchantList"></div></div></div>
+          <div id="view-health" class="tab-view"><div class="glass-card"><h2 class="section-title">Health</h2><div id="healthVersion"></div></div></div>
+          <div id="view-finance" class="tab-view"><div class="glass-card"><h2 class="section-title">Finance</h2><div id="financeList"></div></div></div>
 
         </section>
       </div>
     </div>
   </main>
 
+  <!-- --- PRODUCTION ASSETS --- -->
   <script src="/assets/supabase.min.js"></script>
   <script src="/assets/three.min.js"></script>
   <script src="/assets/korra_viz.js"></script>
-  <script src="/assets/jspdf.min.js"></script>
-  <script src="/assets/korra_export.js"></script>
-  <script src="/assets/chart.min.js"></script>
-  <script src="/assets/korra_analytics.js"></script>
 
   <script>
+    // DEFINTIVE NON-DESTRUCTIVE HANDLER
     function handleAdminFile(input, labelId) {
-      console.log("🔧 DEBUG: handleAdminFile triggered for", labelId);
+      console.log("🔧 KORRA DEBUG: handleAdminFile fired for", labelId);
       const label = document.getElementById(labelId);
+      const previewImg = label.querySelector('.preview-img');
+      const uploadSpan = label.querySelector('span');
+
       if (input && input.files && input.files[0]) {
-        console.log("🔧 DEBUG: File detected:", input.files[0].name);
+        console.log("🔧 KORRA DEBUG: File detected ->", input.files[0].name);
         const reader = new FileReader();
         reader.onload = (e) => {
-           label.innerHTML = `<img src="${e.target.result}" style="width:100%; height:100%; object-fit:cover; border-radius:12px;">`;
+           if(previewImg) {
+             previewImg.src = e.target.result;
+             previewImg.style.display = 'block';
+           }
+           if(uploadSpan) uploadSpan.style.display = 'none';
            label.classList.add('has-image');
-           // Re-append the hidden input so it remains in the DOM!
-           label.appendChild(input);
         };
         reader.readAsDataURL(input.files[0]);
       }
@@ -313,42 +296,32 @@
 
         try {
           const client = window.supabase.createClient(config.url, config.key);
-          const { data: { session }, error: sessionError } = await client.auth.getSession();
+          const { data: { session } } = await client.auth.getSession();
 
-          if (sessionError || !session) { window.location.href = '/signin'; return; }
+          if (!session) { window.location.href = '/signin'; return; }
 
           document.getElementById('loadingOverlay').style.display = 'none';
           document.getElementById('adminUser').textContent = session.user.email;
 
           if (window.KORRA_VIZ) window.KORRA_VIZ.init('korra-3d-viewport');
 
-          // --- DEFINTIVE FORM FIX ---
+          // --- FORM HANDLER (Z-INDEX & DOM SAFE) ---
           const form = document.getElementById('adminScanForm');
           form.addEventListener('submit', async (e) => {
              e.preventDefault();
-             console.log("🚀 DEBUG: Form Submit Handshake Started");
+             console.log("🚀 KORRA DEBUG: Form Submission Initiated");
 
              const h = document.getElementById('adminHeight').value;
              const g = document.getElementById('adminGender').value;
              const fInput = document.getElementById('adminFrontPhoto');
              const sInput = document.getElementById('adminSidePhoto');
 
-             console.log("🔧 DEBUG: Height:", h, "Gender:", g);
-             console.log("🔧 DEBUG: Front Input Found:", !!fInput);
-             console.log("🔧 DEBUG: Side Input Found:", !!sInput);
-
-             if (!fInput || !sInput) {
-                console.error("❌ DEBUG: Critical DOM Error - File inputs missing.");
-                alert("Internal Error: Form elements failed to initialize.");
-                return;
-             }
-
-             console.log("🔧 DEBUG: Front Files Count:", fInput.files.length);
-             console.log("🔧 DEBUG: Side Files Count:", sInput.files.length);
+             console.log("🔧 KORRA DEBUG: Form Inputs -> H:", h, "G:", g);
+             console.log("🔧 KORRA DEBUG: File State -> F:", fInput.files.length, "S:", sInput.files.length);
 
              if(fInput.files.length === 0 || sInput.files.length === 0) {
-               console.warn("⚠️ DEBUG: Validation Blocked - User has not selected files.");
-               alert("Photos required. Please click 'Upload' for both views.");
+               console.error("❌ KORRA DEBUG: Input Validation Failure - Missing Files");
+               alert("CRITICAL ERROR: Photos required. Please click 'Upload' again.");
                return;
              }
 
@@ -373,10 +346,13 @@
                   const data = await res.json();
                   if (window.KORRA_VIZ) window.KORRA_VIZ.loadMesh(data.mesh_url);
                   adminLog("SUCCESS: BIOMETRICS CALCULATED.");
-                  btn.textContent = 'Complete';
-               } else { alert("AI Core rejection."); }
+                  btn.textContent = 'Benchmarking Complete';
+               } else {
+                 const errData = await res.json();
+                 alert("Quality Error: " + errData.detail.error);
+               }
              } catch (err) {
-               console.error("❌ DEBUG: API Handshake Failed:", err);
+               console.error("❌ KORRA DEBUG: API Handshake Failed", err);
                adminLog("FATAL: CONNECTION CLOSED.");
              } finally { btn.disabled = false; }
           });
@@ -385,8 +361,7 @@
 
         } catch (err) {
           console.error("Admin Handshake Failure:", err);
-          document.getElementById('overlayError').style.display = 'block';
-          document.getElementById('btnRetryOverlay').style.display = 'inline-block';
+          document.getElementById('loadingOverlay').innerHTML = `<div style="text-align:center; padding:40px;"><h2 style="color:var(--Error)">Security Interrupted</h2><p>Please use Incognito mode.</p></div>`;
         }
       }
       initAdmin();
