@@ -67,7 +67,8 @@ async def extract_measurements(
     mesh_path = TEMP_MESH_DIR / mesh_filename
     mesh_generated = False
 
-    # --- PHASE 13/16: HMR VERTEX EXTRACTION ---
+# --- PHASE 13/16: HMR VERTEX EXTRACTION ---
+    landmarks = None
     try:
         from api.services.extract_measurements import extract_measurements_from_hmr, HMR_ACTIVE
         if HMR_ACTIVE:
@@ -85,7 +86,8 @@ async def extract_measurements(
         print(f"⚠️ Extraction Handshake Failure: {e}")
         measurements, landmarks = extract_measurements_from_dual_photos(front_arr, side_arr, height, gender)
 
-    return {
+    # Build response with landmarks for UI visualization
+    response_data = {
         "success": True,
         "measurements": measurements,
         "scan_id": scan_id,
@@ -96,3 +98,9 @@ async def extract_measurements(
             "mesh_status": "real" if mesh_generated else "proportional"
         }
     }
+    
+    # Include landmarks for frontend visualization (convert tuple to list for JSON)
+    if landmarks:
+        response_data["landmarks"] = {k: list(v) for k, v in landmarks.items()}
+    
+    return response_data
