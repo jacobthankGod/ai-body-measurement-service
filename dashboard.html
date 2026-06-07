@@ -106,9 +106,21 @@
         font-size: 12px; font-weight: 800; letter-spacing: 0.2em; text-transform: uppercase; color: var(--Mint);
     }
 
-    /* DIGITAL TWIN STYLES (Block 5) */
+/* DIGITAL TWIN STYLES (Block 5) */
     #dashboard-3d-viewport { width: 100%; height: 350px; background: #000; border-radius: 16px; border: 1px solid var(--Glass-Border); margin-bottom: 32px; overflow: hidden; position: relative; }
     #dashboard-3d-viewport span { position: absolute; top: 12px; left: 16px; font-size: 9px; font-weight: 900; color: var(--Mint); text-transform: uppercase; letter-spacing: 0.2em; z-index: 10; background: rgba(0,0,0,0.5); padding: 4px 8px; border-radius: 4px; }
+
+    /* LANDMARK VISUALIZATION STYLES */
+    .viz-container { position: relative; width: 100%; height: 300px; background: #000; border-radius: 12px; overflow: hidden; margin-top: 24px; border: 1px solid var(--Glass-Border); display: none; }
+    .viz-canvas { position: absolute; inset: 0; width: 100%; height: 100%; z-index: 2; pointer-events: none; }
+    .viz-img { position: absolute; inset: 0; width: 100%; height: 100%; object-fit: contain; opacity: 0.6; z-index: 1; }
+    .viz-label { position: absolute; bottom: 12px; right: 12px; font-size: 9px; font-weight: 900; color: var(--Mint); z-index: 3; background: rgba(0,0,0,0.5); padding: 4px 8px; border-radius: 4px; }
+
+    /* MEASUREMENT RESULTS GRID */
+    .result-grid { display: grid; grid-template-columns: repeat(4, 1fr); gap: 12px; margin-top: 24px; }
+    .result-item { background: rgba(255,255,255,0.05); padding: 16px; border-radius: 12px; border: 1px solid var(--Glass-Border); display: flex; flex-direction: column; justify-content: center; }
+    .result-label { font-size: 10px; font-weight: 900; color: var(--Neutral-500); text-transform: uppercase; margin-bottom: 8px; }
+    .result-value { font-size: 20px; font-weight: 800; color: var(--Mint); }
   </style>
 </head>
 <body>
@@ -143,7 +155,7 @@
             </select>
           </div>
         </div>
-        <div style="display:grid; grid-template-columns: 1fr 1fr; gap:16px">
+<div style="display:grid; grid-template-columns: 1fr 1fr; gap:16px">
           <label class="file-input-wrapper" id="frontWrapper">
             <input type="file" id="frontPhoto" accept="image/*" required onchange="handleFileChange(this, 'frontWrapper')">
             <span>Front Photo</span>
@@ -154,7 +166,34 @@
           </label>
         </div>
 
-        <button type="submit" class="btn-primary" style="height:52px" id="btnRunInference" disabled>Handshaking Vault...</button>
+        <!-- LANDMARK VISUALIZATION CONTAINER -->
+        <div id="landmarkViz" class="viz-container">
+          <img id="vizImg" class="viz-img">
+          <canvas id="vizCanvas" class="viz-canvas"></canvas>
+          <div class="viz-label">LIVE LANDMARK MAP</div>
+        </div>
+
+        <!-- MEASUREMENT RESULTS GRID -->
+        <div id="measurementResults" class="result-grid" style="display:none">
+          <div class="result-item">
+            <div class="result-label">Chest Round</div>
+            <div class="result-value" id="resultChest">--</div>
+          </div>
+          <div class="result-item">
+            <div class="result-label">Waist Round</div>
+            <div class="result-value" id="resultWaist">--</div>
+          </div>
+          <div class="result-item">
+            <div class="result-label">Hip Round</div>
+            <div class="result-value" id="resultHip">--</div>
+          </div>
+          <div class="result-item">
+            <div class="result-label">Shoulder</div>
+            <div class="result-value" id="resultShoulder">--</div>
+          </div>
+        </div>
+
+        <button type="submit" class="btn-primary" style="height:52px; margin-top:24px" id="btnRunInference" disabled>Handshaking Vault...</button>
 
         <div style="text-align:center">
           <button type="button" class="btn-outline" style="border:none" onclick="document.getElementById('newScanModal').classList.remove('active')">Cancel</button>
@@ -287,7 +326,7 @@
   <script src="/assets/jspdf.min.js"></script>
   <script src="/assets/korra_export.js"></script>
 
-  <script>
+<script>
     const KORRA_CONFIG = {
       supabaseUrl: 'https://blsettabymllulsxtziw.supabase.co',
       supabaseKey: 'sb_publishable_miCOIXHtlxLkfDgpwE0N-g_BA1Q-x8y'
@@ -297,6 +336,47 @@
     let currentUser = null;
     let activeApiKey = null;
     let fullRawKey = null;
+
+    // LANDMARK VISUALIZATION FUNCTION
+    function drawSkeleton(landmarks, imgFile) {
+      const viz = document.getElementById('landmarkViz');
+      const canvas = document.getElementById('vizCanvas');
+      const imgEl = document.getElementById('vizImg');
+      const ctx = canvas.getContext('2d');
+      viz.style.display = 'block';
+      const reader = new FileReader();
+      reader.onload = (e) => {
+        imgEl.src = e.target.result;
+        imgEl.onload = () => {
+          canvas.width = imgEl.clientWidth;
+          canvas.height = imgEl.clientHeight;
+          ctx.clearRect(0, 0, canvas.width, canvas.height);
+          ctx.fillStyle = '#57D7C0';
+          ctx.shadowBlur = 10;
+          ctx.shadowColor = '#57D7C0';
+          for (const [name, pt] of Object.entries(landmarks)) {
+            const x = pt[0] * canvas.width;
+            const y = pt[1] * canvas.height;
+            ctx.beginPath();
+            ctx.arc(x, y, 4, 0, Math.PI * 2);
+            ctx.fill();
+          }
+        };
+      };
+      reader.readAsDataURL(imgFile);
+    }
+
+    // UPDATE MEASUREMENT RESULTS GRID
+    function updateMeasurementResults(measurements) {
+      const resultsGrid = document.getElementById('measurementResults');
+      if (resultsGrid && measurements) {
+        resultsGrid.style.display = 'grid';
+        document.getElementById('resultChest').textContent = measurements['Chest Round'] || '--';
+        document.getElementById('resultWaist').textContent = measurements['Waist Round'] || '--';
+        document.getElementById('resultHip').textContent = measurements['Hip Round'] || '--';
+        document.getElementById('resultShoulder').textContent = measurements['Shoulder'] || '--';
+      }
+    }
 
     function handleFileChange(input, wrapperId) {
         const wrapper = document.getElementById(wrapperId);
@@ -456,14 +536,16 @@
           if (fullRawKey) { navigator.clipboard.writeText(fullRawKey); alert("API Key copied."); }
         });
 
-        document.getElementById('scanForm').addEventListener('submit', async (e) => {
+document.getElementById('scanForm').addEventListener('submit', async (e) => {
           e.preventDefault();
           const btn = document.getElementById('btnRunInference');
           const clientName = document.getElementById('scanClientName').value;
           const height = document.getElementById('scanHeight').value;
           const gender = document.getElementById('scanGender').value;
-          const front = document.getElementById('frontPhoto').files[0];
-          const side = document.getElementById('sidePhoto').files[0];
+          const frontInput = document.getElementById('frontPhoto');
+          const sideInput = document.getElementById('sidePhoto');
+          const front = frontInput.files[0];
+          const side = sideInput.files[0];
           btn.disabled = true; btn.textContent = "AI EXTRACTING...";
           const formData = new FormData();
           formData.append('front', front); formData.append('side', side);
@@ -473,6 +555,15 @@
             const response = await fetch('/api/v2/measurements/extract', { method: 'POST', headers: { 'X-API-Key': activeApiKey }, body: formData });
             if (response.ok) {
               const resData = await response.json();
+              // Draw landmarks on the front image
+              if (resData.landmarks && frontInput.files && frontInput.files[0]) {
+                drawSkeleton(resData.landmarks, frontInput.files[0]);
+              }
+              // Display measurement results
+              if (resData.measurements) {
+                updateMeasurementResults(resData.measurements);
+              }
+              // Load 3D mesh if available
               if (window.KORRA_VIZ && resData.mesh_url) window.KORRA_VIZ.loadMesh(resData.mesh_url);
               alert("Extraction Successful! 3D Twin Generated.");
               location.reload();
@@ -482,6 +573,6 @@
       }
       initDashboard();
     })();
-  </script>
+</script>
 </body>
 </html>
