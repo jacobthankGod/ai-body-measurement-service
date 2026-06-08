@@ -17,6 +17,11 @@ from typing import Dict, Optional, Tuple, List
 # --- KORRA DIAGNOSTICS ---
 logger = logging.getLogger("KORRA_HMR_EXTRACTION")
 
+# Hardened Package Resolution for Render/Vercel
+SRC_PATH = Path(__file__).parent.resolve() / "src"
+if str(SRC_PATH) not in sys.path: sys.path.insert(0, str(SRC_PATH))
+if str(SRC_PATH.parent) not in sys.path: sys.path.insert(0, str(SRC_PATH.parent))
+
 # --- NUCLEAR TENSORFLOW LEGACY BRIDGE ---
 try:
     import tensorflow as tf
@@ -119,63 +124,35 @@ FEMALE_RATIOS = {
 
 class HMRMasterEngine:
     def __init__(self):
-        self.model = None
-        self.initialized = False
         self.base_dir = Path(__file__).parent.resolve() # api/services
         self.vertex_map = {}
         self.last_error = None
+        self._load_vertex_map()
 
-    def initialize(self):
-        """Absolute Handshake for AI Brain Initialization."""
+    def _load_vertex_map(self):
+        root = self.base_dir.parent.parent
+        vertex_path = root / "data" / "customBodyPoints.txt"
+        self.vertex_map = self._parse_vertex_indices(vertex_path)
+
+    def extract(self, image: np.ndarray, height_cm: float, gender: str = 'male') -> Tuple[Dict[str, float], Optional[np.ndarray], Optional[dict], Optional[str]]:
+        """
+        High-Precision Extraction with TRANSIENT MEMORY MANAGEMENT.
+        Instantiates, Predicts, and PURGES model to fit Render 512MB RAM tier.
+        """
+        import gc
+        model = None
         try:
-            root = self.base_dir.parent.parent
-            models_dir = root / "models"
-            ckpt_base = models_dir / "model.ckpt-667589"
-            vertex_path = root / "data" / "customBodyPoints.txt"
-
-            # Use string concatenation to avoid Path.with_suffix bug with dots in filename
-            if not Path(str(ckpt_base) + ".index").exists():
-                self.last_error = f"Weights missing at {ckpt_base}"
-                return False
-
-            # SATISFY NUMPY DEPRECATIONS
+            # 1. PRE-FLIGHT NUMPY PATCHING
             if not hasattr(np, 'bool'):
                 np.bool = bool; np.int = int; np.float = float; np.complex = complex; np.object = object; np.str = str; np.unicode = str
 
-            # PACKAGE RESOLUTION HARDENING
-            src_path = self.base_dir / "src"
-            if str(src_path) not in sys.path: sys.path.insert(0, str(src_path))
-            if str(self.base_dir) not in sys.path: sys.path.insert(0, str(self.base_dir))
-
-            from src import resnet_v2
-            sys.modules['tensorflow.contrib.slim.python.slim.nets.resnet_v2'] = resnet_v2
-
+            # 2. TRANSIENT MODEL INSTANTIATION
             from src.RunModel import RunModel
-            logger.info("📦 HMR: Instantiating RunModel...")
-            self.model = RunModel()
+            logger.info("📦 HMR: Loading transient AI weights (400MB)...")
+            model = RunModel()
+            model.prepare()
 
-            logger.info("📦 HMR: Loading Checkpoint Weights...")
-            self.model.prepare()
-
-            self.vertex_map = self._parse_vertex_indices(vertex_path)
-            if not self.vertex_map:
-                raise FileNotFoundError(f"Vertex mapping missing at {vertex_path}")
-
-            self.initialized = True
-            logger.info("✅ KORRA: HMR 3D Brain Fully Synchronized.")
-            return True
-        except Exception as e:
-            self.last_error = f"INIT_CRASH: {str(e)}"
-            logger.error(f"❌ HMR INITIALIZATION CRASH: {self.last_error}")
-            # Capture full traceback for forensic analysis
-            self.last_error += "\n" + traceback.format_exc()
-            return False
-
-    def extract(self, image: np.ndarray, height_cm: float, gender: str = 'male') -> Tuple[Dict[str, float], Optional[np.ndarray], Optional[dict], Optional[str]]:
-        if not self.initialized:
-            if not self.initialize():
-                return self._fallback_ratios(height_cm, gender), None, None, f"Initialization Failed: {self.last_error}"
-        try:
+            # 3. PREPROCESSING
             import cv2
             h, w = image.shape[:2]
             if max(h, w) > 1024:
@@ -186,13 +163,14 @@ class HMRMasterEngine:
             img_normalized = 2 * ((img_resized / 255.0) - 0.5)
             img_batch = np.expand_dims(img_normalized, 0)
 
-            results = self.model.predict_dict(img_batch)
+            # 4. INFERENCE
+            logger.info("🧠 HMR: Executing 3D inference...")
+            results = model.predict_dict(img_batch)
             vertices = results['verts'][0]
             joints = results['joints'][0]
 
-            # Remap HMR [-1, 1] range to [0, 1] normalized coordinates for UI
+            # 5. POST-PROCESSING
             def norm_hmr(val): return float((val + 1.0) / 2.0)
-
             landmark_2d = {
                 'Shoulder_L': (norm_hmr(joints[8][0]), norm_hmr(joints[8][1])),
                 'Shoulder_R': (norm_hmr(joints[9][0]), norm_hmr(joints[9][1])),
@@ -201,30 +179,25 @@ class HMRMasterEngine:
                 'Nose': (norm_hmr(joints[14][0]), norm_hmr(joints[14][1]))
             }
 
-            # 1. Calculate Core Measurements from 3D Vertices
             measurements_3d = self._calculate_from_indices(vertices, height_cm, gender)
+            final_measurements = {key: measurements_3d.get(key, 0.0) for key in (MALE_KEYS if gender == 'male' else FEMALE_KEYS)}
 
-            # 2. Populate Full Canonical Set (18 for Male, 27 for Female)
-            # STRICT POLICY: No fallback ratios. Everything derived from 3D model.
-            final_measurements = {}
-            target_keys = MALE_KEYS if gender == 'male' else FEMALE_KEYS
-
-            for key in target_keys:
-                # Use calculated 3D measurement or default to 0.0 if not yet mapped
-                final_measurements[key] = measurements_3d.get(key, 0.0)
-
-            # Clinical Scaling for Digital Twin
             v_min, v_max = np.min(vertices[:, 1]), np.max(vertices[:, 1])
-            v_height = v_max - v_min
-            scale_to_meters = (height_cm / 100.0) / v_height
+            scale_to_meters = (height_cm / 100.0) / (v_max - v_min)
             vertices_scaled = vertices * scale_to_meters
 
             return final_measurements, vertices_scaled, landmark_2d, None
+
         except Exception as e:
-            err_msg = f"RUNTIME_CRASH: {str(e)}"
-            logger.error(f"⚠️ HMR Pipeline Error: {e}")
-            traceback.print_exc()
-            return self._fallback_ratios(height_cm, gender), None, None, err_msg
+            logger.error(f"❌ HMR PIPELINE CRASH: {e}")
+            return self._fallback_ratios(height_cm, gender), None, None, str(e)
+        finally:
+            # 6. NUCLEAR MEMORY PURGE (Essential for Render stability)
+            if model and hasattr(model, 'sess'):
+                logger.info("♻️ HMR: Purging AI weights from RAM...")
+                model.sess.close()
+            del model
+            gc.collect()
 
     def _calculate_from_indices(self, vertices: np.ndarray, user_height_cm: float, gender: str) -> Dict[str, float]:
         # Calculated scaled vertices to real-world CM
