@@ -71,6 +71,46 @@ except ImportError:
 # MASTER EXTRACTION ENGINE
 # ============================================================================
 
+# ============================================================================
+# CANONICAL MEASUREMENT CONTRACT (Section 9 Alignment)
+# ============================================================================
+
+MALE_KEYS = [
+    'Shoulder', 'Neck Round', 'Chest Round', 'Stomach Round', 'Waist Round',
+    'Half Length', 'Full Top Length', 'Across Back', 'Across Chest', 'Hip Round',
+    'Thigh Round', 'Knee Round', 'Calf Round', 'Ankle Round', 'Trouser Waist',
+    'Trouser Length', 'Inseam', 'Crotch Depth'
+]
+
+FEMALE_KEYS = [
+    'Shoulder', 'Neck Round', 'Bust Round', 'High Bust', 'Under Bust',
+    'Bust Point', 'Shoulder to Bust Point', 'Shoulder to Under Bust',
+    'Shoulder to Waist', 'Front Waist Length', 'Back Waist Length',
+    'Across Chest', 'Across Back', 'Armhole Round', 'Sleeve Length',
+    'Bicep Round', 'Elbow Round', 'Wrist Round', 'Waist Round',
+    'Half Length', 'Waist to Hip', 'Upper Hip', 'Hip Round',
+    'Thigh Round', 'Knee Round', 'Calf Round', 'Ankle Round'
+]
+
+MALE_RATIOS = {
+    'Shoulder': 0.265, 'Neck Round': 0.224, 'Chest Round': 0.588, 'Stomach Round': 0.500,
+    'Waist Round': 0.471, 'Half Length': 0.353, 'Full Top Length': 0.441, 'Across Back': 0.247,
+    'Across Chest': 0.259, 'Hip Round': 0.559, 'Thigh Round': 0.324, 'Knee Round': 0.224,
+    'Calf Round': 0.212, 'Ankle Round': 0.153, 'Trouser Waist': 0.482, 'Trouser Length': 0.588,
+    'Inseam': 0.459, 'Crotch Depth': 0.165,
+}
+
+FEMALE_RATIOS = {
+    'Shoulder': 0.230, 'Neck Round': 0.206, 'Bust Round': 0.521, 'High Bust': 0.460,
+    'Under Bust': 0.412, 'Bust Point': 0.121, 'Shoulder to Bust Point': 0.145,
+    'Shoulder to Under Bust': 0.170, 'Shoulder to Waist': 0.230, 'Front Waist Length': 0.218,
+    'Back Waist Length': 0.242, 'Across Chest': 0.206, 'Across Back': 0.194,
+    'Armhole Round': 0.242, 'Sleeve Length': 0.333, 'Bicep Round': 0.170, 'Elbow Round': 0.145,
+    'Wrist Round': 0.109, 'Waist Round': 0.400, 'Half Length': 0.315, 'Waist to Hip': 0.109,
+    'Upper Hip': 0.521, 'Hip Round': 0.570, 'Thigh Round': 0.315, 'Knee Round': 0.206,
+    'Calf Round': 0.194, 'Ankle Round': 0.133,
+}
+
 class HMRMasterEngine:
     def __init__(self):
         self.model = None
@@ -150,29 +190,58 @@ class HMRMasterEngine:
                 'Hip_R': (norm_hmr(joints[3][0]), norm_hmr(joints[3][1])),
                 'Nose': (norm_hmr(joints[14][0]), norm_hmr(joints[14][1]))
             }
-            measurements = self._calculate_from_indices(vertices, height_cm)
 
-            # Clinical Scaling
+            # 1. Calculate Core Measurements from 3D Vertices
+            measurements_3d = self._calculate_from_indices(vertices, height_cm, gender)
+
+            # 2. Populate Full Canonical Set (18 for Male, 27 for Female)
+            final_measurements = {}
+            target_keys = MALE_KEYS if gender == 'male' else FEMALE_KEYS
+            ratios = MALE_RATIOS if gender == 'male' else FEMALE_RATIOS
+
+            for key in target_keys:
+                if key in measurements_3d:
+                    final_measurements[key] = measurements_3d[key]
+                else:
+                    # Use Aligned Anthropometric Ratio Fallback
+                    ratio = ratios.get(key, 0.0)
+                    final_measurements[key] = round(ratio * height_cm, 1)
+
+            # Clinical Scaling for Digital Twin
             v_min, v_max = np.min(vertices[:, 1]), np.max(vertices[:, 1])
             v_height = v_max - v_min
             scale_to_meters = (height_cm / 100.0) / v_height
             vertices_scaled = vertices * scale_to_meters
 
-            return measurements, vertices_scaled, landmark_2d, None
+            return final_measurements, vertices_scaled, landmark_2d, None
         except Exception as e:
             err_msg = f"RUNTIME_CRASH: {str(e)}"
             logger.error(f"⚠️ HMR Pipeline Error: {e}")
             traceback.print_exc()
             return self._fallback_ratios(height_cm, gender), None, None, err_msg
 
-    def _calculate_from_indices(self, vertices: np.ndarray, user_height_cm: float) -> Dict[str, float]:
+    def _calculate_from_indices(self, vertices: np.ndarray, user_height_cm: float, gender: str) -> Dict[str, float]:
         v_height = np.max(vertices[:, 1]) - np.min(vertices[:, 1])
         scale = user_height_cm / (v_height * 100)
         results = {}
-        target_groups = {'chest': 'Chest Round', 'waist': 'Waist Round', 'hips': 'Hip Round', 'shoulder width': 'Shoulder'}
-        for key, display_name in target_groups.items():
-            indices = self.vertex_map.get(key, [])
+
+        # Mapping from vertex map section names to UI display names
+        mapping = {
+            'chest': 'Chest Round' if gender == 'male' else 'Bust Round',
+            'waist': 'Waist Round',
+            'hips': 'Hip Round',
+            'shoulder width': 'Shoulder',
+            'belly': 'Stomach Round',
+            'neck': 'Neck Round',
+            'thigh': 'Thigh Round',
+            'ankle': 'Ankle Round',
+            'wrist': 'Wrist Round'
+        }
+
+        for map_key, display_name in mapping.items():
+            indices = self.vertex_map.get(map_key, [])
             if not indices: continue
+
             group_verts = vertices[indices]
             w = (np.max(group_verts[:, 0]) - np.min(group_verts[:, 0])) * 100 * scale
             d = (np.max(group_verts[:, 2]) - np.min(group_verts[:, 2])) * 100 * scale
