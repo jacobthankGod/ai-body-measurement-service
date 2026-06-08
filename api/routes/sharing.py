@@ -25,7 +25,7 @@ async def send_scan_link(
         raise HTTPException(status_code=500, detail="Email service not configured.")
 
     # Atomic Create in Database (Permanent even after server restart)
-    token = await DatabaseService.create_invitation(merchant_id, client_name)
+    token = DatabaseService.create_invitation(merchant_id, client_name)
     if not token:
         raise HTTPException(status_code=500, detail="Internal Persistence Error.")
 
@@ -58,7 +58,7 @@ async def send_scan_link(
 @router.get("/verify/{token}")
 async def verify_share_token(token: str):
     """Checks if a shared scan token is still valid via DB."""
-    invite = await DatabaseService.verify_invitation(token)
+    invite = DatabaseService.verify_invitation(token)
     if not invite:
         raise HTTPException(status_code=404, detail="Invalid or expired link.")
 

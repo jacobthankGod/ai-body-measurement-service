@@ -25,7 +25,7 @@ async def test_supabase_connection():
 async def verify_test_key():
     test_key = "test_key_precision_3d_001"
     print(f"\n🔍 Verifying Test Key: {test_key}...")
-    key_data = await DatabaseService.get_api_key(test_key)
+    key_data = DatabaseService.get_api_key(test_key)
     if key_data:
         print(f"✅ Key is VALID. Tier: {key_data.get('tier')}")
     else:

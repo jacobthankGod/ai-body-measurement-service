@@ -32,7 +32,7 @@ async def validate_api_key(request: Request, api_key: str = Security(API_KEY_HEA
         return key
 
     # 4. Validate against Supabase
-    key_data = await DatabaseService.get_api_key(key)
+    key_data = DatabaseService.get_api_key(key)
     if not key_data:
         raise HTTPException(
             status_code=403,

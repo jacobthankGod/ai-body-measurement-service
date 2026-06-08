@@ -36,7 +36,7 @@ EXTRACTION_TASKS = {}
 async def get_current_user(x_api_key: str = Header(None)):
     if not x_api_key:
         raise HTTPException(status_code=401, detail="API key required")
-    result = await validate_subscription(x_api_key)
+    result = validate_subscription(x_api_key)
     if not result.get('valid'):
         raise HTTPException(status_code=403, detail=result.get('error', 'Unauthorized'))
     return {'api_key': x_api_key, 'user_id': result.get('user_id'), 'is_admin': result.get('is_admin', False)}
@@ -47,8 +47,8 @@ def cleanup_task_queue():
     keys_to_del = [k for k, v in EXTRACTION_TASKS.items() if (now - datetime.fromisoformat(v["created_at"])) > timedelta(hours=24)]
     for k in keys_to_del: del EXTRACTION_TASKS[k]
 
-async def run_extraction_task(task_id: str, front_bytes: bytes, side_bytes: bytes, height: float, gender: str, client_name: str, user_id: str):
-    """Background worker for 1:1 HMR extraction with descriptive errors."""
+def run_extraction_task(task_id: str, front_bytes: bytes, side_bytes: bytes, height: float, gender: str, client_name: str, user_id: str):
+    """Background worker for 1:1 HMR extraction with descriptive errors (THREADED)."""
     try:
         cleanup_task_queue()
         EXTRACTION_TASKS[task_id]["status"] = "processing"
@@ -86,7 +86,7 @@ async def run_extraction_task(task_id: str, front_bytes: bytes, side_bytes: byte
             measurements, landmarks = fallback_extract(front_arr, side_arr, height, gender)
 
         # ATOMIC PERSISTENCE
-        await DatabaseService.save_measurement(
+        DatabaseService.save_measurement(
             user_id=user_id, client_name=client_name, height=height,
             gender=gender, biometrics=measurements, landmarks=landmarks, mesh_url=mesh_url
         )
@@ -119,7 +119,7 @@ async def start_extraction(
     task_id = str(uuid.uuid4())
     front_bytes = await front.read()
     side_bytes = await side.read()
-    await track_usage(user['api_key'])
+    track_usage(user['api_key'])
     EXTRACTION_TASKS[task_id] = {"status": "queued", "created_at": datetime.utcnow().isoformat()}
     background_tasks.add_task(run_extraction_task, task_id, front_bytes, side_bytes, height, gender, client_name, user['user_id'])
     return {"status": "accepted", "task_id": task_id}

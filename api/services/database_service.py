@@ -33,7 +33,7 @@ class DatabaseService:
         return cls._instance
 
     @classmethod
-    async def create_invitation(cls, merchant_id: str, client_name: str) -> str:
+    def create_invitation(cls, merchant_id: str, client_name: str) -> str:
         """Atomic Invitation Persistence."""
         client = cls.get_client()
         token = str(uuid.uuid4())
@@ -51,7 +51,7 @@ class DatabaseService:
             return None
 
     @classmethod
-    async def verify_invitation(cls, token: str) -> Optional[dict]:
+    def verify_invitation(cls, token: str) -> Optional[dict]:
         """Verify invitation against PostgreSQL vault."""
         client = cls.get_client()
         try:
@@ -64,7 +64,7 @@ class DatabaseService:
         except Exception as e: return None
 
     @classmethod
-    async def save_measurement(cls, user_id: str, client_name: str, height: float, gender: str, biometrics: dict, landmarks: dict = None, mesh_url: str = None):
+    def save_measurement(cls, user_id: str, client_name: str, height: float, gender: str, biometrics: dict, landmarks: dict = None, mesh_url: str = None):
         client = cls.get_client()
         if not client: 
             logger.error("❌ DatabaseService: Supabase client is None - ENV variables missing!")
@@ -91,7 +91,7 @@ class DatabaseService:
             return None
 
     @classmethod
-    async def get_api_key(cls, api_key: str) -> Optional[Dict[str, Any]]:
+    def get_api_key(cls, api_key: str) -> Optional[Dict[str, Any]]:
         client = cls.get_client()
         if not client: return None
         try:
@@ -100,7 +100,7 @@ class DatabaseService:
         except: return None
 
     @classmethod
-    async def update_usage(cls, api_key: str):
+    def update_usage(cls, api_key: str):
         client = cls.get_client()
         if not client: return
         try:
