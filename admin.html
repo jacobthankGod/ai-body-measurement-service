@@ -370,6 +370,7 @@
 
       const NetworkGuard = {
           isOnline: navigator.onLine,
+          isPaused: false,
           init: function() {
               window.addEventListener('online', () => this.update(true));
               window.addEventListener('offline', () => this.update(false));
@@ -377,18 +378,31 @@
           },
           update: function(online) {
               this.isOnline = online;
+              this._render();
+          },
+          pause: function(reason) {
+              this.isPaused = true;
+              this._render(reason);
+          },
+          resume: function() {
+              this.isPaused = false;
+              this._render();
+          },
+          _render: function(msg) {
               const statusEl = document.getElementById('networkStatus');
               const overlay = document.getElementById('offlineOverlay');
-              if (online) {
-                  statusEl.classList.remove('offline');
-                  statusEl.querySelector('span').textContent = 'Sync Active';
-                  overlay.style.display = 'none';
-                  console.log("💎 KORRA: Connection Restored.");
-              } else {
-                  statusEl.classList.add('offline');
-                  statusEl.querySelector('span').textContent = 'Connection Lost';
-                  overlay.style.display = 'flex';
-                  console.warn("💎 KORRA: Connection Severed. Pausing technical handshakes.");
+              if (statusEl) {
+                  if (this.isOnline && !this.isPaused) {
+                      statusEl.classList.remove('offline');
+                      statusEl.querySelector('span').textContent = 'Sync Active';
+                  } else {
+                      statusEl.classList.add('offline');
+                      statusEl.querySelector('span').textContent = 'Sync Paused';
+                  }
+              }
+              if (overlay) {
+                  overlay.style.display = (this.isOnline && !this.isPaused) ? 'none' : 'flex';
+                  if (msg) overlay.querySelector('p').textContent = msg;
               }
           },
           retry: async function(fn, retries = 5, delay = 1000) {
@@ -397,9 +411,18 @@
                       if (!this.isOnline) throw new Error("OFFLINE");
                       return await fn();
                   } catch (err) {
-                      if (i === retries - 1) throw err;
+                      const isNetworkError = err.message === "OFFLINE" || err.message.includes("fetch") || err.name === "TypeError" || err.message.includes("refresh_token");
+
+                      if (i === retries - 1) {
+                          if (isNetworkError) {
+                              this.pause("Technical handshake interrupted. Waiting for network restoration...");
+                              throw new Error("PAUSED");
+                          }
+                          throw err;
+                      }
+
                       const wait = delay * Math.pow(2, i);
-                      console.warn(`💎 KORRA: Handshake failed. Retrying in ${wait}ms...`, err);
+                      console.warn(`💎 KORRA: Silent handshake retry (${i+1}/${retries})...`);
                       await new Promise(r => setTimeout(r, wait));
                   }
               }
@@ -411,45 +434,24 @@
         if (typeof window.supabase === 'undefined') { setTimeout(initAdmin, 500); return; }
 
         try {
-          // IMPLEMENT ATOMIC HANDSHAKE RECOVERY
           const client = window.supabase.createClient(config.url, config.key, {
-              auth: {
-                  persistSession: true,
-                  autoRefreshToken: true,
-                  detectSessionInUrl: true,
-                  storage: window.localStorage,
-                  flowType: 'pkce' // Use modern secure flow
-              },
+              auth: { persistSession: true, autoRefreshToken: true, detectSessionInUrl: true, flowType: 'pkce' },
               global: {
-                  // Optimized fetch with specific block for auth refresh loops
                   fetch: (...args) => {
-                      if (args[0].includes('/auth/v1/token')) {
-                          // Allow auth tokens to fail once without aggressive retry to prevent console flood
-                          return fetch(...args);
-                      }
+                      if (args[0].includes('/auth/v1/token')) return fetch(...args);
                       return NetworkGuard.retry(() => fetch(...args));
                   }
               }
           });
           window.KORRA_DB = client;
 
-          // Attempt session fetch with specific catch for refresh_token failure
           let sessionResponse;
           try {
-              // Diagnostic Handshake: Test basic connectivity to Supabase before auth
-              const healthCheck = await fetch(`${config.url}/rest/v1/`, {
-                  method: 'HEAD',
-                  headers: { 'apikey': config.key }
-              }).catch(() => ({ ok: false }));
-
-              if (!healthCheck.ok && healthCheck.status !== 401) {
-                  console.warn("💎 KORRA: Database Vault is technically unreachable. Check Firewall/VPN.");
-              }
-
               sessionResponse = await NetworkGuard.retry(() => client.auth.getSession());
-          } catch (fetchErr) {
-              if (fetchErr.message === "OFFLINE") return;
-              console.error("💎 KORRA: Supabase Sync Failed. Wiping session cache.", fetchErr);
+              NetworkGuard.resume();
+          } catch (err) {
+              if (err.message === "PAUSED" || err.message === "OFFLINE") return;
+              console.error("💎 KORRA: Auth integrity lost. Required re-authentication.");
               localStorage.clear();
               window.location.href = '/signin';
               return;
@@ -466,7 +468,7 @@
           document.getElementById('adminUser').textContent = session.user.email;
 
           async function loadGlobalStats() {
-            if (!NetworkGuard.isOnline) return;
+            if (!NetworkGuard.isOnline || NetworkGuard.isPaused) return;
             try {
               const { data: profiles, count: mCount, error: pErr } = await client.from('profiles').select('*', { count: 'exact' });
               if (!pErr) {
