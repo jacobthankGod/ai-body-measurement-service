@@ -89,6 +89,15 @@
     #dashboard-3d-viewport span { position: absolute; top: 12px; left: 16px; font-size: 9px; font-weight: 900; color: var(--Mint); text-transform: uppercase; letter-spacing: 0.2em; z-index: 10; background: rgba(0,0,0,0.5); padding: 4px 8px; border-radius: 4px; }
 
     #loadingOverlay { position: fixed; inset: 0; background: #000; z-index: 9999; display: flex; align-items: center; justify-content: center; font-size: 12px; font-weight: 800; letter-spacing: 0.2em; color: var(--Mint); text-transform: uppercase; }
+
+    /* NETWORK INTEGRITY STYLES */
+    #networkStatus { display: flex; align-items: center; gap: 8px; font-size: 10px; font-weight: 800; text-transform: uppercase; letter-spacing: 0.05em; color: var(--Mint); transition: 0.3s; margin-right: 20px; }
+    .status-dot { width: 6px; height: 6px; border-radius: 50%; background: var(--Mint); box-shadow: 0 0 10px var(--Mint); }
+    #networkStatus.offline { color: var(--Error); }
+    #networkStatus.offline .status-dot { background: var(--Error); box-shadow: 0 0 10px var(--Error); }
+
+    #offlineOverlay { position: fixed; inset: 0; background: rgba(0,0,0,0.85); backdrop-filter: blur(10px); z-index: 99999999; display: none; align-items: center; justify-content: center; text-align: center; }
+    .offline-card { background: var(--Glass); border: 1px solid var(--Glass-Border); padding: 40px; border-radius: 24px; max-width: 320px; color: #fff; }
   </style>
   <script>
     if (window.top !== window.self) window.top.location.href = window.location.href;
@@ -97,6 +106,14 @@
 <body>
 
   <div id="loadingOverlay">Syncing Vault...</div>
+
+  <div id="offlineOverlay">
+    <div class="offline-card">
+      <div style="font-size: 32px; margin-bottom: 24px;">📡</div>
+      <h2 style="font-size: 18px; font-weight: 800; margin-bottom: 12px;">Sync Interrupted</h2>
+      <p style="font-size: 12px; color: var(--Neutral-400); line-height: 1.6;">Your internet connection is unstable. KORRA has paused technical handshakes to prevent data corruption.</p>
+    </div>
+  </div>
 
   <!-- EMAIL SHARE MODAL -->
   <div class="modal-overlay" id="shareModal">
@@ -121,6 +138,7 @@
     <div class="container">
       <a class="logo" href="/"><div class="logo-mark"></div><div class="logo-text">KORRA</div></a>
       <div style="display:flex; align-items:center; gap:24px">
+        <div id="networkStatus"><div class="status-dot"></div><span>Sync Active</span></div>
         <span id="userEmail" style="font-size:12px; font-weight:700; color:var(--Mint)"></span>
         <button class="btn-outline" id="btnSignOut">Exit</button>
       </div>
@@ -175,6 +193,44 @@
     window.KORRA_DB = null;
     let userId = null;
 
+    const NetworkGuard = {
+        isOnline: navigator.onLine,
+        init: function() {
+            window.addEventListener('online', () => this.update(true));
+            window.addEventListener('offline', () => this.update(false));
+            this.update(navigator.onLine);
+        },
+        update: function(online) {
+            this.isOnline = online;
+            const statusEl = document.getElementById('networkStatus');
+            const overlay = document.getElementById('offlineOverlay');
+            if (statusEl) {
+                if (online) {
+                    statusEl.classList.remove('offline');
+                    statusEl.querySelector('span').textContent = 'Sync Active';
+                    if (overlay) overlay.style.display = 'none';
+                } else {
+                    statusEl.classList.add('offline');
+                    statusEl.querySelector('span').textContent = 'Connection Lost';
+                    if (overlay) overlay.style.display = 'flex';
+                }
+            }
+        },
+        retry: async function(fn, retries = 5, delay = 1000) {
+            for (let i = 0; i < retries; i++) {
+                try {
+                    if (!this.isOnline) throw new Error("OFFLINE");
+                    return await fn();
+                } catch (err) {
+                    if (i === retries - 1) throw err;
+                    const wait = delay * Math.pow(2, i);
+                    console.warn(`💎 KORRA: Handshake failed. Retrying in ${wait}ms...`, err);
+                    await new Promise(r => setTimeout(r, wait));
+                }
+            }
+        }
+    };
+
     function switchTab(id) {
       document.querySelectorAll('.tab-view').forEach(t => t.classList.remove('active'));
       document.querySelectorAll('.sidebar-nav a').forEach(a => a.classList.remove('active'));
@@ -201,9 +257,32 @@
       }
 
       async function init() {
+        NetworkGuard.init();
         if (typeof window.supabase === 'undefined') { setTimeout(init, 500); return; }
-        window.KORRA_DB = window.supabase.createClient(CONFIG.url, CONFIG.key);
-        const { data: { session } } = await window.KORRA_DB.auth.getSession();
+
+        window.KORRA_DB = window.supabase.createClient(CONFIG.url, CONFIG.key, {
+            auth: {
+                persistSession: true,
+                autoRefreshToken: true,
+                detectSessionInUrl: true,
+                storage: window.localStorage
+            },
+            global: {
+                fetch: (...args) => NetworkGuard.retry(() => fetch(...args))
+            }
+        });
+
+        let sessionResponse;
+        try {
+            sessionResponse = await NetworkGuard.retry(() => window.KORRA_DB.auth.getSession());
+        } catch (err) {
+            if (err.message === "OFFLINE") return;
+            localStorage.clear();
+            window.location.href = '/signin';
+            return;
+        }
+
+        const { data: { session } } = sessionResponse;
         if (!session) { window.location.href = '/signin'; return; }
 
         userId = session.user.id;

@@ -111,6 +111,15 @@
     .polling-overlay { display: none; flex-direction: column; align-items: center; justify-content: center; margin-top: 24px; padding: 24px; background: rgba(87,215,192,0.05); border-radius: 16px; border: 1px solid var(--Mint); }
     .polling-bar { width: 100%; height: 4px; background: rgba(255,255,255,0.1); border-radius: 99px; margin-top: 16px; overflow: hidden; }
     .polling-fill { width: 0%; height: 100%; background: var(--Mint); transition: 0.5s cubic-bezier(0.1, 0, 0.2, 1); }
+
+    /* NETWORK INTEGRITY STYLES */
+    #networkStatus { display: flex; align-items: center; gap: 8px; font-size: 10px; font-weight: 800; text-transform: uppercase; letter-spacing: 0.05em; color: var(--Mint); transition: 0.3s; }
+    .status-dot { width: 6px; height: 6px; border-radius: 50%; background: var(--Mint); box-shadow: 0 0 10px var(--Mint); }
+    #networkStatus.offline { color: var(--Error); }
+    #networkStatus.offline .status-dot { background: var(--Error); box-shadow: 0 0 10px var(--Error); }
+
+    #offlineOverlay { position: fixed; inset: 0; background: rgba(0,0,0,0.85); backdrop-filter: blur(10px); z-index: 99999999; display: none; align-items: center; justify-content: center; text-align: center; }
+    .offline-card { background: var(--Glass); border: 1px solid var(--Glass-Border); padding: 40px; border-radius: 24px; max-width: 320px; }
   </style>
   <script>
     // FRAME ESCAPE PROTOCOL: Resolve Chrome-Error Domain Mismatch
@@ -136,6 +145,14 @@
       <div id="loadingText" style="font-size:12px; font-weight:800; letter-spacing:0.2em; color:var(--Mint); margin-bottom:16px">INITIALIZING AUTHORITY...</div>
       <div id="overlayError" style="color:var(--Error); font-size:14px; display:none; margin-bottom:20px">Connection Interrupted. Please check extensions.</div>
       <button onclick="location.reload()" class="btn-primary" style="display:none" id="btnRetryOverlay">Retry Handshake</button>
+    </div>
+  </div>
+
+  <div id="offlineOverlay">
+    <div class="offline-card">
+      <div style="font-size: 32px; margin-bottom: 24px;">📡</div>
+      <h2 style="font-size: 18px; font-weight: 800; margin-bottom: 12px;">Sync Interrupted</h2>
+      <p style="font-size: 12px; color: var(--Neutral-400); line-height: 1.6;">Your internet connection is unstable. KORRA has paused technical handshakes to prevent data corruption.</p>
     </div>
   </div>
 
@@ -197,6 +214,7 @@
         <div class="logo-text">KORRA <span style="font-size:10px; color:var(--Mint); margin-left:8px">ADMIN</span></div>
       </a>
       <div style="display:flex; align-items:center; gap:24px">
+        <div id="networkStatus"><div class="status-dot"></div><span>Sync Active</span></div>
         <span id="adminUser" style="font-size:12px; font-weight:700; color:var(--Mint)"></span>
         <button class="btn-action" id="btnExit">Exit Super-Workbench</button>
       </div>
@@ -350,7 +368,46 @@
       };
       const ADMIN_BYPASS_KEY = "korra_admin_auth_01J0PK82X92K4";
 
+      const NetworkGuard = {
+          isOnline: navigator.onLine,
+          init: function() {
+              window.addEventListener('online', () => this.update(true));
+              window.addEventListener('offline', () => this.update(false));
+              this.update(navigator.onLine);
+          },
+          update: function(online) {
+              this.isOnline = online;
+              const statusEl = document.getElementById('networkStatus');
+              const overlay = document.getElementById('offlineOverlay');
+              if (online) {
+                  statusEl.classList.remove('offline');
+                  statusEl.querySelector('span').textContent = 'Sync Active';
+                  overlay.style.display = 'none';
+                  console.log("💎 KORRA: Connection Restored.");
+              } else {
+                  statusEl.classList.add('offline');
+                  statusEl.querySelector('span').textContent = 'Connection Lost';
+                  overlay.style.display = 'flex';
+                  console.warn("💎 KORRA: Connection Severed. Pausing technical handshakes.");
+              }
+          },
+          retry: async function(fn, retries = 5, delay = 1000) {
+              for (let i = 0; i < retries; i++) {
+                  try {
+                      if (!this.isOnline) throw new Error("OFFLINE");
+                      return await fn();
+                  } catch (err) {
+                      if (i === retries - 1) throw err;
+                      const wait = delay * Math.pow(2, i);
+                      console.warn(`💎 KORRA: Handshake failed. Retrying in ${wait}ms...`, err);
+                      await new Promise(r => setTimeout(r, wait));
+                  }
+              }
+          }
+      };
+
       async function initAdmin() {
+        NetworkGuard.init();
         if (typeof window.supabase === 'undefined') { setTimeout(initAdmin, 500); return; }
 
         try {
@@ -359,7 +416,11 @@
               auth: {
                   persistSession: true,
                   autoRefreshToken: true,
-                  detectSessionInUrl: true
+                  detectSessionInUrl: true,
+                  storage: window.localStorage
+              },
+              global: {
+                  fetch: (...args) => NetworkGuard.retry(() => fetch(...args))
               }
           });
           window.KORRA_DB = client;
@@ -367,10 +428,11 @@
           // Attempt session fetch with specific catch for refresh_token failure
           let sessionResponse;
           try {
-              sessionResponse = await client.auth.getSession();
+              sessionResponse = await NetworkGuard.retry(() => client.auth.getSession());
           } catch (fetchErr) {
-              console.error("💎 KORRA: Supabase Sync Failed. Wiping session cache.");
-              localStorage.clear(); // Nuclear reset for corrupted tokens
+              if (fetchErr.message === "OFFLINE") return; // Handled by overlay
+              console.error("💎 KORRA: Supabase Sync Failed. Wiping session cache.", fetchErr);
+              localStorage.clear();
               window.location.href = '/signin';
               return;
           }
@@ -386,6 +448,7 @@
           document.getElementById('adminUser').textContent = session.user.email;
 
           async function loadGlobalStats() {
+            if (!NetworkGuard.isOnline) return;
             try {
               const { data: profiles, count: mCount, error: pErr } = await client.from('profiles').select('*', { count: 'exact' });
               if (!pErr) {
