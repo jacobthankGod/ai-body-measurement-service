@@ -417,10 +417,18 @@
                   persistSession: true,
                   autoRefreshToken: true,
                   detectSessionInUrl: true,
-                  storage: window.localStorage
+                  storage: window.localStorage,
+                  flowType: 'pkce' // Use modern secure flow
               },
               global: {
-                  fetch: (...args) => NetworkGuard.retry(() => fetch(...args))
+                  // Optimized fetch with specific block for auth refresh loops
+                  fetch: (...args) => {
+                      if (args[0].includes('/auth/v1/token')) {
+                          // Allow auth tokens to fail once without aggressive retry to prevent console flood
+                          return fetch(...args);
+                      }
+                      return NetworkGuard.retry(() => fetch(...args));
+                  }
               }
           });
           window.KORRA_DB = client;
@@ -428,9 +436,19 @@
           // Attempt session fetch with specific catch for refresh_token failure
           let sessionResponse;
           try {
+              // Diagnostic Handshake: Test basic connectivity to Supabase before auth
+              const healthCheck = await fetch(`${config.url}/rest/v1/`, {
+                  method: 'HEAD',
+                  headers: { 'apikey': config.key }
+              }).catch(() => ({ ok: false }));
+
+              if (!healthCheck.ok && healthCheck.status !== 401) {
+                  console.warn("💎 KORRA: Database Vault is technically unreachable. Check Firewall/VPN.");
+              }
+
               sessionResponse = await NetworkGuard.retry(() => client.auth.getSession());
           } catch (fetchErr) {
-              if (fetchErr.message === "OFFLINE") return; // Handled by overlay
+              if (fetchErr.message === "OFFLINE") return;
               console.error("💎 KORRA: Supabase Sync Failed. Wiping session cache.", fetchErr);
               localStorage.clear();
               window.location.href = '/signin';
