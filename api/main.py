@@ -20,9 +20,14 @@ from pathlib import Path
 API_DIR = Path(__file__).resolve().parent
 BASE_DIR = API_DIR.parent
 MODELS_DIR = BASE_DIR / "models"
+PUBLIC_DIR = BASE_DIR / "public"
+MESH_DIR = PUBLIC_DIR / "meshes"
 
 if str(BASE_DIR) not in sys.path:
     sys.path.insert(0, str(BASE_DIR))
+
+# Ensure public/meshes exists for technical persistence
+MESH_DIR.mkdir(parents=True, exist_ok=True)
 
 # --- PRODUCTION LOGGING ---
 logging.basicConfig(
@@ -40,7 +45,6 @@ def autonomous_restoration():
 
     if not checkpoint_idx.exists() or not checkpoint_data.exists():
         logger.info("🚀 UNICORN RESTORATION: AI Brain Missing. Initiating Autonomous Handshake...")
-        # Restoring from Berkeley Research Mirror (Verified 200 OK)
         url = "https://people.eecs.berkeley.edu/~kanazawa/cachedir/hmr/models.tar.gz"
         dest = BASE_DIR / "hmr_auto_restore.tar.gz"
         try:
@@ -58,9 +62,7 @@ def autonomous_restoration():
 
 @asynccontextmanager
 async def lifespan(app: FastAPI):
-    # Log the root for debugging
     logger.info(f"KORRA Infrastructure Booting. Root: {BASE_DIR}")
-    # Perform on-boot expert fix
     autonomous_restoration()
     yield
     logger.info("KORRA Infrastructure Shutting Down.")
@@ -68,7 +70,7 @@ async def lifespan(app: FastAPI):
 app = FastAPI(
     title="KORRA Artisan API",
     description="Production-grade AI body measurement extraction infrastructure.",
-    version="2.1.14",
+    version="2.1.15",
     lifespan=lifespan,
     docs_url="/docs",
     redoc_url="/redoc"
@@ -86,7 +88,6 @@ app.add_middleware(
 @app.middleware("http")
 async def add_security_headers(request: Request, call_next):
     response = await call_next(request)
-    # Allow embedding for the widget and prevent frame mismatch errors
     response.headers["X-Frame-Options"] = "ALLOWALL"
     response.headers["Content-Security-Policy"] = "frame-ancestors *; default-src 'self' * 'unsafe-inline' 'unsafe-eval' data: blob:;"
     return response
@@ -95,13 +96,11 @@ async def add_security_headers(request: Request, call_next):
 def register_routers(app: FastAPI):
     try:
         from api.routes import measurements, auth, health, qrcode, sharing
-
         app.include_router(health.router, prefix="/api/v2", tags=["Health"])
         app.include_router(measurements.router, prefix="/api/v2", tags=["Measurements"])
         app.include_router(auth.router, prefix="/api/v2", tags=["Auth"])
         app.include_router(qrcode.router, prefix="/api/v2/qrcode", tags=["QR Systems"])
         app.include_router(sharing.router, prefix="/api/v2/share", tags=["Sharing"])
-
         logger.info("✅ ALL API Routers Handshaked Successfully.")
     except Exception as e:
         logger.error(f"❌ CRITICAL: Router handshake failed: {e}")
@@ -109,17 +108,13 @@ def register_routers(app: FastAPI):
 register_routers(app)
 
 # --- STATIC ASSET MOUNTING ---
-public_dir = BASE_DIR / "public"
-mesh_dir = Path("/tmp/korra_mesh_cache")
-mesh_dir.mkdir(parents=True, exist_ok=True)
+if PUBLIC_DIR.exists():
+    app.mount("/assets", StaticFiles(directory=str(PUBLIC_DIR)), name="assets")
 
-if public_dir.exists():
-    app.mount("/assets", StaticFiles(directory=str(public_dir)), name="assets")
-
-app.mount("/meshes", StaticFiles(directory=str(mesh_dir)), name="meshes")
+# EXPLICIT MESH MOUNTING: Prioritized for 3D Loader
+app.mount("/meshes", StaticFiles(directory=str(MESH_DIR)), name="meshes")
 
 # --- MPA ROUTING ---
-
 def get_safe_file(filename: str):
     target = BASE_DIR / filename
     if target.exists() and target.is_file():
@@ -128,22 +123,16 @@ def get_safe_file(filename: str):
 
 @app.get("/")
 async def serve_root(): return get_safe_file("index.html")
-
 @app.get("/signin")
 async def serve_signin(): return get_safe_file("signin.html")
-
 @app.get("/signup")
 async def serve_signup(): return get_safe_file("signup.html")
-
 @app.get("/dashboard")
 async def serve_dashboard(): return get_safe_file("dashboard.html")
-
 @app.get("/admin")
 async def serve_admin(): return get_safe_file("admin.html")
-
 @app.get("/widget")
 async def serve_widget(): return get_safe_file("widget.html")
-
 @app.get("/share")
 async def serve_share(): return get_safe_file("share.html")
 
@@ -151,13 +140,16 @@ async def serve_share(): return get_safe_file("share.html")
 @app.get("/{full_path:path}")
 async def catch_all(request: Request, full_path: str):
     if full_path.startswith("api/v2") or "/api/" in full_path:
-        return JSONResponse(
-            status_code=404,
-            content={"error": f"API Endpoint /{full_path} not found. Check router registration."}
-        )
+        return JSONResponse(status_code=404, content={"error": f"API Endpoint /{full_path} not found."})
     if ".." in full_path: return JSONResponse(status_code=400, content={"error": "Illegal access"})
     if full_path.endswith(".html"): return get_safe_file(full_path)
-    asset_file = public_dir / full_path
+
+    # Check meshes directory explicitly
+    if full_path.startswith("meshes/"):
+        mesh_file = PUBLIC_DIR / full_path
+        if mesh_file.exists(): return FileResponse(str(mesh_file))
+
+    asset_file = PUBLIC_DIR / full_path
     if asset_file.exists() and asset_file.is_file(): return FileResponse(str(asset_file))
     return get_safe_file("index.html")
 
@@ -168,7 +160,6 @@ async def global_exception_handler(request: Request, exc: Exception):
     return JSONResponse(status_code=500, content={"error": "KORRA Engine conflict."})
 
 handler = app
-
 if __name__ == "__main__":
     import uvicorn
     uvicorn.run(app, host="0.0.0.0", port=int(os.environ.get("PORT", 5001)))

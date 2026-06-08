@@ -27,10 +27,11 @@ router = APIRouter()
 logger = logging.getLogger("KORRA_MEASUREMENTS")
 
 BASE_DIR = Path(os.getcwd()).resolve()
-TEMP_MESH_DIR = Path("/tmp/korra_mesh_cache")
-TEMP_MESH_DIR.mkdir(parents=True, exist_ok=True)
+# REFACTORED FOR PERSISTENCE: Using public/meshes
+MESH_DIR = BASE_DIR / "public" / "meshes"
+MESH_DIR.mkdir(parents=True, exist_ok=True)
 
-# Shared Task Store (Persistent across requests)
+# Shared Task Store
 EXTRACTION_TASKS = {}
 
 async def get_current_user(x_api_key: str = Header(None)):
@@ -50,7 +51,7 @@ async def run_extraction_task(task_id: str, front_bytes: bytes, side_bytes: byte
         side_arr = np.array(Image.open(io.BytesIO(side_bytes)))
 
         mesh_filename = f"korra_twin_{task_id}.obj"
-        mesh_path = TEMP_MESH_DIR / mesh_filename
+        mesh_path = MESH_DIR / mesh_filename
         mesh_url = None
         landmarks = {}
 
@@ -58,15 +59,21 @@ async def run_extraction_task(task_id: str, front_bytes: bytes, side_bytes: byte
         try:
             from api.services.extract_measurements import extract_measurements_from_hmr, HMR_ACTIVE
             if HMR_ACTIVE:
+                logger.info(f"🧬 [TASK {task_id}] EXECUTING HMR HIGH-PRECISION EXTRACTION...")
                 measurements, vertices, landmarks = extract_measurements_from_hmr(front_arr, height, gender)
                 if vertices is not None:
                     MeshExporter.save_to_obj(vertices, str(mesh_path))
-                    mesh_url = f"/meshes/{mesh_filename}"
+                    # Physical verification check
+                    if mesh_path.exists():
+                        logger.info(f"✅ MESH SERIALIZED: {mesh_path} ({mesh_path.stat().st_size} bytes)")
+                        mesh_url = f"/meshes/{mesh_filename}"
+                    else:
+                        logger.error(f"❌ MESH WRITE FAILURE: {mesh_path} not found after serialization.")
             else:
+                logger.info(f"🛡️ [TASK {task_id}] HMR INACTIVE. EXECUTING MEDIAPIPE FALLBACK...")
                 measurements, landmarks = fallback_extract(front_arr, side_arr, height, gender)
         except Exception as inner_e:
             logger.error(f"⚠️ HMR Pipeline Conflict: {inner_e}")
-            # Ensure we at least return fallback biometrics
             measurements, landmarks = fallback_extract(front_arr, side_arr, height, gender)
 
         # ATOMIC PERSISTENCE
@@ -104,8 +111,6 @@ async def start_extraction(
 ):
     """Initiates an asynchronous extraction task to prevent timeouts."""
     task_id = str(uuid.uuid4())
-
-    # Pre-flight Vision Guard
     front_bytes = await front.read()
     side_bytes = await side.read()
 
@@ -115,19 +120,12 @@ async def start_extraction(
         if not is_valid: raise HTTPException(status_code=422, detail={"error": reason})
 
     await track_usage(user['api_key'])
-
     EXTRACTION_TASKS[task_id] = {"status": "queued", "created_at": datetime.utcnow().isoformat()}
-
-    background_tasks.add_task(
-        run_extraction_task, task_id, front_bytes, side_bytes, height, gender, client_name, user['user_id']
-    )
-
-    return {"status": "accepted", "task_id": task_id, "message": "Extraction queued in background."}
+    background_tasks.add_task(run_extraction_task, task_id, front_bytes, side_bytes, height, gender, client_name, user['user_id'])
+    return {"status": "accepted", "task_id": task_id}
 
 @router.get("/measurements/status/{task_id}")
 async def get_extraction_status(task_id: str):
-    """Polling endpoint for task completion."""
     task = EXTRACTION_TASKS.get(task_id)
-    if not task:
-        raise HTTPException(status_code=404, detail="Task not found.")
+    if not task: raise HTTPException(status_code=404, detail="Task not found.")
     return task
