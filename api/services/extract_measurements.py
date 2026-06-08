@@ -29,6 +29,10 @@ try:
     # SATISFY TF-SLIM / TF-KERAS DRIFT
     tk = create_mock_module('tf_keras')
     sys.modules['tf_keras.legacy_tf_layers'] = tf1.layers
+    sys.modules['tf_keras.legacy_tf_layers.normalization'] = tf1.layers
+    sys.modules['tf_keras.legacy_tf_layers.convolutional'] = tf1.layers
+    sys.modules['tf_keras.legacy_tf_layers.pooling'] = tf1.layers
+    sys.modules['tf_keras.legacy_tf_layers.core'] = tf1.layers
 
     contrib = create_mock_module('tensorflow.contrib')
 
@@ -83,7 +87,8 @@ class HMRMasterEngine:
             ckpt_base = models_dir / "model.ckpt-667589"
             vertex_path = root / "data" / "customBodyPoints.txt"
 
-            if not (ckpt_base.with_suffix(".index")).exists():
+            # Use string concatenation to avoid Path.with_suffix bug with dots in filename
+            if not Path(str(ckpt_base) + ".index").exists():
                 self.last_error = f"Weights missing at {ckpt_base}"
                 return False
 

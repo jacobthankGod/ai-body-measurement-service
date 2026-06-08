@@ -80,7 +80,7 @@ def Encoder_fc3_dropout(x,
         net = slim.fully_connected(net, 1024, scope='fc2')
         net = slim.dropout(net, 0.5, is_training=is_training, scope='dropout2')
         small_xavier = variance_scaling_initializer(
-            factor=.01, mode='FAN_AVG', uniform=True)
+            scale=.01, mode='fan_avg', distribution='uniform')
         net = slim.fully_connected(
             net,
             num_output,

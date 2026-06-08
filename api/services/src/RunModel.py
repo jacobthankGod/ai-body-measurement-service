@@ -64,9 +64,9 @@ class RunModel(object):
         self.final_thetas = []
         theta_prev = tf.tile(self.mean_var, [self.batch_size, 1])
 
-        for i in np.arange(self.num_stage):
+        for i in range(self.num_stage):
             state = tf.concat([self.img_feat, theta_prev], 1)
-            delta_theta, _ = threed_enc_fn(state, num_output=self.total_params, is_training=False, reuse=(i > 0))
+            delta_theta, _ = threed_enc_fn(state, num_output=self.total_params, is_training=False, reuse=bool(i > 0))
             theta_here = theta_prev + delta_theta
             cams = theta_here[:, :self.num_cam]
             poses = theta_here[:, self.num_cam:(self.num_cam + self.num_theta)]
