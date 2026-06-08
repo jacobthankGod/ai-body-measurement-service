@@ -6,7 +6,10 @@ Enables the "Digital Twin" visualization ecosystem.
 """
 import os
 import numpy as np
+import logging
 from pathlib import Path
+
+logger = logging.getLogger("KORRA_EXPORTER")
 
 class MeshExporter:
     @staticmethod
@@ -16,18 +19,20 @@ class MeshExporter:
         HMR returns ~6890 vertices.
         """
         try:
-            # Get faces from the research source (Phase 7 alignment)
-            # SMPL has a fixed topology of 13776 faces
-            faces_path = Path(__file__).parent / "src" / "tf_smpl" / "smpl_faces.npy"
+            # Physical path resolution for SMPL faces
+            src_dir = Path(__file__).parent / "src" / "tf_smpl"
+            faces_path = src_dir / "smpl_faces.npy"
 
             if faces_path.exists():
                 faces = np.load(faces_path)
+                logger.info(f"💎 KORRA: Loaded {len(faces)} SMPL faces from {faces_path}")
             else:
-                # Fallback to empty faces if research source is missing
+                logger.warning(f"⚠️ KORRA: SMPL faces MISSING at {faces_path}. OBJ will be vertex-only.")
                 faces = []
 
             with open(output_path, 'w') as f:
                 f.write("# KORRA Digital Twin | 3D Body Mesh\n")
+                f.write(f"# Vertices: {len(vertices)} | Faces: {len(faces)}\n")
 
                 # Write Vertices
                 for v in vertices:
@@ -39,7 +44,7 @@ class MeshExporter:
 
             return True
         except Exception as e:
-            print(f"❌ Mesh Export Failed: {e}")
+            logger.error(f"❌ Mesh Export Failed: {e}")
             return False
 
     @staticmethod

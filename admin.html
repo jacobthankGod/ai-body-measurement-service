@@ -580,9 +580,20 @@
                         status.textContent = 'ANALYZING VERTEX DENSITY...';
                     } else if (data.status === 'completed') {
                         clearInterval(interval);
+                        console.log("💎 KORRA: Task Handshake Successful.", data);
                         progress = 100;
                         status.textContent = 'SUCCESS: HANDSHAKE COMPLETE';
-                        if (window.KORRA_VIZ && data.mesh_url) window.KORRA_VIZ.loadMesh(data.mesh_url);
+
+                        if (window.KORRA_VIZ) {
+                            if (data.mesh_url) {
+                                console.log(`🚀 KORRA: Triggering 3D load for ${data.mesh_url}`);
+                                window.KORRA_VIZ.loadMesh(data.mesh_url);
+                            } else {
+                                console.warn("⚠️ KORRA: Task complete but mesh_url is NULL. Checking fallback.");
+                                window.KORRA_VIZ.loadMesh(null);
+                            }
+                        }
+
                         adminLog("SUCCESS: BIOMETRICS CALCULATED.");
                         loadGlobalStats();
                         setTimeout(() => { overlay.style.display = 'none'; btn.disabled = false; btn.textContent = 'Complete'; }, 1000);
