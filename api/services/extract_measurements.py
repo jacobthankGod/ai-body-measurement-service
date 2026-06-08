@@ -77,14 +77,17 @@ class HMRMasterEngine:
         models_dir = root / "models"
         ckpt_base = models_dir / "model.ckpt-667589"
 
-        if not os.path.exists(str(ckpt_base) + ".index"): return False
+        if not os.path.exists(str(ckpt_base) + ".index"):
+            print("⚠️ KORRA: AI Brain weights missing. Waiting for restoration...")
+            return False
 
-        import numpy as np
+        # SATISFY NUMPY DEPRECATIONS IN LEGACY CODE
         if not hasattr(np, 'bool'):
             np.bool = bool; np.int = int; np.float = float; np.complex = complex; np.object = object; np.str = str; np.unicode = str
 
         try:
-            import resnet_v2
+            # FIX: resnet_v2 is inside src package
+            from src import resnet_v2
             sys.modules['tensorflow.contrib.slim.python.slim.nets.resnet_v2'] = resnet_v2
 
             from src.RunModel import RunModel
@@ -99,22 +102,48 @@ class HMRMasterEngine:
             return True
         except Exception as e:
             print(f"❌ HMR BRIDGE FAILURE: {e}")
+            import traceback
+            traceback.print_exc()
             return False
 
     def extract(self, image: np.ndarray, height_cm: float, gender: str = 'male') -> Tuple[Dict[str, float], Optional[np.ndarray], Optional[dict]]:
         if not self.initialized:
-            if not self.initialize(): return self._fallback_ratios(height_cm, gender), None, None
+            if not self.initialize():
+                print("🛡️ KORRA: Engine not ready. Returning fallback.")
+                return self._fallback_ratios(height_cm, gender), None, None
         try:
             import cv2
+            # 1024 Memory Guard: Ensure image isn't huge
+            h, w = image.shape[:2]
+            if max(h, w) > 1024:
+                scale_f = 1024 / max(h, w)
+                image = cv2.resize(image, (int(w * scale_f), int(h * scale_f)))
+
             img_resized = cv2.resize(image, (224, 224))
             img_normalized = 2 * ((img_resized / 255.0) - 0.5)
             img_batch = np.expand_dims(img_normalized, 0)
+
             results = self.model.predict_dict(img_batch)
             vertices = results['verts'][0]
             joints = results['joints'][0]
-            landmark_2d = {'Shoulder_L': (float(joints[2][0])/224.0, float(joints[2][1])/224.0), 'Shoulder_R': (float(joints[3][0])/224.0, float(joints[3][1])/224.0), 'Hip_L': (float(joints[8][0])/224.0, float(joints[8][1])/224.0), 'Hip_R': (float(joints[9][0])/224.0, float(joints[9][1])/224.0)}
+
+            # Extract technical landmarks
+            landmark_2d = {
+                'Shoulder_L': (float(joints[2][0])/224.0, float(joints[2][1])/224.0),
+                'Shoulder_R': (float(joints[3][0])/224.0, float(joints[3][1])/224.0)
+            }
+
             measurements = self._calculate_from_indices(vertices, height_cm)
-            return measurements, vertices, landmark_2d
+
+            # STANDARD SCALING: Ensure vertices are in meters for Three.js
+            # HMR usually outputs in a normalized camera space.
+            # We scale the entire mesh so its bounding box matches the user's height.
+            v_min, v_max = np.min(vertices[:, 1]), np.max(vertices[:, 1])
+            v_height = v_max - v_min
+            scale_to_meters = (height_cm / 100.0) / v_height
+            vertices_scaled = vertices * scale_to_meters
+
+            return measurements, vertices_scaled, landmark_2d
         except Exception as e:
             print(f"⚠️ HMR Pipeline Error: {e}")
             return self._fallback_ratios(height_cm, gender), None, None
