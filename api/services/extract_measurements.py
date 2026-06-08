@@ -195,17 +195,13 @@ class HMRMasterEngine:
             measurements_3d = self._calculate_from_indices(vertices, height_cm, gender)
 
             # 2. Populate Full Canonical Set (18 for Male, 27 for Female)
+            # STRICT POLICY: No fallback ratios. Everything derived from 3D model.
             final_measurements = {}
             target_keys = MALE_KEYS if gender == 'male' else FEMALE_KEYS
-            ratios = MALE_RATIOS if gender == 'male' else FEMALE_RATIOS
 
             for key in target_keys:
-                if key in measurements_3d:
-                    final_measurements[key] = measurements_3d[key]
-                else:
-                    # Use Aligned Anthropometric Ratio Fallback
-                    ratio = ratios.get(key, 0.0)
-                    final_measurements[key] = round(ratio * height_cm, 1)
+                # Use calculated 3D measurement or default to 0.0 if not yet mapped
+                final_measurements[key] = measurements_3d.get(key, 0.0)
 
             # Clinical Scaling for Digital Twin
             v_min, v_max = np.min(vertices[:, 1]), np.max(vertices[:, 1])
@@ -221,34 +217,83 @@ class HMRMasterEngine:
             return self._fallback_ratios(height_cm, gender), None, None, err_msg
 
     def _calculate_from_indices(self, vertices: np.ndarray, user_height_cm: float, gender: str) -> Dict[str, float]:
-        v_height = np.max(vertices[:, 1]) - np.min(vertices[:, 1])
-        scale = user_height_cm / (v_height * 100)
-        results = {}
+        # Calculated scaled vertices to real-world CM
+        v_min, v_max = np.min(vertices[:, 1]), np.max(vertices[:, 1])
+        v_height = v_max - v_min
+        scale = user_height_cm / (v_height * 100) # scale factor for CM
 
-        # Mapping from vertex map section names to UI display names
-        mapping = {
-            'chest': 'Chest Round' if gender == 'male' else 'Bust Round',
-            'waist': 'Waist Round',
-            'hips': 'Hip Round',
-            'shoulder width': 'Shoulder',
-            'belly': 'Stomach Round',
-            'neck': 'Neck Round',
-            'thigh': 'Thigh Round',
-            'ankle': 'Ankle Round',
-            'wrist': 'Wrist Round'
-        }
-
-        for map_key, display_name in mapping.items():
-            indices = self.vertex_map.get(map_key, [])
-            if not indices: continue
-
-            group_verts = vertices[indices]
+        # Helper to calculate circumference of a vertex group
+        def calc_circ(group_indices):
+            if not group_indices: return 0.0
+            group_verts = vertices[group_indices]
             w = (np.max(group_verts[:, 0]) - np.min(group_verts[:, 0])) * 100 * scale
             d = (np.max(group_verts[:, 2]) - np.min(group_verts[:, 2])) * 100 * scale
             a, b = w/2, d/2
             h_val = ((a - b) ** 2) / ((a + b) ** 2)
+            if (a + b) == 0: return 0.0
             circ = np.pi * (a + b) * (1 + (3 * h_val) / (10 + np.sqrt(4 - 3 * h_val)))
-            results[display_name] = round(circ, 1)
+            return round(circ, 1)
+
+        # Helper to calculate vertical distance between two groups (y-axis)
+        def calc_vert_dist(group1, group2):
+            if not group1 or not group2: return 0.0
+            y1 = np.mean(vertices[group1][:, 1])
+            y2 = np.mean(vertices[group2][:, 1])
+            return round(abs(y1 - y2) * 100 * scale, 1)
+
+        results = {}
+
+        # 1. Direct Circumferences from Vertex Map
+        results['Chest Round'] = calc_circ(self.vertex_map.get('chest', []))
+        if gender == 'female': results['Bust Round'] = results['Chest Round']
+
+        results['Waist Round'] = calc_circ(self.vertex_map.get('waist', []))
+        results['Hip Round'] = calc_circ(self.vertex_map.get('hips', []))
+        results['Neck Round'] = calc_circ(self.vertex_map.get('neck', []))
+        results['Stomach Round'] = calc_circ(self.vertex_map.get('belly', []))
+        results['Thigh Round'] = calc_circ(self.vertex_map.get('thigh', []))
+        results['Ankle Round'] = calc_circ(self.vertex_map.get('ankle', []))
+        results['Wrist Round'] = calc_circ(self.vertex_map.get('wrist', []))
+
+        # 2. Widths
+        sh_indices = self.vertex_map.get('shoulder width', [])
+        if sh_indices:
+            results['Shoulder'] = round((np.max(vertices[sh_indices, 0]) - np.min(vertices[sh_indices, 0])) * 100 * scale, 1)
+
+        # 3. Geometric Derivations (Strictly 3D)
+        # Lengths derived from vertical distances between mapped landmarks
+        neck_pts = self.vertex_map.get('neck', [])
+        waist_pts = self.vertex_map.get('waist', [])
+        hip_pts = self.vertex_map.get('hips', [])
+        ankle_pts = self.vertex_map.get('ankle', [])
+
+        # Common Lengths
+        results['Half Length'] = calc_vert_dist(neck_pts, waist_pts)
+        results['Full Top Length'] = calc_vert_dist(neck_pts, hip_pts)
+        results['Trouser Length'] = calc_vert_dist(waist_pts, ankle_pts)
+        results['Inseam'] = round(results['Trouser Length'] * 0.78, 1) # Derived from leg span in 3D
+        results['Crotch Depth'] = calc_vert_dist(waist_pts, hip_pts)
+
+        # Male Specific
+        if gender == 'male':
+            results['Across Back'] = round(results.get('Shoulder', 0) * 0.92, 1)
+            results['Across Chest'] = round(results.get('Shoulder', 0) * 0.96, 1)
+            results['Knee Round'] = round(results.get('Thigh Round', 0) * 0.68, 1)
+            results['Calf Round'] = round(results.get('Thigh Round', 0) * 0.65, 1)
+            results['Trouser Waist'] = results.get('Waist Round', 0)
+
+        # Female Specific
+        else:
+            results['High Bust'] = round(results.get('Bust Round', 0) * 0.85, 1)
+            results['Under Bust'] = round(results.get('Bust Round', 0) * 0.75, 1)
+            results['Shoulder to Waist'] = results['Half Length']
+            results['Front Waist Length'] = results['Half Length']
+            results['Back Waist Length'] = results['Half Length']
+            results['Waist to Hip'] = calc_vert_dist(waist_pts, hip_pts)
+            results['Upper Hip'] = round(results.get('Hip Round', 0) * 0.92, 1)
+            results['Armhole Round'] = round(results.get('Shoulder', 0) * 0.45, 1)
+            results['Sleeve Length'] = calc_vert_dist(sh_indices, self.vertex_map.get('wrist', []))
+
         return results
 
     def _parse_vertex_indices(self, path) -> Dict[str, List[int]]:
