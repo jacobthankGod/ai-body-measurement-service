@@ -7,7 +7,9 @@ from __future__ import print_function
 import tensorflow as tf
 import numpy as np
 from os.path import exists
+import os
 import tf_slim as slim
+from pathlib import Path
 
 from .tf_smpl import projection as proj_util
 from .tf_smpl.batch_smpl import SMPL
@@ -16,12 +18,15 @@ from . import resnet_v2
 
 class RunModel(object):
     def __init__(self, sess=None):
-        self.load_path = 'models/model.ckpt-667589'
+        # Physical path resolution for Cloud Persistence
+        root = Path(__file__).resolve().parent.parent.parent.parent
+        self.load_path = str(root / 'models' / 'model.ckpt-667589')
+        self.smpl_model_path = str(root / 'models' / 'neutral_smpl_with_cocoplus_reg.pkl')
+
         self.batch_size = 1
         self.img_size = 224
         self.data_format = 'NHMC'
-        self.smpl_model_path = 'models/neutral_smpl_with_cocoplus_reg.pkl'
-        
+
         input_size = (self.batch_size, self.img_size, self.img_size, 3)
         self.images_pl = tf.placeholder(tf.float32, shape=input_size)
 
@@ -39,12 +44,13 @@ class RunModel(object):
         if sess is None:
             config = tf.ConfigProto()
             config.gpu_options.allow_growth = True
+            # Limit memory usage for Render 512MB tier
+            config.gpu_options.per_process_gpu_memory_fraction = 0.4
             self.sess = tf.Session(config=config)
         else:
             self.sess = sess
         
         self.saver = tf.train.Saver()
-        self.prepare()        
 
     def build_test_model_ief(self):
         self.mean_var = tf.Variable(tf.zeros((1, self.total_params)), name="mean_param", dtype=tf.float32)
@@ -79,15 +85,8 @@ class RunModel(object):
             print('Restoring checkpoint %s..' % self.load_path)
             self.saver.restore(self.sess, self.load_path)
         else:
-            print('⚠️ Checkpoint not found at %s. Running in proxy mode.' % self.load_path)
+            raise FileNotFoundError(f"AI weights not found at {self.load_path}")
             
-    def predict(self, images, get_theta=False):
-        results = self.predict_dict(images)
-        if get_theta:
-            return results['joints'], results['verts'], results['cams'], results['joints3d'], results['theta']
-        else:
-            return results['joints'], results['verts'], results['cams'], results['joints3d']
-
     def predict_dict(self, images):
         feed_dict = { self.images_pl: images }
         fetch_dict = {
@@ -98,6 +97,4 @@ class RunModel(object):
             'theta': self.final_thetas[-1],
         }
         results = self.sess.run(fetch_dict, feed_dict)
-        joints = results['joints']
-        results['joints'] = ((joints + 1) * 0.5) * self.img_size
         return results

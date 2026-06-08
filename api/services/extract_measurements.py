@@ -9,8 +9,11 @@ import sys
 import types
 import numpy as np
 import logging
+import traceback
 from pathlib import Path
 from typing import Dict, Optional, Tuple, List
+
+logger = logging.getLogger("KORRA_HMR")
 
 # --- NUCLEAR TENSORFLOW LEGACY BRIDGE ---
 try:
@@ -48,9 +51,9 @@ try:
     contrib.layers = layers
 
     framework = create_mock_module('tensorflow.contrib.framework')
-    def get_variables(scope=None, suffix=None, collection=tf1.GraphKeys.GLOBAL_VARIABLES):
+    def _get_vars(scope=None, suffix=None, collection=tf1.GraphKeys.GLOBAL_VARIABLES):
         return tf1.get_collection(collection, scope=scope)
-    framework.get_variables = get_variables
+    framework.get_variables = _get_vars
     contrib.framework = framework
 
     tf1.contrib = contrib
@@ -58,7 +61,7 @@ try:
     tf = tf1
 
 except ImportError:
-    print("❌ Critical: TensorFlow Infrastructure Offline.")
+    logger.error("❌ Critical: TensorFlow Infrastructure Offline.")
 
 # ============================================================================
 # MASTER EXTRACTION ENGINE
@@ -68,52 +71,57 @@ class HMRMasterEngine:
     def __init__(self):
         self.model = None
         self.initialized = False
-        self.base_dir = Path(__file__).parent.resolve()
-        if str(self.base_dir) not in sys.path: sys.path.insert(0, str(self.base_dir))
+        self.base_dir = Path(__file__).parent.resolve() # api/services
         self.vertex_map = {}
+        self.last_error = None
 
     def initialize(self):
-        root = self.base_dir.parent.parent
-        models_dir = root / "models"
-        ckpt_base = models_dir / "model.ckpt-667589"
-
-        if not os.path.exists(str(ckpt_base) + ".index"):
-            print("⚠️ KORRA: AI Brain weights missing. Waiting for restoration...")
-            return False
-
-        # SATISFY NUMPY DEPRECATIONS IN LEGACY CODE
-        if not hasattr(np, 'bool'):
-            np.bool = bool; np.int = int; np.float = float; np.complex = complex; np.object = object; np.str = str; np.unicode = str
-
+        """Absolute Handshake for AI Brain Initialization."""
         try:
-            # FIX: resnet_v2 is inside src package
+            root = self.base_dir.parent.parent
+            models_dir = root / "models"
+            ckpt_base = models_dir / "model.ckpt-667589"
+            vertex_path = root / "data" / "customBodyPoints.txt"
+
+            if not (ckpt_base.with_suffix(".index")).exists():
+                self.last_error = f"Weights missing at {ckpt_base}"
+                return False
+
+            # SATISFY NUMPY DEPRECATIONS
+            if not hasattr(np, 'bool'):
+                np.bool = bool; np.int = int; np.float = float; np.complex = complex; np.object = object; np.str = str; np.unicode = str
+
+            # PACKAGE RESOLUTION HARDENING
+            src_path = self.base_dir / "src"
+            if str(src_path) not in sys.path: sys.path.insert(0, str(src_path))
+            if str(self.base_dir) not in sys.path: sys.path.insert(0, str(self.base_dir))
+
             from src import resnet_v2
             sys.modules['tensorflow.contrib.slim.python.slim.nets.resnet_v2'] = resnet_v2
 
             from src.RunModel import RunModel
+            logger.info("📦 HMR: Instantiating RunModel...")
             self.model = RunModel()
-            self.model.load_path = str(ckpt_base)
-            self.model.smpl_model_path = str(models_dir / "neutral_smpl_with_cocoplus_reg.pkl")
+
+            logger.info("📦 HMR: Loading Checkpoint Weights...")
             self.model.prepare()
 
-            self.vertex_map = self._parse_vertex_indices(root / "data" / "customBodyPoints.txt")
+            self.vertex_map = self._parse_vertex_indices(vertex_path)
             self.initialized = True
-            print("💎 KORRA: HMR 3D Brain Fully Synchronized.")
+            logger.info("✅ KORRA: HMR 3D Brain Fully Synchronized.")
             return True
         except Exception as e:
-            print(f"❌ HMR BRIDGE FAILURE: {e}")
-            import traceback
+            self.last_error = f"INIT_CRASH: {str(e)}"
+            logger.error(f"❌ HMR INITIALIZATION CRASH: {e}")
             traceback.print_exc()
             return False
 
-    def extract(self, image: np.ndarray, height_cm: float, gender: str = 'male') -> Tuple[Dict[str, float], Optional[np.ndarray], Optional[dict]]:
+    def extract(self, image: np.ndarray, height_cm: float, gender: str = 'male') -> Tuple[Dict[str, float], Optional[np.ndarray], Optional[dict], Optional[str]]:
         if not self.initialized:
             if not self.initialize():
-                print("🛡️ KORRA: Engine not ready. Returning fallback.")
-                return self._fallback_ratios(height_cm, gender), None, None
+                return self._fallback_ratios(height_cm, gender), None, None, f"Initialization Failed: {self.last_error}"
         try:
             import cv2
-            # 1024 Memory Guard: Ensure image isn't huge
             h, w = image.shape[:2]
             if max(h, w) > 1024:
                 scale_f = 1024 / max(h, w)
@@ -127,26 +135,24 @@ class HMRMasterEngine:
             vertices = results['verts'][0]
             joints = results['joints'][0]
 
-            # Extract technical landmarks
             landmark_2d = {
                 'Shoulder_L': (float(joints[2][0])/224.0, float(joints[2][1])/224.0),
                 'Shoulder_R': (float(joints[3][0])/224.0, float(joints[3][1])/224.0)
             }
-
             measurements = self._calculate_from_indices(vertices, height_cm)
 
-            # STANDARD SCALING: Ensure vertices are in meters for Three.js
-            # HMR usually outputs in a normalized camera space.
-            # We scale the entire mesh so its bounding box matches the user's height.
+            # Clinical Scaling
             v_min, v_max = np.min(vertices[:, 1]), np.max(vertices[:, 1])
             v_height = v_max - v_min
             scale_to_meters = (height_cm / 100.0) / v_height
             vertices_scaled = vertices * scale_to_meters
 
-            return measurements, vertices_scaled, landmark_2d
+            return measurements, vertices_scaled, landmark_2d, None
         except Exception as e:
-            print(f"⚠️ HMR Pipeline Error: {e}")
-            return self._fallback_ratios(height_cm, gender), None, None
+            err_msg = f"RUNTIME_CRASH: {str(e)}"
+            logger.error(f"⚠️ HMR Pipeline Error: {e}")
+            traceback.print_exc()
+            return self._fallback_ratios(height_cm, gender), None, None, err_msg
 
     def _calculate_from_indices(self, vertices: np.ndarray, user_height_cm: float) -> Dict[str, float]:
         v_height = np.max(vertices[:, 1]) - np.min(vertices[:, 1])

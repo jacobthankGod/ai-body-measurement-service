@@ -42,15 +42,9 @@ async def get_current_user(x_api_key: str = Header(None)):
     return {'api_key': x_api_key, 'user_id': result.get('user_id'), 'is_admin': result.get('is_admin', False)}
 
 def cleanup_task_queue():
-    """Nuclear Cleanup: Removes tasks older than 24h to prevent memory bloat."""
     global EXTRACTION_TASKS
     now = datetime.utcnow()
-    keys_to_del = []
-    for k, v in EXTRACTION_TASKS.items():
-        try:
-            created = datetime.fromisoformat(v["created_at"])
-            if now - created > timedelta(hours=24): keys_to_del.append(k)
-        except: keys_to_del.append(k)
+    keys_to_del = [k for k, v in EXTRACTION_TASKS.items() if (now - datetime.fromisoformat(v["created_at"])) > timedelta(hours=24)]
     for k in keys_to_del: del EXTRACTION_TASKS[k]
 
 async def run_extraction_task(task_id: str, front_bytes: bytes, side_bytes: bytes, height: float, gender: str, client_name: str, user_id: str):
@@ -66,25 +60,26 @@ async def run_extraction_task(task_id: str, front_bytes: bytes, side_bytes: byte
         mesh_path = MESH_DIR / mesh_filename
         mesh_url = None
         landmarks = {}
+        hmr_error = None
 
         # AI EXTRACTION
         try:
             from api.services.extract_measurements import extract_measurements_from_hmr, HMR_ACTIVE
             if HMR_ACTIVE:
                 logger.info(f"🧬 [TASK {task_id}] EXECUTING HMR HIGH-PRECISION EXTRACTION...")
-                measurements, vertices, landmarks = extract_measurements_from_hmr(front_arr, height, gender)
+                measurements, vertices, landmarks, hmr_error = extract_measurements_from_hmr(front_arr, height, gender)
+
                 if vertices is not None:
                     MeshExporter.save_to_obj(vertices, str(mesh_path))
                     if mesh_path.exists():
-                        logger.info(f"✅ MESH SERIALIZED: {mesh_path} ({mesh_path.stat().st_size} bytes)")
                         mesh_url = f"/meshes/{mesh_filename}"
                     else:
-                        logger.error(f"❌ MESH WRITE FAILURE: {mesh_path} not found.")
+                        hmr_error = "MESH_WRITE_FAILURE"
             else:
-                logger.info(f"🛡️ [TASK {task_id}] HMR INACTIVE. EXECUTING MEDIAPIPE FALLBACK...")
                 measurements, landmarks = fallback_extract(front_arr, side_arr, height, gender)
         except Exception as inner_e:
             logger.error(f"⚠️ HMR Pipeline Conflict: {inner_e}")
+            hmr_error = str(inner_e)
             measurements, landmarks = fallback_extract(front_arr, side_arr, height, gender)
 
         # ATOMIC PERSISTENCE
@@ -97,7 +92,8 @@ async def run_extraction_task(task_id: str, front_bytes: bytes, side_bytes: byte
             "status": "completed",
             "measurements": measurements,
             "mesh_url": mesh_url,
-            "landmarks": landmarks
+            "landmarks": landmarks,
+            "debug": hmr_error
         })
         logger.info(f"✅ TASK COMPLETED: {task_id}")
 
@@ -105,11 +101,7 @@ async def run_extraction_task(task_id: str, front_bytes: bytes, side_bytes: byte
         error_msg = str(e)
         logger.error(f"❌ EXTRACTION TASK FAILED: {error_msg}")
         traceback.print_exc()
-        EXTRACTION_TASKS[task_id].update({
-            "status": "failed",
-            "error": error_msg,
-            "trace": traceback.format_exc()
-        })
+        EXTRACTION_TASKS[task_id].update({ "status": "failed", "error": error_msg })
 
 @router.post("/measurements/extract")
 async def start_extraction(
@@ -121,20 +113,13 @@ async def start_extraction(
     client_name: str = Form("Unnamed Client"),
     user: dict = Depends(get_current_user)
 ):
-    """Initiates an asynchronous extraction task for Admin/Dashboard."""
     task_id = str(uuid.uuid4())
     front_bytes = await front.read()
     side_bytes = await side.read()
-
-    if not user.get('is_admin'):
-        front_arr = np.array(Image.open(io.BytesIO(front_bytes)))
-        is_valid, reason = VisionGuard.validate_photo(front_arr, "front")
-        if not is_valid: raise HTTPException(status_code=422, detail={"error": reason})
-
     await track_usage(user['api_key'])
     EXTRACTION_TASKS[task_id] = {"status": "queued", "created_at": datetime.utcnow().isoformat()}
     background_tasks.add_task(run_extraction_task, task_id, front_bytes, side_bytes, height, gender, client_name, user['user_id'])
-    return {"status": "accepted", "task_id": task_id, "message": "Extraction queued."}
+    return {"status": "accepted", "task_id": task_id}
 
 @router.post("/measurements/extract-widget")
 async def extract_widget(
@@ -146,18 +131,15 @@ async def extract_widget(
     merchant_id: str = Form(...),
     client_name: str = Form("Widget Customer")
 ):
-    """Public Widget Extraction with Task-Queue logic."""
     task_id = str(uuid.uuid4())
     front_bytes = await front.read()
     side_bytes = await side.read()
-
     EXTRACTION_TASKS[task_id] = {"status": "queued", "created_at": datetime.utcnow().isoformat()}
     background_tasks.add_task(run_extraction_task, task_id, front_bytes, side_bytes, height, gender, client_name, merchant_id)
     return {"status": "accepted", "task_id": task_id}
 
 @router.get("/measurements/status/{task_id}")
 async def get_extraction_status(task_id: str):
-    """Polling endpoint for task completion."""
     task = EXTRACTION_TASKS.get(task_id)
     if not task: raise HTTPException(status_code=404, detail="Task not found.")
     return task
