@@ -7,11 +7,16 @@ Hardened with Atomic Integrity Diagnostics and TF1 Compatibility Bridge.
 import os
 import sys
 import types
+import inspect
 import numpy as np
 import logging
 import traceback
 from pathlib import Path
 from typing import Dict, Optional, Tuple, List
+
+# --- Python 3.11+ Compatibility Patch ---
+if not hasattr(inspect, 'getargspec'):
+    inspect.getargspec = inspect.getfullargspec
 
 logger = logging.getLogger("KORRA_HMR")
 
