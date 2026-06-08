@@ -21,11 +21,13 @@ class MeshExporter:
         """
         try:
             # FORENSIC FIX: Resolve faces from absolute path independent of import context
-            # Try multiple possible paths to ensure robustness
-            base_dir = Path(__file__).resolve().parent.parent
+            # __file__ = api/services/mesh_exporter.py
+            # parent = api/services
+            # parent.parent = api
+            # parent.parent.parent = project root
+            base_dir = Path(__file__).resolve().parent.parent.parent
             possible_faces_paths = [
                 base_dir / "api" / "services" / "src" / "tf_smpl" / "smpl_faces.npy",
-                base_dir / "api" / "services" / "tf_smpl" / "smpl_faces.npy",
             ]
             
             faces = []
