@@ -107,12 +107,7 @@ def register_routers(app: FastAPI):
 
 register_routers(app)
 
-# --- STATIC ASSET MOUNTING ---
-if PUBLIC_DIR.exists():
-    app.mount("/assets", StaticFiles(directory=str(PUBLIC_DIR)), name="assets")
-
-# EXPLICIT MESH MOUNTING: Prioritized for 3D Loader
-app.mount("/meshes", StaticFiles(directory=str(MESH_DIR)), name="meshes")
+# Note: Static assets are now served via explicit routes above for priority handling
 
 # --- MPA ROUTING ---
 def get_safe_file(filename: str):
@@ -137,20 +132,26 @@ async def serve_widget(): return get_safe_file("widget.html")
 async def serve_share(): return get_safe_file("share.html")
 
 # --- PRIORITIZED CATCH-ALL ---
+# PRIORITY: Serve static assets BEFORE catch-all
+@app.get("/assets/{asset_path:path}")
+async def serve_assets(asset_path: str):
+    asset_file = PUBLIC_DIR / asset_path
+    if asset_file.exists() and asset_file.is_file():
+        return FileResponse(str(asset_file))
+    raise HTTPException(status_code=404, detail="Asset not found")
+
+@app.get("/meshes/{mesh_file:path}")
+async def serve_meshes(mesh_file: str):
+    mesh_path = MESH_DIR / mesh_file
+    if mesh_path.exists(): return FileResponse(str(mesh_path))
+    raise HTTPException(status_code=404, detail="Mesh not found")
+
 @app.get("/{full_path:path}")
 async def catch_all(request: Request, full_path: str):
-    if full_path.startswith("api/v2") or "/api/" in full_path:
+    if full_path.startswith("api/v2") or full_path.startswith("api/"):
         return JSONResponse(status_code=404, content={"error": f"API Endpoint /{full_path} not found."})
     if ".." in full_path: return JSONResponse(status_code=400, content={"error": "Illegal access"})
     if full_path.endswith(".html"): return get_safe_file(full_path)
-
-    # Check meshes directory explicitly
-    if full_path.startswith("meshes/"):
-        mesh_file = PUBLIC_DIR / full_path
-        if mesh_file.exists(): return FileResponse(str(mesh_file))
-
-    asset_file = PUBLIC_DIR / full_path
-    if asset_file.exists() and asset_file.is_file(): return FileResponse(str(asset_file))
     return get_safe_file("index.html")
 
 # --- GLOBAL ERROR HANDLER ---

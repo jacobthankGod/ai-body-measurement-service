@@ -71,10 +71,13 @@ async def run_extraction_task(task_id: str, front_bytes: bytes, side_bytes: byte
 
                 if vertices is not None:
                     MeshExporter.save_to_obj(vertices, str(mesh_path))
-                    if mesh_path.exists():
+                    # Physical persistence verification
+                    if mesh_path.exists() and mesh_path.stat().st_size > 0:
                         mesh_url = f"/meshes/{mesh_filename}"
+                        logger.info(f"✅ MESH VERIFIED: {mesh_url} ({mesh_path.stat().st_size} bytes)")
                     else:
-                        hmr_error = "MESH_WRITE_FAILURE"
+                        hmr_error = "MESH_WRITE_FAILURE: File missing or empty on disk."
+                        logger.error(f"❌ {hmr_error}")
             else:
                 measurements, landmarks = fallback_extract(front_arr, side_arr, height, gender)
         except Exception as inner_e:

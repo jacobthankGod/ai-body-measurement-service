@@ -14,17 +14,15 @@ import traceback
 from pathlib import Path
 from typing import Dict, Optional, Tuple, List
 
-# --- Python 3.11+ Compatibility Patch ---
-if not hasattr(inspect, 'getargspec'):
-    inspect.getargspec = inspect.getfullargspec
-
-logger = logging.getLogger("KORRA_HMR")
-
 # --- NUCLEAR TENSORFLOW LEGACY BRIDGE ---
 try:
     import tensorflow as tf
     import tensorflow.compat.v1 as tf1
     tf1.disable_v2_behavior()
+
+    # Consolidate Environment Patching
+    if not hasattr(inspect, 'getargspec'):
+        inspect.getargspec = inspect.getfullargspec
 
     def create_mock_module(name):
         msg = types.ModuleType(name)
@@ -157,13 +155,17 @@ class HMRMasterEngine:
             self.model.prepare()
 
             self.vertex_map = self._parse_vertex_indices(vertex_path)
+            if not self.vertex_map:
+                raise FileNotFoundError(f"Vertex mapping missing at {vertex_path}")
+
             self.initialized = True
             logger.info("✅ KORRA: HMR 3D Brain Fully Synchronized.")
             return True
         except Exception as e:
             self.last_error = f"INIT_CRASH: {str(e)}"
-            logger.error(f"❌ HMR INITIALIZATION CRASH: {e}")
-            traceback.print_exc()
+            logger.error(f"❌ HMR INITIALIZATION CRASH: {self.last_error}")
+            # Capture full traceback for forensic analysis
+            self.last_error += "\n" + traceback.format_exc()
             return False
 
     def extract(self, image: np.ndarray, height_cm: float, gender: str = 'male') -> Tuple[Dict[str, float], Optional[np.ndarray], Optional[dict], Optional[str]]:

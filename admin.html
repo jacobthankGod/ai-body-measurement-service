@@ -589,7 +589,9 @@
                                 console.log(`🚀 KORRA: Triggering 3D load for ${data.mesh_url}`);
                                 window.KORRA_VIZ.loadMesh(data.mesh_url);
                             } else {
-                                console.warn("⚠️ KORRA: Task complete but mesh_url is NULL. Checking fallback.");
+                                const conflict = data.debug || "NULL_MESH_HANDSHAKE";
+                                console.warn(`⚠️ KORRA: Task complete but mesh_url is NULL. Conflict: ${conflict}`);
+                                adminLog(`AI CONFLICT: ${conflict}`);
                                 window.KORRA_VIZ.loadMesh(null);
                             }
                         }
