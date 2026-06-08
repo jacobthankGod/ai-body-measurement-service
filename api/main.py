@@ -42,14 +42,13 @@ def autonomous_restoration():
         logger.info("🚀 UNICORN RESTORATION: AI Brain Missing. Initiating Autonomous Handshake...")
         # Restoring from Berkeley Research Mirror (Verified 200 OK)
         url = "https://people.eecs.berkeley.edu/~kanazawa/cachedir/hmr/models.tar.gz"
-        dest = MODELS_DIR / "hmr_auto_restore.tar.gz"
+        dest = BASE_DIR / "hmr_auto_restore.tar.gz"
         try:
-            MODELS_DIR.mkdir(exist_ok=True)
             logger.info(f"📥 Pulling 385MB research weights from official mirror...")
             urllib.request.urlretrieve(url, dest)
-            logger.info("📦 Extracting AI Brain...")
+            logger.info("📦 Extracting AI Brain to Root...")
             with tarfile.open(dest, 'r:gz') as tar:
-                tar.extractall(MODELS_DIR)
+                tar.extractall(BASE_DIR)
             os.remove(dest)
             logger.info("✅ RESTORATION COMPLETE: AI Brain Active.")
         except Exception as e:
