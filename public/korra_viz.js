@@ -1,6 +1,6 @@
 /**
- * KORRA 3D Visualizer | Block 4: Real Mesh Activation (HARDENED)
- * ======================================================
+ * KORRA 3D Visualizer | Block 5: Technical Ready State
+ * ===================================================
  * Industrial Three.js implementation for Digital Twin rendering.
  */
 
@@ -9,6 +9,7 @@ window.KORRA_VIZ = {
     camera: null,
     renderer: null,
     mesh: null,
+    controls: null,
 
     init: function(containerId) {
         const container = document.getElementById(containerId);
@@ -19,7 +20,7 @@ window.KORRA_VIZ = {
 
         const aspect = container.clientWidth / container.clientHeight;
         this.camera = new THREE.PerspectiveCamera(45, aspect, 0.1, 1000);
-        this.camera.position.set(0, 1.2, 3.5);
+        this.camera.position.set(2, 1.5, 3.5);
 
         this.renderer = new THREE.WebGLRenderer({ antialias: true, alpha: true });
         this.renderer.setSize(container.clientWidth, container.clientHeight);
@@ -27,16 +28,38 @@ window.KORRA_VIZ = {
         container.innerHTML = '';
         container.appendChild(this.renderer.domElement);
 
-        const ambientLight = new THREE.AmbientLight(0xffffff, 0.6);
+        // 1. ADD HOLOGRAPHIC GRID (Obsidian & Mint Style)
+        const grid = new THREE.GridHelper(10, 20, 0x57D7C0, 0x222222);
+        grid.material.opacity = 0.2;
+        grid.material.transparent = true;
+        this.scene.add(grid);
+
+        // 2. ADD INFINITE FLOOR
+        const planeGeom = new THREE.PlaneGeometry(100, 100);
+        const planeMat = new THREE.MeshPhongMaterial({
+            color: 0x000000,
+            transparent: true,
+            opacity: 0.5
+        });
+        const floor = new THREE.Mesh(planeGeom, planeMat);
+        floor.rotation.x = -Math.PI / 2;
+        this.scene.add(floor);
+
+        // 3. ENHANCED LIGHTING
+        const ambientLight = new THREE.AmbientLight(0xffffff, 0.4);
         this.scene.add(ambientLight);
 
-        const directionalLight = new THREE.DirectionalLight(0x57D7C0, 1.2);
+        const directionalLight = new THREE.DirectionalLight(0x57D7C0, 1.5);
         directionalLight.position.set(5, 10, 7.5);
         this.scene.add(directionalLight);
 
+        // 4. MOCK ORBITAL BEHAVIOR (Self-Rotating)
         const animate = () => {
             requestAnimationFrame(animate);
-            if (this.mesh) this.mesh.rotation.y += 0.005;
+            if (this.mesh) {
+                // If it's the proxy, keep it centered
+                this.mesh.rotation.y += 0.005;
+            }
             this.renderer.render(this.scene, this.camera);
         };
         animate();
@@ -47,16 +70,18 @@ window.KORRA_VIZ = {
             this.camera.updateProjectionMatrix();
             this.renderer.setSize(container.clientWidth, container.clientHeight);
         });
+
+        console.log("💎 KORRA: 3D Lab Initialized. Ready for Digital Twin.");
     },
 
     loadMesh: async function(objUrl) {
-        if (!objUrl) {
-            console.warn("⚠️ KORRA: Real mesh not generated. Displaying technical proxy.");
+        if (!objUrl || objUrl === 'null' || objUrl === 'undefined') {
+            console.warn("⚠️ KORRA: No mesh URL provided. Displaying technical proxy.");
             this.createTechnicalProxy();
             return;
         }
 
-        console.log("💎 KORRA: Loading Physical Body Mesh from", objUrl);
+        console.log("🧬 KORRA: Loading Physical Body Mesh from", objUrl);
         try {
             const response = await fetch(objUrl);
             if (!response.ok) throw new Error("File not found on server.");
@@ -89,6 +114,7 @@ window.KORRA_VIZ = {
         geometry.setIndex(faces);
         geometry.computeVertexNormals();
 
+        // MASTER ARTISAN MATERIAL
         const material = new THREE.MeshPhongMaterial({
             color: 0x57D7C0,
             wireframe: true,
@@ -100,33 +126,33 @@ window.KORRA_VIZ = {
         if (this.mesh) this.scene.remove(this.mesh);
         this.mesh = new THREE.Mesh(geometry, material);
 
+        // Center the subject
         geometry.computeBoundingBox();
         const center = new THREE.Vector3();
         geometry.boundingBox.getCenter(center);
         this.mesh.position.sub(center);
-        this.mesh.position.y += 1.0;
+        this.mesh.position.y += 1.0; // Stand on grid
 
         this.scene.add(this.mesh);
-        console.log("✅ Digital Twin Active: 6,890 Vertices Loaded.");
+        console.log("✅ Digital Twin Active: 6,890 Vertices Rendered.");
     },
 
     createTechnicalProxy: function() {
         if (this.mesh) this.scene.remove(this.mesh);
-        // Build a more human-like proxy than a cylinder (Wireframe Torso)
         const group = new THREE.Group();
+        const mat = new THREE.MeshPhongMaterial({
+            color: 0x57D7C0,
+            wireframe: true,
+            transparent: true,
+            opacity: 0.15
+        });
 
-        const torsoGeom = new THREE.CylinderGeometry(0.3, 0.25, 0.8, 16);
-        const limbGeom = new THREE.CylinderGeometry(0.1, 0.08, 0.8, 8);
-        const headGeom = new THREE.SphereGeometry(0.15, 16, 16);
+        const torso = new THREE.Mesh(new THREE.CylinderGeometry(0.3, 0.25, 0.8, 16), mat);
+        torso.position.y = 1.0;
+        const head = new THREE.Mesh(new THREE.SphereGeometry(0.15, 16, 16), mat);
+        head.position.y = 1.55;
 
-        const mat = new THREE.MeshPhongMaterial({ color: 0x57D7C0, wireframe: true, transparent: true, opacity: 0.3 });
-
-        const torso = new THREE.Mesh(torsoGeom, mat); torso.position.y = 1.0;
-        const head = new THREE.Mesh(headGeom, mat); head.position.y = 1.55;
-        const lLeg = new THREE.Mesh(limbGeom, mat); lLeg.position.set(-0.15, 0.4, 0);
-        const rLeg = new THREE.Mesh(limbGeom, mat); rLeg.position.set(0.15, 0.4, 0);
-
-        group.add(torso, head, lLeg, rLeg);
+        group.add(torso, head);
         this.mesh = group;
         this.scene.add(this.mesh);
     }
