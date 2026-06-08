@@ -3,7 +3,7 @@ System Health Routes | Phase 18: Autonomous Infrastructure
 =========================================================
 """
 from fastapi import APIRouter, BackgroundTasks
-from api.services.extract_measurements import get_brain_integrity
+# from api.services.extract_measurements import get_brain_integrity # MOVED TO LATE IMPORT
 import os
 import platform
 import urllib.request
@@ -20,6 +20,7 @@ MODELS_DIR = BASE_DIR / "models"
 @router.get("/health")
 async def health_check():
     """Returns absolute infrastructure status."""
+    from api.services.extract_measurements import get_brain_integrity
     return {
         "status": "active",
         "version": "2.1.14",

@@ -21,14 +21,19 @@ except ImportError:
 HAS_MEDIAPIPE = False
 pose_landmarker = None
 
-try:
-    from mediapipe import Image, ImageFormat
-    from mediapipe.tasks import python
-    from mediapipe.tasks.python import vision
-    from mediapipe.tasks.python.vision import PoseLandmarker, PoseLandmarkerOptions
-    HAS_MEDIAPIPE = True
-except ImportError as e:
-    print(f"Warning: MediaPipe not available: {e}")
+def get_mediapipe_vision():
+    """Late import of MediaPipe to prevent TensorFlow load in main process."""
+    global HAS_MEDIAPIPE
+    try:
+        from mediapipe import Image, ImageFormat
+        from mediapipe.tasks import python
+        from mediapipe.tasks.python import vision
+        from mediapipe.tasks.python.vision import PoseLandmarker, PoseLandmarkerOptions
+        HAS_MEDIAPIPE = True
+        return Image, ImageFormat, python, vision, PoseLandmarker, PoseLandmarkerOptions
+    except ImportError as e:
+        print(f"Warning: MediaPipe not available: {e}")
+        return None, None, None, None, None, None
 
 BASE_DIR = Path(__file__).parent.parent
 MODELS_DIR = BASE_DIR.parent / "models"
@@ -39,7 +44,11 @@ def get_pose_model_path():
 
 def initialize_pose_detector():
     global pose_landmarker
-    if not HAS_MEDIAPIPE: return None
+    # Late import to prevent module-level TF load
+    mp_vision = get_mediapipe_vision()
+    if not mp_vision[0]: return None
+    Image, ImageFormat, python, vision, PoseLandmarker, PoseLandmarkerOptions = mp_vision
+
     model_path = get_pose_model_path()
     if not model_path: return None
     

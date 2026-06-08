@@ -23,60 +23,63 @@ if str(SRC_PATH) not in sys.path: sys.path.insert(0, str(SRC_PATH))
 if str(SRC_PATH.parent) not in sys.path: sys.path.insert(0, str(SRC_PATH.parent))
 
 # --- NUCLEAR TENSORFLOW LEGACY BRIDGE ---
-try:
-    import tensorflow as tf
-    import tensorflow.compat.v1 as tf1
-    tf1.disable_v2_behavior()
-
-    # Consolidate Environment Patching
-    if not hasattr(inspect, 'getargspec'):
-        inspect.getargspec = inspect.getfullargspec
-
-    def create_mock_module(name):
-        msg = types.ModuleType(name)
-        sys.modules[name] = msg
-        return msg
-
-    # SATISFY TF-SLIM / TF-KERAS DRIFT
-    tk = create_mock_module('tf_keras')
-    sys.modules['tf_keras.legacy_tf_layers'] = tf1.layers
-    sys.modules['tf_keras.legacy_tf_layers.normalization'] = tf1.layers
-    sys.modules['tf_keras.legacy_tf_layers.convolutional'] = tf1.layers
-    sys.modules['tf_keras.legacy_tf_layers.pooling'] = tf1.layers
-    sys.modules['tf_keras.legacy_tf_layers.core'] = tf1.layers
-
-    contrib = create_mock_module('tensorflow.contrib')
-
+def setup_tf_bridge():
+    """Dynamically sets up TF1 compatibility only when needed."""
     try:
-        import tf_slim
-        if not hasattr(tf_slim.stack, '_slim_arg_scope'):
-            tf_slim.stack = tf_slim.add_arg_scope(tf_slim.stack)
-        contrib.slim = tf_slim
-        sys.modules['tensorflow.contrib.slim'] = tf_slim
+        import tensorflow as tf
+        import tensorflow.compat.v1 as tf1
+        tf1.disable_v2_behavior()
 
-        create_mock_module('tensorflow.contrib.slim.python')
-        create_mock_module('tensorflow.contrib.slim.python.slim')
-        create_mock_module('tensorflow.contrib.slim.python.slim.nets')
-    except: pass
+        # Consolidate Environment Patching
+        if not hasattr(inspect, 'getargspec'):
+            inspect.getargspec = inspect.getfullargspec
 
-    layers = create_mock_module('tensorflow.contrib.layers')
-    initializers = create_mock_module('tensorflow.contrib.layers.python.layers.initializers')
-    from tensorflow.python.ops import init_ops
-    initializers.variance_scaling_initializer = init_ops.variance_scaling_initializer
-    contrib.layers = layers
+        def create_mock_module(name):
+            msg = types.ModuleType(name)
+            sys.modules[name] = msg
+            return msg
 
-    framework = create_mock_module('tensorflow.contrib.framework')
-    def _get_vars(scope=None, suffix=None, collection=tf1.GraphKeys.GLOBAL_VARIABLES):
-        return tf1.get_collection(collection, scope=scope)
-    framework.get_variables = _get_vars
-    contrib.framework = framework
+        # SATISFY TF-SLIM / TF-KERAS DRIFT
+        tk = create_mock_module('tf_keras')
+        sys.modules['tf_keras.legacy_tf_layers'] = tf1.layers
+        sys.modules['tf_keras.legacy_tf_layers.normalization'] = tf1.layers
+        sys.modules['tf_keras.legacy_tf_layers.convolutional'] = tf1.layers
+        sys.modules['tf_keras.legacy_tf_layers.pooling'] = tf1.layers
+        sys.modules['tf_keras.legacy_tf_layers.core'] = tf1.layers
 
-    tf1.contrib = contrib
-    sys.modules['tensorflow'] = tf1
-    tf = tf1
+        contrib = create_mock_module('tensorflow.contrib')
 
-except ImportError:
-    logger.error("❌ Critical: TensorFlow Infrastructure Offline.")
+        try:
+            import tf_slim
+            if not hasattr(tf_slim.stack, '_slim_arg_scope'):
+                tf_slim.stack = tf_slim.add_arg_scope(tf_slim.stack)
+            contrib.slim = tf_slim
+            sys.modules['tensorflow.contrib.slim'] = tf_slim
+
+            create_mock_module('tensorflow.contrib.slim.python')
+            create_mock_module('tensorflow.contrib.slim.python.slim')
+            create_mock_module('tensorflow.contrib.slim.python.slim.nets')
+        except: pass
+
+        layers = create_mock_module('tensorflow.contrib.layers')
+        initializers = create_mock_module('tensorflow.contrib.layers.python.layers.initializers')
+        from tensorflow.python.ops import init_ops
+        initializers.variance_scaling_initializer = init_ops.variance_scaling_initializer
+        contrib.layers = layers
+
+        framework = create_mock_module('tensorflow.contrib.framework')
+        def _get_vars(scope=None, suffix=None, collection=tf1.GraphKeys.GLOBAL_VARIABLES):
+            return tf1.get_collection(collection, scope=scope)
+        framework.get_variables = _get_vars
+        contrib.framework = framework
+
+        tf1.contrib = contrib
+        sys.modules['tensorflow'] = tf1
+        return tf1
+
+    except ImportError:
+        logger.error("❌ Critical: TensorFlow Infrastructure Offline.")
+        return None
 
 # ============================================================================
 # MASTER EXTRACTION ENGINE
@@ -140,7 +143,10 @@ class HMRMasterEngine:
         Uses a dedicated TF Graph and Session per request to prevent leaks.
         """
         import gc
-        import tensorflow as tf
+        tf1 = setup_tf_bridge()
+        if not tf1:
+            return self._fallback_ratios(height_cm, gender), None, None, "TensorFlow not found"
+
         model = None
         try:
             # 1. PRE-FLIGHT NUMPY PATCHING
@@ -149,13 +155,13 @@ class HMRMasterEngine:
 
             # 2. ISOLATED GRAPH CONTEXT
             # This is critical for Render 512MB: prevent global graph bloat.
-            with tf.Graph().as_default() as graph:
-                config = tf.ConfigProto()
+            with tf1.Graph().as_default() as graph:
+                config = tf1.ConfigProto()
                 config.gpu_options.allow_growth = True
                 config.intra_op_parallelism_threads = 1
                 config.inter_op_parallelism_threads = 1
 
-                with tf.Session(config=config, graph=graph) as sess:
+                with tf1.Session(config=config, graph=graph) as sess:
                     # 3. TRANSIENT MODEL INSTANTIATION
                     from src.RunModel import RunModel
                     logger.info("📦 HMR: Loading isolated AI brain...")

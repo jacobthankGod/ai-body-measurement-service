@@ -12,8 +12,8 @@ from six.moves import urllib
 import numpy as np
 from PIL import Image
 import cv2, pdb, glob, argparse
-from demo import main
-import tensorflow as tf
+# from demo import main # Removed to prevent circular import and TF load
+# import tensorflow as tf # Moved inside class methods
 
 
 
@@ -27,6 +27,7 @@ class DeepLabModel(object):
 
 	def __init__(self, tarball_path):
 		#"""Creates and loads pretrained deeplab model."""
+		import tensorflow as tf
 		self.graph = tf.Graph()
 		graph_def = None
 		# Extract frozen graph from tar archive.
