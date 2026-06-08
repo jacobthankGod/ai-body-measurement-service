@@ -2,7 +2,7 @@
 Measurement Routes | TASK-QUEUE ARCHITECTURE (Unicorn Scaling)
 ============================================================
 Handles high-precision AI extraction with background processing
-to prevent 502 Bad Gateway timeouts.
+to prevent 502 Bad Gateway timeouts across all vectors.
 """
 from fastapi import APIRouter, UploadFile, File, Form, Header, HTTPException, Depends, BackgroundTasks
 from datetime import datetime
@@ -74,6 +74,7 @@ async def run_extraction_task(task_id: str, front_bytes: bytes, side_bytes: byte
                 measurements, landmarks = fallback_extract(front_arr, side_arr, height, gender)
         except Exception as inner_e:
             logger.error(f"⚠️ HMR Pipeline Conflict: {inner_e}")
+            # Ensure we at least return fallback biometrics
             measurements, landmarks = fallback_extract(front_arr, side_arr, height, gender)
 
         # ATOMIC PERSISTENCE
@@ -109,7 +110,7 @@ async def start_extraction(
     client_name: str = Form("Unnamed Client"),
     user: dict = Depends(get_current_user)
 ):
-    """Initiates an asynchronous extraction task to prevent timeouts."""
+    """Initiates an asynchronous extraction task for Admin/Dashboard."""
     task_id = str(uuid.uuid4())
     front_bytes = await front.read()
     side_bytes = await side.read()
@@ -122,10 +123,41 @@ async def start_extraction(
     await track_usage(user['api_key'])
     EXTRACTION_TASKS[task_id] = {"status": "queued", "created_at": datetime.utcnow().isoformat()}
     background_tasks.add_task(run_extraction_task, task_id, front_bytes, side_bytes, height, gender, client_name, user['user_id'])
-    return {"status": "accepted", "task_id": task_id}
+    return {"status": "accepted", "task_id": task_id, "message": "Extraction queued in background."}
+
+@router.post("/measurements/extract-widget")
+async def extract_widget(
+    background_tasks: BackgroundTasks,
+    front: UploadFile = File(...),
+    side: UploadFile = File(...),
+    height: float = Form(...),
+    gender: str = Form("male"),
+    merchant_id: str = Form(...),
+    client_name: str = Form("Widget Customer")
+):
+    """Public Widget/Share Extraction (Now weaponized with Task-Queue)."""
+    task_id = str(uuid.uuid4())
+    front_bytes = await front.read()
+    side_bytes = await side.read()
+
+    # Compulsory Vision Guard for Public Inputs
+    front_arr = np.array(Image.open(io.BytesIO(front_bytes)))
+    is_front_valid, front_reason = VisionGuard.validate_photo(front_arr, "front")
+    if not is_front_valid: raise HTTPException(status_code=422, detail={"error": front_reason})
+
+    EXTRACTION_TASKS[task_id] = {"status": "queued", "created_at": datetime.utcnow().isoformat()}
+
+    # Queue task with merchant_id as the owner
+    background_tasks.add_task(
+        run_extraction_task, task_id, front_bytes, side_bytes, height, gender, client_name, merchant_id
+    )
+
+    return {"status": "accepted", "task_id": task_id, "message": "Async extraction handshaked."}
 
 @router.get("/measurements/status/{task_id}")
 async def get_extraction_status(task_id: str):
+    """Polling endpoint for task completion."""
     task = EXTRACTION_TASKS.get(task_id)
-    if not task: raise HTTPException(status_code=404, detail="Task not found.")
+    if not task:
+        raise HTTPException(status_code=404, detail="Task not found.")
     return task

@@ -60,7 +60,7 @@
 
       <div id="loadingOverlay">
         <div class="mesh-loader"></div>
-        <div style="font-size:11px; font-weight:900; letter-spacing:0.2em; color:var(--Mint)">CONSTRUCTING DIGITAL TWIN</div>
+        <div style="font-size:11px; font-weight:900; letter-spacing:0.2em; color:var(--Mint)" id="statusText">CONSTRUCTING DIGITAL TWIN</div>
         <div class="progress-track"><div class="progress-fill" id="pFill"></div></div>
         <div id="pText" style="font-size:10px; color:var(--Neutral-500); margin-top:12px">Analyzing topology...</div>
       </div>
@@ -154,71 +154,88 @@
       } catch (e) {}
     }
 
+    async function pollTask(taskId) {
+        const pFill = document.getElementById('pFill');
+        const pText = document.getElementById('pText');
+        const statusText = document.getElementById('statusText');
+        let progress = 20;
+
+        const interval = setInterval(async () => {
+            try {
+                const res = await fetch(`/api/v2/measurements/status/${taskId}`);
+                if (!res.ok) return;
+                const data = await res.json();
+
+                if (data.status === 'processing') {
+                    progress = Math.min(progress + 10, 90);
+                    pText.textContent = "Reconstructing 3D volume...";
+                } else if (data.status === 'completed') {
+                    clearInterval(interval);
+                    progress = 100;
+                    scanResults = data;
+                    pFill.style.width = '100%';
+                    renderResults(data);
+                } else if (data.status === 'failed') {
+                    clearInterval(interval);
+                    alert("AI Rejection: " + (data.error || "Brain Fault"));
+                    document.getElementById('loadingOverlay').style.display = 'none';
+                }
+                pFill.style.width = progress + '%';
+            } catch (e) {}
+        }, 2000);
+    }
+
+    function renderResults(data) {
+        const b = data.measurements;
+        const hVal = document.getElementById('height').value;
+        const gVal = document.getElementById('gender').value;
+
+        document.getElementById('summaryBody').innerHTML = `
+            <div style="display:flex; justify-content:space-between"><span>Chest:</span> <b style="color:var(--Mint)">${b['Chest Round']}cm</b></div>
+            <div style="display:flex; justify-content:space-between"><span>Waist:</span> <b style="color:var(--Mint)">${b['Waist Round']}cm</b></div>
+            <div style="display:flex; justify-content:space-between"><span>Hips:</span> <b style="color:var(--Mint)">${b['Hip Round']}cm</b></div>
+            <div style="display:flex; justify-content:space-between"><span>Shoulder:</span> <b style="color:var(--Mint)">${b['Shoulder']}cm</b></div>
+        `;
+
+        if (window.KORRA_VIZ) {
+            const viewport = document.getElementById('share-3d-viewport');
+            viewport.style.display = 'block';
+            window.KORRA_VIZ.init('share-3d-viewport');
+            if (data.mesh_url) window.KORRA_VIZ.loadMesh(data.mesh_url);
+        }
+
+        document.getElementById('btnPdf').onclick = () => window.KORRA_EXPORT.pdf(sessionData?.client_name || 'Guest', b, gVal, hVal);
+        document.getElementById('btnObj').onclick = () => window.KORRA_EXPORT.obj(data.mesh_url, sessionData?.client_name || 'Guest');
+
+        setTimeout(() => {
+            document.getElementById('loadingOverlay').style.display = 'none';
+            goToStep('success');
+        }, 800);
+    }
+
     document.getElementById('shareForm').addEventListener('submit', async (e) => {
       e.preventDefault();
-      const loader = document.getElementById('loadingOverlay');
-      const pFill = document.getElementById('pFill');
-      const pText = document.getElementById('pText');
-
-      loader.style.display = 'flex';
-
-      let progress = 0;
-      const interval = setInterval(() => {
-        progress += Math.random() * 15;
-        if(progress > 90) clearInterval(interval);
-        pFill.style.width = Math.min(progress, 90) + '%';
-        if(progress > 30) pText.textContent = "Reconstructing 3D volume...";
-        if(progress > 60) pText.textContent = "Calculating vertex circumferences...";
-      }, 400);
+      document.getElementById('loadingOverlay').style.display = 'flex';
 
       const fd = new FormData();
       fd.append('front', document.getElementById('front').files[0]);
       fd.append('side', document.getElementById('side').files[0]);
-      const hVal = document.getElementById('height').value;
-      const gVal = document.getElementById('gender').value;
-      fd.append('height', hVal);
-      fd.append('gender', gVal);
+      fd.append('height', document.getElementById('height').value);
+      fd.append('gender', document.getElementById('gender').value);
       fd.append('merchant_id', sessionData?.merchant_id || 'PUBLIC');
       fd.append('client_name', sessionData?.client_name || 'Guest');
 
       try {
         const res = await fetch('/api/v2/measurements/extract-widget', { method: 'POST', body: fd });
-        clearInterval(interval);
         if (res.ok) {
-          pFill.style.width = '100%';
-          scanResults = await res.json();
-          const b = scanResults.measurements;
-
-          document.getElementById('summaryBody').innerHTML = `
-            <div style="display:flex; justify-content:space-between"><span>Chest:</span> <b style="color:var(--Mint)">${b['Chest Round']}cm</b></div>
-            <div style="display:flex; justify-content:space-between"><span>Waist:</span> <b style="color:var(--Mint)">${b['Waist Round']}cm</b></div>
-            <div style="display:flex; justify-content:space-between"><span>Hips:</span> <b style="color:var(--Mint)">${b['Hip Round']}cm</b></div>
-            <div style="display:flex; justify-content:space-between"><span>Shoulder:</span> <b style="color:var(--Mint)">${b['Shoulder']}cm</b></div>
-          `;
-
-          // Handle 3D Activation
-          if (window.KORRA_VIZ) {
-             const viewport = document.getElementById('share-3d-viewport');
-             viewport.style.display = 'block';
-             window.KORRA_VIZ.init('share-3d-viewport');
-             if (scanResults.mesh_url) window.KORRA_VIZ.loadMesh(scanResults.mesh_url);
-          }
-
-          // Handle Export Triggers
-          document.getElementById('btnPdf').onclick = () => {
-              if (window.KORRA_EXPORT) window.KORRA_EXPORT.pdf(sessionData?.client_name || 'Guest', b, gVal, hVal);
-          };
-          document.getElementById('btnObj').onclick = () => {
-              if (window.KORRA_EXPORT) window.KORRA_EXPORT.obj(scanResults.mesh_url, sessionData?.client_name || 'Guest');
-          };
-
-          setTimeout(() => goToStep('success'), 600);
+          const data = await res.json();
+          pollTask(data.task_id); // Weaponized polling for public vector
         } else {
           const err = await res.json();
-          alert("Quality Error: " + (err.detail?.error || "Check lighting."));
-          loader.style.display = 'none';
+          alert("Quality Error: " + (err.error || "Check lighting."));
+          document.getElementById('loadingOverlay').style.display = 'none';
         }
-      } catch { alert("Connection Error."); loader.style.display = 'none'; }
+      } catch { alert("Connection Error."); document.getElementById('loadingOverlay').style.display = 'none'; }
     });
     init();
   </script>

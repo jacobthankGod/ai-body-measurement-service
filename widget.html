@@ -53,7 +53,7 @@
 
       <div id="loadingOverlay">
         <div class="mesh-loader"></div>
-        <div style="font-size:9px; font-weight:900; letter-spacing:0.2em; color:var(--Mint)">EXTRACTING BIOMETRICS</div>
+        <div style="font-size:9px; font-weight:900; letter-spacing:0.2em; color:var(--Mint)" id="statusText">EXTRACTING BIOMETRICS</div>
         <div class="progress-track"><div class="progress-fill" id="pFill"></div></div>
       </div>
 
@@ -113,16 +113,53 @@
       }
     }
 
+    async function pollTask(taskId, height, gender) {
+        const pFill = document.getElementById('pFill');
+        let progress = 20;
+
+        const interval = setInterval(async () => {
+            try {
+                const res = await fetch(`/api/v2/measurements/status/${taskId}`);
+                if (!res.ok) return;
+                const data = await res.json();
+
+                if (data.status === 'processing') {
+                    progress = Math.min(progress + 8, 90);
+                } else if (data.status === 'completed') {
+                    clearInterval(interval);
+                    pFill.style.width = '100%';
+                    window.parent.postMessage({ type: 'KORRA_RESULT', measurements: data.measurements }, '*');
+
+                    document.getElementById('scanFormView').style.display = 'none';
+                    document.getElementById('successView').classList.add('active');
+
+                    if (window.KORRA_VIZ) {
+                        document.getElementById('widget-3d-viewport').style.display = 'block';
+                        window.KORRA_VIZ.init('widget-3d-viewport');
+                        if (data.mesh_url) window.KORRA_VIZ.loadMesh(data.mesh_url);
+                    }
+
+                    document.getElementById('btnPdf').onclick = () => window.KORRA_EXPORT.pdf('Customer', data.measurements, gender, height);
+                    document.getElementById('btnObj').onclick = () => window.KORRA_EXPORT.obj(data.mesh_url, 'Customer');
+
+                    document.getElementById('loadingOverlay').style.display = 'none';
+                } else if (data.status === 'failed') {
+                    clearInterval(interval);
+                    alert("AI rejection. Task Failed.");
+                    document.getElementById('loadingOverlay').style.display = 'none';
+                }
+                pFill.style.width = progress + '%';
+            } catch (e) {}
+        }, 2000);
+    }
+
     document.getElementById('widgetForm').addEventListener('submit', async (e) => {
       e.preventDefault();
       const loader = document.getElementById('loadingOverlay');
-      const pFill = document.getElementById('pFill');
       const params = new URLSearchParams(window.location.search);
       const merchantId = params.get('merchant') || 'PUBLIC_WIDGET';
 
       loader.style.display = 'flex';
-      let progress = 0;
-      const interval = setInterval(() => { progress += 5; if(progress > 90) clearInterval(interval); pFill.style.width = progress + '%'; }, 200);
 
       const fd = new FormData();
       fd.append('front', document.getElementById('front').files[0]);
@@ -135,28 +172,15 @@
 
       try {
         const res = await fetch('/api/v2/measurements/extract-widget', { method: 'POST', body: fd });
-        clearInterval(interval);
         if (res.ok) {
-          pFill.style.width = '100%';
           const data = await res.json();
-          window.parent.postMessage({ type: 'KORRA_RESULT', measurements: data.measurements }, '*');
-
-          document.getElementById('scanFormView').style.display = 'none';
-          document.getElementById('successView').classList.add('active');
-
-          if (window.KORRA_VIZ) {
-             document.getElementById('widget-3d-viewport').style.display = 'block';
-             window.KORRA_VIZ.init('widget-3d-viewport');
-             if (data.mesh_url) window.KORRA_VIZ.loadMesh(data.mesh_url);
-          }
-
-          document.getElementById('btnPdf').onclick = () => window.KORRA_EXPORT.pdf('Customer', data.measurements, g, h);
-          document.getElementById('btnObj').onclick = () => window.KORRA_EXPORT.obj(data.mesh_url, 'Customer');
-
+          pollTask(data.task_id, h, g);
+        } else {
+          const err = await res.json();
+          alert("Quality rejection: " + (err.error || "Check lighting."));
           loader.style.display = 'none';
-        } else alert("AI rejection. Check photo quality.");
-      } catch { alert("Connection Error."); }
-      finally { loader.style.display = 'none'; }
+        }
+      } catch { alert("Connection Error."); loader.style.display = 'none'; }
     });
   </script>
 </body>
