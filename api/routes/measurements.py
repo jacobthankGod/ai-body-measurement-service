@@ -87,6 +87,7 @@ def update_task(task_id, data):
 import threading
 import subprocess
 import json
+import sys
 from concurrent.futures import ThreadPoolExecutor
 
 # --- SUBPROCESS RELIABILITY ENGINE ---
