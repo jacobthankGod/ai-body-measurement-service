@@ -84,18 +84,25 @@ def update_task(task_id, data):
         EXTRACTION_TASKS[task_id] = data
     save_tasks(EXTRACTION_TASKS)
 
-def run_extraction_task(task_id: str, front_bytes: bytes, side_bytes: bytes, height: float, gender: str, client_name: str, user_id: str):
-    """Background worker for 1:1 HMR extraction with descriptive errors (THREADED)."""
+import threading
+import multiprocessing
+from concurrent.futures import ProcessPoolExecutor
+
+# ... (rest of imports)
+
+# --- SUBPROCESS RELIABILITY ENGINE ---
+def run_extraction_subprocess(task_id: str, front_path: str, side_path: str, height: float, gender: str, client_name: str, user_id: str):
+    """
+    Isolated Subprocess Worker: Runs AI in a completely separate memory space.
+    If this process crashes (OOM), the main web server survives.
+    """
     try:
-        cleanup_task_queue()
-        update_task(task_id, {"status": "processing"})
+        # 1. READ DISK HANDSHAKE (Minimize RAM during IPC)
+        with open(front_path, 'rb') as f: front_arr = np.array(Image.open(f))
+        os.remove(front_path)
 
-        front_arr = np.array(Image.open(io.BytesIO(front_bytes)))
-        # Nuclear release of raw bytes immediately after conversion
-        del front_bytes
-
-        side_arr = np.array(Image.open(io.BytesIO(side_bytes)))
-        del side_bytes
+        with open(side_path, 'rb') as f: side_arr = np.array(Image.open(f))
+        os.remove(side_path)
 
         mesh_filename = f"korra_twin_{task_id}.obj"
         mesh_path = MESH_DIR / mesh_filename
@@ -103,49 +110,83 @@ def run_extraction_task(task_id: str, front_bytes: bytes, side_bytes: bytes, hei
         landmarks = {}
         hmr_error = None
 
-        # AI EXTRACTION
+        # 2. AI EXTRACTION
         try:
             from api.services.extract_measurements import extract_measurements_from_hmr, HMR_ACTIVE
             if HMR_ACTIVE:
-                logger.info(f"🧬 [TASK {task_id}] EXECUTING HMR HIGH-PRECISION EXTRACTION...")
+                logger.info(f"🧬 [SUBPROCESS {task_id}] EXECUTING HMR...")
                 measurements, vertices, landmarks, hmr_error = extract_measurements_from_hmr(front_arr, height, gender)
 
                 if vertices is not None:
+                    from api.services.mesh_exporter import MeshExporter
                     MeshExporter.save_to_obj(vertices, str(mesh_path))
-                    # Physical persistence verification
                     if mesh_path.exists() and mesh_path.stat().st_size > 0:
                         mesh_url = f"/meshes/{mesh_filename}"
-                        logger.info(f"✅ MESH VERIFIED: {mesh_url} ({mesh_path.stat().st_size} bytes)")
-                    else:
-                        hmr_error = "MESH_WRITE_FAILURE: File missing or empty on disk."
-                        logger.error(f"❌ {hmr_error}")
             else:
+                from api.services.mediapipe_measurement_engine import extract_measurements_from_dual_photos as fallback_extract
                 measurements, landmarks = fallback_extract(front_arr, side_arr, height, gender)
         except Exception as inner_e:
-            logger.error(f"⚠️ HMR Pipeline Conflict: {inner_e}")
+            from api.services.mediapipe_measurement_engine import extract_measurements_from_dual_photos as fallback_extract
             hmr_error = str(inner_e)
             measurements, landmarks = fallback_extract(front_arr, side_arr, height, gender)
 
-        # ATOMIC PERSISTENCE
+        # 3. ATOMIC PERSISTENCE
+        from api.services.database_service import DatabaseService
         DatabaseService.save_measurement(
             user_id=user_id, client_name=client_name, height=height,
             gender=gender, biometrics=measurements, landmarks=landmarks, mesh_url=mesh_url
         )
 
-        update_task(task_id, {
+        # 4. FINAL HANDSHAKE
+        return {
             "status": "completed",
             "measurements": measurements,
             "mesh_url": mesh_url,
             "landmarks": landmarks,
             "debug": hmr_error
-        })
-        logger.info(f"✅ TASK COMPLETED: {task_id}")
+        }
 
     except Exception as e:
-        error_msg = str(e)
-        logger.error(f"❌ EXTRACTION TASK FAILED: {error_msg}")
-        traceback.print_exc()
+        logger.error(f"❌ SUBPROCESS CRITICAL FAILURE: {e}")
+        return {"status": "failed", "error": str(e)}
+
+def run_extraction_task(task_id: str, front_bytes: bytes, side_bytes: bytes, height: float, gender: str, client_name: str, user_id: str):
+    """
+    Reliability Wrapper: Manages the lifecycle of the AI Subprocess.
+    """
+    try:
+        cleanup_task_queue()
+        update_task(task_id, {"status": "processing"})
+
+        # 1. DISK-BASED IPC (Render 512MB RAM protection)
+        tmp_dir = BASE_DIR / "data" / "tmp"
+        tmp_dir.mkdir(exist_ok=True)
+        f_path = str(tmp_dir / f"f_{task_id}.png")
+        s_path = str(tmp_dir / f"s_{task_id}.png")
+
+        with open(f_path, 'wb') as f: f.write(front_bytes)
+        del front_bytes
+        with open(s_path, 'wb') as f: f.write(side_bytes)
+        del side_bytes
+
+        # 2. ISOLATED EXECUTION
+        # Using ProcessPoolExecutor with max_workers=1 to force serial execution on low-RAM
+        with ProcessPoolExecutor(max_workers=1) as executor:
+            logger.info(f"🚀 [TASK {task_id}] Launching Isolated AI Process...")
+            future = executor.submit(run_extraction_subprocess, task_id, f_path, s_path, height, gender, client_name, user_id)
+            result = future.result(timeout=300) # 5 minute timeout
+
+        # 3. TASK SYNC
+        update_task(task_id, result)
+        logger.info(f"✅ [TASK {task_id}] Process returned control to main server.")
+
+    except Exception as e:
+        error_msg = f"ORCHESTRATOR_CRASH: {str(e)}"
+        logger.error(f"❌ ORCHESTRATOR FAILED: {error_msg}")
         update_task(task_id, { "status": "failed", "error": error_msg })
+        # Cleanup orphan files
+        for p in [f_path, s_path]:
+            if os.path.exists(p): os.remove(p)
 
 @router.post("/measurements/extract")
 async def start_extraction(

@@ -37,32 +37,41 @@ logging.basicConfig(
 )
 logger = logging.getLogger("KORRA_PROD")
 
-# --- AUTONOMOUS BRAIN RESTORATION ---
-def autonomous_restoration():
-    """Ensures AI Brain is present on-boot."""
-    checkpoint_idx = MODELS_DIR / "model.ckpt-667589.index"
-    checkpoint_data = MODELS_DIR / "model.ckpt-667589.data-00000-of-00001"
+import threading
+os.environ["MALLOC_ARENA_MAX"] = "2"
+os.environ["TF_CPP_MIN_LOG_LEVEL"] = "2"
 
-    if not checkpoint_idx.exists() or not checkpoint_data.exists():
-        logger.info("🚀 UNICORN RESTORATION: AI Brain Missing. Initiating Autonomous Handshake...")
-        url = "https://people.eecs.berkeley.edu/~kanazawa/cachedir/hmr/models.tar.gz"
-        dest = BASE_DIR / "hmr_auto_restore.tar.gz"
-        try:
-            logger.info(f"📥 Pulling 385MB research weights from official mirror...")
-            urllib.request.urlretrieve(url, dest)
-            logger.info("📦 Extracting AI Brain to Root...")
-            with tarfile.open(dest, 'r:gz') as tar:
-                tar.extractall(BASE_DIR)
-            os.remove(dest)
-            logger.info("✅ RESTORATION COMPLETE: AI Brain Active.")
-        except Exception as e:
-            logger.error(f"❌ AUTONOMOUS RESTORATION FAILED: {e}")
-    else:
-        logger.info("💎 KORRA: AI Brain Integrity Verified.")
+# --- AUTONOMOUS BRAIN RESTORATION (NON-BLOCKING) ---
+def autonomous_restoration():
+    """Ensures AI Brain is present without blocking the server start."""
+    def run():
+        checkpoint_idx = MODELS_DIR / "model.ckpt-667589.index"
+        checkpoint_data = MODELS_DIR / "model.ckpt-667589.data-00000-of-00001"
+
+        if not checkpoint_idx.exists() or not checkpoint_data.exists():
+            logger.info("🚀 UNICORN RESTORATION: AI Brain Missing. Initiating Autonomous Handshake...")
+            url = "https://people.eecs.berkeley.edu/~kanazawa/cachedir/hmr/models.tar.gz"
+            dest = BASE_DIR / "hmr_auto_restore.tar.gz"
+            try:
+                logger.info(f"📥 Pulling 385MB research weights from official mirror...")
+                urllib.request.urlretrieve(url, dest)
+                logger.info("📦 Extracting AI Brain to Root...")
+                with tarfile.open(dest, 'r:gz') as tar:
+                    tar.extractall(BASE_DIR)
+                os.remove(dest)
+                logger.info("✅ RESTORATION COMPLETE: AI Brain Active.")
+            except Exception as e:
+                logger.error(f"❌ AUTONOMOUS RESTORATION FAILED: {e}")
+        else:
+            logger.info("💎 KORRA: AI Brain Integrity Verified.")
+
+    # Run in background thread so app can bind to port immediately
+    threading.Thread(target=run, daemon=True).start()
 
 @asynccontextmanager
 async def lifespan(app: FastAPI):
     logger.info(f"KORRA Infrastructure Booting. Root: {BASE_DIR}")
+    # NON-BLOCKING BOOT: Bind port first, download later
     autonomous_restoration()
     yield
     logger.info("KORRA Infrastructure Shutting Down.")
