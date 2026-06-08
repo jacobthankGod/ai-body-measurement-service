@@ -22,10 +22,14 @@ class DatabaseService:
     @classmethod
     def get_client(cls) -> Optional[Client]:
         if cls._instance is None:
-            if not SUPABASE_URL or not SUPABASE_KEY: return None
+            if not SUPABASE_URL or not SUPABASE_KEY: 
+                logger.error("❌ DatabaseService: SUPABASE_URL or SUPABASE_KEY is None in ENV!")
+                return None
             try:
                 cls._instance = create_client(SUPABASE_URL, SUPABASE_KEY)
-            except Exception as e: return None
+            except Exception as e: 
+                logger.error(f"❌ DatabaseService: Failed to create client: {e}")
+                return None
         return cls._instance
 
     @classmethod
@@ -62,16 +66,29 @@ class DatabaseService:
     @classmethod
     async def save_measurement(cls, user_id: str, client_name: str, height: float, gender: str, biometrics: dict, landmarks: dict = None, mesh_url: str = None):
         client = cls.get_client()
-        if not client: return None
+        if not client: 
+            logger.error("❌ DatabaseService: Supabase client is None - ENV variables missing!")
+            return None
         try:
             payload = {
                 "user_id": user_id, "client_name": client_name, "height": height,
                 "gender": gender, "biometrics": biometrics, "landmarks_3d": landmarks if landmarks else {},
                 "mesh_url": mesh_url, "created_at": datetime.utcnow().isoformat()
             }
+            logger.info(f"💾 DatabaseService: Inserting payload for {client_name}, height={height}, gender={gender}")
+            logger.info(f"💾 Payload keys: {list(payload.keys())}")
+            
             response = client.table("measurements").insert(payload).execute()
-            return response.data[0] if response.data else None
-        except Exception as e: return None
+            
+            if response.data:
+                logger.info(f"✅ DatabaseService: Insert successful! ID: {response.data[0].get('id')}")
+                return response.data[0]
+            else:
+                logger.error("❌ DatabaseService: Insert returned no data")
+                return None
+        except Exception as e:
+            logger.error(f"❌ DatabaseService.save_measurement FAILED: {e}")
+            return None
 
     @classmethod
     async def get_api_key(cls, api_key: str) -> Optional[Dict[str, Any]]:

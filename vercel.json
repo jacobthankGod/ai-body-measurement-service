@@ -1,23 +1,14 @@
 {
-  "version": 2,
-  "builds": [
-    {
-      "src": "api/main.py",
-      "use": "@vercel/python"
+  "build": {
+    "pre": "rm -rf __pycache__ api/__pycache__ api/services/__pycache__",
+    "env": {
+      "PYTHONDONTWRITEBYTECODE": "0"
     }
-  ],
+  },
   "routes": [
     {
       "src": "/api/v2/(.*)",
-      "dest": "api/main.py"
-    },
-    {
-      "src": "/(.*)",
-      "dest": "api/main.py"
+      "dest": "/api/main.py"
     }
-  ],
-  "env": {
-    "PYTHONPATH": ".",
-    "VERCEL": "1"
-  }
+  ]
 }

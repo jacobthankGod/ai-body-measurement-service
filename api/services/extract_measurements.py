@@ -14,6 +14,9 @@ import traceback
 from pathlib import Path
 from typing import Dict, Optional, Tuple, List
 
+# --- KORRA DIAGNOSTICS ---
+logger = logging.getLogger("KORRA_HMR_EXTRACTION")
+
 # --- NUCLEAR TENSORFLOW LEGACY BRIDGE ---
 try:
     import tensorflow as tf

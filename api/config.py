@@ -8,7 +8,8 @@ import os
 # Serverless environment detection
 IS_VERCEL = os.environ.get('VERCEL', '0') == '1'
 IS_AWS_LAMBDA = os.environ.get('AWS_LAMBDA_FUNCTION_NAME', '') != ''
-IS_SERVERLESS = IS_VERCEL or IS_AWS_LAMBDA
+IS_RENDER = os.environ.get('RENDER', '') != ''
+IS_SERVERLESS = IS_VERCEL or IS_AWS_LAMBDA or IS_RENDER
 
 # API Keys storage - use environment variables in serverless
 def get_api_keys_storage():

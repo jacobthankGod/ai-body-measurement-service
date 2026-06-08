@@ -121,7 +121,15 @@
     #offlineOverlay { position: fixed; inset: 0; background: rgba(0,0,0,0.85); backdrop-filter: blur(10px); z-index: 99999999; display: none; align-items: center; justify-content: center; text-align: center; }
     .offline-card { background: var(--Glass); border: 1px solid var(--Glass-Border); padding: 40px; border-radius: 24px; max-width: 320px; }
   </style>
-  <script>
+<script>
+    // FORENSIC FIX: KORRA Logger Declaration (Industry Standard)
+    const logger = {
+      debug: (...args) => console.debug('[KORRA]', ...args),
+      info: (...args) => console.info('[KORRA]', ...args),
+      warn: (...args) => console.warn('[KORRA]', ...args),
+      error: (...args) => console.error('[KORRA]', ...args),
+    };
+
     // FRAME ESCAPE PROTOCOL: Resolve Chrome-Error Domain Mismatch
     if (window.top !== window.self) {
         try {
@@ -268,11 +276,62 @@
                 </div>
               </div>
 
-              <div class="qr-container" id="qrBox">
+<div class="qr-container" id="qrBox">
                 <img id="qrImg" src="" alt="Scan QR">
                 <div class="qr-url" id="qrUrl"></div>
                 <button class="btn-action" style="margin-top:16px" onclick="window.print()">Print for Store</button>
                 <button class="btn-action" style="margin-top:16px; border:none" onclick="document.getElementById('qrBox').style.display='none'">Dismiss</button>
+              </div>
+
+<!-- FORENSIC: Measurement Results Display - KORRA Theme -->
+              <div id="measurementResultsCard" class="glass-card" style="display:none; margin-top:24px; background:linear-gradient(135deg, rgba(87,215,192,0.05) 0%, rgba(0,0,0,0.4) 100%)">
+                <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:24px">
+                  <h4 style="font-size:16px; font-weight:900; color:var(--Mint); margin:0">
+                    <span style="margin-right:8px">📊</span>MEASUREMENT RESULTS
+                  </h4>
+                  <div style="font-size:10px; color:var(--Neutral-500)" id="measurementTimestamp"></div>
+                </div>
+                
+                <!-- Upper Body Section -->
+                <div style="margin-bottom:20px">
+                  <h5 style="font-size:10px; font-weight:900; color:var(--Neutral-500); text-transform:uppercase; margin-bottom:12px; letter-spacing:0.1em">Upper Body</h5>
+                  <div id="measurementGridUpper" style="display:grid; grid-template-columns:repeat(4,1fr); gap:8px"></div>
+                </div>
+                
+                <!-- Middle Body Section -->
+                <div style="margin-bottom:20px">
+                  <h5 style="font-size:10px; font-weight:900; color:var(--Neutral-500); text-transform:uppercase; margin-bottom:12px; letter-spacing:0.1em">Middle Body</h5>
+                  <div id="measurementGridMiddle" style="display:grid; grid-template-columns:repeat(4,1fr); gap:8px"></div>
+                </div>
+                
+                <!-- Lower Body Section -->
+                <div style="margin-bottom:20px">
+                  <h5 style="font-size:10px; font-weight:900; color:var(--Neutral-500); text-transform:uppercase; margin-bottom:12px; letter-spacing:0.1em">Lower Body</h5>
+                  <div id="measurementGridLower" style="display:grid; grid-template-columns:repeat(4,1fr); gap:8px"></div>
+                </div>
+                
+                <!-- Summary -->
+                <div style="padding:16px; background:rgba(87,215,192,0.1); border-radius:12px; border:1px solid var(--Mint); margin-bottom:20px">
+                  <div style="display:flex; justify-content:space-around; text-align:center">
+                    <div>
+                      <div style="font-size:10px; color:var(--Neutral-500); text-transform:uppercase">Target Height</div>
+                      <div style="font-size:20px; font-weight:900; color:var(--Mint)" id="measurementHeight"></div>
+                    </div>
+                    <div>
+                      <div style="font-size:10px; color:var(--Neutral-500); text-transform:uppercase">Profile</div>
+                      <div style="font-size:20px; font-weight:900; color:var(--Mint)" id="measurementGender"></div>
+                    </div>
+                    <div>
+                      <div style="font-size:10px; color:var(--Neutral-500); text-transform:uppercase">Status</div>
+                      <div style="font-size:20px; font-weight:900; color:var(--Mint)">✓ Extracted</div>
+                    </div>
+                  </div>
+                </div>
+                
+                <div style="display:flex; gap:12px">
+                  <button class="btn-primary" onclick="window.exportToPDF && window.exportToPDF()">📄 Export PDF</button>
+                  <button class="btn-action" onclick="document.getElementById('measurementResultsCard').style.display='none'">Dismiss</button>
+                </div>
               </div>
 
               <div style="display:flex; flex-direction:column; gap:32px">
@@ -585,18 +644,77 @@
                         status.textContent = 'SUCCESS: HANDSHAKE COMPLETE';
 
                         if (window.KORRA_VIZ) {
-                            if (data.mesh_url) {
+if (data.mesh_url) {
                                 console.log(`🚀 KORRA: Triggering 3D load for ${data.mesh_url}`);
                                 window.KORRA_VIZ.loadMesh(data.mesh_url);
                             } else {
-                                const conflict = data.debug || "NULL_MESH_HANDSHAKE";
-                                console.warn(`⚠️ KORRA: Task complete but mesh_url is NULL. Conflict: ${conflict}`);
-                                adminLog(`AI CONFLICT: ${conflict}`);
+                                // FORENSIC FIX: Handle new debug object structure
+                                let conflictMsg = "NULL_MESH_HANDSHAKE";
+                                if (typeof data.debug === 'object' && data.debug !== null) {
+                                    conflictMsg = data.debug.hmr_error || data.debug.mesh_url || JSON.stringify(data.debug);
+                                    console.warn(`⚠️ KORRA: Layer ${data.debug.layer} completed but mesh_url NULL. Error: ${conflictMsg}`);
+                                } else if (typeof data.debug === 'string') {
+                                    conflictMsg = data.debug;
+                                    console.warn(`⚠️ KORRA: Task complete but mesh_url is NULL. Conflict: ${conflict}`);
+                                }
+console.warn(`⚠️ KORRA: AI CONFLICT: ${conflictMsg}`);
+                                adminLog(`AI CONFLICT: ${conflictMsg}`);
                                 window.KORRA_VIZ.loadMesh(null);
                             }
                         }
 
-                        adminLog("SUCCESS: BIOMETRICS CALCULATED.");
+adminLog("SUCCESS: BIOMETRICS CALCULATED.");
+                        
+                        // FORENSIC FIX: Display measurements on UI - KORRA Theme Organized
+                        if (data.measurements) {
+                            const resultsCard = document.getElementById('measurementResultsCard');
+                            if (resultsCard) {
+                                resultsCard.style.display = 'block';
+                                
+                                // Set timestamp
+                                const ts = document.getElementById('measurementTimestamp');
+                                if (ts) ts.textContent = new Date().toLocaleString();
+                                
+                                // Set summary
+                                const hEl = document.getElementById('measurementHeight');
+                                const gEl = document.getElementById('measurementGender');
+                                if (hEl) hEl.textContent = data.height + ' cm';
+                                if (gEl) gEl.textContent = data.gender || 'Male';
+                                
+                                // Define body region groupings
+                                const upperBody = ['Shoulder', 'Neck Round', 'Chest Round', 'Bust Round', 'High Bust', 'Under Bust', 'Across Back', 'Across Chest', 'Armhole Round', 'Bicep Round'];
+                                const middleBody = ['Waist Round', 'Stomach Round', 'Half Length', 'Full Top Length', 'Waist to Hip', 'Upper Hip', 'Crotch Depth'];
+                                const lowerBody = ['Hip Round', 'Thigh Round', 'Knee Round', 'Calf Round', 'Ankle Round', 'Trouser Waist', 'Trouser Length', 'Inseam', 'Sleeve Length', 'Wrist Round'];
+                                
+                                // Helper to create measurement card
+                                function createMetricCard(key, val) {
+                                    if (!val || val === 0) return '';
+                                    return `<div style="padding:10px; background:rgba(255,255,255,0.05); border-radius:8px; border:1px solid rgba(255,255,255,0.08)">
+                                        <div style="font-size:9px; color:var(--Neutral-500); text-transform:uppercase; margin-bottom:2px; white-space:nowrap">${key}</div>
+                                        <div style="font-size:16px; font-weight:700; color:var(--Mint)">${val}<span style="font-size:10px; margin-left:2px">cm</span></div>
+                                    </div>`;
+                                }
+                                
+                                // Populate grids
+                                const gridUpper = document.getElementById('measurementGridUpper');
+                                const gridMiddle = document.getElementById('measurementGridMiddle');
+                                const gridLower = document.getElementById('measurementGridLower');
+                                
+                                if (gridUpper) {
+                                    gridUpper.innerHTML = upperBody.map(k => createMetricCard(k, data.measurements[k])).join('');
+                                }
+                                if (gridMiddle) {
+                                    gridMiddle.innerHTML = middleBody.map(k => createMetricCard(k, data.measurements[k])).join('');
+                                }
+                                if (gridLower) {
+                                    gridLower.innerHTML = lowerBody.map(k => createMetricCard(k, data.measurements[k])).join('');
+                                }
+                                
+                                // Scroll to results
+                                resultsCard.scrollIntoView({behavior: 'smooth', block: 'center'});
+                            }
+                        }
+                        
                         loadGlobalStats();
                         setTimeout(() => { overlay.style.display = 'none'; btn.disabled = false; btn.textContent = 'Complete'; }, 1000);
                     } else if (data.status === 'failed') {
