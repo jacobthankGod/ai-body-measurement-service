@@ -140,9 +140,15 @@ class HMRMasterEngine:
             vertices = results['verts'][0]
             joints = results['joints'][0]
 
+            # Remap HMR [-1, 1] range to [0, 1] normalized coordinates for UI
+            def norm_hmr(val): return float((val + 1.0) / 2.0)
+
             landmark_2d = {
-                'Shoulder_L': (float(joints[2][0])/224.0, float(joints[2][1])/224.0),
-                'Shoulder_R': (float(joints[3][0])/224.0, float(joints[3][1])/224.0)
+                'Shoulder_L': (norm_hmr(joints[8][0]), norm_hmr(joints[8][1])),
+                'Shoulder_R': (norm_hmr(joints[9][0]), norm_hmr(joints[9][1])),
+                'Hip_L': (norm_hmr(joints[2][0]), norm_hmr(joints[2][1])),
+                'Hip_R': (norm_hmr(joints[3][0]), norm_hmr(joints[3][1])),
+                'Nose': (norm_hmr(joints[14][0]), norm_hmr(joints[14][1]))
             }
             measurements = self._calculate_from_indices(vertices, height_cm)
 
