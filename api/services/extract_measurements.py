@@ -155,13 +155,19 @@ class HMRMasterEngine:
             # 3. PREPROCESSING
             import cv2
             h, w = image.shape[:2]
-            if max(h, w) > 1024:
-                scale_f = 1024 / max(h, w)
+
+            # ATOMIC MEMORY PROTECTION: Downscale large images immediately
+            if max(h, w) > 800:
+                scale_f = 800 / max(h, w)
                 image = cv2.resize(image, (int(w * scale_f), int(h * scale_f)))
 
+            # Pre-clear large arrays if possible
             img_resized = cv2.resize(image, (224, 224))
+            del image # Nuclear release of original high-res array
+
             img_normalized = 2 * ((img_resized / 255.0) - 0.5)
             img_batch = np.expand_dims(img_normalized, 0)
+            del img_resized # Nuclear release of intermediate array
 
             # 4. INFERENCE
             logger.info("🧠 HMR: Executing 3D inference...")

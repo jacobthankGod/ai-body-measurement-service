@@ -54,7 +54,11 @@ def run_extraction_task(task_id: str, front_bytes: bytes, side_bytes: bytes, hei
         EXTRACTION_TASKS[task_id]["status"] = "processing"
 
         front_arr = np.array(Image.open(io.BytesIO(front_bytes)))
+        # Nuclear release of raw bytes immediately after conversion
+        del front_bytes
+
         side_arr = np.array(Image.open(io.BytesIO(side_bytes)))
+        del side_bytes
 
         mesh_filename = f"korra_twin_{task_id}.obj"
         mesh_path = MESH_DIR / mesh_filename

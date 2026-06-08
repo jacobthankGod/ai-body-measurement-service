@@ -44,8 +44,15 @@ class RunModel(object):
         if sess is None:
             config = tf.ConfigProto()
             config.gpu_options.allow_growth = True
-            # Limit memory usage for Render 512MB tier
-            config.gpu_options.per_process_gpu_memory_fraction = 0.4
+
+            # KORRA CLOUD HARDENING: CPU & Memory Throttling for Render 512MB
+            # Limit parallelism to prevent starving the FastAPI event loop
+            config.intra_op_parallelism_threads = 1
+            config.inter_op_parallelism_threads = 1
+
+            # Limit memory usage for Render tiers
+            config.gpu_options.per_process_gpu_memory_fraction = 0.2
+
             self.sess = tf.Session(config=config)
         else:
             self.sess = sess
