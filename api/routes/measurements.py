@@ -30,8 +30,25 @@ BASE_DIR = Path(os.getcwd()).resolve()
 MESH_DIR = BASE_DIR / "public" / "meshes"
 MESH_DIR.mkdir(parents=True, exist_ok=True)
 
-# Shared Task Store
-EXTRACTION_TASKS = {}
+# Shared Task Store (Persistent via JSON to survive minor restarts)
+TASK_STORE_FILE = BASE_DIR / "data" / "tasks.json"
+
+def load_tasks():
+    try:
+        if TASK_STORE_FILE.exists():
+            return json.loads(TASK_STORE_FILE.read_text())
+    except: pass
+    return {}
+
+def save_tasks(tasks):
+    try:
+        TASK_STORE_FILE.parent.mkdir(exist_ok=True)
+        # Only keep last 100 tasks to prevent file bloat
+        pruned = dict(list(tasks.items())[-100:])
+        TASK_STORE_FILE.write_text(json.dumps(pruned))
+    except: pass
+
+EXTRACTION_TASKS = load_tasks()
 
 async def get_current_user(x_api_key: str = Header(None)):
     if not x_api_key:
@@ -44,14 +61,34 @@ async def get_current_user(x_api_key: str = Header(None)):
 def cleanup_task_queue():
     global EXTRACTION_TASKS
     now = datetime.utcnow()
-    keys_to_del = [k for k, v in EXTRACTION_TASKS.items() if (now - datetime.fromisoformat(v["created_at"])) > timedelta(hours=24)]
-    for k in keys_to_del: del EXTRACTION_TASKS[k]
+    # Filter out tasks older than 24 hours
+    changed = False
+    new_tasks = {}
+    for k, v in EXTRACTION_TASKS.items():
+        try:
+            if (now - datetime.fromisoformat(v["created_at"])) < timedelta(hours=24):
+                new_tasks[k] = v
+            else:
+                changed = True
+        except: changed = True
+
+    if changed:
+        EXTRACTION_TASKS = new_tasks
+        save_tasks(EXTRACTION_TASKS)
+
+def update_task(task_id, data):
+    global EXTRACTION_TASKS
+    if task_id in EXTRACTION_TASKS:
+        EXTRACTION_TASKS[task_id].update(data)
+    else:
+        EXTRACTION_TASKS[task_id] = data
+    save_tasks(EXTRACTION_TASKS)
 
 def run_extraction_task(task_id: str, front_bytes: bytes, side_bytes: bytes, height: float, gender: str, client_name: str, user_id: str):
     """Background worker for 1:1 HMR extraction with descriptive errors (THREADED)."""
     try:
         cleanup_task_queue()
-        EXTRACTION_TASKS[task_id]["status"] = "processing"
+        update_task(task_id, {"status": "processing"})
 
         front_arr = np.array(Image.open(io.BytesIO(front_bytes)))
         # Nuclear release of raw bytes immediately after conversion
@@ -95,7 +132,7 @@ def run_extraction_task(task_id: str, front_bytes: bytes, side_bytes: bytes, hei
             gender=gender, biometrics=measurements, landmarks=landmarks, mesh_url=mesh_url
         )
 
-        EXTRACTION_TASKS[task_id].update({
+        update_task(task_id, {
             "status": "completed",
             "measurements": measurements,
             "mesh_url": mesh_url,
@@ -108,7 +145,7 @@ def run_extraction_task(task_id: str, front_bytes: bytes, side_bytes: bytes, hei
         error_msg = str(e)
         logger.error(f"❌ EXTRACTION TASK FAILED: {error_msg}")
         traceback.print_exc()
-        EXTRACTION_TASKS[task_id].update({ "status": "failed", "error": error_msg })
+        update_task(task_id, { "status": "failed", "error": error_msg })
 
 @router.post("/measurements/extract")
 async def start_extraction(
@@ -124,7 +161,7 @@ async def start_extraction(
     front_bytes = await front.read()
     side_bytes = await side.read()
     track_usage(user['api_key'])
-    EXTRACTION_TASKS[task_id] = {"status": "queued", "created_at": datetime.utcnow().isoformat()}
+    update_task(task_id, {"status": "queued", "created_at": datetime.utcnow().isoformat()})
     background_tasks.add_task(run_extraction_task, task_id, front_bytes, side_bytes, height, gender, client_name, user['user_id'])
     return {"status": "accepted", "task_id": task_id}
 
@@ -141,7 +178,7 @@ async def extract_widget(
     task_id = str(uuid.uuid4())
     front_bytes = await front.read()
     side_bytes = await side.read()
-    EXTRACTION_TASKS[task_id] = {"status": "queued", "created_at": datetime.utcnow().isoformat()}
+    update_task(task_id, {"status": "queued", "created_at": datetime.utcnow().isoformat()})
     background_tasks.add_task(run_extraction_task, task_id, front_bytes, side_bytes, height, gender, client_name, merchant_id)
     return {"status": "accepted", "task_id": task_id}
 

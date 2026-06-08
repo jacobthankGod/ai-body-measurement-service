@@ -136,73 +136,84 @@ class HMRMasterEngine:
 
     def extract(self, image: np.ndarray, height_cm: float, gender: str = 'male') -> Tuple[Dict[str, float], Optional[np.ndarray], Optional[dict], Optional[str]]:
         """
-        High-Precision Extraction with TRANSIENT MEMORY MANAGEMENT.
-        Instantiates, Predicts, and PURGES model to fit Render 512MB RAM tier.
+        High-Precision Extraction with ABSOLUTE MEMORY ISOLATION.
+        Uses a dedicated TF Graph and Session per request to prevent leaks.
         """
         import gc
+        import tensorflow as tf
         model = None
         try:
             # 1. PRE-FLIGHT NUMPY PATCHING
             if not hasattr(np, 'bool'):
                 np.bool = bool; np.int = int; np.float = float; np.complex = complex; np.object = object; np.str = str; np.unicode = str
 
-            # 2. TRANSIENT MODEL INSTANTIATION
-            from src.RunModel import RunModel
-            logger.info("📦 HMR: Loading transient AI weights (400MB)...")
-            model = RunModel()
-            model.prepare()
+            # 2. ISOLATED GRAPH CONTEXT
+            # This is critical for Render 512MB: prevent global graph bloat.
+            with tf.Graph().as_default() as graph:
+                config = tf.ConfigProto()
+                config.gpu_options.allow_growth = True
+                config.intra_op_parallelism_threads = 1
+                config.inter_op_parallelism_threads = 1
 
-            # 3. PREPROCESSING
-            import cv2
-            h, w = image.shape[:2]
+                with tf.Session(config=config, graph=graph) as sess:
+                    # 3. TRANSIENT MODEL INSTANTIATION
+                    from src.RunModel import RunModel
+                    logger.info("📦 HMR: Loading isolated AI brain...")
+                    model = RunModel(sess=sess)
+                    model.prepare()
 
-            # ATOMIC MEMORY PROTECTION: Downscale large images immediately
-            if max(h, w) > 800:
-                scale_f = 800 / max(h, w)
-                image = cv2.resize(image, (int(w * scale_f), int(h * scale_f)))
+                    # 4. PREPROCESSING (Aggressive downscaling)
+                    import cv2
+                    h, w = image.shape[:2]
+                    if max(h, w) > 800:
+                        scale_f = 800 / max(h, w)
+                        image = cv2.resize(image, (int(w * scale_f), int(h * scale_f)))
 
-            # Pre-clear large arrays if possible
-            img_resized = cv2.resize(image, (224, 224))
-            del image # Nuclear release of original high-res array
+                    img_resized = cv2.resize(image, (224, 224))
+                    del image
 
-            img_normalized = 2 * ((img_resized / 255.0) - 0.5)
-            img_batch = np.expand_dims(img_normalized, 0)
-            del img_resized # Nuclear release of intermediate array
+                    img_normalized = 2 * ((img_resized / 255.0) - 0.5)
+                    img_batch = np.expand_dims(img_normalized, 0)
+                    del img_resized
 
-            # 4. INFERENCE
-            logger.info("🧠 HMR: Executing 3D inference...")
-            results = model.predict_dict(img_batch)
-            vertices = results['verts'][0]
-            joints = results['joints'][0]
+                    # 5. INFERENCE
+                    logger.info("🧠 HMR: Executing isolated 3D inference...")
+                    results = model.predict_dict(img_batch)
+                    vertices = results['verts'][0]
+                    joints = results['joints'][0]
 
-            # 5. POST-PROCESSING
-            def norm_hmr(val): return float((val + 1.0) / 2.0)
-            landmark_2d = {
-                'Shoulder_L': (norm_hmr(joints[8][0]), norm_hmr(joints[8][1])),
-                'Shoulder_R': (norm_hmr(joints[9][0]), norm_hmr(joints[9][1])),
-                'Hip_L': (norm_hmr(joints[2][0]), norm_hmr(joints[2][1])),
-                'Hip_R': (norm_hmr(joints[3][0]), norm_hmr(joints[3][1])),
-                'Nose': (norm_hmr(joints[14][0]), norm_hmr(joints[14][1]))
-            }
+                    # 6. POST-PROCESSING
+                    def norm_hmr(val): return float((val + 1.0) / 2.0)
+                    landmark_2d = {
+                        'Shoulder_L': (norm_hmr(joints[8][0]), norm_hmr(joints[8][1])),
+                        'Shoulder_R': (norm_hmr(joints[9][0]), norm_hmr(joints[9][1])),
+                        'Hip_L': (norm_hmr(joints[2][0]), norm_hmr(joints[2][1])),
+                        'Hip_R': (norm_hmr(joints[3][0]), norm_hmr(joints[3][1])),
+                        'Nose': (norm_hmr(joints[14][0]), norm_hmr(joints[14][1]))
+                    }
 
-            measurements_3d = self._calculate_from_indices(vertices, height_cm, gender)
-            final_measurements = {key: measurements_3d.get(key, 0.0) for key in (MALE_KEYS if gender == 'male' else FEMALE_KEYS)}
+                    measurements_3d = self._calculate_from_indices(vertices, height_cm, gender)
+                    final_measurements = {key: measurements_3d.get(key, 0.0) for key in (MALE_KEYS if gender == 'male' else FEMALE_KEYS)}
 
-            v_min, v_max = np.min(vertices[:, 1]), np.max(vertices[:, 1])
-            scale_to_meters = (height_cm / 100.0) / (v_max - v_min)
-            vertices_scaled = vertices * scale_to_meters
+                    v_min, v_max = np.min(vertices[:, 1]), np.max(vertices[:, 1])
+                    scale_to_meters = (height_cm / 100.0) / (v_max - v_min)
+                    vertices_scaled = vertices * scale_to_meters
 
-            return final_measurements, vertices_scaled, landmark_2d, None
+                    # Clear session before exit
+                    sess.close()
+
+                    return final_measurements, vertices_scaled, landmark_2d, None
 
         except Exception as e:
-            logger.error(f"❌ HMR PIPELINE CRASH: {e}")
+            logger.error(f"❌ HMR ISOLATED CRASH: {e}")
+            traceback.print_exc()
             return self._fallback_ratios(height_cm, gender), None, None, str(e)
         finally:
-            # 6. NUCLEAR MEMORY PURGE (Essential for Render stability)
-            if model and hasattr(model, 'sess'):
-                logger.info("♻️ HMR: Purging AI weights from RAM...")
-                model.sess.close()
-            del model
+            # 7. NUCLEAR MEMORY PURGE
+            logger.info("♻️ HMR: Purging isolated brain and cleaning RAM...")
+            if 'model' in locals(): del model
+            if 'sess' in locals(): del sess
+            if 'graph' in locals(): del graph
             gc.collect()
 
     def _calculate_from_indices(self, vertices: np.ndarray, user_height_cm: float, gender: str) -> Dict[str, float]:
