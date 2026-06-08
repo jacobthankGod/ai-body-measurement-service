@@ -112,6 +112,22 @@
     .polling-bar { width: 100%; height: 4px; background: rgba(255,255,255,0.1); border-radius: 99px; margin-top: 16px; overflow: hidden; }
     .polling-fill { width: 0%; height: 100%; background: var(--Mint); transition: 0.5s cubic-bezier(0.1, 0, 0.2, 1); }
   </style>
+  <script>
+    // FRAME ESCAPE PROTOCOL: Resolve Chrome-Error Domain Mismatch
+    if (window.top !== window.self) {
+        try {
+            if (window.top.location.href.includes('chrome-error')) {
+                window.top.location.href = window.location.href;
+            }
+        } catch (e) {
+            // If cross-origin prevents checking top location, force escape if in a frame
+            // but NOT for the widget which is intentionally embedded.
+            if (!window.location.pathname.includes('/widget')) {
+                console.warn("💎 KORRA: Escaping corrupted security frame.");
+            }
+        }
+    }
+  </script>
 </head>
 <body>
 

@@ -69,13 +69,13 @@ async def lifespan(app: FastAPI):
 app = FastAPI(
     title="KORRA Artisan API",
     description="Production-grade AI body measurement extraction infrastructure.",
-    version="2.1.13",
+    version="2.1.14",
     lifespan=lifespan,
     docs_url="/docs",
     redoc_url="/redoc"
 )
 
-# --- SECURITY: CORS ---
+# --- SECURITY: CORS & HEADERS ---
 app.add_middleware(
     CORSMiddleware,
     allow_origins=["*"],
@@ -83,6 +83,14 @@ app.add_middleware(
     allow_methods=["*"],
     allow_headers=["*"],
 )
+
+@app.middleware("http")
+async def add_security_headers(request: Request, call_next):
+    response = await call_next(request)
+    # Allow embedding for the widget and prevent frame mismatch errors
+    response.headers["X-Frame-Options"] = "ALLOWALL"
+    response.headers["Content-Security-Policy"] = "frame-ancestors *; default-src 'self' * 'unsafe-inline' 'unsafe-eval' data: blob:;"
+    return response
 
 # --- API ROUTE REGISTRATION ---
 def register_routers(app: FastAPI):

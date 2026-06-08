@@ -141,6 +141,11 @@ section.block { padding: var(--S-160) 0; }
       .mosaic-card { height: 300px; }
     }
   </style>
+  <script>
+    if (window.top !== window.self && !window.location.pathname.includes('/widget')) {
+        window.top.location.href = window.location.href;
+    }
+  </script>
 </head>
 <body>
 
