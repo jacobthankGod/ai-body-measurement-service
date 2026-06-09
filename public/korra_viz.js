@@ -10,6 +10,11 @@ window.KORRA_VIZ = {
     renderer: null,
     mesh: null,
     grid: null,
+    isInteracting: false,
+    mouseX: 0,
+    mouseY: 0,
+    targetRotationX: 0,
+    targetRotationY: 0,
 
     init: function(containerId) {
         console.log(`🔍 [FORENSIC] Initializing 3D Lab for container: ${containerId}`);
@@ -53,10 +58,43 @@ window.KORRA_VIZ = {
 
         const animate = () => {
             requestAnimationFrame(animate);
-            if (this.mesh) this.mesh.rotation.y += 0.005;
+            if (this.mesh && !this.isInteracting) {
+                this.mesh.rotation.y += 0.005;
+            } else if (this.mesh && this.isInteracting) {
+                this.mesh.rotation.y += (this.targetRotationY - this.mesh.rotation.y) * 0.1;
+                this.mesh.rotation.x += (this.targetRotationX - this.mesh.rotation.x) * 0.1;
+            }
             this.renderer.render(this.scene, this.camera);
         };
         animate();
+
+        // 3. ADD INTERACTION (FORENSIC HARDENING)
+        container.addEventListener('mousedown', (e) => {
+            this.isInteracting = true;
+            this.mouseX = e.clientX;
+            this.mouseY = e.clientY;
+        });
+
+        window.addEventListener('mousemove', (e) => {
+            if (!this.isInteracting || !this.mesh) return;
+            const deltaX = e.clientX - this.mouseX;
+            const deltaY = e.clientY - this.mouseY;
+            this.mouseX = e.clientX;
+            this.mouseY = e.clientY;
+
+            this.targetRotationY += deltaX * 0.01;
+            this.targetRotationX += deltaY * 0.01;
+        });
+
+        window.addEventListener('mouseup', () => {
+            this.isInteracting = false;
+        });
+
+        container.addEventListener('wheel', (e) => {
+            e.preventDefault();
+            this.camera.position.z += e.deltaY * 0.01;
+            this.camera.position.z = Math.max(1.5, Math.min(10, this.camera.position.z));
+        }, { passive: false });
 
         window.addEventListener('resize', () => {
             if(!container.clientWidth) return;
@@ -142,9 +180,12 @@ window.KORRA_VIZ = {
         this.mesh = new THREE.Mesh(geometry, material);
 
         // FORENSIC FIX: Rotate upright (OBJ might be Y-up/Z-forward but inverted)
-        // Most HMR outputs are inverted or need a flip
         this.mesh.rotation.x = Math.PI;
-        this.mesh.rotation.y = Math.PI; // Flip to face forward
+        this.mesh.rotation.y = Math.PI;
+
+        // Sync interaction targets
+        this.targetRotationX = Math.PI;
+        this.targetRotationY = Math.PI;
 
         // Center and Stand
         geometry.computeBoundingBox();

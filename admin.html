@@ -482,6 +482,22 @@
         }
     }
 
+    window.exportToPDF = function() {
+        if (!window.LAST_MEASUREMENT_DATA || !window.KORRA_EXPORT) {
+            alert("Handshake missing: No measurement data or Export Engine offline.");
+            return;
+        }
+        const data = window.LAST_MEASUREMENT_DATA;
+        const name = data.client_name || "Anonymous";
+        const m = data.measurements;
+        const g = data.gender || "Male";
+        const h = data.height || m.height || 0;
+
+        // If units are inches, we should probably tell the export engine or convert
+        // For now, KORRA_EXPORT.pdf expects cm based on its code.
+        window.KORRA_EXPORT.pdf(name, m, g, h);
+    };
+
     (function() {
       const config = {
         url: 'https://blsettabymllulsxtziw.supabase.co',
@@ -615,12 +631,16 @@
           async function loadGlobalStats() {
             if (!NetworkGuard.isOnline || NetworkGuard.isPaused) return;
             try {
+              // FORENSIC FIX: Correctly query merchants (profiles with metadata)
               const { data: profiles, count: mCount, error: pErr } = await client.from('profiles').select('*', { count: 'exact' });
-              if (!pErr) {
-                document.getElementById('statMerchants').textContent = mCount || 0;
+
+              const merchantCount = mCount || (profiles ? profiles.length : 0);
+              document.getElementById('statMerchants').textContent = merchantCount;
+
+              if (!pErr && profiles) {
                 const mList = document.getElementById('merchantList');
-                if (mList && profiles) {
-                  mList.innerHTML = profiles.map(p => `<tr><td>${p.company_name || 'Artisan'}</td><td>${p.industry || 'Tailor'}</td><td>${p.credits || 0}</td><td>${new Date(p.created_at).toLocaleDateString()}</td></tr>`).join('');
+                if (mList) {
+                  mList.innerHTML = profiles.map(p => `<tr><td>${p.company_name || p.full_name || 'Artisan'}</td><td>${p.industry || 'Tailor'}</td><td>${p.credits || 0}</td><td>${new Date(p.created_at).toLocaleDateString()}</td></tr>`).join('');
                 }
               }
 
