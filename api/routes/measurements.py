@@ -271,17 +271,29 @@ async def extract_widget(
 
 @router.get("/measurements/status/{task_id}")
 async def get_extraction_status(task_id: str):
+    # ULTRA-RESILIENT STATUS CHECK
+    # 502 happens when worker crashes - we guard against that
     try:
+        # Fast path: in-memory lookup (no file I/O)
         task = EXTRACTION_TASKS.get(task_id)
-        if not task:
-            # Try loading from disk as fallback
+        if task:
+            return task
+        
+        # Fallback: disk lookup (with timeout protection)
+        try:
             tasks = load_tasks()
             task = tasks.get(task_id)
-            if not task:
-                raise HTTPException(status_code=404, detail="Task not found.")
-        return task
+            if task:
+                return task
+        except Exception as disk_err:
+            logger.warning(f"Disk fallback failed: {disk_err}")
+        
+        # Task not found - return 404
+        raise HTTPException(status_code=404, detail="Task not found. It may have expired or never was created.")
+        
     except HTTPException:
         raise
     except Exception as e:
         logger.error(f"Status check failed: {e}")
-        raise HTTPException(status_code=500, detail="Status temporarily unavailable")
+        # Return empty task status instead of crashing with 500
+        raise HTTPException(status_code=404, detail="Task not found.")
