@@ -1,37 +1,33 @@
-# AI Body Scan SaaS - Production Dockerfile (Heavy AI Support)
-# =========================================================
+# Use Python 3.9 Slim as base
+FROM python:3.9-slim
 
-FROM python:3.11-slim
-
-# Install system dependencies for OpenCV and MediaPipe
-# Note: libgl1-mesa-glx is obsolete in newer Debian, using libgl1 instead.
+# Install system dependencies for OpenCV and TensorFlow
 RUN apt-get update && apt-get install -y \
-    libgl1 \
+    libgl1-mesa-glx \
     libglib2.0-0 \
     libsm6 \
     libxext6 \
     libxrender-dev \
-    libgomp1 \
+    curl \
     && rm -rf /var/lib/apt/lists/*
 
+# Set working directory
 WORKDIR /app
 
-# Copy and install full ML requirements
+# Copy requirements first for better caching
 COPY requirements.txt .
 RUN pip install --no-cache-dir -r requirements.txt
 
-# Copy application source
+# Copy the rest of the application
 COPY . .
 
-# Download crucial ML models during build to bypass Git LFS quota
-RUN python scripts/download_models.py
-
-# Environment Defaults
-ENV PORT=5001
-ENV PYTHONPATH=/app
+# Set environment variables
+ENV PORT=8080
 ENV PYTHONUNBUFFERED=1
 
-EXPOSE 5001
+# Expose the port
+EXPOSE 8080
 
-# Entry point
-CMD ["uvicorn", "api.main:app", "--host", "0.0.0.0", "--port", "5001"]
+# Command to run the application
+# We use 1 worker and 4 threads for Cloud Run efficiency
+CMD ["python", "-m", "uvicorn", "api.main:app", "--host", "0.0.0.0", "--port", "8080", "--workers", "1"]
