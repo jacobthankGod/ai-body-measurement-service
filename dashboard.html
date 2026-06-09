@@ -269,6 +269,28 @@
         NetworkGuard.init();
         if (typeof window.supabase === 'undefined') { setTimeout(init, 500); return; }
 
+// ULTRA-RESILIENT: Custom fetch that wraps ALL Supabase internal calls with retry
+        const resilientFetch = async (url, options = {}) => {
+            const isTokenEndpoint = url.includes('/auth/v1/token') || url.includes('refresh_token');
+            const maxRetries = isTokenEndpoint ? 10 : 8;
+            const baseDelay = isTokenEndpoint ? 2000 : 1500;
+            
+            for (let attempt = 0; attempt < maxRetries; attempt++) {
+                try {
+                    const response = await fetch(url, options);
+                    if (!response.ok && response.type === 'opaque' && response.status === 0) {
+                        throw new Error("NETWORK_ERROR");
+                    }
+                    return response;
+                } catch (err) {
+                    if (attempt === maxRetries - 1) throw err;
+                    const backoff = (baseDelay * Math.pow(2, attempt)) + (Math.random() * 1000);
+                    console.warn(`🔄 KORRA: Attempt ${attempt + 1}/${maxRetries} failed. Retrying in ${Math.round(backoff)}ms...`);
+                    await new Promise(r => setTimeout(r, backoff));
+                }
+            }
+        };
+
         window.KORRA_DB = window.supabase.createClient(CONFIG.url, CONFIG.key, {
             auth: {
                 persistSession: true,
@@ -277,7 +299,7 @@
                 storage: window.localStorage
             },
             global: {
-                fetch: (...args) => NetworkGuard.retry(() => fetch(...args))
+                fetch: resilientFetch
             }
         });
 
