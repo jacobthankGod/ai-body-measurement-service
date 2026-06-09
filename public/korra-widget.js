@@ -11,7 +11,7 @@
         config: {
             merchantId: null,
             theme: 'dark',
-            host: 'https://ai-body-measurement-service-1.onrender.com'
+            host: 'https://korra-436814609100.us-central1.run.app'
         },
 
         init: function() {

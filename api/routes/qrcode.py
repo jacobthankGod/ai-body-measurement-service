@@ -37,7 +37,7 @@ async def generate_qr(
     }
 
     # Generate QR URL
-    host = os.environ.get("RENDER_EXTERNAL_URL", "https://ai-body-measurement-service-1.onrender.com")
+    host = os.environ.get("RENDER_EXTERNAL_URL", "https://korra-436814609100.us-central1.run.app")
     scan_url = f"{host}/widget?merchant={merchant_id}&token={token}"
 
     # Render QR Image

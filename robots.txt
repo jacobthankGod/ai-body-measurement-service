@@ -7,4 +7,4 @@ Disallow: /api/
 Disallow: /middleware/
 Disallow: /data/
 
-Sitemap: https://ai-body-measurement-service-1.onrender.com/sitemap.xml
+Sitemap: https://korra-436814609100.us-central1.run.app/sitemap.xml
