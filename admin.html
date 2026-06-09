@@ -652,11 +652,36 @@
             overlay.style.display = 'flex';
             let progress = 10;
 
-            const interval = setInterval(async () => {
+const interval = setInterval(async () => {
                 try {
-                    const res = await fetch(`/api/v2/measurements/status/${taskId}`);
-                    if (!res.ok) return;
-                    const data = await res.json();
+                    // ULTRA-RESILIENT: Retry status check on 502/503/504 errors
+                    let data = null;
+                    let statusOk = false;
+                    for (let retry = 0; retry < 5; retry++) {
+                        try {
+                            const res = await fetch(`/api/v2/measurements/status/${taskId}`);
+                            if (res.ok) {
+                                data = await res.json();
+                                statusOk = true;
+                                break;
+                            } else if (res.status === 404) {
+                                // Task expired or never created - stop polling
+                                clearInterval(interval);
+                                status.textContent = 'TASK EXPIRED.';
+                                return;
+                            }
+                        } catch (netErr) {
+                            // Network error - retry
+                            if (retry < 4) {
+                                console.warn(`🔄 KORRA: Status retry ${retry + 1}/5...`);
+                                await new Promise(r => setTimeout(r, 2000 * (retry + 1)));
+                            }
+                        }
+                    }
+                    
+                    if (!statusOk || !data) return;
+                    
+                    // Process the task status data...
 
                     if (data.status === 'processing') {
                         progress = Math.min(progress + 5, 90);

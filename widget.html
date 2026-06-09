@@ -117,11 +117,25 @@
         const pFill = document.getElementById('pFill');
         let progress = 20;
 
-        const interval = setInterval(async () => {
+const interval = setInterval(async () => {
             try {
-                const res = await fetch(`/api/v2/measurements/status/${taskId}`);
-                if (!res.ok) return;
-                const data = await res.json();
+                // ULTRA-RESILIENT: Retry on 502/503/504
+                let data = null;
+                for (let retry = 0; retry < 5; retry++) {
+                    try {
+                        const res = await fetch(`/api/v2/measurements/status/${taskId}`);
+                        if (res.ok) {
+                            data = await res.json();
+                            break;
+                        } else if (res.status === 404) {
+                            clearInterval(interval);
+                            return;
+                        }
+                    } catch (netErr) {
+                        if (retry < 4) await new Promise(r => setTimeout(r, 2000));
+                    }
+                }
+                if (!data) return;
 
                 if (data.status === 'processing') {
                     progress = Math.min(progress + 8, 90);
