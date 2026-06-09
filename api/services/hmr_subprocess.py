@@ -24,6 +24,7 @@ logger = logging.getLogger("HMR_SUBPROCESS")
 
 def run_hmr(image_path, height_cm, gender, mesh_path=None):
     import sys # REDUNDANT IMPORT FOR SCOPE PROTECTION
+    import gc
     try:
         # Late import of TensorFlow to ensure it only loads in this process
         import tensorflow as tf
@@ -46,6 +47,9 @@ def run_hmr(image_path, height_cm, gender, mesh_path=None):
         # Perform extraction
         measurements, vertices, landmarks, error = engine.extract(img, height_cm, gender)
 
+        # CLEANUP AGGRESSIVELY
+        del img
+
         if error:
             return {"status": "failed", "error": error}
 
@@ -55,6 +59,10 @@ def run_hmr(image_path, height_cm, gender, mesh_path=None):
             from api.services.mesh_exporter import MeshExporter
             MeshExporter.save_to_obj(vertices, mesh_path)
             mesh_url = mesh_path # Caller will convert to relative URL
+
+        # FINAL CLEANUP
+        del vertices
+        gc.collect()
 
         return {
             "status": "completed",

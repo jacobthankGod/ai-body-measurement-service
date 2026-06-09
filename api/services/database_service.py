@@ -9,7 +9,7 @@ import logging
 import uuid
 from datetime import datetime, timedelta
 from typing import Dict, Optional, Any
-from supabase import create_client, Client
+# from supabase import create_client, Client # MOVED TO LATE IMPORT
 
 logger = logging.getLogger("KORRA_DB")
 
@@ -17,15 +17,16 @@ SUPABASE_URL = os.environ.get("SUPABASE_URL")
 SUPABASE_KEY = os.environ.get("SUPABASE_SERVICE_ROLE_KEY") or os.environ.get("SUPABASE_ANON_KEY")
 
 class DatabaseService:
-    _instance: Optional[Client] = None
+    _instance: Optional[Any] = None
 
     @classmethod
-    def get_client(cls) -> Optional[Client]:
+    def get_client(cls) -> Optional[Any]:
         if cls._instance is None:
             if not SUPABASE_URL or not SUPABASE_KEY: 
                 logger.error("❌ DatabaseService: SUPABASE_URL or SUPABASE_KEY is None in ENV!")
                 return None
             try:
+                from supabase import create_client
                 cls._instance = create_client(SUPABASE_URL, SUPABASE_KEY)
             except Exception as e: 
                 logger.error(f"❌ DatabaseService: Failed to create client: {e}")

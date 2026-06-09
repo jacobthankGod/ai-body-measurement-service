@@ -5,7 +5,7 @@ Performs pre-flight validation on body scan photos to ensure
 clinical accuracy (Lighting, Pose, Resolution).
 """
 import numpy as np
-import cv2
+# import cv2 # MOVED TO LATE IMPORT
 
 class VisionGuard:
     @staticmethod
@@ -14,6 +14,7 @@ class VisionGuard:
         Validate image quality and subject positioning.
         Returns: (bool, str) -> (is_valid, reason)
         """
+        import cv2 # LATE IMPORT
         if image_array is None or image_array.size == 0:
             return False, "Empty image data."
 

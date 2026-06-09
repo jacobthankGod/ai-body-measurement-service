@@ -11,11 +11,12 @@ from pathlib import Path
 from typing import Dict, Optional, Tuple
 
 # Check for OpenCV availability
-try:
-    import cv2
-    HAS_CV2 = True
-except ImportError:
-    HAS_CV2 = False
+HAS_CV2 = False
+# try:
+#     import cv2
+#     HAS_CV2 = True
+# except ImportError:
+#     HAS_CV2 = False
 
 # Check for MediaPipe availability
 HAS_MEDIAPIPE = False
@@ -69,7 +70,13 @@ def initialize_pose_detector():
         return None
 
 def detect_pose_landmarks(image: np.ndarray) -> Optional[Dict[str, Tuple[float, float]]]:
-    global pose_landmarker
+    global pose_landmarker, HAS_CV2
+    try:
+        import cv2
+        HAS_CV2 = True
+    except:
+        HAS_CV2 = False
+
     if pose_landmarker is None:
         if not initialize_pose_detector(): return None
     if not HAS_CV2: return None
@@ -197,7 +204,11 @@ def _extract_proportional_measurements(user_height_cm: float, gender: str = 'mal
     return {k: round(v * user_height_cm, 1) for k, v in ratios.items()}
 
 def validate_image(image_array):
-    if not HAS_CV2: return True, "OK"
+    try:
+        import cv2
+    except:
+        return True, "OK"
+
     height, width = image_array.shape[:2]
     if height < 256 or width < 256: return False, "Image too small"
     gray = np.mean(image_array)

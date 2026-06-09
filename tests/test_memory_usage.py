@@ -36,7 +36,8 @@ def test_tensorflow_not_loaded_on_import():
     # 100MB is a safe upper bound for a lean FastAPI app
     assert post_import_mem < 150, f"Memory usage too high after import: {post_import_mem:.2f} MB"
 
-def test_subprocess_memory_release():
+@pytest.mark.asyncio
+async def test_subprocess_memory_release():
     """Verify that running an AI task doesn't bloat the main process memory."""
     from api.routes.measurements import run_extraction_subprocess_cli
     import numpy as np
@@ -59,7 +60,7 @@ def test_subprocess_memory_release():
 
     # Run the subprocess task (it will likely fail or use fallback if weights missing,
     # but we want to see if the MAIN process stays lean)
-    result = run_extraction_subprocess_cli(task_id, f_path, s_path, 175.0, "male", "Test", "user_123")
+    result = await run_extraction_subprocess_cli(task_id, f_path, s_path, 175.0, "male", "Test", "user_123")
 
     mem_after = get_process_memory()
     print(f"Memory after AI Task: {mem_after:.2f} MB")
