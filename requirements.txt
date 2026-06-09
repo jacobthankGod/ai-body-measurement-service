@@ -1,9 +1,10 @@
-# AI Body Scan SaaS - Full ML Engine (Render/Docker)
-# ===============================================
+# AI Body Scan SaaS - Full ML Engine (Google Cloud Optimized)
+# ==========================================================
+# Strict version pinning to prevent pip backtracking loops
 
-# Core ML/Image Processing (Crucial Accuracy)
+# Core ML/Image Processing
 mediapipe==0.10.9
-opencv-python-headless>=4.8.1.78
+opencv-contrib-python-headless==4.8.1.78
 numpy==1.26.3
 pillow==10.2.0
 scikit-image==0.22.0
@@ -11,27 +12,49 @@ scipy==1.11.4
 matplotlib==3.8.2
 
 # 3D Extraction (HMR/SMPL Specific)
-chumpy>=0.70
+chumpy==0.70
 PyOpenGL==3.1.7
 tensorflow==2.15.0
+protobuf==3.20.3
 absl-py==2.0.0
 tf-slim==1.1.0
 tf-keras==2.15.0
 
 # Web Framework
 fastapi==0.109.0
+starlette==0.35.1
 uvicorn[standard]==0.27.0
 python-multipart==0.0.6
-httpx==0.25.2
+httpx==0.27.0
+httpcore==1.0.5
 
 # Data & Database (Optimized for Supabase)
 pydantic==2.5.3
+pydantic-core==2.14.6
 pydantic-settings==2.1.0
-supabase==2.3.7
+supabase==2.5.0
+gotrue==2.12.4
+postgrest==0.16.9
+storage3==0.7.7
+supafunc==0.4.7
+realtime==1.0.6
 
-# Integrations (Part 2 & 3)
+# Integrations
 qrcode==7.4.2
 sendgrid==6.11.0
+python-http-client==3.3.7
 
 # Utilities
 python-dotenv==1.0.0
+python-dateutil==2.9.0.post0
+six>=1.16.0
+typing-extensions>=4.10.0
+attrs>=23.2.0
+certifi>=2024.2.2
+idna>=3.7
+sniffio>=1.3.0
+anyio>=4.3.0
+click==8.1.8
+pyparsing==3.3.2
+zipp==3.23.1
+importlib-resources==6.5.2

@@ -15,6 +15,9 @@ RUN apt-get update && apt-get install -y \
 # Set working directory
 WORKDIR /app
 
+# Upgrade pip to ensure the latest dependency resolver is used
+RUN pip install --no-cache-dir --upgrade pip setuptools wheel
+
 # Copy requirements first for better caching
 COPY requirements.txt .
 RUN pip install --no-cache-dir -r requirements.txt
