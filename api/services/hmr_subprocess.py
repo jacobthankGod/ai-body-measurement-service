@@ -23,6 +23,7 @@ logging.basicConfig(level=logging.INFO, stream=sys.stderr)
 logger = logging.getLogger("HMR_SUBPROCESS")
 
 def run_hmr(image_path, height_cm, gender, mesh_path=None):
+    import sys # REDUNDANT IMPORT FOR SCOPE PROTECTION
     try:
         # Late import of TensorFlow to ensure it only loads in this process
         import tensorflow as tf

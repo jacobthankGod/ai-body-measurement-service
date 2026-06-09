@@ -25,6 +25,7 @@ if str(SRC_PATH.parent) not in sys.path: sys.path.insert(0, str(SRC_PATH.parent)
 # --- NUCLEAR TENSORFLOW LEGACY BRIDGE ---
 def setup_tf_bridge():
     """Dynamically sets up TF1 compatibility only when needed."""
+    import sys # REDUNDANT IMPORT FOR SCOPE PROTECTION
     try:
         import tensorflow as tf
         import tensorflow.compat.v1 as tf1

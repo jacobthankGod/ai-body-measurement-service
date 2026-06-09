@@ -17,6 +17,7 @@ from contextlib import asynccontextmanager
 from pathlib import Path
 
 # --- CORE PATH RESOLUTION ---
+import sys # REDUNDANT IMPORT FOR SCOPE PROTECTION
 API_DIR = Path(__file__).resolve().parent
 BASE_DIR = API_DIR.parent
 MODELS_DIR = BASE_DIR / "models"

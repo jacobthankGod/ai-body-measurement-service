@@ -94,6 +94,7 @@ def run_extraction_subprocess_cli(task_id: str, front_path: str, side_path: str,
     Isolated Subprocess Worker: Runs AI in a COMPLETELY separate OS process via CLI.
     This is the ultimate protection against TensorFlow memory leaks in the main process.
     """
+    import sys # REDUNDANT IMPORT FOR SCOPE PROTECTION
     try:
         mesh_filename = f"korra_twin_{task_id}.obj"
         mesh_path = MESH_DIR / mesh_filename
