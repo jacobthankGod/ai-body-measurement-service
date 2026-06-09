@@ -289,24 +289,30 @@
                   <h4 style="font-size:16px; font-weight:900; color:var(--Mint); margin:0">
                     <span style="margin-right:8px">📊</span>MEASUREMENT RESULTS
                   </h4>
-                  <div style="font-size:10px; color:var(--Neutral-500)" id="measurementTimestamp"></div>
+                  <div style="display:flex; align-items:center; gap:16px">
+                    <div class="unit-toggle" style="background:rgba(255,255,255,0.1); border-radius:20px; padding:2px; display:flex; cursor:pointer" onclick="toggleUnits()">
+                        <div id="unit-cm" style="padding:4px 12px; border-radius:18px; font-size:10px; font-weight:900; background:var(--Mint); color:var(--Teal-900)">CM</div>
+                        <div id="unit-in" style="padding:4px 12px; border-radius:18px; font-size:10px; font-weight:900; color:var(--Neutral-400)">IN</div>
+                    </div>
+                    <div style="font-size:10px; color:var(--Neutral-500)" id="measurementTimestamp"></div>
+                  </div>
                 </div>
                 
                 <!-- Upper Body Section -->
                 <div style="margin-bottom:20px">
-                  <h5 style="font-size:10px; font-weight:900; color:var(--Neutral-500); text-transform:uppercase; margin-bottom:12px; letter-spacing:0.1em">Upper Body</h5>
+                  <h5 style="font-size:11px; font-weight:900; color:#FFFFFF; text-transform:uppercase; margin-bottom:12px; letter-spacing:0.1em; text-shadow: 0 0 10px rgba(87,215,192,0.3)">Upper Body</h5>
                   <div id="measurementGridUpper" style="display:grid; grid-template-columns:repeat(4,1fr); gap:8px"></div>
                 </div>
                 
                 <!-- Middle Body Section -->
                 <div style="margin-bottom:20px">
-                  <h5 style="font-size:10px; font-weight:900; color:var(--Neutral-500); text-transform:uppercase; margin-bottom:12px; letter-spacing:0.1em">Middle Body</h5>
+                  <h5 style="font-size:11px; font-weight:900; color:#FFFFFF; text-transform:uppercase; margin-bottom:12px; letter-spacing:0.1em; text-shadow: 0 0 10px rgba(87,215,192,0.3)">Middle Body</h5>
                   <div id="measurementGridMiddle" style="display:grid; grid-template-columns:repeat(4,1fr); gap:8px"></div>
                 </div>
                 
                 <!-- Lower Body Section -->
                 <div style="margin-bottom:20px">
-                  <h5 style="font-size:10px; font-weight:900; color:var(--Neutral-500); text-transform:uppercase; margin-bottom:12px; letter-spacing:0.1em">Lower Body</h5>
+                  <h5 style="font-size:11px; font-weight:900; color:#FFFFFF; text-transform:uppercase; margin-bottom:12px; letter-spacing:0.1em; text-shadow: 0 0 10px rgba(87,215,192,0.3)">Lower Body</h5>
                   <div id="measurementGridLower" style="display:grid; grid-template-columns:repeat(4,1fr); gap:8px"></div>
                 </div>
                 
@@ -418,6 +424,62 @@
       entry.className = 'log-entry';
       entry.textContent = `[${new Date().toLocaleTimeString()}] ${text}`;
       consoleEl.appendChild(entry);
+    }
+
+    function toggleUnits() {
+        if (!window.LAST_MEASUREMENT_DATA) return;
+        window.CURRENT_UNIT = window.CURRENT_UNIT === 'cm' ? 'in' : 'cm';
+
+        // Update UI toggles
+        const cmBtn = document.getElementById('unit-cm');
+        const inBtn = document.getElementById('unit-in');
+
+        if (window.CURRENT_UNIT === 'cm') {
+            cmBtn.style.background = 'var(--Mint)';
+            cmBtn.style.color = 'var(--Teal-900)';
+            inBtn.style.background = 'transparent';
+            inBtn.style.color = 'var(--Neutral-400)';
+        } else {
+            inBtn.style.background = 'var(--Mint)';
+            inBtn.style.color = 'var(--Teal-900)';
+            cmBtn.style.background = 'transparent';
+            cmBtn.style.color = 'var(--Neutral-400)';
+        }
+
+        // Refresh grids
+        const data = window.LAST_MEASUREMENT_DATA;
+        const upperBody = ['Shoulder', 'Neck Round', 'Chest Round', 'Bust Round', 'High Bust', 'Under Bust', 'Across Back', 'Across Chest', 'Armhole Round', 'Bicep Round'];
+        const middleBody = ['Waist Round', 'Stomach Round', 'Half Length', 'Full Top Length', 'Waist to Hip', 'Upper Hip', 'Crotch Depth'];
+        const lowerBody = ['Hip Round', 'Thigh Round', 'Knee Round', 'Calf Round', 'Ankle Round', 'Trouser Waist', 'Trouser Length', 'Inseam', 'Sleeve Length', 'Wrist Round'];
+
+        function createMetricCard(key, val) {
+            if (!val || val === 0) return '';
+            let displayVal = val;
+            let unit = 'cm';
+            if (window.CURRENT_UNIT === 'in') {
+                displayVal = (val * 0.393701).toFixed(1);
+                unit = 'in';
+            }
+            return `<div style="padding:10px; background:rgba(255,255,255,0.05); border-radius:8px; border:1px solid rgba(255,255,255,0.08)">
+                <div style="font-size:9px; color:var(--Neutral-500); text-transform:uppercase; margin-bottom:2px; white-space:nowrap">${key}</div>
+                <div style="font-size:16px; font-weight:700; color:var(--Mint)">${displayVal}<span style="font-size:10px; margin-left:2px">${unit}</span></div>
+            </div>`;
+        }
+
+        document.getElementById('measurementGridUpper').innerHTML = upperBody.map(k => createMetricCard(k, data.measurements[k])).join('');
+        document.getElementById('measurementGridMiddle').innerHTML = middleBody.map(k => createMetricCard(k, data.measurements[k])).join('');
+        document.getElementById('measurementGridLower').innerHTML = lowerBody.map(k => createMetricCard(k, data.measurements[k])).join('');
+
+        // Update Height
+        const heightVal = data.height || data.measurements?.height;
+        if (heightVal) {
+            const hEl = document.getElementById('measurementHeight');
+            if (window.CURRENT_UNIT === 'in') {
+                hEl.textContent = (heightVal * 0.393701).toFixed(1) + ' in';
+            } else {
+                hEl.textContent = heightVal + ' cm';
+            }
+        }
     }
 
     (function() {
@@ -727,9 +789,14 @@ adminLog("SUCCESS: BIOMETRICS CALCULATED.");
                                 // Set summary
                                 const hEl = document.getElementById('measurementHeight');
                                 const gEl = document.getElementById('measurementGender');
-                                if (hEl) hEl.textContent = data.height + ' cm';
+                                const heightVal = data.height || data.measurements?.height;
+                                if (hEl) hEl.textContent = (heightVal || '--') + ' cm';
                                 if (gEl) gEl.textContent = data.gender || 'Male';
-                                
+
+                                // Cache data for unit toggling
+                                window.LAST_MEASUREMENT_DATA = data;
+                                window.CURRENT_UNIT = 'cm';
+
                                 // Define body region groupings
                                 const upperBody = ['Shoulder', 'Neck Round', 'Chest Round', 'Bust Round', 'High Bust', 'Under Bust', 'Across Back', 'Across Chest', 'Armhole Round', 'Bicep Round'];
                                 const middleBody = ['Waist Round', 'Stomach Round', 'Half Length', 'Full Top Length', 'Waist to Hip', 'Upper Hip', 'Crotch Depth'];
@@ -738,9 +805,15 @@ adminLog("SUCCESS: BIOMETRICS CALCULATED.");
                                 // Helper to create measurement card
                                 function createMetricCard(key, val) {
                                     if (!val || val === 0) return '';
+                                    let displayVal = val;
+                                    let unit = 'cm';
+                                    if (window.CURRENT_UNIT === 'in') {
+                                        displayVal = (val * 0.393701).toFixed(1);
+                                        unit = 'in';
+                                    }
                                     return `<div style="padding:10px; background:rgba(255,255,255,0.05); border-radius:8px; border:1px solid rgba(255,255,255,0.08)">
                                         <div style="font-size:9px; color:var(--Neutral-500); text-transform:uppercase; margin-bottom:2px; white-space:nowrap">${key}</div>
-                                        <div style="font-size:16px; font-weight:700; color:var(--Mint)">${val}<span style="font-size:10px; margin-left:2px">cm</span></div>
+                                        <div style="font-size:16px; font-weight:700; color:var(--Mint)">${displayVal}<span style="font-size:10px; margin-left:2px">${unit}</span></div>
                                     </div>`;
                                 }
                                 

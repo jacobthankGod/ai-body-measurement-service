@@ -24,7 +24,7 @@ window.KORRA_VIZ = {
 
         const aspect = container.clientWidth / container.clientHeight;
         this.camera = new THREE.PerspectiveCamera(45, aspect, 0.1, 1000);
-        this.camera.position.set(2, 2, 4);
+        this.camera.position.set(0, 1.2, 3.5); // Lower and closer for better zoom
         this.camera.lookAt(0, 1, 0);
 
         this.renderer = new THREE.WebGLRenderer({ antialias: true, alpha: true });
@@ -140,6 +140,11 @@ window.KORRA_VIZ = {
 
         if (this.mesh) this.scene.remove(this.mesh);
         this.mesh = new THREE.Mesh(geometry, material);
+
+        // FORENSIC FIX: Rotate upright (OBJ might be Y-up/Z-forward but inverted)
+        // Most HMR outputs are inverted or need a flip
+        this.mesh.rotation.x = Math.PI;
+        this.mesh.rotation.y = Math.PI; // Flip to face forward
 
         // Center and Stand
         geometry.computeBoundingBox();

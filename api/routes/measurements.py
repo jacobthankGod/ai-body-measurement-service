@@ -273,7 +273,7 @@ async def start_extraction(
             raise HTTPException(status_code=400, detail="Invalid height")
             
         track_usage(user['api_key'])
-        update_task(task_id, {"status": "queued", "created_at": datetime.utcnow().isoformat()})
+        update_task(task_id, {"status": "queued", "created_at": datetime.utcnow().isoformat(), "height": height, "gender": gender})
         background_tasks.add_task(run_extraction_task, task_id, front_bytes, side_bytes, height, gender, client_name, user['user_id'])
         return {"status": "accepted", "task_id": task_id}
     except HTTPException:
@@ -305,7 +305,7 @@ async def extract_widget(
         if not merchant_id:
             raise HTTPException(status_code=400, detail="Merchant ID required")
             
-        update_task(task_id, {"status": "queued", "created_at": datetime.utcnow().isoformat()})
+        update_task(task_id, {"status": "queued", "created_at": datetime.utcnow().isoformat(), "height": height, "gender": gender})
         background_tasks.add_task(run_extraction_task, task_id, front_bytes, side_bytes, height, gender, client_name, merchant_id)
         return {"status": "accepted", "task_id": task_id}
     except HTTPException:
