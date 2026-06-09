@@ -29,7 +29,7 @@ window.KORRA_VIZ = {
 
         const aspect = container.clientWidth / container.clientHeight;
         this.camera = new THREE.PerspectiveCamera(45, aspect, 0.1, 1000);
-        this.camera.position.set(0, 1.2, 3.5); // Lower and closer for better zoom
+        this.camera.position.set(0, 1.0, 3.0); // Balanced starting zoom
         this.camera.lookAt(0, 1, 0);
 
         this.renderer = new THREE.WebGLRenderer({ antialias: true, alpha: true });
@@ -167,6 +167,9 @@ window.KORRA_VIZ = {
         if (faces.length > 0) geometry.setIndex(faces);
         geometry.computeVertexNormals();
 
+        // CLEAN CENTERING
+        geometry.center();
+
         const material = new THREE.MeshPhongMaterial({
             color: 0x57D7C0,
             wireframe: true,
@@ -179,7 +182,7 @@ window.KORRA_VIZ = {
         if (this.mesh) this.scene.remove(this.mesh);
         this.mesh = new THREE.Mesh(geometry, material);
 
-        // FORENSIC FIX: Rotate upright (OBJ might be Y-up/Z-forward but inverted)
+        // FORENSIC FIX: Rotate upright
         this.mesh.rotation.x = Math.PI;
         this.mesh.rotation.y = Math.PI;
 
@@ -187,18 +190,21 @@ window.KORRA_VIZ = {
         this.targetRotationX = Math.PI;
         this.targetRotationY = Math.PI;
 
-        // Center and Stand
+        // Calculate Size & Stand on Ground
         geometry.computeBoundingBox();
         const bbox = geometry.boundingBox;
         const size = new THREE.Vector3();
         bbox.getSize(size);
-        const center = new THREE.Vector3();
-        bbox.getCenter(center);
 
         console.log(`📐 [FORENSIC] Bounding Box: Width=${size.x.toFixed(2)}, Height=${size.y.toFixed(2)}, Depth=${size.z.toFixed(2)}`);
 
-        this.mesh.position.sub(center);
-        this.mesh.position.y += (size.y / 2); // Stand perfectly on ground
+        // Stand perfectly on ground (Y=0)
+        this.mesh.position.set(0, size.y / 2, 0);
+
+        // Adjust camera to look at center of height
+        this.camera.lookAt(0, size.y / 2, 0);
+        this.camera.position.y = size.y / 2; // Perfectly vertical alignment
+        this.camera.position.z = Math.max(2.5, size.y * 1.5); // Dynamic zoom based on height
 
         this.scene.add(this.mesh);
         console.log("✅ [FORENSIC] Digital Twin materialization success.");
