@@ -493,11 +493,14 @@
         if (typeof window.supabase === 'undefined') { setTimeout(initAdmin, 500); return; }
 
         try {
-          const client = window.supabase.createClient(config.url, config.key, {
+const client = window.supabase.createClient(config.url, config.key, {
               auth: { persistSession: true, autoRefreshToken: true, detectSessionInUrl: true, flowType: 'pkce' },
               global: {
                   fetch: (...args) => {
-                      if (args[0].includes('/auth/v1/token')) return fetch(...args);
+                      // ENHANCED: Retry more aggressively on auth endpoint
+                      if (args[0].includes('/auth/v1/token')) {
+                          return NetworkGuard.retry(() => fetch(...args), 6, 2000);
+                      }
                       return NetworkGuard.retry(() => fetch(...args));
                   }
               }
