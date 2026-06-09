@@ -216,15 +216,24 @@
                 }
             }
         },
-        retry: async function(fn, retries = 5, delay = 1000) {
+            retry: async function(fn, retries = 8, delay = 1500) {
             for (let i = 0; i < retries; i++) {
                 try {
                     if (!this.isOnline) throw new Error("OFFLINE");
                     return await fn();
                 } catch (err) {
-                    if (i === retries - 1) throw err;
-                    const wait = delay * Math.pow(2, i);
-                    console.warn(`💎 KORRA: Handshake failed. Retrying in ${wait}ms...`, err);
+                    const isNetworkError = err.message === "OFFLINE" || err.message.includes("fetch") || err.name === "TypeError" || err.message.includes("refresh_token") || err.message.includes("network") || err.message.includes("connection");
+                    if (i === retries - 1) {
+                        if (isNetworkError) {
+                            this.update(false);
+                            console.error("💎 KORRA: Network failed. Pausing...");
+                            throw new Error("PAUSED");
+                        }
+                        throw err;
+                    }
+                    // Exponential backoff with jitter
+                    const wait = (delay * Math.pow(1.8, i)) + (Math.random() * 500);
+                    console.warn(`💎 KORRA: Handshake retry (${i+1}/${retries}) in ${Math.round(wait)}ms...`);
                     await new Promise(r => setTimeout(r, wait));
                 }
             }
