@@ -743,21 +743,27 @@ const interval = setInterval(async () => {
                     
                     if (!statusOk || !data) return;
                     
-                    // --- INTERACTIVE PROCESS ENGINE ---
+                    // --- ENHANCED INTERACTIVE PROCESS ENGINE (14+ STAGES) ---
                     const interactiveMessages = [
-                        "INITIALIZING VOLUMETRIC SCAN...",
-                        "MAPPING SKELETAL LANDMARKS...",
-                        "CALIBRATING DEPTH VECTORS...",
-                        "REFINING MESH TOPOLOGY...",
-                        "EXTRACTING VERTEX DENSITY...",
-                        "CALCULATING BIOMETRIC RATIOS...",
-                        "SYNCHRONIZING DIGITAL TWIN...",
-                        "FINALIZING CLOUD HANDSHAKE..."
+                        "INITIALIZING ISOLATED AI BRAIN...",
+                        "NORMALIZE INPUT VECTORS...",
+                        "EXECUTING SKELETAL KEYPOINT DETECTION...",
+                        "INJECTING SMPL TOPOLOGY...",
+                        "RUNNING VOLUMETRIC REGRESSION...",
+                        "MAPPING VERTEX CLOUD (6890 POINTS)...",
+                        "SCALING TO REAL-WORLD BIOMETRICS...",
+                        "EXTRACTING CIRCUMFERENTIAL RADIUS...",
+                        "COMPUTING VERTICAL SEGMENTATION...",
+                        "SOLVING POSE CONFLICTS...",
+                        "MATERIALIZING 3D DIGITAL TWIN...",
+                        "FINALIZING GEOMETRIC VALIDATION...",
+                        "ENCRYPTING BIOMETRIC PACKET...",
+                        "SYNCING HANDSHAKE COMPLETE."
                     ];
 
                     if (data.status === 'processing') {
                         progress = Math.min(progress + 5, 95);
-                        // Cycle through messages based on progress or timer
+                        // Cycle through messages based on progress
                         const msgIndex = Math.floor((progress / 100) * interactiveMessages.length);
                         status.textContent = interactiveMessages[Math.min(msgIndex, interactiveMessages.length - 1)];
                         status.style.opacity = "0.8";
