@@ -216,13 +216,26 @@ async def start_extraction(
     client_name: str = Form("Unnamed Client"),
     user: dict = Depends(get_current_user)
 ):
-    task_id = str(uuid.uuid4())
-    front_bytes = await front.read()
-    side_bytes = await side.read()
-    track_usage(user['api_key'])
-    update_task(task_id, {"status": "queued", "created_at": datetime.utcnow().isoformat()})
-    background_tasks.add_task(run_extraction_task, task_id, front_bytes, side_bytes, height, gender, client_name, user['user_id'])
-    return {"status": "accepted", "task_id": task_id}
+    try:
+        task_id = str(uuid.uuid4())
+        front_bytes = await front.read()
+        side_bytes = await side.read()
+        
+        # Validate input
+        if not front_bytes or not side_bytes:
+            raise HTTPException(status_code=400, detail="Empty image files")
+        if height < 50 or height > 250:
+            raise HTTPException(status_code=400, detail="Invalid height")
+            
+        track_usage(user['api_key'])
+        update_task(task_id, {"status": "queued", "created_at": datetime.utcnow().isoformat()})
+        background_tasks.add_task(run_extraction_task, task_id, front_bytes, side_bytes, height, gender, client_name, user['user_id'])
+        return {"status": "accepted", "task_id": task_id}
+    except HTTPException:
+        raise
+    except Exception as e:
+        logger.error(f"Extraction start failed: {e}")
+        raise HTTPException(status_code=500, detail="Failed to start extraction")
 
 @router.post("/measurements/extract-widget")
 async def extract_widget(
@@ -243,6 +256,17 @@ async def extract_widget(
 
 @router.get("/measurements/status/{task_id}")
 async def get_extraction_status(task_id: str):
-    task = EXTRACTION_TASKS.get(task_id)
-    if not task: raise HTTPException(status_code=404, detail="Task not found.")
-    return task
+    try:
+        task = EXTRACTION_TASKS.get(task_id)
+        if not task:
+            # Try loading from disk as fallback
+            tasks = load_tasks()
+            task = tasks.get(task_id)
+            if not task:
+                raise HTTPException(status_code=404, detail="Task not found.")
+        return task
+    except HTTPException:
+        raise
+    except Exception as e:
+        logger.error(f"Status check failed: {e}")
+        raise HTTPException(status_code=500, detail="Status temporarily unavailable")
