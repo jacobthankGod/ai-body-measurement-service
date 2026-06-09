@@ -1,10 +1,13 @@
-# Use Python 3.9 Slim as base
-FROM python:3.9-slim
+# Use Python 3.11-slim to match pyproject.toml requirements
+FROM python:3.11-slim
 
 # Install system dependencies for OpenCV, MediaPipe, and TensorFlow
+# Added build-essential and python3-dev for potential C extensions in legacy packages
 RUN apt-get update && apt-get install -y \
+    build-essential \
+    python3-dev \
     libgl1 \
-    libglib2.0-0 \
+    libglib2.0-0t64 \
     libsm6 \
     libxext6 \
     libxrender1 \
@@ -17,6 +20,10 @@ WORKDIR /app
 
 # Upgrade pip to ensure the latest dependency resolver is used
 RUN pip install --no-cache-dir --upgrade pip setuptools wheel
+
+# Pre-install numpy and build chumpy without isolation to fix "ModuleNotFoundError: No module named 'pip'"
+RUN pip install --no-cache-dir numpy==1.26.3
+RUN pip install --no-cache-dir chumpy==0.70 --no-build-isolation
 
 # Copy requirements first for better caching
 COPY requirements.txt .
