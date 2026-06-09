@@ -4,18 +4,22 @@ Measurement Routes | TASK-QUEUE ARCHITECTURE (Unicorn Scaling)
 Handles high-precision AI extraction with background processing
 to prevent 502 Bad Gateway timeouts across all vectors.
 """
-from fastapi import APIRouter, UploadFile, File, Form, Header, HTTPException, Depends, BackgroundTasks
-from datetime import datetime, timedelta
+import sys
+import threading
+import subprocess
 import io
 import os
 import uuid
 import json
 import logging
 import traceback
+from concurrent.futures import ThreadPoolExecutor
+from datetime import datetime, timedelta
 from typing import Dict, Optional
 from PIL import Image
 import numpy as np
 from pathlib import Path
+from fastapi import APIRouter, UploadFile, File, Form, Header, HTTPException, Depends, BackgroundTasks
 
 from api.services.mediapipe_measurement_engine import extract_measurements_from_dual_photos as fallback_extract
 from api.services.vision_guard import VisionGuard
@@ -83,12 +87,6 @@ def update_task(task_id, data):
     else:
         EXTRACTION_TASKS[task_id] = data
     save_tasks(EXTRACTION_TASKS)
-
-import threading
-import subprocess
-import json
-import sys
-from concurrent.futures import ThreadPoolExecutor
 
 # --- SUBPROCESS RELIABILITY ENGINE ---
 def run_extraction_subprocess_cli(task_id: str, front_path: str, side_path: str, height: float, gender: str, client_name: str, user_id: str):
