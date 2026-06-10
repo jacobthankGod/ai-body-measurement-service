@@ -1257,26 +1257,6 @@
         } catch (err) { btn.disabled = false; }
       });
 
-      document.getElementById('shareForm').addEventListener('submit', async (e) => {
-        e.preventDefault();
-        const btn = document.getElementById('btnSendInvite');
-        btn.disabled = true; btn.textContent = 'SENDING...';
-
-        const fd = new FormData();
-        fd.append('merchant_id', userId);
-        fd.append('customer_email', document.getElementById('shareEmail').value);
-        fd.append('client_name', document.getElementById('shareName').value);
-
-        try {
-          const res = await fetch('/api/v2/share/send-email', { method: 'POST', body: fd });
-          if(res.ok) {
-            alert("Scan invitation sent successfully!");
-            document.getElementById('shareModal').classList.remove('active');
-          } else { alert("Email Handshake Failed. Check SendGrid Config."); }
-        } catch(e) { alert("Sync Error."); }
-        finally { btn.disabled = false; btn.textContent = 'Send Scan Invitation'; }
-      });
-
       document.getElementById('btnSignOut').onclick = async () => { await window.KORRA_DB.auth.signOut(); window.location.href = '/signin'; };
 
       // --- SETTINGS ACTIONS ---
