@@ -428,10 +428,13 @@
       if (head.visibility < 0.5 || leftAnkle.visibility < 0.5 || rightAnkle.visibility < 0.5) {
         feedback = "Step back: Head and feet must be visible.";
         aligned = false;
-      } else if (activeCameraType === 'front') {
-        const armDistance = Math.abs(leftWrist.x - leftHip.x);
-        if (armDistance < 0.1) {
-          feedback = "A-POSE: Move arms away from your sides.";
+} else if (activeCameraType === 'front') {
+        // Check BOTH arms must be away from body for A-POSE
+        const leftArmDist = Math.abs(leftWrist.x - leftHip.x);
+        const rightArmDist = Math.abs(rightWrist.x - rightHip.x);
+        const minArmDist = 0.15; // Both arms must be at least 15% from hips
+        if (leftArmDist < minArmDist || rightArmDist < minArmDist) {
+          feedback = "A-POSE: Spread arms away from your body.";
           aligned = false;
         }
       }
@@ -449,10 +452,10 @@
 
 // Draw user skeleton - Vibrant Mint (#57D7C0) for accurate, Pure White (#FFFFFF) for inaccurate
       ctx.strokeStyle = aligned ? "#57D7C0" : "#FFFFFF";
-      ctx.lineWidth = aligned ? 12 : 8; // Thicker 12px for accurate, 8px for inaccurate
+ctx.lineWidth = aligned ? 6 : 4; // Sleeker lines: 6px accurate, 4px inaccurate - no glow
       ctx.lineCap = "round";
-      ctx.shadowBlur = aligned ? 30 : 0; // Strong glow for accurate pose
-      ctx.shadowColor = "#57D7C0";
+      ctx.shadowBlur = 0; // No glow
+      ctx.shadowColor = "transparent";
 
       const connections = [ [11, 12], [11, 13], [13, 15], [12, 14], [14, 16], [11, 23], [12, 24], [23, 24], [23, 25], [25, 27], [24, 26], [26, 28] ];
       connections.forEach(([i, j]) => {
