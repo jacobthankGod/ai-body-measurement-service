@@ -63,3 +63,13 @@ async def check_and_decrement_credits(user_id: str):
             return True
         return False
     except: return False
+
+async def refund_credit(user_id: str):
+    """Adds 1 credit back to the user account (Phase 20 Refund Protocol)."""
+    client = DatabaseService.get_client()
+    try:
+        res = client.table("profiles").select("credits").eq("id", user_id).single().execute()
+        credits = res.data.get('credits', 0) if res.data else 0
+        client.table("profiles").update({"credits": credits + 1}).eq("id", user_id).execute()
+        return True
+    except: return False

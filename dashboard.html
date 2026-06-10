@@ -1222,6 +1222,7 @@
                     <div><span style="font-size:10px; color:var(--Neutral-500)">Waist:</span> <b style="color:var(--Mint)">${latest.measurements?.['Waist Round'] || '--'}cm</b></div>
                   </div>
                   ${scans.length > 1 ? `<div style="font-size:9px; margin-top:8px; color:${changeColor}">Waist Drift: ${change > 0 ? '+' : ''}${change}cm since start</div>` : ''}
+                  ${scans.length > 2 ? `<div style="font-size:8px; margin-top:4px; color:var(--Neutral-500); opacity:0.7">GROWTH FORECAST (30d): ${ (change / (scans.length-1)).toFixed(1) }cm projection</div>` : ''}
                 </div>
 
                 <div style="display:grid; grid-template-columns: 1fr 1fr; gap:12px; margin-bottom:12px">

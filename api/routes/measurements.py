@@ -253,10 +253,19 @@ async def run_extraction_task(task_id: str, front_bytes: bytes, side_bytes: byte
         update_task(task_id, result)
         logger.info(f"✅ [TASK {task_id}] Process returned control to main server.")
 
+        if result.get("status") == "failed":
+            from middleware.subscription_check import refund_credit
+            await refund_credit(user_id)
+            logger.info(f"♻️ [TASK {task_id}] Credit refunded due to AI core rejection.")
+
     except Exception as e:
         error_msg = f"ORCHESTRATOR_CRASH: {str(e)}"
         logger.error(f"❌ ORCHESTRATOR FAILED: {error_msg}")
         update_task(task_id, { "status": "failed", "error": error_msg })
+
+        # PHASE 20: REFUND PROTOCOL
+        from middleware.subscription_check import refund_credit
+        await refund_credit(user_id)
 
 @router.post("/measurements/extract")
 async def start_extraction(
