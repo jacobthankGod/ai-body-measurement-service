@@ -1,102 +1,95 @@
 /**
- * KORRA Export Engine | Block 5: Portability
- * =========================================
- * Industrial-grade PDF and CSV generation for digital biometrics.
- * Formatted for Master Artisan Workshop floors.
+ * KORRA Export Engine | Phase 5: Multi-Angle Intelligence
+ * ====================================================
+ * High-fidelity PDF and Image extraction suite.
  */
 
 window.KORRA_EXPORT = {
+    pdf: function(clientName, measurements, gender, height) {
+        console.log("📄 Generating Clinical PDF...");
+        const doc = new jspdf.jsPDF();
 
-    pdf: async function(clientName, measurements, gender, height) {
-        const { jsPDF } = window.jspdf;
-        const doc = new jsPDF();
-
-        // 1. Branding & Header (Obsidian & Mint Style)
-        doc.setFillColor(0, 0, 0); // Obsidian
+        // Brand Header
+        doc.setFillColor(0, 0, 0);
         doc.rect(0, 0, 210, 40, 'F');
-
         doc.setTextColor(87, 215, 192); // Mint
-        doc.setFontSize(28);
-        doc.setFont("helvetica", "bold");
-        doc.text("KORRA AI", 20, 25);
-
-        doc.setTextColor(255, 255, 255);
+        doc.setFontSize(24);
+        doc.text("KORRA", 20, 25);
         doc.setFontSize(10);
-        doc.text("DIGITAL ARTISAN INFRASTRUCTURE", 20, 32);
+        doc.text("BIOMETRIC PASSPORT / CLINICAL GRADE", 20, 32);
 
-        // 2. Client Profile
+        // Subject Info
         doc.setTextColor(0, 0, 0);
         doc.setFontSize(16);
-        doc.text("Technical Measurement Sheet", 20, 55);
-
+        doc.text(`Subject: ${clientName}`, 20, 55);
         doc.setFontSize(10);
-        doc.setTextColor(100, 100, 100);
-        doc.text(`CLIENT: ${clientName.toUpperCase()}`, 20, 65);
-        doc.text(`GENDER: ${gender.toUpperCase()}  |  HEIGHT: ${height}cm`, 20, 70);
-        doc.text(`DATE: ${new Date().toLocaleDateString()}`, 20, 75);
+        doc.text(`Protocol: ±1cm Precision AI Extraction`, 20, 62);
+        doc.text(`Gender: ${gender} | Height: ${height}cm`, 20, 68);
+        doc.text(`Date: ${new Date().toLocaleDateString()}`, 20, 74);
 
-        // 3. Measurement Grid
+        // Measurements Table
         let y = 90;
-        doc.setDrawColor(230, 230, 230);
-        doc.line(20, y - 5, 190, y - 5);
-
         doc.setFontSize(12);
-        doc.setTextColor(0, 0, 0);
+        doc.setTextColor(80, 80, 80);
 
-        const keys = Object.keys(measurements);
-        keys.forEach((key, index) => {
-            const val = measurements[key];
-            doc.text(`${key}:`, 25, y);
-            doc.setFont("helvetica", "bold");
-            doc.text(`${val} cm`, 100, y);
-            doc.setFont("helvetica", "normal");
-
-            doc.line(20, y + 3, 190, y + 3);
-            y += 10;
-
-            // Handle page overflow if many measurements
-            if (y > 270) {
-                doc.addPage();
-                y = 20;
+        Object.entries(measurements).forEach(([key, val]) => {
+            if (typeof val === 'number') {
+                doc.text(`${key}:`, 20, y);
+                doc.setTextColor(0, 0, 0);
+                doc.text(`${val} cm`, 150, y);
+                doc.setTextColor(80, 80, 80);
+                y += 10;
+                if (y > 270) { doc.addPage(); y = 20; }
             }
         });
 
-        // 4. Footer
-        doc.setFontSize(8);
-        doc.setTextColor(150, 150, 150);
-        doc.text("VERIFIED BY KORRA VOLUMETRIC ENGINE V2.1.2 | London • Lagos", 20, 285);
-
-        doc.save(`KORRA_MEASUREMENTS_${clientName.replace(/\s+/g, '_')}.pdf`);
+        doc.save(`korra_passport_${clientName.replace(/\s+/g, '_')}.pdf`);
     },
 
-    csv: function(dataArray) {
-        // Implementation for batch CSV export
-        let csvContent = "data:text/csv;charset=utf-8,";
-        csvContent += "Client,Gender,Height,Chest,Waist,Hips,Shoulder,Inseam\n";
+    /**
+     * PHASE 5: MULTI-ANGLE SNAPSHOTS
+     * Captures 4 angles from a given visualizer instance.
+     */
+    captureMultiAngle: async function(viz, clientName) {
+        console.log("📸 Executing Multi-Angle Forensic Capture...");
+        const angles = [
+            { name: 'Front', y: Math.PI },
+            { name: 'Back', y: 0 },
+            { name: 'Left', y: Math.PI / 2 },
+            { name: 'Right', y: -Math.PI / 2 }
+        ];
 
-        dataArray.forEach(row => {
-            const m = row.measurements;
-            csvContent += `${row.client_name},${row.gender},${row.height},${m['Chest Round']},${m['Waist Round']},${m['Hip Round']},${m['Shoulder']},${m['Inseam']}\n`;
-        });
+        const zip = []; // For now we'll just download 4 files or one combined PDF
+        const originalRotation = viz.mesh.rotation.y;
+        viz.isInteracting = true; // Pause auto-rotate
 
-        const encodedUri = encodeURI(csvContent);
-        const link = document.createElement("a");
-        link.setAttribute("href", encodedUri);
-        link.setAttribute("download", "KORRA_BATCH_EXPORT.csv");
-        document.body.appendChild(link);
-        link.click();
-    },
+        const doc = new jspdf.jsPDF('l', 'mm', 'a4');
+        doc.setFillColor(0, 0, 0);
+        doc.rect(0, 0, 297, 210, 'F');
+        doc.setTextColor(87, 215, 192);
+        doc.text(`DIAGNOSTIC REPORT: ${clientName}`, 10, 15);
 
-    obj: function(meshUrl, clientName) {
-        if (!meshUrl) {
-            alert("No physical 3D twin found for this scan.");
-            return;
+        for (let i = 0; i < angles.length; i++) {
+            viz.mesh.rotation.y = angles[i].y;
+            viz.renderer.render(viz.scene, viz.camera);
+            const imgData = viz.renderer.domElement.toDataURL('image/png');
+
+            const x = 10 + (i * 70);
+            doc.addImage(imgData, 'PNG', x, 30, 65, 120);
+            doc.setFontSize(8);
+            doc.text(angles[i].name, x + 25, 160);
         }
-        const link = document.createElement("a");
-        link.href = meshUrl;
-        link.download = `KORRA_MESH_${clientName.replace(/\s+/g, '_')}.obj`;
-        document.body.appendChild(link);
+
+        viz.mesh.rotation.y = originalRotation;
+        viz.isInteracting = false;
+        doc.save(`korra_diagnostic_${clientName}.pdf`);
+    },
+
+    obj: function(url, name) {
+        if(!url) return;
+        const link = document.createElement('a');
+        link.href = url;
+        link.download = `korra_mesh_${name}.obj`;
         link.click();
-        document.body.removeChild(link);
     }
 };

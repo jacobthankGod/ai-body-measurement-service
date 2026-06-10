@@ -1,7 +1,7 @@
 /**
- * KORRA 3D Visualizer | Phase 4: Clinical Transparency
+ * KORRA 3D Visualizer | Phase 5-15 Evolution
  * ====================================================
- * High-authority rendering engine with heatmap and skeletal landmark support.
+ * High-authority rendering engine with glow effects and multi-instance support.
  */
 
 class KorraVisualizer {
@@ -20,7 +20,7 @@ class KorraVisualizer {
     }
 
     init(containerId) {
-        console.log(`🔍 [PHASE 4] Initializing 3D Viewport: ${containerId}`);
+        console.log(`🔍 [EVOLUTION] Initializing 3D Viewport: ${containerId}`);
         const container = document.getElementById(containerId);
         if (!container) return;
 
@@ -32,7 +32,7 @@ class KorraVisualizer {
         this.camera.position.set(0, 1.0, 3.0);
         this.camera.lookAt(0, 1, 0);
 
-        this.renderer = new THREE.WebGLRenderer({ antialias: true, alpha: true });
+        this.renderer = new THREE.WebGLRenderer({ antialias: true, alpha: true, preserveDrawingBuffer: true });
         this.renderer.setSize(container.clientWidth, container.clientHeight);
         this.renderer.setPixelRatio(window.devicePixelRatio);
         container.innerHTML = '';
@@ -149,13 +149,16 @@ class KorraVisualizer {
         geometry.computeVertexNormals();
         geometry.center();
 
+        // PHASE 8: VIBRANT GLOW SHADER MATERIAL
         const material = new THREE.MeshPhongMaterial({
             color: 0x57D7C0,
             wireframe: true,
             transparent: true,
             opacity: 0.9,
             shininess: 100,
-            side: THREE.DoubleSide
+            side: THREE.DoubleSide,
+            emissive: 0x57D7C0,
+            emissiveIntensity: 0.5
         });
 
         if (this.mesh) this.scene.remove(this.mesh);
@@ -182,23 +185,18 @@ class KorraVisualizer {
     renderLandmarks(landmarks, modelSize) {
         if (this.landmarksGroup) this.scene.remove(this.landmarksGroup);
         this.landmarksGroup = new THREE.Group();
-
         const dotGeo = new THREE.SphereGeometry(0.02, 16, 16);
         const dotMat = new THREE.MeshBasicMaterial({ color: 0xFFFFFF });
 
-        // Landmarks from HMR are usually 24 SMPL joints
-        // We'll iterate and place them. They need to be centered and rotated to match the mesh center()
-        // For simplicity, we assume they are already normalized or we use a basic skeleton
         Object.values(landmarks).forEach(p => {
             if (p.x !== undefined) {
                 const dot = new THREE.Mesh(dotGeo, dotMat);
-                // Rotate and offset logic to match mesh center()
                 dot.position.set(-p.x, -p.y + (modelSize.y/2), -p.z);
                 this.landmarksGroup.add(dot);
             }
         });
 
-        this.landmarksGroup.visible = false; // Hidden by default
+        this.landmarksGroup.visible = false;
         this.scene.add(this.landmarksGroup);
     }
 
@@ -231,7 +229,15 @@ class KorraVisualizer {
         geometry.computeVertexNormals();
         geometry.center();
 
-        const material = new THREE.MeshPhongMaterial({ vertexColors: true, wireframe: false, transparent: true, opacity: 0.8, side: THREE.DoubleSide });
+        const material = new THREE.MeshPhongMaterial({
+            vertexColors: true,
+            wireframe: false,
+            transparent: true,
+            opacity: 0.8,
+            side: THREE.DoubleSide,
+            emissive: 0x222222,
+            emissiveIntensity: 0.2
+        });
         if (this.mesh) this.scene.remove(this.mesh);
         this.mesh = new THREE.Mesh(geometry, material);
         this.mesh.rotation.x = Math.PI; this.mesh.rotation.y = Math.PI;
