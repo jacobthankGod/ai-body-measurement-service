@@ -1171,13 +1171,13 @@ if (data.mesh_url) {
                                 window.KORRA_VIZ.loadMesh(data.mesh_url);
                             } else {
                                 // FORENSIC FIX: Handle new debug object structure
-                                let conflictMsg = "NULL_MESH_HANDSHAKE";
+let conflictMsg = "NULL_MESH_HANDSHAKE";
                                 if (typeof data.debug === 'object' && data.debug !== null) {
                                     conflictMsg = data.debug.hmr_error || data.debug.mesh_url || JSON.stringify(data.debug);
                                     console.warn(`⚠️ KORRA: Layer ${data.debug.layer} completed but mesh_url NULL. Error: ${conflictMsg}`);
                                 } else if (typeof data.debug === 'string') {
                                     conflictMsg = data.debug;
-                                    console.warn(`⚠️ KORRA: Task complete but mesh_url is NULL. Conflict: ${conflict}`);
+                                    console.warn(`⚠️ KORRA: Task complete but mesh_url is NULL. Conflict: ${conflictMsg}`);
                                 }
 console.warn(`⚠️ KORRA: AI CONFLICT: ${conflictMsg}`);
                                 adminLog(`AI CONFLICT: ${conflictMsg}`);
