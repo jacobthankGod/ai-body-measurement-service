@@ -149,16 +149,13 @@ class KorraVisualizer {
         geometry.computeVertexNormals();
         geometry.center();
 
-        // PHASE 8: VIBRANT GLOW SHADER MATERIAL
         const material = new THREE.MeshPhongMaterial({
             color: 0x57D7C0,
             wireframe: true,
             transparent: true,
             opacity: 0.9,
             shininess: 100,
-            side: THREE.DoubleSide,
-            emissive: 0x57D7C0,
-            emissiveIntensity: 0.5
+            side: THREE.DoubleSide
         });
 
         if (this.mesh) this.scene.remove(this.mesh);
