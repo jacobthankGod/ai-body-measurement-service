@@ -32,8 +32,21 @@ class FitDiagnostics:
 
         # Standard bespoke rule: +4cm for slim fit, +8cm for regular
         ease_values = {
-            "chest_ease": 4.0 if body_shape == "Hourglass" else 6.0,
+            "chest_ease": 4.0 if "Hourglass" in body_shape else 6.0,
             "waist_ease": 2.0 if waist < chest else 4.0,
             "hip_ease": 4.0
         }
         return ease_values
+
+    @staticmethod
+    def recommend_fabrics(body_shape: str) -> list:
+        """Phase 36: Suggest fabrics based on body volume and silhouette."""
+        if "Inverted Triangle" in body_shape:
+            return ["Heavy Wool (Structure)", "Corduroy", "Structured Cotton"]
+        if "Hourglass" in body_shape:
+            return ["Lightweight Linen", "Silk Crepe", "Stretch Poplin"]
+        if "Rectangle" in body_shape:
+            return ["Textured Tweed", "Heavy Jersey", "Gabardine"]
+        if "Pear" in body_shape:
+            return ["Flowy Rayon", "Lightweight Wool", "Chiffon"]
+        return ["Universal Twill", "Standard Wool", "Oxford Cotton"]

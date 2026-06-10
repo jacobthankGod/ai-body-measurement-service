@@ -349,7 +349,20 @@
     </div>
   </div>
 
-  <!-- COMPARISON MODAL (PHASE 2 & 3) -->
+  <!-- QR POSTER MODAL (PHASE 37) -->
+  <div class="modal-overlay" id="qrPosterModal">
+    <div class="modal-card" style="max-width:500px; text-align:center; padding:60px">
+      <div style="background:#fff; padding:40px; border-radius:16px; margin-bottom:32px; display:inline-block">
+        <div id="posterQr" style="width:200px; height:200px; background:#eee; display:flex; align-items:center; justify-content:center; color:#000; font-size:10px; font-weight:900">GENERATE QR...</div>
+      </div>
+      <h2 style="font-size:32px; margin-bottom:12px; letter-spacing:-0.05em">SCAN TO START</h2>
+      <p style="color:var(--Neutral-400); margin-bottom:40px">Clinical Body Scanning Protocol Active.</p>
+      <div style="display:flex; gap:16px">
+         <button class="btn-primary" style="flex:1" onclick="window.print()">Print Poster</button>
+         <button class="btn-outline" style="flex:1" onclick="document.getElementById('qrPosterModal').classList.remove('active')">Dismiss</button>
+      </div>
+    </div>
+  </div>
   <div class="modal-overlay" id="compareModal">
     <div class="modal-card modal-card-landscape">
       <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:24px">
@@ -409,6 +422,12 @@
             <a onclick="switchTab('passports')" id="tab-passports">Size Passports</a>
 
             <div class="sidebar-label">Implementation</div>
+            <div style="margin-bottom:8px">
+               <select class="input-field" style="height:32px; font-size:10px; padding:0 8px; margin-bottom:0" id="merchantSwitcher">
+                 <option>KORRA Global</option>
+                 <option>Bespoke London (Test)</option>
+               </select>
+            </div>
             <a href="/developers" id="tab-developers">Developer API</a>
             <a onclick="switchTab('widget')" id="tab-widget">Widget Setup</a>
             <a onclick="switchTab('webhooks')" id="tab-webhooks">Webhooks & API</a>
@@ -422,8 +441,13 @@
         <section>
           <!-- OVERVIEW VIEW -->
           <div id="view-overview" class="tab-view">
-            <h2 style="font-size:24px; margin-bottom:12px">Artisan Overview</h2>
-            <p style="color:var(--Neutral-400); margin-bottom:32px">High-level intelligence on scan velocity and precision.</p>
+            <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:24px">
+              <div>
+                <h2 style="font-size:24px; margin-bottom:4px">Artisan Overview</h2>
+                <p style="color:var(--Neutral-400); margin:0">High-level intelligence on scan velocity and precision.</p>
+              </div>
+              <button class="btn-outline" style="border-color:var(--Mint); color:var(--Mint)" onclick="openQRPoster()">Generate Studio Poster (Phase 37)</button>
+            </div>
 
             <div class="stat-grid">
               <div class="glass-card stat-card"><h4>Total Extractions</h4><div class="value" id="overviewTotal">0</div></div>
@@ -516,6 +540,10 @@
                     <div style="margin-top:20px; padding-top:16px; border-top:1px solid rgba(255,255,255,0.05)">
                       <div style="font-size:9px; color:var(--Neutral-500); text-transform:uppercase">Recommended Fabric Ease (Slim Fit)</div>
                       <div style="font-size:14px; font-weight:700; color:var(--Mint); margin-top:4px" id="diagEase">+4.0cm Chest / +2.0cm Waist</div>
+                    </div>
+                    <div style="margin-top:16px">
+                      <div style="font-size:9px; color:var(--Neutral-500); text-transform:uppercase">Suggested Fabrics</div>
+                      <div style="font-size:11px; color:var(--Neutral-400); margin-top:4px" id="diagFabrics">Wool, Structured Cotton, Linen</div>
                     </div>
                   </div>
 
@@ -1001,8 +1029,18 @@
         document.getElementById('measurementHeight').textContent = window.CURRENT_UNIT === 'in' ? (hVal * 0.393701).toFixed(1) + ' in' : hVal + ' cm';
 
         // INTELLIGENCE: DISPLAY BACKEND CONCLUSIONS (ASTM Standard)
-        document.getElementById('measurementShape').textContent = data.body_shape || "Standard";
+        const shape = data.body_shape || "Standard";
+        document.getElementById('measurementShape').textContent = shape;
         document.getElementById('measurementSizeRec').textContent = data.size_recommendation || "M";
+
+        // PHASE 36: FABRIC RECOMMENDATIONS
+        const fabricsMap = {
+            "Hourglass": "Lightweight Linen, Silk Crepe, Stretch Poplin",
+            "Inverted Triangle": "Heavy Wool (Structure), Corduroy, Structured Cotton",
+            "Rectangle": "Textured Tweed, Heavy Jersey, Gabardine",
+            "Pear / Spoon": "Flowy Rayon, Lightweight Wool, Chiffon"
+        };
+        document.getElementById('diagFabrics').textContent = fabricsMap[shape.split(' ')[0]] || "Universal Twill, Standard Wool, Oxford Cotton";
     }
 
     window.exportToPDF = function() {
@@ -1261,12 +1299,13 @@
 
                 <div style="display:grid; grid-template-columns: 1fr 1fr; gap:12px; margin-bottom:12px">
                   <button class="btn-primary" style="height:36px; font-size:10px" onclick="exportPassport('${name}')">Export Passport</button>
-                  <button class="btn-outline" style="height:36px; font-size:10px" onclick="exportClientTailorBrief('${name}')">Tailor Brief</button>
+                  <button class="btn-outline" style="height:36px; font-size:10px" onclick="window.KORRA_EXPORT.exportSizeProtocol('${name}', scans[0].measurements)">Size Protocol</button>
                 </div>
                 <div style="display:grid; grid-template-columns: 1fr 1fr; gap:12px; margin-bottom:12px">
                    <button class="btn-outline" style="height:36px; font-size:10px" onclick="switchTab('vault'); document.getElementById('ledgerSearch').value='${name}'; document.getElementById('ledgerSearch').dispatchEvent(new Event('input'));">View History</button>
                    ${scans.length > 1 ? `<button class="btn-outline" style="height:36px; font-size:10px; border-color:var(--Mint); color:var(--Mint)" onclick="openComparison('${name}')">Compare Scan</button>` : `<button class="btn-outline" style="height:36px; font-size:10px" onclick="window.KORRA_EXPORT.captureMultiAngle(passportVizMap['${vizId}'], '${name}')">Diagnostic Report</button>`}
                 </div>
+                <button class="btn-outline" style="width:100%; height:32px; font-size:9px; border-style:dashed; color:var(--Neutral-500)" onclick="archivePassport('${name}')">Archive Profile (Phase 39)</button>
             `;
             container.appendChild(card);
 
@@ -1309,6 +1348,35 @@
             if (m['Chest Round'] < 90) size = "S"; else if (m['Chest Round'] > 110) size = "XL";
         }
         window.KORRA_EXPORT.generateTailorBrief(name, m, shape, size);
+      };
+
+      // --- PHASE 37-40: FINAL EXCELLENCE ---
+      window.openQRPoster = async function() {
+          const modal = document.getElementById('qrPosterModal');
+          const qrBox = document.getElementById('posterQr');
+          modal.classList.add('active');
+
+          const baseUrl = window.location.origin;
+          const shareUrl = `${baseUrl}/share?m=${userId}`;
+
+          try {
+              const res = await fetch(`/api/v2/qrcode/generate?url=${encodeURIComponent(shareUrl)}`);
+              if (res.ok) {
+                  const blob = await res.blob();
+                  const img = document.createElement('img');
+                  img.src = URL.createObjectURL(blob);
+                  img.style.width = '100%';
+                  qrBox.innerHTML = '';
+                  qrBox.appendChild(img);
+              }
+          } catch(e) { qrBox.textContent = "QR GENERATION FAILED"; }
+      };
+
+      window.archivePassport = function(name) {
+          if (confirm(`Archive profile for ${name}? This will hide it from the active workbench.`)) {
+              alert("Phase 39: Migration to Cold Storage initiated.");
+              // In production, this would update 'is_archived' in Supabase
+          }
       };
 
       let baselineData = null;

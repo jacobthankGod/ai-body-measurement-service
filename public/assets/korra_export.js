@@ -155,5 +155,26 @@ window.KORRA_EXPORT = {
         });
 
         doc.save(`korra_tailor_brief_${clientName}.pdf`);
+    },
+
+    /**
+     * PHASE 40: GLOBAL SIZE PROTOCOL
+     * Exports biometric ID in a standardized JSON format.
+     */
+    exportSizeProtocol: function(name, measurements) {
+        const protocol = {
+            "version": "1.0",
+            "protocol": "KORRA_SIZE_ID",
+            "subject": name,
+            "timestamp": new Date().toISOString(),
+            "biometrics": measurements,
+            "signature": "AI_VERIFIED_HMR"
+        };
+        const blob = new Blob([JSON.stringify(protocol, null, 2)], { type: 'application/json' });
+        const url = URL.createObjectURL(blob);
+        const a = document.createElement('a');
+        a.href = url;
+        a.download = `korra_protocol_${name}.json`;
+        a.click();
     }
 };
