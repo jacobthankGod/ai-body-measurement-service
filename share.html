@@ -199,6 +199,29 @@
     let alignmentStartTime = 0;
     let autoSnapTriggered = false;
 
+    // --- TTS ENGINE ---
+    let lastSpokenText = "";
+    let lastSpokenTime = 0;
+
+    function speak(text, force = false) {
+      if (!window.speechSynthesis) return;
+      const now = Date.now();
+      if (!force && text === lastSpokenText && now - lastSpokenTime < 3000) return;
+
+      window.speechSynthesis.cancel();
+      const utterance = new SpeechSynthesisUtterance(text);
+      utterance.rate = 1.0;
+      utterance.pitch = 1.0;
+
+      // Select premium voice if available
+      const voices = window.speechSynthesis.getVoices();
+      utterance.voice = voices.find(v => v.name.includes('Google') || v.name.includes('Siri')) || voices[0];
+
+      window.speechSynthesis.speak(utterance);
+      lastSpokenText = text;
+      lastSpokenTime = now;
+    }
+
     // --- AI CAMERA LOGIC ---
     async function openCamera(type) {
       activeCameraType = type;
@@ -252,7 +275,9 @@
       ctx.clearRect(0, 0, canvas.width, canvas.height);
 
       if (!results.poseLandmarks) {
-        msg.textContent = "Searching for subject...";
+        const feedback = "Searching for subject...";
+        msg.textContent = feedback;
+        speak(feedback);
         msg.style.background = "rgba(0, 0, 0, 0.8)";
         msg.style.color = "#fff";
         msg.style.borderColor = "var(--Mint)";
@@ -295,6 +320,7 @@
       if (aligned) {
         if (alignmentStartTime === 0) {
           alignmentStartTime = Date.now();
+          speak("Perfect, hold still.");
         } else if (Date.now() - alignmentStartTime > 1500 && !autoSnapTriggered) {
           autoSnapTriggered = true;
           snapPhoto();
@@ -305,6 +331,7 @@
         else feedback = "Processing...";
       } else {
         alignmentStartTime = 0;
+        speak(feedback);
       }
 
       msg.textContent = feedback;
@@ -399,6 +426,8 @@
       img.src = dataUrl;
       img.style.display = 'block';
 
+      speak(activeCameraType === 'front' ? "Front pose captured. Now turn for your side profile." : "Side profile captured. Processing your results.", true);
+
       // Convert to blob and assign to file input (trick)
       fetch(dataUrl)
         .then(res => res.blob())
@@ -415,6 +444,10 @@
     function goToStep(step) {
       document.querySelectorAll('.step-view').forEach(v => v.classList.remove('active'));
       document.getElementById('step-' + step).classList.add('active');
+
+      if (step === 'scan') {
+        speak("Clinical Protocol. Stand 2 meters away from the camera. Ensure your full body from head to toe is in frame. Use a neutral, well-lit background.", true);
+      }
     }
 
     function preview(input, id) {
@@ -491,6 +524,8 @@ const interval = setInterval(async () => {
             <div style="display:flex; justify-content:space-between"><span>Hips:</span> <b style="color:var(--Mint)">${b['Hip Round']}cm</b></div>
             <div style="display:flex; justify-content:space-between"><span>Shoulder:</span> <b style="color:var(--Mint)">${b['Shoulder']}cm</b></div>
         `;
+
+        speak(`Handshake locked. Your chest is ${b['Chest Round']} centimeters, waist is ${b['Waist Round']} centimeters, and hips are ${b['Hip Round']} centimeters.`, true);
 
         if (window.KORRA_VIZ) {
             const viewport = document.getElementById('share-3d-viewport');

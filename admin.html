@@ -490,6 +490,26 @@
     let alignmentStartTime = 0;
     let autoSnapTriggered = false;
 
+    // --- TTS ENGINE ---
+    let lastSpokenText = "";
+    let lastSpokenTime = 0;
+
+    function speak(text, force = false) {
+      if (!window.speechSynthesis) return;
+      const now = Date.now();
+      if (!force && text === lastSpokenText && now - lastSpokenTime < 3000) return;
+
+      window.speechSynthesis.cancel();
+      const utterance = new SpeechSynthesisUtterance(text);
+      utterance.rate = 1.0;
+      utterance.pitch = 1.0;
+      const voices = window.speechSynthesis.getVoices();
+      utterance.voice = voices.find(v => v.name.includes('Google') || v.name.includes('Siri')) || voices[0];
+      window.speechSynthesis.speak(utterance);
+      lastSpokenText = text;
+      lastSpokenTime = now;
+    }
+
     // --- AI CAMERA LOGIC (Ported from share.html) ---
     async function openCamera(type) {
       activeCameraType = type;
@@ -539,7 +559,9 @@
       ctx.clearRect(0, 0, canvas.width, canvas.height);
 
       if (!results.poseLandmarks) {
-        msg.textContent = "Searching for subject...";
+        const feedback = "Searching for subject...";
+        msg.textContent = feedback;
+        speak(feedback);
         msg.style.background = "rgba(0, 0, 0, 0.8)";
         msg.style.borderColor = "var(--Mint)";
         isPoseAligned = false;
@@ -581,6 +603,7 @@
       if (aligned) {
         if (alignmentStartTime === 0) {
           alignmentStartTime = Date.now();
+          speak("Perfect, hold still.");
         } else if (Date.now() - alignmentStartTime > 1500 && !autoSnapTriggered) {
           autoSnapTriggered = true;
           snapPhoto();
@@ -591,6 +614,7 @@
         else feedback = "Processing...";
       } else {
         alignmentStartTime = 0;
+        speak(feedback);
       }
 
       msg.textContent = feedback;
@@ -680,6 +704,8 @@
       const dataUrl = canvas.toDataURL('image/jpeg');
       const labelId = activeCameraType === 'front' ? 'adminFrontLabel' : 'adminSideLabel';
       const inputId = activeCameraType === 'front' ? 'adminFrontPhoto' : 'adminSidePhoto';
+
+      speak(activeCameraType === 'front' ? "Front pose captured. Now take your side profile." : "Side profile captured. Analyzing topology.", true);
 
       const label = document.getElementById(labelId);
       const previewImg = label.querySelector('.preview-img');
@@ -1179,6 +1205,8 @@ adminLog("SUCCESS: BIOMETRICS CALCULATED.");
                                     gridLower.innerHTML = lowerBody.map(k => createMetricCard(k, data.measurements[k])).join('');
                                 }
                                 
+                                speak(`Benchmark complete. Subject height is ${heightVal} centimeters. Chest is ${data.measurements['Chest Round']} centimeters.`, true);
+
                                 // Scroll to results
                                 resultsCard.scrollIntoView({behavior: 'smooth', block: 'center'});
                             }

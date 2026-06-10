@@ -371,6 +371,25 @@
     let alignmentStartTime = 0;
     let autoSnapTriggered = false;
 
+    // --- TTS ENGINE ---
+    let lastSpokenText = "";
+    let lastSpokenTime = 0;
+
+    function speak(text, force = false) {
+      if (!window.speechSynthesis) return;
+      const now = Date.now();
+      if (!force && text === lastSpokenText && now - lastSpokenTime < 3000) return;
+      window.speechSynthesis.cancel();
+      const utterance = new SpeechSynthesisUtterance(text);
+      utterance.rate = 1.0;
+      utterance.pitch = 1.0;
+      const voices = window.speechSynthesis.getVoices();
+      utterance.voice = voices.find(v => v.name.includes('Google') || v.name.includes('Siri')) || voices[0];
+      window.speechSynthesis.speak(utterance);
+      lastSpokenText = text;
+      lastSpokenTime = now;
+    }
+
     // --- AI CAMERA LOGIC ---
     async function openCamera(type) {
       activeCameraType = type;
@@ -451,6 +470,7 @@
       if (aligned) {
         if (alignmentStartTime === 0) {
           alignmentStartTime = Date.now();
+          speak("Perfect, hold still.");
         } else if (Date.now() - alignmentStartTime > 1500 && !autoSnapTriggered) {
           autoSnapTriggered = true;
           snapPhoto();
@@ -461,6 +481,7 @@
         else feedback = "Processing...";
       } else {
         alignmentStartTime = 0;
+        speak(feedback);
       }
 
       msg.textContent = feedback;
@@ -531,6 +552,8 @@
       const dataUrl = canvas.toDataURL('image/jpeg');
       const labelId = activeCameraType === 'front' ? 'frontLabel' : 'sideLabel';
       const inputId = activeCameraType === 'front' ? 'frontPhoto' : 'sidePhoto';
+
+      speak(activeCameraType === 'front' ? "Front pose captured. Now take your side profile." : "Side profile captured. Processing your biometrics.", true);
 
       const label = document.getElementById(labelId);
       const previewImg = label.querySelector('.preview-img');
@@ -778,6 +801,8 @@
               window.CURRENT_UNIT = 'cm';
               document.getElementById('measurementResultsCard').style.display = 'block';
               renderMeasurementGrids(data);
+
+              speak(`Handshake locked. Your chest is ${data.measurements['Chest Round']} centimeters, waist is ${data.measurements['Waist Round']} centimeters, and hips are ${data.measurements['Hip Round']} centimeters.`, true);
 
               fetchHistory();
               setTimeout(() => {
