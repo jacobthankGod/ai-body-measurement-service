@@ -359,6 +359,7 @@
             <div class="sidebar-label">Workspace</div>
             <a onclick="switchTab('overview')" id="tab-overview">Overview</a>
             <a onclick="switchTab('vault')" id="tab-vault" class="active">Biometrics Vault</a>
+            <a onclick="switchTab('passports')" id="tab-passports">Size Passports</a>
 
             <div class="sidebar-label">Implementation</div>
             <a href="/developers" id="tab-developers">Developer API</a>
@@ -477,6 +478,20 @@
                   </div>
                   <div id="scanList" style="max-height:800px; overflow-y:auto"></div>
                 </div>
+              </div>
+            </div>
+          </div>
+
+          <!-- SIZE PASSPORTS VIEW -->
+          <div id="view-passports" class="tab-view">
+            <h2 style="font-size:24px; margin-bottom:12px">Global Size Passports</h2>
+            <p style="color:var(--Neutral-400); margin-bottom:32px">Persistent biometric identities. Grouped by unique client profiles.</p>
+
+            <div id="passportGrid" style="display:grid; grid-template-columns: repeat(auto-fill, minmax(300px, 1fr)); gap:24px">
+              <!-- Passport Cards will be injected here -->
+              <div class="glass-card" style="text-align:center; padding:48px; grid-column: 1/-1">
+                <div style="font-size:32px; margin-bottom:16px">📂</div>
+                <div style="color:var(--Neutral-500); font-size:14px">Syncing client identities...</div>
               </div>
             </div>
           </div>
@@ -941,6 +956,7 @@
       if (targetTab) targetTab.classList.add('active');
 
       if (id === 'settings' || id === 'billing' || id === 'overview') loadSettings();
+      if (id === 'passports') renderPassports();
     }
 
     window.copyApiKey = function() {
@@ -1020,6 +1036,62 @@
           </div>
         `).join('');
       }
+
+      function renderPassports() {
+        const container = document.getElementById('passportGrid');
+        if (!masterHistory.length) {
+            container.innerHTML = `<div class="glass-card" style="text-align:center; padding:48px; grid-column: 1/-1"><div style="color:var(--Neutral-500)">No passports found. Start a scan to begin.</div></div>`;
+            return;
+        }
+
+        // Group by Client Name
+        const groups = {};
+        masterHistory.forEach(s => {
+            const name = s.client_name || "Unknown";
+            if (!groups[name]) groups[name] = [];
+            groups[name].push(s);
+        });
+
+        container.innerHTML = Object.entries(groups).map(([name, scans]) => {
+            const latest = scans[0];
+            const first = scans[scans.length - 1];
+            const change = scans.length > 1 ? (latest.measurements?.['Waist Round'] - first.measurements?.['Waist Round']).toFixed(1) : 0;
+            const changeColor = change > 0 ? '#ff4d4d' : change < 0 ? '#57D7C0' : 'var(--Neutral-500)';
+
+            return `
+              <div class="glass-card" style="padding:24px">
+                <div style="display:flex; align-items:center; gap:16px; margin-bottom:20px">
+                  <div style="width:48px; height:48px; background:var(--Mint); border-radius:50%; display:flex; align-items:center; justify-content:center; color:var(--Obsidian); font-weight:900">${name[0]}</div>
+                  <div>
+                    <h5 style="font-size:18px; margin:0">${name}</h5>
+                    <p style="font-size:10px; color:var(--Neutral-500); text-transform:uppercase; letter-spacing:0.1em">${scans.length} Extractions Locked</p>
+                  </div>
+                </div>
+
+                <div style="background:rgba(0,0,0,0.3); border-radius:12px; padding:16px; border:1px solid var(--Glass-Border); margin-bottom:20px">
+                  <div style="font-size:10px; color:var(--Neutral-500); text-transform:uppercase; margin-bottom:8px">Latest Biometrics</div>
+                  <div style="display:grid; grid-template-columns: 1fr 1fr; gap:12px">
+                    <div><span style="font-size:10px; color:var(--Neutral-500)">Chest:</span> <b style="color:var(--Mint)">${latest.measurements?.['Chest Round'] || '--'}cm</b></div>
+                    <div><span style="font-size:10px; color:var(--Neutral-500)">Waist:</span> <b style="color:var(--Mint)">${latest.measurements?.['Waist Round'] || '--'}cm</b></div>
+                  </div>
+                  ${scans.length > 1 ? `<div style="font-size:9px; margin-top:8px; color:${changeColor}">Waist Drift: ${change > 0 ? '+' : ''}${change}cm since start</div>` : ''}
+                </div>
+
+                <div style="display:grid; grid-template-columns: 1fr 1fr; gap:12px">
+                  <button class="btn-primary" style="height:36px; font-size:10px" onclick="exportPassport('${name}')">Export Passport</button>
+                  <button class="btn-outline" style="height:36px; font-size:10px" onclick="switchTab('vault'); document.getElementById('ledgerSearch').value='${name}'; document.getElementById('ledgerSearch').dispatchEvent(new Event('input'));">View History</button>
+                </div>
+              </div>
+            `;
+        }).join('');
+      }
+
+      window.exportPassport = function(name) {
+        const scans = masterHistory.filter(s => s.client_name === name);
+        if (!scans.length) return;
+        const latest = scans[0];
+        window.KORRA_EXPORT.pdf(`Passport: ${name}`, latest.measurements, latest.gender, latest.height);
+      };
 
       function renderAnalytics(data) {
         const ctx = document.getElementById('usageChart').getContext('2d');
