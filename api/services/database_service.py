@@ -65,7 +65,7 @@ class DatabaseService:
         except Exception as e: return None
 
     @classmethod
-    def save_measurement(cls, user_id: str, client_name: str, height: float, gender: str, biometrics: dict, landmarks: dict = None, mesh_url: str = None):
+    def save_measurement(cls, user_id: str, client_name: str, height: float, gender: str, biometrics: dict, landmarks: dict = None, mesh_url: str = None, body_shape: str = None, size_rec: str = None):
         client = cls.get_client()
         if not client: 
             logger.error("❌ DatabaseService: Supabase client is None - ENV variables missing!")
@@ -74,9 +74,10 @@ class DatabaseService:
             payload = {
                 "user_id": user_id, "client_name": client_name, "height": height,
                 "gender": gender, "biometrics": biometrics, "landmarks_3d": landmarks if landmarks else {},
-                "mesh_url": mesh_url, "created_at": datetime.utcnow().isoformat()
+                "mesh_url": mesh_url, "body_shape": body_shape, "size_recommendation": size_rec,
+                "created_at": datetime.utcnow().isoformat()
             }
-            logger.info(f"💾 DatabaseService: Inserting payload for {client_name}, height={height}, gender={gender}")
+            logger.info(f"💾 DatabaseService: Inserting payload for {client_name}, shape={body_shape}, size={size_rec}")
             logger.info(f"💾 Payload keys: {list(payload.keys())}")
             
             response = client.table("measurements").insert(payload).execute()

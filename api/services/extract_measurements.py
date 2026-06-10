@@ -138,15 +138,15 @@ class HMRMasterEngine:
         vertex_path = root / "data" / "customBodyPoints.txt"
         self.vertex_map = self._parse_vertex_indices(vertex_path)
 
-    def extract(self, image: np.ndarray, height_cm: float, gender: str = 'male') -> Tuple[Dict[str, float], Optional[np.ndarray], Optional[dict], Optional[str]]:
+    def extract(self, image: np.ndarray, height_cm: float, gender: str = 'male') -> Tuple[Dict[str, float], Optional[np.ndarray], Optional[dict], Optional[str], Optional[str], Optional[str]]:
         """
         High-Precision Extraction with ABSOLUTE MEMORY ISOLATION.
-        Uses a dedicated TF Graph and Session per request to prevent leaks.
+        Returns: (measurements, vertices, landmark_2d, body_shape, size_rec, error)
         """
         import gc
         tf1 = setup_tf_bridge()
         if not tf1:
-            return self._fallback_ratios(height_cm, gender), None, None, "TensorFlow not found"
+            return self._fallback_ratios(height_cm, gender), None, None, "Standard", "M", "TensorFlow not found"
 
         model = None
         try:
@@ -155,7 +155,6 @@ class HMRMasterEngine:
                 np.bool = bool; np.int = int; np.float = float; np.complex = complex; np.object = object; np.str = str; np.unicode = str
 
             # 2. ISOLATED GRAPH CONTEXT
-            # This is critical for Render 512MB: prevent global graph bloat.
             with tf1.Graph().as_default() as graph:
                 config = tf1.ConfigProto()
                 config.gpu_options.allow_growth = True
@@ -169,7 +168,7 @@ class HMRMasterEngine:
                     model = RunModel(sess=sess)
                     model.prepare()
 
-                    # 4. PREPROCESSING (Aggressive downscaling)
+                    # 4. PREPROCESSING
                     import cv2
                     h, w = image.shape[:2]
                     if max(h, w) > 800:
@@ -202,26 +201,67 @@ class HMRMasterEngine:
                     measurements_3d = self._calculate_from_indices(vertices, height_cm, gender)
                     final_measurements = {key: measurements_3d.get(key, 0.0) for key in (MALE_KEYS if gender == 'male' else FEMALE_KEYS)}
 
+                    # INTELLIGENCE LAYER: CLASSIFICATION
+                    body_shape = self._classify_body_shape(final_measurements, gender)
+                    size_rec = self._calculate_size_recommendation(final_measurements, gender)
+
                     v_min, v_max = np.min(vertices[:, 1]), np.max(vertices[:, 1])
                     scale_to_meters = (height_cm / 100.0) / (v_max - v_min)
                     vertices_scaled = vertices * scale_to_meters
 
-                    # Clear session before exit
                     sess.close()
-
-                    return final_measurements, vertices_scaled, landmark_2d, None
+                    return final_measurements, vertices_scaled, landmark_2d, body_shape, size_rec, None
 
         except Exception as e:
             logger.error(f"❌ HMR ISOLATED CRASH: {e}")
-            traceback.print_exc()
-            return self._fallback_ratios(height_cm, gender), None, None, str(e)
+            return self._fallback_ratios(height_cm, gender), None, None, "Standard", "M", str(e)
         finally:
-            # 7. NUCLEAR MEMORY PURGE
-            logger.info("♻️ HMR: Purging isolated brain and cleaning RAM...")
             if 'model' in locals(): del model
-            if 'sess' in locals(): del sess
-            if 'graph' in locals(): del graph
             gc.collect()
+
+    def _classify_body_shape(self, m: Dict[str, float], gender: str) -> str:
+        """ASTM Standard Body Shape Classification."""
+        c = m.get('Chest Round') or m.get('Bust Round', 0)
+        w = m.get('Waist Round', 0)
+        h = m.get('Hip Round', 0)
+
+        if not (c and w and h): return "Standard"
+
+        # Ratios
+        wh_ratio = w / h
+        cw_ratio = c / w
+        ch_diff = abs(c - h)
+
+        if gender == 'female':
+            if ch_diff <= (0.05 * c) and w < (0.75 * c): return "Hourglass"
+            if h > (1.05 * c) and h > (1.05 * w): return "Pear / Spoon"
+            if c > (1.05 * h): return "Inverted Triangle"
+            if ch_diff <= (0.05 * c) and w >= (0.75 * c): return "Rectangle"
+        else:
+            if c > (1.1 * h): return "Inverted Triangle (Athletic)"
+            if w > (0.9 * c): return "Oval / Apple"
+            if ch_diff <= (0.1 * c): return "Rectangle (Linear)"
+
+        return "Standard / Balanced"
+
+    def _calculate_size_recommendation(self, m: Dict[str, float], gender: str) -> str:
+        """Universal Size Recommendation based on Chest/Bust."""
+        c = m.get('Chest Round') or m.get('Bust Round', 0)
+        if not c: return "M"
+
+        if gender == 'male':
+            if c < 92: return "S"
+            if c < 100: return "M"
+            if c < 108: return "L"
+            if c < 116: return "XL"
+            return "XXL"
+        else:
+            if c < 84: return "XS"
+            if c < 90: return "S"
+            if c < 96: return "M"
+            if c < 102: return "L"
+            if c < 110: return "XL"
+            return "XXL"
 
     def _calculate_from_indices(self, vertices: np.ndarray, user_height_cm: float, gender: str) -> Dict[str, float]:
         # Calculated scaled vertices to real-world CM

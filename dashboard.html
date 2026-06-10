@@ -966,24 +966,9 @@
         const hVal = data.height || data.measurements?.height;
         document.getElementById('measurementHeight').textContent = window.CURRENT_UNIT === 'in' ? (hVal * 0.393701).toFixed(1) + ' in' : hVal + ' cm';
 
-        // INTELLIGENCE: BODY SHAPE CLASSIFICATION
-        const c = data.measurements['Chest Round'], w = data.measurements['Waist Round'], h = data.measurements['Hip Round'];
-        let shape = "Standard";
-        if (c && w && h) {
-            const cwRatio = c / w, whRatio = w / h;
-            if (whRatio < 0.75 && cwRatio < 1.1) shape = "Hourglass";
-            else if (whRatio > 0.85 && cwRatio > 1.15) shape = "Inverted Triangle";
-            else if (whRatio > 0.8 && cwRatio < 1.1) shape = "Rectangle";
-            else if (whRatio < 0.75 && cwRatio < 0.9) shape = "Pear / Spoon";
-        }
-        document.getElementById('measurementShape').textContent = shape;
-
-        // INTELLIGENCE: SIZE RECOMMENDATION
-        let size = "M";
-        if (c < 90) size = "S";
-        else if (c > 110) size = "XL";
-        else if (c > 100) size = "L";
-        document.getElementById('measurementSizeRec').textContent = size;
+        // INTELLIGENCE: DISPLAY BACKEND CONCLUSIONS (ASTM Standard)
+        document.getElementById('measurementShape').textContent = data.body_shape || "Standard";
+        document.getElementById('measurementSizeRec').textContent = data.size_recommendation || "M";
     }
 
     window.exportToPDF = function() {

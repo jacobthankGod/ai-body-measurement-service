@@ -45,7 +45,7 @@ def run_hmr(image_path, height_cm, gender, mesh_path=None):
         engine = HMRMasterEngine()
 
         # Perform extraction
-        measurements, vertices, landmarks, error = engine.extract(img, height_cm, gender)
+        measurements, vertices, landmarks, body_shape, size_rec, error = engine.extract(img, height_cm, gender)
 
         # CLEANUP AGGRESSIVELY
         del img
@@ -68,6 +68,8 @@ def run_hmr(image_path, height_cm, gender, mesh_path=None):
             "status": "completed",
             "measurements": measurements,
             "landmarks": landmarks,
+            "body_shape": body_shape,
+            "size_recommendation": size_rec,
             "mesh_path": str(mesh_path) if mesh_path else None
         }
 

@@ -182,6 +182,8 @@ async def run_extraction_subprocess_cli(task_id: str, front_path: str, side_path
                     if data.get("status") == "completed":
                         measurements = data["measurements"]
                         landmarks = data["landmarks"]
+                        body_shape = data.get("body_shape", "Standard")
+                        size_rec = data.get("size_recommendation", "M")
                         hmr_error = None
                         mesh_url = f"/meshes/{mesh_filename}" if mesh_path.exists() else None
                     else:
@@ -193,6 +195,8 @@ async def run_extraction_subprocess_cli(task_id: str, front_path: str, side_path
                     with open(front_path, 'rb') as f: front_arr = np.array(Image.open(f))
                     with open(side_path, 'rb') as f: side_arr = np.array(Image.open(f))
                     measurements, landmarks = fallback_extract(front_arr, side_arr, height, gender)
+                    body_shape = "Standard"
+                    size_rec = "M"
                     hmr_error = f"Parse Error: {str(e)}"
                     mesh_url = None
 
@@ -204,7 +208,8 @@ async def run_extraction_subprocess_cli(task_id: str, front_path: str, side_path
             from api.services.database_service import DatabaseService
             DatabaseService.save_measurement(
                 user_id=user_id, client_name=client_name, height=height,
-                gender=gender, biometrics=measurements, landmarks=landmarks, mesh_url=mesh_url
+                gender=gender, biometrics=measurements, landmarks=landmarks,
+                mesh_url=mesh_url, body_shape=body_shape, size_rec=size_rec
             )
 
             return {
@@ -212,6 +217,8 @@ async def run_extraction_subprocess_cli(task_id: str, front_path: str, side_path
                 "measurements": measurements,
                 "mesh_url": mesh_url,
                 "landmarks": landmarks,
+                "body_shape": body_shape,
+                "size_recommendation": size_rec,
                 "debug": hmr_error
             }
 
