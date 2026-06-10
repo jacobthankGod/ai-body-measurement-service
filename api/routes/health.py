@@ -20,14 +20,24 @@ MODELS_DIR = BASE_DIR / "models"
 @router.get("/health")
 async def health_check():
     """Returns absolute infrastructure status."""
-    from api.services.extract_measurements import get_brain_integrity
+    try:
+        from api.services.extract_measurements import get_brain_integrity
+        ai_integrity = get_brain_integrity()
+    except Exception as e:
+        logger.error(f"Health integrity check failed: {e}")
+        ai_integrity = {
+            "hmr_weights": False,
+            "smpl_model": False,
+            "vertex_map": False,
+            "error": str(e)
+        }
     return {
         "status": "active",
         "version": "2.1.14",
         "environment": os.environ.get("RENDER_EXTERNAL_URL", "production"),
         "platform": platform.system(),
         "acceleration": "CPU-Stable (Optimized)" if "Linux" in platform.system() else "Native",
-        "ai_integrity": get_brain_integrity(),
+        "ai_integrity": ai_integrity,
         "paths": {
             "root": str(BASE_DIR),
             "models": str(MODELS_DIR)
