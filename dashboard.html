@@ -98,6 +98,37 @@
 
     #offlineOverlay { position: fixed; inset: 0; background: rgba(0,0,0,0.85); backdrop-filter: blur(10px); z-index: 99999999; display: none; align-items: center; justify-content: center; text-align: center; }
     .offline-card { background: var(--Glass); border: 1px solid var(--Glass-Border); padding: 40px; border-radius: 24px; max-width: 320px; color: #fff; }
+
+    /* AI CAMERA GUIDANCE SYSTEM (Ported from share.html) */
+    .pro-tips-card { background: rgba(87, 215, 192, 0.05); border: 1px solid rgba(87, 215, 192, 0.2); border-radius: 20px; padding: 20px; margin-top: 24px; text-align: left; }
+    .pro-tips-card h4 { font-size: 11px; font-weight: 900; color: var(--Mint); text-transform: uppercase; margin-bottom: 12px; display: flex; align-items: center; gap: 8px; }
+    .tip-row { display: flex; gap: 12px; margin-bottom: 10px; font-size: 11px; color: var(--Neutral-400); line-height: 1.4; }
+    .tip-bullet { color: var(--Mint); font-weight: 900; }
+
+    #step-camera { position: fixed; inset: 0; background: #000; z-index: 99999999; display: none; flex-direction: column; }
+    #step-camera.active { display: flex; }
+    .camera-container { flex: 1; position: relative; overflow: hidden; display: flex; align-items: center; justify-content: center; }
+    #camera-video { width: 100%; height: 100%; object-fit: cover; transform: scaleX(-1); }
+    #camera-canvas { position: absolute; inset: 0; width: 100%; height: 100%; z-index: 10; transform: scaleX(-1); }
+    .camera-overlay { position: absolute; inset: 0; z-index: 20; pointer-events: none; display: flex; flex-direction: column; align-items: center; justify-content: space-between; padding: 40px 24px; }
+    .camera-guidance { background: rgba(0,0,0,0.7); backdrop-filter: blur(10px); padding: 12px 24px; border-radius: 99px; border: 1px solid var(--Glass-Border); color: #fff; font-size: 13px; font-weight: 700; text-align: center; }
+    .camera-controls { position: absolute; bottom: 40px; left: 0; right: 0; display: flex; justify-content: center; align-items: center; gap: 32px; z-index: 30; }
+    .shutter-btn { width: 72px; height: 72px; border-radius: 50%; background: #fff; border: 4px solid var(--Mint); cursor: pointer; display: flex; align-items: center; justify-content: center; box-shadow: 0 0 20px rgba(0,0,0,0.5); }
+    .shutter-btn:active { transform: scale(0.9); }
+    .camera-close { position: absolute; top: 40px; right: 24px; width: 40px; height: 40px; border-radius: 50%; background: rgba(0,0,0,0.5); border: 1px solid var(--Glass-Border); color: #fff; display: flex; align-items: center; justify-content: center; cursor: pointer; }
+
+    /* UNICORN POLLING STYLES */
+    .polling-overlay { display: none; flex-direction: column; align-items: center; justify-content: center; margin-top: 24px; padding: 24px; background: rgba(87,215,192,0.05); border-radius: 16px; border: 1px solid var(--Mint); }
+    .polling-bar { width: 100%; height: 4px; background: rgba(255,255,255,0.1); border-radius: 99px; margin-top: 16px; overflow: hidden; }
+    .polling-fill { width: 0%; height: 100%; background: var(--Mint); transition: 0.5s cubic-bezier(0.1, 0, 0.2, 1); }
+
+    .preview-box { width: 100%; height: 120px; border-radius: 12px; border: 1px dashed var(--Glass-Border); display: flex; align-items: center; justify-content: center; overflow: hidden; position: relative; cursor: pointer; }
+    .preview-box span { font-size: 10px; font-weight: 900; color: var(--Neutral-500); text-transform: uppercase; z-index: 1; }
+    .preview-img { position: absolute; inset: 0; width: 100%; height: 100%; object-fit: cover; z-index: 2; display: none; }
+    .preview-box input { display: none; }
+
+    .korra-icon { width: 18px; height: 18px; stroke-width: 2.5; vertical-align: middle; }
+    .unit-toggle div { cursor: pointer; transition: 0.2s; }
   </style>
   <script>
     if (window.top !== window.self) window.top.location.href = window.location.href;
@@ -107,11 +138,90 @@
 
   <div id="loadingOverlay">Syncing Vault...</div>
 
+  <!-- AI CAMERA VIEW -->
+  <div id="step-camera">
+    <div class="camera-container">
+      <video id="camera-video" autoplay playsinline></video>
+      <canvas id="camera-canvas"></canvas>
+      <div class="camera-overlay">
+        <div class="camera-guidance" id="camera-msg">Initializing AI guidance...</div>
+        <div class="camera-close" onclick="closeCamera()">✕</div>
+      </div>
+    </div>
+    <div class="camera-controls">
+      <div class="shutter-btn" onclick="snapPhoto()">
+        <div style="width:56px; height:56px; border-radius:50%; background:var(--Mint); opacity:0.2"></div>
+      </div>
+    </div>
+  </div>
+
   <div id="offlineOverlay">
     <div class="offline-card">
       <div style="font-size: 32px; margin-bottom: 24px;">📡</div>
       <h2 style="font-size: 18px; font-weight: 800; margin-bottom: 12px;">Sync Interrupted</h2>
       <p style="font-size: 12px; color: var(--Neutral-400); line-height: 1.6;">Your internet connection is unstable. KORRA has paused technical handshakes to prevent data corruption.</p>
+    </div>
+  </div>
+
+  <!-- SCAN MODAL -->
+  <div class="modal-overlay" id="scanModal">
+    <div class="modal-card">
+      <h2 style="font-size:24px; margin-bottom:12px">Digital Body Scan</h2>
+      <p style="color:var(--Neutral-400); margin-bottom:32px">Run local AI benchmarks. ±1cm precision protocol active.</p>
+
+      <form id="scanForm">
+        <div style="margin-bottom:20px">
+          <label style="font-size:10px; font-weight:900; color:var(--Neutral-500); display:block; margin-bottom:8px">CLIENT NAME</label>
+          <input type="text" id="scanClientName" class="input-field" style="margin-bottom:0" placeholder="e.g. James" required>
+        </div>
+        <div style="display:grid; grid-template-columns: 1fr 1fr; gap:16px; margin-bottom:20px">
+          <div>
+            <label style="font-size:10px; font-weight:900; color:var(--Neutral-500); display:block; margin-bottom:8px">HEIGHT (CM)</label>
+            <input type="number" id="scanHeight" class="input-field" style="margin-bottom:0" placeholder="180" required>
+          </div>
+          <div>
+            <label style="font-size:10px; font-weight:900; color:var(--Neutral-500); display:block; margin-bottom:8px">GENDER</label>
+            <select id="scanGender" class="input-field" style="margin-bottom:0; appearance:none; cursor:pointer">
+              <option value="male">Male</option>
+              <option value="female">Female</option>
+            </select>
+          </div>
+        </div>
+
+        <div style="display:grid; grid-template-columns: 1fr 1fr; gap:16px; margin-bottom:20px">
+           <div class="preview-box" id="frontLabel" onclick="openCamera('front')">
+             <input type="file" id="frontPhoto" accept="image/*" required onchange="handleFile(this, 'frontLabel')" onclick="event.stopPropagation()">
+             <img class="preview-img" alt="Front Preview">
+             <div style="display:flex; flex-direction:column; align-items:center; z-index:1">
+               <span>Front A-Pose</span>
+               <div style="font-size:8px; color:var(--Mint); margin-top:4px; font-weight:700">TAP TO SNAP</div>
+             </div>
+           </div>
+           <div class="preview-box" id="sideLabel" onclick="openCamera('side')">
+             <input type="file" id="sidePhoto" accept="image/*" required onchange="handleFile(this, 'sideLabel')" onclick="event.stopPropagation()">
+             <img class="preview-img" alt="Side Preview">
+             <div style="display:flex; flex-direction:column; align-items:center; z-index:1">
+               <span>Side Profile</span>
+               <div style="font-size:8px; color:var(--Mint); margin-top:4px; font-weight:700">TAP TO SNAP</div>
+             </div>
+           </div>
+        </div>
+
+        <div class="pro-tips-card">
+          <h4><span style="font-size:14px">✨</span> Pro-Tips for Precision</h4>
+          <div class="tip-row"><span class="tip-bullet">&bull;</span><span><b>The A-Pose:</b> Keep arms 15" away from body. Do not touch your torso.</span></div>
+          <div class="tip-row"><span class="tip-bullet">&bull;</span><span><b>Clothing:</b> Wear form-fitting gym wear. Baggy clothes add fake volume.</span></div>
+          <div class="tip-row"><span class="tip-bullet">&bull;</span><span><b>Contrast:</b> Stand against a plain wall that is a different color than your outfit.</span></div>
+        </div>
+
+        <div id="extractionProgress" class="polling-overlay">
+           <div style="font-size:11px; font-weight:900; color:var(--Mint); letter-spacing:0.1em" id="progressStatus">QUEUEING ASYNC TASK...</div>
+           <div class="polling-bar"><div class="polling-fill" id="progressFill"></div></div>
+        </div>
+
+        <button type="submit" class="btn-primary" style="height:52px; width:100%; margin-top:20px" id="btnRunScan">Extract Biometrics</button>
+        <button type="button" class="btn-outline" style="border:none; width:100%; margin-top:12px" onclick="document.getElementById('scanModal').classList.remove('active')">Dismiss</button>
+      </form>
     </div>
   </div>
 
@@ -160,6 +270,56 @@
           <div id="view-vault" class="tab-view active">
             <div id="dashboard-3d-viewport"><span>3D Digital Twin Viewer</span></div>
 
+            <!-- MEASUREMENT RESULTS CARD (Ported from admin.html) -->
+            <div id="measurementResultsCard" class="glass-card" style="display:none; margin-bottom:48px; background:linear-gradient(135deg, rgba(87,215,192,0.05) 0%, rgba(0,0,0,0.4) 100%)">
+              <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:24px">
+                <h4 style="font-size:16px; font-weight:900; color:var(--Mint); margin:0; display:flex; align-items:center; gap:10px">
+                  <svg class="korra-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><line x1="12" y1="20" x2="12" y2="10"/><line x1="18" y1="20" x2="18" y2="4"/><line x1="6" y1="20" x2="6" y2="16"/></svg>
+                  MEASUREMENT RESULTS
+                </h4>
+                <div style="display:flex; align-items:center; gap:16px">
+                  <div class="unit-toggle" style="background:rgba(255,255,255,0.1); border-radius:20px; padding:2px; display:flex; cursor:pointer" onclick="toggleUnits()">
+                      <div id="unit-cm" style="padding:4px 12px; border-radius:18px; font-size:10px; font-weight:900; background:var(--Mint); color:var(--Teal-900)">CM</div>
+                      <div id="unit-in" style="padding:4px 12px; border-radius:18px; font-size:10px; font-weight:900; color:var(--Neutral-400)">IN</div>
+                  </div>
+                  <div style="font-size:10px; color:var(--Neutral-500)" id="measurementTimestamp"></div>
+                </div>
+              </div>
+
+              <div style="margin-bottom:20px">
+                <h5 style="font-size:11px; font-weight:900; color:#FFFFFF; text-transform:uppercase; margin-bottom:12px; letter-spacing:0.1em">Upper Body</h5>
+                <div id="measurementGridUpper" style="display:grid; grid-template-columns:repeat(3,1fr); gap:8px"></div>
+              </div>
+
+              <div style="margin-bottom:20px">
+                <h5 style="font-size:11px; font-weight:900; color:#FFFFFF; text-transform:uppercase; margin-bottom:12px; letter-spacing:0.1em">Middle Body</h5>
+                <div id="measurementGridMiddle" style="display:grid; grid-template-columns:repeat(3,1fr); gap:8px"></div>
+              </div>
+
+              <div style="margin-bottom:20px">
+                <h5 style="font-size:11px; font-weight:900; color:#FFFFFF; text-transform:uppercase; margin-bottom:12px; letter-spacing:0.1em">Lower Body</h5>
+                <div id="measurementGridLower" style="display:grid; grid-template-columns:repeat(3,1fr); gap:8px"></div>
+              </div>
+
+              <div style="padding:16px; background:rgba(87,215,192,0.1); border-radius:12px; border:1px solid var(--Mint); margin-bottom:20px">
+                <div style="display:flex; justify-content:space-around; text-align:center">
+                  <div>
+                    <div style="font-size:10px; color:var(--Neutral-500); text-transform:uppercase">Target Height</div>
+                    <div style="font-size:20px; font-weight:900; color:var(--Mint)" id="measurementHeight"></div>
+                  </div>
+                  <div>
+                    <div style="font-size:10px; color:var(--Neutral-500); text-transform:uppercase">Profile</div>
+                    <div style="font-size:20px; font-weight:900; color:var(--Mint)" id="measurementGender"></div>
+                  </div>
+                </div>
+              </div>
+
+              <div style="display:flex; gap:12px">
+                <button class="btn-primary" onclick="exportToPDF()">Export PDF</button>
+                <button class="btn-outline" onclick="document.getElementById('measurementResultsCard').style.display='none'">Dismiss</button>
+              </div>
+            </div>
+
             <div class="stat-grid">
               <div class="glass-card stat-card"><h4>Vault Capacity</h4><div class="value" id="statTotal">0</div></div>
               <div class="glass-card stat-card"><h4>Avg Precision</h4><div class="value">±1cm</div></div>
@@ -169,7 +329,10 @@
             <div class="glass-card">
               <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:32px">
                 <h2 style="font-size:24px;">Measurement Ledger</h2>
-                <button class="btn-primary" onclick="document.getElementById('shareModal').classList.add('active')">+ Invite Client</button>
+                <div style="display:flex; gap:12px">
+                  <button class="btn-outline" onclick="document.getElementById('scanModal').classList.add('active')">+ Start Scan</button>
+                  <button class="btn-primary" onclick="document.getElementById('shareModal').classList.add('active')">+ Invite Client</button>
+                </div>
               </div>
               <div id="scanList"></div>
             </div>
@@ -179,12 +342,207 @@
     </div>
   </main>
 
+  <script src="https://cdn.jsdelivr.net/npm/@mediapipe/pose"></script>
+  <script src="https://cdn.jsdelivr.net/npm/@mediapipe/camera_utils"></script>
   <script src="/assets/supabase.min.js"></script>
   <script src="/assets/three.min.js"></script>
   <script src="/assets/korra_viz.js"></script>
   <script src="/assets/korra_export.js"></script>
 
   <script>
+    let activeCameraType = null;
+    let poseModel = null;
+    let cameraInstance = null;
+    let isPoseAligned = false;
+
+    // --- AI CAMERA LOGIC ---
+    async function openCamera(type) {
+      activeCameraType = type;
+      document.getElementById('step-camera').classList.add('active');
+      const video = document.getElementById('camera-video');
+      const canvas = document.getElementById('camera-canvas');
+
+      if (!poseModel) {
+        poseModel = new Pose({ locateFile: (file) => `https://cdn.jsdelivr.net/npm/@mediapipe/pose/${file}` });
+        poseModel.setOptions({ modelComplexity: 1, smoothLandmarks: true, minDetectionConfidence: 0.5, minTrackingConfidence: 0.5 });
+        poseModel.onResults(onPoseResults);
+      }
+
+      cameraInstance = new Camera(video, {
+        onFrame: async () => { await poseModel.send({image: video}); },
+        width: 1280, height: 720
+      });
+      cameraInstance.start();
+    }
+
+    function closeCamera() {
+      if (cameraInstance) cameraInstance.stop();
+      document.getElementById('step-camera').classList.remove('active');
+      activeCameraType = null;
+    }
+
+    function onPoseResults(results) {
+      const canvas = document.getElementById('camera-canvas');
+      const ctx = canvas.getContext('2d');
+      const msg = document.getElementById('camera-msg');
+
+      canvas.width = canvas.clientWidth;
+      canvas.height = canvas.clientHeight;
+      ctx.clearRect(0, 0, canvas.width, canvas.height);
+
+      if (!results.poseLandmarks) {
+        msg.textContent = "Searching for subject...";
+        msg.style.color = "#fff";
+        isPoseAligned = false;
+        return;
+      }
+
+      drawSilhouette(ctx, canvas.width, canvas.height, activeCameraType);
+
+      const landmarks = results.poseLandmarks;
+      const head = landmarks[0];
+      const leftAnkle = landmarks[27];
+      const rightAnkle = landmarks[28];
+      const leftWrist = landmarks[15];
+      const rightWrist = landmarks[16];
+      const leftHip = landmarks[23];
+      const rightHip = landmarks[24];
+
+      let aligned = true;
+      let feedback = "Hold steady...";
+
+      if (head.visibility < 0.5 || leftAnkle.visibility < 0.5 || rightAnkle.visibility < 0.5) {
+        feedback = "Step back: Head and feet must be visible.";
+        aligned = false;
+      } else if (activeCameraType === 'front') {
+        const armDistance = Math.abs(leftWrist.x - leftHip.x);
+        if (armDistance < 0.1) {
+          feedback = "A-POSE: Move arms away from your sides.";
+          aligned = false;
+        }
+      }
+
+      msg.textContent = feedback;
+      msg.style.color = aligned ? "var(--Mint)" : "#fff";
+      isPoseAligned = aligned;
+
+      ctx.strokeStyle = aligned ? "var(--Mint)" : "rgba(255,255,255,0.3)";
+      ctx.lineWidth = 4;
+      ctx.lineCap = "round";
+
+      const connections = [ [11, 12], [11, 13], [13, 15], [12, 14], [14, 16], [11, 23], [12, 24], [23, 24], [23, 25], [25, 27], [24, 26], [26, 28] ];
+      connections.forEach(([i, j]) => {
+        const p1 = landmarks[i];
+        const p2 = landmarks[j];
+        if (p1.visibility > 0.5 && p2.visibility > 0.5) {
+          ctx.beginPath();
+          ctx.moveTo(p1.x * canvas.width, p1.y * canvas.height);
+          ctx.lineTo(p2.x * canvas.width, p2.y * canvas.height);
+          ctx.stroke();
+        }
+      });
+    }
+
+    function drawSilhouette(ctx, w, h, type) {
+      ctx.beginPath();
+      ctx.strokeStyle = isPoseAligned ? "var(--Mint)" : "rgba(255,255,255,0.1)";
+      ctx.setLineDash([10, 5]); ctx.lineWidth = 2;
+      const cx = w / 2; const cy = h / 2;
+      ctx.moveTo(cx, cy - h*0.4); ctx.lineTo(cx - w*0.1, cy - h*0.2); ctx.lineTo(cx - w*0.2, cy + h*0.1);
+      ctx.moveTo(cx, cy - h*0.4); ctx.lineTo(cx + w*0.1, cy - h*0.2); ctx.lineTo(cx + w*0.2, cy + h*0.1);
+      ctx.moveTo(cx, cy - h*0.2); ctx.lineTo(cx, cy + h*0.1); ctx.lineTo(cx - w*0.1, cy + h*0.4);
+      ctx.moveTo(cx, cy + h*0.1); ctx.lineTo(cx + w*0.1, cy + h*0.4);
+      ctx.stroke(); ctx.setLineDash([]);
+    }
+
+    function snapPhoto() {
+      const video = document.getElementById('camera-video');
+      const canvas = document.createElement('canvas');
+      canvas.width = video.videoWidth; canvas.height = video.videoHeight;
+      const ctx = canvas.getContext('2d');
+      ctx.translate(canvas.width, 0); ctx.scale(-1, 1);
+      ctx.drawImage(video, 0, 0);
+
+      const dataUrl = canvas.toDataURL('image/jpeg');
+      const labelId = activeCameraType === 'front' ? 'frontLabel' : 'sideLabel';
+      const inputId = activeCameraType === 'front' ? 'frontPhoto' : 'sidePhoto';
+
+      const label = document.getElementById(labelId);
+      const previewImg = label.querySelector('.preview-img');
+      const uploadUI = label.querySelector('div');
+
+      previewImg.src = dataUrl;
+      previewImg.style.display = 'block';
+      if(uploadUI) uploadUI.style.display = 'none';
+
+      fetch(dataUrl).then(res => res.blob()).then(blob => {
+        const file = new File([blob], `${activeCameraType}.jpg`, { type: "image/jpeg" });
+        const container = new DataTransfer();
+        container.items.add(file);
+        document.getElementById(inputId).files = container.files;
+      });
+      closeCamera();
+    }
+
+    function handleFile(input, labelId) {
+      const label = document.getElementById(labelId);
+      const previewImg = label.querySelector('.preview-img');
+      const uploadUI = label.querySelector('div');
+      if (input && input.files && input.files[0]) {
+        const reader = new FileReader();
+        reader.onload = (e) => {
+           previewImg.src = e.target.result; previewImg.style.display = 'block';
+           if(uploadUI) uploadUI.style.display = 'none';
+        };
+        reader.readAsDataURL(input.files[0]);
+      }
+    }
+
+    function toggleUnits() {
+        if (!window.LAST_MEASUREMENT_DATA) return;
+        window.CURRENT_UNIT = window.CURRENT_UNIT === 'cm' ? 'in' : 'cm';
+        const cmBtn = document.getElementById('unit-cm');
+        const inBtn = document.getElementById('unit-in');
+        if (window.CURRENT_UNIT === 'cm') {
+            cmBtn.style.background = 'var(--Mint)'; cmBtn.style.color = 'var(--Teal-900)';
+            inBtn.style.background = 'transparent'; inBtn.style.color = 'var(--Neutral-400)';
+        } else {
+            inBtn.style.background = 'var(--Mint)'; inBtn.style.color = 'var(--Teal-900)';
+            cmBtn.style.background = 'transparent'; cmBtn.style.color = 'var(--Neutral-400)';
+        }
+        renderMeasurementGrids(window.LAST_MEASUREMENT_DATA);
+    }
+
+    function renderMeasurementGrids(data) {
+        const upperBody = ['Shoulder', 'Neck Round', 'Chest Round', 'Across Back', 'Across Chest'];
+        const middleBody = ['Waist Round', 'Stomach Round', 'Half Length', 'Full Top Length'];
+        const lowerBody = ['Hip Round', 'Thigh Round', 'Knee Round', 'Calf Round', 'Ankle Round', 'Inseam'];
+
+        function createCard(key, val) {
+            if (!val) return '';
+            let dVal = val; let unit = 'cm';
+            if (window.CURRENT_UNIT === 'in') { dVal = (val * 0.393701).toFixed(1); unit = 'in'; }
+            return `<div style="padding:10px; background:rgba(255,255,255,0.05); border-radius:8px; border:1px solid rgba(255,255,255,0.08)">
+                <div style="font-size:9px; color:var(--Neutral-500); text-transform:uppercase; margin-bottom:2px">${key}</div>
+                <div style="font-size:16px; font-weight:700; color:var(--Mint)">${dVal}<span style="font-size:10px; margin-left:2px">${unit}</span></div>
+            </div>`;
+        }
+
+        document.getElementById('measurementGridUpper').innerHTML = upperBody.map(k => createCard(k, data.measurements[k])).join('');
+        document.getElementById('measurementGridMiddle').innerHTML = middleBody.map(k => createCard(k, data.measurements[k])).join('');
+        document.getElementById('measurementGridLower').innerHTML = lowerBody.map(k => createCard(k, data.measurements[k])).join('');
+
+        const hVal = data.height || data.measurements?.height;
+        document.getElementById('measurementHeight').textContent = window.CURRENT_UNIT === 'in' ? (hVal * 0.393701).toFixed(1) + ' in' : hVal + ' cm';
+        document.getElementById('measurementGender').textContent = data.gender || 'Male';
+    }
+
+    window.exportToPDF = function() {
+        if (!window.LAST_MEASUREMENT_DATA) return;
+        const d = window.LAST_MEASUREMENT_DATA;
+        window.KORRA_EXPORT.pdf(d.client_name || "Client", d.measurements, d.gender, d.height);
+    };
+
     const CONFIG = {
       url: 'https://blsettabymllulsxtziw.supabase.co',
       key: 'sb_publishable_miCOIXHtlxLkfDgpwE0N-g_BA1Q-x8y'
@@ -323,6 +681,81 @@
         fetchHistory();
         if (window.KORRA_VIZ) window.KORRA_VIZ.init('dashboard-3d-viewport');
       }
+
+      // --- UNICORN POLLING ENGINE ---
+      async function pollTask(taskId) {
+        const overlay = document.getElementById('extractionProgress');
+        const fill = document.getElementById('progressFill');
+        const status = document.getElementById('progressStatus');
+        const btn = document.getElementById('btnRunScan');
+
+        overlay.style.display = 'flex';
+        let progress = 10;
+
+        const interval = setInterval(async () => {
+          try {
+            const res = await fetch(`/api/v2/measurements/status/${taskId}`);
+            if (!res.ok) return;
+            const data = await res.json();
+
+            const msgs = ["INITIALIZING AI BRAIN...", "EXECUTING SKELETAL DETECTION...", "RUNNING VOLUMETRIC REGRESSION...", "MAPPING VERTEX CLOUD...", "SCALING BIOMETRICS...", "MATERIALIZING 3D TWIN...", "SYNCING HANDSHAKE COMPLETE."];
+
+            if (data.status === 'processing') {
+              progress = Math.min(progress + 8, 95);
+              status.textContent = msgs[Math.floor((progress/100) * msgs.length)];
+            } else if (data.status === 'completed') {
+              clearInterval(interval);
+              progress = 100;
+              status.textContent = 'SUCCESS: HANDSHAKE COMPLETE';
+              if (window.KORRA_VIZ && data.mesh_url) window.KORRA_VIZ.loadMesh(data.mesh_url);
+
+              window.LAST_MEASUREMENT_DATA = data;
+              window.CURRENT_UNIT = 'cm';
+              document.getElementById('measurementResultsCard').style.display = 'block';
+              renderMeasurementGrids(data);
+
+              fetchHistory();
+              setTimeout(() => {
+                overlay.style.display = 'none';
+                btn.disabled = false; btn.textContent = 'Complete';
+                document.getElementById('scanModal').classList.remove('active');
+              }, 1000);
+            } else if (data.status === 'failed') {
+              clearInterval(interval);
+              alert("AI Core Rejection: " + (data.error || "Conflict"));
+              overlay.style.display = 'none';
+              btn.disabled = false; btn.textContent = 'Retry Scan';
+            }
+            fill.style.width = progress + '%';
+          } catch (e) {}
+        }, 2000);
+      }
+
+      document.getElementById('scanForm').addEventListener('submit', async (e) => {
+        e.preventDefault();
+        const btn = document.getElementById('btnRunScan');
+        btn.disabled = true; btn.textContent = 'QUEUING...';
+
+        const fd = new FormData();
+        fd.append('front', document.getElementById('frontPhoto').files[0]);
+        fd.append('side', document.getElementById('sidePhoto').files[0]);
+        fd.append('height', document.getElementById('scanHeight').value);
+        fd.append('gender', document.getElementById('scanGender').value);
+        fd.append('client_name', document.getElementById('scanClientName').value);
+        fd.append('merchant_id', userId);
+
+        try {
+          const res = await fetch('/api/v2/measurements/extract-widget', { method: 'POST', body: fd });
+          if (res.ok) {
+            const data = await res.json();
+            pollTask(data.task_id);
+          } else {
+            const err = await res.json();
+            alert("Error: " + (err.error || "Rejection"));
+            btn.disabled = false; btn.textContent = 'Extract Biometrics';
+          }
+        } catch (err) { btn.disabled = false; }
+      });
 
       document.getElementById('shareForm').addEventListener('submit', async (e) => {
         e.preventDefault();
