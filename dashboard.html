@@ -1052,20 +1052,31 @@
             groups[name].push(s);
         });
 
-        container.innerHTML = Object.entries(groups).map(([name, scans]) => {
+        container.innerHTML = ''; // Clear for manual injection
+
+        Object.entries(groups).forEach(([name, scans]) => {
             const latest = scans[0];
             const first = scans[scans.length - 1];
             const change = scans.length > 1 ? (latest.measurements?.['Waist Round'] - first.measurements?.['Waist Round']).toFixed(1) : 0;
             const changeColor = change > 0 ? '#ff4d4d' : change < 0 ? '#57D7C0' : 'var(--Neutral-500)';
 
-            return `
-              <div class="glass-card" style="padding:24px">
+            const cardId = `passport-${name.replace(/\s+/g, '-')}`;
+            const vizId = `viz-${cardId}`;
+
+            const card = document.createElement('div');
+            card.className = 'glass-card';
+            card.style.padding = '24px';
+            card.innerHTML = `
                 <div style="display:flex; align-items:center; gap:16px; margin-bottom:20px">
                   <div style="width:48px; height:48px; background:var(--Mint); border-radius:50%; display:flex; align-items:center; justify-content:center; color:var(--Obsidian); font-weight:900">${name[0]}</div>
                   <div>
                     <h5 style="font-size:18px; margin:0">${name}</h5>
                     <p style="font-size:10px; color:var(--Neutral-500); text-transform:uppercase; letter-spacing:0.1em">${scans.length} Extractions Locked</p>
                   </div>
+                </div>
+
+                <div id="${vizId}" style="width:100%; height:200px; background:#000; border-radius:12px; border:1px solid var(--Glass-Border); margin-bottom:20px; overflow:hidden; position:relative">
+                  <span style="position:absolute; top:8px; left:8px; font-size:7px; color:var(--Mint); text-transform:uppercase; z-index:10; background:rgba(0,0,0,0.5); padding:2px 6px; border-radius:3px">3D Digital Twin</span>
                 </div>
 
                 <div style="background:rgba(0,0,0,0.3); border-radius:12px; padding:16px; border:1px solid var(--Glass-Border); margin-bottom:20px">
@@ -1081,9 +1092,16 @@
                   <button class="btn-primary" style="height:36px; font-size:10px" onclick="exportPassport('${name}')">Export Passport</button>
                   <button class="btn-outline" style="height:36px; font-size:10px" onclick="switchTab('vault'); document.getElementById('ledgerSearch').value='${name}'; document.getElementById('ledgerSearch').dispatchEvent(new Event('input'));">View History</button>
                 </div>
-              </div>
             `;
-        }).join('');
+            container.appendChild(card);
+
+            // Initialize Mini-Viewport for this specific passport
+            if (window.createKorraVisualizer && latest.mesh_url) {
+                const viz = window.createKorraVisualizer();
+                viz.init(vizId);
+                viz.loadMesh(latest.mesh_url);
+            }
+        });
       }
 
       window.exportPassport = function(name) {
