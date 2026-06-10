@@ -51,9 +51,12 @@
 
     .grid-workbench { display: grid; grid-template-columns: 240px 1fr; gap: 48px; align-items: start; }
 
+    .sidebar-nav { margin-bottom: 32px; }
+    .sidebar-label { font-size: 10px; font-weight: 900; color: var(--Neutral-500); text-transform: uppercase; letter-spacing: 0.1em; padding: 0 16px; margin: 24px 0 12px; }
     .sidebar-nav a {
       display: block; padding: 12px 16px; border-radius: 12px; color: var(--Neutral-400);
       text-decoration: none; font-size: 14px; font-weight: 600; transition: 0.2s; cursor: pointer;
+      margin-bottom: 4px;
     }
     .sidebar-nav a:hover, .sidebar-nav a.active { background: var(--Glass); color: var(--Mint); }
 
@@ -304,28 +307,46 @@
       <div class="grid-workbench">
         <aside>
           <nav class="sidebar-nav">
+            <div class="sidebar-label">Workspace</div>
+            <a onclick="switchTab('overview')" id="tab-overview">Overview</a>
             <a onclick="switchTab('vault')" id="tab-vault" class="active">Biometrics Vault</a>
+
+            <div class="sidebar-label">Implementation</div>
             <a href="/developers" id="tab-developers">Developer API</a>
+            <a onclick="switchTab('widget')" id="tab-widget">Widget Setup</a>
+
+            <div class="sidebar-label">Account</div>
             <a onclick="switchTab('settings')" id="tab-settings">Settings</a>
+            <a onclick="switchTab('billing')" id="tab-billing">Billing & Plans</a>
           </nav>
         </aside>
 
         <section>
+          <!-- OVERVIEW VIEW -->
+          <div id="view-overview" class="tab-view">
+            <h2 style="font-size:24px; margin-bottom:12px">Artisan Overview</h2>
+            <p style="color:var(--Neutral-400); margin-bottom:32px">High-level intelligence on scan velocity and precision.</p>
+
+            <div class="stat-grid">
+              <div class="glass-card stat-card"><h4>Total Extractions</h4><div class="value" id="overviewTotal">0</div></div>
+              <div class="glass-card stat-card"><h4>Avg Precision</h4><div class="value">±1cm</div></div>
+              <div class="glass-card stat-card"><h4>Integration Health</h4><div class="value" style="color:var(--Mint); font-size:16px; margin-top:8px">ACTIVE</div></div>
+            </div>
+
+            <div class="glass-card" style="margin-bottom:32px; padding:32px">
+              <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:24px">
+                <h4 style="font-size:12px; font-weight:900; color:var(--Neutral-500); text-transform:uppercase">Scan Velocity (Last 30 Days)</h4>
+              </div>
+              <div style="height:300px; width:100%"><canvas id="usageChart"></canvas></div>
+            </div>
+          </div>
+
           <div id="view-vault" class="tab-view active">
 
             <div class="stat-grid">
               <div class="glass-card stat-card"><h4>Vault Capacity</h4><div class="value" id="statTotal">0</div></div>
               <div class="glass-card stat-card"><h4>Avg Precision</h4><div class="value">±1cm</div></div>
               <div class="glass-card stat-card"><h4>Credits</h4><div class="value" id="statCredits">0</div></div>
-            </div>
-
-            <!-- ANALYTICS PREVIEW -->
-            <div class="glass-card" style="margin-bottom:32px; padding:24px">
-              <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:20px">
-                <h4 style="font-size:12px; font-weight:900; color:var(--Neutral-500); text-transform:uppercase">Scan Velocity (Last 30 Days)</h4>
-                <div style="font-size:10px; color:var(--Mint); font-weight:700">LIVE FEED</div>
-              </div>
-              <div style="height:120px; width:100%"><canvas id="usageChart"></canvas></div>
             </div>
 
             <div class="workbench-split">
@@ -406,6 +427,56 @@
                     </div>
                   </div>
                   <div id="scanList" style="max-height:800px; overflow-y:auto"></div>
+                </div>
+              </div>
+            </div>
+          </div>
+
+          <!-- WIDGET VIEW -->
+          <div id="view-widget" class="tab-view">
+            <div class="glass-card" style="margin-bottom:32px">
+              <h2 style="font-size:24px; margin-bottom:12px">Widget Configuration</h2>
+              <p style="color:var(--Neutral-400); margin-bottom:32px">Embed the KORRA scan experience directly into your storefront.</p>
+
+              <div style="background:#000; border-radius:12px; padding:24px; border:1px solid var(--Glass-Border); margin-bottom:32px">
+                <div style="font-size:10px; font-weight:900; color:var(--Neutral-500); margin-bottom:12px">EMBED SCRIPT</div>
+                <code style="font-family:monospace; color:var(--Mint); font-size:12px; word-break:break-all">
+                  &lt;script src="https://korra-436814609100.us-central1.run.app/assets/korra_widget.js"&gt;&lt;/script&gt;<br>
+                  &lt;korra-widget artisan-key="YOUR_API_KEY"&gt;&lt;/korra-widget&gt;
+                </code>
+              </div>
+
+              <div style="display:grid; grid-template-columns: 1fr 1fr; gap:32px">
+                <div>
+                  <label style="font-size:10px; font-weight:900; color:var(--Neutral-500); display:block; margin-bottom:8px">BRAND COLOR</label>
+                  <input type="color" value="#57D7C0" style="width:100%; height:52px; background:none; border:1px solid var(--Glass-Border); border-radius:12px; padding:8px; cursor:pointer">
+                </div>
+                <div>
+                  <label style="font-size:10px; font-weight:900; color:var(--Neutral-500); display:block; margin-bottom:8px">WIDGET TEXT</label>
+                  <input type="text" class="input-field" value="Start AI Scan" style="margin-bottom:0">
+                </div>
+              </div>
+            </div>
+          </div>
+
+          <!-- BILLING VIEW -->
+          <div id="view-billing" class="tab-view">
+            <div class="glass-card" style="margin-bottom:32px">
+              <h2 style="font-size:24px; margin-bottom:12px">Billing & Plans</h2>
+              <p style="color:var(--Neutral-400); margin-bottom:32px">Manage your subscription and credit balance.</p>
+
+              <div style="display:grid; grid-template-columns: 1.5fr 1fr; gap:32px">
+                <div style="padding:24px; background:rgba(87,215,192,0.05); border:1px solid var(--Mint); border-radius:16px">
+                  <div style="font-size:10px; font-weight:900; color:var(--Mint); margin-bottom:8px">CURRENT PLAN</div>
+                  <div style="font-size:24px; font-weight:900; margin-bottom:12px">Artisan Pro</div>
+                  <div style="font-size:12px; color:var(--Neutral-400); margin-bottom:20px">Includes 100 free extractions/month + Bulk Export</div>
+                  <button class="btn-primary" style="height:44px; width:100%">Manage Subscription</button>
+                </div>
+
+                <div style="padding:24px; background:var(--Glass); border:1px solid var(--Glass-Border); border-radius:16px">
+                  <div style="font-size:10px; font-weight:900; color:var(--Neutral-500); margin-bottom:8px">AVAILABLE CREDITS</div>
+                  <div style="font-size:32px; font-weight:900; margin-bottom:12px" id="billingCredits">0</div>
+                  <button class="btn-outline" style="height:44px; width:100%">Top-up Credits</button>
                 </div>
               </div>
             </div>
