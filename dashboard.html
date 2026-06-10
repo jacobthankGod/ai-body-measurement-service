@@ -411,6 +411,7 @@
             <div class="sidebar-label">Implementation</div>
             <a href="/developers" id="tab-developers">Developer API</a>
             <a onclick="switchTab('widget')" id="tab-widget">Widget Setup</a>
+            <a onclick="switchTab('webhooks')" id="tab-webhooks">Webhooks & API</a>
 
             <div class="sidebar-label">Account</div>
             <a onclick="switchTab('settings')" id="tab-settings">Settings</a>
@@ -496,6 +497,25 @@
                         <div style="font-size:10px; color:var(--Neutral-500); text-transform:uppercase">Size Rec.</div>
                         <div style="font-size:18px; font-weight:900; color:var(--Mint)" id="measurementSizeRec">S/M/L</div>
                       </div>
+                    </div>
+                  </div>
+
+                  <!-- PHASE 31-33: FIT DIAGNOSTICS -->
+                  <div style="background:rgba(255,255,255,0.02); border:1px solid var(--Glass-Border); border-radius:12px; padding:20px; margin-bottom:32px">
+                    <h5 style="font-size:11px; font-weight:900; color:#FFFFFF; text-transform:uppercase; margin-bottom:16px; letter-spacing:0.1em">Artisan Fit Diagnostics</h5>
+                    <div style="display:grid; grid-template-columns: 1fr 1fr; gap:20px">
+                       <div>
+                         <div style="font-size:9px; color:var(--Neutral-500); text-transform:uppercase">Asymmetry Check</div>
+                         <div style="font-size:13px; font-weight:700; color:var(--White); margin-top:4px" id="diagAsymmetry">Analyzing...</div>
+                       </div>
+                       <div>
+                         <div style="font-size:9px; color:var(--Neutral-500); text-transform:uppercase">Posture Scan</div>
+                         <div style="font-size:13px; font-weight:700; color:var(--Mint); margin-top:4px" id="diagPosture">Analyzing...</div>
+                       </div>
+                    </div>
+                    <div style="margin-top:20px; padding-top:16px; border-top:1px solid rgba(255,255,255,0.05)">
+                      <div style="font-size:9px; color:var(--Neutral-500); text-transform:uppercase">Recommended Fabric Ease (Slim Fit)</div>
+                      <div style="font-size:14px; font-weight:700; color:var(--Mint); margin-top:4px" id="diagEase">+4.0cm Chest / +2.0cm Waist</div>
                     </div>
                   </div>
 
@@ -618,6 +638,20 @@
                 </div>
               </div>
             </div>
+          </div>
+
+          <!-- WEBHOOKS VIEW (Phase 26) -->
+          <div id="view-webhooks" class="tab-view">
+             <div class="glass-card" style="margin-bottom:32px">
+                <h2 style="font-size:24px; margin-bottom:12px">Webhooks & External Sync</h2>
+                <p style="color:var(--Neutral-400); margin-bottom:32px">Connect KORRA events to your own backend systems.</p>
+
+                <div style="margin-bottom:24px">
+                  <label style="font-size:10px; font-weight:900; color:var(--Neutral-500); display:block; margin-bottom:8px">WEBHOOK ENDPOINT URL</label>
+                  <input type="url" id="webhookUrl" class="input-field" placeholder="https://yourserver.com/korra-hook">
+                </div>
+                <button class="btn-primary">Update Webhook Settings</button>
+             </div>
           </div>
 
           <!-- SETTINGS VIEW -->
