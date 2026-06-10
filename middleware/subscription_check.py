@@ -50,3 +50,16 @@ def track_usage(api_key):
     if api_key.startswith("korra_admin_"):
         return
     DatabaseService.update_usage(api_key)
+
+async def check_and_decrement_credits(user_id: str):
+    """Verifies user has credits and decrements 1. Returns True if successful."""
+    client = DatabaseService.get_client()
+    try:
+        res = client.table("profiles").select("credits").eq("id", user_id).single().execute()
+        credits = res.data.get('credits', 0) if res.data else 0
+
+        if credits > 0:
+            client.table("profiles").update({"credits": credits - 1}).eq("id", user_id).execute()
+            return True
+        return False
+    except: return False

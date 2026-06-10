@@ -262,6 +262,12 @@ async def start_extraction(
     user: dict = Depends(get_current_user)
 ):
     try:
+        # Enforce merchant credits for dashboard scans
+        if not user.get('is_admin'):
+            from middleware.subscription_check import check_and_decrement_credits
+            if not await check_and_decrement_credits(user['user_id']):
+                raise HTTPException(status_code=402, detail="Insufficient credits for extraction.")
+
         task_id = str(uuid.uuid4())
         front_bytes = await front.read()
         side_bytes = await side.read()
@@ -290,26 +296,36 @@ async def extract_widget(
     height: float = Form(...),
     gender: str = Form("male"),
     merchant_id: str = Form(...),
-    client_name: str = Form("Widget Customer")
+    client_name: str = Form("Widget Customer"),
+    payment_reference: Optional[str] = Form(None)
 ):
     try:
+        # 1. Payment Verification Gate
+        paid = False
+        if payment_reference:
+            # Verify single-scan payment ($0.50)
+            from api.routes.payments import paystack_service
+            verify = paystack_service.verify_payment(payment_reference)
+            if verify['status'] and verify['data']['status'] == 'success':
+                paid = True
+
+        if not paid:
+            # Try merchant credits
+            from middleware.subscription_check import check_and_decrement_credits
+            if not await check_and_decrement_credits(merchant_id):
+                raise HTTPException(status_code=402, detail="Payment Required: Merchant has 0 credits and no single-scan reference provided.")
+
+        # 2. Process Task
         task_id = str(uuid.uuid4())
         front_bytes = await front.read()
         side_bytes = await side.read()
         
-        # Validate input
-        if not front_bytes or not side_bytes:
-            raise HTTPException(status_code=400, detail="Empty image files")
-        if height < 50 or height > 250:
-            raise HTTPException(status_code=400, detail="Invalid height")
-        if not merchant_id:
-            raise HTTPException(status_code=400, detail="Merchant ID required")
+        if not front_bytes or not side_bytes: raise HTTPException(status_code=400, detail="Empty image files")
             
         update_task(task_id, {"status": "queued", "created_at": datetime.utcnow().isoformat(), "height": height, "gender": gender})
         background_tasks.add_task(run_extraction_task, task_id, front_bytes, side_bytes, height, gender, client_name, merchant_id)
         return {"status": "accepted", "task_id": task_id}
-    except HTTPException:
-        raise
+    except HTTPException: raise
     except Exception as e:
         logger.error(f"Widget extraction failed: {e}")
         raise HTTPException(status_code=500, detail="Failed to start widget extraction")

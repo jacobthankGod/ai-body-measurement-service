@@ -94,17 +94,14 @@ async def initialize_payment(
 
 @router.get("/payments/verify/{reference}")
 async def verify_payment(
-    reference: str,
-    user: dict = Depends(get_current_user)
+    reference: str
 ):
     """
-    Verify a Paystack payment.
-    
-    Checks if payment was successful and activates subscription.
+    Verify a Paystack payment (Bundle or Single Scan).
     """
     result = paystack_service.verify_payment(reference)
     
-    if not result['status']:
+    if not result['status'] or result['data']['status'] != 'success':
         raise HTTPException(
             status_code=400,
             detail=result.get('message', 'Verification failed')
@@ -112,28 +109,35 @@ async def verify_payment(
     
     payment_data = result['data']
     metadata = payment_data.get('metadata', {})
-    tier = metadata.get('tier', 'tailor_pro')
+    user_id = metadata.get('user_id')
+    type = metadata.get('type') # 'bundle' or 'single'
+    credits_to_add = metadata.get('credits', 0)
+
+    if not user_id:
+        raise HTTPException(status_code=400, detail="Transaction missing user context.")
+
+    # Update credits in database
+    from api.services.database_service import DatabaseService
+    client = DatabaseService.get_client()
     
-    # Update subscription in the system
-    from middleware.subscription_check import load_api_keys, save_api_keys
-    keys = load_api_keys()
-    
-    if user['api_key'] in keys:
-        keys[user['api_key']]['tier'] = tier
-        keys[user['api_key']]['last_payment'] = datetime.now().isoformat()
-        keys[user['api_key']]['paystack_reference'] = reference
-        save_api_keys(keys)
-    
+    if type == 'bundle' and credits_to_add > 0:
+        # Fetch current
+        res = client.table("profiles").select("credits").eq("id", user_id).single().execute()
+        current = res.data.get('credits', 0) if res.data else 0
+        # Update
+        client.table("profiles").update({"credits": current + int(credits_to_add)}).eq("id", user_id).execute()
+    elif type == 'single':
+        # Single scans don't add to permanent balance, they authorize a one-time operation
+        # We can log this in a 'transactions' table if needed, but for now we'll return success
+        pass
+
     return {
         "status": True,
-        "message": "Verification successful",
+        "message": "Payment verified and synchronized.",
         "data": {
-            "reference": reference,
-            "amount": payment_data['amount'],
-            "paid_at": payment_data.get('paid_at'),
-            "customer": payment_data.get('customer', {}),
-            "subscription_tier": tier,
-            "subscription_activated": True
+            "type": type,
+            "credits_added": credits_to_add if type == 'bundle' else 0,
+            "reference": reference
         }
     }
 

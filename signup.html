@@ -130,7 +130,7 @@
           <button type="submit" class="btn" id="btnSignUp">Initialize Merchant Account</button>
         </form>
 
-        <a href="/signin" class="switch-link">Already have an account? <span>Sign In</span></a>
+        <a href="/signin" id="linkSignIn" class="switch-link">Already have an account? <span>Sign In</span></a>
       </div>
 
       <!-- CINEMATIC SUCCESS VIEW -->
@@ -138,7 +138,7 @@
         <div class="success-icon">✓</div>
         <h2 style="color:var(--Mint)">Account Created</h2>
         <p>Your precision workbench is almost ready. Please check your email to verify your artisan portal before logging in.</p>
-        <a href="/signin" class="btn" style="text-decoration:none; display:flex; align-items:center; justify-content:center">Go to Sign In</a>
+        <a id="successLoginLink" href="/signin" class="btn" style="text-decoration:none; display:flex; align-items:center; justify-content:center">Go to Sign In</a>
       </div>
     </div>
   </div>
@@ -150,6 +150,13 @@
         key: 'sb_publishable_miCOIXHtlxLkfDgpwE0N-g_BA1Q-x8y'
       };
       const KORRA_CORE = window.supabase.createClient(config.url, config.key);
+
+      const params = new URLSearchParams(window.location.search);
+      const next = params.get('next');
+      if (next) {
+        document.getElementById('linkSignIn').href = `/signin?next=${encodeURIComponent(next)}`;
+        document.getElementById('successLoginLink').href = `/signin?next=${encodeURIComponent(next)}`;
+      }
 
       const form = document.getElementById('signUpForm');
       const btn = document.getElementById('btnSignUp');

@@ -182,6 +182,8 @@
   </div>
 
   <!-- --- ASSETS --- -->
+  <script src="/assets/supabase.min.js"></script>
+  <script src="https://js.paystack.co/v1/inline.js"></script>
   <script src="https://cdn.jsdelivr.net/npm/@mediapipe/pose@0.5.1675469404"></script>
   <script src="https://cdn.jsdelivr.net/npm/@mediapipe/camera_utils@0.3.1675466862/camera_utils.js"></script>
   <script src="/assets/three.min.js"></script>
@@ -190,7 +192,15 @@
   <script src="/assets/korra_export.js"></script>
 
   <script>
+    const CONFIG = {
+      url: 'https://blsettabymllulsxtziw.supabase.co',
+      key: 'sb_publishable_miCOIXHtlxLkfDgpwE0N-g_BA1Q-x8y',
+      paystack: 'pk_live_d8442a8b9814421b1b463286f91887e5b546305a'
+    };
+
     let sessionData = null;
+    let merchantCredits = 0;
+    let userId = null;
     let scanResults = null;
     let activeCameraType = null;
     let poseModel = null;
@@ -475,12 +485,28 @@
     }
 
     async function init() {
-      const token = new URLSearchParams(window.location.search).get('token');
-      if (!token) return;
-      try {
-        const res = await fetch(`/api/v2/share/verify/${token}`);
-        if (res.ok) sessionData = await res.json();
-      } catch (e) {}
+      const params = new URLSearchParams(window.location.search);
+      const mId = params.get('m');
+      const cName = params.get('c');
+
+      if (!window.supabase) { setTimeout(init, 500); return; }
+      const db = window.supabase.createClient(CONFIG.url, CONFIG.key);
+
+      // 1. Mandatory Auth Check
+      const { data: { session } } = await db.auth.getSession();
+      if (!session) {
+        alert("Authentication required. Redirecting to signup...");
+        window.location.href = `/signup?next=${encodeURIComponent(window.location.href)}`;
+        return;
+      }
+      userId = session.user.id;
+
+      // 2. Load Merchant Context
+      if (mId) {
+        const { data: profile } = await db.from('profiles').select('credits').eq('id', mId).single();
+        merchantCredits = profile?.credits || 0;
+        sessionData = { merchant_id: mId, client_name: cName || "Artisan Client" };
+      }
     }
 
     async function pollTask(taskId) {
@@ -561,27 +587,52 @@ const interval = setInterval(async () => {
 
     document.getElementById('shareForm').addEventListener('submit', async (e) => {
       e.preventDefault();
-      document.getElementById('loadingOverlay').style.display = 'flex';
 
-      const fd = new FormData();
-      fd.append('front', document.getElementById('front').files[0]);
-      fd.append('side', document.getElementById('side').files[0]);
-      fd.append('height', document.getElementById('height').value);
-      fd.append('gender', document.getElementById('gender').value);
-      fd.append('merchant_id', sessionData?.merchant_id || 'PUBLIC');
-      fd.append('client_name', sessionData?.client_name || 'Guest');
+      const proceedWithExtraction = async (payRef = null) => {
+        document.getElementById('loadingOverlay').style.display = 'flex';
+        const fd = new FormData();
+        fd.append('front', document.getElementById('front').files[0]);
+        fd.append('side', document.getElementById('side').files[0]);
+        fd.append('height', document.getElementById('height').value);
+        fd.append('gender', document.getElementById('gender').value);
+        fd.append('merchant_id', sessionData?.merchant_id || 'PUBLIC');
+        fd.append('client_name', sessionData?.client_name || 'Guest');
+        if (payRef) fd.append('payment_reference', payRef);
 
-      try {
-        const res = await fetch('/api/v2/measurements/extract-widget', { method: 'POST', body: fd });
-        if (res.ok) {
-          const data = await res.json();
-          pollTask(data.task_id); // Weaponized polling for public vector
-        } else {
-          const err = await res.json();
-          alert("Quality Error: " + (err.error || "Check lighting."));
-          document.getElementById('loadingOverlay').style.display = 'none';
-        }
-      } catch { alert("Connection Error."); document.getElementById('loadingOverlay').style.display = 'none'; }
+        try {
+          const res = await fetch('/api/v2/measurements/extract-widget', { method: 'POST', body: fd });
+          if (res.ok) {
+            const data = await res.json();
+            pollTask(data.task_id);
+          } else {
+            const err = await res.json();
+            alert("Quality Error: " + (err.error || "Check lighting."));
+            document.getElementById('loadingOverlay').style.display = 'none';
+          }
+        } catch { alert("Connection Error."); document.getElementById('loadingOverlay').style.display = 'none'; }
+      };
+
+      // 3. Payment Gate Logic
+      if (merchantCredits > 0) {
+        await proceedWithExtraction();
+      } else {
+        // Merchant has 0 credits. Client must pay $0.50
+        const db = window.supabase.createClient(CONFIG.url, CONFIG.key);
+        const { data: { user } } = await db.auth.getUser();
+
+        const handler = PaystackPop.setup({
+          key: CONFIG.paystack,
+          email: user.email,
+          amount: 50, // $0.50 in cents
+          currency: "USD",
+          metadata: { user_id: userId, type: 'single', merchant_id: sessionData?.merchant_id },
+          callback: async (response) => {
+            await proceedWithExtraction(response.reference);
+          },
+          onClose: () => alert("Payment required to unlock digital twin results.")
+        });
+        handler.openIframe();
+      }
     });
     init();
   </script>

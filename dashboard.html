@@ -313,6 +313,32 @@
     </div>
   </div>
 
+  <!-- INVITE CLIENT MODAL (UPGRADED TO DEEP LINKS) -->
+  <div class="modal-overlay" id="shareModal">
+    <div class="modal-card">
+      <h2 style="font-size:24px; margin-bottom:12px">Secure Deep Link</h2>
+      <p style="color:var(--Neutral-400); margin-bottom:32px">Generate a platform-agnostic link to share with your client.</p>
+
+      <div style="margin-bottom:24px">
+        <label style="font-size:10px; font-weight:900; color:var(--Neutral-500); display:block; margin-bottom:8px">CLIENT NAME</label>
+        <input type="text" id="shareName" class="input-field" placeholder="e.g. James" required>
+      </div>
+
+      <div id="linkGeneratedArea" style="display:none; margin-bottom:32px">
+        <div style="background:rgba(0,0,0,0.3); border-radius:12px; padding:20px; border:1px solid var(--Glass-Border); margin-bottom:20px">
+          <code id="deepLinkDisplay" style="font-family:monospace; color:var(--Mint); font-size:12px; word-break:break-all">https://...</code>
+        </div>
+        <div style="display:grid; grid-template-columns: 1fr 1fr; gap:12px">
+          <button class="btn-outline" style="justify-content:center" onclick="copyDeepLink()">Copy Link</button>
+          <button class="btn-primary" style="justify-content:center; background:#25D366; color:#fff" onclick="shareToWhatsApp()">WhatsApp</button>
+        </div>
+      </div>
+
+      <button type="button" class="btn-primary" id="btnGenerateLink" style="width:100%; height:52px" onclick="generateDeepLink()">Generate Invite Link</button>
+      <button type="button" class="btn-outline" style="width:100%; border:none; margin-top:12px" onclick="document.getElementById('shareModal').classList.remove('active')">Cancel</button>
+    </div>
+  </div>
+
   <header>
     <div class="container">
       <a class="logo" href="/"><div class="logo-mark"></div><div class="logo-text">KORRA</div></a>
@@ -551,6 +577,7 @@
   </main>
 
   <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+  <script src="https://js.paystack.co/v1/inline.js"></script>
   <script src="https://cdn.jsdelivr.net/npm/@mediapipe/pose@0.5.1675469404"></script>
   <script src="https://cdn.jsdelivr.net/npm/@mediapipe/camera_utils@0.3.1675466862/camera_utils.js"></script>
   <script src="/assets/supabase.min.js"></script>
@@ -848,7 +875,8 @@
 
     const CONFIG = {
       url: 'https://blsettabymllulsxtziw.supabase.co',
-      key: 'sb_publishable_miCOIXHtlxLkfDgpwE0N-g_BA1Q-x8y'
+      key: 'sb_publishable_miCOIXHtlxLkfDgpwE0N-g_BA1Q-x8y',
+      paystack: 'pk_live_d8442a8b9814421b1b463286f91887e5b546305a' // REPLACE WITH YOUR ACTUAL LIVE PUBLIC KEY
     };
 
     window.KORRA_DB = null;
@@ -1067,6 +1095,30 @@
         renderLedger(filtered);
       });
 
+      // --- DEEP LINK LOGIC ---
+      let generatedUrl = "";
+      window.generateDeepLink = function() {
+        const name = document.getElementById('shareName').value;
+        if (!name) { alert("Please enter client name."); return; }
+
+        // Create a secure invitation record
+        const baseUrl = window.location.origin;
+        generatedUrl = `${baseUrl}/share?m=${userId}&c=${encodeURIComponent(name)}`;
+
+        document.getElementById('deepLinkDisplay').textContent = generatedUrl;
+        document.getElementById('linkGeneratedArea').style.display = 'block';
+        document.getElementById('btnGenerateLink').style.display = 'none';
+      };
+
+      window.copyDeepLink = function() {
+        navigator.clipboard.writeText(generatedUrl).then(() => alert("Deep Link copied to clipboard."));
+      };
+
+      window.shareToWhatsApp = function() {
+        const text = encodeURIComponent(`Hi! Please use this secure link to complete your digital body scan: ${generatedUrl}`);
+        window.open(`https://wa.me/?text=${text}`, '_blank');
+      };
+
       async function init() {
         NetworkGuard.init();
         if (typeof window.supabase === 'undefined') { setTimeout(init, 500); return; }
@@ -1263,24 +1315,37 @@
       });
 
       // --- BILLING ACTIONS ---
-      document.getElementById('btnConfirmPurchase').addEventListener('click', async () => {
-        const btn = document.getElementById('btnConfirmPurchase');
-        btn.disabled = true; btn.textContent = 'PROCESSING PAYMENT...';
+      document.getElementById('btnConfirmPurchase').addEventListener('click', () => {
+        const email = document.getElementById('userEmail').textContent;
+        const amount = selectedCredits * 50; // $0.50 per scan = 50 cents * credits
 
-        try {
-          // 1. Fetch current credits
-          const { data: profile } = await window.KORRA_DB.from('profiles').select('credits').eq('id', userId).single();
-          const newBalance = (profile.credits || 0) + selectedCredits;
-
-          // 2. Update credits (Simulated purchase)
-          const { error } = await window.KORRA_DB.from('profiles').update({ credits: newBalance }).eq('id', userId);
-          if (error) throw error;
-
-          alert(`Success! ${selectedCredits} credits have been added to your vault.`);
-          loadSettings(); // Refresh UI
-          document.getElementById('topUpModal').classList.remove('active');
-        } catch (e) { alert("Purchase failed. Sync interrupted."); }
-        finally { btn.disabled = false; btn.textContent = 'Purchase & Sync Credits'; }
+        const handler = PaystackPop.setup({
+          key: CONFIG.paystack,
+          email: email,
+          amount: amount, // Assuming USD cents or conversion happens on backend
+          currency: "USD",
+          metadata: {
+            user_id: userId,
+            type: 'bundle',
+            credits: selectedCredits
+          },
+          callback: function(response) {
+            // Verify reference on backend
+            fetch(`/api/v2/payments/verify/${response.reference}`)
+              .then(res => res.json())
+              .then(data => {
+                if (data.status) {
+                  alert(`Success! ${selectedCredits} credits synchronized.`);
+                  loadSettings();
+                  document.getElementById('topUpModal').classList.remove('active');
+                } else {
+                  alert("Sync failed. Contact Support with Reference: " + response.reference);
+                }
+              });
+          },
+          onClose: function() { alert('Transaction cancelled.'); }
+        });
+        handler.openIframe();
       });
 
       init();

@@ -119,9 +119,13 @@
           } else {
             console.log("PfDebug: Auth Success. Routing for", email);
 
-            // --- SMART ROUTING (Mauritius-Level Hardening) ---
-            if (ADMIN_LIST.includes(email.toLowerCase())) {
-              console.log("PfDebug: Super-User Detected. Routing to Admin Terminal.");
+            const params = new URLSearchParams(window.location.search);
+            const next = params.get('next');
+
+            // --- SMART ROUTING ---
+            if (next) {
+              window.location.href = next;
+            } else if (ADMIN_LIST.includes(email.toLowerCase())) {
               window.location.href = '/admin';
             } else {
               window.location.href = '/dashboard';
