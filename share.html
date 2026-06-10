@@ -254,6 +254,7 @@
       if (!results.poseLandmarks) {
         msg.textContent = "Searching for subject...";
         msg.style.background = "rgba(0, 0, 0, 0.8)";
+        msg.style.color = "#fff";
         msg.style.borderColor = "var(--Mint)";
         isPoseAligned = false;
         alignmentStartTime = 0;
@@ -279,7 +280,7 @@
       if (head.visibility < 0.5 || leftAnkle.visibility < 0.5 || rightAnkle.visibility < 0.5) {
         feedback = "Step back: Head and feet must be visible.";
         aligned = false;
-} else if (activeCameraType === 'front') {
+      } else if (activeCameraType === 'front') {
         // Check BOTH arms must be away from body for A-POSE
         const leftArmDist = Math.abs(leftWrist.x - leftHip.x);
         const rightArmDist = Math.abs(rightWrist.x - rightHip.x);
@@ -318,12 +319,12 @@
       }
       isPoseAligned = aligned;
 
-// Draw user skeleton - Vibrant Mint for accurate, Pure White for inaccurate
+      // Draw user skeleton - Vibrant Mint for accurate, Pure White for inaccurate
       ctx.strokeStyle = aligned ? "#57D7C0" : "#FFFFFF";
-ctx.lineWidth = aligned ? 6 : 4; // Sleeker lines: 6px accurate, 4px inaccurate - no glow
+      ctx.lineWidth = aligned ? 8 : 4;
       ctx.lineCap = "round";
-      ctx.shadowBlur = 0; // No glow
-      ctx.shadowColor = "transparent";
+      ctx.shadowBlur = aligned ? 15 : 0;
+      ctx.shadowColor = "#57D7C0";
 
       const connections = [
         [11, 12], [11, 13], [13, 15], [12, 14], [14, 16], // Upper body
@@ -339,6 +340,19 @@ ctx.lineWidth = aligned ? 6 : 4; // Sleeker lines: 6px accurate, 4px inaccurate 
           ctx.moveTo(p1.x * canvas.width, p1.y * canvas.height);
           ctx.lineTo(p2.x * canvas.width, p2.y * canvas.height);
           ctx.stroke();
+        }
+      });
+
+      // Draw joint nodes at each keypoint
+      ctx.fillStyle = aligned ? "#57D7C0" : "#FFFFFF";
+      const nodeRadius = aligned ? 10 : 6;
+      const keypoints = [11, 12, 13, 14, 15, 16, 23, 24, 25, 26, 27, 28];
+      keypoints.forEach(idx => {
+        const p = landmarks[idx];
+        if (p.visibility > 0.5) {
+          ctx.beginPath();
+          ctx.arc(p.x * canvas.width, p.y * canvas.height, nodeRadius, 0, Math.PI * 2);
+          ctx.fill();
         }
       });
     }
