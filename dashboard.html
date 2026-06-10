@@ -126,6 +126,9 @@
     #offlineOverlay { position: fixed; inset: 0; background: rgba(0,0,0,0.85); backdrop-filter: blur(10px); z-index: 99999999; display: none; align-items: center; justify-content: center; text-align: center; }
     .offline-card { background: var(--Glass); border: 1px solid var(--Glass-Border); padding: 40px; border-radius: 24px; max-width: 320px; color: #fff; }
 
+    #creditOverlay { position: fixed; inset: 0; background: rgba(0,0,0,0.9); backdrop-filter: blur(20px); z-index: 1000000; display: none; align-items: center; justify-content: center; text-align: center; }
+    .credit-card { background: #0a0a0a; border: 2px solid var(--Mint); padding: 60px 40px; border-radius: 32px; max-width: 440px; box-shadow: 0 0 50px rgba(87, 215, 192, 0.2); }
+
     /* AI CAMERA GUIDANCE SYSTEM (Ported from share.html) */
     .pro-tips-card { background: rgba(87, 215, 192, 0.05); border: 1px solid rgba(87, 215, 192, 0.2); border-radius: 20px; padding: 20px; margin-top: 24px; text-align: left; }
     .pro-tips-card h4 { font-size: 11px; font-weight: 900; color: var(--Mint); text-transform: uppercase; margin-bottom: 12px; display: flex; align-items: center; gap: 8px; }
@@ -200,6 +203,16 @@
       <div style="font-size: 32px; margin-bottom: 24px;">📡</div>
       <h2 style="font-size: 18px; font-weight: 800; margin-bottom: 12px;">Sync Interrupted</h2>
       <p style="font-size: 12px; color: var(--Neutral-400); line-height: 1.6;">Your internet connection is unstable. KORRA has paused technical handshakes to prevent data corruption.</p>
+    </div>
+  </div>
+
+  <div id="creditOverlay">
+    <div class="credit-card">
+      <div style="font-size: 48px; margin-bottom: 32px;">💎</div>
+      <h2 style="font-size: 24px; font-weight: 900; margin-bottom: 16px; letter-spacing: -0.02em;">Vault Credits Depleted</h2>
+      <p style="font-size: 14px; color: var(--Neutral-400); line-height: 1.6; margin-bottom: 40px;">Your Biometrics Vault has reached 0 credits. To continue with high-precision AI body scans, please top up your balance.</p>
+      <button class="btn-primary" style="width:100%; height:56px; font-size:14px" onclick="dismissCreditError(); switchTab('billing'); document.getElementById('topUpModal').classList.add('active');">Top Up Credits Now</button>
+      <button class="btn-outline" style="width:100%; border:none; margin-top:16px; color:var(--Neutral-500)" onclick="dismissCreditError()">Maybe Later</button>
     </div>
   </div>
 
@@ -1646,6 +1659,9 @@
           if (res.ok) {
             const data = await res.json();
             pollTask(data.task_id);
+          } else if (res.status === 402) {
+            document.getElementById('creditOverlay').style.display = 'flex';
+            btn.disabled = false; btn.textContent = 'Extract Biometrics';
           } else {
             const err = await res.json();
             alert("Error: " + (err.error || "Rejection"));
@@ -1653,6 +1669,11 @@
           }
         } catch (err) { btn.disabled = false; }
       });
+
+      window.dismissCreditError = () => {
+        document.getElementById('creditOverlay').style.display = 'none';
+        document.getElementById('scanModal').classList.remove('active');
+      };
 
       document.getElementById('btnSignOut').onclick = async () => { await window.KORRA_DB.auth.signOut(); window.location.href = '/signin'; };
 

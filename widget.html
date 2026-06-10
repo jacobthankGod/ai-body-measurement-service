@@ -189,6 +189,9 @@ const interval = setInterval(async () => {
         if (res.ok) {
           const data = await res.json();
           pollTask(data.task_id, h, g);
+        } else if (res.status === 402) {
+          alert("INSUFFICIENT CREDITS: This merchant has 0 scan credits. Please contact the business or try again later.");
+          loader.style.display = 'none';
         } else {
           const err = await res.json();
           alert("Quality rejection: " + (err.error || "Check lighting."));

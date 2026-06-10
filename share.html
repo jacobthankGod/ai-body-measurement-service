@@ -148,6 +148,18 @@
 
       <!-- STEP 3: RESULT SUMMARY -->
       <div id="step-success" class="step-view">
+<!-- slide -->
+      <!-- STEP 4: CREDIT ERROR (Phase 42) -->
+      <div id="step-credit-error" class="step-view">
+        <div style="font-size: 48px; margin-bottom: 24px;">💎</div>
+        <h1 class="title">Sync Blocked</h1>
+        <p class="subtitle">The merchant's vault has reached 0 credits. You must purchase a single-scan token to continue.</p>
+        <div class="pro-tips-card" style="margin-bottom: 32px; text-align: left;">
+          <div class="tip-row"><span>This scan requires high-performance AI inference which is currently unfunded by the artisan.</span></div>
+        </div>
+        <button class="btn-submit" onclick="triggerSingleScanPayment()">Purchase Scan Token ($0.50)</button>
+        <button class="btn-outline" style="border:none; margin-top:16px; color:var(--Neutral-500); width:100%" onclick="goToStep('scan')">Back to Setup</button>
+      </div>
         <div id="share-3d-viewport"><span>3D Digital Twin Active</span></div>
         <h1 class="title" style="color:var(--Mint); margin-bottom:24px">Handshake Locked</h1>
 
@@ -604,12 +616,30 @@ const interval = setInterval(async () => {
           if (res.ok) {
             const data = await res.json();
             pollTask(data.task_id);
+          } else if (res.status === 402) {
+            document.getElementById('loadingOverlay').style.display = 'none';
+            goToStep('credit-error');
           } else {
             const err = await res.json();
             alert("Quality Error: " + (err.error || "Check lighting."));
             document.getElementById('loadingOverlay').style.display = 'none';
           }
         } catch { alert("Connection Error."); document.getElementById('loadingOverlay').style.display = 'none'; }
+      };
+
+      window.triggerSingleScanPayment = () => {
+        const handler = PaystackPop.setup({
+          key: CONFIG.paystack,
+          email: "guest@korra.ai",
+          amount: 50,
+          currency: "USD",
+          metadata: { type: 'single', merchant_id: sessionData?.merchant_id },
+          callback: async (response) => {
+            await proceedWithExtraction(response.reference);
+          },
+          onClose: () => { alert("Scan token purchase cancelled."); }
+        });
+        handler.openIframe();
       };
 
       // 3. Payment Gate Logic
