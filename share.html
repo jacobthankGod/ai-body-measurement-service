@@ -196,10 +196,14 @@
     let poseModel = null;
     let cameraInstance = null;
     let isPoseAligned = false;
+    let alignmentStartTime = 0;
+    let autoSnapTriggered = false;
 
     // --- AI CAMERA LOGIC ---
     async function openCamera(type) {
       activeCameraType = type;
+      alignmentStartTime = 0;
+      autoSnapTriggered = false;
       document.getElementById('step-camera').classList.add('active');
       const video = document.getElementById('camera-video');
       const canvas = document.getElementById('camera-canvas');
@@ -224,7 +228,8 @@
           await poseModel.send({image: video});
         },
         width: 1280,
-        height: 720
+        height: 720,
+        facingMode: 'user'
       });
       cameraInstance.start();
     }
@@ -233,6 +238,8 @@
       if (cameraInstance) cameraInstance.stop();
       document.getElementById('step-camera').classList.remove('active');
       activeCameraType = null;
+      alignmentStartTime = 0;
+      autoSnapTriggered = false;
     }
 
     function onPoseResults(results) {
@@ -246,8 +253,10 @@
 
       if (!results.poseLandmarks) {
         msg.textContent = "Searching for subject...";
-        msg.style.color = "#fff";
+        msg.style.background = "rgba(0, 0, 0, 0.8)";
+        msg.style.borderColor = "var(--Mint)";
         isPoseAligned = false;
+        alignmentStartTime = 0;
         return;
       }
 
@@ -278,23 +287,40 @@
         }
       }
 
-      msg.textContent = feedback;
-      msg.style.color = aligned ? "#fff" : "#fff";
+      // Autonomous Capture Logic
       if (aligned) {
-        msg.style.background = "rgba(87, 215, 192, 0.9)";
+        if (alignmentStartTime === 0) {
+          alignmentStartTime = Date.now();
+        } else if (Date.now() - alignmentStartTime > 1500 && !autoSnapTriggered) {
+          autoSnapTriggered = true;
+          snapPhoto();
+          return;
+        }
+        const remaining = Math.max(0, 1500 - (Date.now() - alignmentStartTime));
+        if (remaining > 0) feedback = `Capturing in ${(remaining/1000).toFixed(1)}s...`;
+        else feedback = "Processing...";
+      } else {
+        alignmentStartTime = 0;
+      }
+
+      msg.textContent = feedback;
+      if (aligned) {
+        msg.style.background = "var(--Mint)";
+        msg.style.color = "var(--Obsidian)";
         msg.style.borderColor = "#fff";
       } else {
         msg.style.background = "rgba(0, 0, 0, 0.8)";
+        msg.style.color = "#fff";
         msg.style.borderColor = "var(--Mint)";
       }
       isPoseAligned = aligned;
 
-      // Draw user skeleton (Vibrant & Thick)
-      ctx.strokeStyle = aligned ? "var(--Mint)" : "rgba(255,255,255,0.4)";
-      ctx.lineWidth = 6;
+// Draw user skeleton - Vibrant Mint for accurate, Pure White for inaccurate
+      ctx.strokeStyle = aligned ? "#57D7C0" : "#FFFFFF";
+      ctx.lineWidth = aligned ? 12 : 8; // Thicker for accurate (12px), White for inaccurate (8px)
       ctx.lineCap = "round";
-      ctx.shadowBlur = 10;
-      ctx.shadowColor = aligned ? "var(--Mint)" : "rgba(255,255,255,0.2)";
+      ctx.shadowBlur = aligned ? 30 : 0; // Strong glow for accurate pose
+      ctx.shadowColor = "#57D7C0";
 
       const connections = [
         [11, 12], [11, 13], [13, 15], [12, 14], [14, 16], // Upper body

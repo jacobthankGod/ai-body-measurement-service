@@ -447,11 +447,12 @@
       }
       isPoseAligned = aligned;
 
-      ctx.strokeStyle = aligned ? "var(--Mint)" : "rgba(255,255,255,0.4)";
-      ctx.lineWidth = 6;
+// Draw user skeleton - Vibrant Mint (#57D7C0) for accurate, Pure White (#FFFFFF) for inaccurate
+      ctx.strokeStyle = aligned ? "#57D7C0" : "#FFFFFF";
+      ctx.lineWidth = aligned ? 12 : 8; // Thicker 12px for accurate, 8px for inaccurate
       ctx.lineCap = "round";
-      ctx.shadowBlur = 10;
-      ctx.shadowColor = aligned ? "var(--Mint)" : "rgba(255,255,255,0.2)";
+      ctx.shadowBlur = aligned ? 30 : 0; // Strong glow for accurate pose
+      ctx.shadowColor = "#57D7C0";
 
       const connections = [ [11, 12], [11, 13], [13, 15], [12, 14], [14, 16], [11, 23], [12, 24], [23, 24], [23, 25], [25, 27], [24, 26], [26, 28] ];
       connections.forEach(([i, j]) => {
