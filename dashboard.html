@@ -340,13 +340,20 @@
     </div>
   </div>
 
-  <!-- COMPARISON MODAL (PHASE 2) -->
+  <!-- COMPARISON MODAL (PHASE 2 & 3) -->
   <div class="modal-overlay" id="compareModal">
     <div class="modal-card modal-card-landscape">
-      <h2 style="font-size:24px; margin-bottom:12px">Visual Comparison Mode</h2>
-      <p style="color:var(--Neutral-400); margin-bottom:32px">Comparing Baseline vs. Latest scan. Synchronization active.</p>
+      <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:24px">
+        <div>
+          <h2 style="font-size:24px; margin-bottom:4px">Visual Comparison Mode</h2>
+          <p style="color:var(--Neutral-400); margin:0">Comparing Baseline vs. Latest scan. Synchronization active.</p>
+        </div>
+        <div style="display:flex; gap:16px">
+           <button class="btn-outline" style="border-color:var(--Mint); color:var(--Mint)" id="btnHeatmapToggle" onclick="toggleHeatmap()">Activate Heatmap Overlay</button>
+        </div>
+      </div>
 
-      <div class="landscape-grid">
+      <div class="landscape-grid" id="compareGrid">
         <div style="text-align:center">
           <div style="font-size:10px; font-weight:900; color:var(--Neutral-500); margin-bottom:12px; text-transform:uppercase">Baseline Scan</div>
           <div id="compare-baseline-viz" style="width:100%; height:450px; background:#000; border-radius:16px; border:1px solid var(--Glass-Border); overflow:hidden; position:relative"></div>
@@ -359,8 +366,14 @@
         </div>
       </div>
 
+      <div id="heatmapLegend" style="display:none; justify-content:center; gap:32px; margin-top:24px">
+         <div style="display:flex; align-items:center; gap:8px; font-size:10px; font-weight:700"><div style="width:12px; height:12px; border-radius:50%; background:#ff4d4d"></div> EXPANSION (GROWTH)</div>
+         <div style="display:flex; align-items:center; gap:8px; font-size:10px; font-weight:700"><div style="width:12px; height:12px; border-radius:50%; background:#57D7C0"></div> REDUCTION (LOSS)</div>
+         <div style="display:flex; align-items:center; gap:8px; font-size:10px; font-weight:700"><div style="width:12px; height:12px; border-radius:50%; background:#888"></div> NO CHANGE</div>
+      </div>
+
       <div style="display:flex; justify-content:center; gap:16px; margin-top:40px">
-        <button class="btn-primary" style="padding:0 40px" onclick="document.getElementById('compareModal').classList.remove('active')">Exit Comparison</button>
+        <button class="btn-primary" style="padding:0 40px" onclick="location.reload()">Exit Comparison</button>
       </div>
     </div>
   </div>
@@ -1137,6 +1150,11 @@
         window.KORRA_EXPORT.pdf(`Passport: ${name}`, latest.measurements, latest.gender, latest.height);
       };
 
+      let baselineData = null;
+      let latestData = null;
+      let vBaseline = null;
+      let vLatest = null;
+
       window.openComparison = function(name) {
         const scans = masterHistory.filter(s => s.client_name === name);
         if (scans.length < 2) return;
@@ -1149,17 +1167,39 @@
         document.getElementById('compareModal').classList.add('active');
 
         // Initialize 3D Viewports
-        const vBaseline = window.createKorraVisualizer();
-        const vLatest = window.createKorraVisualizer();
+        vBaseline = window.createKorraVisualizer();
+        vLatest = window.createKorraVisualizer();
 
         vBaseline.init('compare-baseline-viz');
         vLatest.init('compare-latest-viz');
 
-        vBaseline.loadMesh(baseline.mesh_url);
-        vLatest.loadMesh(latest.mesh_url);
+        Promise.all([
+            vBaseline.loadMesh(baseline.mesh_url),
+            vLatest.loadMesh(latest.mesh_url)
+        ]).then(results => {
+            baselineData = results[0];
+            latestData = results[1];
+        });
+      };
 
-        // SYNC INTERACTION (Optional but high-authority)
-        // vBaseline.onRotate = (x, y) => { vLatest.targetRotationX = x; vLatest.targetRotationY = y; };
+      window.toggleHeatmap = function() {
+        if (!baselineData || !latestData) return;
+
+        const btn = document.getElementById('btnHeatmapToggle');
+        const legend = document.getElementById('heatmapLegend');
+        const grid = document.getElementById('compareGrid');
+
+        if (btn.textContent.includes('Activate')) {
+            // MERGE INTO HEATMAP VIEW
+            vLatest.applyHeatmap(baselineData, latestData);
+            btn.textContent = 'Disable Heatmap Overlay';
+            legend.style.display = 'flex';
+            // Optionally hide baseline viewport to focus on heat
+            document.getElementById('compare-baseline-viz').parentElement.style.display = 'none';
+            grid.style.gridTemplateColumns = '1fr';
+        } else {
+            location.reload(); // Hard reset for clean state
+        }
       };
 
       function renderAnalytics(data) {

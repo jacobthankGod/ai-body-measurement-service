@@ -1,7 +1,7 @@
 /**
- * KORRA 3D Visualizer | Phase 1: Multi-Instance Evolution
+ * KORRA 3D Visualizer | Phase 3: Heatmap Analytics
  * ====================================================
- * High-authority rendering engine with support for concurrent viewports.
+ * High-authority rendering engine with support for volumetric comparisons.
  */
 
 class KorraVisualizer {
@@ -19,7 +19,7 @@ class KorraVisualizer {
     }
 
     init(containerId) {
-        console.log(`🔍 [PHASE 1] Initializing 3D Viewport: ${containerId}`);
+        console.log(`🔍 [PHASE 3] Initializing 3D Viewport: ${containerId}`);
         const container = document.getElementById(containerId);
         if (!container) return;
 
@@ -94,7 +94,7 @@ class KorraVisualizer {
     async loadMesh(objUrl) {
         if (!objUrl || objUrl === 'null') {
             this.createTechnicalProxy();
-            return;
+            return null;
         }
 
         try {
@@ -102,9 +102,10 @@ class KorraVisualizer {
             if (!response.ok) throw new Error("File Missing");
             const text = await response.text();
             if (text.trim().startsWith('<!doctype html>')) throw new Error("Corruption");
-            this.parseAndRenderOBJ(text);
+            return this.parseAndRenderOBJ(text);
         } catch (e) {
             this.createTechnicalProxy();
+            return null;
         }
     }
 
@@ -127,7 +128,7 @@ class KorraVisualizer {
             }
         }
 
-        if (vertices.length === 0) return;
+        if (vertices.length === 0) return null;
 
         const geometry = new THREE.BufferGeometry();
         geometry.setAttribute('position', new THREE.Float32BufferAttribute(vertices, 3));
@@ -162,6 +163,72 @@ class KorraVisualizer {
         this.camera.position.z = Math.max(2.5, size.y * 1.5);
 
         this.scene.add(this.mesh);
+        return { vertices, faces, size };
+    }
+
+    /**
+     * PHASE 3: VOLUMETRIC HEATMAP ENGINE
+     * Compares this instance's current mesh to a new set of data.
+     */
+    applyHeatmap(baselineData, latestData) {
+        if (!baselineData || !latestData) return;
+
+        const baselineArr = baselineData.vertices;
+        const latestArr = latestData.vertices;
+
+        // Safety: Topologies must match (HMR/SMPL standard)
+        if (baselineArr.length !== latestArr.length) {
+            console.error("❌ [HEATMAP] Topology mismatch. Comparison aborted.");
+            return;
+        }
+
+        const count = baselineArr.length / 3;
+        const colors = new Float32Array(baselineArr.length);
+
+        for (let i = 0; i < count; i++) {
+            const idx = i * 3;
+            // Calculate Euclidean Distance difference (Simplified for Z-expansion/Physical volume)
+            // In a professional clinical app, we calculate the signed distance along the surface normal.
+            // For KORRA v1, we use radial distance from center.
+            const bX = baselineArr[idx], bY = baselineArr[idx+1], bZ = baselineArr[idx+2];
+            const lX = latestArr[idx], lY = latestArr[idx+1], lZ = latestArr[idx+2];
+
+            const distB = Math.sqrt(bX*bX + bZ*bZ);
+            const distL = Math.sqrt(lX*lX + lZ*lZ);
+            const diff = distL - distB; // Positive = Growth, Negative = Loss
+
+            if (diff > 0.005) { // Expansion (Red)
+                colors[idx] = 1.0; colors[idx+1] = 0.3; colors[idx+2] = 0.3;
+            } else if (diff < -0.005) { // Reduction (Mint)
+                colors[idx] = 0.34; colors[idx+1] = 0.84; colors[idx+2] = 0.75;
+            } else { // Static (White/Glass)
+                colors[idx] = 0.8; colors[idx+1] = 0.8; colors[idx+2] = 0.8;
+            }
+        }
+
+        const geometry = new THREE.BufferGeometry();
+        geometry.setAttribute('position', new THREE.Float32BufferAttribute(latestArr, 3));
+        geometry.setAttribute('color', new THREE.BufferAttribute(colors, 3));
+        if (latestData.faces) geometry.setIndex(latestData.faces);
+        geometry.computeVertexNormals();
+        geometry.center();
+
+        const material = new THREE.MeshPhongMaterial({
+            vertexColors: true,
+            wireframe: false,
+            transparent: true,
+            opacity: 0.8,
+            side: THREE.DoubleSide
+        });
+
+        if (this.mesh) this.scene.remove(this.mesh);
+        this.mesh = new THREE.Mesh(geometry, material);
+        this.mesh.rotation.x = Math.PI;
+        this.mesh.rotation.y = Math.PI;
+
+        const size = latestData.size;
+        this.mesh.position.set(0, size.y / 2, 0);
+        this.scene.add(this.mesh);
     }
 
     createTechnicalProxy() {
@@ -176,8 +243,5 @@ class KorraVisualizer {
     }
 }
 
-// MAINTAIN BACKWARD COMPATIBILITY FOR MAIN VIEWER
 window.KORRA_VIZ = new KorraVisualizer();
-
-// EXPOSE FACTORY FOR MINI-VIEWPORTS
 window.createKorraVisualizer = () => new KorraVisualizer();
