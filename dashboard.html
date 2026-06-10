@@ -340,6 +340,31 @@
     </div>
   </div>
 
+  <!-- COMPARISON MODAL (PHASE 2) -->
+  <div class="modal-overlay" id="compareModal">
+    <div class="modal-card modal-card-landscape">
+      <h2 style="font-size:24px; margin-bottom:12px">Visual Comparison Mode</h2>
+      <p style="color:var(--Neutral-400); margin-bottom:32px">Comparing Baseline vs. Latest scan. Synchronization active.</p>
+
+      <div class="landscape-grid">
+        <div style="text-align:center">
+          <div style="font-size:10px; font-weight:900; color:var(--Neutral-500); margin-bottom:12px; text-transform:uppercase">Baseline Scan</div>
+          <div id="compare-baseline-viz" style="width:100%; height:450px; background:#000; border-radius:16px; border:1px solid var(--Glass-Border); overflow:hidden; position:relative"></div>
+          <div id="baselineDate" style="font-size:11px; color:var(--Mint); margin-top:12px"></div>
+        </div>
+        <div style="text-align:center">
+          <div style="font-size:10px; font-weight:900; color:var(--Neutral-500); margin-bottom:12px; text-transform:uppercase">Latest Scan</div>
+          <div id="compare-latest-viz" style="width:100%; height:450px; background:#000; border-radius:16px; border:1px solid var(--Mint); overflow:hidden; position:relative"></div>
+          <div id="latestDate" style="font-size:11px; color:var(--Mint); margin-top:12px"></div>
+        </div>
+      </div>
+
+      <div style="display:flex; justify-content:center; gap:16px; margin-top:40px">
+        <button class="btn-primary" style="padding:0 40px" onclick="document.getElementById('compareModal').classList.remove('active')">Exit Comparison</button>
+      </div>
+    </div>
+  </div>
+
   <header>
     <div class="container">
       <a class="logo" href="/"><div class="logo-mark"></div><div class="logo-text">KORRA</div></a>
@@ -1088,10 +1113,11 @@
                   ${scans.length > 1 ? `<div style="font-size:9px; margin-top:8px; color:${changeColor}">Waist Drift: ${change > 0 ? '+' : ''}${change}cm since start</div>` : ''}
                 </div>
 
-                <div style="display:grid; grid-template-columns: 1fr 1fr; gap:12px">
+                <div style="display:grid; grid-template-columns: 1fr 1fr; gap:12px; margin-bottom:12px">
                   <button class="btn-primary" style="height:36px; font-size:10px" onclick="exportPassport('${name}')">Export Passport</button>
                   <button class="btn-outline" style="height:36px; font-size:10px" onclick="switchTab('vault'); document.getElementById('ledgerSearch').value='${name}'; document.getElementById('ledgerSearch').dispatchEvent(new Event('input'));">View History</button>
                 </div>
+                ${scans.length > 1 ? `<button class="btn-outline" style="width:100%; height:36px; font-size:10px; border-color:var(--Mint); color:var(--Mint)" onclick="openComparison('${name}')">Compare Baseline vs Latest</button>` : ''}
             `;
             container.appendChild(card);
 
@@ -1109,6 +1135,31 @@
         if (!scans.length) return;
         const latest = scans[0];
         window.KORRA_EXPORT.pdf(`Passport: ${name}`, latest.measurements, latest.gender, latest.height);
+      };
+
+      window.openComparison = function(name) {
+        const scans = masterHistory.filter(s => s.client_name === name);
+        if (scans.length < 2) return;
+
+        const latest = scans[0];
+        const baseline = scans[scans.length - 1];
+
+        document.getElementById('baselineDate').textContent = new Date(baseline.created_at).toLocaleDateString() + " (First Scan)";
+        document.getElementById('latestDate').textContent = new Date(latest.created_at).toLocaleDateString() + " (Most Recent)";
+        document.getElementById('compareModal').classList.add('active');
+
+        // Initialize 3D Viewports
+        const vBaseline = window.createKorraVisualizer();
+        const vLatest = window.createKorraVisualizer();
+
+        vBaseline.init('compare-baseline-viz');
+        vLatest.init('compare-latest-viz');
+
+        vBaseline.loadMesh(baseline.mesh_url);
+        vLatest.loadMesh(latest.mesh_url);
+
+        // SYNC INTERACTION (Optional but high-authority)
+        // vBaseline.onRotate = (x, y) => { vLatest.targetRotationX = x; vLatest.targetRotationY = y; };
       };
 
       function renderAnalytics(data) {
