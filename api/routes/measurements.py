@@ -137,6 +137,7 @@ async def run_extraction_subprocess_cli(task_id: str, front_path: str, side_path
                 sys.executable,
                 str(script_path),
                 front_path,
+                side_path,
                 str(height),
                 gender,
                 str(mesh_path)

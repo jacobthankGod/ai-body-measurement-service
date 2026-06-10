@@ -541,10 +541,6 @@
                       <div style="font-size:9px; color:var(--Neutral-500); text-transform:uppercase">Recommended Fabric Ease (Slim Fit)</div>
                       <div style="font-size:14px; font-weight:700; color:var(--Mint); margin-top:4px" id="diagEase">+4.0cm Chest / +2.0cm Waist</div>
                     </div>
-                    <div style="margin-top:16px">
-                      <div style="font-size:9px; color:var(--Neutral-500); text-transform:uppercase">Suggested Fabrics</div>
-                      <div style="font-size:11px; color:var(--Neutral-400); margin-top:4px" id="diagFabrics">Wool, Structured Cotton, Linen</div>
-                    </div>
                   </div>
 
                   <div style="display:flex; gap:12px">
@@ -1032,15 +1028,6 @@
         const shape = data.body_shape || "Standard";
         document.getElementById('measurementShape').textContent = shape;
         document.getElementById('measurementSizeRec').textContent = data.size_recommendation || "M";
-
-        // PHASE 36: FABRIC RECOMMENDATIONS
-        const fabricsMap = {
-            "Hourglass": "Lightweight Linen, Silk Crepe, Stretch Poplin",
-            "Inverted Triangle": "Heavy Wool (Structure), Corduroy, Structured Cotton",
-            "Rectangle": "Textured Tweed, Heavy Jersey, Gabardine",
-            "Pear / Spoon": "Flowy Rayon, Lightweight Wool, Chiffon"
-        };
-        document.getElementById('diagFabrics').textContent = fabricsMap[shape.split(' ')[0]] || "Universal Twill, Standard Wool, Oxford Cotton";
     }
 
     window.exportToPDF = function() {

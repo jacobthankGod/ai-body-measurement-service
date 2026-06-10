@@ -138,10 +138,10 @@ class HMRMasterEngine:
         vertex_path = root / "data" / "customBodyPoints.txt"
         self.vertex_map = self._parse_vertex_indices(vertex_path)
 
-    def extract(self, image: np.ndarray, height_cm: float, gender: str = 'male') -> Tuple[Dict[str, float], Optional[np.ndarray], Optional[dict], Optional[str], Optional[str], Optional[str]]:
+    def extract(self, front_image: np.ndarray, side_image: Optional[np.ndarray], height_cm: float, gender: str = 'male') -> Tuple[Dict[str, float], Optional[np.ndarray], Optional[dict], Optional[str], Optional[str], Optional[str]]:
         """
-        High-Precision Extraction with ABSOLUTE MEMORY ISOLATION.
-        Returns: (measurements, vertices, landmark_2d, body_shape, size_rec, error)
+        Multi-View High-Precision Extraction.
+        Uses the Side Photo to correct the depth (Z-axis) of the Front Photo's 3D regression.
         """
         import gc
         tf1 = setup_tf_bridge()
@@ -162,55 +162,84 @@ class HMRMasterEngine:
                 config.inter_op_parallelism_threads = 1
 
                 with tf1.Session(config=config, graph=graph) as sess:
-                    # 3. TRANSIENT MODEL INSTANTIATION
                     from src.RunModel import RunModel
-                    logger.info("📦 HMR: Loading isolated AI brain...")
+                    logger.info("📦 HMR: Loading Isolated Multi-View Brain...")
                     model = RunModel(sess=sess)
                     model.prepare()
 
-                    # 4. PREPROCESSING
-                    import cv2
-                    h, w = image.shape[:2]
-                    if max(h, w) > 800:
-                        scale_f = 800 / max(h, w)
-                        image = cv2.resize(image, (int(w * scale_f), int(h * scale_f)))
+                    # --- PHASE 1: FRONT VIEW INFERENCE ---
+                    front_proc = self._preprocess_for_hmr(front_image)
+                    logger.info("🧠 HMR: Executing Frontal Inference...")
+                    res_f = model.predict_dict(front_proc)
+                    v_f = res_f['verts'][0]
+                    j_f = res_f['joints'][0]
 
-                    img_resized = cv2.resize(image, (224, 224))
-                    del image
+                    # --- PHASE 2: SIDE VIEW DEPTH CORRECTION ---
+                    depth_correction = 1.0
+                    if side_image is not None:
+                        logger.info("🧠 HMR: Executing Side-Profile Depth Audit...")
+                        side_proc = self._preprocess_for_hmr(side_image)
+                        res_s = model.predict_dict(side_proc)
+                        v_s = res_s['verts'][0]
 
-                    img_normalized = 2 * ((img_resized / 255.0) - 0.5)
-                    img_batch = np.expand_dims(img_normalized, 0)
-                    del img_resized
+                        # Calculate physical 'Depth' from Side Width
+                        side_width_raw = np.max(v_s[:, 0]) - np.min(v_s[:, 0])
+                        front_depth_raw = np.max(v_f[:, 2]) - np.min(v_f[:, 2])
 
-                    # 5. INFERENCE
-                    logger.info("🧠 HMR: Executing isolated 3D inference...")
-                    results = model.predict_dict(img_batch)
-                    vertices = results['verts'][0]
-                    joints = results['joints'][0]
+                        if front_depth_raw > 0:
+                            depth_correction = side_width_raw / front_depth_raw
+                            # Clamp correction to prevent insane mesh distortion
+                            depth_correction = np.clip(depth_correction, 0.7, 1.4)
+                            logger.info(f"⚖️ KORRA: Depth Correction Factor Applied: {depth_correction:.2f}")
 
-                    # 6. POST-PROCESSING
-                    def norm_hmr(val): return float((val + 1.0) / 2.0)
-                    landmark_2d = {
-                        'Shoulder_L': (norm_hmr(joints[8][0]), norm_hmr(joints[8][1])),
-                        'Shoulder_R': (norm_hmr(joints[9][0]), norm_hmr(joints[9][1])),
-                        'Hip_L': (norm_hmr(joints[2][0]), norm_hmr(joints[2][1])),
-                        'Hip_R': (norm_hmr(joints[3][0]), norm_hmr(joints[3][1])),
-                        'Nose': (norm_hmr(joints[14][0]), norm_hmr(joints[14][1]))
-                    }
+                    # --- PHASE 3: FUSION & SCALING ---
+                    # Apply correction to Z-axis (Depth) of the primary front mesh
+                    v_f[:, 2] *= depth_correction
 
-                    measurements_3d = self._calculate_from_indices(vertices, height_cm, gender)
+                    # Recalculate 3D measurements from corrected mesh
+                    measurements_3d = self._calculate_from_indices(v_f, height_cm, gender)
                     final_measurements = {key: measurements_3d.get(key, 0.0) for key in (MALE_KEYS if gender == 'male' else FEMALE_KEYS)}
 
-                    # INTELLIGENCE LAYER: CLASSIFICATION
+                    # UI Landmarks (Normalized 0-1)
+                    def norm_hmr(val): return float((val + 1.0) / 2.0)
+                    landmark_2d = {
+                        'Shoulder_L': (norm_hmr(j_f[8][0]), norm_hmr(j_f[8][1])),
+                        'Shoulder_R': (norm_hmr(j_f[9][0]), norm_hmr(j_f[9][1])),
+                        'Hip_L': (norm_hmr(j_f[2][0]), norm_hmr(j_f[2][1])),
+                        'Hip_R': (norm_hmr(j_f[3][0]), norm_hmr(j_f[3][1])),
+                        'Nose': (norm_hmr(j_f[14][0]), norm_hmr(j_f[14][1]))
+                    }
+
                     body_shape = self._classify_body_shape(final_measurements, gender)
                     size_rec = self._calculate_size_recommendation(final_measurements, gender)
 
-                    v_min, v_max = np.min(vertices[:, 1]), np.max(vertices[:, 1])
+                    # Real-world meter scaling
+                    v_min, v_max = np.min(v_f[:, 1]), np.max(v_f[:, 1])
                     scale_to_meters = (height_cm / 100.0) / (v_max - v_min)
-                    vertices_scaled = vertices * scale_to_meters
+                    v_scaled = v_f * scale_to_meters
 
                     sess.close()
-                    return final_measurements, vertices_scaled, landmark_2d, body_shape, size_rec, None
+                    return final_measurements, v_scaled, landmark_2d, body_shape, size_rec, None
+
+        except Exception as e:
+            logger.error(f"❌ HMR MULTI-VIEW CRASH: {e}")
+            traceback.print_exc()
+            return self._fallback_ratios(height_cm, gender), None, None, "Standard", "M", str(e)
+        finally:
+            if 'model' in locals(): del model
+            gc.collect()
+
+    def _preprocess_for_hmr(self, image: np.ndarray) -> np.ndarray:
+        """Isolated preprocessing for memory safety."""
+        import cv2
+        h, w = image.shape[:2]
+        if max(h, w) > 800:
+            scale_f = 800 / max(h, w)
+            image = cv2.resize(image, (int(w * scale_f), int(h * scale_f)))
+
+        img_resized = cv2.resize(image, (224, 224))
+        img_normalized = 2 * ((img_resized / 255.0) - 0.5)
+        return np.expand_dims(img_normalized, 0)
 
         except Exception as e:
             logger.error(f"❌ HMR ISOLATED CRASH: {e}")

@@ -22,7 +22,7 @@ if str(SRC_PATH) not in sys.path: sys.path.insert(0, str(SRC_PATH))
 logging.basicConfig(level=logging.INFO, stream=sys.stderr)
 logger = logging.getLogger("HMR_SUBPROCESS")
 
-def run_hmr(image_path, height_cm, gender, mesh_path=None):
+def run_hmr(front_path, side_path, height_cm, gender, mesh_path=None):
     import sys # REDUNDANT IMPORT FOR SCOPE PROTECTION
     import gc
     try:
@@ -37,18 +37,20 @@ def run_hmr(image_path, height_cm, gender, mesh_path=None):
         if not hasattr(inspect, 'getargspec'):
             inspect.getargspec = inspect.getfullargspec
 
-        # Load image
-        img = np.array(Image.open(image_path))
+        # Load images
+        img_f = np.array(Image.open(front_path))
+        img_s = np.array(Image.open(side_path)) if side_path and os.path.exists(side_path) else None
 
         # Import extraction engine components
         from api.services.extract_measurements import HMRMasterEngine
         engine = HMRMasterEngine()
 
         # Perform extraction
-        measurements, vertices, landmarks, body_shape, size_rec, error = engine.extract(img, height_cm, gender)
+        measurements, vertices, landmarks, body_shape, size_rec, error = engine.extract(img_f, img_s, height_cm, gender)
 
         # CLEANUP AGGRESSIVELY
-        del img
+        del img_f
+        if img_s is not None: del img_s
 
         if error:
             return {"status": "failed", "error": error}
@@ -78,18 +80,19 @@ def run_hmr(image_path, height_cm, gender, mesh_path=None):
         return {"status": "failed", "error": str(e), "traceback": traceback.format_exc()}
 
 if __name__ == "__main__":
-    if len(sys.argv) < 4:
-        print(json.dumps({"status": "failed", "error": "Missing arguments"}))
+    if len(sys.argv) < 5:
+        print(json.dumps({"status": "failed", "error": "Missing arguments. Need: front_path side_path height gender [mesh_out]"}))
         sys.exit(1)
 
-    img_path = sys.argv[1]
-    height = float(sys.argv[2])
-    gender = sys.argv[3]
-    mesh_out = sys.argv[4] if len(sys.argv) > 4 else None
+    f_path = sys.argv[1]
+    s_path = sys.argv[2]
+    height = float(sys.argv[3])
+    gender = sys.argv[4]
+    mesh_out = sys.argv[5] if len(sys.argv) > 5 else None
 
     # Force single threaded to save memory on Render
     os.environ["OMP_NUM_THREADS"] = "1"
     os.environ["TF_CPP_MIN_LOG_LEVEL"] = "3"
 
-    result = run_hmr(img_path, height, gender, mesh_out)
+    result = run_hmr(f_path, s_path, height, gender, mesh_out)
     print(json.dumps(result))
