@@ -52,6 +52,24 @@
     .step-view { display: none; animation: fadeIn 0.3s ease-out; }
     .step-view.active { display: block; }
     @keyframes fadeIn { from { opacity: 0; transform: translateY(10px); } to { opacity: 1; transform: translateY(0); } }
+
+    /* CAMERA GUIDANCE SYSTEM */
+    .pro-tips-card { background: rgba(87, 215, 192, 0.05); border: 1px solid rgba(87, 215, 192, 0.2); border-radius: 20px; padding: 20px; margin-top: 24px; text-align: left; }
+    .pro-tips-card h4 { font-size: 11px; font-weight: 900; color: var(--Mint); text-transform: uppercase; margin-bottom: 12px; display: flex; align-items: center; gap: 8px; }
+    .tip-row { display: flex; gap: 12px; margin-bottom: 10px; font-size: 11px; color: var(--Neutral-400); line-height: 1.4; }
+    .tip-bullet { color: var(--Mint); font-weight: 900; }
+
+    #step-camera { position: fixed; inset: 0; background: #000; z-index: 3000; display: none; flex-direction: column; }
+    #step-camera.active { display: flex; }
+    .camera-container { flex: 1; position: relative; overflow: hidden; display: flex; align-items: center; justify-content: center; }
+    #camera-video { width: 100%; height: 100%; object-fit: cover; transform: scaleX(-1); }
+    #camera-canvas { position: absolute; inset: 0; width: 100%; height: 100%; z-index: 10; transform: scaleX(-1); }
+    .camera-overlay { position: absolute; inset: 0; z-index: 20; pointer-events: none; display: flex; flex-direction: column; align-items: center; justify-content: space-between; padding: 40px 24px; }
+    .camera-guidance { background: rgba(0,0,0,0.7); backdrop-filter: blur(10px); padding: 12px 24px; border-radius: 99px; border: 1px solid var(--Glass-Border); color: #fff; font-size: 13px; font-weight: 700; text-align: center; }
+    .camera-controls { position: absolute; bottom: 40px; left: 0; right: 0; display: flex; justify-content: center; align-items: center; gap: 32px; z-index: 30; }
+    .shutter-btn { width: 72px; height: 72px; border-radius: 50%; background: #fff; border: 4px solid var(--Mint); cursor: pointer; display: flex; align-items: center; justify-content: center; box-shadow: 0 0 20px rgba(0,0,0,0.5); }
+    .shutter-btn:active { transform: scale(0.9); }
+    .camera-close { position: absolute; top: 40px; right: 24px; width: 40px; height: 40px; border-radius: 50%; background: rgba(0,0,0,0.5); border: 1px solid var(--Glass-Border); color: #fff; display: flex; align-items: center; justify-content: center; cursor: pointer; }
   </style>
 </head>
 <body>
@@ -86,21 +104,31 @@
           <select id="gender" class="input" style="appearance:none;"><option value="male">Male</option><option value="female">Female</option></select>
 
           <div class="file-grid">
-            <div class="file-box">
+            <div class="file-box" onclick="openCamera('front')">
               <div class="ghost-overlay"><div class="ghost-shape"></div></div>
               <img class="preview-img" id="fPrev">
-              <span>Front Photo</span>
-              <input type="file" id="front" accept="image/*" required onchange="preview(this, 'fPrev')">
+              <span>Front A-Pose</span>
+              <div style="font-size:8px; color:var(--Mint); margin-top:4px; font-weight:700">TAP TO SNAP</div>
+              <input type="file" id="front" accept="image/*" required onchange="preview(this, 'fPrev')" onclick="event.stopPropagation()">
             </div>
-            <div class="file-box">
+            <div class="file-box" onclick="openCamera('side')">
               <div class="ghost-overlay"><div class="ghost-shape" style="width:25%"></div></div>
               <img class="preview-img" id="sPrev">
-              <span>Side Photo</span>
-              <input type="file" id="side" accept="image/*" required onchange="preview(this, 'sPrev')">
+              <span>Side Profile</span>
+              <div style="font-size:8px; color:var(--Mint); margin-top:4px; font-weight:700">TAP TO SNAP</div>
+              <input type="file" id="side" accept="image/*" required onchange="preview(this, 'sPrev')" onclick="event.stopPropagation()">
             </div>
           </div>
 
-          <button type="submit" class="btn-submit" id="btnSubmit">Extract Biometrics</button>
+          <div class="pro-tips-card">
+            <h4><span style="font-size:14px">&#x2728;</span> Pro-Tips for Precision</h4>
+            <div class="tip-row"><span class="tip-bullet">&bull;</span><span><b>The A-Pose:</b> Keep arms 15&quot; away from body. Do not touch your torso.</span></div>
+            <div class="tip-row"><span class="tip-bullet">&bull;</span><span><b>Clothing:</b> Wear form-fitting gym wear. Baggy clothes add fake volume.</span></div>
+            <div class="tip-row"><span class="tip-bullet">&bull;</span><span><b>Contrast:</b> Stand against a plain wall that is a different color than your outfit.</span></div>
+            <div class="tip-row"><span class="tip-bullet">&bull;</span><span><b>Level:</b> Place phone at waist height, perfectly vertical (not tilted).</span></div>
+          </div>
+
+          <button type="submit" class="btn-submit" id="btnSubmit" style="margin-top:32px">Extract Biometrics</button>
         </form>
       </div>
 
@@ -120,9 +148,28 @@
         <p style="font-size:11px; color:var(--Neutral-500); text-align:center; margin-top:24px">Your profile has been synced with your artisan.</p>
       </div>
     </div>
+
+    <!-- STEP 4: AI CAMERA VIEW -->
+    <div id="step-camera">
+      <div class="camera-container">
+        <video id="camera-video" autoplay playsinline></video>
+        <canvas id="camera-canvas"></canvas>
+        <div class="camera-overlay">
+          <div class="camera-guidance" id="camera-msg">Initializing AI guidance...</div>
+          <div class="camera-close" onclick="closeCamera()">✕</div>
+        </div>
+      </div>
+      <div class="camera-controls">
+        <div class="shutter-btn" onclick="snapPhoto()">
+          <div style="width:56px; height:56px; border-radius:50%; background:var(--Mint); opacity:0.2"></div>
+        </div>
+      </div>
+    </div>
   </div>
 
   <!-- --- ASSETS --- -->
+  <script src="https://cdn.jsdelivr.net/npm/@mediapipe/pose"></script>
+  <script src="https://cdn.jsdelivr.net/npm/@mediapipe/camera_utils"></script>
   <script src="/assets/three.min.js"></script>
   <script src="/assets/korra_viz.js"></script>
   <script src="/assets/jspdf.min.js"></script>
@@ -131,6 +178,173 @@
   <script>
     let sessionData = null;
     let scanResults = null;
+    let activeCameraType = null;
+    let poseModel = null;
+    let cameraInstance = null;
+    let isPoseAligned = false;
+
+    // --- AI CAMERA LOGIC ---
+    async function openCamera(type) {
+      activeCameraType = type;
+      document.getElementById('step-camera').classList.add('active');
+      const video = document.getElementById('camera-video');
+      const canvas = document.getElementById('camera-canvas');
+      const ctx = canvas.getContext('2d');
+      const msg = document.getElementById('camera-msg');
+
+      if (!poseModel) {
+        poseModel = new Pose({
+          locateFile: (file) => `https://cdn.jsdelivr.net/npm/@mediapipe/pose/${file}`
+        });
+        poseModel.setOptions({
+          modelComplexity: 1,
+          smoothLandmarks: true,
+          minDetectionConfidence: 0.5,
+          minTrackingConfidence: 0.5
+        });
+        poseModel.onResults(onPoseResults);
+      }
+
+      cameraInstance = new Camera(video, {
+        onFrame: async () => {
+          await poseModel.send({image: video});
+        },
+        width: 1280,
+        height: 720
+      });
+      cameraInstance.start();
+    }
+
+    function closeCamera() {
+      if (cameraInstance) cameraInstance.stop();
+      document.getElementById('step-camera').classList.remove('active');
+      activeCameraType = null;
+    }
+
+    function onPoseResults(results) {
+      const canvas = document.getElementById('camera-canvas');
+      const ctx = canvas.getContext('2d');
+      const msg = document.getElementById('camera-msg');
+
+      canvas.width = canvas.clientWidth;
+      canvas.height = canvas.clientHeight;
+      ctx.clearRect(0, 0, canvas.width, canvas.height);
+
+      if (!results.poseLandmarks) {
+        msg.textContent = "Searching for subject...";
+        msg.style.color = "#fff";
+        isPoseAligned = false;
+        return;
+      }
+
+      // Draw silhouette guidance
+      drawSilhouette(ctx, canvas.width, canvas.height, activeCameraType);
+
+      // Check alignment
+      const landmarks = results.poseLandmarks;
+      const head = landmarks[0];
+      const leftAnkle = landmarks[27];
+      const rightAnkle = landmarks[28];
+      const leftWrist = landmarks[15];
+      const rightWrist = landmarks[16];
+      const leftHip = landmarks[23];
+      const rightHip = landmarks[24];
+
+      let aligned = true;
+      let feedback = "Hold steady...";
+
+      if (head.visibility < 0.5 || leftAnkle.visibility < 0.5 || rightAnkle.visibility < 0.5) {
+        feedback = "Step back: Head and feet must be visible.";
+        aligned = false;
+      } else if (activeCameraType === 'front') {
+        const armDistance = Math.abs(leftWrist.x - leftHip.x);
+        if (armDistance < 0.1) {
+          feedback = "A-POSE: Move arms away from your sides.";
+          aligned = false;
+        }
+      }
+
+      msg.textContent = feedback;
+      msg.style.color = aligned ? "var(--Mint)" : "#fff";
+      isPoseAligned = aligned;
+
+      // Draw user skeleton (simplified)
+      ctx.strokeStyle = aligned ? "var(--Mint)" : "rgba(255,255,255,0.3)";
+      ctx.lineWidth = 4;
+      ctx.lineCap = "round";
+
+      const connections = [
+        [11, 12], [11, 13], [13, 15], [12, 14], [14, 16], // Upper body
+        [11, 23], [12, 24], [23, 24], // Torso
+        [23, 25], [25, 27], [24, 26], [26, 28] // Legs
+      ];
+
+      connections.forEach(([i, j]) => {
+        const p1 = landmarks[i];
+        const p2 = landmarks[j];
+        if (p1.visibility > 0.5 && p2.visibility > 0.5) {
+          ctx.beginPath();
+          ctx.moveTo(p1.x * canvas.width, p1.y * canvas.height);
+          ctx.lineTo(p2.x * canvas.width, p2.y * canvas.height);
+          ctx.stroke();
+        }
+      });
+    }
+
+    function drawSilhouette(ctx, w, h, type) {
+      ctx.beginPath();
+      ctx.strokeStyle = isPoseAligned ? "var(--Mint)" : "rgba(255,255,255,0.1)";
+      ctx.setLineDash([10, 5]);
+      ctx.lineWidth = 2;
+
+      // Basic A-Pose silhouette drawing
+      const cx = w / 2;
+      const cy = h / 2;
+      ctx.moveTo(cx, cy - h*0.4); // Head
+      ctx.lineTo(cx - w*0.1, cy - h*0.2); // Shoulder L
+      ctx.lineTo(cx - w*0.2, cy + h*0.1); // Arm L
+      ctx.moveTo(cx, cy - h*0.4);
+      ctx.lineTo(cx + w*0.1, cy - h*0.2); // Shoulder R
+      ctx.lineTo(cx + w*0.2, cy + h*0.1); // Arm R
+      ctx.moveTo(cx, cy - h*0.2);
+      ctx.lineTo(cx, cy + h*0.1); // Torso
+      ctx.lineTo(cx - w*0.1, cy + h*0.4); // Leg L
+      ctx.moveTo(cx, cy + h*0.1);
+      ctx.lineTo(cx + w*0.1, cy + h*0.4); // Leg R
+      ctx.stroke();
+      ctx.setLineDash([]);
+    }
+
+    function snapPhoto() {
+      const video = document.getElementById('camera-video');
+      const canvas = document.createElement('canvas');
+      canvas.width = video.videoWidth;
+      canvas.height = video.videoHeight;
+      const ctx = canvas.getContext('2d');
+      ctx.translate(canvas.width, 0);
+      ctx.scale(-1, 1);
+      ctx.drawImage(video, 0, 0);
+
+      const dataUrl = canvas.toDataURL('image/jpeg');
+      const imgId = activeCameraType === 'front' ? 'fPrev' : 'sPrev';
+      const fileId = activeCameraType === 'front' ? 'front' : 'side';
+
+      const img = document.getElementById(imgId);
+      img.src = dataUrl;
+      img.style.display = 'block';
+
+      // Convert to blob and assign to file input (trick)
+      fetch(dataUrl)
+        .then(res => res.blob())
+        .then(blob => {
+          const file = new File([blob], `${activeCameraType}.jpg`, { type: "image/jpeg" });
+          const container = new DataTransfer();
+          container.items.add(file);
+          document.getElementById(fileId).files = container.files;
+        });
+
+      closeCamera();
+    }
 
     function goToStep(step) {
       document.querySelectorAll('.step-view').forEach(v => v.classList.remove('active'));
