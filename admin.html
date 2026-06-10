@@ -516,14 +516,24 @@
     function speak(text, force = false) {
       if (!window.speechSynthesis) return;
       const now = Date.now();
+
+      // 1. Prevent repetitive spam (standard guidance)
       if (!force && text === lastSpokenText && now - lastSpokenTime < 3000) return;
 
-      window.speechSynthesis.cancel();
+      // 2. Audio Integrity: If currently speaking, don't interrupt unless forced
+      if (!force && window.speechSynthesis.speaking) return;
+
+      // 3. Clear queue only for high-priority 'force' alerts (Captured, Perfect)
+      if (force) window.speechSynthesis.cancel();
+
       const utterance = new SpeechSynthesisUtterance(text);
       utterance.rate = 1.0;
       utterance.pitch = 1.0;
+
+      // Select premium voice if available
       const voices = window.speechSynthesis.getVoices();
       utterance.voice = voices.find(v => v.name.includes('Google') || v.name.includes('Siri')) || voices[0];
+
       window.speechSynthesis.speak(utterance);
       lastSpokenText = text;
       lastSpokenTime = now;
@@ -631,7 +641,7 @@
       if (aligned) {
         if (alignmentStartTime === 0) {
           alignmentStartTime = Date.now();
-          speak("Perfect, hold still.");
+          speak("Perfect, hold still.", true);
         } else if (Date.now() - alignmentStartTime > 1500 && !autoSnapTriggered) {
           autoSnapTriggered = true;
           snapPhoto();
