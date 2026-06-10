@@ -19,7 +19,7 @@ CREATE TABLE IF NOT EXISTS public.profiles (
   company_name TEXT,
   industry TEXT,
   monthly_volume TEXT,
-  credits INTEGER DEFAULT 10,
+  credits INTEGER DEFAULT 0,
   created_at TIMESTAMPTZ DEFAULT NOW()
 );
 
@@ -46,7 +46,7 @@ BEGIN
     COALESCE(NEW.raw_user_meta_data->>'company_name', 'Independent Brand'),
     COALESCE(NEW.raw_user_meta_data->>'industry', 'luxury_mtm'),
     COALESCE(NEW.raw_user_meta_data->>'monthly_volume', '0-50'),
-    10 -- Initial scan gift
+    0 -- No free credits on signup
   );
 
   -- Initialize Subscription record
