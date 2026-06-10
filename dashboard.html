@@ -309,6 +309,15 @@
         </div>
       </div>
 
+      <div style="margin-bottom:32px">
+        <label style="font-size:10px; font-weight:900; color:var(--Neutral-500); display:block; margin-bottom:8px">PROMO CODE</label>
+        <div style="display:flex; gap:12px">
+           <input type="text" id="promoCodeInput" class="input-field" style="margin-bottom:0; flex:1" placeholder="Enter code...">
+           <button class="btn-outline" style="height:52px" onclick="applyPromo()">Apply</button>
+        </div>
+        <div id="promoStatus" style="font-size:10px; margin-top:8px; display:none"></div>
+      </div>
+
       <button class="btn-primary" id="btnConfirmPurchase" style="width:100%; height:52px">Purchase & Sync Credits</button>
       <button class="btn-outline" style="width:100%; border:none; margin-top:12px" onclick="document.getElementById('topUpModal').classList.remove('active')">Cancel</button>
     </div>
@@ -477,17 +486,22 @@
                     <div style="display:flex; justify-content:space-around; text-align:center">
                       <div>
                         <div style="font-size:10px; color:var(--Neutral-500); text-transform:uppercase">Target Height</div>
-                        <div style="font-size:20px; font-weight:900; color:var(--Mint)" id="measurementHeight"></div>
+                        <div style="font-size:18px; font-weight:900; color:var(--Mint)" id="measurementHeight"></div>
                       </div>
                       <div>
-                        <div style="font-size:10px; color:var(--Neutral-500); text-transform:uppercase">Profile</div>
-                        <div style="font-size:20px; font-weight:900; color:var(--Mint)" id="measurementGender"></div>
+                        <div style="font-size:10px; color:var(--Neutral-500); text-transform:uppercase">Body Shape</div>
+                        <div style="font-size:18px; font-weight:900; color:var(--White)" id="measurementShape">Detecting...</div>
+                      </div>
+                      <div>
+                        <div style="font-size:10px; color:var(--Neutral-500); text-transform:uppercase">Size Rec.</div>
+                        <div style="font-size:18px; font-weight:900; color:var(--Mint)" id="measurementSizeRec">S/M/L</div>
                       </div>
                     </div>
                   </div>
 
                   <div style="display:flex; gap:12px">
                     <button class="btn-primary" onclick="exportToPDF()">Export PDF</button>
+                    <button class="btn-outline" onclick="exportTailorBrief()">Tailor Brief</button>
                     <button class="btn-outline" onclick="document.getElementById('measurementResultsCard').style.display='none'">Dismiss</button>
                   </div>
                 </div>
@@ -513,6 +527,8 @@
                       <button class="btn-outline" style="justify-content:center" onclick="document.getElementById('scanModal').classList.add('active')">+ Start Scan</button>
                       <button class="btn-primary" style="justify-content:center" onclick="document.getElementById('shareModal').classList.add('active')">+ Invite Client</button>
                     </div>
+                    <button class="btn-outline" style="width:100%; border-style:dashed; color:var(--Neutral-500); font-size:10px" onclick="triggerBulkImport()">↑ Bulk Import Clients (CSV)</button>
+                    <input type="file" id="bulkImportFile" accept=".csv" style="display:none" onchange="handleBulkImport(this)">
                   </div>
                   <div id="scanList" style="max-height:800px; overflow-y:auto"></div>
                 </div>
@@ -581,6 +597,26 @@
                   <button class="btn-outline" style="height:44px; width:100%" onclick="document.getElementById('topUpModal').classList.add('active')">Top-up Credits</button>
                 </div>
               </div>
+
+              <!-- BILLING HISTORY -->
+              <div style="margin-top:48px">
+                <h4 style="font-size:12px; font-weight:900; color:var(--Neutral-500); text-transform:uppercase; margin-bottom:20px">Transaction History</h4>
+                <div class="table-container">
+                  <table style="width:100%; border-collapse:collapse">
+                    <thead>
+                      <tr style="border-bottom:1px solid var(--Glass-Border)">
+                        <th style="text-align:left; padding:12px; font-size:10px">DATE</th>
+                        <th style="text-align:left; padding:12px; font-size:10px">TYPE</th>
+                        <th style="text-align:left; padding:12px; font-size:10px">AMOUNT</th>
+                        <th style="text-align:left; padding:12px; font-size:10px">STATUS</th>
+                      </tr>
+                    </thead>
+                    <tbody id="billingHistoryBody">
+                      <tr><td colspan="4" style="padding:40px; text-align:center; color:var(--Neutral-500); font-size:12px">No transactions recorded.</td></tr>
+                    </tbody>
+                  </table>
+                </div>
+              </div>
             </div>
           </div>
 
@@ -604,6 +640,17 @@
                     <option value="fashion">Ready-to-Wear Fashion</option>
                     <option value="medical">Medical / Physical Therapy</option>
                   </select>
+                </div>
+
+                <div style="display:grid; grid-template-columns: 1fr 1fr; gap:24px; margin-bottom:32px">
+                  <div>
+                    <label style="font-size:10px; font-weight:900; color:var(--Neutral-500); display:block; margin-bottom:8px">CLIENT SCAN PRICE ($)</label>
+                    <input type="number" id="settingsPrice" class="input-field" style="margin-bottom:0" step="0.1" value="0.50">
+                  </div>
+                  <div>
+                    <label style="font-size:10px; font-weight:900; color:var(--Neutral-500); display:block; margin-bottom:8px">LOW CREDIT ALERT (UNIT)</label>
+                    <input type="number" id="settingsThreshold" class="input-field" style="margin-bottom:0" value="10">
+                  </div>
                 </div>
 
                 <button class="btn-primary" id="btnSaveSettings">Save Profile Changes</button>
@@ -918,13 +965,39 @@
 
         const hVal = data.height || data.measurements?.height;
         document.getElementById('measurementHeight').textContent = window.CURRENT_UNIT === 'in' ? (hVal * 0.393701).toFixed(1) + ' in' : hVal + ' cm';
-        document.getElementById('measurementGender').textContent = data.gender || 'Male';
+
+        // INTELLIGENCE: BODY SHAPE CLASSIFICATION
+        const c = data.measurements['Chest Round'], w = data.measurements['Waist Round'], h = data.measurements['Hip Round'];
+        let shape = "Standard";
+        if (c && w && h) {
+            const cwRatio = c / w, whRatio = w / h;
+            if (whRatio < 0.75 && cwRatio < 1.1) shape = "Hourglass";
+            else if (whRatio > 0.85 && cwRatio > 1.15) shape = "Inverted Triangle";
+            else if (whRatio > 0.8 && cwRatio < 1.1) shape = "Rectangle";
+            else if (whRatio < 0.75 && cwRatio < 0.9) shape = "Pear / Spoon";
+        }
+        document.getElementById('measurementShape').textContent = shape;
+
+        // INTELLIGENCE: SIZE RECOMMENDATION
+        let size = "M";
+        if (c < 90) size = "S";
+        else if (c > 110) size = "XL";
+        else if (c > 100) size = "L";
+        document.getElementById('measurementSizeRec').textContent = size;
     }
 
     window.exportToPDF = function() {
         if (!window.LAST_MEASUREMENT_DATA) return;
         const d = window.LAST_MEASUREMENT_DATA;
         window.KORRA_EXPORT.pdf(d.client_name || "Client", d.measurements, d.gender, d.height);
+    };
+
+    window.exportTailorBrief = function() {
+        if (!window.LAST_MEASUREMENT_DATA) return;
+        const d = window.LAST_MEASUREMENT_DATA;
+        const shape = document.getElementById('measurementShape').textContent;
+        const sizeRec = document.getElementById('measurementSizeRec').textContent;
+        window.KORRA_EXPORT.generateTailorBrief(d.client_name || "Client", d.measurements, shape, sizeRec);
     };
 
     const CONFIG = {
@@ -1004,11 +1077,33 @@
     };
 
     let selectedCredits = 50;
+    let promoDiscount = 0;
 
     window.selectBundle = function(el, count, price) {
       selectedCredits = count;
       document.querySelectorAll('#topUpModal .glass-card').forEach(c => c.style.borderColor = 'var(--Glass-Border)');
       el.style.borderColor = 'var(--Mint)';
+    };
+
+    window.applyPromo = async function() {
+        const code = document.getElementById('promoCodeInput').value.trim();
+        const status = document.getElementById('promoStatus');
+        if (!code) return;
+
+        try {
+            const { data, error } = await window.KORRA_DB.from('promo_codes').select('*').eq('code', code.toUpperCase()).eq('is_active', true).single();
+            if (data) {
+                promoDiscount = data.discount_percent;
+                status.textContent = `CODE APPLIED: ${promoDiscount}% OFF`;
+                status.style.color = 'var(--Mint)';
+                status.style.display = 'block';
+            } else {
+                status.textContent = 'INVALID OR EXPIRED CODE';
+                status.style.color = 'var(--Error)';
+                status.style.display = 'block';
+                promoDiscount = 0;
+            }
+        } catch (e) { console.error(e); }
     };
 
     async function loadSettings() {
@@ -1020,11 +1115,26 @@
         if (profile) {
           document.getElementById('settingsName').value = profile.full_name || profile.company_name || "";
           document.getElementById('settingsIndustry').value = profile.industry || "tailor";
+          document.getElementById('settingsPrice').value = profile.custom_client_price || 0.50;
+          document.getElementById('settingsThreshold').value = profile.low_credit_threshold || 10;
 
           // Sync Credits everywhere
           const credits = profile.credits || 0;
           document.getElementById('statCredits').textContent = credits;
           document.getElementById('billingCredits').textContent = credits;
+        }
+
+        // Fetch Transactions
+        const { data: txs } = await window.KORRA_DB.from('transactions').select('*').eq('user_id', userId).order('created_at', { ascending: false });
+        if (txs && txs.length) {
+            document.getElementById('billingHistoryBody').innerHTML = txs.map(t => `
+                <tr style="border-bottom:1px solid rgba(255,255,255,0.05)">
+                    <td style="padding:12px; font-size:12px">${new Date(t.created_at).toLocaleDateString()}</td>
+                    <td style="padding:12px; font-size:12px; text-transform:uppercase">${t.type.replace('_', ' ')}</td>
+                    <td style="padding:12px; font-size:12px">$${t.amount.toFixed(2)}</td>
+                    <td style="padding:12px; font-size:10px; color:var(--Mint)">SUCCESS</td>
+                </tr>
+            `).join('');
         }
 
         // Fetch Subscription Plan
@@ -1131,11 +1241,11 @@
 
                 <div style="display:grid; grid-template-columns: 1fr 1fr; gap:12px; margin-bottom:12px">
                   <button class="btn-primary" style="height:36px; font-size:10px" onclick="exportPassport('${name}')">Export Passport</button>
-                  <button class="btn-outline" style="height:36px; font-size:10px" onclick="window.KORRA_EXPORT.captureMultiAngle(passportVizMap['${vizId}'], '${name}')">Diagnostic Report</button>
+                  <button class="btn-outline" style="height:36px; font-size:10px" onclick="exportClientTailorBrief('${name}')">Tailor Brief</button>
                 </div>
                 <div style="display:grid; grid-template-columns: 1fr 1fr; gap:12px; margin-bottom:12px">
                    <button class="btn-outline" style="height:36px; font-size:10px" onclick="switchTab('vault'); document.getElementById('ledgerSearch').value='${name}'; document.getElementById('ledgerSearch').dispatchEvent(new Event('input'));">View History</button>
-                   ${scans.length > 1 ? `<button class="btn-outline" style="height:36px; font-size:10px; border-color:var(--Mint); color:var(--Mint)" onclick="openComparison('${name}')">Compare Scan</button>` : ''}
+                   ${scans.length > 1 ? `<button class="btn-outline" style="height:36px; font-size:10px; border-color:var(--Mint); color:var(--Mint)" onclick="openComparison('${name}')">Compare Scan</button>` : `<button class="btn-outline" style="height:36px; font-size:10px" onclick="window.KORRA_EXPORT.captureMultiAngle(passportVizMap['${vizId}'], '${name}')">Diagnostic Report</button>`}
                 </div>
             `;
             container.appendChild(card);
@@ -1163,6 +1273,22 @@
         if (!scans.length) return;
         const latest = scans[0];
         window.KORRA_EXPORT.pdf(`Passport: ${name}`, latest.measurements, latest.gender, latest.height);
+      };
+
+      window.exportClientTailorBrief = function(name) {
+        const scans = masterHistory.filter(s => s.client_name === name);
+        if (!scans.length) return;
+        const latest = scans[0];
+        // Calculate shape/size rec on the fly
+        const m = latest.measurements;
+        let shape = "Standard", size = "M";
+        if (m['Chest Round'] && m['Waist Round'] && m['Hip Round']) {
+            const cw = m['Chest Round']/m['Waist Round'], wh = m['Waist Round']/m['Hip Round'];
+            if (wh < 0.75 && cw < 1.1) shape = "Hourglass";
+            else if (wh > 0.8 && cw < 1.1) shape = "Rectangle";
+            if (m['Chest Round'] < 90) size = "S"; else if (m['Chest Round'] > 110) size = "XL";
+        }
+        window.KORRA_EXPORT.generateTailorBrief(name, m, shape, size);
       };
 
       let baselineData = null;
@@ -1460,15 +1586,48 @@
         const btn = document.getElementById('btnSaveSettings');
         const name = document.getElementById('settingsName').value;
         const ind = document.getElementById('settingsIndustry').value;
+        const price = parseFloat(document.getElementById('settingsPrice').value);
+        const threshold = parseInt(document.getElementById('settingsThreshold').value);
 
         btn.disabled = true; btn.textContent = 'SAVING...';
         try {
-          const { error } = await window.KORRA_DB.from('profiles').update({ company_name: name, industry: ind }).eq('id', userId);
+          const { error } = await window.KORRA_DB.from('profiles').update({
+            company_name: name,
+            industry: ind,
+            custom_client_price: price,
+            low_credit_threshold: threshold
+          }).eq('id', userId);
           if (error) throw error;
           alert("Profile updated successfully.");
         } catch (e) { alert("Failed to save settings."); }
         finally { btn.disabled = false; btn.textContent = 'Save Profile Changes'; }
       });
+
+      // --- BULK IMPORT ---
+      window.triggerBulkImport = () => document.getElementById('bulkImportFile').click();
+      window.handleBulkImport = async (input) => {
+        if (!input.files || !input.files[0]) return;
+        const file = input.files[0];
+        const reader = new FileReader();
+        reader.onload = async (e) => {
+            const text = e.target.result;
+            const lines = text.split('\n').slice(1); // Skip header
+            let count = 0;
+            for (let line of lines) {
+                const [name, email, height, gender] = line.split(',');
+                if (name && height) {
+                    await window.KORRA_DB.from('measurements').insert({
+                        user_id: userId, client_name: name, height: parseFloat(height),
+                        gender: gender?.trim().toLowerCase() || 'male', biometrics: {}
+                    });
+                    count++;
+                }
+            }
+            alert(`Bulk Import Complete. ${count} clients migrated to your vault.`);
+            fetchHistory();
+        };
+        reader.readAsText(file);
+      };
 
       document.getElementById('btnRegenKey').addEventListener('click', async () => {
         if (!confirm("Are you sure? This will break your existing widget integrations.")) return;
