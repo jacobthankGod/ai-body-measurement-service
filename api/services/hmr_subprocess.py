@@ -45,8 +45,8 @@ def run_hmr(front_path, side_path, height_cm, gender, mesh_path=None):
         from api.services.extract_measurements import HMRMasterEngine
         engine = HMRMasterEngine()
 
-        # Perform extraction
-        measurements, vertices, landmarks, body_shape, size_rec, error = engine.extract(img_f, img_s, height_cm, gender)
+# Perform extraction
+        measurements, vertices, landmarks, body_shape, size_rec, error = engine.extract(img_f, height_cm, gender)
 
         # CLEANUP AGGRESSIVELY
         del img_f
