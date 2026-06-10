@@ -272,22 +272,44 @@
     </div>
   </div>
 
-  <!-- EMAIL SHARE MODAL -->
-  <div class="modal-overlay" id="shareModal">
+  <!-- PURCHASE CREDITS MODAL -->
+  <div class="modal-overlay" id="topUpModal">
     <div class="modal-card">
-      <h2 style="font-size:24px; margin-bottom:12px">Invite Client</h2>
-      <p style="color:var(--Neutral-400); margin-bottom:32px">Send a secure scan link to your client's email.</p>
+      <h2 style="font-size:24px; margin-bottom:12px">Purchase Credits</h2>
+      <p style="color:var(--Neutral-400); margin-bottom:32px">Select a credit bundle to top up your Biometrics Vault.</p>
 
-      <form id="shareForm">
-        <label style="font-size:10px; font-weight:900; color:var(--Neutral-500); display:block; margin-bottom:8px">CLIENT NAME</label>
-        <input type="text" id="shareName" class="input-field" placeholder="e.g. James" required>
+      <div style="display:grid; grid-template-columns: 1fr; gap:16px; margin-bottom:32px">
+        <div class="glass-card" style="padding:20px; cursor:pointer; border-color:var(--Mint)" onclick="selectBundle(this, 50, 25)">
+          <div style="display:flex; justify-content:space-between; align-items:center">
+            <div>
+              <div style="font-size:18px; font-weight:900">50 Scan Bundle</div>
+              <div style="font-size:12px; color:var(--Neutral-400)">$0.50 per scan</div>
+            </div>
+            <div style="font-size:20px; font-weight:900; color:var(--Mint)">$25.00</div>
+          </div>
+        </div>
+        <div class="glass-card" style="padding:20px; cursor:pointer" onclick="selectBundle(this, 150, 60)">
+          <div style="display:flex; justify-content:space-between; align-items:center">
+            <div>
+              <div style="font-size:18px; font-weight:900">150 Scan Bundle</div>
+              <div style="font-size:12px; color:var(--Neutral-400)">$0.40 per scan (Save 20%)</div>
+            </div>
+            <div style="font-size:20px; font-weight:900; color:var(--Mint)">$60.00</div>
+          </div>
+        </div>
+        <div class="glass-card" style="padding:20px; cursor:pointer" onclick="selectBundle(this, 500, 150)">
+          <div style="display:flex; justify-content:space-between; align-items:center">
+            <div>
+              <div style="font-size:18px; font-weight:900">500 Scan Bundle</div>
+              <div style="font-size:12px; color:var(--Neutral-400)">$0.30 per scan (Save 40%)</div>
+            </div>
+            <div style="font-size:20px; font-weight:900; color:var(--Mint)">$150.00</div>
+          </div>
+        </div>
+      </div>
 
-        <label style="font-size:10px; font-weight:900; color:var(--Neutral-500); display:block; margin-bottom:8px">CLIENT EMAIL</label>
-        <input type="email" id="shareEmail" class="input-field" placeholder="james@example.com" required>
-
-        <button type="submit" class="btn-primary" id="btnSendInvite" style="width:100%; height:52px">Send Scan Invitation</button>
-        <button type="button" class="btn-outline" style="width:100%; border:none; margin-top:12px" onclick="document.getElementById('shareModal').classList.remove('active')">Cancel</button>
-      </form>
+      <button class="btn-primary" id="btnConfirmPurchase" style="width:100%; height:52px">Purchase & Sync Credits</button>
+      <button class="btn-outline" style="width:100%; border:none; margin-top:12px" onclick="document.getElementById('topUpModal').classList.remove('active')">Cancel</button>
     </div>
   </div>
 
@@ -468,15 +490,15 @@
               <div style="display:grid; grid-template-columns: 1.5fr 1fr; gap:32px">
                 <div style="padding:24px; background:rgba(87,215,192,0.05); border:1px solid var(--Mint); border-radius:16px">
                   <div style="font-size:10px; font-weight:900; color:var(--Mint); margin-bottom:8px">CURRENT PLAN</div>
-                  <div style="font-size:24px; font-weight:900; margin-bottom:12px">Artisan Pro</div>
-                  <div style="font-size:12px; color:var(--Neutral-400); margin-bottom:20px">Professional Extractions + High-Resolution 3D + CSV Export</div>
-                  <button class="btn-primary" style="height:44px; width:100%">Manage Subscription</button>
+                  <div style="font-size:24px; font-weight:900; margin-bottom:12px" id="billingPlanName">Loading...</div>
+                  <div style="font-size:12px; color:var(--Neutral-400); margin-bottom:20px" id="billingPlanDesc">Professional Extractions + High-Resolution 3D + CSV Export</div>
+                  <button class="btn-primary" style="height:44px; width:100%" onclick="alert('Subscription management coming soon.')">Manage Subscription</button>
                 </div>
 
                 <div style="padding:24px; background:var(--Glass); border:1px solid var(--Glass-Border); border-radius:16px">
                   <div style="font-size:10px; font-weight:900; color:var(--Neutral-500); margin-bottom:8px">AVAILABLE CREDITS</div>
                   <div style="font-size:32px; font-weight:900; margin-bottom:12px" id="billingCredits">0</div>
-                  <button class="btn-outline" style="height:44px; width:100%">Top-up Credits</button>
+                  <button class="btn-outline" style="height:44px; width:100%" onclick="document.getElementById('topUpModal').classList.add('active')">Top-up Credits</button>
                 </div>
               </div>
             </div>
@@ -889,7 +911,7 @@
       if (targetView) targetView.classList.add('active');
       if (targetTab) targetTab.classList.add('active');
 
-      if (id === 'settings') loadSettings();
+      if (id === 'settings' || id === 'billing' || id === 'overview') loadSettings();
     }
 
     window.copyApiKey = function() {
@@ -898,15 +920,41 @@
       navigator.clipboard.writeText(key).then(() => alert("API Key copied to clipboard."));
     };
 
+    let selectedCredits = 50;
+
+    window.selectBundle = function(el, count, price) {
+      selectedCredits = count;
+      document.querySelectorAll('#topUpModal .glass-card').forEach(c => c.style.borderColor = 'var(--Glass-Border)');
+      el.style.borderColor = 'var(--Mint)';
+    };
+
     async function loadSettings() {
       if (!window.KORRA_DB || !userId) return;
 
       try {
-        // Fetch Profile
+        // Fetch Profile & Credits
         const { data: profile } = await window.KORRA_DB.from('profiles').select('*').eq('id', userId).single();
         if (profile) {
           document.getElementById('settingsName').value = profile.full_name || profile.company_name || "";
           document.getElementById('settingsIndustry').value = profile.industry || "tailor";
+
+          // Sync Credits everywhere
+          const credits = profile.credits || 0;
+          document.getElementById('statCredits').textContent = credits;
+          document.getElementById('billingCredits').textContent = credits;
+        }
+
+        // Fetch Subscription Plan
+        const { data: sub } = await window.KORRA_DB.from('subscriptions').select('plan_id').eq('user_id', userId).single();
+        if (sub) {
+          const planMap = {
+            'basic': { name: 'Artisan Basic', desc: 'Standard Extractions + Core Visuals' },
+            'pro': { name: 'Artisan Pro', desc: 'Industrial Extractions + Bulk Data Export + 3D Viewport' },
+            'elite': { name: 'Artisan Elite', desc: 'Precision Priority + Custom Branding + Advanced Topology' }
+          };
+          const p = planMap[sub.plan_id] || planMap['basic'];
+          document.getElementById('billingPlanName').textContent = p.name;
+          document.getElementById('billingPlanDesc').textContent = p.desc;
         }
 
         // Fetch API Key
@@ -1075,6 +1123,7 @@
         document.getElementById('userEmail').textContent = session.user.email;
 
         fetchHistory();
+        loadSettings();
         if (window.KORRA_VIZ) window.KORRA_VIZ.init('dashboard-3d-viewport');
       }
 
@@ -1211,6 +1260,27 @@
           alert("New API Key generated.");
         } catch (e) { alert("Failed to generate key."); }
         finally { btn.disabled = false; btn.textContent = 'Regenerate API Key'; }
+      });
+
+      // --- BILLING ACTIONS ---
+      document.getElementById('btnConfirmPurchase').addEventListener('click', async () => {
+        const btn = document.getElementById('btnConfirmPurchase');
+        btn.disabled = true; btn.textContent = 'PROCESSING PAYMENT...';
+
+        try {
+          // 1. Fetch current credits
+          const { data: profile } = await window.KORRA_DB.from('profiles').select('credits').eq('id', userId).single();
+          const newBalance = (profile.credits || 0) + selectedCredits;
+
+          // 2. Update credits (Simulated purchase)
+          const { error } = await window.KORRA_DB.from('profiles').update({ credits: newBalance }).eq('id', userId);
+          if (error) throw error;
+
+          alert(`Success! ${selectedCredits} credits have been added to your vault.`);
+          loadSettings(); // Refresh UI
+          document.getElementById('topUpModal').classList.remove('active');
+        } catch (e) { alert("Purchase failed. Sync interrupted."); }
+        finally { btn.disabled = false; btn.textContent = 'Purchase & Sync Credits'; }
       });
 
       init();
