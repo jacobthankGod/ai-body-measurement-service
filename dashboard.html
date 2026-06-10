@@ -305,7 +305,7 @@
         <aside>
           <nav class="sidebar-nav">
             <a onclick="switchTab('vault')" id="tab-vault" class="active">Biometrics Vault</a>
-            <a href="/developers">Developer API</a>
+            <a href="/developers" id="tab-developers">Developer API</a>
             <a onclick="switchTab('settings')" id="tab-settings">Settings</a>
           </nav>
         </aside>
@@ -387,6 +387,48 @@
                   </div>
                   <div id="scanList" style="max-height:800px; overflow-y:auto"></div>
                 </div>
+              </div>
+            </div>
+          </div>
+
+          <!-- SETTINGS VIEW -->
+          <div id="view-settings" class="tab-view">
+            <div class="glass-card" style="margin-bottom:32px">
+              <h2 style="font-size:24px; margin-bottom:12px">Merchant Settings</h2>
+              <p style="color:var(--Neutral-400); margin-bottom:32px">Manage your artisan profile and API integrations.</p>
+
+              <div style="max-width:600px">
+                <div style="margin-bottom:24px">
+                  <label style="font-size:10px; font-weight:900; color:var(--Neutral-500); display:block; margin-bottom:8px">COMPANY / ARTISAN NAME</label>
+                  <input type="text" id="settingsName" class="input-field" style="margin-bottom:0" placeholder="Loading...">
+                </div>
+
+                <div style="margin-bottom:24px">
+                  <label style="font-size:10px; font-weight:900; color:var(--Neutral-500); display:block; margin-bottom:8px">INDUSTRY</label>
+                  <select id="settingsIndustry" class="input-field" style="margin-bottom:0; appearance:none">
+                    <option value="tailor">Bespoke Tailoring</option>
+                    <option value="fitness">Fitness & Coaching</option>
+                    <option value="fashion">Ready-to-Wear Fashion</option>
+                    <option value="medical">Medical / Physical Therapy</option>
+                  </select>
+                </div>
+
+                <button class="btn-primary" id="btnSaveSettings">Save Profile Changes</button>
+              </div>
+            </div>
+
+            <div class="glass-card">
+              <h2 style="font-size:18px; margin-bottom:12px">API Access Control</h2>
+              <p style="color:var(--Neutral-400); margin-bottom:24px">Use this key to integrate the KORRA widget into your own website.</p>
+
+              <div style="background:rgba(0,0,0,0.3); border-radius:12px; padding:20px; border:1px solid var(--Glass-Border); display:flex; align-items:center; justify-content:space-between; gap:20px">
+                <code id="apiKeyDisplay" style="font-family:monospace; color:var(--Mint); font-size:14px; word-break:break-all">********************************</code>
+                <button class="btn-outline" style="height:32px; font-size:10px; flex-shrink:0" onclick="copyApiKey()">Copy Key</button>
+              </div>
+
+              <div style="margin-top:24px">
+                <button class="btn-outline" style="border-color:var(--Error); color:var(--Error); font-size:10px" id="btnRegenKey">Regenerate API Key</button>
+                <p style="font-size:10px; color:var(--Neutral-500); margin-top:12px">Warning: Regenerating your key will break any existing widget integrations.</p>
               </div>
             </div>
           </div>
@@ -748,8 +790,39 @@
     function switchTab(id) {
       document.querySelectorAll('.tab-view').forEach(t => t.classList.remove('active'));
       document.querySelectorAll('.sidebar-nav a').forEach(a => a.classList.remove('active'));
-      document.getElementById('view-' + id).classList.add('active');
-      document.getElementById('tab-' + id).classList.add('active');
+
+      const targetView = document.getElementById('view-' + id);
+      const targetTab = document.getElementById('tab-' + id);
+
+      if (targetView) targetView.classList.add('active');
+      if (targetTab) targetTab.classList.add('active');
+
+      if (id === 'settings') loadSettings();
+    }
+
+    window.copyApiKey = function() {
+      const key = document.getElementById('apiKeyDisplay').textContent;
+      if (key.includes('*')) { alert("Please regenerate key to view."); return; }
+      navigator.clipboard.writeText(key).then(() => alert("API Key copied to clipboard."));
+    };
+
+    async function loadSettings() {
+      if (!window.KORRA_DB || !userId) return;
+
+      try {
+        // Fetch Profile
+        const { data: profile } = await window.KORRA_DB.from('profiles').select('*').eq('id', userId).single();
+        if (profile) {
+          document.getElementById('settingsName').value = profile.full_name || profile.company_name || "";
+          document.getElementById('settingsIndustry').value = profile.industry || "tailor";
+        }
+
+        // Fetch API Key
+        const { data: keyData } = await window.KORRA_DB.from('api_keys').select('*').eq('user_id', userId).single();
+        if (keyData) {
+          document.getElementById('apiKeyDisplay').textContent = keyData.key;
+        }
+      } catch (err) { console.error("Settings Load Failed:", err); }
     }
 
     (function() {
@@ -927,6 +1000,43 @@
       });
 
       document.getElementById('btnSignOut').onclick = async () => { await window.KORRA_DB.auth.signOut(); window.location.href = '/signin'; };
+
+      // --- SETTINGS ACTIONS ---
+      document.getElementById('btnSaveSettings').addEventListener('click', async () => {
+        const btn = document.getElementById('btnSaveSettings');
+        const name = document.getElementById('settingsName').value;
+        const ind = document.getElementById('settingsIndustry').value;
+
+        btn.disabled = true; btn.textContent = 'SAVING...';
+        try {
+          const { error } = await window.KORRA_DB.from('profiles').update({ company_name: name, industry: ind }).eq('id', userId);
+          if (error) throw error;
+          alert("Profile updated successfully.");
+        } catch (e) { alert("Failed to save settings."); }
+        finally { btn.disabled = false; btn.textContent = 'Save Profile Changes'; }
+      });
+
+      document.getElementById('btnRegenKey').addEventListener('click', async () => {
+        if (!confirm("Are you sure? This will break your existing widget integrations.")) return;
+        const btn = document.getElementById('btnRegenKey');
+        btn.disabled = true; btn.textContent = 'REGENERATING...';
+
+        try {
+          // Generate a new standard artisan key
+          const newKey = 'korra_artisan_' + Math.random().toString(36).substring(2) + Math.random().toString(36).substring(2);
+          const { error } = await window.KORRA_DB.from('api_keys').upsert({
+            user_id: userId,
+            key: newKey,
+            is_active: true,
+            tier: 'tailor_pro' // Default tier for new keys
+          });
+          if (error) throw error;
+          document.getElementById('apiKeyDisplay').textContent = newKey;
+          alert("New API Key generated.");
+        } catch (e) { alert("Failed to generate key."); }
+        finally { btn.disabled = false; btn.textContent = 'Regenerate API Key'; }
+      });
+
       init();
     })();
   </script>
