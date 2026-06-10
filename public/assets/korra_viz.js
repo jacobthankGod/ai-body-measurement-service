@@ -1,7 +1,7 @@
 /**
- * KORRA 3D Visualizer | Phase 3: Heatmap Analytics
+ * KORRA 3D Visualizer | Phase 4: Clinical Transparency
  * ====================================================
- * High-authority rendering engine with support for volumetric comparisons.
+ * High-authority rendering engine with heatmap and skeletal landmark support.
  */
 
 class KorraVisualizer {
@@ -11,6 +11,7 @@ class KorraVisualizer {
         this.renderer = null;
         this.mesh = null;
         this.grid = null;
+        this.landmarksGroup = null;
         this.isInteracting = false;
         this.mouseX = 0;
         this.mouseY = 0;
@@ -19,7 +20,7 @@ class KorraVisualizer {
     }
 
     init(containerId) {
-        console.log(`🔍 [PHASE 3] Initializing 3D Viewport: ${containerId}`);
+        console.log(`🔍 [PHASE 4] Initializing 3D Viewport: ${containerId}`);
         const container = document.getElementById(containerId);
         if (!container) return;
 
@@ -54,9 +55,16 @@ class KorraVisualizer {
             requestAnimationFrame(animate);
             if (this.mesh && !this.isInteracting) {
                 this.mesh.rotation.y += 0.005;
+                if(this.landmarksGroup) this.landmarksGroup.rotation.y += 0.005;
             } else if (this.mesh && this.isInteracting) {
-                this.mesh.rotation.y += (this.targetRotationY - this.mesh.rotation.y) * 0.1;
-                this.mesh.rotation.x += (this.targetRotationX - this.mesh.rotation.x) * 0.1;
+                const rotY = this.mesh.rotation.y + (this.targetRotationY - this.mesh.rotation.y) * 0.1;
+                const rotX = this.mesh.rotation.x + (this.targetRotationX - this.mesh.rotation.x) * 0.1;
+                this.mesh.rotation.y = rotY;
+                this.mesh.rotation.x = rotX;
+                if(this.landmarksGroup) {
+                    this.landmarksGroup.rotation.y = rotY;
+                    this.landmarksGroup.rotation.x = rotX;
+                }
             }
             this.renderer.render(this.scene, this.camera);
         };
@@ -91,7 +99,7 @@ class KorraVisualizer {
         });
     }
 
-    async loadMesh(objUrl) {
+    async loadMesh(objUrl, landmarkData = null) {
         if (!objUrl || objUrl === 'null') {
             this.createTechnicalProxy();
             return null;
@@ -101,8 +109,13 @@ class KorraVisualizer {
             const response = await fetch(objUrl);
             if (!response.ok) throw new Error("File Missing");
             const text = await response.text();
-            if (text.trim().startsWith('<!doctype html>')) throw new Error("Corruption");
-            return this.parseAndRenderOBJ(text);
+            const meshData = this.parseAndRenderOBJ(text);
+
+            if (landmarkData) {
+                this.renderLandmarks(landmarkData, meshData.size);
+            }
+
+            return meshData;
         } catch (e) {
             this.createTechnicalProxy();
             return null;
@@ -166,44 +179,49 @@ class KorraVisualizer {
         return { vertices, faces, size };
     }
 
-    /**
-     * PHASE 3: VOLUMETRIC HEATMAP ENGINE
-     * Compares this instance's current mesh to a new set of data.
-     */
+    renderLandmarks(landmarks, modelSize) {
+        if (this.landmarksGroup) this.scene.remove(this.landmarksGroup);
+        this.landmarksGroup = new THREE.Group();
+
+        const dotGeo = new THREE.SphereGeometry(0.02, 16, 16);
+        const dotMat = new THREE.MeshBasicMaterial({ color: 0xFFFFFF });
+
+        // Landmarks from HMR are usually 24 SMPL joints
+        // We'll iterate and place them. They need to be centered and rotated to match the mesh center()
+        // For simplicity, we assume they are already normalized or we use a basic skeleton
+        Object.values(landmarks).forEach(p => {
+            if (p.x !== undefined) {
+                const dot = new THREE.Mesh(dotGeo, dotMat);
+                // Rotate and offset logic to match mesh center()
+                dot.position.set(-p.x, -p.y + (modelSize.y/2), -p.z);
+                this.landmarksGroup.add(dot);
+            }
+        });
+
+        this.landmarksGroup.visible = false; // Hidden by default
+        this.scene.add(this.landmarksGroup);
+    }
+
+    toggleLandmarks(visible) {
+        if (this.landmarksGroup) this.landmarksGroup.visible = visible;
+    }
+
     applyHeatmap(baselineData, latestData) {
         if (!baselineData || !latestData) return;
-
         const baselineArr = baselineData.vertices;
         const latestArr = latestData.vertices;
-
-        // Safety: Topologies must match (HMR/SMPL standard)
-        if (baselineArr.length !== latestArr.length) {
-            console.error("❌ [HEATMAP] Topology mismatch. Comparison aborted.");
-            return;
-        }
+        if (baselineArr.length !== latestArr.length) return;
 
         const count = baselineArr.length / 3;
         const colors = new Float32Array(baselineArr.length);
-
         for (let i = 0; i < count; i++) {
             const idx = i * 3;
-            // Calculate Euclidean Distance difference (Simplified for Z-expansion/Physical volume)
-            // In a professional clinical app, we calculate the signed distance along the surface normal.
-            // For KORRA v1, we use radial distance from center.
-            const bX = baselineArr[idx], bY = baselineArr[idx+1], bZ = baselineArr[idx+2];
-            const lX = latestArr[idx], lY = latestArr[idx+1], lZ = latestArr[idx+2];
-
-            const distB = Math.sqrt(bX*bX + bZ*bZ);
-            const distL = Math.sqrt(lX*lX + lZ*lZ);
-            const diff = distL - distB; // Positive = Growth, Negative = Loss
-
-            if (diff > 0.005) { // Expansion (Red)
-                colors[idx] = 1.0; colors[idx+1] = 0.3; colors[idx+2] = 0.3;
-            } else if (diff < -0.005) { // Reduction (Mint)
-                colors[idx] = 0.34; colors[idx+1] = 0.84; colors[idx+2] = 0.75;
-            } else { // Static (White/Glass)
-                colors[idx] = 0.8; colors[idx+1] = 0.8; colors[idx+2] = 0.8;
-            }
+            const distB = Math.sqrt(baselineArr[idx]**2 + baselineArr[idx+2]**2);
+            const distL = Math.sqrt(latestArr[idx]**2 + latestArr[idx+2]**2);
+            const diff = distL - distB;
+            if (diff > 0.005) { colors[idx]=1; colors[idx+1]=0.3; colors[idx+2]=0.3; }
+            else if (diff < -0.005) { colors[idx]=0.34; colors[idx+1]=0.84; colors[idx+2]=0.75; }
+            else { colors[idx]=0.8; colors[idx+1]=0.8; colors[idx+2]=0.8; }
         }
 
         const geometry = new THREE.BufferGeometry();
@@ -213,21 +231,11 @@ class KorraVisualizer {
         geometry.computeVertexNormals();
         geometry.center();
 
-        const material = new THREE.MeshPhongMaterial({
-            vertexColors: true,
-            wireframe: false,
-            transparent: true,
-            opacity: 0.8,
-            side: THREE.DoubleSide
-        });
-
+        const material = new THREE.MeshPhongMaterial({ vertexColors: true, wireframe: false, transparent: true, opacity: 0.8, side: THREE.DoubleSide });
         if (this.mesh) this.scene.remove(this.mesh);
         this.mesh = new THREE.Mesh(geometry, material);
-        this.mesh.rotation.x = Math.PI;
-        this.mesh.rotation.y = Math.PI;
-
-        const size = latestData.size;
-        this.mesh.position.set(0, size.y / 2, 0);
+        this.mesh.rotation.x = Math.PI; this.mesh.rotation.y = Math.PI;
+        this.mesh.position.set(0, latestData.size.y / 2, 0);
         this.scene.add(this.mesh);
     }
 

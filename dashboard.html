@@ -1075,6 +1075,8 @@
         `).join('');
       }
 
+      const passportVizMap = {};
+
       function renderPassports() {
         const container = document.getElementById('passportGrid');
         if (!masterHistory.length) {
@@ -1115,6 +1117,7 @@
 
                 <div id="${vizId}" style="width:100%; height:200px; background:#000; border-radius:12px; border:1px solid var(--Glass-Border); margin-bottom:20px; overflow:hidden; position:relative">
                   <span style="position:absolute; top:8px; left:8px; font-size:7px; color:var(--Mint); text-transform:uppercase; z-index:10; background:rgba(0,0,0,0.5); padding:2px 6px; border-radius:3px">3D Digital Twin</span>
+                  <button class="btn-outline" style="position:absolute; bottom:8px; right:8px; height:24px; font-size:7px; padding:0 8px; z-index:10; background:rgba(0,0,0,0.5)" onclick="togglePassportLandmarks(this, '${vizId}')">Landmarks: OFF</button>
                 </div>
 
                 <div style="background:rgba(0,0,0,0.3); border-radius:12px; padding:16px; border:1px solid var(--Glass-Border); margin-bottom:20px">
@@ -1138,10 +1141,19 @@
             if (window.createKorraVisualizer && latest.mesh_url) {
                 const viz = window.createKorraVisualizer();
                 viz.init(vizId);
-                viz.loadMesh(latest.mesh_url);
+                viz.loadMesh(latest.mesh_url, latest.landmarks_3d);
+                passportVizMap[vizId] = viz;
             }
         });
       }
+
+      window.togglePassportLandmarks = function(btn, vizId) {
+        const viz = passportVizMap[vizId];
+        if (!viz) return;
+        const isCurrentlyOff = btn.textContent.includes('OFF');
+        viz.toggleLandmarks(isCurrentlyOff);
+        btn.textContent = `Landmarks: ${isCurrentlyOff ? 'ON' : 'OFF'}`;
+      };
 
       window.exportPassport = function(name) {
         const scans = masterHistory.filter(s => s.client_name === name);
