@@ -49,4 +49,4 @@
 
 **FINAL AUDIT VERDICT**: KORRA Infrastructure is 100% Active.
 **Target Branch**: `main`
-**Environment**: [Render Production](https://ai-body-measurement-service-1.onrender.com)
+**Environment**: [Google Cloud Production](https://korra-436814609100.us-central1.run.app)

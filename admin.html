@@ -91,6 +91,13 @@
     .modal-card {
       width: 100%; max-width: 600px; background: #0a0a0a; border: 1px solid var(--Glass-Border);
       border-radius: 24px; padding: 40px; max-height: 90vh; overflow-y: auto;
+      transition: max-width 0.3s ease;
+    }
+    .modal-card-landscape { max-width: 1000px; }
+    .landscape-grid { display: grid; grid-template-columns: 1fr 1.2fr; gap: 48px; align-items: start; }
+    @media (max-width: 850px) {
+      .landscape-grid { grid-template-columns: 1fr; gap: 32px; }
+      .modal-card-landscape { max-width: 600px; }
     }
 
     #loadingOverlay {
@@ -98,7 +105,7 @@
         font-size: 12px; font-weight: 800; letter-spacing: 0.2em; text-transform: uppercase; color: var(--Mint);
     }
 
-    .preview-box { width: 100%; height: 120px; border-radius: 12px; border: 1px dashed var(--Glass-Border); display: flex; align-items: center; justify-content: center; overflow: hidden; position: relative; cursor: pointer; }
+    .preview-box { width: 100%; height: 160px; border-radius: 12px; border: 1px dashed var(--Glass-Border); display: flex; align-items: center; justify-content: center; overflow: hidden; position: relative; cursor: pointer; }
     .preview-box span { font-size: 10px; font-weight: 900; color: var(--Neutral-500); text-transform: uppercase; z-index: 1; }
     .preview-img { position: absolute; inset: 0; width: 100%; height: 100%; object-fit: cover; z-index: 2; display: none; }
 
@@ -228,65 +235,73 @@
 
   <!-- ADMIN SCAN MODAL -->
   <div class="modal-overlay" id="adminScanModal">
-    <div class="modal-card">
+    <div class="modal-card modal-card-landscape">
       <h2 style="font-size:24px; margin-bottom:12px">Admin Testing Lab</h2>
-      <p style="color:var(--Neutral-400); margin-bottom:32px">Run technical benchmarks. Background Task Queue active (No timeouts).</p>
+      <p style="color:var(--Neutral-400); margin-bottom:40px">Run technical benchmarks. Background Task Queue active (No timeouts).</p>
 
       <form id="adminScanForm">
-        <div style="margin-bottom:20px">
-          <label style="font-size:10px; font-weight:900; color:var(--Neutral-500); display:block; margin-bottom:8px">SUBJECT FULL NAME</label>
-          <input type="text" id="adminSubjectName" class="search-input" style="width:100%" placeholder="e.g. James" required>
-        </div>
-        <div style="display:grid; grid-template-columns: 1fr 1fr; gap:16px; margin-bottom:20px">
+        <div class="landscape-grid">
+          <!-- LEFT COLUMN: SETUP -->
           <div>
-            <label style="font-size:10px; font-weight:900; color:var(--Neutral-500); display:block; margin-bottom:8px">HEIGHT (CM)</label>
-            <input type="number" id="adminHeight" class="search-input" style="width:100%" placeholder="180" required>
+            <div style="margin-bottom:24px">
+              <label style="font-size:10px; font-weight:900; color:var(--Neutral-500); display:block; margin-bottom:8px">SUBJECT FULL NAME</label>
+              <input type="text" id="adminSubjectName" class="search-input" style="width:100%" placeholder="e.g. James" required>
+            </div>
+            <div style="display:grid; grid-template-columns: 1fr 1fr; gap:16px; margin-bottom:32px">
+              <div>
+                <label style="font-size:10px; font-weight:900; color:var(--Neutral-500); display:block; margin-bottom:8px">HEIGHT (CM)</label>
+                <input type="number" id="adminHeight" class="search-input" style="width:100%" placeholder="180" required>
+              </div>
+              <div>
+                <label style="font-size:10px; font-weight:900; color:var(--Neutral-500); display:block; margin-bottom:8px">GENDER</label>
+                <select id="adminGender" class="search-input" style="width:100%; appearance:none; cursor:pointer">
+                  <option value="male">Male</option>
+                  <option value="female">Female</option>
+                </select>
+              </div>
+            </div>
+
+            <div class="pro-tips-card" style="margin-top:0">
+              <h4><span style="font-size:14px">✨</span> Pro-Tips for Precision</h4>
+              <div class="tip-row"><span class="tip-bullet">&bull;</span><span><b>The A-Pose:</b> Keep arms 15" away from body. Do not touch your torso.</span></div>
+              <div class="tip-row"><span class="tip-bullet">&bull;</span><span><b>Clothing:</b> Wear form-fitting gym wear. Baggy clothes add fake volume.</span></div>
+              <div class="tip-row"><span class="tip-bullet">&bull;</span><span><b>Contrast:</b> Stand against a plain wall that is a different color than your outfit.</span></div>
+              <div class="tip-row"><span class="tip-bullet">&bull;</span><span><b>Level:</b> Place phone at waist height, perfectly vertical (not tilted).</span></div>
+            </div>
           </div>
+
+          <!-- RIGHT COLUMN: CAPTURE -->
           <div>
-            <label style="font-size:10px; font-weight:900; color:var(--Neutral-500); display:block; margin-bottom:8px">GENDER</label>
-            <select id="adminGender" class="search-input" style="width:100%; appearance:none; cursor:pointer">
-              <option value="male">Male</option>
-              <option value="female">Female</option>
-            </select>
+            <div style="display:grid; grid-template-columns: 1fr 1fr; gap:16px; margin-bottom:24px">
+               <div class="preview-box" id="adminFrontLabel" onclick="openCamera('front')">
+                 <input type="file" id="adminFrontPhoto" accept="image/*" required style="display:none" onchange="handleAdminFile(this, 'adminFrontLabel')" onclick="event.stopPropagation()">
+                 <img class="preview-img" alt="Front Preview">
+                 <div style="display:flex; flex-direction:column; align-items:center; z-index:1">
+                   <span>Front A-Pose</span>
+                   <div style="font-size:8px; color:var(--Mint); margin-top:4px; font-weight:700">TAP TO SNAP</div>
+                 </div>
+               </div>
+               <div class="preview-box" id="adminSideLabel" onclick="openCamera('side')">
+                 <input type="file" id="adminSidePhoto" accept="image/*" required style="display:none" onchange="handleAdminFile(this, 'adminSideLabel')" onclick="event.stopPropagation()">
+                 <img class="preview-img" alt="Side Preview">
+                 <div style="display:flex; flex-direction:column; align-items:center; z-index:1">
+                   <span>Side Profile</span>
+                   <div style="font-size:8px; color:var(--Mint); margin-top:4px; font-weight:700">TAP TO SNAP</div>
+                 </div>
+               </div>
+            </div>
+
+            <div id="extractionProgress" class="polling-overlay" style="margin-top:0; margin-bottom:24px">
+               <div style="font-size:11px; font-weight:900; color:var(--Mint); letter-spacing:0.1em" id="progressStatus">QUEUEING ASYNC TASK...</div>
+               <div class="polling-bar"><div class="polling-fill" id="progressFill"></div></div>
+            </div>
+
+            <div id="adminConsole" class="console-box" style="display:none; margin-bottom:24px"></div>
+
+            <button type="submit" class="btn-primary" style="height:52px; width:100%" id="btnAdminRun">Execute Benchmarking</button>
+            <button type="button" class="btn-action" style="border:none; width:100%; margin-top:12px" onclick="document.getElementById('adminScanModal').classList.remove('active')">Dismiss</button>
           </div>
         </div>
-
-        <div style="display:grid; grid-template-columns: 1fr 1fr; gap:16px; margin-bottom:20px">
-           <div class="preview-box" id="adminFrontLabel" onclick="openCamera('front')">
-             <input type="file" id="adminFrontPhoto" accept="image/*" required style="display:none" onchange="handleAdminFile(this, 'adminFrontLabel')" onclick="event.stopPropagation()">
-             <img class="preview-img" alt="Front Preview">
-             <div style="display:flex; flex-direction:column; align-items:center; z-index:1">
-               <span>Front A-Pose</span>
-               <div style="font-size:8px; color:var(--Mint); margin-top:4px; font-weight:700">TAP TO SNAP</div>
-             </div>
-           </div>
-           <div class="preview-box" id="adminSideLabel" onclick="openCamera('side')">
-             <input type="file" id="adminSidePhoto" accept="image/*" required style="display:none" onchange="handleAdminFile(this, 'adminSideLabel')" onclick="event.stopPropagation()">
-             <img class="preview-img" alt="Side Preview">
-             <div style="display:flex; flex-direction:column; align-items:center; z-index:1">
-               <span>Side Profile</span>
-               <div style="font-size:8px; color:var(--Mint); margin-top:4px; font-weight:700">TAP TO SNAP</div>
-             </div>
-           </div>
-        </div>
-
-        <div class="pro-tips-card">
-          <h4><span style="font-size:14px">✨</span> Pro-Tips for Precision</h4>
-          <div class="tip-row"><span class="tip-bullet">&bull;</span><span><b>The A-Pose:</b> Keep arms 15" away from body. Do not touch your torso.</span></div>
-          <div class="tip-row"><span class="tip-bullet">&bull;</span><span><b>Clothing:</b> Wear form-fitting gym wear. Baggy clothes add fake volume.</span></div>
-          <div class="tip-row"><span class="tip-bullet">&bull;</span><span><b>Contrast:</b> Stand against a plain wall that is a different color than your outfit.</span></div>
-          <div class="tip-row"><span class="tip-bullet">&bull;</span><span><b>Level:</b> Place phone at waist height, perfectly vertical (not tilted).</span></div>
-        </div>
-
-        <div id="extractionProgress" class="polling-overlay">
-           <div style="font-size:11px; font-weight:900; color:var(--Mint); letter-spacing:0.1em" id="progressStatus">QUEUEING ASYNC TASK...</div>
-           <div class="polling-bar"><div class="polling-fill" id="progressFill"></div></div>
-        </div>
-
-        <div id="adminConsole" class="console-box" style="display:none"></div>
-
-        <button type="submit" class="btn-primary" style="height:52px; width:100%" id="btnAdminRun">Execute Benchmarking</button>
-        <button type="button" class="btn-action" style="border:none; width:100%; margin-top:12px" onclick="document.getElementById('adminScanModal').classList.remove('active')">Dismiss</button>
       </form>
     </div>
   </div>
