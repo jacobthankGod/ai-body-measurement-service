@@ -581,6 +581,8 @@
       const rightWrist = landmarks[16];
       const leftHip = landmarks[23];
       const rightHip = landmarks[24];
+      const leftShoulder = landmarks[11];
+      const rightShoulder = landmarks[12];
 
       let aligned = true;
       let feedback = "Hold steady...";
@@ -593,7 +595,14 @@
         const leftArmDist = Math.abs(leftWrist.x - leftHip.x);
         const rightArmDist = Math.abs(rightWrist.x - rightHip.x);
         const minArmDist = 0.15; // Both arms must be at least 15% from hips
-        if (leftArmDist < minArmDist || rightArmDist < minArmDist) {
+
+        // CORRECTION: Ensure wrists are BELOW shoulders (A-Pose, not T-Pose)
+        const handsDown = leftWrist.y > leftShoulder.y && rightWrist.y > rightShoulder.y;
+
+        if (!handsDown) {
+          feedback = "A-POSE: Drop arms away from your waist.";
+          aligned = false;
+        } else if (leftArmDist < minArmDist || rightArmDist < minArmDist) {
           feedback = "A-POSE: Spread arms away from your body.";
           aligned = false;
         }
