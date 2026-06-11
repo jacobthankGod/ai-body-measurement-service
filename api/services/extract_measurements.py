@@ -138,7 +138,7 @@ class HMRMasterEngine:
         vertex_path = root / "data" / "customBodyPoints.txt"
         self.vertex_map = self._parse_vertex_indices(vertex_path)
 
-    def extract(self, image: np.ndarray, height_cm: float, gender: str = 'male') -> Tuple[Dict[str, float], Optional[np.ndarray], Optional[dict], Optional[str]]:
+    def extract(self, image: np.ndarray, height_cm: float, gender: str = 'male', side_image: Optional[np.ndarray] = None) -> Tuple[Dict[str, float], Optional[np.ndarray], Optional[dict], str, str, Optional[str]]:
         """
         High-Precision Extraction with ABSOLUTE MEMORY ISOLATION.
         Uses a dedicated TF Graph and Session per request to prevent leaks.
@@ -146,7 +146,7 @@ class HMRMasterEngine:
         import gc
         tf1 = setup_tf_bridge()
         if not tf1:
-            return self._fallback_ratios(height_cm, gender), None, None, "TensorFlow not found"
+            return self._fallback_ratios(height_cm, gender), None, None, "Standard", "M", "TensorFlow not found"
 
         model = None
         try:
@@ -183,13 +183,35 @@ class HMRMasterEngine:
                     img_batch = np.expand_dims(img_normalized, 0)
                     del img_resized
 
-                    # 5. INFERENCE
+                    # 5. SIDE IMAGE PROCESSING (If available)
+                    side_results = None
+                    if side_image is not None:
+                        logger.info("🧠 HMR: Processing side profile for depth refinement...")
+                        s_h, s_w = side_image.shape[:2]
+                        if max(s_h, s_w) > 800:
+                            s_scale = 800 / max(s_h, s_w)
+                            side_image = cv2.resize(side_image, (int(s_w * s_scale), int(s_h * s_scale)))
+
+                        side_resized = cv2.resize(side_image, (224, 224))
+                        side_norm = 2 * ((side_resized / 255.0) - 0.5)
+                        side_batch = np.expand_dims(side_norm, 0)
+                        side_results = model.predict_dict(side_batch)
+                        del side_resized, side_norm
+
+                    # 6. INFERENCE
                     logger.info("🧠 HMR: Executing isolated 3D inference...")
                     results = model.predict_dict(img_batch)
                     vertices = results['verts'][0]
                     joints = results['joints'][0]
 
-                    # 6. POST-PROCESSING
+                    # 7. MULTI-VIEW REFINEMENT (Heuristic)
+                    if side_results:
+                        # Average the vertices if they are relatively stable, or use side to refine depth
+                        # For now, we take the mean of the two vertex sets to improve stability
+                        vertices = (vertices + side_results['verts'][0]) / 2.0
+                        logger.info("💎 HMR: Bi-view vertex synchronization complete.")
+
+                    # 8. POST-PROCESSING
                     def norm_hmr(val): return float((val + 1.0) / 2.0)
                     landmark_2d = {
                         'Shoulder_L': (norm_hmr(joints[8][0]), norm_hmr(joints[8][1])),
@@ -206,17 +228,35 @@ class HMRMasterEngine:
                     scale_to_meters = (height_cm / 100.0) / (v_max - v_min)
                     vertices_scaled = vertices * scale_to_meters
 
+                    # 9. INTELLIGENCE CONCLUSIONS (Standard Placeholders)
+                    body_shape = "Standard"
+                    # Simple heuristic for body shape if side view helped
+                    if side_results:
+                        # compare chest/waist ratios from 3D model
+                        m_tmp = self._calculate_from_indices(vertices, height_cm, gender)
+                        c_w = m_tmp.get('Chest Round', 0) / (m_tmp.get('Waist Round', 1) or 1)
+                        if gender == 'female':
+                            if c_w > 1.2: body_shape = "Hourglass"
+                            elif c_w < 1.05: body_shape = "Rectangle"
+                        else:
+                            if c_w > 1.3: body_shape = "Inverted Triangle"
+                            elif c_w < 1.1: body_shape = "Oval"
+
+                    size_rec = "M"
+                    if measurements_3d.get('Chest Round', 0) > 110: size_rec = "XL"
+                    elif measurements_3d.get('Chest Round', 0) < 90: size_rec = "S"
+
                     # Clear session before exit
                     sess.close()
 
-                    return final_measurements, vertices_scaled, landmark_2d, None
+                    return final_measurements, vertices_scaled, landmark_2d, body_shape, size_rec, None
 
         except Exception as e:
             logger.error(f"❌ HMR ISOLATED CRASH: {e}")
             traceback.print_exc()
-            return self._fallback_ratios(height_cm, gender), None, None, str(e)
+            return self._fallback_ratios(height_cm, gender), None, None, "Standard", "M", str(e)
         finally:
-            # 7. NUCLEAR MEMORY PURGE
+            # 8. NUCLEAR MEMORY PURGE
             logger.info("♻️ HMR: Purging isolated brain and cleaning RAM...")
             if 'model' in locals(): del model
             if 'sess' in locals(): del sess
@@ -321,13 +361,14 @@ class HMRMasterEngine:
         except: return {}
 
     def _fallback_ratios(self, height_cm: float, gender: str) -> Dict[str, float]:
+        # Return 6 values to match extractor signature: measurements, vertices, landmarks, body_shape, size_rec, error
         return {'Shoulder': round(0.265 * height_cm, 1), 'Chest Round': round(0.588 * height_cm, 1), 'Waist Round': round(0.471 * height_cm, 1)}
 
 ENGINE = HMRMasterEngine()
 HMR_ACTIVE = True
 
-def extract_measurements_from_hmr(image, height, gender='male'):
-    return ENGINE.extract(image, height, gender)
+def extract_measurements_from_hmr(image, height, gender='male', side_image=None):
+    return ENGINE.extract(image, height, gender, side_image=side_image)
 
 def get_brain_integrity():
     """Returns absolute technical status of AI weights."""

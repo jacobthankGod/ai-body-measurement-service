@@ -41,9 +41,11 @@
     .admin-grid { display: grid; grid-template-columns: 280px 1fr; gap: 48px; align-items: start; }
 
     .sidebar-card { background: var(--Glass); border: 1px solid var(--Glass-Border); border-radius: 20px; padding: 32px; margin-bottom: 32px; }
+    .sidebar-label { font-size: 10px; font-weight: 900; color: var(--Neutral-500); text-transform: uppercase; letter-spacing: 0.1em; padding: 0 16px; margin: 24px 0 12px; }
     .sidebar-nav a {
       display: block; padding: 12px 16px; border-radius: 12px; color: var(--Neutral-400);
       text-decoration: none; font-size: 14px; font-weight: 600; transition: 0.2s; cursor: pointer;
+      margin-bottom: 4px;
     }
     .sidebar-nav a:hover, .sidebar-nav a.active { background: var(--Glass); color: var(--Mint); }
 
@@ -169,6 +171,11 @@
       box-shadow: 0 0 30px rgba(87, 215, 192, 0.3);
     }
     .camera-controls { position: absolute; bottom: 40px; left: 0; right: 0; display: flex; justify-content: center; align-items: center; gap: 32px; z-index: 30; }
+    .camera-review-controls { position: absolute; bottom: 40px; left: 0; right: 0; display: none; justify-content: center; align-items: center; gap: 24px; z-index: 50; padding: 0 24px; }
+    .btn-review { height: 56px; border-radius: 12px; font-weight: 800; cursor: pointer; flex: 1; text-transform: uppercase; font-size: 14px; border: none; }
+    .btn-keep { background: var(--Mint); color: var(--Obsidian); }
+    .btn-redo { background: rgba(255,255,255,0.1); color: #fff; border: 1px solid var(--Glass-Border); }
+
     .shutter-btn { width: 84px; height: 84px; border-radius: 50%; background: #fff; border: 6px solid var(--Mint); cursor: pointer; display: flex; align-items: center; justify-content: center; box-shadow: 0 0 30px rgba(0,0,0,0.5); transition: 0.2s; }
     .shutter-btn:active { transform: scale(0.9); }
     .camera-close { position: absolute; top: 40px; right: 24px; width: 44px; height: 44px; border-radius: 50%; background: rgba(0,0,0,0.6); border: 1px solid var(--Glass-Border); color: #fff; display: flex; align-items: center; justify-content: center; cursor: pointer; z-index: 40; pointer-events: auto; font-size: 20px; font-weight: 700; transition: 0.2s; }
@@ -214,10 +221,14 @@
         <div class="camera-close" onclick="closeCamera()">✕</div>
       </div>
     </div>
-    <div class="camera-controls">
+    <div class="camera-controls" id="shutter-container">
       <div class="shutter-btn" onclick="snapPhoto()">
         <div style="width:56px; height:56px; border-radius:50%; background:var(--Mint); opacity:0.2"></div>
       </div>
+    </div>
+    <div class="camera-review-controls" id="review-container">
+      <button class="btn-review btn-redo" onclick="retakePhoto()">Recapture</button>
+      <button class="btn-review btn-keep" onclick="keepPhoto()">Keep Photo</button>
     </div>
   </div>
 
@@ -277,18 +288,26 @@
           <!-- RIGHT COLUMN: CAPTURE -->
           <div>
             <div style="display:grid; grid-template-columns: 1fr 1fr; gap:16px; margin-bottom:24px">
-               <div class="preview-box" id="adminFrontLabel" onclick="openCamera('front')">
+               <div class="preview-box" id="adminFrontLabel" onclick="handlePreviewClick('front')">
                  <input type="file" id="adminFrontPhoto" accept="image/*" required style="display:none" onchange="handleAdminFile(this, 'adminFrontLabel')" onclick="event.stopPropagation()">
                  <img class="preview-img" alt="Front Preview">
-                 <div style="display:flex; flex-direction:column; align-items:center; z-index:1">
+                 <div class="preview-overlay" style="position:absolute; inset:0; background:rgba(0,0,0,0.6); display:none; flex-direction:column; align-items:center; justify-content:center; z-index:10" onclick="openCamera('front'); event.stopPropagation();">
+                    <svg class="korra-icon" style="color:var(--Mint); width:24px; height:24px; margin-bottom:8px" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M23 19a2 2 0 0 1-2 2H3a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h4l2-3h6l2 3h4a2 2 0 0 1 2 2z"/><circle cx="12" cy="13" r="4"/></svg>
+                    <span style="font-size:10px; font-weight:900; color:#fff">TAP TO RECAPTURE</span>
+                 </div>
+                 <div style="display:flex; flex-direction:column; align-items:center; z-index:1" class="placeholder-content">
                    <span>Front A-Pose</span>
                    <div style="font-size:8px; color:var(--Mint); margin-top:4px; font-weight:700">TAP TO SNAP</div>
                  </div>
                </div>
-               <div class="preview-box" id="adminSideLabel" onclick="openCamera('side')">
+               <div class="preview-box" id="adminSideLabel" onclick="handlePreviewClick('side')">
                  <input type="file" id="adminSidePhoto" accept="image/*" required style="display:none" onchange="handleAdminFile(this, 'adminSideLabel')" onclick="event.stopPropagation()">
                  <img class="preview-img" alt="Side Preview">
-                 <div style="display:flex; flex-direction:column; align-items:center; z-index:1">
+                 <div class="preview-overlay" style="position:absolute; inset:0; background:rgba(0,0,0,0.6); display:none; flex-direction:column; align-items:center; justify-content:center; z-index:10" onclick="openCamera('side'); event.stopPropagation();">
+                    <svg class="korra-icon" style="color:var(--Mint); width:24px; height:24px; margin-bottom:8px" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M23 19a2 2 0 0 1-2 2H3a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h4l2-3h6l2 3h4a2 2 0 0 1 2 2z"/><circle cx="12" cy="13" r="4"/></svg>
+                    <span style="font-size:10px; font-weight:900; color:#fff">TAP TO RECAPTURE</span>
+                 </div>
+                 <div style="display:flex; flex-direction:column; align-items:center; z-index:1" class="placeholder-content">
                    <span>Side Profile</span>
                    <div style="font-size:8px; color:var(--Mint); margin-top:4px; font-weight:700">TAP TO SNAP</div>
                  </div>
@@ -329,13 +348,22 @@
       <div class="admin-grid">
         <aside>
           <div class="sidebar-card">
-            <h4 style="font-size:10px; font-weight:900; color:var(--Mint); margin-bottom:16px">ADMIN CONTROLS</h4>
+            <h4 style="font-size:10px; font-weight:900; color:var(--Mint); margin-bottom:16px">SUPER-BENCH</h4>
             <nav class="sidebar-nav">
+              <div class="sidebar-label">Platform Core</div>
               <a onclick="switchTab('overview')" id="tab-overview" class="active">Global Overview</a>
               <a onclick="switchTab('registry')" id="tab-registry">Merchant Registry</a>
               <a onclick="switchTab('lab')" id="tab-lab">Testing Lab</a>
+
+              <div class="sidebar-label">Artisan Features</div>
+              <a onclick="switchTab('passports')" id="tab-passports">Size Passports</a>
+              <a onclick="switchTab('widget')" id="tab-widget">Widget Configuration</a>
+
+              <div class="sidebar-label">Operations</div>
               <a onclick="switchTab('health')" id="tab-health">System Health</a>
               <a onclick="switchTab('finance')" id="tab-finance">Financial Audit</a>
+              <a onclick="switchTab('billing')" id="tab-billing">Billing & Plans</a>
+              <a onclick="switchTab('settings')" id="tab-settings">Platform Settings</a>
             </nav>
           </div>
         </aside>
@@ -486,6 +514,53 @@
               <div class="table-container"><table><thead><tr><th>Date</th><th>Merchant</th><th>Amount</th><th>Ref</th></tr></thead><tbody id="financeList"></tbody></table></div>
             </div>
           </div>
+
+          <!-- PASSPORTS VIEW (Ported from Dashboard) -->
+          <div id="view-passports" class="tab-view">
+            <h2 class="section-title">Global Size Passports</h2>
+            <p style="color:var(--Neutral-400); margin-bottom:32px">Persistent biometric identities across all merchants.</p>
+            <div id="passportGrid" style="display:grid; grid-template-columns: repeat(auto-fill, minmax(300px, 1fr)); gap:24px"></div>
+          </div>
+
+          <!-- WIDGET VIEW (Ported from Dashboard) -->
+          <div id="view-widget" class="tab-view">
+            <div class="glass-card">
+              <h2 class="section-title">Widget Distribution</h2>
+              <p style="color:var(--Neutral-400); margin-bottom:32px">Embed code for merchant storefronts.</p>
+              <div style="background:#000; border-radius:12px; padding:24px; border:1px solid var(--Glass-Border); margin-bottom:32px">
+                <div style="font-size:10px; font-weight:900; color:var(--Neutral-500); margin-bottom:12px">CORE SDK</div>
+                <code style="font-family:monospace; color:var(--Mint); font-size:12px; word-break:break-all">
+                  &lt;script src="https://korra-436814609100.us-central1.run.app/assets/korra_widget.js"&gt;&lt;/script&gt;
+                </code>
+              </div>
+            </div>
+          </div>
+
+          <!-- BILLING VIEW (Ported from Dashboard) -->
+          <div id="view-billing" class="tab-view">
+            <div class="glass-card">
+              <h2 class="section-title">Financial Overview</h2>
+              <div style="display:grid; grid-template-columns: 1fr 1fr; gap:32px">
+                <div style="padding:24px; background:rgba(87,215,192,0.05); border:1px solid var(--Mint); border-radius:16px">
+                  <div style="font-size:10px; font-weight:900; color:var(--Mint); margin-bottom:8px">TOTAL PLATFORM CREDITS</div>
+                  <div style="font-size:32px; font-weight:900" id="totalCredits">0</div>
+                </div>
+              </div>
+            </div>
+          </div>
+
+          <!-- SETTINGS VIEW (Ported from Dashboard) -->
+          <div id="view-settings" class="tab-view">
+            <div class="glass-card">
+              <h2 class="section-title">Platform Configuration</h2>
+              <div style="max-width:600px">
+                <div style="margin-bottom:24px">
+                  <label style="font-size:10px; font-weight:900; color:var(--Neutral-500); display:block; margin-bottom:8px">SYSTEM VERSION</label>
+                  <input type="text" class="search-input" value="KORRA OS v2.4" readonly>
+                </div>
+              </div>
+            </div>
+          </div>
         </section>
       </div>
     </div>
@@ -508,6 +583,8 @@
     let isPoseAligned = false;
     let alignmentStartTime = 0;
     let autoSnapTriggered = false;
+    let isReviewing = false;
+    let capturedDataUrl = null;
 
     // --- TTS ENGINE ---
     let lastSpokenText = "";
@@ -544,6 +621,11 @@
       activeCameraType = type;
       alignmentStartTime = 0;
       autoSnapTriggered = false;
+      isReviewing = false;
+      document.getElementById('shutter-container').style.display = 'flex';
+      document.getElementById('review-container').style.display = 'none';
+      document.getElementById('camera-video').style.display = 'block';
+      document.getElementById('camera-canvas').style.display = 'block';
       document.getElementById('step-camera').classList.add('active');
       const video = document.getElementById('camera-video');
       const canvas = document.getElementById('camera-canvas');
@@ -576,9 +658,12 @@
       if (cameraInstance) cameraInstance.stop();
       document.getElementById('step-camera').classList.remove('active');
       activeCameraType = null;
+      alignmentStartTime = 0;
+      autoSnapTriggered = false;
     }
 
     function onPoseResults(results) {
+      if (isReviewing) return;
       const canvas = document.getElementById('camera-canvas');
       const ctx = canvas.getContext('2d');
       const msg = document.getElementById('camera-msg');
@@ -634,6 +719,32 @@
         } else if (leftArmDist < minArmDist || rightArmDist < minArmDist) {
           feedback = "A-POSE: Spread arms away from your body.";
           aligned = false;
+        }
+      } else if (activeCameraType === 'side') {
+        // ULTRA-STRICT SIDE POSE TRACKING
+        const shoulderWidth = Math.abs(leftShoulder.x - rightShoulder.x);
+        const hipWidth = Math.abs(leftHip.x - rightHip.x);
+        const torsoHeight = Math.abs(leftShoulder.y - leftHip.y);
+
+        // In profile, width of shoulders and hips should be very narrow
+        const sideRatio = (shoulderWidth + hipWidth) / (2 * torsoHeight);
+
+        // Check for shoulder-hip vertical alignment (avoid leaning)
+        const shoulderHipAlign = Math.abs((leftShoulder.x + rightShoulder.x)/2 - (leftHip.x + rightHip.x)/2);
+
+        if (sideRatio > 0.25) { // Stricter threshold
+          feedback = "Turn Side: Rotate 90 degrees.";
+          aligned = false;
+        } else if (shoulderHipAlign > 0.1) {
+          feedback = "Stand Straight: Don't lean.";
+          aligned = false;
+        } else {
+          // Check that hands are down
+          const handsDown = leftWrist.y > leftShoulder.y && rightWrist.y > rightShoulder.y;
+          if (!handsDown) {
+             feedback = "Keep arms down at your sides.";
+             aligned = false;
+          }
         }
       }
 
@@ -730,6 +841,8 @@
     }
 
     function snapPhoto() {
+      if (isReviewing) return;
+
       const video = document.getElementById('camera-video');
       const canvas = document.createElement('canvas');
       canvas.width = video.videoWidth;
@@ -739,7 +852,30 @@
       ctx.scale(-1, 1);
       ctx.drawImage(video, 0, 0);
 
-      const dataUrl = canvas.toDataURL('image/jpeg');
+      capturedDataUrl = canvas.toDataURL('image/jpeg');
+
+      // Enter Review Mode
+      isReviewing = true;
+      document.getElementById('camera-video').style.display = 'none';
+      document.getElementById('camera-canvas').style.display = 'none';
+      document.getElementById('shutter-container').style.display = 'none';
+      document.getElementById('review-container').style.display = 'flex';
+      document.getElementById('camera-msg').textContent = "Review your capture";
+      speak("Captured. Review your photo.", true);
+    }
+
+    function retakePhoto() {
+      isReviewing = false;
+      autoSnapTriggered = false;
+      alignmentStartTime = 0;
+      document.getElementById('camera-video').style.display = 'block';
+      document.getElementById('camera-canvas').style.display = 'block';
+      document.getElementById('shutter-container').style.display = 'flex';
+      document.getElementById('review-container').style.display = 'none';
+      document.getElementById('camera-msg').textContent = "Re-aligning...";
+    }
+
+    function keepPhoto() {
       const labelId = activeCameraType === 'front' ? 'adminFrontLabel' : 'adminSideLabel';
       const inputId = activeCameraType === 'front' ? 'adminFrontPhoto' : 'adminSidePhoto';
 
@@ -747,14 +883,16 @@
 
       const label = document.getElementById(labelId);
       const previewImg = label.querySelector('.preview-img');
-      const uploadSpan = label.querySelector('div'); // The div containing span and snap text
+      const placeholder = label.querySelector('.placeholder-content');
+      const overlay = label.querySelector('.preview-overlay');
 
-      previewImg.src = dataUrl;
+      previewImg.src = capturedDataUrl;
       previewImg.style.display = 'block';
-      if(uploadSpan) uploadSpan.style.display = 'none';
+      if(placeholder) placeholder.style.display = 'none';
+      if(overlay) overlay.style.display = 'flex';
 
       // Convert to blob and assign to file input
-      fetch(dataUrl)
+      fetch(capturedDataUrl)
         .then(res => res.blob())
         .then(blob => {
           const file = new File([blob], `${activeCameraType}.jpg`, { type: "image/jpeg" });
@@ -769,15 +907,32 @@
     function handleAdminFile(input, labelId) {
       const label = document.getElementById(labelId);
       const previewImg = label.querySelector('.preview-img');
-      const uploadSpan = label.querySelector('span');
+      const placeholder = label.querySelector('.placeholder-content');
+      const overlay = label.querySelector('.preview-overlay');
       if (input && input.files && input.files[0]) {
         const reader = new FileReader();
         reader.onload = (e) => {
            if(previewImg) { previewImg.src = e.target.result; previewImg.style.display = 'block'; }
-           if(uploadSpan) uploadSpan.style.display = 'none';
+           if(placeholder) placeholder.style.display = 'none';
+           if(overlay) overlay.style.display = 'flex';
         };
         reader.readAsDataURL(input.files[0]);
       }
+    }
+
+    function handlePreviewClick(type) {
+        const labelId = type === 'front' ? 'adminFrontLabel' : 'adminSideLabel';
+        const label = document.getElementById(labelId);
+        const placeholder = label.querySelector('.placeholder-content');
+
+        // If placeholder is visible, it means no image yet - open camera
+        if (placeholder && placeholder.style.display !== 'none') {
+            openCamera(type);
+        } else {
+            // Image exists - show it full screen or just let them click the recapture overlay
+            const img = label.querySelector('.preview-img');
+            if (img.src) window.open(img.src, '_blank');
+        }
     }
 
     function switchTab(tabId) {
@@ -785,9 +940,51 @@
       document.querySelectorAll('.sidebar-nav a').forEach(a => a.classList.remove('active'));
       const view = document.getElementById('view-' + tabId);
       if(view) view.classList.add('active');
+      const tab = document.getElementById('tab-' + tabId);
+      if(tab) tab.classList.add('active');
+
+      if(tabId === 'passports') renderGlobalPassports();
     }
 
-    function adminLog(text) {
+    // --- GLOBAL PASSPORT LOGIC (Ported & Optimized) ---
+    async function renderGlobalPassports() {
+      const container = document.getElementById('passportGrid');
+      if(!container) return;
+      container.innerHTML = '<div style="color:var(--Neutral-500)">Scanning Global Vault...</div>';
+
+      try {
+        const { data, error } = await window.KORRA_DB.from('measurements').select('*').order('created_at', { ascending: false });
+        if(error || !data) throw error;
+
+        // Group by Client Name (Global)
+        const groups = {};
+        data.forEach(s => {
+          const name = s.client_name || "Anonymous";
+          if (!groups[name]) groups[name] = [];
+          groups[name].push(s);
+        });
+
+        container.innerHTML = '';
+        Object.entries(groups).forEach(([name, scans]) => {
+          const latest = scans[0];
+          const card = document.createElement('div');
+          card.className = 'glass-card';
+          card.style.padding = '24px';
+          card.innerHTML = `
+            <div style="display:flex; align-items:center; gap:16px; margin-bottom:20px">
+              <div style="width:40px; height:40px; background:var(--Mint); border-radius:50%; display:flex; align-items:center; justify-content:center; color:var(--Obsidian); font-weight:900">${name[0]}</div>
+              <div><h5 style="margin:0">${name}</h5><p style="font-size:10px; color:var(--Neutral-500)">${scans.length} Extractions</p></div>
+            </div>
+            <div style="background:rgba(255,255,255,0.03); padding:12px; border-radius:8px; font-size:11px">
+              <div>Chest: <b style="color:var(--Mint)">${latest.biometrics?.['Chest Round'] || '--'}cm</b></div>
+              <div>Waist: <b style="color:var(--Mint)">${latest.biometrics?.['Waist Round'] || '--'}cm</b></div>
+            </div>
+            <button class="btn-action" style="width:100%; margin-top:12px" onclick="window.KORRA_VIZ.loadMesh('${latest.mesh_url}'); switchTab('lab'); window.scrollTo(0,0);">Inspect 3D Twin</button>
+          `;
+          container.appendChild(card);
+        });
+      } catch(e) { container.innerHTML = 'Vault Handshake Failed.'; }
+    }
       const consoleEl = document.getElementById('adminConsole');
       if(!consoleEl) return;
       consoleEl.style.display = 'block';

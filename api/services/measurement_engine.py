@@ -16,7 +16,9 @@ def extract_measurements_from_dual_photos(front_image, side_image, user_height_c
 
     # 1. ATTEMPT HIGH-PRECISION HMR (Faraz Bhatti Implementation)
     try:
-        results = extract_measurements_from_hmr(front_image, user_height_cm, gender)
+        # HMR Returns: (measurements, vertices, landmarks, body_shape, size_rec, error)
+        hmr_res = extract_measurements_from_hmr(front_image, user_height_cm, gender, side_image=side_image)
+        results = hmr_res[0] # Get the measurements dict
         if results and results.get('Chest Round', 0) > 0:
             print("💎 KORRA: High-Precision 1:1 Alignment Active.")
             return results
