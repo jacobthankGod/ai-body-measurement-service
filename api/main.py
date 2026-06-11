@@ -149,6 +149,20 @@ async def serve_widget(): return get_safe_file("widget.html")
 @app.get("/share")
 async def serve_share(): return get_safe_file("share.html")
 
+# --- INDUSTRY PAGES ---
+@app.get("/luxury-mtm")
+async def serve_luxury(): return get_safe_file("luxury-mtm.html")
+@app.get("/manufacturing")
+async def serve_manufacturing(): return get_safe_file("manufacturing.html")
+@app.get("/rtw")
+async def serve_rtw(): return get_safe_file("rtw.html")
+@app.get("/bridal")
+async def serve_bridal(): return get_safe_file("bridal.html")
+@app.get("/custom")
+async def serve_custom(): return get_safe_file("custom.html")
+@app.get("/uniforms")
+async def serve_uniforms(): return get_safe_file("uniforms.html")
+
 # --- PRIORITIZED CATCH-ALL ---
 # PRIORITY: Serve static assets BEFORE catch-all
 @app.get("/assets/{asset_path:path}")
