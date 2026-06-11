@@ -225,7 +225,7 @@
             </div>
           </div>
 
-          <div id="view-settings" class="tab-view">
+<div id="view-settings" class="tab-view">
             <div class="glass-card">
               <h2 class="section-title">Platform Settings</h2>
               <div style="display:grid; grid-template-columns: 1fr 1fr; gap:32px">
@@ -240,6 +240,121 @@
                   <div class="health-item"><span class="health-label">MAINTENANCE MODE</span><button class="btn-action" style="background:var(--Error)">DEACTIVATED</button></div>
                   <div class="health-item"><span class="health-label">AI AUTO-RECOVERY</span><button class="btn-action" style="color:var(--Mint)">ENABLED</button></div>
                 </div>
+              </div>
+            </div>
+          </div>
+
+          <div id="view-registry" class="tab-view">
+            <div class="glass-card">
+              <h2 class="section-title">Merchant Registry</h2>
+              <p style="color:var(--Neutral-400); margin-bottom:32px">Complete listing of all registered merchants on the platform.</p>
+              <div class="table-container">
+                <table>
+                  <thead>
+                    <tr>
+                      <th>Merchant Name</th>
+                      <th>Industry</th>
+                      <th>Credits</th>
+                      <th>Joined</th>
+                      <th>Status</th>
+                    </tr>
+                  </thead>
+                  <tbody id="merchantList"></tbody>
+                </table>
+              </div>
+            </div>
+          </div>
+
+          <div id="view-passports" class="tab-view">
+            <div class="glass-card">
+              <h2 class="section-title">Size Passports</h2>
+              <p style="color:var(--Neutral-400); margin-bottom:32px">Global measurement vault across all merchants.</p>
+              <div id="passportGrid" style="display:grid; grid-template-columns:repeat(auto-fill, minmax(280px, 1fr)); gap:24px"></div>
+            </div>
+          </div>
+
+          <div id="view-widget" class="tab-view">
+            <div class="glass-card">
+              <h2 class="section-title">Widget SDK</h2>
+              <p style="color:var(--Neutral-400); margin-bottom:32px">Embed body scanning on any website.</p>
+              
+              <div style="margin-bottom:32px">
+                <h4 style="font-size:10px; font-weight:900; color:var(--Mint); margin-bottom:12px">STANDARD EMBED</h4>
+                <div style="background:#000; padding:20px; border:1px solid var(--Glass-Border); border-radius:12px;">
+<code style="color:var(--Mint); font-size:12px; word-break:break-all"><script src="https://korra-436814609100.us-central1.run.app/assets/korra_widget.js"></script></code>
+                </div>
+              </div>
+
+              <div style="margin-bottom:32px">
+                <h4 style="font-size:10px; font-weight:900; color:var(--Mint); margin-bottom:12px">ADVANCED (WITH CALLBACKS)</h4>
+                <div style="background:#000; padding:20px; border:1px solid var(--Glass-Border); border-radius:12px;">
+                  <code style="color:var(--Mint); font-size:11px; word-break:break-all"><script>
+  KORRA.init({
+    apiKey: 'YOUR_API_KEY',
+    onScanComplete: (data) => console.log('Measurements:', data),
+    onError: (err) => console.error('Error:', err)
+  });
+</script></code>
+                </div>
+              </div>
+
+              <div>
+                <h4 style="font-size:10px; font-weight:900; color:var(--Mint); margin-bottom:12px">AVAILABLE METHODS</h4>
+                <div style="display:grid; grid-template-columns:1fr 1fr; gap:12px">
+                  <div class="health-item"><span class="health-label">init(config)</span><span class="health-status status-ok">READY</span></div>
+                  <div class="health-item"><span class="health-label">openCamera()</span><span class="health-status status-ok">READY</span></div>
+                  <div class="health-item"><span class="health-label">getMeasurements()</span><span class="health-status status-ok">READY</span></div>
+                  <div class="health-item"><span class="health-label">exportPDF()</span><span class="health-status status-ok">READY</span></div>
+                </div>
+              </div>
+            </div>
+          </div>
+
+          <div id="view-health" class="tab-view">
+            <div class="glass-card">
+              <h2 class="section-title">System Health</h2>
+              <p style="color:var(--Neutral-400); margin-bottom:32px">Real-time platform diagnostics.</p>
+              
+              <div class="stat-row" style="margin-bottom:32px">
+                <div class="stat-card">
+                  <h4>API Status</h4>
+                  <div class="value" style="color:var(--Mint)" id="healthVersion">Loading...</div>
+                </div>
+                <div class="stat-card">
+                  <h4>Database</h4>
+                  <div class="value" style="color:var(--Mint)">CONNECTED</div>
+                </div>
+                <div class="stat-card">
+                  <h4>AI Engine</h4>
+                  <div class="value" style="color:var(--Mint)">READY</div>
+                </div>
+                <div class="stat-card">
+                  <h4>Uptime</h4>
+                  <div class="value" id="healthUptime">Computing...</div>
+                </div>
+              </div>
+
+              <h4 style="font-size:10px; font-weight:900; color:var(--Mint); margin-bottom:16px">ASSET INTEGRITY</h4>
+              <div id="healthAssets"></div>
+
+              <h4 style="font-size:10px; font-weight:900; color:var(--Mint); margin:32px 0 16px">ENDPOINT STATUS</h4>
+              <div class="table-container">
+                <table>
+                  <thead>
+                    <tr>
+                      <th>Endpoint</th>
+                      <th>Method</th>
+                      <th>Status</th>
+                      <th>Latency</th>
+                    </tr>
+                  </thead>
+                  <tbody id="healthEndpoints">
+                    <tr><td>/api/v2/measurements/extract</td><td>POST</td><td><span class="health-status status-ok">HEALTHY</span></td><td>~200ms</td></tr>
+                    <tr><td>/api/v2/measurements/status/:id</td><td>GET</td><td><span class="health-status status-ok">HEALTHY</span></td><td>~50ms</td></tr>
+                    <tr><td>/api/v2/health</td><td>GET</td><td><span class="health-status status-ok">HEALTHY</span></td><td>~10ms</td></tr>
+                    <tr><td>/api/v2/auth/session</td><td>GET</td><td><span class="health-status status-ok">HEALTHY</span></td><td>~30ms</td></tr>
+                  </tbody>
+                </table>
               </div>
             </div>
           </div>
