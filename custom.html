@@ -12,6 +12,7 @@
     :root {
       --Obsidian: #000000; --Mint: #57D7C0; --Teal-900: #002D2A; --Glass: rgba(255, 255, 255, 0.04);
       --Glass-Border: rgba(255, 255, 255, 0.1); --Neutral-400: #A3A3A3; --Neutral-500: #737373; --White: #FFFFFF; --Error: #D63031;
+      --S-8: 8px; --S-16: 16px; --S-24: 24px; --S-32: 32px; --S-48: 48px; --S-64: 64px; --S-80: 80px; --S-120: 120px; --S-160: 160px;
     }
     * { box-sizing: border-box; -webkit-font-smoothing: antialiased; margin: 0; padding: 0; }
     html, body { background: var(--Obsidian); color: var(--White); font-family: 'Inter', sans-serif; overflow-x: hidden; }
@@ -36,24 +37,30 @@
     .hero h1 { font-size: 64px; font-weight: 900; letter-spacing: -0.04em; color: var(--Mint); margin-bottom: 24px; }
     .hero p { font-size: 20px; color: var(--Neutral-400); max-width: 700px; margin: 0 auto 40px; line-height: 1.6; font-weight: 500; }
 
-    .feature-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(320px, 1fr)); gap: 32px; text-align: left; }
+    section.block { padding: var(--S-120) 0; }
+    .section-eyebrow { font-size: 11px; font-weight: 900; color: var(--Mint); text-transform: uppercase; letter-spacing: 0.2em; margin-bottom: var(--S-16); }
+    .section-title { font-size: 40px; font-weight: 800; line-height: 1.1; letter-spacing: -0.03em; margin: 0; }
+    .section-desc { font-size: 18px; color: var(--Neutral-400); line-height: 1.6; margin-top: var(--S-24); max-width: 550px; font-weight: 500; }
 
-    .image-feature-card {
-        background: var(--Glass); border: 1px solid var(--Glass-Border); border-radius: 24px; overflow: hidden;
-        transition: 0.4s cubic-bezier(0.4, 0, 0.2, 1); position: relative; display: flex; flex-direction: column;
-    }
-    .image-feature-card:hover { border-color: var(--Mint); transform: translateY(-8px); box-shadow: 0 20px 40px rgba(0,0,0,0.5); }
-    .card-img-container { height: 260px; width: 100%; overflow: hidden; position: relative; background: #111; }
-    .card-img-container img { width: 100%; height: 100%; object-fit: cover; opacity: 0.6; transition: 0.4s; }
-    .image-feature-card:hover .card-img-container img { opacity: 0.8; transform: scale(1.05); }
-    .card-content { padding: 32px; flex: 1; }
-    .card-content h3 { color: var(--Mint); font-size: 22px; font-weight: 800; margin-bottom: 12px; }
-    .card-content p { font-size: 15px; color: var(--Neutral-400); line-height: 1.6; }
+    .grid-impact { display: grid; grid-template-columns: 1fr 1.2fr; gap: var(--S-80); align-items: center; }
+    .grid-swapped { grid-template-columns: 1.2fr 1fr; }
+
+    .glass-card { background: var(--Glass); border: 1px solid var(--Glass-Border); border-radius: 24px; padding: var(--S-48); transition: 0.3s; position: relative; overflow: hidden; }
+    .image-card { padding: 12px !important; border-radius: 24px !important; width: 100%; height: auto; aspect-ratio: 4/3; display: flex; }
+    .image-card img { width: 100%; height: 100%; object-fit: cover; border-radius: 16px; opacity: 0.7; transition: 0.4s; }
+    .image-card:hover img { opacity: 0.9; transform: scale(1.02); }
 
     .btn { height: 52px; padding: 0 32px; border-radius: 12px; font-size: 13px; font-weight: 800; cursor: pointer; display: inline-flex; align-items: center; justify-content: center; gap: 12px; transition: 0.2s; text-decoration: none; text-transform: uppercase; }
     .btn-primary { background: var(--Mint); color: var(--Obsidian); border: none; }
     .btn-outline { background: transparent; border: 1px solid var(--Glass-Border); color: var(--White); }
     .btn-outline:hover { background: var(--Glass); border-color: var(--White); }
+
+    .final-banner {
+      background: linear-gradient(135deg, var(--Teal-900), #000); border-radius: 24px; padding: var(--S-64) var(--S-80);
+      text-align: center; border: 1px solid var(--Glass-Border); margin-top: 80px;
+    }
+    .final-banner h2 { font-size: 40px; font-weight: 800; letter-spacing: -0.04em; margin-bottom: 16px; }
+    .final-banner p { font-size: 18px; color: var(--Neutral-400); margin-bottom: 32px; }
 
     footer { padding: 120px 0 64px; border-top: 1px solid var(--Glass-Border); background: #000; }
     .footer-links { display: grid; grid-template-columns: repeat(4, 1fr); gap: 64px; }
@@ -63,6 +70,7 @@
 
     @media (max-width: 1050px) {
       .hero h1 { font-size: 40px; }
+      .grid-impact, .grid-swapped { grid-template-columns: 1fr; gap: var(--S-48); }
       nav { display: none; }
       .footer-links { grid-template-columns: repeat(2, 1fr); }
     }
@@ -98,51 +106,84 @@
     <section class="hero">
       <div class="container">
         <div style="font-size: 11px; font-weight: 900; color: var(--Mint); text-transform: uppercase; letter-spacing: 0.2em; margin-bottom: 16px;">Industry Focus</div>
-        <h1>Custom Apparel Excellence</h1>
-        <p>The bridge between individual expression and clinical precision. Data-driven custom apparel for the digital age.</p>
+        <h1>Custom Apparel</h1>
+        <p>Deliver unique, custom-made clothing at scale. The bridge between artisanal quality and digital efficiency.</p>
         <div style="display:flex; justify-content:center; gap:16px">
-            <a href="/signup.html" class="btn-primary">Build Custom</a>
+            <a href="/signup.html" class="btn btn-primary">Start Scaling</a>
             <a href="/#technology" class="btn btn-outline">See Technology</a>
         </div>
       </div>
     </section>
 
-    <section class="container">
-      <div class="feature-grid">
-        <div class="image-feature-card">
-          <div class="card-img-container"><img src="/assets/body-capture.png" alt="Limitless Customization"></div>
-          <div class="card-content">
-            <h3>Limitless Customization</h3>
-            <p>Empower your brand to offer deep customization with the confidence that the final garment will fit the customer's unique body type perfectly.</p>
+    <!-- SECTION 1 -->
+    <section class="block">
+      <div class="container">
+        <div class="grid-impact">
+          <div>
+            <div class="section-eyebrow">Personalization</div>
+            <h2 class="section-title">Fit-First Design</h2>
+            <p class="section-desc">Build your brand on fit. KORRA provides the precise biometric data needed to create custom apparel that fits every customer perfectly.</p>
           </div>
-        </div>
-        <div class="image-feature-card">
-          <div class="card-img-container"><img src="/assets/homepage_image.png" alt="Digital First Fitting"></div>
-          <div class="card-content">
-            <h3>Digital First Fitting</h3>
-            <p>Start your custom workflow with a 100% digital measurement capture. Move from "Idea" to "Production-Ready Pattern" in less time than a single manual session.</p>
-          </div>
-        </div>
-        <div class="image-feature-card">
-          <div class="card-img-container"><img src="/assets/body-capture.png" alt="Measurement Portability"></div>
-          <div class="card-content">
-            <h3>Measurement Portability</h3>
-            <p>KORRA scan data follows the user. Provide your clients with a biometric identity they can use for all their custom apparel needs within your ecosystem.</p>
-          </div>
-        </div>
-        <div class="image-feature-card">
-          <div class="card-img-container"><img src="/assets/homepage_image.png" alt="High-Volume Custom"></div>
-          <div class="card-content">
-            <h3>High-Volume Custom</h3>
-            <p>Handle thousands of custom orders monthly with ease. KORRA's automated extraction scales where human tailors cannot.</p>
+          <div class="glass-card image-card">
+            <img src="/assets/body-capture.png" alt="Fit-First Design">
           </div>
         </div>
       </div>
+    </section>
 
-      <div class="glass-card" style="background: linear-gradient(135deg, var(--Teal-900), #000); text-align: center; margin-top: 80px;">
-         <h2 style="font-size: 32px; font-weight: 800; margin-bottom: 16px;">Scale your custom brand.</h2>
-         <p style="color: var(--Neutral-400); margin-bottom: 32px;">Join the custom apparel companies using KORRA to deliver the perfect fit at scale.</p>
-         <a href="/signup.html" class="btn-primary">Start Scaling Custom</a>
+    <!-- SECTION 2 -->
+    <section class="block" style="background:rgba(255,255,255,0.01)">
+      <div class="container">
+        <div class="grid-impact grid-swapped">
+          <div class="glass-card image-card">
+            <img src="/assets/homepage_image.png" alt="Operational Speed">
+          </div>
+          <div>
+            <div class="section-eyebrow">Operations</div>
+            <h2 class="section-title">Artisan Velocity</h2>
+            <p class="section-desc">Reduce the time spent on client measurement sessions by 90%. Focus on the craftsmanship, not the tape measure.</p>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <!-- SECTION 3 -->
+    <section class="block">
+      <div class="container">
+        <div class="grid-impact">
+          <div>
+            <div class="section-eyebrow">Innovation</div>
+            <h2 class="section-title">Digital Pattern Sync</h2>
+            <p class="section-desc">Integrate 3D body scans directly into your pattern-making software for a seamless design-to-production workflow.</p>
+          </div>
+          <div class="glass-card image-card">
+            <img src="/assets/body-capture.png" alt="Digital Pattern Sync">
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <!-- SECTION 4 -->
+    <section class="block" style="background:rgba(255,255,255,0.01)">
+      <div class="container">
+        <div class="grid-impact grid-swapped">
+          <div class="glass-card image-card">
+            <img src="/assets/homepage_image.png" alt="Global Custom">
+          </div>
+          <div>
+            <div class="section-eyebrow">Growth</div>
+            <h2 class="section-title">Serve Anyone, Anywhere</h2>
+            <p class="section-desc">Expand your custom apparel business globally. Collect measurements from clients anywhere in the world with KORRA.</p>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <section class="container" style="padding-bottom: 80px;">
+      <div class="final-banner">
+         <h2>Ready to scale custom?</h2>
+         <p>Join the custom apparel brands using KORRA to power their artisanal workflows.</p>
+         <a href="/signup.html" class="btn btn-primary">Get Started</a>
       </div>
     </section>
   </main>
@@ -180,8 +221,10 @@
       initSupabase();
       window.addEventListener('scroll', () => {
         const header = document.getElementById('mainHeader');
-        if (window.scrollY > 40) header.classList.add('scrolled');
-        else header.classList.remove('scrolled');
+        if (header) {
+          if (window.scrollY > 40) header.classList.add('scrolled');
+          else header.classList.remove('scrolled');
+        }
       });
       document.getElementById('btnSignOut').onclick = () => window.korraSupabase.auth.signOut().then(() => window.location.reload());
     })();
