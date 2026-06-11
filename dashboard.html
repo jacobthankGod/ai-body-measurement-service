@@ -52,6 +52,15 @@
 
     .grid-workbench { display: grid; grid-template-columns: 240px 1fr; gap: 48px; align-items: start; }
 
+    @media (max-width: 1024px) {
+      .container { padding: 0 24px; }
+      .grid-workbench { grid-template-columns: 1fr; gap: 32px; }
+      .sidebar-nav { display: flex; overflow-x: auto; gap: 8px; padding-bottom: 8px; -webkit-overflow-scrolling: touch; }
+      .sidebar-nav a { white-space: nowrap; padding: 10px 20px; border: 1px solid var(--Glass-Border); }
+      .sidebar-label { display: none; }
+      .visual-column { position: static !important; }
+    }
+
     .sidebar-nav { margin-bottom: 32px; }
     .sidebar-label { font-size: 10px; font-weight: 900; color: var(--Neutral-500); text-transform: uppercase; letter-spacing: 0.1em; padding: 0 16px; margin: 24px 0 12px; }
     .sidebar-nav a {
@@ -68,6 +77,16 @@
     .visual-column { position: sticky; top: 120px; }
 
     .stat-grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 24px; margin-bottom: 32px; }
+
+    @media (max-width: 768px) {
+      .stat-grid { grid-template-columns: repeat(2, 1fr); gap: 16px; }
+      .workbench-split { grid-template-columns: 1fr !important; }
+      .stat-card .value { font-size: 20px; }
+      #dashboard-3d-viewport { height: 350px; }
+      .glass-card { padding: 24px; }
+      #measurementGridUpper, #measurementGridMiddle, #measurementGridLower { grid-template-columns: repeat(2, 1fr) !important; }
+    }
+
     .stat-card { padding: 20px !important; }
     .stat-card h4 { font-size: 9px; font-weight: 900; color: var(--Neutral-500); text-transform: uppercase; margin-bottom: 6px; }
     .stat-card .value { font-size: 24px; font-weight: 900; color: var(--White); }
@@ -97,9 +116,16 @@
       width: 100%; max-width: 600px; background: #0a0a0a; border: 1px solid var(--Glass-Border);
       border-radius: 24px; padding: 40px;
       transition: max-width 0.3s ease;
+      max-height: 90vh; overflow-y: auto;
     }
     .modal-card-landscape { max-width: 1000px; }
     .landscape-grid { display: grid; grid-template-columns: 1fr 1.2fr; gap: 48px; align-items: start; }
+
+    @media (max-width: 900px) {
+      .modal-card { padding: 24px; border-radius: 0; }
+      .modal-card-landscape { max-width: 100%; height: 100vh; max-height: 100vh; }
+      .landscape-grid { grid-template-columns: 1fr; gap: 24px; }
+    }
 
     .preview-box { width: 100%; height: 160px; border-radius: 12px; border: 1px dashed var(--Glass-Border); display: flex; align-items: center; justify-content: center; overflow: hidden; position: relative; cursor: pointer; }
 

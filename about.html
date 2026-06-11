@@ -59,7 +59,17 @@
     .value-card { background: var(--Glass); border: 1px solid var(--Glass-Border); border-radius: 20px; padding: var(--S-32); }
     .value-card h3 { color: var(--Mint); font-size: 18px; font-weight: 900; margin-bottom: 16px; }
 
-    footer { padding: var(--S-120) 0 var(--S-64); border-top: 1px solid var(--Glass-Border); }
+    @media (max-width: 900px) {
+      .container { padding: 0 24px; }
+      nav { display: none; }
+      #authButtons { gap: 8px; }
+      .btn { padding: 0 16px; height: 40px; font-size: 11px; }
+
+      main { padding-top: 140px; }
+      .section-title { font-size: 32px; }
+      .content-text { font-size: 16px; }
+      .grid-values { grid-template-columns: 1fr; gap: 24px; }
+    }
   </style>
 </head>
 <body>

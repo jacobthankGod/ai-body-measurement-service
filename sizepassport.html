@@ -60,7 +60,17 @@
     .feature-card h3 { font-size: 18px; font-weight: 800; color: var(--Mint); margin-bottom: 12px; }
     .feature-card p { font-size: 14px; color: var(--Neutral-400); line-height: 1.6; }
 
-    footer { padding: var(--S-120) 0 var(--S-64); border-top: 1px solid var(--Glass-Border); margin-top: 120px; }
+    @media (max-width: 900px) {
+      .container { padding: 0 24px; }
+      main { padding-top: 140px; }
+      .section-title { font-size: 32px; }
+      .hero-desc { font-size: 16px; margin-bottom: 48px; }
+
+      .passport-mock { grid-template-columns: 1fr; padding: 32px; gap: 32px; }
+      .data-value { font-size: 24px; }
+
+      .feature-grid { grid-template-columns: 1fr; gap: 40px; margin-top: 64px; }
+    }
   </style>
 </head>
 <body>

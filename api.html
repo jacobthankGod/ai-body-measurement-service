@@ -60,7 +60,18 @@
     .code-block b { color: var(--Mint); }
 
     .btn-portal { display: inline-flex; align-items: center; gap: 12px; height: 52px; padding: 0 32px; background: var(--Mint); color: var(--Obsidian); border-radius: 12px; font-weight: 800; font-size: 14px; text-decoration: none; transition: 0.2s; margin-top: 20px; }
-    .btn-portal:hover { transform: translateY(-2px); box-shadow: 0 10px 30px rgba(87, 215, 192, 0.2); }
+    @media (max-width: 900px) {
+      .container { padding: 0 24px; }
+      .grid-api { grid-template-columns: 1fr; gap: 32px; }
+      .sidebar-nav { display: flex; overflow-x: auto; gap: 8px; padding-bottom: 8px; }
+      .sidebar-nav a { white-space: nowrap; border: 1px solid var(--Glass-Border); }
+
+      main { padding-top: 140px; }
+      .section-title { font-size: 24px; }
+      .glass-card { padding: 24px; }
+      .endpoint-card { padding: 20px; }
+      .path { font-size: 13px; }
+    }
   </style>
 </head>
 <body>

@@ -171,6 +171,8 @@ async def run_extraction_subprocess_cli(task_id: str, front_path: str, side_path
                 with open(front_path, 'rb') as f: front_arr = np.array(Image.open(f))
                 with open(side_path, 'rb') as f: side_arr = np.array(Image.open(f))
                 measurements, landmarks = fallback_extract(front_arr, side_arr, height, gender)
+                body_shape = "Standard"
+                size_rec = "M"
                 hmr_error = f"AI Subprocess Crashed (RC {returncode}): {err_msg[:200]}"
                 mesh_url = None
             else:

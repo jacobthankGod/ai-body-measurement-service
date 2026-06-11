@@ -60,7 +60,19 @@
     .stat-card .value { font-size: 40px; font-weight: 900; color: var(--Mint); margin-bottom: 8px; }
     .stat-card .label { font-size: 12px; font-weight: 800; color: var(--Neutral-500); text-transform: uppercase; }
 
-    footer { padding: var(--S-120) 0 var(--S-64); border-top: 1px solid var(--Glass-Border); }
+    @media (max-width: 900px) {
+      .container { padding: 0 24px; }
+      nav { display: none; }
+      #authButtons { gap: 8px; }
+      .btn { padding: 0 16px; height: 40px; font-size: 11px; }
+
+      main { padding-top: 140px; }
+      .section-title { font-size: 32px; }
+
+      .content-grid { grid-template-columns: 1fr; gap: 48px; }
+      .stat-card { padding: 24px; }
+      .stat-card .value { font-size: 32px; }
+    }
   </style>
 </head>
 <body>

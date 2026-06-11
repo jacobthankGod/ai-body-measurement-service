@@ -135,10 +135,32 @@ section.block { padding: var(--S-160) 0; }
     .btn-view-more:hover { opacity: 1; transform: translateX(4px); }
 
     @media (max-width: 1050px) {
-      .hero-headline { font-size: 42px; white-space: normal; } nav { display: none; }
-      .grid-impact, .grid-swapped, .mosaic-grid { grid-template-columns: 1fr; gap: var(--S-48); }
-      .final-banner { flex-direction: column; text-align: center; gap: var(--S-32); }
-      .mosaic-card { height: 300px; }
+      .hero-headline { font-size: 36px; white-space: normal; }
+      nav { display: none; }
+      .container { padding: 0 var(--S-24); }
+      header .container { padding: 0 24px; }
+
+      .grid-impact, .grid-swapped, .mosaic-grid, .grid-3, .grid-4 { grid-template-columns: 1fr !important; gap: var(--S-48); }
+      .final-banner { flex-direction: column; text-align: center; gap: var(--S-32); padding: 48px 24px; }
+      .final-banner p { margin: 0; }
+
+      .hero { padding: 140px 0 var(--S-64); }
+      .hero-visual { height: 400px; margin-top: 40px; }
+      .hero-cta-card { margin-top: 40px; flex-direction: column; gap: 32px; padding: 32px; }
+      .hero-cta-card h3 { font-size: 24px; }
+
+      .section-title { font-size: 32px; }
+      .footer-links { grid-template-columns: repeat(2, 1fr); gap: 40px; }
+
+      .mosaic-card { height: 280px; }
+      section.block { padding: 80px 0; }
+    }
+
+    @media (max-width: 600px) {
+      .footer-links { grid-template-columns: 1fr; }
+      .hero-cta-card div { width: 100%; }
+      .hero-cta-card .btn { width: 100%; }
+      .hero-cta-card style { flex-direction: column; }
     }
   </style>
   <script>

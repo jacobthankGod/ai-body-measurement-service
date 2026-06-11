@@ -34,6 +34,13 @@
       border-radius: 24px; padding: var(--S-48); backdrop-filter: blur(20px); transition: 0.4s cubic-bezier(0.4, 0, 0.2, 1);
     }
 
+    @media (max-width: 550px) {
+      .auth-container { padding: 32px 16px; }
+      .auth-card { padding: 32px 24px; border-radius: 16px; border: none; background: transparent; backdrop-filter: none; }
+      h2 { font-size: 28px; }
+      .form-group-row { grid-template-columns: 1fr !important; gap: 0 !important; }
+    }
+
     .logo-area { display: flex; align-items: center; gap: 12px; margin-bottom: 40px; text-decoration: none; color: inherit; }
     .logo-mark { width: 32px; height: 32px; border-radius: 8px; background: var(--Mint); transform: rotate(-8deg); }
     .logo-text { font-size: 20px; font-weight: 900; letter-spacing: -0.05em; }
@@ -95,7 +102,7 @@
             <input type="email" class="form-input" id="upEmail" placeholder="name@company.com" required>
           </div>
 
-          <div style="display:grid; grid-template-columns: 1fr 1fr; gap: 20px;">
+          <div class="form-group-row" style="display:grid; grid-template-columns: 1fr 1fr; gap: 20px;">
             <div class="form-group">
               <label class="form-label">Company Name</label>
               <input type="text" class="form-input" id="upCompany" placeholder="Brand Name" required>
