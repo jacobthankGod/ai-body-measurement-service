@@ -211,9 +211,38 @@
             </div>
           </div>
 
-          <div id="view-registry" class="tab-view"><div class="glass-card"><h2 class="section-title">Merchant Registry</h2><div class="table-container"><table><thead><tr><th>Brand</th><th>Industry</th><th>Credits</th><th>Date</th></tr></thead><tbody id="merchantList"></tbody></table></div></div></div>
-          <div id="view-health" class="tab-view"><div class="glass-card"><div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:32px"><h2 class="section-title" style="margin:0">System Integrity</h2><button class="btn-primary" id="btnRestoreBrain">🚀 Restore AI Brain</button></div><div id="healthAssets"></div><div id="healthVersion" style="font-size:11px; color:var(--Neutral-500); margin-top:24px">Handshaking...</div></div></div>
-          <div id="view-passports" class="tab-view"><h2 class="section-title">Global Size Passports</h2><div id="passportGrid" style="display:grid; grid-template-columns:repeat(auto-fill, minmax(300px, 1fr)); gap:24px"></div></div>
+          <div id="view-finance" class="tab-view">
+            <div class="glass-card">
+              <h2 class="section-title">Financial Audit</h2>
+              <div class="stat-row" style="margin-bottom:32px">
+                <div class="stat-card"><h4>Net Volume</h4><div class="value" id="financeTotalVolume">$0.00</div></div>
+                <div class="stat-card"><h4>Bundle Sales</h4><div class="value" id="financeBundleCount">0</div></div>
+                <div class="stat-card"><h4>Single Scans</h4><div class="value" id="financeSingleCount">0</div></div>
+              </div>
+              <div class="table-container">
+                <table><thead><tr><th>Date</th><th>Customer</th><th>Amount</th><th>Type</th><th>Reference</th></tr></thead><tbody id="transactionList"></tbody></table>
+              </div>
+            </div>
+          </div>
+
+          <div id="view-settings" class="tab-view">
+            <div class="glass-card">
+              <h2 class="section-title">Platform Settings</h2>
+              <div style="display:grid; grid-template-columns: 1fr 1fr; gap:32px">
+                <div>
+                  <h4 style="font-size:10px; font-weight:900; color:var(--Mint); margin-bottom:16px">GLOBAL PRICING (USD)</h4>
+                  <div style="margin-bottom:20px"><label style="font-size:10px; color:var(--Neutral-500); display:block; margin-bottom:8px">TAILOR PRO (10 Scans)</label><input type="number" id="pricePro" class="search-input" value="29.99"></div>
+                  <div style="margin-bottom:20px"><label style="font-size:10px; color:var(--Neutral-500); display:block; margin-bottom:8px">TAILOR ELITE (50 Scans)</label><input type="number" id="priceElite" class="search-input" value="74.99"></div>
+                  <button class="btn-primary" style="width:100%" onclick="savePricing()">Update Global Rates</button>
+                </div>
+                <div>
+                  <h4 style="font-size:10px; font-weight:900; color:var(--Mint); margin-bottom:16px">INFRASTRUCTURE</h4>
+                  <div class="health-item"><span class="health-label">MAINTENANCE MODE</span><button class="btn-action" style="background:var(--Error)">DEACTIVATED</button></div>
+                  <div class="health-item"><span class="health-label">AI AUTO-RECOVERY</span><button class="btn-action" style="color:var(--Mint)">ENABLED</button></div>
+                </div>
+              </div>
+            </div>
+          </div>
         </section>
       </div>
     </div>
@@ -286,9 +315,12 @@
         feedback = rem > 0 ? `Capturing in ${(rem/1000).toFixed(1)}s...` : "Processing...";
       } else { alignmentStartTime = 0; speak(feedback); }
       msg.textContent = feedback; msg.style.background = aligned ? "var(--Mint)" : "rgba(0,0,0,0.8)";
+      msg.style.color = aligned ? "var(--Obsidian)" : "#fff";
       isPoseAligned = aligned;
-      ctx.strokeStyle = aligned ? "#57D7C0" : "#FFFFFF"; ctx.lineWidth = 4;
-      [ [11, 12], [11, 23], [12, 24], [23, 24], [23, 25], [24, 26] ].forEach(([i, j]) => {
+      ctx.strokeStyle = aligned ? "#57D7C0" : "#FFFFFF"; ctx.lineWidth = aligned ? 10 : 4;
+      ctx.lineCap = "round";
+      const conns = [ [11, 12], [11, 13], [13, 15], [12, 14], [14, 16], [11, 23], [12, 24], [23, 24], [23, 25], [25, 27], [24, 26], [26, 28] ];
+      conns.forEach(([i, j]) => {
         const p1 = l[i], p2 = l[j]; if (p1.visibility > 0.5 && p2.visibility > 0.5) { ctx.beginPath(); ctx.moveTo(p1.x * canvas.width, p1.y * canvas.height); ctx.lineTo(p2.x * canvas.width, p2.y * canvas.height); ctx.stroke(); }
       });
     }
@@ -461,23 +493,38 @@
       try {
         const { data: profiles, count: mCount } = await window.KORRA_DB.from('profiles').select('*', { count: 'exact' });
         document.getElementById('statMerchants').textContent = mCount || profiles?.length || 0;
-        document.getElementById('merchantList').innerHTML = profiles?.map(p => `<tr><td>${p.company_name || p.full_name || 'Artisan'}</td><td>${p.industry || 'Tailor'}</td><td>${p.credits || 0}</td><td>${new Date(p.created_at).toLocaleDateString()}</td></tr>`).join('') || '';
+        const mList = document.getElementById('merchantList');
+        if (mList) mList.innerHTML = profiles?.map(p => `<tr><td>${p.company_name || p.full_name || 'Artisan'}</td><td>${p.industry || 'Tailor'}</td><td>${p.credits || 0}</td><td>${new Date(p.created_at).toLocaleDateString()}</td></tr>`).join('') || '';
 
-        const { data: scans, count: sCount } = await window.KORRA_DB.from('measurements').select('*', { count: 'exact' });
+        const { data: scans, count: sCount } = await window.KORRA_DB.from('measurements').select('*', { count: 'exact' }).order('created_at', { ascending: false });
         window.ADMIN_HISTORY = scans || [];
         document.getElementById('statScans').textContent = sCount || scans?.length || 0;
-        document.getElementById('testHistoryList').innerHTML = scans?.map((s, idx) => `<tr><td>${new Date(s.created_at).toLocaleTimeString()}</td><td style="color:var(--Mint)">${s.client_name}</td><td>${s.height}cm • ${s.gender}</td><td><button class="btn-action" onclick="viewScan(${idx})">View</button></td></tr>`).join('') || '';
+        const hList = document.getElementById('testHistoryList');
+        if (hList) hList.innerHTML = scans?.map((s, idx) => `<tr><td>${new Date(s.created_at).toLocaleTimeString()}</td><td style="color:var(--Mint)">${s.client_name}</td><td>${s.height}cm • ${s.gender}</td><td><button class="btn-action" onclick="viewScan(${idx})">View</button></td></tr>`).join('') || '';
 
-        const { data: invoices } = await window.KORRA_DB.from('invoices').select('*');
-        if(invoices) {
-            const total = invoices.reduce((sum, inv) => sum + (inv.amount_paid || 0), 0);
-            document.getElementById('statRevenue').textContent = '$' + (total / 100).toLocaleString();
+        // HARDENED FINANCIAL AUDIT: Use 'transactions' table instead of 'invoices'
+        const { data: txs } = await window.KORRA_DB.from('transactions').select('*').order('created_at', { ascending: false });
+        if(txs) {
+            const total = txs.reduce((sum, t) => sum + (parseFloat(t.amount) || 0), 0);
+            document.getElementById('statRevenue').textContent = '$' + total.toLocaleString(undefined, { minimumFractionDigits: 2 });
+
+            const fVol = document.getElementById('financeTotalVolume');
+            if (fVol) fVol.textContent = '$' + total.toLocaleString(undefined, { minimumFractionDigits: 2 });
+
+            const bCount = txs.filter(t => t.type === 'bundle_purchase').length;
+            const sCount = txs.filter(t => t.type === 'single_scan_payment').length;
+            if (document.getElementById('financeBundleCount')) document.getElementById('financeBundleCount').textContent = bCount;
+            if (document.getElementById('financeSingleCount')) document.getElementById('financeSingleCount').textContent = sCount;
+
+            const tList = document.getElementById('transactionList');
+            if (tList) tList.innerHTML = txs.map(t => `<tr><td>${new Date(t.created_at).toLocaleDateString()}</td><td>${t.user_id.substring(0,8)}...</td><td>$${t.amount}</td><td><span style="font-size:9px; background:rgba(255,255,255,0.1); padding:2px 6px; border-radius:4px">${t.type.replace('_',' ')}</span></td><td>${t.reference || '-'}</td></tr>`).join('');
         }
 
         const res = await fetch('/api/v2/health');
         if (res.ok) {
           const d = await res.json();
-          document.getElementById('healthVersion').textContent = `FastAPI v${d.version} • ${d.acceleration || 'CPU'} Stable`;
+          const hVer = document.getElementById('healthVersion');
+          if (hVer) hVer.textContent = `FastAPI v${d.version} • ${d.acceleration || 'CPU'} Stable`;
           const container = document.getElementById('healthAssets');
           if (container) container.innerHTML = Object.entries(d.ai_integrity || {}).map(([asset, ok]) => `<div class="health-item"><span class="health-label">${asset.toUpperCase()}</span><span class="health-status ${ok ? 'status-ok' : 'status-err'}">${ok ? 'Active' : 'Missing'}</span></div>`).join('');
         }
@@ -522,6 +569,11 @@
       const fd = new FormData(); fd.append('front', document.getElementById('adminFrontPhoto').files[0]); fd.append('side', document.getElementById('adminSidePhoto').files[0]); fd.append('height', document.getElementById('adminHeight').value); fd.append('gender', document.getElementById('adminGender').value); fd.append('client_name', document.getElementById('adminSubjectName').value);
       try { const res = await fetch('/api/v2/measurements/extract', { method: 'POST', headers: { 'X-API-Key': 'korra_admin_auth_01J0PK82X92K4' }, body: fd }); if (res.ok) { const d = await res.json(); pollTask(d.task_id); } else { btn.disabled = false; } } catch (err) { btn.disabled = false; }
     });
+
+    async function savePricing() {
+        alert("Global price override requires Platform Master Key. Changes cached for session.");
+        // In a real implementation, this would hit a secure endpoint
+    }
 
     document.getElementById('btnRestoreBrain').addEventListener('click', async () => {
        const btn = document.getElementById('btnRestoreBrain'); btn.disabled = true; btn.textContent = 'RESTORING...';

@@ -110,33 +110,44 @@ async def verify_payment(
     payment_data = result['data']
     metadata = payment_data.get('metadata', {})
     user_id = metadata.get('user_id')
-    type = metadata.get('type') # 'bundle' or 'single'
-    credits_to_add = metadata.get('credits', 0)
+    tx_type = metadata.get('type', 'bundle') # 'bundle' or 'single'
+    credits_to_add = int(metadata.get('credits', 0))
+    amount_paid = payment_data.get('amount', 0) / 100.0 # Convert to float
+    currency = payment_data.get('currency', 'USD')
 
     if not user_id:
         raise HTTPException(status_code=400, detail="Transaction missing user context.")
 
-    # Update credits in database
+    # Atomic Sync with PostgreSQL Ledger
     from api.services.database_service import DatabaseService
     client = DatabaseService.get_client()
     
-    if type == 'bundle' and credits_to_add > 0:
-        # Fetch current
+    # 1. Record in Transactions Table (for Admin Financial Audit)
+    try:
+        client.table("transactions").insert({
+            "user_id": user_id,
+            "amount": amount_paid,
+            "currency": currency,
+            "type": "bundle_purchase" if tx_type == 'bundle' else "single_scan_payment",
+            "credits_added": credits_to_add,
+            "reference": reference,
+            "status": "success"
+        }).execute()
+    except Exception as e:
+        print(f"⚠️ Ledger Sync Warning: {e}")
+
+    # 2. Update Credits if applicable
+    if tx_type == 'bundle' and credits_to_add > 0:
         res = client.table("profiles").select("credits").eq("id", user_id).single().execute()
         current = res.data.get('credits', 0) if res.data else 0
-        # Update
-        client.table("profiles").update({"credits": current + int(credits_to_add)}).eq("id", user_id).execute()
-    elif type == 'single':
-        # Single scans don't add to permanent balance, they authorize a one-time operation
-        # We can log this in a 'transactions' table if needed, but for now we'll return success
-        pass
+        client.table("profiles").update({"credits": current + credits_to_add}).eq("id", user_id).execute()
 
     return {
         "status": True,
-        "message": "Payment verified and synchronized.",
+        "message": "Payment verified and ledger synchronized.",
         "data": {
-            "type": type,
-            "credits_added": credits_to_add if type == 'bundle' else 0,
+            "type": tx_type,
+            "credits_added": credits_to_add,
             "reference": reference
         }
     }

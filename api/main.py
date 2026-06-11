@@ -105,15 +105,21 @@ async def add_security_headers(request: Request, call_next):
 # --- API ROUTE REGISTRATION ---
 def register_routers(app: FastAPI):
     try:
-        from api.routes import measurements, auth, health, qrcode, sharing
+        from api.routes import measurements, auth, health, qrcode, sharing, payments
         app.include_router(health.router, prefix="/api/v2", tags=["Health"])
         app.include_router(measurements.router, prefix="/api/v2", tags=["Measurements"])
         app.include_router(auth.router, prefix="/api/v2", tags=["Auth"])
         app.include_router(qrcode.router, prefix="/api/v2/qrcode", tags=["QR Systems"])
         app.include_router(sharing.router, prefix="/api/v2/share", tags=["Sharing"])
+        app.include_router(payments.router, prefix="/api/v2", tags=["Payments"])
         logger.info("✅ ALL API Routers Handshaked Successfully.")
+
+        # LOG ALL REGISTERED ROUTES FOR DEBUGGING
+        for route in app.routes:
+            logger.info(f"📍 Route: {route.path} [{route.methods}]")
     except Exception as e:
         logger.error(f"❌ CRITICAL: Router handshake failed: {e}")
+        traceback.print_exc()
 
 register_routers(app)
 
@@ -147,10 +153,26 @@ async def serve_share(): return get_safe_file("share.html")
 # PRIORITY: Serve static assets BEFORE catch-all
 @app.get("/assets/{asset_path:path}")
 async def serve_assets(asset_path: str):
-    asset_file = PUBLIC_DIR / asset_path
-    if asset_file.exists() and asset_file.is_file():
-        return FileResponse(str(asset_file))
-    raise HTTPException(status_code=404, detail="Asset not found")
+    try:
+        # Try public/assets first, then public/
+        possible_paths = [
+            PUBLIC_DIR / "assets" / asset_path,
+            PUBLIC_DIR / asset_path
+        ]
+        for path in possible_paths:
+            if path.exists() and path.is_file():
+                # Explicitly handle common JS/CSS to prevent 500s from incorrect media type guessing
+                media_type = None
+                if asset_path.endswith(".js"): media_type = "application/javascript"
+                elif asset_path.endswith(".css"): media_type = "text/css"
+                return FileResponse(str(path), media_type=media_type)
+
+        logger.warning(f"⚠️ Asset not found: {asset_path}")
+        raise HTTPException(status_code=404, detail="Asset not found")
+    except HTTPException: raise
+    except Exception as e:
+        logger.error(f"Asset serving error ({asset_path}): {e}")
+        return JSONResponse(status_code=500, content={"error": "Asset synchronization failure."})
 
 @app.get("/meshes/{mesh_file:path}")
 async def serve_meshes(mesh_file: str):

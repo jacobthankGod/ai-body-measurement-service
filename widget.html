@@ -44,9 +44,49 @@
     .result-view { display: none; text-align: center; }
     .result-view.active { display: block; animation: fadeIn 0.3s ease-out; }
     @keyframes fadeIn { from { opacity: 0; transform: translateY(10px); } to { opacity: 1; transform: translateY(0); } }
+
+    #step-camera { position: fixed; inset: 0; background: #000; z-index: 99999999; display: none; flex-direction: column; }
+    #step-camera.active { display: flex; }
+    .camera-container { flex: 1; position: relative; overflow: hidden; display: flex; align-items: center; justify-content: center; }
+    #camera-video { width: 100%; height: 100%; object-fit: cover; transform: scaleX(-1); }
+    #camera-canvas { position: absolute; inset: 0; width: 100%; height: 100%; z-index: 10; transform: scaleX(-1); }
+    .camera-overlay { position: absolute; inset: 0; z-index: 20; pointer-events: none; display: flex; flex-direction: column; align-items: center; justify-content: space-between; padding: 60px 24px; }
+    .camera-guidance { background: rgba(0,0,0,0.8); backdrop-filter: blur(12px); padding: 16px 32px; border-radius: 99px; border: 2px solid var(--Mint); color: var(--White); font-size: 16px; font-weight: 900; text-align: center; text-transform: uppercase; letter-spacing: 0.05em; box-shadow: 0 0 30px rgba(87, 215, 192, 0.3); }
+    .camera-controls { position: absolute; bottom: 40px; left: 0; right: 0; display: flex; justify-content: center; align-items: center; gap: 32px; z-index: 30; }
+    .camera-review-controls { position: absolute; bottom: 40px; left: 0; right: 0; display: none; justify-content: center; align-items: center; gap: 24px; z-index: 50; padding: 0 24px; }
+    .btn-review { height: 56px; border-radius: 12px; font-weight: 800; cursor: pointer; flex: 1; text-transform: uppercase; font-size: 14px; border: none; }
+    .btn-keep { background: var(--Mint); color: var(--Obsidian); }
+    .btn-redo { background: rgba(255,255,255,0.1); color: #fff; border: 1px solid var(--Glass-Border); }
+    .shutter-btn { width: 84px; height: 84px; border-radius: 50%; background: #fff; border: 6px solid var(--Mint); cursor: pointer; display: flex; align-items: center; justify-content: center; box-shadow: 0 0 30px rgba(0,0,0,0.5); transition: 0.2s; }
+    .camera-close { position: absolute; top: 40px; right: 24px; width: 44px; height: 44px; border-radius: 50%; background: rgba(0,0,0,0.6); border: 1px solid var(--Glass-Border); color: #fff; display: flex; align-items: center; justify-content: center; cursor: pointer; z-index: 40; pointer-events: auto; font-size: 20px; font-weight: 700; }
+    #review-img { width: 100%; height: 100%; object-fit: cover; display: none; transform: scaleX(-1); }
+
+    .pro-tips-card { background: rgba(87, 215, 192, 0.05); border: 1px solid rgba(87, 215, 192, 0.2); border-radius: 20px; padding: 20px; margin-bottom: 24px; text-align: left; }
+    .pro-tips-card h4 { font-size: 11px; font-weight: 900; color: var(--Mint); text-transform: uppercase; margin-bottom: 12px; display: flex; align-items: center; gap: 8px; }
+    .tip-row { display: flex; gap: 12px; margin-bottom: 10px; font-size: 11px; color: var(--Neutral-400); line-height: 1.4; }
+    .tip-bullet { color: var(--Mint); font-weight: 900; }
   </style>
 </head>
 <body>
+
+  <div id="step-camera">
+    <div class="camera-container">
+      <video id="camera-video" autoplay playsinline></video>
+      <canvas id="camera-canvas"></canvas>
+      <img id="review-img" alt="Capture Review">
+      <div class="camera-overlay">
+        <div class="camera-guidance" id="camera-msg">Initializing guidance...</div>
+        <div class="camera-close" onclick="closeCamera()">✕</div>
+      </div>
+    </div>
+    <div class="camera-controls" id="shutter-container">
+      <div class="shutter-btn" onclick="snapPhoto()"><div style="width:56px; height:56px; border-radius:50%; background:var(--Mint); opacity:0.2"></div></div>
+    </div>
+    <div class="camera-review-controls" id="review-container">
+      <button class="btn-review btn-redo" onclick="retakePhoto()">Recapture</button>
+      <button class="btn-review btn-keep" onclick="keepPhoto()">Keep Photo</button>
+    </div>
+  </div>
 
   <div class="widget-viewport">
     <div class="widget-card" id="mainCard">
@@ -66,18 +106,30 @@
           <select id="gender" class="input" style="appearance:none;"><option value="male">Male</option><option value="female">Female</option></select>
 
           <div class="photo-grid">
-            <div class="photo-box">
-              <div class="ghost-overlay"><div class="ghost-shape"></div></div>
+            <div class="photo-box" id="fLabel" onclick="handlePreviewClick('front')">
+              <div class="ghost-overlay placeholder-content"><div class="ghost-shape"></div></div>
               <img class="preview-img" id="fPrev">
-              <span>Front Photo</span>
-              <input type="file" id="front" accept="image/*" required onchange="preview(this, 'fPrev')">
+              <div class="preview-overlay" style="position:absolute; inset:0; background:rgba(0,0,0,0.6); display:none; flex-direction:column; align-items:center; justify-content:center; z-index:10" onclick="openCamera('front'); event.stopPropagation();">
+                 <span style="font-size:8px; font-weight:900; color:#fff">RETAKE</span>
+              </div>
+              <div class="placeholder-content"><span>Front Photo</span><div style="font-size:7px; color:var(--Mint); margin-top:2px; font-weight:700">TAP TO SNAP</div></div>
+              <input type="file" id="front" accept="image/*" required style="display:none" onchange="preview(this, 'fPrev')">
             </div>
-            <div class="photo-box">
-              <div class="ghost-overlay"><div class="ghost-shape" style="width:25%"></div></div>
+            <div class="photo-box" id="sLabel" onclick="handlePreviewClick('side')">
+              <div class="ghost-overlay placeholder-content"><div class="ghost-shape" style="width:25%"></div></div>
               <img class="preview-img" id="sPrev">
-              <span>Side Photo</span>
-              <input type="file" id="side" accept="image/*" required onchange="preview(this, 'sPrev')">
+              <div class="preview-overlay" style="position:absolute; inset:0; background:rgba(0,0,0,0.6); display:none; flex-direction:column; align-items:center; justify-content:center; z-index:10" onclick="openCamera('side'); event.stopPropagation();">
+                 <span style="font-size:8px; font-weight:900; color:#fff">RETAKE</span>
+              </div>
+              <div class="placeholder-content"><span>Side Photo</span><div style="font-size:7px; color:var(--Mint); margin-top:2px; font-weight:700">TAP TO SNAP</div></div>
+              <input type="file" id="side" accept="image/*" required style="display:none" onchange="preview(this, 'sPrev')">
             </div>
+          </div>
+
+          <div class="pro-tips-card">
+            <h4><span style="font-size:14px">✨</span> Pro-Tips</h4>
+            <div class="tip-row"><span class="tip-bullet">&bull;</span><span><b>A-Pose:</b> Keep arms 15" away.</span></div>
+            <div class="tip-row"><span class="tip-bullet">&bull;</span><span><b>Contrast:</b> Stand against a plain wall.</span></div>
           </div>
 
           <button type="submit" class="btn-submit">Generate Profile</button>
@@ -99,27 +151,131 @@
     </div>
   </div>
 
+  <script src="https://cdn.jsdelivr.net/npm/@mediapipe/pose@0.5.1675469404"></script>
+  <script src="https://cdn.jsdelivr.net/npm/@mediapipe/camera_utils@0.3.1675466862/camera_utils.js"></script>
   <script src="/assets/three.min.js"></script>
   <script src="/assets/korra_viz.js"></script>
   <script src="/assets/jspdf.min.js"></script>
   <script src="/assets/korra_export.js"></script>
 
   <script>
+    let activeCameraType = null, poseModel = null, cameraInstance = null, isPoseAligned = false, alignmentStartTime = 0, autoSnapTriggered = false, isReviewing = false, capturedDataUrl = null;
+    let lastSpokenText = "", lastSpokenTime = 0;
+
+    function speak(text, force = false) {
+      if (!window.speechSynthesis) return;
+      const now = Date.now(); if (!force && text === lastSpokenText && now - lastSpokenTime < 3000) return;
+      if (!force && window.speechSynthesis.speaking) return; if (force) window.speechSynthesis.cancel();
+      const utterance = new SpeechSynthesisUtterance(text);
+      const voices = window.speechSynthesis.getVoices(); utterance.voice = voices.find(v => v.name.includes('Google') || v.name.includes('Siri')) || voices[0];
+      window.speechSynthesis.speak(utterance); lastSpokenText = text; lastSpokenTime = now;
+    }
+
+    async function openCamera(type) {
+      activeCameraType = type; alignmentStartTime = 0; autoSnapTriggered = false; isReviewing = false;
+      document.getElementById('shutter-container').style.display = 'flex';
+      document.getElementById('review-container').style.display = 'none';
+      document.getElementById('camera-video').style.display = 'block';
+      document.getElementById('camera-canvas').style.display = 'block';
+      document.getElementById('review-img').style.display = 'none';
+      document.getElementById('step-camera').classList.add('active');
+      const video = document.getElementById('camera-video');
+      if (!poseModel) {
+        poseModel = new Pose({ locateFile: (file) => `https://cdn.jsdelivr.net/npm/@mediapipe/pose@0.5.1675469404/${file}` });
+        poseModel.setOptions({ modelComplexity: 1, smoothLandmarks: true, minDetectionConfidence: 0.5, minTrackingConfidence: 0.5 });
+        poseModel.onResults(onPoseResults);
+      }
+      cameraInstance = new Camera(video, { onFrame: async () => { await poseModel.send({image: video}); }, width: 1280, height: 720 });
+      cameraInstance.start();
+    }
+
+    function closeCamera() { if (cameraInstance) cameraInstance.stop(); document.getElementById('step-camera').classList.remove('active'); activeCameraType = null; }
+
+    function onPoseResults(results) {
+      if (isReviewing) return;
+      const canvas = document.getElementById('camera-canvas'), ctx = canvas.getContext('2d'), msg = document.getElementById('camera-msg');
+      canvas.width = canvas.clientWidth; canvas.height = canvas.clientHeight;
+      ctx.clearRect(0, 0, canvas.width, canvas.height);
+      if (!results.poseLandmarks) { msg.textContent = "Searching for you..."; isPoseAligned = false; return; }
+      const l = results.poseLandmarks;
+      const head = l[0], lAn = l[27], rAn = l[28], lWr = l[15], rWrist = l[16], lHi = l[23], rHi = l[24], lSh = l[11], rSh = l[12];
+      let aligned = true, feedback = "Hold steady...";
+      if (head.visibility < 0.5 || lAn.visibility < 0.5 || rAn.visibility < 0.5) { feedback = "Step back: Head and feet must be visible."; aligned = false; }
+      else if (activeCameraType === 'front') {
+        const handsDown = lWr.y > lSh.y && rWrist.y > rSh.y;
+        if (!handsDown) { feedback = "A-POSE: Move arms down."; aligned = false; }
+        else if (Math.abs(lWr.x - lHi.x) < 0.15 || Math.abs(rWrist.x - rHi.x) < 0.15) { feedback = "A-POSE: Spread arms."; aligned = false; }
+      } else if (activeCameraType === 'side') {
+        const zDelta = Math.abs(lSh.z - rSh.z), xDelta = Math.abs(lSh.x - rSh.x);
+        const sideRatio = xDelta / Math.abs(lSh.y - lHi.y);
+        if (sideRatio > 0.3 || zDelta < 0.12) { feedback = "Turn Side: Face fully side."; aligned = false; }
+      }
+      if (aligned) {
+        if (alignmentStartTime === 0) { alignmentStartTime = Date.now(); speak("Hold still.", true); }
+        else if (Date.now() - alignmentStartTime > 1500 && !autoSnapTriggered) { autoSnapTriggered = true; snapPhoto(); return; }
+        const rem = Math.max(0, 1500 - (Date.now() - alignmentStartTime));
+        feedback = rem > 0 ? `Capturing in ${(rem/1000).toFixed(1)}s...` : "Processing...";
+      } else { alignmentStartTime = 0; speak(feedback); }
+      msg.textContent = feedback; msg.style.background = aligned ? "var(--Mint)" : "rgba(0,0,0,0.8)";
+      msg.style.color = aligned ? "var(--Obsidian)" : "#fff";
+      isPoseAligned = aligned;
+      ctx.strokeStyle = aligned ? "#57D7C0" : "#FFFFFF"; ctx.lineWidth = aligned ? 10 : 4;
+      ctx.lineCap = "round";
+      const conns = [ [11, 12], [11, 13], [13, 15], [12, 14], [14, 16], [11, 23], [12, 24], [23, 24], [23, 25], [25, 27], [24, 26], [26, 28] ];
+      conns.forEach(([i, j]) => {
+        const p1 = l[i], p2 = l[j]; if (p1.visibility > 0.5 && p2.visibility > 0.5) { ctx.beginPath(); ctx.moveTo(p1.x * canvas.width, p1.y * canvas.height); ctx.lineTo(p2.x * canvas.width, p2.y * canvas.height); ctx.stroke(); }
+      });
+    }
+
+    function snapPhoto() {
+      if (isReviewing) return;
+      const video = document.getElementById('camera-video'), canvas = document.createElement('canvas');
+      canvas.width = video.videoWidth; canvas.height = video.videoHeight;
+      const ctx = canvas.getContext('2d'); ctx.translate(canvas.width, 0); ctx.scale(-1, 1); ctx.drawImage(video, 0, 0);
+      capturedDataUrl = canvas.toDataURL('image/jpeg');
+      isReviewing = true; document.getElementById('camera-video').style.display = 'none'; document.getElementById('camera-canvas').style.display = 'none'; document.getElementById('shutter-container').style.display = 'none';
+      const rImg = document.getElementById('review-img'); rImg.src = capturedDataUrl; rImg.style.display = 'block';
+      document.getElementById('review-container').style.display = 'flex'; document.getElementById('camera-msg').textContent = "Review your photo"; speak("Captured. Review.", true);
+    }
+
+    function retakePhoto() { isReviewing = false; autoSnapTriggered = false; alignmentStartTime = 0; document.getElementById('camera-video').style.display = 'block'; document.getElementById('camera-canvas').style.display = 'block'; document.getElementById('review-img').style.display = 'none'; document.getElementById('shutter-container').style.display = 'flex'; document.getElementById('review-container').style.display = 'none'; }
+
+    function keepPhoto() {
+      const labelId = activeCameraType === 'front' ? 'fLabel' : 'sLabel', inputId = activeCameraType === 'front' ? 'front' : 'side';
+      const label = document.getElementById(labelId), img = label.querySelector('.preview-img');
+      img.src = capturedDataUrl; img.style.display = 'block';
+      label.querySelector('.placeholder-content').style.display = 'none'; label.querySelector('.preview-overlay').style.display = 'flex';
+      fetch(capturedDataUrl).then(res => res.blob()).then(blob => {
+        const file = new File([blob], `${activeCameraType}.jpg`, { type: "image/jpeg" });
+        const container = new DataTransfer(); container.items.add(file);
+        document.getElementById(inputId).files = container.files; closeCamera();
+      });
+    }
+
+    function handlePreviewClick(type) {
+      const label = document.getElementById(type === 'front' ? 'fLabel' : 'sLabel');
+      if (label.querySelector('.placeholder-content').style.display !== 'none') openCamera(type);
+      else { const img = label.querySelector('.preview-img'); if (img.src) window.open(img.src, '_blank'); }
+    }
+
     function preview(input, id) {
       if (input.files && input.files[0]) {
         const reader = new FileReader();
-        reader.onload = e => { const img = document.getElementById(id); img.src = e.target.result; img.style.display = 'block'; };
+        reader.onload = e => {
+            const img = document.getElementById(id); img.src = e.target.result; img.style.display = 'block';
+            const label = document.getElementById(id === 'fPrev' ? 'fLabel' : 'sLabel');
+            label.querySelector('.placeholder-content').style.display = 'none'; label.querySelector('.preview-overlay').style.display = 'flex';
+        };
         reader.readAsDataURL(input.files[0]);
       }
     }
 
     async function pollTask(taskId, height, gender) {
-        const pFill = document.getElementById('pFill');
+        const pFill = document.getElementById('pFill'), status = document.getElementById('statusText');
         let progress = 20;
 
-const interval = setInterval(async () => {
+        const interval = setInterval(async () => {
             try {
-                // ULTRA-RESILIENT: Retry on 502/503/504
                 let data = null;
                 for (let retry = 0; retry < 5; retry++) {
                     try {
@@ -127,9 +283,6 @@ const interval = setInterval(async () => {
                         if (res.ok) {
                             data = await res.json();
                             break;
-                        } else if (res.status === 404) {
-                            clearInterval(interval);
-                            return;
                         }
                     } catch (netErr) {
                         if (retry < 4) await new Promise(r => setTimeout(r, 2000));
@@ -139,6 +292,8 @@ const interval = setInterval(async () => {
 
                 if (data.status === 'processing') {
                     progress = Math.min(progress + 8, 90);
+                    const msgs = ["INITIALIZING ISOLATED AI...", "EXECUTING SKELETAL DETECTION...", "RUNNING VOLUMETRIC REGRESSION...", "MAPPING VERTEX CLOUD...", "SCALING BIOMETRICS...", "MATERIALIZING 3D TWIN..."];
+                    status.textContent = msgs[Math.floor((progress/100) * msgs.length)] || "PROCESSING...";
                 } else if (data.status === 'completed') {
                     clearInterval(interval);
                     pFill.style.width = '100%';
@@ -159,7 +314,7 @@ const interval = setInterval(async () => {
                     document.getElementById('loadingOverlay').style.display = 'none';
                 } else if (data.status === 'failed') {
                     clearInterval(interval);
-                    alert("AI rejection. Task Failed.");
+                    alert("AI rejection: " + (data.error || "Quality issue"));
                     document.getElementById('loadingOverlay').style.display = 'none';
                 }
                 pFill.style.width = progress + '%';

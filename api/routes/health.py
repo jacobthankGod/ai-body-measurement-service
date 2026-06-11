@@ -19,24 +19,36 @@ MODELS_DIR = BASE_DIR / "models"
 
 @router.get("/health")
 async def health_check():
-    """Returns absolute infrastructure status."""
+    """Returns absolute infrastructure status with GPU and granular integrity checks."""
     try:
         from api.services.extract_measurements import get_brain_integrity
         ai_integrity = get_brain_integrity()
+
+        # Granular check for research weights
+        ai_integrity["model_ckpt_index"] = (MODELS_DIR / "model.ckpt-667589.index").exists()
+        ai_integrity["model_ckpt_data"] = (MODELS_DIR / "model.ckpt-667589.data-00000-of-00001").exists()
+
     except Exception as e:
         logger.error(f"Health integrity check failed: {e}")
-        ai_integrity = {
-            "hmr_weights": False,
-            "smpl_model": False,
-            "vertex_map": False,
-            "error": str(e)
-        }
+        ai_integrity = { "error": str(e) }
+
+    # GPU DETECTION
+    gpu_active = False
+    gpu_details = "None"
+    try:
+        import tensorflow as tf
+        gpus = tf.config.list_physical_devices('GPU')
+        gpu_active = len(gpus) > 0
+        if gpu_active: gpu_details = str(gpus)
+    except: pass
+
     return {
         "status": "active",
-        "version": "2.1.14",
+        "version": "2.1.15",
         "environment": os.environ.get("RENDER_EXTERNAL_URL", "production"),
         "platform": platform.system(),
-        "acceleration": "CPU-Stable (Optimized)" if "Linux" in platform.system() else "Native",
+        "acceleration": "GPU-Enabled" if gpu_active else "CPU-Stable (Optimized)",
+        "gpu_details": gpu_details,
         "ai_integrity": ai_integrity,
         "paths": {
             "root": str(BASE_DIR),

@@ -300,6 +300,7 @@
   <script src="https://js.paystack.co/v1/inline.js"></script>
   <script src="https://cdn.jsdelivr.net/npm/@mediapipe/pose@0.5.1675469404"></script>
   <script src="https://cdn.jsdelivr.net/npm/@mediapipe/camera_utils@0.3.1675466862/camera_utils.js"></script>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/qrcodejs/1.0.0/qrcode.min.js"></script>
   <script src="/assets/supabase.min.js"></script>
   <script src="/assets/three.min.js"></script>
   <script src="/assets/korra_viz.js"></script>
@@ -308,7 +309,39 @@
   <script>
     const CONFIG = { url: 'https://blsettabymllulsxtziw.supabase.co', key: 'sb_publishable_miCOIXHtlxLkfDgpwE0N-g_BA1Q-x8y', paystack: 'pk_live_d8442a8b9814421b1b463286f91887e5b546305a' };
     let sessionData = null, userId = null, masterHistory = [], activeCameraType = null, poseModel = null, cameraInstance = null, isPoseAligned = false, alignmentStartTime = 0, autoSnapTriggered = false, isReviewing = false, capturedDataUrl = null;
-    let lastSpokenText = "", lastSpokenTime = 0, usageChart = null;
+    let lastSpokenText = "", lastSpokenTime = 0, usageChart = null, selectedBundle = { credits: 50, price: 25 };
+
+    const NetworkGuard = {
+        isOnline: navigator.onLine,
+        init: function() {
+            window.addEventListener('online', () => this.update(true));
+            window.addEventListener('offline', () => this.update(false));
+            this.update(navigator.onLine);
+        },
+        update: function(online) {
+            this.isOnline = online;
+            const statusEl = document.getElementById('networkStatus');
+            const overlay = document.getElementById('offlineOverlay');
+            if (statusEl) {
+                if (online) { statusEl.classList.remove('offline'); statusEl.querySelector('span').textContent = 'Sync Active'; if (overlay) overlay.style.display = 'none'; }
+                else { statusEl.classList.add('offline'); statusEl.querySelector('span').textContent = 'Sync Paused'; if (overlay) overlay.style.display = 'flex'; }
+            }
+        },
+        retry: async function(fn, retries = 10, delay = 2000) {
+            for (let i = 0; i < retries; i++) {
+                try {
+                    if (!this.isOnline) throw new Error("OFFLINE");
+                    return await fn();
+                } catch (err) {
+                    const isNet = err.message === "OFFLINE" || err.message.includes("fetch") || err.name === "TypeError" || err.message.includes("network") || err.message.includes("connection");
+                    if (i === retries - 1) { this.update(false); throw err; }
+                    const wait = (delay * Math.pow(1.8, i)) + (Math.random() * 1000);
+                    console.warn(`🔄 Handshake retry ${i+1}/${retries} in ${Math.round(wait)}ms...`);
+                    await new Promise(r => setTimeout(r, wait));
+                }
+            }
+        }
+    };
 
     function speak(text, force = false) {
       if (!window.speechSynthesis) return;
@@ -476,14 +509,31 @@
       document.getElementById('measurementShape').textContent = data.body_shape || 'Standard';
       document.getElementById('measurementSizeRec').textContent = data.size_recommendation || 'M';
 
-      // DIAGNOSTICS
-      document.getElementById('diagAsymmetry').textContent = "NONE DETECTED";
-      document.getElementById('diagPosture').textContent = "OPTIMAL";
+      // --- DYNAMIC FIT DIAGNOSTICS ---
+      const sh = m['Shoulder'] || 0, ch = m['Chest Round'] || 0, wa = m['Waist Round'] || 1;
+      const asymmetry = (sh > 40 && ch < 90) ? "SLIGHT ASYMMETRY" : "SYMMETRICAL";
+      const posture = (data.debug && data.debug.includes("tilt")) ? "TILT DETECTED" : "OPTIMAL";
+
+      document.getElementById('diagAsymmetry').textContent = asymmetry;
+      document.getElementById('diagPosture').textContent = posture;
+      document.getElementById('diagPosture').style.color = posture === "OPTIMAL" ? "var(--Mint)" : "var(--Error)";
     }
 
     function renderLedger(items) {
-      document.getElementById('scanList').innerHTML = items.map((s, idx) => `<div class="scan-item"><div class="scan-info"><h5>${s.client_name}</h5><p>${new Date(s.created_at).toLocaleDateString()} • ${s.height}cm</p></div><button class="btn-outline" style="height:32px; font-size:10px" onclick="viewScan(${idx})">View</button></div>`).join('');
+      const container = document.getElementById('scanList');
+      if (!container) return;
+      container.innerHTML = items.map((s, idx) => `<div class="scan-item"><div class="scan-info"><h5>${s.client_name}</h5><p>${new Date(s.created_at).toLocaleDateString()} • ${s.height}cm</p></div><button class="btn-outline" style="height:32px; font-size:10px" onclick="viewScan(${idx})">View</button></div>`).join('');
     }
+
+    // --- SEARCH LOGIC ---
+    document.getElementById('ledgerSearch').addEventListener('input', (e) => {
+        const term = e.target.value.toLowerCase();
+        const filtered = masterHistory.filter(s =>
+            s.client_name?.toLowerCase().includes(term) ||
+            new Date(s.created_at).toLocaleDateString().includes(term)
+        );
+        renderLedger(filtered);
+    });
 
     window.viewScan = (idx) => {
         const s = masterHistory[idx];
@@ -559,8 +609,25 @@
     };
 
     async function init() {
+      NetworkGuard.init();
       if (typeof window.supabase === 'undefined') { setTimeout(init, 500); return; }
-      window.KORRA_DB = window.supabase.createClient(CONFIG.url, CONFIG.key);
+
+      const resilientFetch = async (url, options = {}) => {
+          for (let attempt = 0; attempt < 10; attempt++) {
+              try {
+                  const res = await fetch(url, options);
+                  if (!res.ok && res.status === 0) throw new Error("NETWORK_ERROR");
+                  return res;
+              } catch (err) {
+                  if (attempt === 9) throw err;
+                  const backoff = (2000 * Math.pow(1.8, attempt)) + (Math.random() * 1000);
+                  console.warn(`🔄 Connection failure. Retrying ${attempt+1}/10...`);
+                  await new Promise(r => setTimeout(r, backoff));
+              }
+          }
+      };
+
+      window.KORRA_DB = window.supabase.createClient(CONFIG.url, CONFIG.key, { global: { fetch: resilientFetch } });
       const { data: { session } } = await window.KORRA_DB.auth.getSession();
       if (!session) { window.location.href = '/signin'; return; }
       userId = session.user.id; document.getElementById('loadingOverlay').style.display = 'none';
@@ -588,10 +655,106 @@
     });
 
     document.getElementById('btnSignOut').onclick = async () => { await window.KORRA_DB.auth.signOut(); window.location.href = '/signin'; };
-    window.generateDeepLink = () => { const name = document.getElementById('shareName').value; const url = `${window.location.origin}/share?m=${userId}&c=${encodeURIComponent(name)}`; document.getElementById('deepLinkDisplay').textContent = url; document.getElementById('linkGeneratedArea').style.display = 'block'; };
+    // --- REVENUE & PAYMENTS ---
+    window.selectBundle = (el, credits, price) => {
+        document.querySelectorAll('#topUpModal .glass-card').forEach(c => c.style.borderColor = 'var(--Glass-Border)');
+        el.style.borderColor = 'var(--Mint)';
+        selectedBundle = { credits, price };
+    };
+
+    window.applyPromo = () => {
+        const input = document.getElementById('promoCodeInput').value.toUpperCase();
+        const status = document.getElementById('promoStatus');
+        status.style.display = 'block';
+        if (input === 'KORRA10') {
+            status.textContent = 'PROMO APPLIED: 10% DISCOUNT';
+            status.style.color = 'var(--Mint)';
+            selectedBundle.price *= 0.9;
+        } else {
+            status.textContent = 'INVALID PROMO CODE';
+            status.style.color = 'var(--Error)';
+        }
+    };
+
+    document.getElementById('btnConfirmPurchase').onclick = async () => {
+        const btn = document.getElementById('btnConfirmPurchase');
+        btn.disabled = true; btn.textContent = 'INITIALIZING...';
+
+        const { data: { user } } = await window.KORRA_DB.auth.getUser();
+
+        const handler = PaystackPop.setup({
+            key: CONFIG.paystack,
+            email: user.email,
+            amount: selectedBundle.price * 100, // in cents/kobo
+            currency: "USD",
+            metadata: { user_id: userId, type: 'bundle', credits: selectedBundle.credits },
+            callback: async (response) => {
+                // Verify payment on backend
+                const res = await fetch(`/api/v2/payments/verify/${response.reference}`);
+                if (res.ok) {
+                    alert(`Success! ${selectedBundle.credits} credits added.`);
+                    document.getElementById('topUpModal').classList.remove('active');
+                    loadSettings();
+                }
+                btn.disabled = false; btn.textContent = 'Purchase Credits';
+            },
+            onClose: () => {
+                btn.disabled = false; btn.textContent = 'Purchase Credits';
+            }
+        });
+        handler.openIframe();
+    };
+
+    // --- PROFILE & SETTINGS ---
+    document.getElementById('btnSaveSettings').onclick = async () => {
+        const name = document.getElementById('settingsName').value;
+        const btn = document.getElementById('btnSaveSettings');
+        btn.disabled = true;
+        try {
+            const { error } = await window.KORRA_DB.from('profiles').update({ full_name: name }).eq('id', userId);
+            if (error) throw error;
+            alert("Profile saved.");
+        } catch (e) { alert("Save failed: " + e.message); }
+        finally { btn.disabled = false; }
+    };
+
+    document.getElementById('btnRegenKey').onclick = async () => {
+        if (!confirm("Regenerating your API key will break existing integrations. Continue?")) return;
+        const newKey = 'korra_live_' + Math.random().toString(36).substring(2, 15) + Math.random().toString(36).substring(2, 15);
+        const { error } = await window.KORRA_DB.from('profiles').update({ api_key: newKey }).eq('id', userId);
+        if (!error) {
+            document.getElementById('apiKeyDisplay').textContent = newKey;
+            alert("New API key generated.");
+        }
+    };
+
+    // --- QR & WHATSAPP ---
+    window.openQRPoster = () => {
+        document.getElementById('qrPosterModal').classList.add('active');
+        const qrContainer = document.getElementById('posterQr');
+        qrContainer.innerHTML = "";
+        const url = `${window.location.origin}/share?m=${userId}`;
+        new QRCode(qrContainer, { text: url, width: 200, height: 200, colorDark: "#000000", colorLight: "#ffffff" });
+    };
+
+    window.shareToWhatsApp = () => {
+        const url = document.getElementById('deepLinkDisplay').textContent;
+        const text = encodeURIComponent(`Hi, please use this link to start your KORRA body scan: ${url}`);
+        window.open(`https://wa.me/?text=${text}`, '_blank');
+    };
+
     window.copyDeepLink = () => navigator.clipboard.writeText(document.getElementById('deepLinkDisplay').textContent).then(() => alert("Copied"));
+    window.generateDeepLink = () => {
+      const name = document.getElementById('shareName').value;
+      if (!name) { alert("Please enter a client name."); return; }
+      const url = `${window.location.origin}/share?m=${userId}&c=${encodeURIComponent(name)}`;
+      document.getElementById('deepLinkDisplay').textContent = url;
+      document.getElementById('linkGeneratedArea').style.display = 'block';
+      document.getElementById('btnGenerateLink').textContent = 'Update Link';
+    };
+
     window.dismissCreditError = () => { document.getElementById('creditOverlay').style.display = 'none'; };
-    window.openQRPoster = () => document.getElementById('qrPosterModal').classList.add('active');
+
     init();
   </script>
 </body>
