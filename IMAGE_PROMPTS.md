@@ -1,6 +1,10 @@
-# AI Body Measurement Service - Image Generation Prompts
+# KORRA AI Body Measurement - Image Generation Prompts
 
-This document provides detailed Midjourney/DALL-E prompts for generating feature images for all industry landing pages.
+Core Changes Made to Ensure Accuracy:
+- **The Tech:** Changed bulky hardware references to KORRA's phone-based smartphone AI scanning app
+- **The Data:** Replaced generic "3D mockups" with KORRA's official feature terms: Professional 3D Data, Zero Latency Sharing, and the Size Passport (Biometric Identity/Digital Twin)
+- **The Metrics:** Corrected the sustainability and efficiency metrics (90% fabric waste reduction, $0.50 cost per scan, 2X customer capacity, 99% consistency)
+- **The Demographic:** Wove in KORRA's core mission of LMIC Inclusion (connecting local artisans and international tailors globally)
 
 ---
 
@@ -10,60 +14,60 @@ This document provides detailed Midjourney/DALL-E prompts for generating feature
 **Title:** Digital Savile Row
 **Prompt:**
 ```
-A sophisticated tailor's workshop in London, digital scanner mounted on wall capturing body measurements, holographicMeasurement overlay on elegantMale client wearing premium suit, soft warm lighting, cinematic composition, 8k resolution, professional photography with shallow depth of field --ar 16:9 --v 6 --style professional
+A sophisticated tailor's workshop in London, a client standing in front of a smartphone on a tripod capturing body measurements using a mobile AI app, elegant male client, soft warm lighting, cinematic composition, 8k resolution, professional photography with shallow depth of field, subtle mint-green accents --ar 16:9 --v 6 --style professional
 ```
 
 ### Section 2: Zero-Error Patterns
 **Title:** Zero-Error Patterns
 **Prompt:**
 ```
-AI-generated pattern drafting on digital tablet,精准Body measurements forming 3D holographic garment mockup, designer examining precise digital pattern lines, modern atelier with natural light, subtle cyan/teal accent lighting, macro detail shot of measurement points --ar 16:9 --v 6 --style detailed
+A luxury designer examining professional 3D data and precise digital measurement lines on a tablet, modern atelier with natural light, macro detail shot of perfect measurement metrics eliminating a pattern drafting error loop, premium fashion aesthetic --ar 16:9 --v 6 --style detailed
 ```
 
 ### Section 3: Global Bespoke
 **Title:** Global Bespoke
 **Prompt:**
 ```
-Diverse international clients viewing their digitalSize passports on smartphones, tailor in HongKong connecting with client in NewYork via videoCall, globe holographic interface showing connected measurements, elegant premium branding, warm earth tones with teal accents, photography style --ar 16:9 --v 6 --style lifestyle
+An international client viewing their persistent KORRA Size Passport on a smartphone in New York, instantly sharing zero-latency biometric data with a luxury artisan in Hong Kong, elegant premium branding, warm earth tones with teal accents, lifestyle photography style --ar 16:9 --v 6 --style lifestyle
 ```
 
 ### Section 4: Consistent Standards
 **Title:** Consistent Standards
 **Prompt:**
 ```
-Three professional tailors in matching bespoke suits standing in formation, unified measurementScanner interface showing identical precision readings, brand一致性体现, premium fabric textures, studio lighting, luxury fashion photography, subtle motion blur trails --ar 16:9 --v 6 --style fashion
+Three professional tailors reviewing a digital screen showing 99% more consistent measurement results across users, high-end studio lighting, premium fabric textures, luxury fashion photography, showcasing an end to the lack of industry sizing standards --ar 16:9 --v 6 --style fashion
 ```
 
 ---
 
-## Page 2: manufacturing.html (Manufacturing)
+## Page 2: manufacturing.html (On-Demand Manufacturing)
 
 ### Section 1: Automated Workflows
 **Title:** Automated Workflows
 **Prompt:**
 ```
-Futuristic factory floor with automated body scanning stations, industrial robots alongside human workers, digital measurementData flowing through holographic screens connecting to productionLine, clean modern manufacturing aesthetic, blue and cyan tech lighting, aerial drone perspective, 8k industrial photography --ar 16:9 --v 6 --style industrial
+A clean, modern garment factory floor, workers using smartphones to instantly capture and process high-precision body scans, digital measurement data seamlessly flowing into an on-demand manufacturing production line, blue and cyan tech lighting, 8k industrial photography --ar 16:9 --v 6 --style industrial
 ```
 
 ### Section 2: Sustainable Scale
 **Title:** Sustainable Scale
 **Prompt:**
 ```
-Eco-friendly fabric cutting machine with laser precision, optimized patternLayout reducing fabric waste by 30%, lush green plant accents symbolizing sustainability, natural daylight streaming through factory windows, clean sustainable manufacturing, close-up macro shot of fabric optimization --ar 16:9 --v 6 --style eco
+Eco-friendly fabric cutting table, laser precision cutting machine optimizing layout, text overlay showing a 90% reduction in fabric waste from measurement errors, lush green plant accents, natural daylight streaming through factory windows, clean sustainable manufacturing --ar 16:9 --v 6 --style eco
 ```
 
 ### Section 3: Factory Integration
 **Title:** Factory Integration
 **Prompt:**
 ```
-Pattern cutting machine receiving digital measurement data directly, CAD/CAM system displaying customer body measurements transforming into cut fabric pieces, industrial factory setting with smart screen displays, orange accent lighting on digital interfaces, cinematic industrial documentary style --ar 16:9 --v 6 --style cinematic
+Industrial factory pattern cutting machine receiving digital body measurement data via Merchant API directly from a customer's phone scan, smart screen displays showing clinical AI precision metrics, cinematic industrial documentary style --ar 16:9 --v 6 --style cinematic
 ```
 
 ### Section 4: Mass Personalization
 **Title:** Mass Personalization
 **Prompt:**
 ```
-Warehouse fulfillment center with diverse size packages labeled by customer measurements, mobile scanning tablets enabling warehouse workers to verify measurements, efficient organized inventory system, natural warehouse lighting with smart screen overlays, documentary photography style --ar 16:9 --v 6 --style documentary
+A fast-paced apparel fulfillment center with diverse packages, a worker using a mobile app showing a 2X increase in customers served per worker daily, efficient organized inventory system, documentary photography style --ar 16:9 --v 6 --style documentary
 ```
 
 ---
@@ -74,60 +78,60 @@ Warehouse fulfillment center with diverse size packages labeled by customer meas
 **Title:** Reduce Returns
 **Prompt:**
 ```
-Retail store fitting room with smart mirror technology, customer seeing personalizedSize recommendation overlay, confettiCelebration as perfect fit found, warm store lighting, retail fashion photography with motion, --ar 16:9 --v 6 --style retail
+An e-commerce shopper using a smartphone at home to scan their body in 60 seconds, a digital "Size Passport" matching them to perfect apparel sizing, eliminating the 62% consumer struggle of finding clothing that fits, bright lifestyle photography --ar 16:9 --v 6 --style retail
 ```
 
 ### Section 2: Size Confidence
 **Title:** Size Confidence
 **Prompt:**
 ```
-Happy diverse group of customers in fitting room reviewingSize recommendations on tablet, AI-powered style suggestions displayed, mirror showing personalized fit visualization, bright retail environment, authentic lifestyle photography, --ar 16:9 --v 6 --style lifestyle
+A happy, diverse group of friends looking at an online retail site on a phone, enjoying a clinical source of truth for their sizing, zero hesitation or guesswork, bright modern apartment setting, authentic lifestyle photography --ar 16:9 --v 6 --style lifestyle
 ```
 
 ### Section 3: Inventory Analytics
 **Title:** Inventory Analytics
 **Prompt:**
 ```
-Retail analytics dashboard showing size distribution heat maps, data visualization of customer body types, modern retail office with large display screens, blue-teal data visualization aesthetic, professional business photography with data overlay, --ar 16:9 --v 6 --style business
+A retail operations dashboard showing accurate global size distribution maps from over 10k daily scans, data visualization of customer body biometrics, professional business photography with clean UI overlay --ar 16:9 --v 6 --style business
 ```
 
 ### Section 4: Seamless Integration
 **Title:** Seamless Integration
 **Prompt:**
 ```
-Retail checkout counter with barcodeScanner displaying customer size passport instantly, POS screen showing customer measurement profile, efficient modern retail environment, warm store lighting with smart technology accents, professional retail photography, --ar 16:9 --v 6 --style retail
+An e-commerce checkout interface on a mobile phone displaying a one-click "Use KORRA Size Passport" button, secure and instant profile loading, modern minimal tech aesthetic, professional retail photography --ar 16:9 --v 6 --style retail
 ```
 
 ---
 
-## Page 4: bridal.html (Bridal)
+## Page 4: bridal.html (Bridal & Tuxedo)
 
 ### Section 1: Reduce Rework
 **Title:** Reduce Rework
 **Prompt:**
 ```
-Bride trying on intricate wedding gown, tailor with tablet capturing precise measurements with digital scanner, close-up of measurement capture points on复杂的婚纱设计, elegant bridal boutique with soft natural lighting, luxury wedding photography, --ar 16:9 --v 6 --style luxury
+A bride-to-be standing for a quick 60-second smartphone AI body scan in an elegant bridal boutique, capturing professional 3D data to eliminate multiple revision rounds and tight garment errors, soft natural lighting, luxury wedding photography --ar 16:9 --v 6 --style luxury
 ```
 
 ### Section 2: Global Bridal
 **Title:** Global Bridal
 **Prompt:**
 ```
-International bridal party coordination, bride in different time zones viewing dress designs via video call with tailor, smart screen showing measurements sync across globe, elegant modern collaboration aesthetic, warm premium lighting, lifestyle documentary style, --ar 16:9 --v 6 --style lifestyle
+An international bridal party coordination scene, an overseas tailor checking a digital twin size profile sent from a smartphone app across the world, stopping the frustration loop of delayed delivery and long-distance fitting disputes, warm premium lighting --ar 16:9 --v 6 --style lifestyle
 ```
 
 ### Section 3: Stress-Free Sync
 **Title:** Stress-Free Sync
 **Prompt:**
 ```
-Bridesmaids group chat receiving automated fit status notifications, organized digital timeline showing measurement milestones and fitting appointments, stress-free excited bridal party, soft romantic lighting with notification alerts visible, lifestyle photography with phone overlays, --ar 16:9 --v 6 --style lifestyle
+An organized digital dashboard showing bridal party measurement completion states, zero latency sharing active, a relaxed and happy coordinator, soft romantic boutique lighting, lifestyle photography with clean software interface overlays --ar 16:9 --v 6 --style lifestyle
 ```
 
 ### Section 4: Party Coordination
 **Title:** Party Coordination
 **Prompt:**
 ```
-Entire bridal party wearing coordinated bridesmaid dresses in various sizes, bridal party coordinator managing measurement progress on tablet dashboard, organized elegant bridesmaids group, warm outdoor or庄园 setting, documentary wedding photography style, --ar 16:9 --v 6 --style wedding
+A diverse wedding party looking sharp in perfectly fitting custom tuxedos and dresses, a coordinator seamlessly matching everyone's unique biometric identity using a single tablet, estate garden setting, documentary wedding photography style --ar 16:9 --v 6 --style wedding
 ```
 
 ---
@@ -138,60 +142,60 @@ Entire bridal party wearing coordinated bridesmaid dresses in various sizes, bri
 **Title:** Fit-First Design
 **Prompt:**
 ```
-Virtual try-on technology showing garment proportions on customer's digital twin, customer viewing custom designOptions with tailor, holographic design visualization, modern design studio with smart screens, bright creative lighting with teal accents, professional design studio photography, --ar 16:9 --v 6 --style creative
+A modern design studio where a designer is matching digital patterns to a persistent biometric digital twin on a tablet screen, bright creative lighting with teal accents, professional design studio photography, showing clinical AI precision --ar 16:9 --v 6 --style creative
 ```
 
 ### Section 2: Artisan Velocity
 **Title:** Artisan Velocity
 **Prompt:**
 ```
-Tailor using guided capture interface on tablet for fast measurement, customer performing self-measurement with real-time feedback indicators, efficient modern appointment setting, bright natural light studio, lifestyle photography showing speed and ease, --ar 16:9 --v 6 --style lifestyle
+A local artisan tailor smiling as a client performs a self-guided 60-second phone scan, a graphic callout highlighting a "$0.50 cost per measurement using smartphone AI", bright natural light studio, lifestyle photography showing speed and ease --ar 16:9 --v 6 --style lifestyle
 ```
 
 ### Section 3: Digital Pattern Sync
 **Title:** Digital Pattern Sync
 **Prompt:**
 ```
-Digital pattern versioning system displaying measurement history, pattern adjustments visualized across multiple orders, tailor reviewing previous commissions alongside current design, modern atelier with history timeline on screen, professional studio lighting, --ar 16:9 --v 6 --style professional
+A digital tailoring interface showing zero-latency pattern sync, instantly translating mobile app measurements into immediate cutting specifications, cutting down time spent by 90%, professional studio lighting --ar 16:9 --v 6 --style professional
 ```
 
 ### Section 4: Serve Anyone, Anywhere
 **Title:** Serve Anyone, Anywhere
 **Prompt:**
 ```
-Global tailor network visualization, customer in remote location sharing measurement passport with connected tailor, cross-border digital measurement transfer, world map with connected measurement points, modern tech aesthetic with teal accents, documentary style, --ar 16:9 --v 6 --style cinematic
+An LMIC inclusion engine graphic concept, showing a local tailor in an African or Asian workshop seamlessly connected to international global clients via smartphone scans shared over chat apps, breaking down the distance factor, cinematic documentary style --ar 16:9 --v 6 --style cinematic
 ```
 
 ---
 
-## Page 6: uniforms.html (Uniforms)
+## Page 6: uniforms.html (Uniform Manufacturers)
 
 ### Section 1: Mass Enrollment
 **Title:** Mass Enrollment
 **Prompt:**
 ```
-Corporate team enrollment event, employees using self-service capture stations, manager viewing organizational enrollment progress on dashboard, efficient organized corporate setting, bright office lighting, professional corporate photography, --ar 16:9 --v 6 --style corporate
+A corporate uniform enrollment event, employees easily using their own smartphones on desks to complete a quick 60-second body scan, an operations manager tracking the data on a dashboard, efficient organized corporate setting, bright office lighting --ar 16:9 --v 6 --style corporate
 ```
 
 ### Section 2: Deployment Logistics
 **Title:** Deployment Logistics
 **Prompt:**
 ```
-Uniform distribution center with organized size-specific packaging, logistics dashboard tracking shipments by size and location, smart warehouse with delivery vehicles ready, efficient industrial setting with natural light, documentary logistics photography, --ar 16:9 --v 6 --style documentary
+A uniform distribution center with thousands of boxes accurately sized, zero guessing, a logistics screen showing 99% more consistent results across users via smartphone AI, efficient industrial setting, documentary logistics photography --ar 16:9 --v 6 --style documentary
 ```
 
 ### Section 3: Reduced Exchange Costs
 **Title:** Reduced Exchange Costs
 **Prompt:**
 ```
-Corporate employee receiving perfectly fitting uniform first time, satisfied professional in company uniform, pre-distribution validation checkpoint visible, clean corporate environment, professional business photography with success visual, --ar 16:9 --v 6 --style business
+A transit or corporate employee receiving a perfectly fitting uniform package on the first try, smiling with satisfaction, eliminating costly returns and fitting disputes, clean professional environment, business photography --ar 16:9 --v 6 --style business
 ```
 
 ### Section 4: Persistent Sizing
 **Title:** Persistent Sizing
 **Prompt:**
 ```
-Employee returning for annual uniform refresh, one-click reorder system showing automatic size verification, efficient repeat order workflow, modern corporate retail counter, professional business environment with smart screen displays, photography showing convenience and efficiency, --ar 16:9 --v 6 --style professional
+An employee doing an annual uniform refresh using their persistent KORRA Size Passport profile on a phone, skipping physical measurement visits entirely, efficient repeat order workflow, modern corporate retail counter, professional business environment --ar 16:9 --v 6 --style professional
 ```
 
 ---
@@ -199,23 +203,21 @@ Employee returning for annual uniform refresh, one-click reorder system showing 
 ## Generation Guidelines
 
 ### Common Arguments
-- `--ar 16:9` - Use 16:9 aspect ratio for landing page hero/section images
-- `--v 6` - Use version 6 for best photorealistic results
-- `--style [style]` - Adjust style based on the specific section
+- `--ar 16:9` - Aspect ratio for landing page hero/section images
+- `--v 6` - Midjourney version 6 for best photorealistic results
+- `--style [style]` - Adjust style based on section type
 
-### Color Palette Recommendations
-- **Luxury:** Warm earth tones, gold, deep navy
+### Key Product Features to Highlight
+- **Smartphone AI Scanning** - No bulking hardware; use phone-based capture
+- **Size Passport** - Digital biometric identity that persists
+- **Zero Latency** - Instant measurement sharing
+- **Professional 3D Data** - Clinical-grade precision
+- **LMIC Inclusion** - Connecting global artisans to local markets
+- **Metrics** - 90% waste reduction, $0.50 per scan, 2X capacity, 99% consistency
+
+### Color Palette
+- **Luxury:** Warm earth tones, gold, deep navy, subtle mint accents
 - **Manufacturing:** Industrial blue, cyan, clean white
-- **Retail/Bridal:** Warm whites, soft pastels, rose gold accents
+- **Retail/Bridal:** Warm whites, soft pastels, rose gold
 - **Corporate:** Professional blue, teal, neutral grays
-
-### Lighting Guidelines
-- Use soft, natural lighting for lifestyle images
-- Use dramatic lighting for feature highlights
-- Ensure brand-consistent teal/mint accent colors appear subtly
-
-### Composition Tips
-- Lead with the human element (customers, tailors, workers)
-- Show technology as enabler, not replacement
-- Capture authentic moments showing emotion/satisfaction
-- Include subtle device/interface presence without dominating frame
+- **LMIC/Global:** Earth tones, vibrant cultural colors
