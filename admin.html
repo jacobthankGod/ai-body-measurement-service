@@ -410,12 +410,16 @@
                 else { statusEl.classList.add('offline'); statusEl.querySelector('span').textContent = 'Sync Paused'; if (overlay) overlay.style.display = 'flex'; }
             }
         },
-        retry: async function(fn, retries = 8, delay = 1500) {
+        retry: async function(fn, retries = 10, delay = 2000) {
             for (let i = 0; i < retries; i++) {
-                try { if (!this.isOnline) throw new Error("OFFLINE"); return await fn(); }
-                catch (err) {
+                try {
+                    if (!this.isOnline) throw new Error("OFFLINE");
+                    return await fn();
+                } catch (err) {
+                    const isNet = err.message === "OFFLINE" || err.message.includes("fetch") || err.name === "TypeError" || err.message.includes("network") || err.message.includes("connection");
                     if (i === retries - 1) { this.update(false); throw err; }
-                    const wait = (delay * Math.pow(1.8, i)) + (Math.random() * 500);
+                    const wait = (delay * Math.pow(1.8, i)) + (Math.random() * 1000);
+                    console.warn(`🔄 Handshake retry ${i+1}/${retries} in ${Math.round(wait)}ms...`);
                     await new Promise(r => setTimeout(r, wait));
                 }
             }
@@ -427,26 +431,30 @@
       if (typeof window.supabase === 'undefined') { setTimeout(initAdmin, 500); return; }
 
       const resilientFetch = async (url, options = {}) => {
-          for (let attempt = 0; attempt < 8; attempt++) {
+          for (let attempt = 0; attempt < 10; attempt++) {
               try {
                   const res = await fetch(url, options);
                   if (!res.ok && res.status === 0) throw new Error("NETWORK_ERROR");
                   return res;
               } catch (err) {
-                  if (attempt === 7) throw err;
-                  await new Promise(r => setTimeout(r, 1500 * Math.pow(2, attempt)));
+                  if (attempt === 9) throw err;
+                  const backoff = (2000 * Math.pow(1.8, attempt)) + (Math.random() * 1000);
+                  console.warn(`🔄 Connection failure. Retrying ${attempt+1}/10...`);
+                  await new Promise(r => setTimeout(r, backoff));
               }
           }
       };
 
       window.KORRA_DB = window.supabase.createClient('https://blsettabymllulsxtziw.supabase.co', 'sb_publishable_miCOIXHtlxLkfDgpwE0N-g_BA1Q-x8y', { global: { fetch: resilientFetch } });
-      const { data: { session } } = await NetworkGuard.retry(() => window.KORRA_DB.auth.getSession());
-      if (!session) { window.location.href = '/signin'; return; }
+      try {
+        const { data: { session } } = await NetworkGuard.retry(() => window.KORRA_DB.auth.getSession());
+        if (!session) { window.location.href = '/signin'; return; }
 
-      document.getElementById('loadingOverlay').style.display = 'none';
-      document.getElementById('adminUser').textContent = session.user.email;
-      if (window.KORRA_VIZ) window.KORRA_VIZ.init('korra-3d-viewport');
-      loadGlobalStats();
+        document.getElementById('loadingOverlay').style.display = 'none';
+        document.getElementById('adminUser').textContent = session.user.email;
+        if (window.KORRA_VIZ) window.KORRA_VIZ.init('korra-3d-viewport');
+        loadGlobalStats();
+      } catch(e) { console.error("FATAL Handshake Failure:", e); }
     }
 
     async function loadGlobalStats() {
@@ -489,8 +497,17 @@
       overlay.style.display = 'flex'; let progress = 10;
       const interval = setInterval(async () => {
         try {
-          const res = await fetch(`/api/v2/measurements/status/${taskId}`); if (!res.ok) return;
-          const data = await res.json();
+          let res = null, data = null;
+          // ULTRA-RESILIENT: Retry on 404/502/503/504
+          for (let i = 0; i < 5; i++) {
+              try {
+                res = await fetch(`/api/v2/measurements/status/${taskId}`);
+                if (res.ok) { data = await res.json(); break; }
+              } catch(e) {}
+              await new Promise(r => setTimeout(r, 2000));
+          }
+
+          if (!data) return;
           const msgs = ["INITIALIZING ISOLATED AI...", "EXECUTING SKELETAL DETECTION...", "RUNNING VOLUMETRIC REGRESSION...", "MAPPING VERTEX CLOUD...", "SCALING BIOMETRICS...", "MATERIALIZING 3D TWIN...", "SYNCING HANDSHAKE COMPLETE."];
           if (data.status === 'processing') { progress = Math.min(progress + 5, 95); status.textContent = msgs[Math.floor((progress/100) * msgs.length)]; }
           else if (data.status === 'completed') { clearInterval(interval); progress = 100; status.textContent = 'SUCCESS'; if (window.KORRA_VIZ) window.KORRA_VIZ.loadMesh(data.mesh_url); window.LAST_MEASUREMENT_DATA = data; renderMeasurementGrids(data); loadGlobalStats(); setTimeout(() => { overlay.style.display = 'none'; btn.disabled = false; document.getElementById('adminScanModal').classList.remove('active'); document.getElementById('measurementResultsCard').style.display='block'; }, 1000); }
