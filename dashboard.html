@@ -111,6 +111,23 @@
     </div>
   </div>
 
+  <!-- COMPARISON MODAL -->
+  <div class="modal-overlay" id="compareModal">
+    <div class="modal-card modal-card-landscape">
+      <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:24px"><div><h2 style="font-size:24px; margin-bottom:4px">Comparison Mode</h2><p style="color:var(--Neutral-400); margin:0">Comparing Baseline vs. Latest scan.</p></div><button class="btn-outline" style="border-color:var(--Mint); color:var(--Mint)" id="btnHeatmapToggle" onclick="toggleHeatmap()">Activate Heatmap Overlay</button></div>
+      <div class="landscape-grid" id="compareGrid">
+        <div style="text-align:center"><div style="font-size:10px; font-weight:900; color:var(--Neutral-500); margin-bottom:12px; text-transform:uppercase">Baseline Scan</div><div id="compare-baseline-viz" style="width:100%; height:450px; background:#000; border-radius:16px; border:1px solid var(--Glass-Border); overflow:hidden; position:relative"></div><div id="baselineDate" style="font-size:11px; color:var(--Mint); margin-top:12px"></div></div>
+        <div style="text-align:center"><div style="font-size:10px; font-weight:900; color:var(--Neutral-500); margin-bottom:12px; text-transform:uppercase">Latest Scan</div><div id="compare-latest-viz" style="width:100%; height:450px; background:#000; border-radius:16px; border:1px solid var(--Mint); overflow:hidden; position:relative"></div><div id="latestDate" style="font-size:11px; color:var(--Mint); margin-top:12px"></div></div>
+      </div>
+      <div id="heatmapLegend" style="display:none; justify-content:center; gap:32px; margin-top:24px">
+         <div style="display:flex; align-items:center; gap:8px; font-size:10px; font-weight:700"><div style="width:12px; height:12px; border-radius:50%; background:#ff4d4d"></div> GROWTH</div>
+         <div style="display:flex; align-items:center; gap:8px; font-size:10px; font-weight:700"><div style="width:12px; height:12px; border-radius:50%; background:#57D7C0"></div> REDUCTION</div>
+         <div style="display:flex; align-items:center; gap:8px; font-size:10px; font-weight:700"><div style="width:12px; height:12px; border-radius:50%; background:#888"></div> NO CHANGE</div>
+      </div>
+      <div style="display:flex; justify-content:center; gap:16px; margin-top:40px"><button class="btn-primary" style="padding:0 40px" onclick="location.reload()">Exit Comparison</button></div>
+    </div>
+  </div>
+
   <div id="offlineOverlay"><div class="offline-card"><div style="font-size:32px; margin-bottom:24px">📡</div><h2 style="font-size:18px; font-weight:800; margin-bottom:12px">Sync Interrupted</h2><p style="font-size:12px; color:var(--Neutral-400)">Your internet connection is unstable. KORRA has paused updates.</p></div></div>
 
   <div id="creditOverlay"><div class="credit-card"><div style="font-size:48px; margin-bottom:32px">💎</div><h2 style="font-size:24px; font-weight:900; margin-bottom:16px">Credits Depleted</h2><p style="font-size:14px; color:var(--Neutral-400); margin-bottom:40px">Your balance has reached 0 credits. Please top up to continue.</p><button class="btn-primary" style="width:100%; height:56px" onclick="dismissCreditError(); switchTab('billing'); document.getElementById('topUpModal').classList.add('active');">Top Up Now</button><button class="btn-outline" style="width:100%; border:none; margin-top:16px; color:var(--Neutral-500)" onclick="dismissCreditError()">Later</button></div></div>
@@ -196,23 +213,6 @@
       <h2 style="font-size:32px; margin-bottom:12px; letter-spacing:-0.05em">SCAN TO START</h2>
       <p style="color:var(--Neutral-400); margin-bottom:40px">High-Precision Body Scanning Active.</p>
       <div style="display:flex; gap:16px"><button class="btn-primary" style="flex:1" onclick="window.print()">Print Poster</button><button class="btn-outline" style="flex:1" onclick="document.getElementById('qrPosterModal').classList.remove('active')">Dismiss</button></div>
-    </div>
-  </div>
-
-  <!-- COMPARISON MODAL -->
-  <div class="modal-overlay" id="compareModal">
-    <div class="modal-card modal-card-landscape">
-      <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:24px"><div><h2 style="font-size:24px; margin-bottom:4px">Comparison Mode</h2><p style="color:var(--Neutral-400); margin:0">Comparing Baseline vs. Latest scan.</p></div><button class="btn-outline" style="border-color:var(--Mint); color:var(--Mint)" id="btnHeatmapToggle" onclick="toggleHeatmap()">Activate Heatmap Overlay</button></div>
-      <div class="landscape-grid" id="compareGrid">
-        <div style="text-align:center"><div style="font-size:10px; font-weight:900; color:var(--Neutral-500); margin-bottom:12px; text-transform:uppercase">Baseline Scan</div><div id="compare-baseline-viz" style="width:100%; height:450px; background:#000; border-radius:16px; border:1px solid var(--Glass-Border); overflow:hidden; position:relative"></div><div id="baselineDate" style="font-size:11px; color:var(--Mint); margin-top:12px"></div></div>
-        <div style="text-align:center"><div style="font-size:10px; font-weight:900; color:var(--Neutral-500); margin-bottom:12px; text-transform:uppercase">Latest Scan</div><div id="compare-latest-viz" style="width:100%; height:450px; background:#000; border-radius:16px; border:1px solid var(--Mint); overflow:hidden; position:relative"></div><div id="latestDate" style="font-size:11px; color:var(--Mint); margin-top:12px"></div></div>
-      </div>
-      <div id="heatmapLegend" style="display:none; justify-content:center; gap:32px; margin-top:24px">
-         <div style="display:flex; align-items:center; gap:8px; font-size:10px; font-weight:700"><div style="width:12px; height:12px; border-radius:50%; background:#ff4d4d"></div> GROWTH</div>
-         <div style="display:flex; align-items:center; gap:8px; font-size:10px; font-weight:700"><div style="width:12px; height:12px; border-radius:50%; background:#57D7C0"></div> REDUCTION</div>
-         <div style="display:flex; align-items:center; gap:8px; font-size:10px; font-weight:700"><div style="width:12px; height:12px; border-radius:50%; background:#888"></div> NO CHANGE</div>
-      </div>
-      <div style="display:flex; justify-content:center; gap:16px; margin-top:40px"><button class="btn-primary" style="padding:0 40px" onclick="location.reload()">Exit Comparison</button></div>
     </div>
   </div>
 
