@@ -73,3 +73,92 @@ async def refund_credit(user_id: str):
         client.table("profiles").update({"credits": credits + 1}).eq("id", user_id).execute()
         return True
     except: return False
+
+
+def get_user_quota(api_key: str):
+    """
+    Get user quota information for a given API key.
+    Returns tier, quota, used, remaining, and reset_date.
+    """
+    if not api_key:
+        return {'valid': False, 'error': 'API key required'}
+    
+    # Check for admin keys
+    master_key = os.environ.get("PRECISIONFIT_MASTER_KEY")
+    if (master_key and api_key == master_key) or api_key.startswith("korra_admin_"):
+        return {
+            'valid': True,
+            'tier': 'enterprise',
+            'quota': 999999,
+            'used': 0,
+            'remaining': 999999,
+            'reset_date': None
+        }
+    
+    # Get key data from database
+    key_data = DatabaseService.get_api_key(api_key)
+    if not key_data:
+        return {'valid': False, 'error': 'Invalid API key'}
+    
+    tier = key_data.get('tier', 'tailor_basic')
+    quota = SUBSCRIPTION_QUOTAS.get(tier, 0)
+    
+    # Get usage stats (approximated for now)
+    client = DatabaseService.get_client()
+    try:
+        res = client.table("usage_logs").select("id").eq("api_key", api_key).execute()
+        used = len(res.data) if res.data else 0
+    except:
+        used = 0
+    
+    remaining = max(0, quota - used)
+    
+    # Calculate reset date (first of next month)
+    now = datetime.now()
+    if now.month == 12:
+        reset_date = datetime(now.year + 1, 1, 1).strftime('%Y-%m-%d')
+    else:
+        reset_date = datetime(now.year, now.month + 1, 1).strftime('%Y-%m-%d')
+    
+    return {
+        'valid': True,
+        'tier': tier,
+        'quota': quota,
+        'used': used,
+        'remaining': remaining,
+        'reset_date': reset_date
+    }
+
+
+def get_usage_stats(api_key: str):
+    """
+    Get usage statistics for a given API key.
+    Returns this_month and total usage counts.
+    """
+    if not api_key:
+        return {'this_month': 0, 'total': 0}
+    
+    # Check for admin keys
+    if api_key.startswith("korra_admin_"):
+        return {'this_month': 0, 'total': 0}
+    
+    client = DatabaseService.get_client()
+    now = datetime.now()
+    start_of_month = datetime(now.year, now.month, 1).isoformat()
+    
+    try:
+        # Get this month's usage
+        res_month = client.table("usage_logs").select("id").eq("api_key", api_key).gte("created_at", start_of_month).execute()
+        this_month = len(res_month.data) if res_month.data else 0
+        
+        # Get total usage
+        res_total = client.table("usage_logs").select("id").eq("api_key", api_key).execute()
+        total = len(res_total.data) if res_total.data else 0
+    except:
+        this_month = 0
+        total = 0
+    
+    return {
+        'this_month': this_month,
+        'total': total
+    }

@@ -307,7 +307,9 @@
   <script src="/assets/korra_export.js"></script>
 
   <script>
-    const CONFIG = { url: 'https://blsettabymllulsxtziw.supabase.co', key: 'sb_publishable_miCOIXHtlxLkfDgpwE0N-g_BA1Q-x8y', paystack: 'pk_live_d8442a8b9814421b1b463286f91887e5b546305a' };
+// Paystack key loaded from environment - do not hardcode in production
+    const PAYSTACK_PUBLIC_KEY = window.ENV?.PAYSTACK_PUBLIC_KEY || 'pk_test_placeholder';
+    const CONFIG = { url: 'https://blsettabymllulsxtziw.supabase.co', key: 'sb_publishable_miCOIXHtlxLkfDgpwE0N-g_BA1Q-x8y', paystack: PAYSTACK_PUBLIC_KEY };
     let sessionData = null, userId = null, masterHistory = [], activeCameraType = null, poseModel = null, cameraInstance = null, isPoseAligned = false, alignmentStartTime = 0, autoSnapTriggered = false, isReviewing = false, capturedDataUrl = null;
     let lastSpokenText = "", lastSpokenTime = 0, usageChart = null, selectedBundle = { credits: 50, price: 25 };
 

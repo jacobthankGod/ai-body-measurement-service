@@ -575,15 +575,12 @@
         // In a real implementation, this would hit a secure endpoint
     }
 
-    document.getElementById('btnRestoreBrain').addEventListener('click', async () => {
-       const btn = document.getElementById('btnRestoreBrain'); btn.disabled = true; btn.textContent = 'RESTORING...';
-       try { const res = await fetch('/api/v2/health/restore', { method: 'POST' }); if(res.ok) { alert("Unicorn Restoration Initiated. Please wait 1-2 minutes."); setTimeout(loadGlobalStats, 15000); } } catch(e) { alert("Failed."); }
-       finally { btn.disabled = false; btn.textContent = '🚀 Restore AI Brain'; }
-    });
-
-    document.getElementById('btnExit').onclick = async () => { await window.KORRA_DB.auth.signOut(); window.location.href = '/signin'; };
+    document.getElementById('btnExit').onclick = () => { window.location.href = '/'; };
     window.exportToPDF = function() { if (!window.LAST_MEASUREMENT_DATA) return; const d = window.LAST_MEASUREMENT_DATA; window.KORRA_EXPORT.pdf(d.client_name || "Admin Test", d.measurements, d.gender, d.height); };
-    initAdmin();
+
+    document.addEventListener('DOMContentLoaded', () => {
+        initAdmin();
+    });
   </script>
 </body>
 </html>

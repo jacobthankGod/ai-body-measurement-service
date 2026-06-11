@@ -378,8 +378,9 @@ class HMRMasterEngine:
         except: return {}
 
     def _fallback_ratios(self, height_cm: float, gender: str) -> Dict[str, float]:
-        # Return 6 values to match extractor signature: measurements, vertices, landmarks, body_shape, size_rec, error
-        return {'Shoulder': round(0.265 * height_cm, 1), 'Chest Round': round(0.588 * height_cm, 1), 'Waist Round': round(0.471 * height_cm, 1)}
+        # Return all measurements using MALE_RATIOS/FEMALE_RATIOS dictionaries
+        ratios = MALE_RATIOS if gender == 'male' else FEMALE_RATIOS
+        return {key: round(ratio * height_cm, 1) for key, ratio in ratios.items()}
 
 ENGINE = HMRMasterEngine()
 HMR_ACTIVE = True
