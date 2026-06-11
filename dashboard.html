@@ -285,7 +285,42 @@
           </div>
 
           <div id="view-passports" class="tab-view"><h2 style="font-size:24px; margin-bottom:32px">Size Profiles</h2><div id="passportGrid" style="display:grid; grid-template-columns:repeat(auto-fill, minmax(300px, 1fr)); gap:24px"></div></div>
-          <div id="view-widget" class="tab-view"><div class="glass-card"><h2>Widget Setup</h2><p style="color:var(--Neutral-400); margin-bottom:32px">Embed body scanning on your site.</p><div style="background:#000; padding:24px; border:1px solid var(--Glass-Border); border-radius:12px; margin-bottom:32px"><code style="color:var(--Mint); font-size:12px; word-break:break-all">&lt;script src="https://korra-436814609100.us-central1.run.app/assets/korra_widget.js"&gt;&lt;/script&gt;</code></div></div></div>
+          <div id="view-widget" class="tab-view">
+            <div class="glass-card">
+              <h2>Widget Setup</h2>
+              <p style="color:var(--Neutral-400); margin-bottom:32px">Embed body scanning on your site.</p>
+              
+              <div style="margin-bottom:32px">
+                <h4 style="font-size:10px; font-weight:900; color:var(--Mint); margin-bottom:12px">STANDARD EMBED</h4>
+                <div style="background:#000; padding:20px; border:1px solid var(--Glass-Border); border-radius:12px;">
+                  <code style="color:var(--Mint); font-size:12px; word-break:break-all"><script src="https://korra-436814609100.us-central1.run.app/assets/korra_widget.js"></script></code>
+                </div>
+              </div>
+
+              <div style="margin-bottom:32px">
+                <h4 style="font-size:10px; font-weight:900; color:var(--Mint); margin-bottom:12px">ADVANCED (WITH CALLBACKS)</h4>
+                <div style="background:#000; padding:20px; border:1px solid var(--Glass-Border); border-radius:12px;">
+                  <code style="color:var(--Mint); font-size:11px; word-break:break-all"><script>
+  KORRA.init({
+    apiKey: 'YOUR_API_KEY',
+    onScanComplete: (data) => console.log('Measurements:', data),
+    onError: (err) => console.error('Error:', err)
+  });
+</script></code>
+                </div>
+              </div>
+
+              <div>
+                <h4 style="font-size:10px; font-weight:900; color:var(--Mint); margin-bottom:12px">AVAILABLE METHODS</h4>
+                <div style="display:grid; grid-template-columns:1fr 1fr; gap:12px">
+                  <div style="display:flex; align-items:center; justify-content:space-between; padding:16px; border-radius:12px; background:rgba(255,255,255,0.02); border:1px solid var(--Glass-Border)"><span style="font-size:12px; font-weight:700">init(config)</span><span style="font-size:10px; font-weight:900; text-transform:uppercase; padding:4px 8px; border-radius:4px; color:var(--Mint); background:rgba(87,215,192,0.1)">READY</span></div>
+                  <div style="display:flex; align-items:center; justify-content:space-between; padding:16px; border-radius:12px; background:rgba(255,255,255,0.02); border:1px solid var(--Glass-Border)"><span style="font-size:12px; font-weight:700">openCamera()</span><span style="font-size:10px; font-weight:900; text-transform:uppercase; padding:4px 8px; border-radius:4px; color:var(--Mint); background:rgba(87,215,192,0.1)">READY</span></div>
+                  <div style="display:flex; align-items:center; justify-content:space-between; padding:16px; border-radius:12px; background:rgba(255,255,255,0.02); border:1px solid var(--Glass-Border)"><span style="font-size:12px; font-weight:700">getMeasurements()</span><span style="font-size:10px; font-weight:900; text-transform:uppercase; padding:4px 8px; border-radius:4px; color:var(--Mint); background:rgba(87,215,192,0.1)">READY</span></div>
+                  <div style="display:flex; align-items:center; justify-content:space-between; padding:16px; border-radius:12px; background:rgba(255,255,255,0.02); border:1px solid var(--Glass-Border)"><span style="font-size:12px; font-weight:700">exportPDF()</span><span style="font-size:10px; font-weight:900; text-transform:uppercase; padding:4px 8px; border-radius:4px; color:var(--Mint); background:rgba(87,215,192,0.1)">READY</span></div>
+                </div>
+              </div>
+            </div>
+          </div>
           <div id="view-billing" class="tab-view"><div class="glass-card"><h2>Billing & Plans</h2><div style="display:grid; grid-template-columns:1.5fr 1fr; gap:32px; margin-top:32px"><div style="padding:24px; background:rgba(87,215,192,0.05); border:1px solid var(--Mint); border-radius:16px"><h4>CURRENT PLAN</h4><div style="font-size:24px; font-weight:900" id="billingPlanName">Loading...</div><button class="btn-primary" style="margin-top:20px; width:100%">Manage</button></div><div style="padding:24px; background:var(--Glass); border:1px solid var(--Glass-Border); border-radius:16px"><h4>AVAILABLE CREDITS</h4><div style="font-size:32px; font-weight:900" id="billingCredits">0</div><button class="btn-outline" style="margin-top:20px; width:100%" onclick="document.getElementById('topUpModal').classList.add('active')">Top Up</button></div></div><div style="margin-top:48px"><h4>Transaction History</h4><div class="table-container"><table><thead><tr><th>DATE</th><th>TYPE</th><th>AMOUNT</th><th>STATUS</th></tr></thead><tbody id="billingHistoryBody"></tbody></table></div></div></div></div>
           <div id="view-settings" class="tab-view">
              <div class="glass-card"><h2>Settings</h2><div style="max-width:600px; margin-top:32px"><label style="font-size:10px; font-weight:900; color:var(--Neutral-500)">PROFESSIONAL NAME</label><input type="text" id="settingsName" class="input-field" placeholder="Loading..."><button class="btn-primary" id="btnSaveSettings">Save Profile</button></div></div>
