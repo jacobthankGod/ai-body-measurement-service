@@ -39,9 +39,19 @@
     .glass-card { background: var(--Glass); border: 1px solid var(--Glass-Border); border-radius: 24px; padding: 64px; margin-bottom: 80px; position: relative; overflow: hidden; }
     .glass-card:hover { border-color: var(--Mint); }
 
-    .feature-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 48px; text-align: left; }
-    .feature-item h3 { color: var(--Mint); font-size: 24px; font-weight: 800; margin-bottom: 16px; }
-    .feature-item p { font-size: 16px; color: var(--Neutral-400); line-height: 1.6; }
+    .feature-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(320px, 1fr)); gap: 32px; text-align: left; }
+
+    .image-feature-card {
+        background: var(--Glass); border: 1px solid var(--Glass-Border); border-radius: 24px; overflow: hidden;
+        transition: 0.4s cubic-bezier(0.4, 0, 0.2, 1); position: relative; display: flex; flex-direction: column;
+    }
+    .image-feature-card:hover { border-color: var(--Mint); transform: translateY(-8px); box-shadow: 0 20px 40px rgba(0,0,0,0.5); }
+    .card-img-container { height: 260px; width: 100%; overflow: hidden; position: relative; background: #111; }
+    .card-img-container img { width: 100%; height: 100%; object-fit: cover; opacity: 0.6; transition: 0.4s; }
+    .image-feature-card:hover .card-img-container img { opacity: 0.8; transform: scale(1.05); }
+    .card-content { padding: 32px; flex: 1; }
+    .card-content h3 { color: var(--Mint); font-size: 22px; font-weight: 800; margin-bottom: 12px; }
+    .card-content p { font-size: 15px; color: var(--Neutral-400); line-height: 1.6; }
 
     .btn { height: 52px; padding: 0 32px; border-radius: 12px; font-size: 13px; font-weight: 800; cursor: pointer; display: inline-flex; align-items: center; justify-content: center; gap: 12px; transition: 0.2s; text-decoration: none; text-transform: uppercase; }
     .btn-primary { background: var(--Mint); color: var(--Obsidian); border: none; }
@@ -56,7 +66,6 @@
 
     @media (max-width: 1050px) {
       .hero h1 { font-size: 40px; }
-      .feature-grid { grid-template-columns: 1fr; }
       nav { display: none; }
       .footer-links { grid-template-columns: repeat(2, 1fr); }
     }
@@ -102,28 +111,38 @@
     </section>
 
     <section class="container">
-      <div class="glass-card">
-        <div class="feature-grid">
-          <div class="feature-item">
+      <div class="feature-grid">
+        <div class="image-feature-card">
+          <div class="card-img-container"><img src="/assets/homepage_image.png" alt="Automated Workflows"></div>
+          <div class="card-content">
             <h3>Automated Workflows</h3>
             <p>Directly feed body measurements into your CAD/CAM systems. Eliminate the manual data entry bottleneck in on-demand production lines.</p>
           </div>
-          <div class="feature-item">
+        </div>
+        <div class="image-feature-card">
+          <div class="card-img-container"><img src="/assets/body-capture.png" alt="Sustainable Scale"></div>
+          <div class="card-content">
             <h3>Sustainable Scale</h3>
             <p>Reduce returns by up to 40% and fabric waste by 15% through precision fit. High-efficiency manufacturing starts with high-accuracy data.</p>
           </div>
-          <div class="feature-item">
+        </div>
+        <div class="image-feature-card">
+          <div class="card-img-container"><img src="/assets/homepage_image.png" alt="Factory Integration"></div>
+          <div class="card-content">
             <h3>Factory Integration</h3>
             <p>KORRA's robust API connects your digital storefront directly to the factory floor, ensuring seamless biometric data transmission.</p>
           </div>
-          <div class="feature-item">
+        </div>
+        <div class="image-feature-card">
+          <div class="card-img-container"><img src="/assets/body-capture.png" alt="Mass Personalization"></div>
+          <div class="card-content">
             <h3>Mass Personalization</h3>
             <p>Scale personalized apparel offerings without increasing overhead. Deliver custom-fit garments at ready-to-wear speeds.</p>
           </div>
         </div>
       </div>
 
-      <div class="glass-card" style="background: linear-gradient(135deg, var(--Teal-900), #000); text-align: center;">
+      <div class="glass-card" style="background: linear-gradient(135deg, var(--Teal-900), #000); text-align: center; margin-top: 80px;">
          <h2 style="font-size: 32px; font-weight: 800; margin-bottom: 16px;">Optimize your production line.</h2>
          <p style="color: var(--Neutral-400); margin-bottom: 32px;">Join the manufacturers using KORRA to power their on-demand workflows.</p>
          <a href="/signup.html" class="btn btn-primary">Start On-Demand</a>
