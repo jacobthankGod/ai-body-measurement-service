@@ -204,12 +204,29 @@ class HMRMasterEngine:
                     vertices = results['verts'][0]
                     joints = results['joints'][0]
 
-                    # 7. MULTI-VIEW REFINEMENT (Heuristic)
-                    if side_results:
-                        # Average the vertices if they are relatively stable, or use side to refine depth
-                        # For now, we take the mean of the two vertex sets to improve stability
-                        vertices = (vertices + side_results['verts'][0]) / 2.0
-                        logger.info("💎 HMR: Bi-view vertex synchronization complete.")
+                    # 7. MULTI-VIEW DEPTH REFINEMENT (Advanced)
+                    # Instead of averaging vertices (which ruins the pose),
+                    # we use the width from the side image to refine the depth (Z) of the front mesh.
+                    if side_results is not None:
+                        logger.info("💎 HMR: Performing perspective-aware depth refinement...")
+                        side_verts = side_results['verts'][0]
+
+                        # Calculate front-view depth (Z-axis span) and side-view width (X-axis span)
+                        # We use the torso region for scaling factor
+                        torso_indices = self.vertex_map.get('waist', []) + self.vertex_map.get('chest', [])
+                        if torso_indices:
+                            front_depth = np.max(vertices[torso_indices, 2]) - np.min(vertices[torso_indices, 2])
+                            side_width = np.max(side_verts[torso_indices, 0]) - np.min(side_verts[torso_indices, 0])
+
+                            if front_depth > 0 and side_width > 0:
+                                depth_scale = side_width / front_depth
+                                # Dampen the scale to avoid extreme distortions
+                                depth_scale = 1.0 + (depth_scale - 1.0) * 0.7
+                                vertices[:, 2] *= depth_scale
+                                logger.info(f"💎 HMR: Multi-view depth calibration: {depth_scale:.2f}x")
+
+                        # We still prefer the front-view pose (joints) for landmarks
+                        logger.info("💎 HMR: Perspective calibration complete.")
 
                     # 8. POST-PROCESSING
                     def norm_hmr(val): return float((val + 1.0) / 2.0)

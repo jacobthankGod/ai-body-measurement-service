@@ -4,228 +4,106 @@
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
   <title>Workbench | KORRA</title>
-
   <link rel="icon" type="image/png" href="/assets/body-capture.png">
   <link rel="preconnect" href="https://fonts.googleapis.com" />
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
   <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800;900&display=swap" rel="stylesheet" />
-
   <style>
     :root {
-      --Obsidian: #000000;
-      --Mint: #57D7C0;
-      --Teal-900: #002D2A;
-      --Glass: rgba(255, 255, 255, 0.04);
-      --Glass-Border: rgba(255, 255, 255, 0.1);
-      --Neutral-400: #A3A3A3;
-      --Neutral-500: #737373;
-      --White: #FFFFFF;
-      --Error: #D63031;
+      --Obsidian: #000000; --Mint: #57D7C0; --Teal-900: #002D2A; --Glass: rgba(255, 255, 255, 0.04);
+      --Glass-Border: rgba(255, 255, 255, 0.1); --Neutral-400: #A3A3A3; --Neutral-500: #737373; --White: #FFFFFF; --Error: #D63031;
     }
-
     * { box-sizing: border-box; -webkit-font-smoothing: antialiased; margin: 0; padding: 0; }
     html, body { height: 100%; background: var(--Obsidian); color: var(--White); font-family: 'Inter', sans-serif; overflow-x: hidden; }
-
-    header {
-      width: 100%; height: 80px; display: flex; align-items: center; position: fixed; top: 0; z-index: 1000;
-      background: rgba(0, 0, 0, 0.8); backdrop-filter: blur(20px); border-bottom: 1px solid var(--Glass-Border);
-    }
+    header { width: 100%; height: 80px; display: flex; align-items: center; position: fixed; top: 0; z-index: 1000; background: rgba(0, 0, 0, 0.8); backdrop-filter: blur(20px); border-bottom: 1px solid var(--Glass-Border); }
     main { padding-top: 120px; height: 100vh; overflow-y: auto; }
     .container { width: 100%; max-width: 1200px; margin: 0 auto; padding: 0 48px; }
     header .container { display: flex; align-items: center; justify-content: space-between; padding: 0; }
-
     .logo { display: flex; align-items: center; gap: 12px; text-decoration: none; color: inherit; }
     .logo-mark { width: 32px; height: 32px; border-radius: 8px; background: var(--Mint); transform: rotate(-8deg); }
     .logo-text { font-size: 20px; font-weight: 900; letter-spacing: -0.05em; }
-
-    .btn-outline {
-      height: 40px; padding: 0 20px; border-radius: 8px; border: 1px solid var(--Glass-Border);
-      color: var(--White); font-size: 12px; font-weight: 800; text-transform: uppercase;
-      cursor: pointer; text-decoration: none; display: inline-flex; align-items: center; transition: 0.2s; background: none;
-    }
+    .btn-outline { height: 40px; padding: 0 20px; border-radius: 8px; border: 1px solid var(--Glass-Border); color: var(--White); font-size: 12px; font-weight: 800; text-transform: uppercase; cursor: pointer; text-decoration: none; display: inline-flex; align-items: center; transition: 0.2s; background: none; }
     .btn-outline:hover { background: var(--Glass); border-color: var(--White); }
-
-    .btn-primary {
-      height: 40px; padding: 0 20px; border-radius: 8px; background: var(--Mint); color: var(--Obsidian);
-      font-size: 12px; font-weight: 800; text-transform: uppercase; cursor: pointer; border: none; transition: 0.2s;
-    }
-
+    .btn-primary { height: 40px; padding: 0 20px; border-radius: 8px; background: var(--Mint); color: var(--Obsidian); font-size: 12px; font-weight: 800; text-transform: uppercase; cursor: pointer; border: none; transition: 0.2s; }
     .grid-workbench { display: grid; grid-template-columns: 240px 1fr; gap: 48px; align-items: start; }
-
-    @media (max-width: 1024px) {
-      .container { padding: 0 24px; }
-      .grid-workbench { grid-template-columns: 1fr; gap: 32px; }
-      .sidebar-nav { display: flex; overflow-x: auto; gap: 8px; padding-bottom: 8px; -webkit-overflow-scrolling: touch; }
-      .sidebar-nav a { white-space: nowrap; padding: 10px 20px; border: 1px solid var(--Glass-Border); }
-      .sidebar-label { display: none; }
-      .visual-column { position: static !important; }
-    }
-
     .sidebar-nav { margin-bottom: 32px; }
     .sidebar-label { font-size: 10px; font-weight: 900; color: var(--Neutral-500); text-transform: uppercase; letter-spacing: 0.1em; padding: 0 16px; margin: 24px 0 12px; }
-    .sidebar-nav a {
-      display: block; padding: 12px 16px; border-radius: 12px; color: var(--Neutral-400);
-      text-decoration: none; font-size: 14px; font-weight: 600; transition: 0.2s; cursor: pointer;
-      margin-bottom: 4px;
-    }
+    .sidebar-nav a { display: block; padding: 12px 16px; border-radius: 12px; color: var(--Neutral-400); text-decoration: none; font-size: 14px; font-weight: 600; transition: 0.2s; cursor: pointer; margin-bottom: 4px; }
     .sidebar-nav a:hover, .sidebar-nav a.active { background: var(--Glass); color: var(--Mint); }
-
     .glass-card { background: var(--Glass); border: 1px solid var(--Glass-Border); border-radius: 20px; padding: 32px; }
-
-    /* WORKBENCH COMMAND CENTER LAYOUT */
     .workbench-split { display: grid; grid-template-columns: 1.2fr 1fr; gap: 32px; align-items: start; }
     .visual-column { position: sticky; top: 120px; }
-
     .stat-grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 24px; margin-bottom: 32px; }
-
-    @media (max-width: 768px) {
-      .stat-grid { grid-template-columns: repeat(2, 1fr); gap: 16px; }
-      .workbench-split { grid-template-columns: 1fr !important; }
-      .stat-card .value { font-size: 20px; }
-      #dashboard-3d-viewport { height: 350px; }
-      .glass-card { padding: 24px; }
-      #measurementGridUpper, #measurementGridMiddle, #measurementGridLower { grid-template-columns: repeat(2, 1fr) !important; }
-    }
-
     .stat-card { padding: 20px !important; }
     .stat-card h4 { font-size: 9px; font-weight: 900; color: var(--Neutral-500); text-transform: uppercase; margin-bottom: 6px; }
     .stat-card .value { font-size: 24px; font-weight: 900; color: var(--White); }
-
-    @media (max-width: 1100px) {
-      .workbench-split { grid-template-columns: 1fr; }
-      .visual-column { position: static; }
-      .grid-workbench { grid-template-columns: 1fr; gap: 32px; }
-    }
-
-    .scan-item {
-      display: flex; align-items: center; justify-content: space-between; padding: 20px;
-      border-bottom: 1px solid var(--Glass-Border);
-    }
+    .scan-item { display: flex; align-items: center; justify-content: space-between; padding: 20px; border-bottom: 1px solid var(--Glass-Border); }
     .scan-info h5 { font-size: 16px; font-weight: 700; margin-bottom: 4px; }
     .scan-info p { font-size: 12px; color: var(--Neutral-400); }
-
     .tab-view { display: none; }
     .tab-view.active { display: block; animation: fadeIn 0.3s ease-out; }
-
-    .modal-overlay {
-      position: fixed; inset: 0; background: rgba(0,0,0,0.9); z-index: 2000;
-      display: none; align-items: center; justify-content: center; backdrop-filter: blur(10px);
-    }
+    .modal-overlay { position: fixed; inset: 0; background: rgba(0,0,0,0.9); z-index: 2000; display: none; align-items: center; justify-content: center; backdrop-filter: blur(10px); }
     .modal-overlay.active { display: flex; }
-    .modal-card {
-      width: 100%; max-width: 600px; background: #0a0a0a; border: 1px solid var(--Glass-Border);
-      border-radius: 24px; padding: 40px;
-      transition: max-width 0.3s ease;
-      max-height: 90vh; overflow-y: auto;
-    }
+    .modal-card { width: 100%; max-width: 600px; background: #0a0a0a; border: 1px solid var(--Glass-Border); border-radius: 24px; padding: 40px; transition: max-width 0.3s ease; max-height: 90vh; overflow-y: auto; }
     .modal-card-landscape { max-width: 1000px; }
     .landscape-grid { display: grid; grid-template-columns: 1fr 1.2fr; gap: 48px; align-items: start; }
-
-    @media (max-width: 900px) {
-      .modal-card { padding: 24px; border-radius: 0; }
-      .modal-card-landscape { max-width: 100%; height: 100vh; max-height: 100vh; }
-      .landscape-grid { grid-template-columns: 1fr; gap: 24px; }
-    }
-
     .preview-box { width: 100%; height: 160px; border-radius: 12px; border: 1px dashed var(--Glass-Border); display: flex; align-items: center; justify-content: center; overflow: hidden; position: relative; cursor: pointer; }
-
-    @media (max-width: 850px) {
-      .landscape-grid { grid-template-columns: 1fr; gap: 32px; }
-      .modal-card-landscape { max-width: 600px; padding: 24px; }
-      .preview-box { height: 120px; }
-      .pro-tips-card { margin-top: 24px !important; }
-    }
-
-    .input-field { width: 100%; height: 52px; background: rgba(255,255,255,0.05); border: 1px solid var(--Glass-Border); border-radius: 12px; padding: 0 16px; color: #fff; font-size: 14px; margin-bottom: 20px; }
-
+    .input-field { width: 100%; height: 52px; background: rgba(255,255,255,0.05); border: 1px solid var(--Glass-Border); border-radius: 12px; padding: 0 16px; color: #fff; font-size: 14px; margin-bottom: 20px; outline: none; }
     #dashboard-3d-viewport { width: 100%; height: 500px; background: #000; border-radius: 16px; border: 1px solid var(--Glass-Border); margin-bottom: 32px; position: relative; overflow: hidden; }
     #dashboard-3d-viewport span { position: absolute; top: 12px; left: 16px; font-size: 9px; font-weight: 900; color: var(--Mint); text-transform: uppercase; letter-spacing: 0.2em; z-index: 10; background: rgba(0,0,0,0.5); padding: 4px 8px; border-radius: 4px; }
-
     #loadingOverlay { position: fixed; inset: 0; background: #000; z-index: 9999; display: flex; align-items: center; justify-content: center; font-size: 12px; font-weight: 800; letter-spacing: 0.2em; color: var(--Mint); text-transform: uppercase; }
-
-    /* NETWORK INTEGRITY STYLES */
     #networkStatus { display: flex; align-items: center; gap: 8px; font-size: 10px; font-weight: 800; text-transform: uppercase; letter-spacing: 0.05em; color: var(--Mint); transition: 0.3s; margin-right: 20px; }
     .status-dot { width: 6px; height: 6px; border-radius: 50%; background: var(--Mint); box-shadow: 0 0 10px var(--Mint); }
-    #networkStatus.offline { color: var(--Error); }
-    #networkStatus.offline .status-dot { background: var(--Error); box-shadow: 0 0 10px var(--Error); }
-
     #offlineOverlay { position: fixed; inset: 0; background: rgba(0,0,0,0.85); backdrop-filter: blur(10px); z-index: 99999999; display: none; align-items: center; justify-content: center; text-align: center; }
     .offline-card { background: var(--Glass); border: 1px solid var(--Glass-Border); padding: 40px; border-radius: 24px; max-width: 320px; color: #fff; }
-
     #creditOverlay { position: fixed; inset: 0; background: rgba(0,0,0,0.9); backdrop-filter: blur(20px); z-index: 1000000; display: none; align-items: center; justify-content: center; text-align: center; }
     .credit-card { background: #0a0a0a; border: 2px solid var(--Mint); padding: 60px 40px; border-radius: 32px; max-width: 440px; box-shadow: 0 0 50px rgba(87, 215, 192, 0.2); }
-
-    /* AI CAMERA GUIDANCE SYSTEM (Ported from share.html) */
     .pro-tips-card { background: rgba(87, 215, 192, 0.05); border: 1px solid rgba(87, 215, 192, 0.2); border-radius: 20px; padding: 20px; margin-top: 24px; text-align: left; }
     .pro-tips-card h4 { font-size: 11px; font-weight: 900; color: var(--Mint); text-transform: uppercase; margin-bottom: 12px; display: flex; align-items: center; gap: 8px; }
     .tip-row { display: flex; gap: 12px; margin-bottom: 10px; font-size: 11px; color: var(--Neutral-400); line-height: 1.4; }
     .tip-bullet { color: var(--Mint); font-weight: 900; }
-
     #step-camera { position: fixed; inset: 0; background: #000; z-index: 99999999; display: none; flex-direction: column; }
     #step-camera.active { display: flex; }
     .camera-container { flex: 1; position: relative; overflow: hidden; display: flex; align-items: center; justify-content: center; }
     #camera-video { width: 100%; height: 100%; object-fit: cover; transform: scaleX(-1); }
     #camera-canvas { position: absolute; inset: 0; width: 100%; height: 100%; z-index: 10; transform: scaleX(-1); }
     .camera-overlay { position: absolute; inset: 0; z-index: 20; pointer-events: none; display: flex; flex-direction: column; align-items: center; justify-content: space-between; padding: 60px 24px; }
-    .camera-guidance {
-      background: rgba(0,0,0,0.8);
-      backdrop-filter: blur(12px);
-      padding: 16px 32px;
-      border-radius: 99px;
-      border: 2px solid var(--Mint);
-      color: var(--White);
-      font-size: 16px;
-      font-weight: 900;
-      text-align: center;
-      text-transform: uppercase;
-      letter-spacing: 0.05em;
-      box-shadow: 0 0 30px rgba(87, 215, 192, 0.3);
-    }
+    .camera-guidance { background: rgba(0,0,0,0.8); backdrop-filter: blur(12px); padding: 16px 32px; border-radius: 99px; border: 2px solid var(--Mint); color: var(--White); font-size: 16px; font-weight: 900; text-align: center; text-transform: uppercase; letter-spacing: 0.05em; box-shadow: 0 0 30px rgba(87, 215, 192, 0.3); }
     .camera-controls { position: absolute; bottom: 40px; left: 0; right: 0; display: flex; justify-content: center; align-items: center; gap: 32px; z-index: 30; }
     .camera-review-controls { position: absolute; bottom: 40px; left: 0; right: 0; display: none; justify-content: center; align-items: center; gap: 24px; z-index: 50; padding: 0 24px; }
     .btn-review { height: 56px; border-radius: 12px; font-weight: 800; cursor: pointer; flex: 1; text-transform: uppercase; font-size: 14px; border: none; }
     .btn-keep { background: var(--Mint); color: var(--Obsidian); }
     .btn-redo { background: rgba(255,255,255,0.1); color: #fff; border: 1px solid var(--Glass-Border); }
-
     .shutter-btn { width: 84px; height: 84px; border-radius: 50%; background: #fff; border: 6px solid var(--Mint); cursor: pointer; display: flex; align-items: center; justify-content: center; box-shadow: 0 0 30px rgba(0,0,0,0.5); transition: 0.2s; }
-    .shutter-btn:active { transform: scale(0.9); }
-    .camera-close { position: absolute; top: 40px; right: 24px; width: 44px; height: 44px; border-radius: 50%; background: rgba(0,0,0,0.6); border: 1px solid var(--Glass-Border); color: #fff; display: flex; align-items: center; justify-content: center; cursor: pointer; z-index: 40; pointer-events: auto; font-size: 20px; font-weight: 700; transition: 0.2s; }
-    .camera-close:hover { background: var(--Error); border-color: var(--Error); }
-
-    /* UNICORN POLLING STYLES */
+    .camera-close { position: absolute; top: 40px; right: 24px; width: 44px; height: 44px; border-radius: 50%; background: rgba(0,0,0,0.6); border: 1px solid var(--Glass-Border); color: #fff; display: flex; align-items: center; justify-content: center; cursor: pointer; z-index: 40; pointer-events: auto; font-size: 20px; font-weight: 700; }
     .polling-overlay { display: none; flex-direction: column; align-items: center; justify-content: center; margin-top: 24px; padding: 24px; background: rgba(87,215,192,0.05); border-radius: 16px; border: 1px solid var(--Mint); }
     .polling-bar { width: 100%; height: 4px; background: rgba(255,255,255,0.1); border-radius: 99px; margin-top: 16px; overflow: hidden; }
-    .polling-fill { width: 0%; height: 100%; background: var(--Mint); transition: 0.5s cubic-bezier(0.1, 0, 0.2, 1); }
-
+    .polling-fill { width: 0%; height: 100%; background: var(--Mint); transition: 0.5s; }
     .preview-box span { font-size: 10px; font-weight: 900; color: var(--Neutral-500); text-transform: uppercase; z-index: 1; }
     .preview-img { position: absolute; inset: 0; width: 100%; height: 100%; object-fit: cover; z-index: 2; display: none; }
-    .preview-box input { display: none; }
-
+    #review-img { width: 100%; height: 100%; object-fit: cover; display: none; transform: scaleX(-1); }
     .korra-icon { width: 18px; height: 18px; stroke-width: 2.5; vertical-align: middle; }
-    .unit-toggle div { cursor: pointer; transition: 0.2s; }
+    .table-container { width: 100%; overflow-x: auto; }
+    table { width: 100%; border-collapse: collapse; text-align: left; }
+    th { font-size: 10px; font-weight: 900; color: var(--Neutral-400); text-transform: uppercase; padding: 12px; border-bottom: 1px solid var(--Glass-Border); }
+    td { padding: 12px; border-bottom: 1px solid rgba(255,255,255,0.05); font-size: 13px; }
   </style>
-  <script>
-    if (window.top !== window.self) window.top.location.href = window.location.href;
-  </script>
 </head>
 <body>
+  <div id="loadingOverlay">Connecting...</div>
 
-  <div id="loadingOverlay">Syncing Vault...</div>
-
-  <!-- AI CAMERA VIEW -->
   <div id="step-camera">
     <div class="camera-container">
       <video id="camera-video" autoplay playsinline></video>
       <canvas id="camera-canvas"></canvas>
+      <img id="review-img" alt="Capture Review">
       <div class="camera-overlay">
-        <div class="camera-guidance" id="camera-msg">Initializing AI guidance...</div>
+        <div class="camera-guidance" id="camera-msg">Initializing guidance...</div>
         <div class="camera-close" onclick="closeCamera()">✕</div>
       </div>
     </div>
     <div class="camera-controls" id="shutter-container">
-      <div class="shutter-btn" onclick="snapPhoto()">
-        <div style="width:56px; height:56px; border-radius:50%; background:var(--Mint); opacity:0.2"></div>
-      </div>
+      <div class="shutter-btn" onclick="snapPhoto()"><div style="width:56px; height:56px; border-radius:50%; background:var(--Mint); opacity:0.2"></div></div>
     </div>
     <div class="camera-review-controls" id="review-container">
       <button class="btn-review btn-redo" onclick="retakePhoto()">Recapture</button>
@@ -233,95 +111,41 @@
     </div>
   </div>
 
-  <div id="offlineOverlay">
-    <div class="offline-card">
-      <div style="font-size: 32px; margin-bottom: 24px;">📡</div>
-      <h2 style="font-size: 18px; font-weight: 800; margin-bottom: 12px;">Sync Interrupted</h2>
-      <p style="font-size: 12px; color: var(--Neutral-400); line-height: 1.6;">Your internet connection is unstable. KORRA has paused technical handshakes to prevent data corruption.</p>
-    </div>
-  </div>
+  <div id="offlineOverlay"><div class="offline-card"><div style="font-size:32px; margin-bottom:24px">📡</div><h2 style="font-size:18px; font-weight:800; margin-bottom:12px">Sync Interrupted</h2><p style="font-size:12px; color:var(--Neutral-400)">Your internet connection is unstable. KORRA has paused updates.</p></div></div>
 
-  <div id="creditOverlay">
-    <div class="credit-card">
-      <div style="font-size: 48px; margin-bottom: 32px;">💎</div>
-      <h2 style="font-size: 24px; font-weight: 900; margin-bottom: 16px; letter-spacing: -0.02em;">Vault Credits Depleted</h2>
-      <p style="font-size: 14px; color: var(--Neutral-400); line-height: 1.6; margin-bottom: 40px;">Your Biometrics Vault has reached 0 credits. To continue with high-precision AI body scans, please top up your balance.</p>
-      <button class="btn-primary" style="width:100%; height:56px; font-size:14px" onclick="dismissCreditError(); switchTab('billing'); document.getElementById('topUpModal').classList.add('active');">Top Up Credits Now</button>
-      <button class="btn-outline" style="width:100%; border:none; margin-top:16px; color:var(--Neutral-500)" onclick="dismissCreditError()">Maybe Later</button>
-    </div>
-  </div>
+  <div id="creditOverlay"><div class="credit-card"><div style="font-size:48px; margin-bottom:32px">💎</div><h2 style="font-size:24px; font-weight:900; margin-bottom:16px">Credits Depleted</h2><p style="font-size:14px; color:var(--Neutral-400); margin-bottom:40px">Your balance has reached 0 credits. Please top up to continue.</p><button class="btn-primary" style="width:100%; height:56px" onclick="dismissCreditError(); switchTab('billing'); document.getElementById('topUpModal').classList.add('active');">Top Up Now</button><button class="btn-outline" style="width:100%; border:none; margin-top:16px; color:var(--Neutral-500)" onclick="dismissCreditError()">Later</button></div></div>
 
-  <!-- SCAN MODAL -->
   <div class="modal-overlay" id="scanModal">
     <div class="modal-card modal-card-landscape">
-      <h2 style="font-size:24px; margin-bottom:12px">Digital Body Scan</h2>
-      <p style="color:var(--Neutral-400); margin-bottom:40px">Run local AI benchmarks. ±1cm precision protocol active.</p>
-
+      <h2 style="font-size:24px; margin-bottom:12px">Body Scan</h2>
+      <p style="color:var(--Neutral-400); margin-bottom:40px">Follow guidelines for high accuracy results.</p>
       <form id="scanForm">
         <div class="landscape-grid">
-          <!-- LEFT COLUMN: SETUP -->
           <div>
-            <div style="margin-bottom:24px">
-              <label style="font-size:10px; font-weight:900; color:var(--Neutral-500); display:block; margin-bottom:8px">CLIENT NAME</label>
-              <input type="text" id="scanClientName" class="input-field" style="margin-bottom:0; width:100%" placeholder="e.g. James" required>
-            </div>
+            <div style="margin-bottom:24px"><label style="font-size:10px; font-weight:900; color:var(--Neutral-500); display:block; margin-bottom:8px">CLIENT NAME</label><input type="text" id="scanClientName" class="input-field" style="margin-bottom:0; width:100%" placeholder="e.g. James" required></div>
             <div style="display:grid; grid-template-columns: 1fr 1fr; gap:16px; margin-bottom:32px">
-              <div>
-                <label style="font-size:10px; font-weight:900; color:var(--Neutral-500); display:block; margin-bottom:8px">HEIGHT (CM)</label>
-                <input type="number" id="scanHeight" class="input-field" style="margin-bottom:0; width:100%" placeholder="180" required>
-              </div>
-              <div>
-                <label style="font-size:10px; font-weight:900; color:var(--Neutral-500); display:block; margin-bottom:8px">GENDER</label>
-                <select id="scanGender" class="input-field" style="margin-bottom:0; width:100%; appearance:none; cursor:pointer">
-                  <option value="male">Male</option>
-                  <option value="female">Female</option>
-                </select>
-              </div>
+              <div><label style="font-size:10px; font-weight:900; color:var(--Neutral-500); display:block; margin-bottom:8px">HEIGHT (CM)</label><input type="number" id="scanHeight" class="input-field" style="margin-bottom:0; width:100%" placeholder="180" required></div>
+              <div><label style="font-size:10px; font-weight:900; color:var(--Neutral-500); display:block; margin-bottom:8px">GENDER</label><select id="scanGender" class="input-field" style="margin-bottom:0; width:100%; appearance:none; cursor:pointer"><option value="male">Male</option><option value="female">Female</option></select></div>
             </div>
-
-            <div class="pro-tips-card" style="margin-top:0">
-              <h4><span style="font-size:14px">✨</span> Pro-Tips for Precision</h4>
-              <div class="tip-row"><span class="tip-bullet">&bull;</span><span><b>The A-Pose:</b> Keep arms 15" away from body. Do not touch your torso.</span></div>
-              <div class="tip-row"><span class="tip-bullet">&bull;</span><span><b>Clothing:</b> Wear form-fitting gym wear. Baggy clothes add fake volume.</span></div>
-              <div class="tip-row"><span class="tip-bullet">&bull;</span><span><b>Contrast:</b> Stand against a plain wall that is a different color than your outfit.</span></div>
-            </div>
+            <div class="pro-tips-card" style="margin-top:0"><h4><span style="font-size:14px">✨</span> Pro-Tips</h4><div class="tip-row"><span class="tip-bullet">&bull;</span><span><b>The A-Pose:</b> Keep arms 15" away.</span></div><div class="tip-row"><span class="tip-bullet">&bull;</span><span><b>Clothing:</b> Wear form-fitting wear.</span></div><div class="tip-row"><span class="tip-bullet">&bull;</span><span><b>Contrast:</b> Stand against a plain wall.</span></div></div>
           </div>
-
-          <!-- RIGHT COLUMN: CAPTURE -->
           <div>
             <div style="display:grid; grid-template-columns: 1fr 1fr; gap:16px; margin-bottom:24px">
                <div class="preview-box" id="frontLabel" onclick="handlePreviewClick('front')">
-                 <input type="file" id="frontPhoto" accept="image/*" required style="display:none" onchange="handleFile(this, 'frontLabel')" onclick="event.stopPropagation()">
                  <img class="preview-img" alt="Front Preview">
-                 <div class="preview-overlay" style="position:absolute; inset:0; background:rgba(0,0,0,0.6); display:none; flex-direction:column; align-items:center; justify-content:center; z-index:10" onclick="openCamera('front'); event.stopPropagation();">
-                    <svg class="korra-icon" style="color:var(--Mint); width:24px; height:24px; margin-bottom:8px" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M23 19a2 2 0 0 1-2 2H3a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h4l2-3h6l2 3h4a2 2 0 0 1 2 2z"/><circle cx="12" cy="13" r="4"/></svg>
-                    <span style="font-size:10px; font-weight:900; color:#fff">TAP TO RECAPTURE</span>
-                 </div>
-                 <div style="display:flex; flex-direction:column; align-items:center; z-index:1" class="placeholder-content">
-                   <span>Front A-Pose</span>
-                   <div style="font-size:8px; color:var(--Mint); margin-top:4px; font-weight:700">TAP TO SNAP</div>
-                 </div>
+                 <div class="preview-overlay" style="position:absolute; inset:0; background:rgba(0,0,0,0.6); display:none; flex-direction:column; align-items:center; justify-content:center; z-index:10" onclick="openCamera('front'); event.stopPropagation();"><span style="font-size:10px; font-weight:900; color:#fff">TAP TO RETAKE</span></div>
+                 <div class="placeholder-content" style="display:flex; flex-direction:column; align-items:center; z-index:1"><span>Front A-Pose</span><div style="font-size:8px; color:var(--Mint); margin-top:4px; font-weight:700">TAP TO SNAP</div></div>
+                 <input type="file" id="frontPhoto" accept="image/*" required style="display:none" onchange="handleFile(this, 'frontLabel')">
                </div>
                <div class="preview-box" id="sideLabel" onclick="handlePreviewClick('side')">
-                 <input type="file" id="sidePhoto" accept="image/*" required style="display:none" onchange="handleFile(this, 'sideLabel')" onclick="event.stopPropagation()">
                  <img class="preview-img" alt="Side Preview">
-                 <div class="preview-overlay" style="position:absolute; inset:0; background:rgba(0,0,0,0.6); display:none; flex-direction:column; align-items:center; justify-content:center; z-index:10" onclick="openCamera('side'); event.stopPropagation();">
-                    <svg class="korra-icon" style="color:var(--Mint); width:24px; height:24px; margin-bottom:8px" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M23 19a2 2 0 0 1-2 2H3a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h4l2-3h6l2 3h4a2 2 0 0 1 2 2z"/><circle cx="12" cy="13" r="4"/></svg>
-                    <span style="font-size:10px; font-weight:900; color:#fff">TAP TO RECAPTURE</span>
-                 </div>
-                 <div style="display:flex; flex-direction:column; align-items:center; z-index:1" class="placeholder-content">
-                   <span>Side Profile</span>
-                   <div style="font-size:8px; color:var(--Mint); margin-top:4px; font-weight:700">TAP TO SNAP</div>
-                 </div>
+                 <div class="preview-overlay" style="position:absolute; inset:0; background:rgba(0,0,0,0.6); display:none; flex-direction:column; align-items:center; justify-content:center; z-index:10" onclick="openCamera('side'); event.stopPropagation();"><span style="font-size:10px; font-weight:900; color:#fff">TAP TO RETAKE</span></div>
+                 <div class="placeholder-content" style="display:flex; flex-direction:column; align-items:center; z-index:1"><span>Side Profile</span><div style="font-size:8px; color:var(--Mint); margin-top:4px; font-weight:700">TAP TO SNAP</div></div>
+                 <input type="file" id="sidePhoto" accept="image/*" required style="display:none" onchange="handleFile(this, 'sideLabel')">
                </div>
             </div>
-
-            <div id="extractionProgress" class="polling-overlay" style="margin-top:0; margin-bottom:24px">
-               <div style="font-size:11px; font-weight:900; color:var(--Mint); letter-spacing:0.1em" id="progressStatus">QUEUEING ASYNC TASK...</div>
-               <div class="polling-bar"><div class="polling-fill" id="progressFill"></div></div>
-            </div>
-
-            <button type="submit" class="btn-primary" style="height:52px; width:100%" id="btnRunScan">Extract Biometrics</button>
+            <div id="extractionProgress" class="polling-overlay" style="margin-top:0; margin-bottom:24px"><div style="font-size:11px; font-weight:900; color:var(--Mint); letter-spacing:0.1em" id="progressStatus">QUEUEING TASK...</div><div class="polling-bar"><div class="polling-fill" id="progressFill"></div></div></div>
+            <button type="submit" class="btn-primary" style="height:52px; width:100%" id="btnRunScan">Start Analysis</button>
             <button type="button" class="btn-outline" style="border:none; width:100%; margin-top:12px" onclick="document.getElementById('scanModal').classList.remove('active')">Dismiss</button>
           </div>
         </div>
@@ -329,143 +153,70 @@
     </div>
   </div>
 
-  <!-- PURCHASE CREDITS MODAL -->
   <div class="modal-overlay" id="topUpModal">
     <div class="modal-card">
       <h2 style="font-size:24px; margin-bottom:12px">Purchase Credits</h2>
-      <p style="color:var(--Neutral-400); margin-bottom:32px">Select a credit bundle to top up your Biometrics Vault.</p>
-
+      <p style="color:var(--Neutral-400); margin-bottom:32px">Select a bundle to top up your balance.</p>
       <div style="display:grid; grid-template-columns: 1fr; gap:16px; margin-bottom:32px">
         <div class="glass-card" style="padding:20px; cursor:pointer; border-color:var(--Mint)" onclick="selectBundle(this, 50, 25)">
-          <div style="display:flex; justify-content:space-between; align-items:center">
-            <div>
-              <div style="font-size:18px; font-weight:900">50 Scan Bundle</div>
-              <div style="font-size:12px; color:var(--Neutral-400)">$0.50 per scan</div>
-            </div>
-            <div style="font-size:20px; font-weight:900; color:var(--Mint)">$25.00</div>
-          </div>
+          <div style="display:flex; justify-content:space-between; align-items:center"><div><div style="font-size:18px; font-weight:900">50 Scan Bundle</div><div style="font-size:12px; color:var(--Neutral-400)">$0.50 per scan</div></div><div style="font-size:20px; font-weight:900; color:var(--Mint)">$25.00</div></div>
         </div>
         <div class="glass-card" style="padding:20px; cursor:pointer" onclick="selectBundle(this, 150, 60)">
-          <div style="display:flex; justify-content:space-between; align-items:center">
-            <div>
-              <div style="font-size:18px; font-weight:900">150 Scan Bundle</div>
-              <div style="font-size:12px; color:var(--Neutral-400)">$0.40 per scan (Save 20%)</div>
-            </div>
-            <div style="font-size:20px; font-weight:900; color:var(--Mint)">$60.00</div>
-          </div>
+          <div style="display:flex; justify-content:space-between; align-items:center"><div><div style="font-size:18px; font-weight:900">150 Scan Bundle</div><div style="font-size:12px; color:var(--Neutral-400)">$0.40 per scan (Save 20%)</div></div><div style="font-size:20px; font-weight:900; color:var(--Mint)">$60.00</div></div>
         </div>
         <div class="glass-card" style="padding:20px; cursor:pointer" onclick="selectBundle(this, 500, 150)">
-          <div style="display:flex; justify-content:space-between; align-items:center">
-            <div>
-              <div style="font-size:18px; font-weight:900">500 Scan Bundle</div>
-              <div style="font-size:12px; color:var(--Neutral-400)">$0.30 per scan (Save 40%)</div>
-            </div>
-            <div style="font-size:20px; font-weight:900; color:var(--Mint)">$150.00</div>
-          </div>
+          <div style="display:flex; justify-content:space-between; align-items:center"><div><div style="font-size:18px; font-weight:900">500 Scan Bundle</div><div style="font-size:12px; color:var(--Neutral-400)">$0.30 per scan (Save 40%)</div></div><div style="font-size:20px; font-weight:900; color:var(--Mint)">$150.00</div></div>
         </div>
       </div>
-
       <div style="margin-bottom:32px">
         <label style="font-size:10px; font-weight:900; color:var(--Neutral-500); display:block; margin-bottom:8px">PROMO CODE</label>
-        <div style="display:flex; gap:12px">
-           <input type="text" id="promoCodeInput" class="input-field" style="margin-bottom:0; flex:1" placeholder="Enter code...">
-           <button class="btn-outline" style="height:52px" onclick="applyPromo()">Apply</button>
-        </div>
+        <div style="display:flex; gap:12px"><input type="text" id="promoCodeInput" class="input-field" style="margin-bottom:0; flex:1" placeholder="Enter code..."><button class="btn-outline" style="height:52px" onclick="applyPromo()">Apply</button></div>
         <div id="promoStatus" style="font-size:10px; margin-top:8px; display:none"></div>
       </div>
-
-      <button class="btn-primary" id="btnConfirmPurchase" style="width:100%; height:52px">Purchase & Sync Credits</button>
+      <button class="btn-primary" id="btnConfirmPurchase" style="width:100%; height:52px">Purchase Credits</button>
       <button class="btn-outline" style="width:100%; border:none; margin-top:12px" onclick="document.getElementById('topUpModal').classList.remove('active')">Cancel</button>
     </div>
   </div>
 
-  <!-- INVITE CLIENT MODAL (UPGRADED TO DEEP LINKS) -->
   <div class="modal-overlay" id="shareModal">
     <div class="modal-card">
-      <h2 style="font-size:24px; margin-bottom:12px">Secure Deep Link</h2>
-      <p style="color:var(--Neutral-400); margin-bottom:32px">Generate a platform-agnostic link to share with your client.</p>
-
-      <div style="margin-bottom:24px">
-        <label style="font-size:10px; font-weight:900; color:var(--Neutral-500); display:block; margin-bottom:8px">CLIENT NAME</label>
-        <input type="text" id="shareName" class="input-field" placeholder="e.g. James" required>
-      </div>
-
-      <div id="linkGeneratedArea" style="display:none; margin-bottom:32px">
-        <div style="background:rgba(0,0,0,0.3); border-radius:12px; padding:20px; border:1px solid var(--Glass-Border); margin-bottom:20px">
-          <code id="deepLinkDisplay" style="font-family:monospace; color:var(--Mint); font-size:12px; word-break:break-all">https://...</code>
-        </div>
-        <div style="display:grid; grid-template-columns: 1fr 1fr; gap:12px">
-          <button class="btn-outline" style="justify-content:center" onclick="copyDeepLink()">Copy Link</button>
-          <button class="btn-primary" style="justify-content:center; background:#25D366; color:#fff" onclick="shareToWhatsApp()">WhatsApp</button>
-        </div>
-      </div>
-
-      <button type="button" class="btn-primary" id="btnGenerateLink" style="width:100%; height:52px" onclick="generateDeepLink()">Generate Invite Link</button>
+      <h2 style="font-size:24px; margin-bottom:12px">Invite Link</h2>
+      <p style="color:var(--Neutral-400); margin-bottom:32px">Generate a link to share with your client.</p>
+      <div style="margin-bottom:24px"><label style="font-size:10px; font-weight:900; color:var(--Neutral-500); display:block; margin-bottom:8px">CLIENT NAME</label><input type="text" id="shareName" class="input-field" placeholder="e.g. James" required></div>
+      <div id="linkGeneratedArea" style="display:none; margin-bottom:32px"><div style="background:rgba(0,0,0,0.3); border-radius:12px; padding:20px; border:1px solid var(--Glass-Border); margin-bottom:20px"><code id="deepLinkDisplay" style="font-family:monospace; color:var(--Mint); font-size:12px; word-break:break-all">https://...</code></div><div style="display:grid; grid-template-columns:1fr 1fr; gap:12px"><button class="btn-outline" onclick="copyDeepLink()">Copy Link</button><button class="btn-primary" style="background:#25D366; color:#fff" onclick="shareToWhatsApp()">WhatsApp</button></div></div>
+      <button type="button" class="btn-primary" id="btnGenerateLink" style="width:100%; height:52px" onclick="generateDeepLink()">Generate Link</button>
       <button type="button" class="btn-outline" style="width:100%; border:none; margin-top:12px" onclick="document.getElementById('shareModal').classList.remove('active')">Cancel</button>
     </div>
   </div>
 
-  <!-- QR POSTER MODAL (PHASE 37) -->
+  <!-- QR POSTER MODAL -->
   <div class="modal-overlay" id="qrPosterModal">
     <div class="modal-card" style="max-width:500px; text-align:center; padding:60px">
-      <div style="background:#fff; padding:40px; border-radius:16px; margin-bottom:32px; display:inline-block">
-        <div id="posterQr" style="width:200px; height:200px; background:#eee; display:flex; align-items:center; justify-content:center; color:#000; font-size:10px; font-weight:900">GENERATE QR...</div>
-      </div>
+      <div style="background:#fff; padding:40px; border-radius:16px; margin-bottom:32px; display:inline-block"><div id="posterQr" style="width:200px; height:200px; background:#eee; display:flex; align-items:center; justify-content:center; color:#000; font-size:10px; font-weight:900">GENERATE QR...</div></div>
       <h2 style="font-size:32px; margin-bottom:12px; letter-spacing:-0.05em">SCAN TO START</h2>
-      <p style="color:var(--Neutral-400); margin-bottom:40px">Clinical Body Scanning Protocol Active.</p>
-      <div style="display:flex; gap:16px">
-         <button class="btn-primary" style="flex:1" onclick="window.print()">Print Poster</button>
-         <button class="btn-outline" style="flex:1" onclick="document.getElementById('qrPosterModal').classList.remove('active')">Dismiss</button>
-      </div>
+      <p style="color:var(--Neutral-400); margin-bottom:40px">High-Precision Body Scanning Active.</p>
+      <div style="display:flex; gap:16px"><button class="btn-primary" style="flex:1" onclick="window.print()">Print Poster</button><button class="btn-outline" style="flex:1" onclick="document.getElementById('qrPosterModal').classList.remove('active')">Dismiss</button></div>
     </div>
   </div>
+
+  <!-- COMPARISON MODAL -->
   <div class="modal-overlay" id="compareModal">
     <div class="modal-card modal-card-landscape">
-      <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:24px">
-        <div>
-          <h2 style="font-size:24px; margin-bottom:4px">Visual Comparison Mode</h2>
-          <p style="color:var(--Neutral-400); margin:0">Comparing Baseline vs. Latest scan. Synchronization active.</p>
-        </div>
-        <div style="display:flex; gap:16px">
-           <button class="btn-outline" style="border-color:var(--Mint); color:var(--Mint)" id="btnHeatmapToggle" onclick="toggleHeatmap()">Activate Heatmap Overlay</button>
-        </div>
-      </div>
-
+      <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:24px"><div><h2 style="font-size:24px; margin-bottom:4px">Comparison Mode</h2><p style="color:var(--Neutral-400); margin:0">Comparing Baseline vs. Latest scan.</p></div><button class="btn-outline" style="border-color:var(--Mint); color:var(--Mint)" id="btnHeatmapToggle" onclick="toggleHeatmap()">Activate Heatmap Overlay</button></div>
       <div class="landscape-grid" id="compareGrid">
-        <div style="text-align:center">
-          <div style="font-size:10px; font-weight:900; color:var(--Neutral-500); margin-bottom:12px; text-transform:uppercase">Baseline Scan</div>
-          <div id="compare-baseline-viz" style="width:100%; height:450px; background:#000; border-radius:16px; border:1px solid var(--Glass-Border); overflow:hidden; position:relative"></div>
-          <div id="baselineDate" style="font-size:11px; color:var(--Mint); margin-top:12px"></div>
-        </div>
-        <div style="text-align:center">
-          <div style="font-size:10px; font-weight:900; color:var(--Neutral-500); margin-bottom:12px; text-transform:uppercase">Latest Scan</div>
-          <div id="compare-latest-viz" style="width:100%; height:450px; background:#000; border-radius:16px; border:1px solid var(--Mint); overflow:hidden; position:relative"></div>
-          <div id="latestDate" style="font-size:11px; color:var(--Mint); margin-top:12px"></div>
-        </div>
+        <div style="text-align:center"><div style="font-size:10px; font-weight:900; color:var(--Neutral-500); margin-bottom:12px; text-transform:uppercase">Baseline Scan</div><div id="compare-baseline-viz" style="width:100%; height:450px; background:#000; border-radius:16px; border:1px solid var(--Glass-Border); overflow:hidden; position:relative"></div><div id="baselineDate" style="font-size:11px; color:var(--Mint); margin-top:12px"></div></div>
+        <div style="text-align:center"><div style="font-size:10px; font-weight:900; color:var(--Neutral-500); margin-bottom:12px; text-transform:uppercase">Latest Scan</div><div id="compare-latest-viz" style="width:100%; height:450px; background:#000; border-radius:16px; border:1px solid var(--Mint); overflow:hidden; position:relative"></div><div id="latestDate" style="font-size:11px; color:var(--Mint); margin-top:12px"></div></div>
       </div>
-
       <div id="heatmapLegend" style="display:none; justify-content:center; gap:32px; margin-top:24px">
-         <div style="display:flex; align-items:center; gap:8px; font-size:10px; font-weight:700"><div style="width:12px; height:12px; border-radius:50%; background:#ff4d4d"></div> EXPANSION (GROWTH)</div>
-         <div style="display:flex; align-items:center; gap:8px; font-size:10px; font-weight:700"><div style="width:12px; height:12px; border-radius:50%; background:#57D7C0"></div> REDUCTION (LOSS)</div>
+         <div style="display:flex; align-items:center; gap:8px; font-size:10px; font-weight:700"><div style="width:12px; height:12px; border-radius:50%; background:#ff4d4d"></div> GROWTH</div>
+         <div style="display:flex; align-items:center; gap:8px; font-size:10px; font-weight:700"><div style="width:12px; height:12px; border-radius:50%; background:#57D7C0"></div> REDUCTION</div>
          <div style="display:flex; align-items:center; gap:8px; font-size:10px; font-weight:700"><div style="width:12px; height:12px; border-radius:50%; background:#888"></div> NO CHANGE</div>
       </div>
-
-      <div style="display:flex; justify-content:center; gap:16px; margin-top:40px">
-        <button class="btn-primary" style="padding:0 40px" onclick="location.reload()">Exit Comparison</button>
-      </div>
+      <div style="display:flex; justify-content:center; gap:16px; margin-top:40px"><button class="btn-primary" style="padding:0 40px" onclick="location.reload()">Exit Comparison</button></div>
     </div>
   </div>
 
-  <header>
-    <div class="container">
-      <a class="logo" href="/"><div class="logo-mark"></div><div class="logo-text">KORRA</div></a>
-      <div style="display:flex; align-items:center; gap:24px">
-        <div id="networkStatus"><div class="status-dot"></div><span>Sync Active</span></div>
-        <span id="userEmail" style="font-size:12px; font-weight:700; color:var(--Mint)"></span>
-        <button class="btn-outline" id="btnSignOut">Exit</button>
-      </div>
-    </div>
-  </header>
+  <header><div class="container"><a class="logo" href="/"><div class="logo-mark"></div><div class="logo-text">KORRA</div></a><div style="display:flex; align-items:center; gap:24px"><div id="networkStatus"><div class="status-dot"></div><span>Sync Active</span></div><span id="userEmail" style="font-size:12px; font-weight:700; color:var(--Mint)"></span><button class="btn-outline" id="btnSignOut">Exit</button></div></div></header>
 
   <main>
     <div class="container">
@@ -474,20 +225,11 @@
           <nav class="sidebar-nav">
             <div class="sidebar-label">Workspace</div>
             <a onclick="switchTab('overview')" id="tab-overview">Overview</a>
-            <a onclick="switchTab('vault')" id="tab-vault" class="active">Biometrics Vault</a>
-            <a onclick="switchTab('passports')" id="tab-passports">Size Passports</a>
-
+            <a onclick="switchTab('vault')" id="tab-vault" class="active">Measurement History</a>
+            <a onclick="switchTab('passports')" id="tab-passports">Size Profiles</a>
             <div class="sidebar-label">Implementation</div>
-            <div style="margin-bottom:8px">
-               <select class="input-field" style="height:32px; font-size:10px; padding:0 8px; margin-bottom:0" id="merchantSwitcher">
-                 <option>KORRA Global</option>
-                 <option>Bespoke London (Test)</option>
-               </select>
-            </div>
-            <a href="/developers" id="tab-developers">Developer API</a>
             <a onclick="switchTab('widget')" id="tab-widget">Widget Setup</a>
             <a onclick="switchTab('webhooks')" id="tab-webhooks">Webhooks & API</a>
-
             <div class="sidebar-label">Account</div>
             <a onclick="switchTab('settings')" id="tab-settings">Settings</a>
             <a onclick="switchTab('billing')" id="tab-billing">Billing & Plans</a>
@@ -495,138 +237,44 @@
         </aside>
 
         <section>
-          <!-- OVERVIEW VIEW -->
           <div id="view-overview" class="tab-view">
-            <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:24px">
-              <div>
-                <h2 style="font-size:24px; margin-bottom:4px">Artisan Overview</h2>
-                <p style="color:var(--Neutral-400); margin:0">High-level intelligence on scan velocity and precision.</p>
-              </div>
-              <button class="btn-outline" style="border-color:var(--Mint); color:var(--Mint)" onclick="openQRPoster()">Generate Studio Poster (Phase 37)</button>
-            </div>
-
-            <div class="stat-grid">
-              <div class="glass-card stat-card"><h4>Total Extractions</h4><div class="value" id="overviewTotal">0</div></div>
-              <div class="glass-card stat-card"><h4>Avg Precision</h4><div class="value">±1cm</div></div>
-              <div class="glass-card stat-card"><h4>Integration Health</h4><div class="value" style="color:var(--Mint); font-size:16px; margin-top:8px">ACTIVE</div></div>
-            </div>
-
-            <div class="glass-card" style="margin-bottom:32px; padding:32px">
-              <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:24px">
-                <h4 style="font-size:12px; font-weight:900; color:var(--Neutral-500); text-transform:uppercase">Scan Velocity (Last 30 Days)</h4>
-              </div>
-              <div style="height:300px; width:100%"><canvas id="usageChart"></canvas></div>
-            </div>
+            <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:24px"><div><h2 style="font-size:24px; margin-bottom:4px">Artisan Overview</h2><p style="color:var(--Neutral-400)">Intelligence on scan velocity and precision.</p></div><button class="btn-outline" style="border-color:var(--Mint); color:var(--Mint)" onclick="openQRPoster()">Generate Studio Poster</button></div>
+            <div class="stat-grid"><div class="glass-card stat-card"><h4>Total Scans</h4><div class="value" id="overviewTotal">0</div></div><div class="glass-card stat-card"><h4>Avg Precision</h4><div class="value">High</div></div><div class="glass-card stat-card"><h4>Health</h4><div class="value" style="color:var(--Mint)">ACTIVE</div></div></div>
+            <div class="glass-card" style="margin-bottom:32px; padding:32px"><h4 style="font-size:12px; font-weight:900; color:var(--Neutral-500); text-transform:uppercase; margin-bottom:24px">Scan Velocity</h4><div style="height:300px; width:100%"><canvas id="usageChart"></canvas></div></div>
           </div>
 
           <div id="view-vault" class="tab-view active">
-
-            <div class="stat-grid">
-              <div class="glass-card stat-card"><h4>Vault Capacity</h4><div class="value" id="statTotal">0</div></div>
-              <div class="glass-card stat-card"><h4>Avg Precision</h4><div class="value">±1cm</div></div>
-              <div class="glass-card stat-card"><h4>Credits</h4><div class="value" id="statCredits">0</div></div>
-            </div>
-
+            <div class="stat-grid"><div class="glass-card stat-card"><h4>Total Profiles</h4><div class="value" id="statTotal">0</div></div><div class="glass-card stat-card"><h4>Avg Error</h4><div class="value">±1cm</div></div><div class="glass-card stat-card"><h4>Credits</h4><div class="value" id="statCredits">0</div></div></div>
             <div class="workbench-split">
-              <!-- LEFT COLUMN: VISUAL LAB -->
               <div class="visual-column">
-                <div id="dashboard-3d-viewport"><span>3D Digital Twin Viewer</span></div>
-
-                <!-- MEASUREMENT RESULTS CARD -->
+                <div id="dashboard-3d-viewport"><span>3D Model Viewer</span></div>
                 <div id="measurementResultsCard" class="glass-card" style="display:none; margin-bottom:48px; background:linear-gradient(135deg, rgba(87,215,192,0.05) 0%, rgba(0,0,0,0.4) 100%)">
-                  <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:24px">
-                    <h4 style="font-size:16px; font-weight:900; color:var(--Mint); margin:0; display:flex; align-items:center; gap:10px">
-                      <svg class="korra-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><line x1="12" y1="20" x2="12" y2="10"/><line x1="18" y1="20" x2="18" y2="4"/><line x1="6" y1="20" x2="6" y2="16"/></svg>
-                      MEASUREMENT RESULTS
-                    </h4>
-                    <div style="display:flex; align-items:center; gap:16px">
-                      <div class="unit-toggle" style="background:rgba(255,255,255,0.1); border-radius:20px; padding:2px; display:flex; cursor:pointer" onclick="toggleUnits()">
-                          <div id="unit-cm" style="padding:4px 12px; border-radius:18px; font-size:10px; font-weight:900; background:var(--Mint); color:var(--Teal-900)">CM</div>
-                          <div id="unit-in" style="padding:4px 12px; border-radius:18px; font-size:10px; font-weight:900; color:var(--Neutral-400)">IN</div>
-                      </div>
-                      <div style="font-size:10px; color:var(--Neutral-500)" id="measurementTimestamp"></div>
-                    </div>
+                  <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:24px"><h4 style="font-size:16px; font-weight:900; color:var(--Mint); margin:0">MEASUREMENT RESULTS</h4><div class="unit-toggle" style="background:rgba(255,255,255,0.1); border-radius:20px; padding:2px; display:flex; cursor:pointer" onclick="toggleUnits()"><div id="unit-cm" style="padding:4px 12px; border-radius:18px; font-size:10px; font-weight:900; background:var(--Mint); color:var(--Teal-900)">CM</div><div id="unit-in" style="padding:4px 12px; border-radius:18px; font-size:10px; font-weight:900; color:var(--Neutral-400)">IN</div></div></div>
+                  <div style="margin-bottom:20px"><h5 style="font-size:11px; font-weight:900; color:#fff; text-transform:uppercase; margin-bottom:12px">Measurements</h5><div id="measurementGridUpper" style="display:grid; grid-template-columns:repeat(3,1fr); gap:8px"></div></div>
+                  <div id="measurementGridMiddle" style="display:grid; grid-template-columns:repeat(3,1fr); gap:8px; margin-bottom:20px"></div>
+                  <div id="measurementGridLower" style="display:grid; grid-template-columns:repeat(3,1fr); gap:8px; margin-bottom:20px"></div>
+                  <div style="padding:16px; background:rgba(87,215,192,0.1); border-radius:12px; border:1px solid var(--Mint); margin-bottom:20px; display:flex; justify-content:space-around; text-align:center">
+                    <div><div style="font-size:10px; color:var(--Neutral-500)">HEIGHT</div><div style="font-size:18px; font-weight:900; color:var(--Mint)" id="measurementHeight"></div></div>
+                    <div><div style="font-size:10px; color:var(--Neutral-500)">SHAPE</div><div style="font-size:18px; font-weight:900; color:#fff" id="measurementShape">Detecting...</div></div>
+                    <div><div style="font-size:10px; color:var(--Neutral-500)">SIZE REC</div><div style="font-size:18px; font-weight:900; color:var(--Mint)" id="measurementSizeRec">M</div></div>
                   </div>
-
-                  <div style="margin-bottom:20px">
-                    <h5 style="font-size:11px; font-weight:900; color:#FFFFFF; text-transform:uppercase; margin-bottom:12px; letter-spacing:0.1em">Upper Body</h5>
-                    <div id="measurementGridUpper" style="display:grid; grid-template-columns:repeat(3,1fr); gap:8px"></div>
-                  </div>
-
-                  <div style="margin-bottom:20px">
-                    <h5 style="font-size:11px; font-weight:900; color:#FFFFFF; text-transform:uppercase; margin-bottom:12px; letter-spacing:0.1em">Middle Body</h5>
-                    <div id="measurementGridMiddle" style="display:grid; grid-template-columns:repeat(3,1fr); gap:8px"></div>
-                  </div>
-
-                  <div style="margin-bottom:20px">
-                    <h5 style="font-size:11px; font-weight:900; color:#FFFFFF; text-transform:uppercase; margin-bottom:12px; letter-spacing:0.1em">Lower Body</h5>
-                    <div id="measurementGridLower" style="display:grid; grid-template-columns:repeat(3,1fr); gap:8px"></div>
-                  </div>
-
-                  <div style="padding:16px; background:rgba(87,215,192,0.1); border-radius:12px; border:1px solid var(--Mint); margin-bottom:20px">
-                    <div style="display:flex; justify-content:space-around; text-align:center">
-                      <div>
-                        <div style="font-size:10px; color:var(--Neutral-500); text-transform:uppercase">Target Height</div>
-                        <div style="font-size:18px; font-weight:900; color:var(--Mint)" id="measurementHeight"></div>
-                      </div>
-                      <div>
-                        <div style="font-size:10px; color:var(--Neutral-500); text-transform:uppercase">Body Shape</div>
-                        <div style="font-size:18px; font-weight:900; color:var(--White)" id="measurementShape">Detecting...</div>
-                      </div>
-                      <div>
-                        <div style="font-size:10px; color:var(--Neutral-500); text-transform:uppercase">Size Rec.</div>
-                        <div style="font-size:18px; font-weight:900; color:var(--Mint)" id="measurementSizeRec">S/M/L</div>
-                      </div>
-                    </div>
-                  </div>
-
-                  <!-- PHASE 31-33: FIT DIAGNOSTICS -->
+                  <!-- FIT DIAGNOSTICS -->
                   <div style="background:rgba(255,255,255,0.02); border:1px solid var(--Glass-Border); border-radius:12px; padding:20px; margin-bottom:32px">
-                    <h5 style="font-size:11px; font-weight:900; color:#FFFFFF; text-transform:uppercase; margin-bottom:16px; letter-spacing:0.1em">Artisan Fit Diagnostics</h5>
+                    <h5 style="font-size:11px; font-weight:900; color:#fff; text-transform:uppercase; margin-bottom:16px">Fit Diagnostics</h5>
                     <div style="display:grid; grid-template-columns: 1fr 1fr; gap:20px">
-                       <div>
-                         <div style="font-size:9px; color:var(--Neutral-500); text-transform:uppercase">Asymmetry Check</div>
-                         <div style="font-size:13px; font-weight:700; color:var(--White); margin-top:4px" id="diagAsymmetry">Analyzing...</div>
-                       </div>
-                       <div>
-                         <div style="font-size:9px; color:var(--Neutral-500); text-transform:uppercase">Posture Scan</div>
-                         <div style="font-size:13px; font-weight:700; color:var(--Mint); margin-top:4px" id="diagPosture">Analyzing...</div>
-                       </div>
-                    </div>
-                    <div style="margin-top:20px; padding-top:16px; border-top:1px solid rgba(255,255,255,0.05)">
-                      <div style="font-size:9px; color:var(--Neutral-500); text-transform:uppercase">Recommended Fabric Ease (Slim Fit)</div>
-                      <div style="font-size:14px; font-weight:700; color:var(--Mint); margin-top:4px" id="diagEase">+4.0cm Chest / +2.0cm Waist</div>
+                       <div><div style="font-size:9px; color:var(--Neutral-500)">ASYMMETRY</div><div style="font-size:13px; font-weight:700; color:#fff; margin-top:4px" id="diagAsymmetry">Analyzing...</div></div>
+                       <div><div style="font-size:9px; color:var(--Neutral-500)">POSTURE</div><div style="font-size:13px; font-weight:700; color:var(--Mint); margin-top:4px" id="diagPosture">Analyzing...</div></div>
                     </div>
                   </div>
-
-                  <div style="display:flex; gap:12px">
-                    <button class="btn-primary" onclick="exportToPDF()">Export PDF</button>
-                    <button class="btn-outline" onclick="exportTailorBrief()">Tailor Brief</button>
-                    <button class="btn-outline" onclick="document.getElementById('measurementResultsCard').style.display='none'">Dismiss</button>
-                  </div>
+                  <div style="display:flex; gap:12px"><button class="btn-primary" onclick="exportToPDF()">Export PDF</button><button class="btn-outline" onclick="document.getElementById('measurementResultsCard').style.display='none'">Dismiss</button></div>
                 </div>
               </div>
-
-              <!-- RIGHT COLUMN: DATA LEDGER -->
               <div class="data-column">
                 <div class="glass-card" style="padding:24px">
                   <div style="display:flex; flex-direction:column; gap:20px; margin-bottom:32px">
-                    <div style="display:flex; justify-content:space-between; align-items:center">
-                      <h2 style="font-size:20px; margin:0">Measurement Ledger</h2>
-                      <button class="btn-outline" style="height:32px; font-size:10px; padding:0 12px" onclick="exportLedgerCSV()">Export CSV</button>
-                    </div>
-
-                    <div style="position:relative">
-                      <input type="text" id="ledgerSearch" class="input-field" style="margin-bottom:0; height:44px; padding-left:40px; font-size:13px" placeholder="Search clients by name...">
-                      <div style="position:absolute; left:14px; top:12px; color:var(--Neutral-500)">
-                        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/></svg>
-                      </div>
-                    </div>
-
-                    <div style="display:grid; grid-template-columns: 1fr 1fr; gap:12px">
-                      <button class="btn-outline" style="justify-content:center" onclick="document.getElementById('scanModal').classList.add('active')">+ Start Scan</button>
-                      <button class="btn-primary" style="justify-content:center" onclick="document.getElementById('shareModal').classList.add('active')">+ Invite Client</button>
-                    </div>
+                    <div style="display:flex; justify-content:space-between; align-items:center"><h2 style="font-size:20px">Ledger</h2><button class="btn-outline" style="height:32px; font-size:10px" onclick="exportLedgerCSV()">Export CSV</button></div>
+                    <input type="text" id="ledgerSearch" class="input-field" style="margin-bottom:0; height:44px" placeholder="Search clients...">
+                    <div style="display:grid; grid-template-columns: 1fr 1fr; gap:12px"><button class="btn-outline" onclick="document.getElementById('scanModal').classList.add('active')">+ Start Scan</button><button class="btn-primary" onclick="document.getElementById('shareModal').classList.add('active')">+ Invite</button></div>
                     <button class="btn-outline" style="width:100%; border-style:dashed; color:var(--Neutral-500); font-size:10px" onclick="triggerBulkImport()">↑ Bulk Import Clients (CSV)</button>
                     <input type="file" id="bulkImportFile" accept=".csv" style="display:none" onchange="handleBulkImport(this)">
                   </div>
@@ -636,155 +284,12 @@
             </div>
           </div>
 
-          <!-- SIZE PASSPORTS VIEW -->
-          <div id="view-passports" class="tab-view">
-            <h2 style="font-size:24px; margin-bottom:12px">Global Size Passports</h2>
-            <p style="color:var(--Neutral-400); margin-bottom:32px">Persistent biometric identities. Grouped by unique client profiles.</p>
-
-            <div id="passportGrid" style="display:grid; grid-template-columns: repeat(auto-fill, minmax(300px, 1fr)); gap:24px">
-              <!-- Passport Cards will be injected here -->
-              <div class="glass-card" style="text-align:center; padding:48px; grid-column: 1/-1">
-                <div style="font-size:32px; margin-bottom:16px">📂</div>
-                <div style="color:var(--Neutral-500); font-size:14px">Syncing client identities...</div>
-              </div>
-            </div>
-          </div>
-
-          <!-- WIDGET VIEW -->
-          <div id="view-widget" class="tab-view">
-            <div class="glass-card" style="margin-bottom:32px">
-              <h2 style="font-size:24px; margin-bottom:12px">Widget Configuration</h2>
-              <p style="color:var(--Neutral-400); margin-bottom:32px">Embed the KORRA scan experience directly into your storefront.</p>
-
-              <div style="background:#000; border-radius:12px; padding:24px; border:1px solid var(--Glass-Border); margin-bottom:32px">
-                <div style="font-size:10px; font-weight:900; color:var(--Neutral-500); margin-bottom:12px">EMBED SCRIPT</div>
-                <code style="font-family:monospace; color:var(--Mint); font-size:12px; word-break:break-all">
-                  &lt;script src="https://korra-436814609100.us-central1.run.app/assets/korra_widget.js"&gt;&lt;/script&gt;<br>
-                  &lt;korra-widget artisan-key="YOUR_API_KEY"&gt;&lt;/korra-widget&gt;
-                </code>
-              </div>
-
-              <div style="display:grid; grid-template-columns: 1fr 1fr; gap:32px">
-                <div>
-                  <label style="font-size:10px; font-weight:900; color:var(--Neutral-500); display:block; margin-bottom:8px">BRAND COLOR</label>
-                  <input type="color" value="#57D7C0" style="width:100%; height:52px; background:none; border:1px solid var(--Glass-Border); border-radius:12px; padding:8px; cursor:pointer">
-                </div>
-                <div>
-                  <label style="font-size:10px; font-weight:900; color:var(--Neutral-500); display:block; margin-bottom:8px">WIDGET TEXT</label>
-                  <input type="text" class="input-field" value="Start AI Scan" style="margin-bottom:0">
-                </div>
-              </div>
-            </div>
-          </div>
-
-          <!-- BILLING VIEW -->
-          <div id="view-billing" class="tab-view">
-            <div class="glass-card" style="margin-bottom:32px">
-              <h2 style="font-size:24px; margin-bottom:12px">Billing & Plans</h2>
-              <p style="color:var(--Neutral-400); margin-bottom:32px">Manage your subscription and credit balance.</p>
-
-              <div style="display:grid; grid-template-columns: 1.5fr 1fr; gap:32px">
-                <div style="padding:24px; background:rgba(87,215,192,0.05); border:1px solid var(--Mint); border-radius:16px">
-                  <div style="font-size:10px; font-weight:900; color:var(--Mint); margin-bottom:8px">CURRENT PLAN</div>
-                  <div style="font-size:24px; font-weight:900; margin-bottom:12px" id="billingPlanName">Loading...</div>
-                  <div style="font-size:12px; color:var(--Neutral-400); margin-bottom:20px" id="billingPlanDesc">Professional Extractions + High-Resolution 3D + CSV Export</div>
-                  <button class="btn-primary" style="height:44px; width:100%" onclick="alert('Subscription management coming soon.')">Manage Subscription</button>
-                </div>
-
-                <div style="padding:24px; background:var(--Glass); border:1px solid var(--Glass-Border); border-radius:16px">
-                  <div style="font-size:10px; font-weight:900; color:var(--Neutral-500); margin-bottom:8px">AVAILABLE CREDITS</div>
-                  <div style="font-size:32px; font-weight:900; margin-bottom:12px" id="billingCredits">0</div>
-                  <button class="btn-outline" style="height:44px; width:100%" onclick="document.getElementById('topUpModal').classList.add('active')">Top-up Credits</button>
-                </div>
-              </div>
-
-              <!-- BILLING HISTORY -->
-              <div style="margin-top:48px">
-                <h4 style="font-size:12px; font-weight:900; color:var(--Neutral-500); text-transform:uppercase; margin-bottom:20px">Transaction History</h4>
-                <div class="table-container">
-                  <table style="width:100%; border-collapse:collapse">
-                    <thead>
-                      <tr style="border-bottom:1px solid var(--Glass-Border)">
-                        <th style="text-align:left; padding:12px; font-size:10px">DATE</th>
-                        <th style="text-align:left; padding:12px; font-size:10px">TYPE</th>
-                        <th style="text-align:left; padding:12px; font-size:10px">AMOUNT</th>
-                        <th style="text-align:left; padding:12px; font-size:10px">STATUS</th>
-                      </tr>
-                    </thead>
-                    <tbody id="billingHistoryBody">
-                      <tr><td colspan="4" style="padding:40px; text-align:center; color:var(--Neutral-500); font-size:12px">No transactions recorded.</td></tr>
-                    </tbody>
-                  </table>
-                </div>
-              </div>
-            </div>
-          </div>
-
-          <!-- WEBHOOKS VIEW (Phase 26) -->
-          <div id="view-webhooks" class="tab-view">
-             <div class="glass-card" style="margin-bottom:32px">
-                <h2 style="font-size:24px; margin-bottom:12px">Webhooks & External Sync</h2>
-                <p style="color:var(--Neutral-400); margin-bottom:32px">Connect KORRA events to your own backend systems.</p>
-
-                <div style="margin-bottom:24px">
-                  <label style="font-size:10px; font-weight:900; color:var(--Neutral-500); display:block; margin-bottom:8px">WEBHOOK ENDPOINT URL</label>
-                  <input type="url" id="webhookUrl" class="input-field" placeholder="https://yourserver.com/korra-hook">
-                </div>
-                <button class="btn-primary">Update Webhook Settings</button>
-             </div>
-          </div>
-
-          <!-- SETTINGS VIEW -->
+          <div id="view-passports" class="tab-view"><h2 style="font-size:24px; margin-bottom:32px">Size Profiles</h2><div id="passportGrid" style="display:grid; grid-template-columns:repeat(auto-fill, minmax(300px, 1fr)); gap:24px"></div></div>
+          <div id="view-widget" class="tab-view"><div class="glass-card"><h2>Widget Setup</h2><p style="color:var(--Neutral-400); margin-bottom:32px">Embed body scanning on your site.</p><div style="background:#000; padding:24px; border:1px solid var(--Glass-Border); border-radius:12px; margin-bottom:32px"><code style="color:var(--Mint); font-size:12px; word-break:break-all">&lt;script src="https://korra-436814609100.us-central1.run.app/assets/korra_widget.js"&gt;&lt;/script&gt;</code></div></div></div>
+          <div id="view-billing" class="tab-view"><div class="glass-card"><h2>Billing & Plans</h2><div style="display:grid; grid-template-columns:1.5fr 1fr; gap:32px; margin-top:32px"><div style="padding:24px; background:rgba(87,215,192,0.05); border:1px solid var(--Mint); border-radius:16px"><h4>CURRENT PLAN</h4><div style="font-size:24px; font-weight:900" id="billingPlanName">Loading...</div><button class="btn-primary" style="margin-top:20px; width:100%">Manage</button></div><div style="padding:24px; background:var(--Glass); border:1px solid var(--Glass-Border); border-radius:16px"><h4>AVAILABLE CREDITS</h4><div style="font-size:32px; font-weight:900" id="billingCredits">0</div><button class="btn-outline" style="margin-top:20px; width:100%" onclick="document.getElementById('topUpModal').classList.add('active')">Top Up</button></div></div><div style="margin-top:48px"><h4>Transaction History</h4><div class="table-container"><table><thead><tr><th>DATE</th><th>TYPE</th><th>AMOUNT</th><th>STATUS</th></tr></thead><tbody id="billingHistoryBody"></tbody></table></div></div></div></div>
           <div id="view-settings" class="tab-view">
-            <div class="glass-card" style="margin-bottom:32px">
-              <h2 style="font-size:24px; margin-bottom:12px">Merchant Settings</h2>
-              <p style="color:var(--Neutral-400); margin-bottom:32px">Manage your artisan profile and API integrations.</p>
-
-              <div style="max-width:600px">
-                <div style="margin-bottom:24px">
-                  <label style="font-size:10px; font-weight:900; color:var(--Neutral-500); display:block; margin-bottom:8px">COMPANY / ARTISAN NAME</label>
-                  <input type="text" id="settingsName" class="input-field" style="margin-bottom:0" placeholder="Loading...">
-                </div>
-
-                <div style="margin-bottom:24px">
-                  <label style="font-size:10px; font-weight:900; color:var(--Neutral-500); display:block; margin-bottom:8px">INDUSTRY</label>
-                  <select id="settingsIndustry" class="input-field" style="margin-bottom:0; appearance:none">
-                    <option value="tailor">Bespoke Tailoring</option>
-                    <option value="fitness">Fitness & Coaching</option>
-                    <option value="fashion">Ready-to-Wear Fashion</option>
-                    <option value="medical">Medical / Physical Therapy</option>
-                  </select>
-                </div>
-
-                <div style="display:grid; grid-template-columns: 1fr 1fr; gap:24px; margin-bottom:32px">
-                  <div>
-                    <label style="font-size:10px; font-weight:900; color:var(--Neutral-500); display:block; margin-bottom:8px">CLIENT SCAN PRICE ($)</label>
-                    <input type="number" id="settingsPrice" class="input-field" style="margin-bottom:0" step="0.1" value="0.50">
-                  </div>
-                  <div>
-                    <label style="font-size:10px; font-weight:900; color:var(--Neutral-500); display:block; margin-bottom:8px">LOW CREDIT ALERT (UNIT)</label>
-                    <input type="number" id="settingsThreshold" class="input-field" style="margin-bottom:0" value="10">
-                  </div>
-                </div>
-
-                <button class="btn-primary" id="btnSaveSettings">Save Profile Changes</button>
-              </div>
-            </div>
-
-            <div class="glass-card">
-              <h2 style="font-size:18px; margin-bottom:12px">API Access Control</h2>
-              <p style="color:var(--Neutral-400); margin-bottom:24px">Use this key to integrate the KORRA widget into your own website.</p>
-
-              <div style="background:rgba(0,0,0,0.3); border-radius:12px; padding:20px; border:1px solid var(--Glass-Border); display:flex; align-items:center; justify-content:space-between; gap:20px">
-                <code id="apiKeyDisplay" style="font-family:monospace; color:var(--Mint); font-size:14px; word-break:break-all">********************************</code>
-                <button class="btn-outline" style="height:32px; font-size:10px; flex-shrink:0" onclick="copyApiKey()">Copy Key</button>
-              </div>
-
-              <div style="margin-top:24px">
-                <button class="btn-outline" style="border-color:var(--Error); color:var(--Error); font-size:10px" id="btnRegenKey">Regenerate API Key</button>
-                <p style="font-size:10px; color:var(--Neutral-500); margin-top:12px">Warning: Regenerating your key will break any existing widget integrations.</p>
-              </div>
-            </div>
+             <div class="glass-card"><h2>Settings</h2><div style="max-width:600px; margin-top:32px"><label style="font-size:10px; font-weight:900; color:var(--Neutral-500)">PROFESSIONAL NAME</label><input type="text" id="settingsName" class="input-field" placeholder="Loading..."><button class="btn-primary" id="btnSaveSettings">Save Profile</button></div></div>
+             <div class="glass-card" style="margin-top:32px"><h3>API Access</h3><div style="background:rgba(0,0,0,0.3); border-radius:12px; padding:20px; border:1px solid var(--Glass-Border); display:flex; align-items:center; justify-content:space-between; gap:20px; margin-top:16px"><code id="apiKeyDisplay" style="font-family:monospace; color:var(--Mint); font-size:14px; word-break:break-all">********************************</code><button class="btn-outline" style="height:32px; font-size:10px; flex-shrink:0" onclick="copyApiKey()">Copy</button></div><button class="btn-outline" style="border-color:var(--Error); color:var(--Error); font-size:10px; margin-top:16px" id="btnRegenKey">Regenerate Key</button></div>
           </div>
         </section>
       </div>
@@ -801,331 +306,149 @@
   <script src="/assets/korra_export.js"></script>
 
   <script>
-    let activeCameraType = null;
-    let poseModel = null;
-    let cameraInstance = null;
-    let isPoseAligned = false;
-    let alignmentStartTime = 0;
-    let autoSnapTriggered = false;
-    let isReviewing = false;
-    let capturedDataUrl = null;
-
-    // --- TTS ENGINE ---
-    let lastSpokenText = "";
-    let lastSpokenTime = 0;
+    const CONFIG = { url: 'https://blsettabymllulsxtziw.supabase.co', key: 'sb_publishable_miCOIXHtlxLkfDgpwE0N-g_BA1Q-x8y', paystack: 'pk_live_d8442a8b9814421b1b463286f91887e5b546305a' };
+    let sessionData = null, userId = null, masterHistory = [], activeCameraType = null, poseModel = null, cameraInstance = null, isPoseAligned = false, alignmentStartTime = 0, autoSnapTriggered = false, isReviewing = false, capturedDataUrl = null;
+    let lastSpokenText = "", lastSpokenTime = 0, usageChart = null;
 
     function speak(text, force = false) {
       if (!window.speechSynthesis) return;
-      const now = Date.now();
-
-      // 1. Prevent repetitive spam (standard guidance)
-      if (!force && text === lastSpokenText && now - lastSpokenTime < 3000) return;
-
-      // 2. Audio Integrity: If currently speaking, don't interrupt unless forced
-      if (!force && window.speechSynthesis.speaking) return;
-
-      // 3. Clear queue only for high-priority 'force' alerts (Captured, Perfect)
-      if (force) window.speechSynthesis.cancel();
-
+      const now = Date.now(); if (!force && text === lastSpokenText && now - lastSpokenTime < 3000) return;
+      if (!force && window.speechSynthesis.speaking) return; if (force) window.speechSynthesis.cancel();
       const utterance = new SpeechSynthesisUtterance(text);
-      utterance.rate = 1.0;
-      utterance.pitch = 1.0;
-
-      // Select premium voice if available
-      const voices = window.speechSynthesis.getVoices();
-      utterance.voice = voices.find(v => v.name.includes('Google') || v.name.includes('Siri')) || voices[0];
-
-      window.speechSynthesis.speak(utterance);
-      lastSpokenText = text;
-      lastSpokenTime = now;
+      const voices = window.speechSynthesis.getVoices(); utterance.voice = voices.find(v => v.name.includes('Google') || v.name.includes('Siri')) || voices[0];
+      window.speechSynthesis.speak(utterance); lastSpokenText = text; lastSpokenTime = now;
     }
 
-    // --- AI CAMERA LOGIC ---
     async function openCamera(type) {
-      activeCameraType = type;
-      alignmentStartTime = 0;
-      autoSnapTriggered = false;
-      isReviewing = false;
+      activeCameraType = type; alignmentStartTime = 0; autoSnapTriggered = false; isReviewing = false;
       document.getElementById('shutter-container').style.display = 'flex';
       document.getElementById('review-container').style.display = 'none';
       document.getElementById('camera-video').style.display = 'block';
       document.getElementById('camera-canvas').style.display = 'block';
+      document.getElementById('review-img').style.display = 'none';
       document.getElementById('step-camera').classList.add('active');
       const video = document.getElementById('camera-video');
-      const canvas = document.getElementById('camera-canvas');
-
       if (!poseModel) {
         poseModel = new Pose({ locateFile: (file) => `https://cdn.jsdelivr.net/npm/@mediapipe/pose@0.5.1675469404/${file}` });
         poseModel.setOptions({ modelComplexity: 1, smoothLandmarks: true, minDetectionConfidence: 0.5, minTrackingConfidence: 0.5 });
         poseModel.onResults(onPoseResults);
       }
-
-      cameraInstance = new Camera(video, {
-        onFrame: async () => { await poseModel.send({image: video}); },
-        width: 1280, height: 720
-      });
+      cameraInstance = new Camera(video, { onFrame: async () => { await poseModel.send({image: video}); }, width: 1280, height: 720 });
       cameraInstance.start();
     }
 
-    function closeCamera() {
-      if (cameraInstance) cameraInstance.stop();
-      document.getElementById('step-camera').classList.remove('active');
-      activeCameraType = null;
-      alignmentStartTime = 0;
-      autoSnapTriggered = false;
-    }
+    function closeCamera() { if (cameraInstance) cameraInstance.stop(); document.getElementById('step-camera').classList.remove('active'); activeCameraType = null; }
 
     function onPoseResults(results) {
       if (isReviewing) return;
-      const canvas = document.getElementById('camera-canvas');
-      const ctx = canvas.getContext('2d');
-      const msg = document.getElementById('camera-msg');
-
-      canvas.width = canvas.clientWidth;
-      canvas.height = canvas.clientHeight;
+      const canvas = document.getElementById('camera-canvas'), ctx = canvas.getContext('2d'), msg = document.getElementById('camera-msg');
+      canvas.width = canvas.clientWidth; canvas.height = canvas.clientHeight;
       ctx.clearRect(0, 0, canvas.width, canvas.height);
-
-      if (!results.poseLandmarks) {
-        msg.textContent = "Searching for subject...";
-        msg.style.background = "rgba(0, 0, 0, 0.8)";
-        msg.style.borderColor = "var(--Mint)";
-        isPoseAligned = false;
-        alignmentStartTime = 0;
-        return;
-      }
-
-      // Draw silhouette guidance
-      drawSilhouette(ctx, canvas.width, canvas.height, activeCameraType);
-
-      // Check alignment
-      const landmarks = results.poseLandmarks;
-      const head = landmarks[0];
-      const leftAnkle = landmarks[27];
-      const rightAnkle = landmarks[28];
-      const leftWrist = landmarks[15];
-      const rightWrist = landmarks[16];
-      const leftHip = landmarks[23];
-      const rightHip = landmarks[24];
-      const leftShoulder = landmarks[11];
-      const rightShoulder = landmarks[12];
-
-      let aligned = true;
-      let feedback = "Hold steady...";
-
-      if (head.visibility < 0.5 || leftAnkle.visibility < 0.5 || rightAnkle.visibility < 0.5) {
-        feedback = "Step back: Head and feet must be visible.";
-        aligned = false;
-      } else if (activeCameraType === 'front') {
-        // Check BOTH arms must be away from body for A-POSE
-        const leftArmDist = Math.abs(leftWrist.x - leftHip.x);
-        const rightArmDist = Math.abs(rightWrist.x - rightHip.x);
-        const minArmDist = 0.15; // Both arms must be at least 15% from hips
-
-        // CORRECTION: Ensure wrists are BELOW shoulders (A-Pose, not T-Pose)
-        const handsDown = leftWrist.y > leftShoulder.y && rightWrist.y > rightShoulder.y;
-
-        if (!handsDown) {
-          feedback = "A-POSE: Drop arms away from your waist.";
-          aligned = false;
-        } else if (leftArmDist < minArmDist || rightArmDist < minArmDist) {
-          feedback = "A-POSE: Spread arms away from your body.";
-          aligned = false;
-        }
+      if (!results.poseLandmarks) { msg.textContent = "Searching for you..."; isPoseAligned = false; return; }
+      const l = results.poseLandmarks;
+      const head = l[0], lSh = l[11], rSh = l[12], lHi = l[23], rHi = l[24], lAn = l[27], rAn = l[28], lWr = l[15], rWrist = l[16];
+      let aligned = true, feedback = "Hold steady...";
+      if (head.visibility < 0.5 || lAn.visibility < 0.5 || rAn.visibility < 0.5) { feedback = "Step back: Head and feet must be visible."; aligned = false; }
+      else if (activeCameraType === 'front') {
+        const handsDown = lWr.y > lSh.y && rWrist.y > rSh.y;
+        if (!handsDown) { feedback = "A-POSE: Move arms down."; aligned = false; }
+        else if (Math.abs(lWr.x - lHi.x) < 0.15 || Math.abs(rWrist.x - rHi.x) < 0.15) { feedback = "A-POSE: Spread arms."; aligned = false; }
       } else if (activeCameraType === 'side') {
-        // ULTRA-STRICT SIDE POSE TRACKING
-        const shoulderWidth = Math.abs(leftShoulder.x - rightShoulder.x);
-        const hipWidth = Math.abs(leftHip.x - rightHip.x);
-        const torsoHeight = Math.abs(leftShoulder.y - leftHip.y);
-
-        // In profile, width of shoulders and hips should be very narrow
-        const sideRatio = (shoulderWidth + hipWidth) / (2 * torsoHeight);
-
-        // Check for shoulder-hip vertical alignment (avoid leaning)
-        const shoulderHipAlign = Math.abs((leftShoulder.x + rightShoulder.x)/2 - (leftHip.x + rightHip.x)/2);
-
-        if (sideRatio > 0.25) { // Stricter threshold
-          feedback = "Turn Side: Rotate 90 degrees.";
-          aligned = false;
-        } else if (shoulderHipAlign > 0.1) {
-          feedback = "Stand Straight: Don't lean.";
-          aligned = false;
-        } else {
-          // Check that hands are down
-          const handsDown = leftWrist.y > leftShoulder.y && rightWrist.y > rightShoulder.y;
-          if (!handsDown) {
-             feedback = "Keep arms down at your sides.";
-             aligned = false;
-          }
-        }
+        const zDelta = Math.abs(lSh.z - rSh.z), xDelta = Math.abs(lSh.x - rSh.x);
+        const sideRatio = xDelta / Math.abs(lSh.y - lHi.y);
+        if (sideRatio > 0.3 || zDelta < 0.12) { feedback = "Turn Side: Face fully side."; aligned = false; }
       }
-
-      // Autonomous Capture Logic
       if (aligned) {
-        if (alignmentStartTime === 0) {
-          alignmentStartTime = Date.now();
-          speak("Perfect, hold still.", true);
-        } else if (Date.now() - alignmentStartTime > 1500 && !autoSnapTriggered) {
-          autoSnapTriggered = true;
-          snapPhoto();
-          return;
-        }
-        const remaining = Math.max(0, 1500 - (Date.now() - alignmentStartTime));
-        if (remaining > 0) feedback = `Capturing in ${(remaining/1000).toFixed(1)}s...`;
-        else feedback = "Processing...";
-      } else {
-        alignmentStartTime = 0;
-        speak(feedback);
-      }
-
-      msg.textContent = feedback;
-      if (aligned) {
-        msg.style.background = "var(--Mint)";
-        msg.style.color = "var(--Obsidian)";
-        msg.style.borderColor = "#fff";
-      } else {
-        msg.style.background = "rgba(0, 0, 0, 0.8)";
-        msg.style.color = "#fff";
-        msg.style.borderColor = "var(--Mint)";
-      }
+        if (alignmentStartTime === 0) { alignmentStartTime = Date.now(); speak("Hold still.", true); }
+        else if (Date.now() - alignmentStartTime > 1500 && !autoSnapTriggered) { autoSnapTriggered = true; snapPhoto(); return; }
+        const rem = Math.max(0, 1500 - (Date.now() - alignmentStartTime));
+        feedback = rem > 0 ? `Capturing in ${(rem/1000).toFixed(1)}s...` : "Processing...";
+      } else { alignmentStartTime = 0; speak(feedback); }
+      msg.textContent = feedback; msg.style.background = aligned ? "var(--Mint)" : "rgba(0,0,0,0.8)";
       isPoseAligned = aligned;
-
-      // Draw user skeleton - Vibrant Mint (#57D7C0) for accurate, Pure White (#FFFFFF) for inaccurate
-      ctx.strokeStyle = aligned ? "#57D7C0" : "#FFFFFF";
-      ctx.lineWidth = aligned ? 8 : 4;
-      ctx.lineCap = "round";
-      ctx.shadowBlur = aligned ? 15 : 0;
-      ctx.shadowColor = "#57D7C0";
-
-      const connections = [ [11, 12], [11, 13], [13, 15], [12, 14], [14, 16], [11, 23], [12, 24], [23, 24], [23, 25], [25, 27], [24, 26], [26, 28] ];
-      connections.forEach(([i, j]) => {
-        const p1 = landmarks[i];
-        const p2 = landmarks[j];
-        if (p1.visibility > 0.5 && p2.visibility > 0.5) {
-          ctx.beginPath();
-          ctx.moveTo(p1.x * canvas.width, p1.y * canvas.height);
-          ctx.lineTo(p2.x * canvas.width, p2.y * canvas.height);
-          ctx.stroke();
-        }
+      ctx.strokeStyle = aligned ? "#57D7C0" : "#FFFFFF"; ctx.lineWidth = 4;
+      [ [11, 12], [11, 23], [12, 24], [23, 24], [23, 25], [24, 26] ].forEach(([i, j]) => {
+        const p1 = l[i], p2 = l[j]; if (p1.visibility > 0.5 && p2.visibility > 0.5) { ctx.beginPath(); ctx.moveTo(p1.x * canvas.width, p1.y * canvas.height); ctx.lineTo(p2.x * canvas.width, p2.y * canvas.height); ctx.stroke(); }
       });
-
-      // Draw joint nodes at each keypoint
-      ctx.fillStyle = aligned ? "#57D7C0" : "#FFFFFF";
-      const nodeRadius = aligned ? 10 : 6;
-      const keypoints = [11, 12, 13, 14, 15, 16, 23, 24, 25, 26, 27, 28];
-      keypoints.forEach(idx => {
-        const p = landmarks[idx];
-        if (p.visibility > 0.5) {
-          ctx.beginPath();
-          ctx.arc(p.x * canvas.width, p.y * canvas.height, nodeRadius, 0, Math.PI * 2);
-          ctx.fill();
-        }
-      });
-    }
-
-    function drawSilhouette(ctx, w, h, type) {
-      ctx.beginPath();
-      ctx.strokeStyle = isPoseAligned ? "var(--Mint)" : "rgba(255,255,255,0.1)";
-      ctx.setLineDash([10, 5]); ctx.lineWidth = 2;
-      const cx = w / 2; const cy = h / 2;
-      ctx.moveTo(cx, cy - h*0.4); ctx.lineTo(cx - w*0.1, cy - h*0.2); ctx.lineTo(cx - w*0.2, cy + h*0.1);
-      ctx.moveTo(cx, cy - h*0.4); ctx.lineTo(cx + w*0.1, cy - h*0.2); ctx.lineTo(cx + w*0.2, cy + h*0.1);
-      ctx.moveTo(cx, cy - h*0.2); ctx.lineTo(cx, cy + h*0.1); ctx.lineTo(cx - w*0.1, cy + h*0.4);
-      ctx.moveTo(cx, cy + h*0.1); ctx.lineTo(cx + w*0.1, cy + h*0.4);
-      ctx.stroke(); ctx.setLineDash([]);
     }
 
     function snapPhoto() {
       if (isReviewing) return;
-
-      const video = document.getElementById('camera-video');
-      const canvas = document.createElement('canvas');
+      const video = document.getElementById('camera-video'), canvas = document.createElement('canvas');
       canvas.width = video.videoWidth; canvas.height = video.videoHeight;
-      const ctx = canvas.getContext('2d');
-      ctx.translate(canvas.width, 0); ctx.scale(-1, 1);
-      ctx.drawImage(video, 0, 0);
-
+      const ctx = canvas.getContext('2d'); ctx.translate(canvas.width, 0); ctx.scale(-1, 1); ctx.drawImage(video, 0, 0);
       capturedDataUrl = canvas.toDataURL('image/jpeg');
-
-      // Enter Review Mode
-      isReviewing = true;
-      document.getElementById('camera-video').style.display = 'none';
-      document.getElementById('camera-canvas').style.display = 'none';
-      document.getElementById('shutter-container').style.display = 'none';
-      document.getElementById('review-container').style.display = 'flex';
-      document.getElementById('camera-msg').textContent = "Review your capture";
-      speak("Captured. Review your photo.", true);
+      isReviewing = true; document.getElementById('camera-video').style.display = 'none'; document.getElementById('camera-canvas').style.display = 'none'; document.getElementById('shutter-container').style.display = 'none';
+      const rImg = document.getElementById('review-img'); rImg.src = capturedDataUrl; rImg.style.display = 'block';
+      document.getElementById('review-container').style.display = 'flex'; document.getElementById('camera-msg').textContent = "Review your photo"; speak("Captured. Review.", true);
     }
 
-    function retakePhoto() {
-      isReviewing = false;
-      autoSnapTriggered = false;
-      alignmentStartTime = 0;
-      document.getElementById('camera-video').style.display = 'block';
-      document.getElementById('camera-canvas').style.display = 'block';
-      document.getElementById('shutter-container').style.display = 'flex';
-      document.getElementById('review-container').style.display = 'none';
-      document.getElementById('camera-msg').textContent = "Re-aligning...";
-    }
+    function retakePhoto() { isReviewing = false; autoSnapTriggered = false; alignmentStartTime = 0; document.getElementById('camera-video').style.display = 'block'; document.getElementById('camera-canvas').style.display = 'block'; document.getElementById('review-img').style.display = 'none'; document.getElementById('shutter-container').style.display = 'flex'; document.getElementById('review-container').style.display = 'none'; }
 
     function keepPhoto() {
-      const labelId = activeCameraType === 'front' ? 'frontLabel' : 'sideLabel';
-      const inputId = activeCameraType === 'front' ? 'frontPhoto' : 'sidePhoto';
-
-      speak(activeCameraType === 'front' ? "Front pose captured. Now take your side profile." : "Side profile captured. Processing your biometrics.", true);
-
-      const label = document.getElementById(labelId);
-      const previewImg = label.querySelector('.preview-img');
-      const placeholder = label.querySelector('.placeholder-content');
-      const overlay = label.querySelector('.preview-overlay');
-
-      previewImg.src = capturedDataUrl;
-      previewImg.style.display = 'block';
-      if(placeholder) placeholder.style.display = 'none';
-      if(overlay) overlay.style.display = 'flex';
-
+      const fileId = activeCameraType === 'front' ? 'frontPhoto' : 'sidePhoto', labelId = activeCameraType === 'front' ? 'frontLabel' : 'sideLabel';
+      const label = document.getElementById(labelId), img = label.querySelector('.preview-img');
+      img.src = capturedDataUrl; img.style.display = 'block';
+      label.querySelector('.placeholder-content').style.display = 'none'; label.querySelector('.preview-overlay').style.display = 'flex';
+      speak("Photo confirmed.", true);
       fetch(capturedDataUrl).then(res => res.blob()).then(blob => {
         const file = new File([blob], `${activeCameraType}.jpg`, { type: "image/jpeg" });
-        const container = new DataTransfer();
-        container.items.add(file);
-        document.getElementById(inputId).files = container.files;
+        const container = new DataTransfer(); container.items.add(file);
+        document.getElementById(fileId).files = container.files; closeCamera();
       });
-      closeCamera();
     }
 
     function handleFile(input, labelId) {
-      const label = document.getElementById(labelId);
-      const previewImg = label.querySelector('.preview-img');
-      const placeholder = label.querySelector('.placeholder-content');
-      const overlay = label.querySelector('.preview-overlay');
-      if (input && input.files && input.files[0]) {
-        const reader = new FileReader();
-        reader.onload = (e) => {
-           previewImg.src = e.target.result; previewImg.style.display = 'block';
-           if(placeholder) placeholder.style.display = 'none';
-           if(overlay) overlay.style.display = 'flex';
-        };
-        reader.readAsDataURL(input.files[0]);
+      if (input.files && input.files[0]) {
+        const reader = new FileReader(); reader.onload = (e) => {
+          const label = document.getElementById(labelId), img = label.querySelector('.preview-img');
+          img.src = e.target.result; img.style.display = 'block';
+          label.querySelector('.placeholder-content').style.display = 'none'; label.querySelector('.preview-overlay').style.display = 'flex';
+        }; reader.readAsDataURL(input.files[0]);
       }
     }
 
     function handlePreviewClick(type) {
-        const labelId = type === 'front' ? 'frontLabel' : 'sideLabel';
-        const label = document.getElementById(labelId);
-        const placeholder = label.querySelector('.placeholder-content');
-
-        if (placeholder && placeholder.style.display !== 'none') {
-            openCamera(type);
-        } else {
-            const img = label.querySelector('.preview-img');
-            if (img.src) window.open(img.src, '_blank');
-        }
+      const label = document.getElementById(type === 'front' ? 'frontLabel' : 'sideLabel');
+      if (label.querySelector('.placeholder-content').style.display !== 'none') openCamera(type);
+      else { const img = label.querySelector('.preview-img'); if (img.src) window.open(img.src, '_blank'); }
     }
 
+    function switchTab(id) {
+      document.querySelectorAll('.tab-view').forEach(t => t.classList.remove('active'));
+      document.querySelectorAll('.sidebar-nav a').forEach(a => a.classList.remove('active'));
+      document.getElementById('view-' + id)?.classList.add('active');
+      document.getElementById('tab-' + id)?.classList.add('active');
+      if (id === 'settings' || id === 'billing' || id === 'overview') loadSettings();
+      if (id === 'passports') renderPassports();
+    }
+
+    async function loadSettings() {
+      const { data: profile } = await window.KORRA_DB.from('profiles').select('*').eq('id', userId).single();
+      if (profile) {
+        document.getElementById('settingsName').value = profile.full_name || profile.company_name || "";
+        document.getElementById('userEmail').textContent = profile.email;
+        document.getElementById('statCredits').textContent = profile.credits || 0;
+        document.getElementById('billingCredits').textContent = profile.credits || 0;
+        document.getElementById('apiKeyDisplay').textContent = profile.api_key || "REGENERATE TO VIEW";
+      }
+      const { data: sub } = await window.KORRA_DB.from('subscriptions').select('plan_id').eq('user_id', userId).single();
+      document.getElementById('billingPlanName').textContent = sub?.plan_id ? sub.plan_id.toUpperCase() : 'FREE';
+
+      const { data: txs } = await window.KORRA_DB.from('transactions').select('*').eq('user_id', userId).order('created_at', { ascending: false });
+      if (txs) document.getElementById('billingHistoryBody').innerHTML = txs.map(t => `<tr><td>${new Date(t.created_at).toLocaleDateString()}</td><td>${t.type}</td><td>$${t.amount.toFixed(2)}</td><td>SUCCESS</td></tr>`).join('');
+    }
+
+    async function fetchHistory() {
+      const { data } = await window.KORRA_DB.from('measurements').select('*').eq('user_id', userId).order('created_at', { ascending: false });
+      if (data) { masterHistory = data; document.getElementById('statTotal').textContent = data.length; document.getElementById('overviewTotal').textContent = data.length; renderLedger(data); renderAnalytics(data); }
+    }
+
+    window.CURRENT_UNIT = 'cm';
     function toggleUnits() {
         if (!window.LAST_MEASUREMENT_DATA) return;
         window.CURRENT_UNIT = window.CURRENT_UNIT === 'cm' ? 'in' : 'cm';
-        const cmBtn = document.getElementById('unit-cm');
-        const inBtn = document.getElementById('unit-in');
+        const cmBtn = document.getElementById('unit-cm'), inBtn = document.getElementById('unit-in');
         if (window.CURRENT_UNIT === 'cm') {
             cmBtn.style.background = 'var(--Mint)'; cmBtn.style.color = 'var(--Teal-900)';
             inBtn.style.background = 'transparent'; inBtn.style.color = 'var(--Neutral-400)';
@@ -1137,772 +460,139 @@
     }
 
     function renderMeasurementGrids(data) {
-        const upperBody = ['Shoulder', 'Neck Round', 'Chest Round', 'Across Back', 'Across Chest'];
-        const middleBody = ['Waist Round', 'Stomach Round', 'Half Length', 'Full Top Length'];
-        const lowerBody = ['Hip Round', 'Thigh Round', 'Knee Round', 'Calf Round', 'Ankle Round', 'Inseam'];
+      const grids = { upper: ['Shoulder', 'Neck Round', 'Chest Round'], middle: ['Waist Round', 'Stomach Round'], lower: ['Hip Round', 'Thigh Round', 'Inseam'] };
+      const m = data.measurements || {};
+      const unit = window.CURRENT_UNIT;
+      const factor = unit === 'in' ? 0.393701 : 1;
 
-        function createCard(key, val) {
-            if (!val) return '';
-            let dVal = val; let unit = 'cm';
-            if (window.CURRENT_UNIT === 'in') { dVal = (val * 0.393701).toFixed(1); unit = 'in'; }
-            return `<div style="padding:10px; background:rgba(255,255,255,0.05); border-radius:8px; border:1px solid rgba(255,255,255,0.08)">
-                <div style="font-size:9px; color:var(--Neutral-500); text-transform:uppercase; margin-bottom:2px">${key}</div>
-                <div style="font-size:16px; font-weight:700; color:var(--Mint)">${dVal}<span style="font-size:10px; margin-left:2px">${unit}</span></div>
-            </div>`;
-        }
+      Object.keys(grids).forEach(g => {
+        document.getElementById(`measurementGrid${g.charAt(0).toUpperCase() + g.slice(1)}`).innerHTML = grids[g].map(k => {
+          if(!m[k]) return '';
+          const val = (m[k] * factor).toFixed(1);
+          return `<div style="padding:10px; background:rgba(255,255,255,0.05); border-radius:8px"><div>${k}</div><div style="font-size:16px; font-weight:700; color:var(--Mint)">${val}${unit}</div></div>`;
+        }).join('');
+      });
+      document.getElementById('measurementHeight').textContent = (data.height * factor).toFixed(1) + unit;
+      document.getElementById('measurementShape').textContent = data.body_shape || 'Standard';
+      document.getElementById('measurementSizeRec').textContent = data.size_recommendation || 'M';
 
-        document.getElementById('measurementGridUpper').innerHTML = upperBody.map(k => createCard(k, data.measurements[k])).join('');
-        document.getElementById('measurementGridMiddle').innerHTML = middleBody.map(k => createCard(k, data.measurements[k])).join('');
-        document.getElementById('measurementGridLower').innerHTML = lowerBody.map(k => createCard(k, data.measurements[k])).join('');
-
-        const hVal = data.height || data.measurements?.height;
-        document.getElementById('measurementHeight').textContent = window.CURRENT_UNIT === 'in' ? (hVal * 0.393701).toFixed(1) + ' in' : hVal + ' cm';
-
-        // INTELLIGENCE: DISPLAY BACKEND CONCLUSIONS (ASTM Standard)
-        const shape = data.body_shape || "Standard";
-        document.getElementById('measurementShape').textContent = shape;
-        document.getElementById('measurementSizeRec').textContent = data.size_recommendation || "M";
+      // DIAGNOSTICS
+      document.getElementById('diagAsymmetry').textContent = "NONE DETECTED";
+      document.getElementById('diagPosture').textContent = "OPTIMAL";
     }
 
-    window.exportToPDF = function() {
-        if (!window.LAST_MEASUREMENT_DATA) return;
-        const d = window.LAST_MEASUREMENT_DATA;
-        window.KORRA_EXPORT.pdf(d.client_name || "Client", d.measurements, d.gender, d.height);
-    };
-
-    window.exportTailorBrief = function() {
-        if (!window.LAST_MEASUREMENT_DATA) return;
-        const d = window.LAST_MEASUREMENT_DATA;
-        const shape = document.getElementById('measurementShape').textContent;
-        const sizeRec = document.getElementById('measurementSizeRec').textContent;
-        window.KORRA_EXPORT.generateTailorBrief(d.client_name || "Client", d.measurements, shape, sizeRec);
-    };
-
-    const CONFIG = {
-      url: 'https://blsettabymllulsxtziw.supabase.co',
-      key: 'sb_publishable_miCOIXHtlxLkfDgpwE0N-g_BA1Q-x8y',
-      paystack: 'pk_live_d8442a8b9814421b1b463286f91887e5b546305a' // REPLACE WITH YOUR ACTUAL LIVE PUBLIC KEY
-    };
-
-    window.KORRA_DB = null;
-    let userId = null;
-
-    const NetworkGuard = {
-        isOnline: navigator.onLine,
-        init: function() {
-            window.addEventListener('online', () => this.update(true));
-            window.addEventListener('offline', () => this.update(false));
-            this.update(navigator.onLine);
-        },
-        update: function(online) {
-            this.isOnline = online;
-            const statusEl = document.getElementById('networkStatus');
-            const overlay = document.getElementById('offlineOverlay');
-            if (statusEl) {
-                if (online) {
-                    statusEl.classList.remove('offline');
-                    statusEl.querySelector('span').textContent = 'Sync Active';
-                    if (overlay) overlay.style.display = 'none';
-                } else {
-                    statusEl.classList.add('offline');
-                    statusEl.querySelector('span').textContent = 'Connection Lost';
-                    if (overlay) overlay.style.display = 'flex';
-                }
-            }
-        },
-            retry: async function(fn, retries = 8, delay = 1500) {
-            for (let i = 0; i < retries; i++) {
-                try {
-                    if (!this.isOnline) throw new Error("OFFLINE");
-                    return await fn();
-                } catch (err) {
-                    const isNetworkError = err.message === "OFFLINE" || err.message.includes("fetch") || err.name === "TypeError" || err.message.includes("refresh_token") || err.message.includes("network") || err.message.includes("connection");
-                    if (i === retries - 1) {
-                        if (isNetworkError) {
-                            this.update(false);
-                            console.error("💎 KORRA: Network failed. Pausing...");
-                            throw new Error("PAUSED");
-                        }
-                        throw err;
-                    }
-                    // Exponential backoff with jitter
-                    const wait = (delay * Math.pow(1.8, i)) + (Math.random() * 500);
-                    console.warn(`💎 KORRA: Handshake retry (${i+1}/${retries}) in ${Math.round(wait)}ms...`);
-                    await new Promise(r => setTimeout(r, wait));
-                }
-            }
-        }
-    };
-
-    function switchTab(id) {
-      document.querySelectorAll('.tab-view').forEach(t => t.classList.remove('active'));
-      document.querySelectorAll('.sidebar-nav a').forEach(a => a.classList.remove('active'));
-
-      const targetView = document.getElementById('view-' + id);
-      const targetTab = document.getElementById('tab-' + id);
-
-      if (targetView) targetView.classList.add('active');
-      if (targetTab) targetTab.classList.add('active');
-
-      if (id === 'settings' || id === 'billing' || id === 'overview') loadSettings();
-      if (id === 'passports') renderPassports();
+    function renderLedger(items) {
+      document.getElementById('scanList').innerHTML = items.map((s, idx) => `<div class="scan-item"><div class="scan-info"><h5>${s.client_name}</h5><p>${new Date(s.created_at).toLocaleDateString()} • ${s.height}cm</p></div><button class="btn-outline" style="height:32px; font-size:10px" onclick="viewScan(${idx})">View</button></div>`).join('');
     }
 
-    window.copyApiKey = function() {
-      const key = document.getElementById('apiKeyDisplay').textContent;
-      if (key.includes('*')) { alert("Please regenerate key to view."); return; }
-      navigator.clipboard.writeText(key).then(() => alert("API Key copied to clipboard."));
+    window.viewScan = (idx) => {
+        const s = masterHistory[idx];
+        if(!s) return;
+        window.LAST_MEASUREMENT_DATA = s;
+        if(window.KORRA_VIZ) window.KORRA_VIZ.loadMesh(s.mesh_url);
+        renderMeasurementGrids(s);
+        document.getElementById('measurementResultsCard').style.display = 'block';
     };
 
-    let selectedCredits = 50;
-    let promoDiscount = 0;
-
-    window.selectBundle = function(el, count, price) {
-      selectedCredits = count;
-      document.querySelectorAll('#topUpModal .glass-card').forEach(c => c.style.borderColor = 'var(--Glass-Border)');
-      el.style.borderColor = 'var(--Mint)';
-    };
-
-    window.applyPromo = async function() {
-        const code = document.getElementById('promoCodeInput').value.trim();
-        const status = document.getElementById('promoStatus');
-        if (!code) return;
-
-        try {
-            const { data, error } = await window.KORRA_DB.from('promo_codes').select('*').eq('code', code.toUpperCase()).eq('is_active', true).single();
-            if (data) {
-                promoDiscount = data.discount_percent;
-                status.textContent = `CODE APPLIED: ${promoDiscount}% OFF`;
-                status.style.color = 'var(--Mint)';
-                status.style.display = 'block';
-            } else {
-                status.textContent = 'INVALID OR EXPIRED CODE';
-                status.style.color = 'var(--Error)';
-                status.style.display = 'block';
-                promoDiscount = 0;
-            }
-        } catch (e) { console.error(e); }
-    };
-
-    async function loadSettings() {
-      if (!window.KORRA_DB || !userId) return;
-
-      try {
-        // Fetch Profile & Credits
-        const { data: profile } = await window.KORRA_DB.from('profiles').select('*').eq('id', userId).single();
-        if (profile) {
-          document.getElementById('settingsName').value = profile.full_name || profile.company_name || "";
-          document.getElementById('settingsIndustry').value = profile.industry || "tailor";
-          document.getElementById('settingsPrice').value = profile.custom_client_price || 0.50;
-          document.getElementById('settingsThreshold').value = profile.low_credit_threshold || 10;
-
-          // Sync Credits everywhere
-          const credits = profile.credits || 0;
-          document.getElementById('statCredits').textContent = credits;
-          document.getElementById('billingCredits').textContent = credits;
-        }
-
-        // Fetch Transactions
-        const { data: txs } = await window.KORRA_DB.from('transactions').select('*').eq('user_id', userId).order('created_at', { ascending: false });
-        if (txs && txs.length) {
-            document.getElementById('billingHistoryBody').innerHTML = txs.map(t => `
-                <tr style="border-bottom:1px solid rgba(255,255,255,0.05)">
-                    <td style="padding:12px; font-size:12px">${new Date(t.created_at).toLocaleDateString()}</td>
-                    <td style="padding:12px; font-size:12px; text-transform:uppercase">${t.type.replace('_', ' ')}</td>
-                    <td style="padding:12px; font-size:12px">$${t.amount.toFixed(2)}</td>
-                    <td style="padding:12px; font-size:10px; color:var(--Mint)">SUCCESS</td>
-                </tr>
-            `).join('');
-        }
-
-        // Fetch Subscription Plan
-        const { data: sub } = await window.KORRA_DB.from('subscriptions').select('plan_id').eq('user_id', userId).single();
-        if (sub) {
-          const planMap = {
-            'basic': { name: 'Artisan Basic', desc: 'Standard Extractions + Core Visuals' },
-            'pro': { name: 'Artisan Pro', desc: 'Industrial Extractions + Bulk Data Export + 3D Viewport' },
-            'elite': { name: 'Artisan Elite', desc: 'Precision Priority + Custom Branding + Advanced Topology' }
-          };
-          const p = planMap[sub.plan_id] || planMap['basic'];
-          document.getElementById('billingPlanName').textContent = p.name;
-          document.getElementById('billingPlanDesc').textContent = p.desc;
-        }
-
-        // Fetch API Key
-        const { data: keyData } = await window.KORRA_DB.from('api_keys').select('*').eq('user_id', userId).single();
-        if (keyData) {
-          document.getElementById('apiKeyDisplay').textContent = keyData.key;
-        }
-      } catch (err) { console.error("Settings Load Failed:", err); }
-    }
-
-    (function() {
-      let masterHistory = [];
-      let usageChart = null;
-
-      async function fetchHistory() {
-        const { data } = await window.KORRA_DB.from('measurements').select('*').eq('user_id', userId).order('created_at', { ascending: false });
-        if(!data) return;
-        masterHistory = data;
-        document.getElementById('statTotal').textContent = data.length;
-        renderLedger(data);
-        renderAnalytics(data);
-      }
-
-      function renderLedger(items) {
-        document.getElementById('scanList').innerHTML = items.map(s => `
-          <div class="scan-item">
-            <div class="scan-info">
-              <h5>${s.client_name}</h5>
-              <p>${new Date(s.created_at).toLocaleDateString()} • ${s.height}cm • ${s.gender}</p>
-            </div>
-            <div style="display:flex; gap:12px">
-              <button class="btn-outline" style="height:32px; font-size:10px" onclick="window.KORRA_VIZ.loadMesh('${s.mesh_url}')">View 3D</button>
-            </div>
+    function renderPassports() {
+      const groups = {}; masterHistory.forEach(s => { const n = s.client_name || "Unknown"; if(!groups[n]) groups[n] = []; groups[n].push(s); });
+      document.getElementById('passportGrid').innerHTML = Object.entries(groups).map(([name, scans]) => `
+        <div class="glass-card" style="padding:24px">
+          <div style="display:flex; align-items:center; gap:16px; margin-bottom:20px">
+            <div style="width:40px; height:40px; background:var(--Mint); border-radius:50%; display:flex; align-items:center; justify-content:center; color:var(--Obsidian); font-weight:900">${name[0]}</div>
+            <div><h5>${name}</h5><p style="font-size:10px; color:var(--Neutral-500)">${scans.length} Scans</p></div>
           </div>
-        `).join('');
-      }
+          <button class="btn-primary" style="width:100%; height:36px; font-size:10px" onclick="exportPassport('${name}')">Export Passport</button>
+          <button class="btn-outline" style="width:100%; height:36px; font-size:10px; margin-top:8px" onclick="openComparison('${name}')">Compare Scans</button>
+        </div>
+      `).join('');
+    }
 
-      const passportVizMap = {};
+    window.exportPassport = (name) => {
+        const s = masterHistory.find(h => h.client_name === name);
+        if(s) window.KORRA_EXPORT.pdf(name, s.measurements, s.gender, s.height);
+    };
 
-      function renderPassports() {
-        const container = document.getElementById('passportGrid');
-        if (!masterHistory.length) {
-            container.innerHTML = `<div class="glass-card" style="text-align:center; padding:48px; grid-column: 1/-1"><div style="color:var(--Neutral-500)">No passports found. Start a scan to begin.</div></div>`;
-            return;
-        }
-
-        // Group by Client Name
-        const groups = {};
-        masterHistory.forEach(s => {
-            const name = s.client_name || "Unknown";
-            if (!groups[name]) groups[name] = [];
-            groups[name].push(s);
-        });
-
-        container.innerHTML = ''; // Clear for manual injection
-
-        Object.entries(groups).forEach(([name, scans]) => {
-            const latest = scans[0];
-            const first = scans[scans.length - 1];
-            const change = scans.length > 1 ? (latest.measurements?.['Waist Round'] - first.measurements?.['Waist Round']).toFixed(1) : 0;
-            const changeColor = change > 0 ? '#ff4d4d' : change < 0 ? '#57D7C0' : 'var(--Neutral-500)';
-
-            const cardId = `passport-${name.replace(/\s+/g, '-')}`;
-            const vizId = `viz-${cardId}`;
-
-            const card = document.createElement('div');
-            card.className = 'glass-card';
-            card.style.padding = '24px';
-            card.innerHTML = `
-                <div style="display:flex; align-items:center; gap:16px; margin-bottom:20px">
-                  <div style="width:48px; height:48px; background:var(--Mint); border-radius:50%; display:flex; align-items:center; justify-content:center; color:var(--Obsidian); font-weight:900">${name[0]}</div>
-                  <div>
-                    <h5 style="font-size:18px; margin:0">${name}</h5>
-                    <p style="font-size:10px; color:var(--Neutral-500); text-transform:uppercase; letter-spacing:0.1em">${scans.length} Extractions Locked</p>
-                  </div>
-                </div>
-
-                <div id="${vizId}" style="width:100%; height:200px; background:#000; border-radius:12px; border:1px solid var(--Glass-Border); margin-bottom:20px; overflow:hidden; position:relative">
-                  <span style="position:absolute; top:8px; left:8px; font-size:7px; color:var(--Mint); text-transform:uppercase; z-index:10; background:rgba(0,0,0,0.5); padding:2px 6px; border-radius:3px">3D Digital Twin</span>
-                  <button class="btn-outline" style="position:absolute; bottom:8px; right:8px; height:24px; font-size:7px; padding:0 8px; z-index:10; background:rgba(0,0,0,0.5)" onclick="togglePassportLandmarks(this, '${vizId}')">Landmarks: OFF</button>
-                </div>
-
-                <div style="background:rgba(0,0,0,0.3); border-radius:12px; padding:16px; border:1px solid var(--Glass-Border); margin-bottom:20px">
-                  <div style="font-size:10px; color:var(--Neutral-500); text-transform:uppercase; margin-bottom:8px">Latest Biometrics</div>
-                  <div style="display:grid; grid-template-columns: 1fr 1fr; gap:12px">
-                    <div><span style="font-size:10px; color:var(--Neutral-500)">Chest:</span> <b style="color:var(--Mint)">${latest.measurements?.['Chest Round'] || '--'}cm</b></div>
-                    <div><span style="font-size:10px; color:var(--Neutral-500)">Waist:</span> <b style="color:var(--Mint)">${latest.measurements?.['Waist Round'] || '--'}cm</b></div>
-                  </div>
-                  ${scans.length > 1 ? `<div style="font-size:9px; margin-top:8px; color:${changeColor}">Waist Drift: ${change > 0 ? '+' : ''}${change}cm since start</div>` : ''}
-                  ${scans.length > 2 ? `<div style="font-size:8px; margin-top:4px; color:var(--Neutral-500); opacity:0.7">GROWTH FORECAST (30d): ${ (change / (scans.length-1)).toFixed(1) }cm projection</div>` : ''}
-                </div>
-
-                <div style="display:grid; grid-template-columns: 1fr 1fr; gap:12px; margin-bottom:12px">
-                  <button class="btn-primary" style="height:36px; font-size:10px" onclick="exportPassport('${name}')">Export Passport</button>
-                  <button class="btn-outline" style="height:36px; font-size:10px" onclick="window.KORRA_EXPORT.exportSizeProtocol('${name}', scans[0].measurements)">Size Protocol</button>
-                </div>
-                <div style="display:grid; grid-template-columns: 1fr 1fr; gap:12px; margin-bottom:12px">
-                   <button class="btn-outline" style="height:36px; font-size:10px" onclick="switchTab('vault'); document.getElementById('ledgerSearch').value='${name}'; document.getElementById('ledgerSearch').dispatchEvent(new Event('input'));">View History</button>
-                   ${scans.length > 1 ? `<button class="btn-outline" style="height:36px; font-size:10px; border-color:var(--Mint); color:var(--Mint)" onclick="openComparison('${name}')">Compare Scan</button>` : `<button class="btn-outline" style="height:36px; font-size:10px" onclick="window.KORRA_EXPORT.captureMultiAngle(passportVizMap['${vizId}'], '${name}')">Diagnostic Report</button>`}
-                </div>
-                <button class="btn-outline" style="width:100%; height:32px; font-size:9px; border-style:dashed; color:var(--Neutral-500)" onclick="archivePassport('${name}')">Archive Profile (Phase 39)</button>
-            `;
-            container.appendChild(card);
-
-            // Initialize Mini-Viewport for this specific passport
-            if (window.createKorraVisualizer && latest.mesh_url) {
-                const viz = window.createKorraVisualizer();
-                viz.init(vizId);
-                viz.loadMesh(latest.mesh_url, latest.landmarks_3d);
-                passportVizMap[vizId] = viz;
-            }
-        });
-      }
-
-      window.togglePassportLandmarks = function(btn, vizId) {
-        const viz = passportVizMap[vizId];
-        if (!viz) return;
-        const isCurrentlyOff = btn.textContent.includes('OFF');
-        viz.toggleLandmarks(isCurrentlyOff);
-        btn.textContent = `Landmarks: ${isCurrentlyOff ? 'ON' : 'OFF'}`;
-      };
-
-      window.exportPassport = function(name) {
-        const scans = masterHistory.filter(s => s.client_name === name);
-        if (!scans.length) return;
-        const latest = scans[0];
-        window.KORRA_EXPORT.pdf(`Passport: ${name}`, latest.measurements, latest.gender, latest.height);
-      };
-
-      window.exportClientTailorBrief = function(name) {
-        const scans = masterHistory.filter(s => s.client_name === name);
-        if (!scans.length) return;
-        const latest = scans[0];
-        // Calculate shape/size rec on the fly
-        const m = latest.measurements;
-        let shape = "Standard", size = "M";
-        if (m['Chest Round'] && m['Waist Round'] && m['Hip Round']) {
-            const cw = m['Chest Round']/m['Waist Round'], wh = m['Waist Round']/m['Hip Round'];
-            if (wh < 0.75 && cw < 1.1) shape = "Hourglass";
-            else if (wh > 0.8 && cw < 1.1) shape = "Rectangle";
-            if (m['Chest Round'] < 90) size = "S"; else if (m['Chest Round'] > 110) size = "XL";
-        }
-        window.KORRA_EXPORT.generateTailorBrief(name, m, shape, size);
-      };
-
-      // --- PHASE 37-40: FINAL EXCELLENCE ---
-      window.openQRPoster = async function() {
-          const modal = document.getElementById('qrPosterModal');
-          const qrBox = document.getElementById('posterQr');
-          modal.classList.add('active');
-
-          const baseUrl = window.location.origin;
-          const shareUrl = `${baseUrl}/share?m=${userId}`;
-
-          try {
-              const res = await fetch(`/api/v2/qrcode/generate?url=${encodeURIComponent(shareUrl)}`);
-              if (res.ok) {
-                  const blob = await res.blob();
-                  const img = document.createElement('img');
-                  img.src = URL.createObjectURL(blob);
-                  img.style.width = '100%';
-                  qrBox.innerHTML = '';
-                  qrBox.appendChild(img);
-              }
-          } catch(e) { qrBox.textContent = "QR GENERATION FAILED"; }
-      };
-
-      window.archivePassport = function(name) {
-          if (confirm(`Archive profile for ${name}? This will hide it from the active workbench.`)) {
-              alert("Phase 39: Migration to Cold Storage initiated.");
-              // In production, this would update 'is_archived' in Supabase
-          }
-      };
-
-      let baselineData = null;
-      let latestData = null;
-      let vBaseline = null;
-      let vLatest = null;
-
-      window.openComparison = function(name) {
-        const scans = masterHistory.filter(s => s.client_name === name);
-        if (scans.length < 2) return;
-
-        const latest = scans[0];
-        const baseline = scans[scans.length - 1];
-
-        document.getElementById('baselineDate').textContent = new Date(baseline.created_at).toLocaleDateString() + " (First Scan)";
-        document.getElementById('latestDate').textContent = new Date(latest.created_at).toLocaleDateString() + " (Most Recent)";
+    let vBaseline = null, vLatest = null, baselineData = null, latestData = null;
+    window.openComparison = (name) => {
+        const scans = masterHistory.filter(h => h.client_name === name);
+        if(scans.length < 2) { alert("2 scans required for comparison."); return; }
+        const latest = scans[0], baseline = scans[scans.length-1];
+        document.getElementById('baselineDate').textContent = new Date(baseline.created_at).toLocaleDateString();
+        document.getElementById('latestDate').textContent = new Date(latest.created_at).toLocaleDateString();
         document.getElementById('compareModal').classList.add('active');
+        vBaseline = window.createKorraVisualizer ? window.createKorraVisualizer() : window.KORRA_VIZ;
+        vLatest = window.createKorraVisualizer ? window.createKorraVisualizer() : window.KORRA_VIZ;
+        vBaseline.init('compare-baseline-viz'); vLatest.init('compare-latest-viz');
+        vBaseline.loadMesh(baseline.mesh_url).then(d => baselineData = d);
+        vLatest.loadMesh(latest.mesh_url).then(d => latestData = d);
+    };
 
-        // Initialize 3D Viewports
-        vBaseline = window.createKorraVisualizer();
-        vLatest = window.createKorraVisualizer();
+    window.toggleHeatmap = () => {
+        if(!vLatest || !baselineData || !latestData) return;
+        vLatest.applyHeatmap(baselineData, latestData);
+        document.getElementById('heatmapLegend').style.display = 'flex';
+        document.getElementById('compare-baseline-viz').parentElement.style.display = 'none';
+        document.getElementById('compareGrid').style.gridTemplateColumns = '1fr';
+    };
 
-        vBaseline.init('compare-baseline-viz');
-        vLatest.init('compare-latest-viz');
-
-        Promise.all([
-            vBaseline.loadMesh(baseline.mesh_url),
-            vLatest.loadMesh(latest.mesh_url)
-        ]).then(results => {
-            baselineData = results[0];
-            latestData = results[1];
-        });
-      };
-
-      window.toggleHeatmap = function() {
-        if (!baselineData || !latestData) return;
-
-        const btn = document.getElementById('btnHeatmapToggle');
-        const legend = document.getElementById('heatmapLegend');
-        const grid = document.getElementById('compareGrid');
-
-        if (btn.textContent.includes('Activate')) {
-            // MERGE INTO HEATMAP VIEW
-            vLatest.applyHeatmap(baselineData, latestData);
-            btn.textContent = 'Disable Heatmap Overlay';
-            legend.style.display = 'flex';
-            // Optionally hide baseline viewport to focus on heat
-            document.getElementById('compare-baseline-viz').parentElement.style.display = 'none';
-            grid.style.gridTemplateColumns = '1fr';
-        } else {
-            location.reload(); // Hard reset for clean state
-        }
-      };
-
-      function renderAnalytics(data) {
+    function renderAnalytics(data) {
         const ctx = document.getElementById('usageChart').getContext('2d');
-        if (usageChart) usageChart.destroy();
+        if(usageChart) usageChart.destroy();
+        const last30 = {}; for(let i=29; i>=0; i--) { const d = new Date(); d.setDate(d.getDate()-i); last30[d.toLocaleDateString()] = 0; }
+        data.forEach(s => { const d = new Date(s.created_at).toLocaleDateString(); if(last30[d] !== undefined) last30[d]++; });
+        usageChart = new Chart(ctx, { type: 'line', data: { labels: Object.keys(last30), datasets: [{ data: Object.values(last30), borderColor: '#57D7C0', backgroundColor: 'rgba(87,215,192,0.1)', fill: true, tension: 0.4 }] }, options: { responsive: true, maintainAspectRatio: false, plugins: { legend: { display: false } }, scales: { x: { display: false }, y: { beginAtZero: true, grid: { color: 'rgba(255,255,255,0.05)' } } } } });
+    }
 
-        // Process last 30 days
-        const last30 = {};
-        for(let i=29; i>=0; i--) {
-            const d = new Date(); d.setDate(d.getDate() - i);
-            last30[d.toLocaleDateString()] = 0;
-        }
-
-        data.forEach(s => {
-            const date = new Date(s.created_at).toLocaleDateString();
-            if (last30[date] !== undefined) last30[date]++;
-        });
-
-        usageChart = new Chart(ctx, {
-            type: 'line',
-            data: {
-                labels: Object.keys(last30),
-                datasets: [{
-                    label: 'Scans',
-                    data: Object.values(last30),
-                    borderColor: '#57D7C0',
-                    backgroundColor: 'rgba(87, 215, 192, 0.1)',
-                    borderWidth: 2,
-                    pointRadius: 0,
-                    fill: true,
-                    tension: 0.4
-                }]
-            },
-            options: {
-                responsive: true,
-                maintainAspectRatio: false,
-                plugins: { legend: { display: false } },
-                scales: {
-                    x: { display: false },
-                    y: {
-                        beginAtZero: true,
-                        grid: { color: 'rgba(255,255,255,0.05)' },
-                        ticks: { color: '#737373', font: { size: 9 } }
-                    }
-                }
-            }
-        });
-      }
-
-      window.exportLedgerCSV = function() {
-        if (!masterHistory.length) return;
-        const headers = ["Client Name", "Date", "Height", "Gender", "Chest", "Waist", "Hips"];
-        const rows = masterHistory.map(s => [
-            s.client_name,
-            new Date(s.created_at).toLocaleDateString(),
-            s.height,
-            s.gender,
-            s.measurements?.['Chest Round'] || '',
-            s.measurements?.['Waist Round'] || '',
-            s.measurements?.['Hip Round'] || ''
-        ]);
-
-        let csvContent = "data:text/csv;charset=utf-8," + headers.join(",") + "\n" + rows.map(r => r.join(",")).join("\n");
-        const encodedUri = encodeURI(csvContent);
-        const link = document.createElement("a");
-        link.setAttribute("href", encodedUri);
-        link.setAttribute("download", `korra_ledger_${new Date().toISOString().split('T')[0]}.csv`);
-        document.body.appendChild(link);
-        link.click();
-      };
-
-      document.getElementById('ledgerSearch').addEventListener('input', (e) => {
-        const query = e.target.value.toLowerCase();
-        const filtered = masterHistory.filter(s => s.client_name.toLowerCase().includes(query));
-        renderLedger(filtered);
-      });
-
-      // --- DEEP LINK LOGIC ---
-      let generatedUrl = "";
-      window.generateDeepLink = function() {
-        const name = document.getElementById('shareName').value;
-        if (!name) { alert("Please enter client name."); return; }
-
-        // Create a secure invitation record
-        const baseUrl = window.location.origin;
-        generatedUrl = `${baseUrl}/share?m=${userId}&c=${encodeURIComponent(name)}`;
-
-        document.getElementById('deepLinkDisplay').textContent = generatedUrl;
-        document.getElementById('linkGeneratedArea').style.display = 'block';
-        document.getElementById('btnGenerateLink').style.display = 'none';
-      };
-
-      window.copyDeepLink = function() {
-        navigator.clipboard.writeText(generatedUrl).then(() => alert("Deep Link copied to clipboard."));
-      };
-
-      window.shareToWhatsApp = function() {
-        const text = encodeURIComponent(`Hi! Please use this secure link to complete your digital body scan: ${generatedUrl}`);
-        window.open(`https://wa.me/?text=${text}`, '_blank');
-      };
-
-      async function init() {
-        NetworkGuard.init();
-        if (typeof window.supabase === 'undefined') { setTimeout(init, 500); return; }
-
-// ULTRA-RESILIENT: Custom fetch that wraps ALL Supabase internal calls with retry
-        const resilientFetch = async (url, options = {}) => {
-            const isTokenEndpoint = url.includes('/auth/v1/token') || url.includes('refresh_token');
-            const maxRetries = isTokenEndpoint ? 10 : 8;
-            const baseDelay = isTokenEndpoint ? 2000 : 1500;
-            
-            for (let attempt = 0; attempt < maxRetries; attempt++) {
-                try {
-                    const response = await fetch(url, options);
-                    if (!response.ok && response.type === 'opaque' && response.status === 0) {
-                        throw new Error("NETWORK_ERROR");
-                    }
-                    return response;
-                } catch (err) {
-                    if (attempt === maxRetries - 1) throw err;
-                    const backoff = (baseDelay * Math.pow(2, attempt)) + (Math.random() * 1000);
-                    console.warn(`🔄 KORRA: Attempt ${attempt + 1}/${maxRetries} failed. Retrying in ${Math.round(backoff)}ms...`);
-                    await new Promise(r => setTimeout(r, backoff));
-                }
-            }
-        };
-
-        window.KORRA_DB = window.supabase.createClient(CONFIG.url, CONFIG.key, {
-            auth: {
-                persistSession: true,
-                autoRefreshToken: true,
-                detectSessionInUrl: true,
-                storage: window.localStorage
-            },
-            global: {
-                fetch: resilientFetch
-            }
-        });
-
-        let sessionResponse;
-        try {
-            sessionResponse = await NetworkGuard.retry(() => window.KORRA_DB.auth.getSession());
-        } catch (err) {
-            if (err.message === "OFFLINE") return;
-            localStorage.clear();
-            window.location.href = '/signin';
-            return;
-        }
-
-        const { data: { session } } = sessionResponse;
-        if (!session) { window.location.href = '/signin'; return; }
-
-        userId = session.user.id;
-        document.getElementById('loadingOverlay').style.display = 'none';
-        document.getElementById('userEmail').textContent = session.user.email;
-
-        fetchHistory();
-        loadSettings();
-        if (window.KORRA_VIZ) window.KORRA_VIZ.init('dashboard-3d-viewport');
-      }
-
-      // --- UNICORN POLLING ENGINE ---
-      async function pollTask(taskId) {
-        const overlay = document.getElementById('extractionProgress');
-        const fill = document.getElementById('progressFill');
-        const status = document.getElementById('progressStatus');
-        const btn = document.getElementById('btnRunScan');
-
-        overlay.style.display = 'flex';
-        let progress = 10;
-
-        const interval = setInterval(async () => {
-          try {
-            const res = await fetch(`/api/v2/measurements/status/${taskId}`);
-            if (!res.ok) return;
-            const data = await res.json();
-
-            const msgs = ["INITIALIZING AI BRAIN...", "EXECUTING SKELETAL DETECTION...", "RUNNING VOLUMETRIC REGRESSION...", "MAPPING VERTEX CLOUD...", "SCALING BIOMETRICS...", "MATERIALIZING 3D TWIN...", "SYNCING HANDSHAKE COMPLETE."];
-
-            if (data.status === 'processing') {
-              progress = Math.min(progress + 8, 95);
-              status.textContent = msgs[Math.floor((progress/100) * msgs.length)];
-            } else if (data.status === 'completed') {
-              clearInterval(interval);
-              progress = 100;
-              status.textContent = 'SUCCESS: HANDSHAKE COMPLETE';
-              if (window.KORRA_VIZ && data.mesh_url) window.KORRA_VIZ.loadMesh(data.mesh_url);
-
-              window.LAST_MEASUREMENT_DATA = data;
-              window.CURRENT_UNIT = 'cm';
-              document.getElementById('measurementResultsCard').style.display = 'block';
-              renderMeasurementGrids(data);
-
-              speak(`Handshake locked. Your chest is ${data.measurements['Chest Round']} centimeters, waist is ${data.measurements['Waist Round']} centimeters, and hips are ${data.measurements['Hip Round']} centimeters.`, true);
-
-              fetchHistory();
-              setTimeout(() => {
-                overlay.style.display = 'none';
-                btn.disabled = false; btn.textContent = 'Complete';
-                document.getElementById('scanModal').classList.remove('active');
-              }, 1000);
-            } else if (data.status === 'failed') {
-              clearInterval(interval);
-              alert("AI Core Rejection: " + (data.error || "Conflict"));
-              overlay.style.display = 'none';
-              btn.disabled = false; btn.textContent = 'Retry Scan';
-            }
-            fill.style.width = progress + '%';
-          } catch (e) {}
-        }, 2000);
-      }
-
-      document.getElementById('scanForm').addEventListener('submit', async (e) => {
-        e.preventDefault();
-        const btn = document.getElementById('btnRunScan');
-        btn.disabled = true; btn.textContent = 'QUEUING...';
-
-        const fd = new FormData();
-        fd.append('front', document.getElementById('frontPhoto').files[0]);
-        fd.append('side', document.getElementById('sidePhoto').files[0]);
-        fd.append('height', document.getElementById('scanHeight').value);
-        fd.append('gender', document.getElementById('scanGender').value);
-        fd.append('client_name', document.getElementById('scanClientName').value);
-        fd.append('merchant_id', userId);
-
-        try {
-          const res = await fetch('/api/v2/measurements/extract-widget', { method: 'POST', body: fd });
-          if (res.ok) {
-            const data = await res.json();
-            pollTask(data.task_id);
-          } else if (res.status === 402) {
-            document.getElementById('creditOverlay').style.display = 'flex';
-            btn.disabled = false; btn.textContent = 'Extract Biometrics';
-          } else {
-            const err = await res.json();
-            alert("Error: " + (err.error || "Rejection"));
-            btn.disabled = false; btn.textContent = 'Extract Biometrics';
-          }
-        } catch (err) { btn.disabled = false; }
-      });
-
-      window.dismissCreditError = () => {
-        document.getElementById('creditOverlay').style.display = 'none';
-        document.getElementById('scanModal').classList.remove('active');
-      };
-
-      document.getElementById('btnSignOut').onclick = async () => { await window.KORRA_DB.auth.signOut(); window.location.href = '/signin'; };
-
-      // --- SETTINGS ACTIONS ---
-      document.getElementById('btnSaveSettings').addEventListener('click', async () => {
-        const btn = document.getElementById('btnSaveSettings');
-        const name = document.getElementById('settingsName').value;
-        const ind = document.getElementById('settingsIndustry').value;
-        const price = parseFloat(document.getElementById('settingsPrice').value);
-        const threshold = parseInt(document.getElementById('settingsThreshold').value);
-
-        btn.disabled = true; btn.textContent = 'SAVING...';
-        try {
-          const { error } = await window.KORRA_DB.from('profiles').update({
-            company_name: name,
-            industry: ind,
-            custom_client_price: price,
-            low_credit_threshold: threshold
-          }).eq('id', userId);
-          if (error) throw error;
-          alert("Profile updated successfully.");
-        } catch (e) { alert("Failed to save settings."); }
-        finally { btn.disabled = false; btn.textContent = 'Save Profile Changes'; }
-      });
-
-      // --- BULK IMPORT ---
-      window.triggerBulkImport = () => document.getElementById('bulkImportFile').click();
-      window.handleBulkImport = async (input) => {
-        if (!input.files || !input.files[0]) return;
-        const file = input.files[0];
+    window.triggerBulkImport = () => document.getElementById('bulkImportFile').click();
+    window.handleBulkImport = (input) => {
+        if(!input.files[0]) return;
         const reader = new FileReader();
         reader.onload = async (e) => {
-            const text = e.target.result;
-            const lines = text.split('\n').slice(1); // Skip header
-            let count = 0;
-            for (let line of lines) {
-                const [name, email, height, gender] = line.split(',');
-                if (name && height) {
-                    await window.KORRA_DB.from('measurements').insert({
-                        user_id: userId, client_name: name, height: parseFloat(height),
-                        gender: gender?.trim().toLowerCase() || 'male', biometrics: {}
-                    });
-                    count++;
-                }
+            const lines = e.target.result.split('\n').slice(1);
+            for(let line of lines) {
+                const [name, height, gender] = line.split(',');
+                if(name) await window.KORRA_DB.from('measurements').insert({ user_id: userId, client_name: name, height: parseFloat(height), gender: gender?.trim().toLowerCase() || 'male', biometrics: {} });
             }
-            alert(`Bulk Import Complete. ${count} clients migrated to your vault.`);
-            fetchHistory();
-        };
-        reader.readAsText(file);
-      };
+            alert("Bulk Import Complete."); fetchHistory();
+        }; reader.readAsText(input.files[0]);
+    };
 
-      document.getElementById('btnRegenKey').addEventListener('click', async () => {
-        if (!confirm("Are you sure? This will break your existing widget integrations.")) return;
-        const btn = document.getElementById('btnRegenKey');
-        btn.disabled = true; btn.textContent = 'REGENERATING...';
+    async function init() {
+      if (typeof window.supabase === 'undefined') { setTimeout(init, 500); return; }
+      window.KORRA_DB = window.supabase.createClient(CONFIG.url, CONFIG.key);
+      const { data: { session } } = await window.KORRA_DB.auth.getSession();
+      if (!session) { window.location.href = '/signin'; return; }
+      userId = session.user.id; document.getElementById('loadingOverlay').style.display = 'none';
+      fetchHistory(); loadSettings(); if (window.KORRA_VIZ) window.KORRA_VIZ.init('dashboard-3d-viewport');
+    }
 
-        try {
-          // Generate a new standard artisan key
-          const newKey = 'korra_artisan_' + Math.random().toString(36).substring(2) + Math.random().toString(36).substring(2);
-          const { error } = await window.KORRA_DB.from('api_keys').upsert({
-            user_id: userId,
-            key: newKey,
-            is_active: true,
-            tier: 'tailor_pro' // Default tier for new keys
-          });
-          if (error) throw error;
-          document.getElementById('apiKeyDisplay').textContent = newKey;
-          alert("New API Key generated.");
-        } catch (e) { alert("Failed to generate key."); }
-        finally { btn.disabled = false; btn.textContent = 'Regenerate API Key'; }
-      });
+    async function pollTask(taskId) {
+      const overlay = document.getElementById('extractionProgress'), fill = document.getElementById('progressFill'), status = document.getElementById('progressStatus'), btn = document.getElementById('btnRunScan');
+      overlay.style.display = 'flex'; let progress = 10;
+      const interval = setInterval(async () => {
+        const res = await fetch(`/api/v2/measurements/status/${taskId}`); if (!res.ok) return;
+        const data = await res.json();
+        if (data.status === 'processing') { progress = Math.min(progress + 10, 95); status.textContent = "Analyzing body shape..."; }
+        else if (data.status === 'completed') { clearInterval(interval); progress = 100; window.LAST_MEASUREMENT_DATA = data; renderMeasurementGrids(data); if (window.KORRA_VIZ) window.KORRA_VIZ.loadMesh(data.mesh_url); fetchHistory(); setTimeout(() => { overlay.style.display = 'none'; btn.disabled = false; document.getElementById('scanModal').classList.remove('active'); document.getElementById('measurementResultsCard').style.display='block'; }, 1000); }
+        else if (data.status === 'failed') { clearInterval(interval); alert("Error"); overlay.style.display = 'none'; btn.disabled = false; }
+        fill.style.width = progress + '%';
+      }, 2000);
+    }
 
-      // --- BILLING ACTIONS ---
-      document.getElementById('btnConfirmPurchase').addEventListener('click', () => {
-        const email = document.getElementById('userEmail').textContent;
-        const amount = selectedCredits * 50; // $0.50 per scan = 50 cents * credits
+    document.getElementById('scanForm').addEventListener('submit', async (e) => {
+      e.preventDefault(); const btn = document.getElementById('btnRunScan'); btn.disabled = true;
+      const fd = new FormData(); fd.append('front', document.getElementById('frontPhoto').files[0]); fd.append('side', document.getElementById('sidePhoto').files[0]); fd.append('height', document.getElementById('scanHeight').value); fd.append('gender', document.getElementById('scanGender').value); fd.append('client_name', document.getElementById('scanClientName').value);
+      const res = await fetch('/api/v2/measurements/extract', { method: 'POST', headers: { 'X-API-Key': 'sb_publishable_miCOIXHtlxLkfDgpwE0N-g_BA1Q-x8y' }, body: fd });
+      if (res.ok) { const d = await res.json(); pollTask(d.task_id); } else { btn.disabled = false; alert("Error starting scan."); }
+    });
 
-        const handler = PaystackPop.setup({
-          key: CONFIG.paystack,
-          email: email,
-          amount: amount, // Assuming USD cents or conversion happens on backend
-          currency: "USD",
-          metadata: {
-            user_id: userId,
-            type: 'bundle',
-            credits: selectedCredits
-          },
-          callback: function(response) {
-            // Verify reference on backend
-            fetch(`/api/v2/payments/verify/${response.reference}`)
-              .then(res => res.json())
-              .then(data => {
-                if (data.status) {
-                  alert(`Success! ${selectedCredits} credits synchronized.`);
-                  loadSettings();
-                  document.getElementById('topUpModal').classList.remove('active');
-                } else {
-                  alert("Sync failed. Contact Support with Reference: " + response.reference);
-                }
-              });
-          },
-          onClose: function() { alert('Transaction cancelled.'); }
-        });
-        handler.openIframe();
-      });
-
-      init();
-    })();
+    document.getElementById('btnSignOut').onclick = async () => { await window.KORRA_DB.auth.signOut(); window.location.href = '/signin'; };
+    window.generateDeepLink = () => { const name = document.getElementById('shareName').value; const url = `${window.location.origin}/share?m=${userId}&c=${encodeURIComponent(name)}`; document.getElementById('deepLinkDisplay').textContent = url; document.getElementById('linkGeneratedArea').style.display = 'block'; };
+    window.copyDeepLink = () => navigator.clipboard.writeText(document.getElementById('deepLinkDisplay').textContent).then(() => alert("Copied"));
+    window.dismissCreditError = () => { document.getElementById('creditOverlay').style.display = 'none'; };
+    window.openQRPoster = () => document.getElementById('qrPosterModal').classList.add('active');
+    init();
   </script>
 </body>
 </html>

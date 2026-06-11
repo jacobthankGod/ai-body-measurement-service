@@ -16,16 +16,6 @@
     html, body { height: 100%; background: var(--Obsidian); color: var(--White); font-family: 'Inter', sans-serif; overflow-x: hidden; }
     .share-viewport { min-height: 100vh; display: flex; align-items: center; justify-content: center; padding: 24px; }
     .share-card { width: 100%; max-width: 440px; background: var(--Glass); border: 1px solid var(--Glass-Border); border-radius: 32px; padding: 40px; position: relative; overflow: hidden; }
-
-    @media (max-width: 480px) {
-      .share-viewport { padding: 16px; }
-      .share-card { padding: 24px; border-radius: 20px; }
-      .title { font-size: 18px; }
-      .file-box { height: 100px; }
-      .camera-guidance { font-size: 14px; padding: 12px 24px; width: 90%; }
-      #share-3d-viewport { height: 250px; }
-    }
-
     .logo-mark { width: 24px; height: 24px; border-radius: 6px; background: var(--Mint); transform: rotate(-8deg); margin: 0 auto 24px; }
     .title { font-size: 20px; font-weight: 800; text-align: center; margin-bottom: 8px; }
     .subtitle { font-size: 13px; color: var(--Neutral-400); text-align: center; margin-bottom: 32px; line-height: 1.5; }
@@ -35,12 +25,11 @@
     .file-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 16px; margin-bottom: 32px; }
     .file-box { height: 120px; border: 1px dashed var(--Glass-Border); border-radius: 16px; display: flex; flex-direction: column; align-items: center; justify-content: center; cursor: pointer; position: relative; overflow: hidden; }
     .file-box span { font-size: 10px; font-weight: 800; color: var(--Neutral-500); text-transform: uppercase; }
-    .file-box input { position: absolute; inset: 0; opacity: 0; cursor: pointer; z-index: 10; }
 
     .ghost-overlay { position: absolute; inset: 0; border: 2px solid var(--Mint); border-radius: 16px; pointer-events: none; z-index: 8; opacity: 0.2; display: flex; align-items: center; justify-content: center; }
     .ghost-shape { width: 40%; height: 80%; border: 1px solid var(--Mint); border-radius: 50% 50% 40% 40%; }
-
     .preview-img { position: absolute; inset: 0; width: 100%; height: 100%; object-fit: cover; display: none; z-index: 5; }
+
     .btn-submit { width: 100%; height: 52px; background: var(--Mint); color: var(--Obsidian); border: none; border-radius: 12px; font-weight: 800; cursor: pointer; transition: 0.2s; }
     .btn-outline { width: 100%; height: 52px; background: none; border: 1px solid var(--Glass-Border); border-radius: 12px; color: #fff; font-weight: 700; font-size: 12px; cursor: pointer; transition: 0.2s; text-transform: uppercase; margin-top: 12px; }
     .btn-outline:hover { background: rgba(255,255,255,0.05); border-color: var(--Mint); }
@@ -63,7 +52,6 @@
     .step-view.active { display: block; }
     @keyframes fadeIn { from { opacity: 0; transform: translateY(10px); } to { opacity: 1; transform: translateY(0); } }
 
-    /* CAMERA GUIDANCE SYSTEM */
     .pro-tips-card { background: rgba(87, 215, 192, 0.05); border: 1px solid rgba(87, 215, 192, 0.2); border-radius: 20px; padding: 20px; margin-top: 24px; text-align: left; }
     .pro-tips-card h4 { font-size: 11px; font-weight: 900; color: var(--Mint); text-transform: uppercase; margin-bottom: 12px; display: flex; align-items: center; gap: 8px; }
     .tip-row { display: flex; gap: 12px; margin-bottom: 10px; font-size: 11px; color: var(--Neutral-400); line-height: 1.4; }
@@ -76,29 +64,18 @@
     #camera-canvas { position: absolute; inset: 0; width: 100%; height: 100%; z-index: 10; transform: scaleX(-1); }
     .camera-overlay { position: absolute; inset: 0; z-index: 20; pointer-events: none; display: flex; flex-direction: column; align-items: center; justify-content: space-between; padding: 60px 24px; }
     .camera-guidance {
-      background: rgba(0,0,0,0.8);
-      backdrop-filter: blur(12px);
-      padding: 16px 32px;
-      border-radius: 99px;
-      border: 2px solid var(--Mint);
-      color: var(--White);
-      font-size: 16px;
-      font-weight: 900;
-      text-align: center;
-      text-transform: uppercase;
-      letter-spacing: 0.05em;
-      box-shadow: 0 0 30px rgba(87, 215, 192, 0.3);
+      background: rgba(0,0,0,0.8); backdrop-filter: blur(12px); padding: 16px 32px; border-radius: 99px;
+      border: 2px solid var(--Mint); color: var(--White); font-size: 16px; font-weight: 900;
+      text-align: center; text-transform: uppercase; letter-spacing: 0.05em; box-shadow: 0 0 30px rgba(87, 215, 192, 0.3);
     }
     .camera-controls { position: absolute; bottom: 40px; left: 0; right: 0; display: flex; justify-content: center; align-items: center; gap: 32px; z-index: 30; }
     .camera-review-controls { position: absolute; bottom: 40px; left: 0; right: 0; display: none; justify-content: center; align-items: center; gap: 24px; z-index: 50; padding: 0 24px; }
     .btn-review { height: 56px; border-radius: 12px; font-weight: 800; cursor: pointer; flex: 1; text-transform: uppercase; font-size: 14px; border: none; }
     .btn-keep { background: var(--Mint); color: var(--Obsidian); }
     .btn-redo { background: rgba(255,255,255,0.1); color: #fff; border: 1px solid var(--Glass-Border); }
-
     .shutter-btn { width: 84px; height: 84px; border-radius: 50%; background: #fff; border: 6px solid var(--Mint); cursor: pointer; display: flex; align-items: center; justify-content: center; box-shadow: 0 0 30px rgba(0,0,0,0.5); transition: 0.2s; }
-    .shutter-btn:active { transform: scale(0.9); }
-    .camera-close { position: absolute; top: 40px; right: 24px; width: 44px; height: 44px; border-radius: 50%; background: rgba(0,0,0,0.6); border: 1px solid var(--Glass-Border); color: #fff; display: flex; align-items: center; justify-content: center; cursor: pointer; z-index: 40; pointer-events: auto; font-size: 20px; font-weight: 700; transition: 0.2s; }
-    .camera-close:hover { background: var(--Error); border-color: var(--Error); }
+    .camera-close { position: absolute; top: 40px; right: 24px; width: 44px; height: 44px; border-radius: 50%; background: rgba(0,0,0,0.6); border: 1px solid var(--Glass-Border); color: #fff; display: flex; align-items: center; justify-content: center; cursor: pointer; z-index: 40; pointer-events: auto; font-size: 20px; font-weight: 700; }
+    #review-img { width: 100%; height: 100%; object-fit: cover; display: none; transform: scaleX(-1); }
   </style>
 </head>
 <body>
@@ -107,16 +84,15 @@
 
       <div id="loadingOverlay">
         <div class="mesh-loader"></div>
-        <div style="font-size:11px; font-weight:900; letter-spacing:0.2em; color:var(--Mint)" id="statusText">CONSTRUCTING DIGITAL TWIN</div>
+        <div style="font-size:11px; font-weight:900; letter-spacing:0.2em; color:var(--Mint)" id="statusText">CREATING 3D MODEL</div>
         <div class="progress-track"><div class="progress-fill" id="pFill"></div></div>
-        <div id="pText" style="font-size:10px; color:var(--Neutral-500); margin-top:12px">Analyzing topology...</div>
+        <div id="pText" style="font-size:10px; color:var(--Neutral-500); margin-top:12px">Analyzing body shape...</div>
       </div>
 
-      <!-- STEP 1: INSTRUCTIONS -->
       <div id="step-instructions" class="step-view active">
         <div class="logo-mark"></div>
-        <h1 class="title">Clinical Protocol</h1>
-        <p class="subtitle">Follow these rules for ±1cm accuracy.</p>
+        <h1 class="title">Measurement Guidelines</h1>
+        <p class="subtitle">Follow these rules for high accuracy.</p>
         <div style="margin-bottom:32px">
           <div class="instruction-item"><span class="instruction-icon">01</span><span>Stand 2 meters away from the camera.</span></div>
           <div class="instruction-item"><span class="instruction-icon">02</span><span>Ensure full body (head to toe) is in frame.</span></div>
@@ -125,97 +101,64 @@
         <button class="btn-submit" onclick="goToStep('scan')">Start Capture</button>
       </div>
 
-      <!-- STEP 2: SCAN FORM -->
       <div id="step-scan" class="step-view">
-        <h1 class="title" style="margin-bottom:24px">Digital Body Scan</h1>
+        <h1 class="title" style="margin-bottom:24px">Body Scan</h1>
         <form id="shareForm">
           <input type="number" id="height" class="input" placeholder="Height in CM (e.g. 180)" required>
           <select id="gender" class="input" style="appearance:none;"><option value="male">Male</option><option value="female">Female</option></select>
-
           <div class="file-grid">
             <div class="file-box" id="fLabel" onclick="handlePreviewClick('front')">
-              <div class="ghost-overlay"><div class="ghost-shape"></div></div>
-              <img class="preview-img" id="fPrev">
+              <div class="ghost-overlay placeholder-content"><div class="ghost-shape"></div></div>
+              <img class="preview-img" id="fPrev" alt="Front Preview">
               <div class="preview-overlay" style="position:absolute; inset:0; background:rgba(0,0,0,0.6); display:none; flex-direction:column; align-items:center; justify-content:center; z-index:10" onclick="openCamera('front'); event.stopPropagation();">
-                 <svg class="korra-icon" style="color:var(--Mint); width:24px; height:24px; margin-bottom:8px" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M23 19a2 2 0 0 1-2 2H3a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h4l2-3h6l2 3h4a2 2 0 0 1 2 2z"/><circle cx="12" cy="13" r="4"/></svg>
-                 <span style="font-size:10px; font-weight:900; color:#fff">TAP TO RECAPTURE</span>
+                 <span style="font-size:10px; font-weight:900; color:#fff">TAP TO RETAKE</span>
               </div>
-              <div class="placeholder-content" style="display:flex; flex-direction:column; align-items:center">
-                <span>Front A-Pose</span>
-                <div style="font-size:8px; color:var(--Mint); margin-top:4px; font-weight:700">TAP TO SNAP</div>
-              </div>
-              <input type="file" id="front" accept="image/*" required style="display:none" onchange="preview(this, 'fPrev')" onclick="event.stopPropagation()">
+              <div class="placeholder-content"><span>Front A-Pose</span><div style="font-size:8px; color:var(--Mint); margin-top:4px; font-weight:700">TAP TO SNAP</div></div>
+              <input type="file" id="front" accept="image/*" required style="display:none" onchange="preview(this, 'fPrev')">
             </div>
             <div class="file-box" id="sLabel" onclick="handlePreviewClick('side')">
-              <div class="ghost-overlay"><div class="ghost-shape" style="width:25%"></div></div>
-              <img class="preview-img" id="sPrev">
+              <div class="ghost-overlay placeholder-content"><div class="ghost-shape" style="width:25%"></div></div>
+              <img class="preview-img" id="sPrev" alt="Side Preview">
               <div class="preview-overlay" style="position:absolute; inset:0; background:rgba(0,0,0,0.6); display:none; flex-direction:column; align-items:center; justify-content:center; z-index:10" onclick="openCamera('side'); event.stopPropagation();">
-                 <svg class="korra-icon" style="color:var(--Mint); width:24px; height:24px; margin-bottom:8px" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M23 19a2 2 0 0 1-2 2H3a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h4l2-3h6l2 3h4a2 2 0 0 1 2 2z"/><circle cx="12" cy="13" r="4"/></svg>
-                 <span style="font-size:10px; font-weight:900; color:#fff">TAP TO RECAPTURE</span>
+                 <span style="font-size:10px; font-weight:900; color:#fff">TAP TO RETAKE</span>
               </div>
-              <div class="placeholder-content" style="display:flex; flex-direction:column; align-items:center">
-                <span>Side Profile</span>
-                <div style="font-size:8px; color:var(--Mint); margin-top:4px; font-weight:700">TAP TO SNAP</div>
-              </div>
-              <input type="file" id="side" accept="image/*" required style="display:none" onchange="preview(this, 'sPrev')" onclick="event.stopPropagation()">
+              <div class="placeholder-content"><span>Side Profile</span><div style="font-size:8px; color:var(--Mint); margin-top:4px; font-weight:700">TAP TO SNAP</div></div>
+              <input type="file" id="side" accept="image/*" required style="display:none" onchange="preview(this, 'sPrev')">
             </div>
           </div>
-
           <div class="pro-tips-card">
-            <h4><span style="font-size:14px">&#x2728;</span> Pro-Tips for Precision</h4>
-            <div class="tip-row"><span class="tip-bullet">&bull;</span><span><b>The A-Pose:</b> Keep arms 15&quot; away from body. Do not touch your torso.</span></div>
-            <div class="tip-row"><span class="tip-bullet">&bull;</span><span><b>Clothing:</b> Wear form-fitting gym wear. Baggy clothes add fake volume.</span></div>
-            <div class="tip-row"><span class="tip-bullet">&bull;</span><span><b>Contrast:</b> Stand against a plain wall that is a different color than your outfit.</span></div>
-            <div class="tip-row"><span class="tip-bullet">&bull;</span><span><b>Level:</b> Place phone at waist height, perfectly vertical (not tilted).</span></div>
+            <h4><span style="font-size:14px">✨</span> Pro-Tips for Precision</h4>
+            <div class="tip-row"><span class="tip-bullet">&bull;</span><span><b>The A-Pose:</b> Keep arms 15" away from body.</span></div>
+            <div class="tip-row"><span class="tip-bullet">&bull;</span><span><b>Clothing:</b> Wear form-fitting gym wear.</span></div>
+            <div class="tip-row"><span class="tip-bullet">&bull;</span><span><b>Contrast:</b> Stand against a plain wall.</span></div>
           </div>
-
-          <button type="submit" class="btn-submit" id="btnSubmit" style="margin-top:32px">Extract Biometrics</button>
+          <button type="submit" class="btn-submit" id="btnSubmit" style="margin-top:32px">Calculate Measurements</button>
         </form>
       </div>
 
-      <!-- STEP 3: RESULT SUMMARY -->
       <div id="step-success" class="step-view">
-<!-- slide -->
-      <!-- STEP 4: CREDIT ERROR (Phase 42) -->
-      <div id="step-credit-error" class="step-view">
-        <div style="font-size: 48px; margin-bottom: 24px;">💎</div>
-        <h1 class="title">Sync Blocked</h1>
-        <p class="subtitle">The merchant's vault has reached 0 credits. You must purchase a single-scan token to continue.</p>
-        <div class="pro-tips-card" style="margin-bottom: 32px; text-align: left;">
-          <div class="tip-row"><span>This scan requires high-performance AI inference which is currently unfunded by the artisan.</span></div>
-        </div>
-        <button class="btn-submit" onclick="triggerSingleScanPayment()">Purchase Scan Token ($0.50)</button>
-        <button class="btn-outline" style="border:none; margin-top:16px; color:var(--Neutral-500); width:100%" onclick="goToStep('scan')">Back to Setup</button>
-      </div>
-        <div id="share-3d-viewport"><span>3D Digital Twin Active</span></div>
-        <h1 class="title" style="color:var(--Mint); margin-bottom:24px">Handshake Locked</h1>
-
+        <div id="share-3d-viewport"><span>3D Model Active</span></div>
+        <h1 class="title" style="color:var(--Mint); margin-bottom:24px">Connection Secured</h1>
         <div style="background:rgba(255,255,255,0.03); border-radius:16px; padding:24px; margin-bottom:32px;">
           <div id="summaryBody" style="font-size:13px; color:var(--Neutral-400); line-height:2.2"></div>
         </div>
-
-        <div style="display:grid; grid-template-columns: 1fr 1fr; gap:12px">
-            <button class="btn-submit" id="btnPdf">PDF Sheet</button>
-            <button class="btn-outline" style="margin-top:0" id="btnObj">3D Mesh</button>
-        </div>
-        <p style="font-size:11px; color:var(--Neutral-500); text-align:center; margin-top:24px">Your profile has been synced with your artisan.</p>
+        <div style="display:grid; grid-template-columns: 1fr 1fr; gap:12px"><button class="btn-submit" id="btnPdf">PDF Sheet</button><button class="btn-outline" style="margin-top:0" id="btnObj">3D Mesh</button></div>
+        <p style="font-size:11px; color:var(--Neutral-500); text-align:center; margin-top:24px">Profile synced with professional.</p>
       </div>
     </div>
 
-    <!-- STEP 4: AI CAMERA VIEW -->
     <div id="step-camera">
       <div class="camera-container">
         <video id="camera-video" autoplay playsinline></video>
         <canvas id="camera-canvas"></canvas>
+        <img id="review-img">
         <div class="camera-overlay">
-          <div class="camera-guidance" id="camera-msg">Initializing AI guidance...</div>
+          <div class="camera-guidance" id="camera-msg">Initializing guidance...</div>
           <div class="camera-close" onclick="closeCamera()">✕</div>
         </div>
       </div>
       <div class="camera-controls" id="shutter-container">
-        <div class="shutter-btn" onclick="snapPhoto()">
-          <div style="width:56px; height:56px; border-radius:50%; background:var(--Mint); opacity:0.2"></div>
-        </div>
+        <div class="shutter-btn" onclick="snapPhoto()"><div style="width:56px; height:56px; border-radius:50%; background:var(--Mint); opacity:0.2"></div></div>
       </div>
       <div class="camera-review-controls" id="review-container">
         <button class="btn-review btn-redo" onclick="retakePhoto()">Recapture</button>
@@ -224,7 +167,6 @@
     </div>
   </div>
 
-  <!-- --- ASSETS --- -->
   <script src="/assets/supabase.min.js"></script>
   <script src="https://js.paystack.co/v1/inline.js"></script>
   <script src="https://cdn.jsdelivr.net/npm/@mediapipe/pose@0.5.1675469404"></script>
@@ -241,448 +183,172 @@
       paystack: 'pk_live_d8442a8b9814421b1b463286f91887e5b546305a'
     };
 
-    let sessionData = null;
-    let merchantCredits = 0;
-    let userId = null;
-    let scanResults = null;
-    let activeCameraType = null;
-    let poseModel = null;
-    let cameraInstance = null;
-    let isPoseAligned = false;
-    let alignmentStartTime = 0;
-    let autoSnapTriggered = false;
-    let isReviewing = false;
-    let capturedBlob = null;
-    let capturedDataUrl = null;
-
-    // --- TTS ENGINE ---
-    let lastSpokenText = "";
-    let lastSpokenTime = 0;
+    let sessionData = null, merchantCredits = 0, userId = null, activeCameraType = null, poseModel = null, cameraInstance = null, isPoseAligned = false, alignmentStartTime = 0, autoSnapTriggered = false, isReviewing = false, capturedDataUrl = null;
+    let lastSpokenText = "", lastSpokenTime = 0;
 
     function speak(text, force = false) {
       if (!window.speechSynthesis) return;
       const now = Date.now();
-
-      // 1. Prevent repetitive spam (standard guidance)
       if (!force && text === lastSpokenText && now - lastSpokenTime < 3000) return;
-
-      // 2. Audio Integrity: If currently speaking, don't interrupt unless forced
       if (!force && window.speechSynthesis.speaking) return;
-
-      // 3. Clear queue only for high-priority 'force' alerts (Captured, Perfect)
       if (force) window.speechSynthesis.cancel();
-
       const utterance = new SpeechSynthesisUtterance(text);
-      utterance.rate = 1.0;
-      utterance.pitch = 1.0;
-
-      // Select premium voice if available
       const voices = window.speechSynthesis.getVoices();
       utterance.voice = voices.find(v => v.name.includes('Google') || v.name.includes('Siri')) || voices[0];
-
       window.speechSynthesis.speak(utterance);
-      lastSpokenText = text;
-      lastSpokenTime = now;
+      lastSpokenText = text; lastSpokenTime = now;
     }
 
-    // --- AI CAMERA LOGIC ---
     async function openCamera(type) {
-      activeCameraType = type;
-      alignmentStartTime = 0;
-      autoSnapTriggered = false;
-      isReviewing = false;
+      activeCameraType = type; alignmentStartTime = 0; autoSnapTriggered = false; isReviewing = false;
       document.getElementById('shutter-container').style.display = 'flex';
       document.getElementById('review-container').style.display = 'none';
       document.getElementById('camera-video').style.display = 'block';
       document.getElementById('camera-canvas').style.display = 'block';
+      document.getElementById('review-img').style.display = 'none';
       document.getElementById('step-camera').classList.add('active');
       const video = document.getElementById('camera-video');
-      const canvas = document.getElementById('camera-canvas');
-      const ctx = canvas.getContext('2d');
-      const msg = document.getElementById('camera-msg');
-
       if (!poseModel) {
-        poseModel = new Pose({
-          locateFile: (file) => `https://cdn.jsdelivr.net/npm/@mediapipe/pose@0.5.1675469404/${file}`
-        });
-        poseModel.setOptions({
-          modelComplexity: 1,
-          smoothLandmarks: true,
-          minDetectionConfidence: 0.5,
-          minTrackingConfidence: 0.5
-        });
+        poseModel = new Pose({ locateFile: (file) => `https://cdn.jsdelivr.net/npm/@mediapipe/pose@0.5.1675469404/${file}` });
+        poseModel.setOptions({ modelComplexity: 1, smoothLandmarks: true, minDetectionConfidence: 0.5, minTrackingConfidence: 0.5 });
         poseModel.onResults(onPoseResults);
       }
-
-      cameraInstance = new Camera(video, {
-        onFrame: async () => {
-          await poseModel.send({image: video});
-        },
-        width: 1280,
-        height: 720,
-        facingMode: 'user'
-      });
+      cameraInstance = new Camera(video, { onFrame: async () => { await poseModel.send({image: video}); }, width: 1280, height: 720, facingMode: 'user' });
       cameraInstance.start();
     }
 
-    function closeCamera() {
-      if (cameraInstance) cameraInstance.stop();
-      document.getElementById('step-camera').classList.remove('active');
-      activeCameraType = null;
-      alignmentStartTime = 0;
-      autoSnapTriggered = false;
-    }
+    function closeCamera() { if (cameraInstance) cameraInstance.stop(); document.getElementById('step-camera').classList.remove('active'); activeCameraType = null; }
 
     function onPoseResults(results) {
       if (isReviewing) return;
       const canvas = document.getElementById('camera-canvas');
       const ctx = canvas.getContext('2d');
       const msg = document.getElementById('camera-msg');
-
-      canvas.width = canvas.clientWidth;
-      canvas.height = canvas.clientHeight;
+      canvas.width = canvas.clientWidth; canvas.height = canvas.clientHeight;
       ctx.clearRect(0, 0, canvas.width, canvas.height);
-
       if (!results.poseLandmarks) {
-        const feedback = "Searching for subject...";
-        msg.textContent = feedback;
-        speak(feedback);
-        msg.style.background = "rgba(0, 0, 0, 0.8)";
-        msg.style.color = "#fff";
-        msg.style.borderColor = "var(--Mint)";
-        isPoseAligned = false;
-        alignmentStartTime = 0;
-        return;
+        const feedback = "Searching for you..."; msg.textContent = feedback; speak(feedback);
+        isPoseAligned = false; alignmentStartTime = 0; return;
       }
-
-      // Draw silhouette guidance
       drawSilhouette(ctx, canvas.width, canvas.height, activeCameraType);
-
-      // Check alignment
       const landmarks = results.poseLandmarks;
-      const head = landmarks[0];
-      const leftAnkle = landmarks[27];
-      const rightAnkle = landmarks[28];
-      const leftWrist = landmarks[15];
-      const rightWrist = landmarks[16];
-      const leftHip = landmarks[23];
-      const rightHip = landmarks[24];
-      const leftShoulder = landmarks[11];
-      const rightShoulder = landmarks[12];
-
-      let aligned = true;
-      let feedback = "Hold steady...";
-
-      if (head.visibility < 0.5 || leftAnkle.visibility < 0.5 || rightAnkle.visibility < 0.5) {
-        feedback = "Step back: Head and feet must be visible.";
-        aligned = false;
-      } else if (activeCameraType === 'front') {
-        // Check BOTH arms must be away from body for A-POSE
-        const leftArmDist = Math.abs(leftWrist.x - leftHip.x);
-        const rightArmDist = Math.abs(rightWrist.x - rightHip.x);
-        const minArmDist = 0.15; // Both arms must be at least 15% from hips
-
-        // CORRECTION: Ensure wrists are BELOW shoulders (A-Pose, not T-Pose)
-        const handsDown = leftWrist.y > leftShoulder.y && rightWrist.y > rightShoulder.y;
-
-        if (!handsDown) {
-          feedback = "A-POSE: Drop arms away from your waist.";
-          aligned = false;
-        } else if (leftArmDist < minArmDist || rightArmDist < minArmDist) {
-          feedback = "A-POSE: Spread arms away from your body.";
-          aligned = false;
-        }
+      const head = landmarks[0], lAnkle = landmarks[27], rAnkle = landmarks[28], lWrist = landmarks[15], rWrist = landmarks[16], lHip = landmarks[23], rHip = landmarks[24], lShoulder = landmarks[11], rShoulder = landmarks[12];
+      let aligned = true, feedback = "Hold steady...";
+      if (head.visibility < 0.5 || lAnkle.visibility < 0.5 || rAnkle.visibility < 0.5) { feedback = "Step back: Head and feet must be visible."; aligned = false; }
+      else if (activeCameraType === 'front') {
+        const lArmDist = Math.abs(lWrist.x - lHip.x), rArmDist = Math.abs(rWrist.x - rHip.x);
+        const handsDown = lWrist.y > lShoulder.y && rWrist.y > rShoulder.y;
+        if (!handsDown) { feedback = "A-POSE: Drop arms away from waist."; aligned = false; }
+        else if (lArmDist < 0.15 || rArmDist < 0.15) { feedback = "A-POSE: Spread arms away from body."; aligned = false; }
       } else if (activeCameraType === 'side') {
-        // ULTRA-STRICT SIDE POSE TRACKING
-        const shoulderWidth = Math.abs(leftShoulder.x - rightShoulder.x);
-        const hipWidth = Math.abs(leftHip.x - rightHip.x);
-        const torsoHeight = Math.abs(leftShoulder.y - leftHip.y);
-
-        // In profile, width of shoulders and hips should be very narrow
-        const sideRatio = (shoulderWidth + hipWidth) / (2 * torsoHeight);
-
-        // Check for shoulder-hip vertical alignment (avoid leaning)
-        const shoulderHipAlign = Math.abs((leftShoulder.x + rightShoulder.x)/2 - (leftHip.x + rightHip.x)/2);
-
-        if (sideRatio > 0.25) { // Stricter threshold
-          feedback = "Turn Side: Rotate 90 degrees.";
-          aligned = false;
-        } else if (shoulderHipAlign > 0.1) {
-          feedback = "Stand Straight: Don't lean.";
-          aligned = false;
-        } else {
-          // Check that hands are down
-          const handsDown = leftWrist.y > leftShoulder.y && rightWrist.y > rightShoulder.y;
-          if (!handsDown) {
-             feedback = "Keep arms down at your sides.";
-             aligned = false;
-          }
-        }
+        const zDelta = Math.abs(lShoulder.z - rShoulder.z), xDelta = Math.abs(lShoulder.x - rShoulder.x);
+        const sideRatio = xDelta / Math.abs(lShoulder.y - lHip.y);
+        if (sideRatio > 0.3 || zDelta < 0.12) { feedback = "Turn Side: Face fully 90 degrees."; aligned = false; }
+        else { if (!(lWrist.y > lShoulder.y && rWrist.y > rShoulder.y)) { feedback = "Keep arms down at your sides."; aligned = false; } }
       }
-
-      // Autonomous Capture Logic
       if (aligned) {
-        if (alignmentStartTime === 0) {
-          alignmentStartTime = Date.now();
-          speak("Perfect, hold still.", true);
-        } else if (Date.now() - alignmentStartTime > 1500 && !autoSnapTriggered) {
-          autoSnapTriggered = true;
-          snapPhoto();
-          return;
-        }
-        const remaining = Math.max(0, 1500 - (Date.now() - alignmentStartTime));
-        if (remaining > 0) feedback = `Capturing in ${(remaining/1000).toFixed(1)}s...`;
-        else feedback = "Processing...";
-      } else {
-        alignmentStartTime = 0;
-        speak(feedback);
-      }
-
-      msg.textContent = feedback;
-      if (aligned) {
-        msg.style.background = "var(--Mint)";
-        msg.style.color = "var(--Obsidian)";
-        msg.style.borderColor = "#fff";
-      } else {
-        msg.style.background = "rgba(0, 0, 0, 0.8)";
-        msg.style.color = "#fff";
-        msg.style.borderColor = "var(--Mint)";
-      }
+        if (alignmentStartTime === 0) { alignmentStartTime = Date.now(); speak("Perfect, hold still.", true); }
+        else if (Date.now() - alignmentStartTime > 1500 && !autoSnapTriggered) { autoSnapTriggered = true; snapPhoto(); return; }
+        const rem = Math.max(0, 1500 - (Date.now() - alignmentStartTime));
+        feedback = rem > 0 ? `Capturing in ${(rem/1000).toFixed(1)}s...` : "Processing...";
+      } else { alignmentStartTime = 0; speak(feedback); }
+      msg.textContent = feedback; msg.style.background = aligned ? "var(--Mint)" : "rgba(0, 0, 0, 0.8)"; msg.style.color = aligned ? "var(--Obsidian)" : "#fff";
       isPoseAligned = aligned;
-
-      // Draw user skeleton - Vibrant Mint for accurate, Pure White for inaccurate
-      ctx.strokeStyle = aligned ? "#57D7C0" : "#FFFFFF";
-      ctx.lineWidth = aligned ? 8 : 4;
-      ctx.lineCap = "round";
-      ctx.shadowBlur = aligned ? 15 : 0;
-      ctx.shadowColor = "#57D7C0";
-
-      const connections = [
-        [11, 12], [11, 13], [13, 15], [12, 14], [14, 16], // Upper body
-        [11, 23], [12, 24], [23, 24], // Torso
-        [23, 25], [25, 27], [24, 26], [26, 28] // Legs
-      ];
-
-      connections.forEach(([i, j]) => {
-        const p1 = landmarks[i];
-        const p2 = landmarks[j];
-        if (p1.visibility > 0.5 && p2.visibility > 0.5) {
-          ctx.beginPath();
-          ctx.moveTo(p1.x * canvas.width, p1.y * canvas.height);
-          ctx.lineTo(p2.x * canvas.width, p2.y * canvas.height);
-          ctx.stroke();
-        }
-      });
-
-      // Draw joint nodes at each keypoint
-      ctx.fillStyle = aligned ? "#57D7C0" : "#FFFFFF";
-      const nodeRadius = aligned ? 10 : 6;
-      const keypoints = [11, 12, 13, 14, 15, 16, 23, 24, 25, 26, 27, 28];
-      keypoints.forEach(idx => {
-        const p = landmarks[idx];
-        if (p.visibility > 0.5) {
-          ctx.beginPath();
-          ctx.arc(p.x * canvas.width, p.y * canvas.height, nodeRadius, 0, Math.PI * 2);
-          ctx.fill();
-        }
+      ctx.strokeStyle = aligned ? "#57D7C0" : "#FFFFFF"; ctx.lineWidth = aligned ? 8 : 4; ctx.lineCap = "round";
+      const conns = [ [11, 12], [11, 13], [13, 15], [12, 14], [14, 16], [11, 23], [12, 24], [23, 24], [23, 25], [25, 27], [24, 26], [26, 28] ];
+      conns.forEach(([i, j]) => {
+        const p1 = landmarks[i], p2 = landmarks[j];
+        if (p1.visibility > 0.5 && p2.visibility > 0.5) { ctx.beginPath(); ctx.moveTo(p1.x * canvas.width, p1.y * canvas.height); ctx.lineTo(p2.x * canvas.width, p2.y * canvas.height); ctx.stroke(); }
       });
     }
 
     function drawSilhouette(ctx, w, h, type) {
-      ctx.beginPath();
-      ctx.strokeStyle = isPoseAligned ? "var(--Mint)" : "rgba(255,255,255,0.1)";
-      ctx.setLineDash([10, 5]);
-      ctx.lineWidth = 2;
-
-      // Basic A-Pose silhouette drawing
-      const cx = w / 2;
-      const cy = h / 2;
-      ctx.moveTo(cx, cy - h*0.4); // Head
-      ctx.lineTo(cx - w*0.1, cy - h*0.2); // Shoulder L
-      ctx.lineTo(cx - w*0.2, cy + h*0.1); // Arm L
-      ctx.moveTo(cx, cy - h*0.4);
-      ctx.lineTo(cx + w*0.1, cy - h*0.2); // Shoulder R
-      ctx.lineTo(cx + w*0.2, cy + h*0.1); // Arm R
-      ctx.moveTo(cx, cy - h*0.2);
-      ctx.lineTo(cx, cy + h*0.1); // Torso
-      ctx.lineTo(cx - w*0.1, cy + h*0.4); // Leg L
-      ctx.moveTo(cx, cy + h*0.1);
-      ctx.lineTo(cx + w*0.1, cy + h*0.4); // Leg R
-      ctx.stroke();
-      ctx.setLineDash([]);
+      ctx.beginPath(); ctx.strokeStyle = isPoseAligned ? "var(--Mint)" : "rgba(255,255,255,0.1)"; ctx.setLineDash([10, 5]); ctx.lineWidth = 2;
+      const cx = w/2, cy = h/2;
+      ctx.moveTo(cx, cy - h*0.4); ctx.lineTo(cx - w*0.1, cy - h*0.2); ctx.lineTo(cx - w*0.2, cy + h*0.1);
+      ctx.moveTo(cx, cy - h*0.4); ctx.lineTo(cx + w*0.1, cy - h*0.2); ctx.lineTo(cx + w*0.2, cy + h*0.1);
+      ctx.moveTo(cx, cy - h*0.2); ctx.lineTo(cx, cy + h*0.1); ctx.lineTo(cx - w*0.1, cy + h*0.4);
+      ctx.moveTo(cx, cy + h*0.1); ctx.lineTo(cx + w*0.1, cy + h*0.4);
+      ctx.stroke(); ctx.setLineDash([]);
     }
 
     function snapPhoto() {
       if (isReviewing) return;
-
-      const video = document.getElementById('camera-video');
-      const canvas = document.createElement('canvas');
-      canvas.width = video.videoWidth;
-      canvas.height = video.videoHeight;
-      const ctx = canvas.getContext('2d');
-      ctx.translate(canvas.width, 0);
-      ctx.scale(-1, 1);
-      ctx.drawImage(video, 0, 0);
-
+      const video = document.getElementById('camera-video'), canvas = document.createElement('canvas');
+      canvas.width = video.videoWidth; canvas.height = video.videoHeight;
+      const ctx = canvas.getContext('2d'); ctx.translate(canvas.width, 0); ctx.scale(-1, 1); ctx.drawImage(video, 0, 0);
       capturedDataUrl = canvas.toDataURL('image/jpeg');
-
-      // Enter Review Mode
-      isReviewing = true;
-      document.getElementById('camera-video').style.display = 'none';
-      document.getElementById('camera-canvas').style.display = 'none';
-      document.getElementById('shutter-container').style.display = 'none';
-      document.getElementById('review-container').style.display = 'flex';
-      document.getElementById('camera-msg').textContent = "Review your capture";
+      isReviewing = true; document.getElementById('camera-video').style.display = 'none'; document.getElementById('camera-canvas').style.display = 'none'; document.getElementById('shutter-container').style.display = 'none';
+      const rImg = document.getElementById('review-img'); rImg.src = capturedDataUrl; rImg.style.display = 'block';
+      document.getElementById('review-container').style.display = 'flex'; document.getElementById('camera-msg').textContent = "Review your photo";
       speak("Captured. Review your photo.", true);
     }
 
     function retakePhoto() {
-      isReviewing = false;
-      autoSnapTriggered = false;
-      alignmentStartTime = 0;
-      document.getElementById('camera-video').style.display = 'block';
-      document.getElementById('camera-canvas').style.display = 'block';
-      document.getElementById('shutter-container').style.display = 'flex';
-      document.getElementById('review-container').style.display = 'none';
-      document.getElementById('camera-msg').textContent = "Re-aligning...";
+      isReviewing = false; autoSnapTriggered = false; alignmentStartTime = 0;
+      document.getElementById('camera-video').style.display = 'block'; document.getElementById('camera-canvas').style.display = 'block'; document.getElementById('review-img').style.display = 'none';
+      document.getElementById('shutter-container').style.display = 'flex'; document.getElementById('review-container').style.display = 'none'; document.getElementById('camera-msg').textContent = "Re-aligning...";
     }
 
     function keepPhoto() {
-      const imgId = activeCameraType === 'front' ? 'fPrev' : 'sPrev';
-      const fileId = activeCameraType === 'front' ? 'front' : 'side';
-      const labelId = activeCameraType === 'front' ? 'fLabel' : 'sLabel';
-
-      const label = document.getElementById(labelId);
-      const img = document.getElementById(imgId);
-      const placeholder = label.querySelector('.placeholder-content');
-      const overlay = label.querySelector('.preview-overlay');
-
-      img.src = capturedDataUrl;
-      img.style.display = 'block';
-      if(placeholder) placeholder.style.display = 'none';
-      if(overlay) overlay.style.display = 'flex';
-
-      speak(activeCameraType === 'front' ? "Front pose confirmed. Now turn for your side profile." : "Side profile confirmed. Processing your results.", true);
-
-      fetch(capturedDataUrl)
-        .then(res => res.blob())
-        .then(blob => {
+      const fileId = activeCameraType === 'front' ? 'front' : 'side', labelId = activeCameraType === 'front' ? 'fLabel' : 'sLabel';
+      const label = document.getElementById(labelId), img = label.querySelector('.preview-img');
+      img.src = capturedDataUrl; img.style.display = 'block';
+      label.querySelector('.placeholder-content').style.display = 'none'; label.querySelector('.preview-overlay').style.display = 'flex';
+      speak(activeCameraType === 'front' ? "Photo confirmed. Now turn to your side." : "Photo confirmed. Generating your results.", true);
+      fetch(capturedDataUrl).then(res => res.blob()).then(blob => {
           const file = new File([blob], `${activeCameraType}.jpg`, { type: "image/jpeg" });
-          const container = new DataTransfer();
-          container.items.add(file);
-          document.getElementById(fileId).files = container.files;
-          closeCamera();
-        });
+          const container = new DataTransfer(); container.items.add(file);
+          document.getElementById(fileId).files = container.files; closeCamera();
+      });
     }
 
-    function goToStep(step) {
-      document.querySelectorAll('.step-view').forEach(v => v.classList.remove('active'));
-      document.getElementById('step-' + step).classList.add('active');
-
-      if (step === 'scan') {
-        speak("Clinical Protocol. Stand 2 meters away from the camera. Ensure your full body from head to toe is in frame. Use a neutral, well-lit background.", true);
-      }
+    function handlePreviewClick(type) {
+        const label = document.getElementById(type === 'front' ? 'fLabel' : 'sLabel');
+        const placeholder = label.querySelector('.placeholder-content');
+        if (placeholder && placeholder.style.display !== 'none') openCamera(type);
+        else { const img = label.querySelector('.preview-img'); if (img.src) window.open(img.src, '_blank'); }
     }
+
+    function goToStep(step) { document.querySelectorAll('.step-view').forEach(v => v.classList.remove('active')); document.getElementById('step-' + step).classList.add('active'); if (step === 'scan') speak("Guidelines. Stand 2 meters away. Full body in frame.", true); }
 
     function preview(input, id) {
-      const labelId = id === 'fPrev' ? 'fLabel' : 'sLabel';
-      const label = document.getElementById(labelId);
-      const placeholder = label.querySelector('.placeholder-content');
-      const overlay = label.querySelector('.preview-overlay');
-
       if (input.files && input.files[0]) {
         const reader = new FileReader();
         reader.onload = e => {
-            const img = document.getElementById(id);
-            img.src = e.target.result;
-            img.style.display = 'block';
-            if(placeholder) placeholder.style.display = 'none';
-            if(overlay) overlay.style.display = 'flex';
+            document.getElementById(id).src = e.target.result; document.getElementById(id).style.display = 'block';
+            const label = document.getElementById(id === 'fPrev' ? 'fLabel' : 'sLabel');
+            label.querySelector('.placeholder-content').style.display = 'none'; label.querySelector('.preview-overlay').style.display = 'flex';
         };
         reader.readAsDataURL(input.files[0]);
       }
     }
 
-    function handlePreviewClick(type) {
-        const labelId = type === 'front' ? 'fLabel' : 'sLabel';
-        const label = document.getElementById(labelId);
-        const placeholder = label.querySelector('.placeholder-content');
-
-        if (placeholder && placeholder.style.display !== 'none') {
-            openCamera(type);
-        } else {
-            const imgId = type === 'front' ? 'fPrev' : 'sPrev';
-            const img = document.getElementById(imgId);
-            if (img.src) window.open(img.src, '_blank');
-        }
-    }
-
     async function init() {
       const params = new URLSearchParams(window.location.search);
-      const mId = params.get('m');
-      const cName = params.get('c');
-
+      const mId = params.get('m'), cName = params.get('c');
       if (!window.supabase) { setTimeout(init, 500); return; }
       const db = window.supabase.createClient(CONFIG.url, CONFIG.key);
-
-      // 1. Mandatory Auth Check
       const { data: { session } } = await db.auth.getSession();
-      if (!session) {
-        alert("Authentication required. Redirecting to signup...");
-        window.location.href = `/signup?next=${encodeURIComponent(window.location.href)}`;
-        return;
-      }
+      if (!session) { window.location.href = `/signup?next=${encodeURIComponent(window.location.href)}`; return; }
       userId = session.user.id;
-
-      // 2. Load Merchant Context
-      if (mId) {
-        const { data: profile } = await db.from('profiles').select('credits').eq('id', mId).single();
-        merchantCredits = profile?.credits || 0;
-        sessionData = { merchant_id: mId, client_name: cName || "Artisan Client" };
-      }
+      if (mId) { const { data: profile } = await db.from('profiles').select('credits').eq('id', mId).single(); merchantCredits = profile?.credits || 0; sessionData = { merchant_id: mId, client_name: cName || "Client" }; }
     }
 
     async function pollTask(taskId) {
-        const pFill = document.getElementById('pFill');
-        const pText = document.getElementById('pText');
-        const statusText = document.getElementById('statusText');
+        const pFill = document.getElementById('pFill'), pText = document.getElementById('pText');
         let progress = 20;
-
-const interval = setInterval(async () => {
+        const interval = setInterval(async () => {
             try {
-                // ULTRA-RESILIENT: Retry on 502/503/504
                 let data = null;
-                for (let retry = 0; retry < 5; retry++) {
-                    try {
-                        const res = await fetch(`/api/v2/measurements/status/${taskId}`);
-                        if (res.ok) {
-                            data = await res.json();
-                            break;
-                        } else if (res.status === 404) {
-                            clearInterval(interval);
-                            document.getElementById('loadingOverlay').style.display = 'none';
-                            return;
-                        }
-                    } catch (netErr) {
-                        if (retry < 4) await new Promise(r => setTimeout(r, 2000));
-                    }
+                for (let i = 0; i < 5; i++) {
+                    const res = await fetch(`/api/v2/measurements/status/${taskId}`);
+                    if (res.ok) { data = await res.json(); break; }
                 }
                 if (!data) return;
-
-                if (data.status === 'processing') {
-                    progress = Math.min(progress + 10, 90);
-                    pText.textContent = "Reconstructing 3D volume...";
-                } else if (data.status === 'completed') {
-                    clearInterval(interval);
-                    progress = 100;
-                    scanResults = data;
-                    pFill.style.width = '100%';
-                    renderResults(data);
-                } else if (data.status === 'failed') {
-                    clearInterval(interval);
-                    alert("AI Rejection: " + (data.error || "Brain Fault"));
-                    document.getElementById('loadingOverlay').style.display = 'none';
-                }
+                if (data.status === 'processing') { progress = Math.min(progress + 10, 90); pText.textContent = "Analyzing body shape..."; }
+                else if (data.status === 'completed') { clearInterval(interval); progress = 100; renderResults(data); }
+                else if (data.status === 'failed') { clearInterval(interval); alert("AI Rejection: " + (data.error || "Quality issue")); document.getElementById('loadingOverlay').style.display = 'none'; }
                 pFill.style.width = progress + '%';
             } catch (e) {}
         }, 2000);
@@ -690,99 +356,40 @@ const interval = setInterval(async () => {
 
     function renderResults(data) {
         const b = data.measurements;
-        const hVal = document.getElementById('height').value;
-        const gVal = document.getElementById('gender').value;
-
         document.getElementById('summaryBody').innerHTML = `
             <div style="display:flex; justify-content:space-between"><span>Chest:</span> <b style="color:var(--Mint)">${b['Chest Round']}cm</b></div>
             <div style="display:flex; justify-content:space-between"><span>Waist:</span> <b style="color:var(--Mint)">${b['Waist Round']}cm</b></div>
             <div style="display:flex; justify-content:space-between"><span>Hips:</span> <b style="color:var(--Mint)">${b['Hip Round']}cm</b></div>
             <div style="display:flex; justify-content:space-between"><span>Shoulder:</span> <b style="color:var(--Mint)">${b['Shoulder']}cm</b></div>
         `;
-
-        speak(`Handshake locked. Your chest is ${b['Chest Round']} centimeters, waist is ${b['Waist Round']} centimeters, and hips are ${b['Hip Round']} centimeters.`, true);
-
-        if (window.KORRA_VIZ) {
-            const viewport = document.getElementById('share-3d-viewport');
-            viewport.style.display = 'block';
-            window.KORRA_VIZ.init('share-3d-viewport');
-            if (data.mesh_url) window.KORRA_VIZ.loadMesh(data.mesh_url);
-        }
-
-        document.getElementById('btnPdf').onclick = () => window.KORRA_EXPORT.pdf(sessionData?.client_name || 'Guest', b, gVal, hVal);
-        document.getElementById('btnObj').onclick = () => window.KORRA_EXPORT.obj(data.mesh_url, sessionData?.client_name || 'Guest');
-
-        setTimeout(() => {
-            document.getElementById('loadingOverlay').style.display = 'none';
-            goToStep('success');
-        }, 800);
+        speak(`Connection secured. Your chest is ${b['Chest Round']}cm, waist is ${b['Waist Round']}cm, and hips are ${b['Hip Round']}cm.`, true);
+        if (window.KORRA_VIZ) { const viewport = document.getElementById('share-3d-viewport'); viewport.style.display = 'block'; window.KORRA_VIZ.init('share-3d-viewport'); if (data.mesh_url) window.KORRA_VIZ.loadMesh(data.mesh_url); }
+        document.getElementById('btnPdf').onclick = () => window.KORRA_EXPORT.pdf(sessionData?.client_name || 'Guest', b, document.getElementById('gender').value, document.getElementById('height').value);
+        setTimeout(() => { document.getElementById('loadingOverlay').style.display = 'none'; goToStep('success'); }, 800);
     }
 
     document.getElementById('shareForm').addEventListener('submit', async (e) => {
       e.preventDefault();
-
-      const proceedWithExtraction = async (payRef = null) => {
+      const proceed = async (payRef = null) => {
         document.getElementById('loadingOverlay').style.display = 'flex';
         const fd = new FormData();
-        fd.append('front', document.getElementById('front').files[0]);
-        fd.append('side', document.getElementById('side').files[0]);
-        fd.append('height', document.getElementById('height').value);
-        fd.append('gender', document.getElementById('gender').value);
-        fd.append('merchant_id', sessionData?.merchant_id || 'PUBLIC');
-        fd.append('client_name', sessionData?.client_name || 'Guest');
-        if (payRef) fd.append('payment_reference', payRef);
-
+        fd.append('front', document.getElementById('front').files[0]); fd.append('side', document.getElementById('side').files[0]);
+        fd.append('height', document.getElementById('height').value); fd.append('gender', document.getElementById('gender').value);
+        fd.append('merchant_id', sessionData?.merchant_id || 'PUBLIC'); if (payRef) fd.append('payment_reference', payRef);
         try {
           const res = await fetch('/api/v2/measurements/extract-widget', { method: 'POST', body: fd });
-          if (res.ok) {
-            const data = await res.json();
-            pollTask(data.task_id);
-          } else if (res.status === 402) {
-            document.getElementById('loadingOverlay').style.display = 'none';
-            goToStep('credit-error');
-          } else {
-            const err = await res.json();
-            alert("Quality Error: " + (err.error || "Check lighting."));
-            document.getElementById('loadingOverlay').style.display = 'none';
-          }
-        } catch { alert("Connection Error."); document.getElementById('loadingOverlay').style.display = 'none'; }
+          if (res.ok) { const data = await res.json(); pollTask(data.task_id); }
+          else { alert("Calculation Error."); document.getElementById('loadingOverlay').style.display = 'none'; }
+        } catch { alert("Connection Error."); }
       };
-
-      window.triggerSingleScanPayment = () => {
-        const handler = PaystackPop.setup({
-          key: CONFIG.paystack,
-          email: "guest@korra.ai",
-          amount: 50,
-          currency: "USD",
-          metadata: { type: 'single', merchant_id: sessionData?.merchant_id },
-          callback: async (response) => {
-            await proceedWithExtraction(response.reference);
-          },
-          onClose: () => { alert("Scan token purchase cancelled."); }
-        });
-        handler.openIframe();
-      };
-
-      // 3. Payment Gate Logic
-      if (merchantCredits > 0) {
-        await proceedWithExtraction();
-      } else {
-        // Merchant has 0 credits. Client must pay $0.50
-        const db = window.supabase.createClient(CONFIG.url, CONFIG.key);
-        const { data: { user } } = await db.auth.getUser();
-
-        const handler = PaystackPop.setup({
-          key: CONFIG.paystack,
-          email: user.email,
-          amount: 50, // $0.50 in cents
-          currency: "USD",
-          metadata: { user_id: userId, type: 'single', merchant_id: sessionData?.merchant_id },
-          callback: async (response) => {
-            await proceedWithExtraction(response.reference);
-          },
-          onClose: () => alert("Payment required to unlock digital twin results.")
-        });
-        handler.openIframe();
+      if (merchantCredits > 0) await proceed();
+      else {
+        const { data: { user } } = await window.supabase.createClient(CONFIG.url, CONFIG.key).auth.getUser();
+        PaystackPop.setup({
+          key: CONFIG.paystack, email: user.email, amount: 50, currency: "USD",
+          callback: async (res) => { await proceed(res.reference); },
+          onClose: () => alert("Payment required.")
+        }).openIframe();
       }
     });
     init();
