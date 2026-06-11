@@ -41,6 +41,11 @@
     .section-eyebrow { font-size: 11px; font-weight: 900; color: var(--Mint); text-transform: uppercase; letter-spacing: 0.2em; margin-bottom: var(--S-16); }
     .section-title { font-size: 40px; font-weight: 800; line-height: 1.1; letter-spacing: -0.03em; margin: 0; }
     .section-desc { font-size: 18px; color: var(--Neutral-400); line-height: 1.6; margin-top: var(--S-24); max-width: 550px; font-weight: 500; }
+    .accordion-toggle { background: none; border: none; color: var(--Neutral-400); font-size: 11px; font-weight: 700; cursor: pointer; margin-top: 16px; display: inline-flex; align-items: center; gap: 8px; text-transform: uppercase; letter-spacing: 0.1em; transition: 0.2s; }
+    .accordion-toggle:hover { color: var(--Mint); }
+    .accordion-expand { display: none; margin-top: 20px; padding-top: 20px; border-top: 1px solid var(--Glass-Border); }
+    .accordion-expand.active { display: block; animation: fadeIn 0.3s ease-out; }
+
 
     .grid-impact { display: grid; grid-template-columns: 1fr 1.2fr; gap: var(--S-80); align-items: center; }
     .grid-swapped { grid-template-columns: 1.2fr 1fr; }
@@ -174,7 +179,11 @@
             <div class="section-eyebrow">Customization</div>
             <h2 class="section-title">Mass Personalization</h2>
             <p class="section-desc">Scale personalized apparel offerings without increasing overhead. Deliver custom-fit garments at ready-to-wear speeds.</p>
-          </div>
+          
+            <button class="accordion-toggle" onclick="this.nextElementSibling.classList.toggle('active'); this.textContent = this.nextElementSibling.classList.contains('active') ? 'Show Less ↑' : 'View Details ↓'">View Details ↓</button>
+            <div class="accordion-expand" id="accordion-mass-personalization">
+              <p style="font-size:14px; color:var(--Neutral-400); line-height:1.6">Enable B2B buyers to capture their measurements once and reuse across multiple orders. Reduce returns by up to 40% with precise size data.</p>
+            </div></div>
         </div>
       </div>
     </section>

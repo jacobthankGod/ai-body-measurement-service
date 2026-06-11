@@ -41,6 +41,11 @@
     .section-eyebrow { font-size: 11px; font-weight: 900; color: var(--Mint); text-transform: uppercase; letter-spacing: 0.2em; margin-bottom: var(--S-16); }
     .section-title { font-size: 40px; font-weight: 800; line-height: 1.1; letter-spacing: -0.03em; margin: 0; }
     .section-desc { font-size: 18px; color: var(--Neutral-400); line-height: 1.6; margin-top: var(--S-24); max-width: 550px; font-weight: 500; }
+    .accordion-toggle { background: none; border: none; color: var(--Neutral-400); font-size: 11px; font-weight: 700; cursor: pointer; margin-top: 16px; display: inline-flex; align-items: center; gap: 8px; text-transform: uppercase; letter-spacing: 0.1em; transition: 0.2s; }
+    .accordion-toggle:hover { color: var(--Mint); }
+    .accordion-expand { display: none; margin-top: 20px; padding-top: 20px; border-top: 1px solid var(--Glass-Border); }
+    .accordion-expand.active { display: block; animation: fadeIn 0.3s ease-out; }
+
 
     .grid-impact { display: grid; grid-template-columns: 1fr 1.2fr; gap: var(--S-80); align-items: center; }
     .grid-swapped { grid-template-columns: 1.2fr 1fr; }
@@ -123,7 +128,11 @@
             <div class="section-eyebrow">Experience</div>
             <h2 class="section-title">Digital Savile Row</h2>
             <p class="section-desc">Provide your clients with a premium, touch-free measuring experience that respects their time and privacy while delivering superior pattern accuracy.</p>
-          </div>
+          
+            <button class="accordion-toggle" onclick="this.nextElementSibling.classList.toggle('active'); this.textContent = this.nextElementSibling.classList.contains('active') ? 'Show Less ↑' : 'View Details ↓'">View Details ↓</button>
+            <div class="accordion-expand" id="accordion-digital-savile-row">
+              <p style="font-size:14px; color:var(--Neutral-400); line-height:1.6">Leverage computer vision to capture 50+ body measurements in under 60 seconds. Each scan produces a precision-fitted digital twin that retains measurements for future reference, enabling pattern adjustments without re-measuring.</p>
+            </div></div>
           <div class="glass-card image-card">
             <img src="/assets/body-capture.png" alt="Digital Savile Row">
           </div>
@@ -142,7 +151,11 @@
             <div class="section-eyebrow">Precision</div>
             <h2 class="section-title">Zero-Error Patterns</h2>
             <p class="section-desc">Our 3D twin regression eliminates manual measuring drift, reducing costly revision rounds and fabric waste for high-value luxury materials.</p>
-          </div>
+          
+            <button class="accordion-toggle" onclick="this.nextElementSibling.classList.toggle('active'); this.textContent = this.nextElementSibling.classList.contains('active') ? 'Show Less ↑' : 'View Details ↓'">View Details ↓</button>
+            <div class="accordion-expand" id="accordion-zero-error-patterns">
+              <p style="font-size:14px; color:var(--Neutral-400); line-height:1.6">Our AI-driven regression model achieves ±0.5cm accuracy across all body types. Combined with your craftsmanship, this eliminates the guesswork that leads to costly returns and fabric waste.</p>
+            </div></div>
         </div>
       </div>
     </section>
@@ -155,7 +168,11 @@
             <div class="section-eyebrow">Reach</div>
             <h2 class="section-title">Global Bespoke</h2>
             <p class="section-desc">Measure clients in London, Paris, or New York and have patterns ready for production in minutes. Distance is no longer a barrier to luxury.</p>
-          </div>
+          
+            <button class="accordion-toggle" onclick="this.nextElementSibling.classList.toggle('active'); this.textContent = this.nextElementSibling.classList.contains('active') ? 'Show Less ↑' : 'View Details ↓'">View Details ↓</button>
+            <div class="accordion-expand" id="accordion-global-bespoke">
+              <p style="font-size:14px; color:var(--Neutral-400); line-height:1.6">Share digital measurements instantly via chat or email. Clients receive a downloadable size passport they can use anywhere. Expand your clientele beyond geographic boundaries.</p>
+            </div></div>
           <div class="glass-card image-card">
             <img src="/assets/body-capture.png" alt="Global Bespoke">
           </div>
@@ -174,7 +191,11 @@
             <div class="section-eyebrow">Intelligence</div>
             <h2 class="section-title">Consistent Standards</h2>
             <p class="section-desc">Ensure every client receives the same master-level measurements, regardless of which consultant or showroom handles the initial scan.</p>
-          </div>
+          
+            <button class="accordion-toggle" onclick="this.nextElementSibling.classList.toggle('active'); this.textContent = this.nextElementSibling.classList.contains('active') ? 'Show Less ↑' : 'View Details ↓'">View Details ↓</button>
+            <div class="accordion-expand" id="accordion-consistent-standards">
+              <p style="font-size:14px; color:var(--Neutral-400); line-height:1.6">Every scan uses the same calibrated algorithm. Maintain your brand's reputation for precision regardless of which team member conducts the measurement session.</p>
+            </div></div>
         </div>
       </div>
     </section>

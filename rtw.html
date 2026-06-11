@@ -41,6 +41,11 @@
     .section-eyebrow { font-size: 11px; font-weight: 900; color: var(--Mint); text-transform: uppercase; letter-spacing: 0.2em; margin-bottom: var(--S-16); }
     .section-title { font-size: 40px; font-weight: 800; line-height: 1.1; letter-spacing: -0.03em; margin: 0; }
     .section-desc { font-size: 18px; color: var(--Neutral-400); line-height: 1.6; margin-top: var(--S-24); max-width: 550px; font-weight: 500; }
+    .accordion-toggle { background: none; border: none; color: var(--Neutral-400); font-size: 11px; font-weight: 700; cursor: pointer; margin-top: 16px; display: inline-flex; align-items: center; gap: 8px; text-transform: uppercase; letter-spacing: 0.1em; transition: 0.2s; }
+    .accordion-toggle:hover { color: var(--Mint); }
+    .accordion-expand { display: none; margin-top: 20px; padding-top: 20px; border-top: 1px solid var(--Glass-Border); }
+    .accordion-expand.active { display: block; animation: fadeIn 0.3s ease-out; }
+
 
     .grid-impact { display: grid; grid-template-columns: 1fr 1.2fr; gap: var(--S-80); align-items: center; }
     .grid-swapped { grid-template-columns: 1.2fr 1fr; }
@@ -123,7 +128,11 @@
             <div class="section-eyebrow">Optimization</div>
             <h2 class="section-title">Reduce Returns</h2>
             <p class="section-desc">Lower your return rate by providing customers with high-accuracy size recommendations based on their unique 3D body profile.</p>
-          </div>
+          
+            <button class="accordion-toggle" onclick="this.nextElementSibling.classList.toggle('active'); this.textContent = this.nextElementSibling.classList.contains('active') ? 'Show Less ↑' : 'View Details ↓'">View Details ↓</button>
+            <div class="accordion-expand" id="accordion-reduce-returns">
+              <p style="font-size:14px; color:var(--Neutral-400); line-height:1.6">Help customers find their perfect fit with accurate measurements. Reduce return rates by providing size guidance based on actual body data rather than generic size charts.</p>
+            </div></div>
           <div class="glass-card image-card">
             <img src="/assets/body-capture.png" alt="Reduce Returns">
           </div>
@@ -142,7 +151,11 @@
             <div class="section-eyebrow">Conversion</div>
             <h2 class="section-title">Size Confidence</h2>
             <p class="section-desc">Give your customers the confidence to click 'Buy' by removing the guesswork from online sizing charts.</p>
-          </div>
+          
+            <button class="accordion-toggle" onclick="this.nextElementSibling.classList.toggle('active'); this.textContent = this.nextElementSibling.classList.contains('active') ? 'Show Less ↑' : 'View Details ↓'">View Details ↓</button>
+            <div class="accordion-expand" id="accordion-size-confidence">
+              <p style="font-size:14px; color:var(--Neutral-400); line-height:1.6">Build customer trust with personalized size recommendations. AI-powered suggestions consider body measurements, style preferences, and fabric stretch.</p>
+            </div></div>
         </div>
       </div>
     </section>
@@ -155,7 +168,11 @@
             <div class="section-eyebrow">Intelligence</div>
             <h2 class="section-title">Inventory Analytics</h2>
             <p class="section-desc">Gain deep insights into your customers' actual body distributions to optimize your manufacturing and inventory allocation.</p>
-          </div>
+          
+            <button class="accordion-toggle" onclick="this.nextElementSibling.classList.toggle('active'); this.textContent = this.nextElementSibling.classList.contains('active') ? 'Show Less ↑' : 'View Details ↓'">View Details ↓</button>
+            <div class="accordion-expand" id="accordion-inventory-analytics">
+              <p style="font-size:14px; color:var(--Neutral-400); line-height:1.6">Aggregate anonymized size data to identify trends. Make smarter purchasing decisions based on actual customer body type distribution.</p>
+            </div></div>
           <div class="glass-card image-card">
             <img src="/assets/body-capture.png" alt="Inventory Analytics">
           </div>
@@ -174,7 +191,11 @@
             <div class="section-eyebrow">E-Commerce</div>
             <h2 class="section-title">Seamless Integration</h2>
             <p class="section-desc">Easily embed the KORRA widget into your existing Shopify, Magento, or custom e-commerce storefront.</p>
-          </div>
+          
+            <button class="accordion-toggle" onclick="this.nextElementSibling.classList.toggle('active'); this.textContent = this.nextElementSibling.classList.contains('active') ? 'Show Less ↑' : 'View Details ↓'">View Details ↓</button>
+            <div class="accordion-expand" id="accordion-seamless-integration">
+              <p style="font-size:14px; color:var(--Neutral-400); line-height:1.6">Connect with your existing POS and e-commerce systems. Enable barcode scanning and size lookup for faster checkout experiences.</p>
+            </div></div>
         </div>
       </div>
     </section>
