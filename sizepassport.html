@@ -8,7 +8,7 @@
   <link rel="preconnect" href="https://fonts.googleapis.com" />
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
   <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800;900&display=swap" rel="stylesheet" />
-  <script src="/assets/supabase.min.js"></script>
+  <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
   <style>
     :root {
       --Obsidian: #000000; --Mint: #57D7C0; --Glass: rgba(255, 255, 255, 0.04);
@@ -60,23 +60,47 @@
   <script>
     (function() {
       const config = { url: 'https://blsettabymllulsxtziw.supabase.co', key: 'sb_publishable_miCOIXHtlxLkfDgpwE0N-g_BA1Q-x8y' };
+      if (!window.supabase) { console.error("KORRA: Supabase CDN Offline."); return; }
       window.korraSupabase = window.supabase.createClient(config.url, config.key);
 
       async function loadPassport() {
         const { data: { session } } = await window.korraSupabase.auth.getSession();
         if(!session) { window.location.href = '/signin'; return; }
         const u = session.user;
-        document.getElementById('userName').textContent = u.user_metadata?.full_name || "Individual User";
+
+        // --- IDENTITY HYDRATION ---
         const { data: profile } = await window.korraSupabase.from('profiles').select('*').eq('id', u.id).single();
-        if(profile) document.getElementById('passportId').textContent = `ID: ${profile.passport_id}`;
+        if(profile) {
+            document.getElementById('userName').textContent = profile.full_name || "Individual User";
+            document.getElementById('passportId').textContent = `ID: ${profile.passport_id}`;
+        }
+
+        // --- BIOMETRIC EXTRACTION ---
         const { data: passport } = await window.korraSupabase.from('size_passports').select('*').eq('user_id', u.id).single();
         if(passport && passport.current_biometrics) {
             const b = passport.current_biometrics;
             const keys = ['Chest Round', 'Waist Round', 'Hip Round', 'Shoulder', 'Inseam'];
-            document.getElementById('bioGrid').innerHTML = keys.map(k => `<div class="bio-item"><div class="bio-label">${k}</div><div class="bio-value">${b[k] || '--'}cm</div></div>`).join('');
+            document.getElementById('bioGrid').innerHTML = keys.map(k => `
+              <div class="bio-item">
+                <div class="bio-label">${k}</div>
+                <div class="bio-value">${b[k] || '--'}cm</div>
+              </div>
+            `).join('');
+        } else {
+            document.getElementById('bioGrid').innerHTML = `<div style="grid-column: 1/-1; padding:40px; text-align:center; color:var(--Neutral-400)">No active biometrics found. Visit a professional to start your first scan.</div>`;
         }
-        const qrContainer = document.getElementById('qrContainer'); qrContainer.innerHTML = '';
-        new QRCode(qrContainer, { text: `https://korra.work/connect?p=${profile?.passport_id}`, width: 160, height: 160, colorDark: "#000000", colorLight: "#ffffff" });
+
+        // --- HANDSHAKE QR GENERATION ---
+        const qrContainer = document.getElementById('qrContainer');
+        if (qrContainer && profile) {
+            qrContainer.innerHTML = '';
+            new QRCode(qrContainer, {
+                text: `https://korra.work/connect?p=${profile.passport_id}`,
+                width: 160, height: 160, colorDark: "#000000", colorLight: "#ffffff",
+                correctLevel : QRCode.CorrectLevel.H
+            });
+        }
+
         document.getElementById('loadingOverlay').style.display = 'none';
       }
       loadPassport();

@@ -637,12 +637,41 @@
         const reader = new FileReader();
         reader.onload = async (e) => {
             const lines = e.target.result.split('\n').slice(1);
+            let count = 0;
             for(let line of lines) {
-                const [name, height, gender] = line.split(',');
-                if(name) await window.KORRA_DB.from('measurements').insert({ user_id: userId, client_name: name, height: parseFloat(height), gender: gender?.trim().toLowerCase() || 'male', biometrics: {} });
+                const parts = line.split(',');
+                const name = parts[0]?.trim();
+                const height = parseFloat(parts[1]);
+                const gender = parts[2]?.trim().toLowerCase();
+
+                if(name && !isNaN(height)) {
+                    await window.KORRA_DB.from('measurements').insert({
+                        user_id: userId,
+                        client_name: name,
+                        height: height,
+                        gender: gender || 'male',
+                        biometrics: {},
+                        merchant_id: userId // Establishing Professional record
+                    });
+                    count++;
+                }
             }
-            alert("Bulk Import Complete."); fetchHistory();
-        }; reader.readAsText(input.files[0]);
+            alert(`INDUSTRIAL SYNC: ${count} subjects successfully enrolled. Measurements will appear as scans are completed.`);
+            fetchHistory();
+        };
+        reader.readAsText(input.files[0]);
+    };
+
+    // --- Institutional Demo Logic ---
+    window.requestIndustrialDemo = async () => {
+        const email = document.getElementById('userEmail').textContent;
+        alert(`DEMO REQUESTED: Our industrial team will contact you at ${email} within 24 hours.`);
+        // Track as interest lead in background
+        await window.KORRA_DB.from('interest_leads').insert({
+            email: email,
+            context: 'INDUSTRIAL_DEMO',
+            source: 'MERCHANT_DASHBOARD'
+        });
     };
 
     async function init() {
