@@ -175,7 +175,77 @@ section.block { padding: var(--S-160) 0; }
       .hero-cta-card style { flex-direction: column; }
     }
   </style>
-  <script>
+<script>
+    // HYPER-DETAILED IMAGE DEBUGGER
+    (function() {
+      const IMAGE_SELECTORS = ['img', '.hero-visual img', '.image-card img', '.mosaic-img'];
+      const assetImages = [
+        '/assets/hero1.png', '/assets/hero2.png', '/assets/body-capture.png', '/assets/homepage_image.png'
+      ];
+
+      function checkImage(src, callback) {
+        const img = new Image();
+        img.onload = function() { callback({ src, status: 'LOADED', width: this.naturalWidth, height: this.naturalHeight }); };
+        img.onerror = function() { callback({ src, status: 'ERROR', error: 'Failed to load' }); };
+        img.onabort = function() { callback({ src, status: 'ABORTED' }); };
+        img.src = src;
+      }
+
+      // Check all potential asset images
+      console.log('%c🖼️ KORRA IMAGE DEBUGGER', 'color: #57D7C0; font-size: 14px; font-weight: bold;');
+      console.log('%c----------------------------', 'color: #57D7C0');
+
+      assetImages.forEach(src => {
+        checkImage(src, result => {
+          const color = result.status === 'LOADED' ? '#57D7C0' : '#D63031';
+          console.log(`%c[${result.status}] ${result.src}`, `color: ${color}; font-weight: bold`);
+          if (result.status === 'LOADED') {
+            console.log(`   ↳ Dimensions: ${result.width}x${result.height}`);
+          } else {
+            console.log(`   ↳ Error: ${result.error || 'Unknown'}`);
+          }
+        });
+      });
+
+      // Check all DOM images
+      console.log('%c\n📋 DOM IMAGE INVENTORY', 'color: #57D7C0; font-size: 14px; font-weight: bold;');
+      console.log('%c-------------------------', 'color: #57D7C0');
+
+      const allImages = document.querySelectorAll('img');
+      console.log(`Found ${allImages.length} <img> elements in DOM`);
+
+      allImages.forEach((img, idx) => {
+        const src = img.src || img.getAttribute('src') || 'NO SRC';
+        const alt = img.alt || 'NO ALT';
+        const complete = img.complete;
+        const naturalWidth = img.naturalWidth || 0;
+        const naturalHeight = img.naturalHeight || 0;
+
+        console.log(`%c[${idx + 1}] ${alt}`, 'color: #A3A3A3; font-weight: bold');
+        console.log(`   ↳ src: ${src.substring(0, 100)}${src.length > 100 ? '...' : ''}`);
+        console.log(`   ↳ complete: ${complete}, natural: ${naturalWidth}x${naturalHeight}`);
+
+        if (!complete && naturalWidth === 0) {
+          console.log(`   ⚠️ IMAGE NOT LOADED - checking network...`);
+          fetch(src, { method: 'HEAD', mode: 'no-cors' })
+            .then(() => console.log(`   ✅ Network request succeeded`))
+            .catch(err => console.log(`   ❌ Network request failed: ${err.message}`));
+        }
+      });
+
+      // Log any 404 errors from page
+      window.addEventListener('error', function(e) {
+        if (e.target.tagName === 'IMG') {
+          console.log('%c❌ IMAGE LOAD ERROR', 'color: #D63031; font-weight: bold');
+          console.log(`   ↳ Element:`, e.target);
+          console.log(`   ↳ src:`, e.target.src);
+          console.log(`   ↳ Error Event:`, e.message);
+        }
+      }, true);
+
+      console.log('%c\n✅ Debugger initialized. Reload page to see all image statuses.', 'color: #57D7C0; font-style: italic');
+    })();
+
     if (window.top !== window.self && !window.location.pathname.includes('/widget')) {
         window.top.location.href = window.location.href;
     }
