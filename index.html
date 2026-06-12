@@ -76,8 +76,18 @@ section.block { padding: var(--S-160) 0; }
       line-height: 1.6; text-align: center; display: block;
     }
 
-    .hero-visual { width: 100vw; margin: 0 auto; height: 850px; position: relative; display: flex; align-items: center; justify-content: center; overflow: hidden; }
-    .hero-visual img { width: 100%; height: 100%; object-fit: contain; }
+    .hero-visual {
+      width: 100%; max-width: 1200px; margin: 0 auto; height: auto; min-height: 400px;
+      position: relative; display: flex; align-items: center; justify-content: center; gap: 40px;
+      padding: 40px 0;
+    }
+    .hero-visual img { width: 45%; height: auto; object-fit: contain; border-radius: 20px; border: 1px solid var(--Glass-Border); }
+    .hero-arrow {
+      width: 60px; height: 60px; background: var(--Mint); border-radius: 50%;
+      display: flex; align-items: center; justify-content: center; color: var(--Obsidian);
+      font-size: 24px; font-weight: 900; box-shadow: 0 0 30px rgba(87, 215, 192, 0.4);
+      flex-shrink: 0; z-index: 5;
+    }
 
     .hero-cta-card {
         width: 100%; max-width: 1000px; margin: -100px auto 0; background: #000; border: 1px solid var(--Mint); border-radius: 24px;
@@ -145,7 +155,9 @@ section.block { padding: var(--S-160) 0; }
       .final-banner p { margin: 0; }
 
       .hero { padding: 140px 0 var(--S-64); }
-      .hero-visual { height: 400px; margin-top: 40px; }
+      .hero-visual { flex-direction: column; gap: 20px; }
+      .hero-visual img { width: 90%; }
+      .hero-arrow { transform: rotate(90deg); }
       .hero-cta-card { margin-top: 40px; flex-direction: column; gap: 32px; padding: 32px; }
       .hero-cta-card h3 { font-size: 24px; }
 
@@ -210,7 +222,11 @@ section.block { padding: var(--S-160) 0; }
          <div style="text-align:center"><div style="font-size:32px; font-weight:900; color:var(--Mint)">Reusable</div><div style="font-size:11px; font-weight:900; opacity:0.5; text-transform:uppercase">size passport</div></div>
       </div>
     </div>
-    <div class="hero-visual"><img src="/assets/homepage_image.png?v=2.0.2" alt="3D Model"></div>
+    <div class="hero-visual">
+      <img src="/assets/hero1.png" alt="Scan Capture">
+      <div class="hero-arrow">→</div>
+      <img src="/assets/hero2.png" alt="3D Model Result">
+    </div>
     <div class="container">
       <div class="hero-cta-card">
         <div>
