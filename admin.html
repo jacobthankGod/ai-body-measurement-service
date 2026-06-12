@@ -679,11 +679,14 @@
       }, 2000);
     }
 
-    document.getElementById('adminScanForm').addEventListener('submit', async (e) => {
-      e.preventDefault(); const btn = document.getElementById('btnAdminRun'); btn.disabled = true; adminLog("INITIATING ASYNC HANDSHAKE...");
-      const fd = new FormData(); fd.append('front', document.getElementById('adminFrontPhoto').files[0]); fd.append('side', document.getElementById('adminSidePhoto').files[0]); fd.append('height', document.getElementById('adminHeight').value); fd.append('gender', document.getElementById('adminGender').value); fd.append('client_name', document.getElementById('adminSubjectName').value);
-      try { const res = await fetch('/api/v2/measurements/extract', { method: 'POST', headers: { 'X-API-Key': 'korra_admin_auth_01J0PK82X92K4' }, body: fd }); if (res.ok) { const d = await res.json(); pollTask(d.task_id); } else { btn.disabled = false; } } catch (err) { btn.disabled = false; }
-    });
+    const adminForm = document.getElementById('adminScanForm');
+    if (adminForm) {
+      adminForm.addEventListener('submit', async (e) => {
+        e.preventDefault(); const btn = document.getElementById('btnAdminRun'); btn.disabled = true; adminLog("INITIATING ASYNC HANDSHAKE...");
+        const fd = new FormData(); fd.append('front', document.getElementById('adminFrontPhoto').files[0]); fd.append('side', document.getElementById('adminSidePhoto').files[0]); fd.append('height', document.getElementById('adminHeight').value); fd.append('gender', document.getElementById('adminGender').value); fd.append('client_name', document.getElementById('adminSubjectName').value);
+        try { const res = await fetch('/api/v2/measurements/extract', { method: 'POST', headers: { 'X-API-Key': 'korra_admin_auth_01J0PK82X92K4' }, body: fd }); if (res.ok) { const d = await res.json(); pollTask(d.task_id); } else { btn.disabled = false; } } catch (err) { btn.disabled = false; }
+      });
+    }
 
     async function savePricing() {
         alert("Global price override requires Platform Master Key. Changes cached for session.");
