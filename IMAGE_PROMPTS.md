@@ -156,7 +156,7 @@ A local artisan tailor smiling as a client performs a self-guided 60-second phon
 **Title:** Digital Pattern Sync
 **Prompt:**
 ```
-A digital tailoring interface showing zero-latency pattern sync, instantly translating mobile app measurements into immediate cutting specifications, cutting down time spent by 90%, professional studio lighting --ar 16:9 --v 6 --style professional
+A professional digital tailoring CAD interface displayed on a large widescreen monitor in a modern tailor workshop, showing a digital pattern draft appearing in real-time as smartphone measurement data streams in from the mobile app, precise measurement overlays and annotation lines visible on the garment pattern, dotted lines automatically adjusting to show the instant transformation from body measurements to cutting specifications, a digital progress indicator showing "90% time saved" or "instant sync complete", clean professional studio with ambient LED panel lighting in soft teal and white tones, minimal clutter on the workbench showing only essential tailoring tools, a tailor's cutting table with fabric roll visible in the background, cinematic composition with the screen as the primary focus, 8k resolution, professional product photography with shallow depth of field, subtle mint and coral accent colors in the UI elements --ar 16:9 --v 6 --style professional
 ```
 
 ### Section 4: Serve Anyone, Anywhere
