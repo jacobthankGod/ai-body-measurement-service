@@ -9,6 +9,15 @@
     {
       "src": "/api/v2/(.*)",
       "dest": "/api/main.py"
+    },
+    {
+      "src": "/assets/(.*)",
+      "dest": "/public/assets/$1"
+    },
+    {
+      "src": "/meshes/(.*)",
+      "dest": "/public/meshes/$1"
     }
-  ]
+  ],
+  "framework": null
 }
