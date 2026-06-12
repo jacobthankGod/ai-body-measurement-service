@@ -175,10 +175,17 @@ async def serve_assets(asset_path: str):
         ]
         for path in possible_paths:
             if path.exists() and path.is_file():
-                # Explicitly handle common JS/CSS to prevent 500s from incorrect media type guessing
+                # Explicitly handle common JS/CSS/image types to prevent 500s from incorrect media type guessing
                 media_type = None
                 if asset_path.endswith(".js"): media_type = "application/javascript"
                 elif asset_path.endswith(".css"): media_type = "text/css"
+                elif asset_path.endswith(".png"): media_type = "image/png"
+                elif asset_path.endswith(".jpg"): media_type = "image/jpeg"
+                elif asset_path.endswith(".jpeg"): media_type = "image/jpeg"
+                elif asset_path.endswith(".webp"): media_type = "image/webp"
+                elif asset_path.endswith(".gif"): media_type = "image/gif"
+                elif asset_path.endswith(".svg"): media_type = "image/svg+xml"
+                elif asset_path.endswith(".ico"): media_type = "image/x-icon"
                 return FileResponse(str(path), media_type=media_type)
 
         logger.warning(f"⚠️ Asset not found: {asset_path}")
