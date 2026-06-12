@@ -15,7 +15,7 @@
 # Large Images
 *.png
 !docs/*.png
-!public/*.png
+!public/**/*.png
 
 # Python
 __pycache__/
