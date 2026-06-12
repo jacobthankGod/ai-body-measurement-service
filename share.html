@@ -332,9 +332,19 @@
       if (!window.supabase) { setTimeout(init, 500); return; }
       const db = window.supabase.createClient(CONFIG.url, CONFIG.key);
       const { data: { session } } = await db.auth.getSession();
-      if (!session) { window.location.href = `/signup?next=${encodeURIComponent(window.location.href)}`; return; }
+
+      // MANDATORY CLIENT REGISTRATION GATE
+      if (!session) {
+        window.location.href = `/signup?role=client&m=${mId || 'PUBLIC'}&next=${encodeURIComponent(window.location.href)}`;
+        return;
+      }
+
       userId = session.user.id;
-      if (mId) { const { data: profile } = await db.from('profiles').select('credits').eq('id', mId).single(); merchantCredits = profile?.credits || 0; sessionData = { merchant_id: mId, client_name: cName || "Client" }; }
+      if (mId) {
+        const { data: profile } = await db.from('profiles').select('credits').eq('id', mId).single();
+        merchantCredits = profile?.credits || 0;
+        sessionData = { merchant_id: mId, client_name: cName || session.user.user_metadata?.full_name || "Client" };
+      }
     }
 
     async function pollTask(taskId) {
