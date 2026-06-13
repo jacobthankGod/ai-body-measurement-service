@@ -25,13 +25,36 @@
     header.scrolled { height: 64px; background: rgba(0, 0, 0, 0.95); }
     header .container { display: flex; align-items: center; justify-content: space-between; padding: 0; }
 
-    .logo { display: flex; align-items: center; gap: 12px; cursor: pointer; text-decoration: none; color: inherit; }
+    .logo { display: flex; align-items: center; gap: 12px; cursor: pointer; text-decoration: none; color: inherit; z-index: 1000001; }
     .logo-mark { width: 32px; height: 32px; border-radius: 8px; background: var(--Mint); transform: rotate(-8deg); }
     .logo-text { font-size: 20px; font-weight: 900; letter-spacing: -0.05em; }
 
-    nav { display: flex; gap: 32px; margin-left: 48px; }
-    nav a { font-size: 11px; font-weight: 800; color: var(--White); text-decoration: none; text-transform: uppercase; letter-spacing: 0.1em; opacity: 0.5; transition: 0.2s; }
+    nav { display: flex; gap: var(--S-32); position: absolute; left: 50%; transform: translateX(-50%); }
+    nav a { font-size: 13px; font-weight: 600; color: var(--White); text-decoration: none; text-transform: uppercase; letter-spacing: 0.1em; opacity: 0.6; transition: 0.2s; }
     nav a:hover { opacity: 1; color: var(--Mint); }
+
+    .header-auth { display: flex; align-items: center; gap: 16px; z-index: 1000001; }
+
+    /* HAMBURGER */
+    .hamburger {
+      display: none; width: 40px; height: 40px; background: var(--Glass); border: 1px solid var(--Glass-Border);
+      border-radius: 10px; cursor: pointer; flex-direction: column; align-items: center; justify-content: center; gap: 4px;
+      z-index: 1000001; transition: 0.2s;
+    }
+    .hamburger:hover { border-color: var(--Mint); }
+    .hamburger span { width: 20px; height: 2px; background: var(--Mint); border-radius: 2px; transition: 0.3s; }
+    .hamburger.active span:nth-child(1) { transform: translateY(6px) rotate(45deg); }
+    .hamburger.active span:nth-child(2) { opacity: 0; }
+    .hamburger.active span:nth-child(3) { transform: translateY(-6px) rotate(-45deg); }
+
+    .mobile-menu {
+      position: fixed; inset: 0; background: rgba(0,0,0,0.95); backdrop-filter: blur(40px);
+      z-index: 1000000; display: flex; flex-direction: column; align-items: center; justify-content: center;
+      gap: 32px; padding: 40px; transform: translateY(-100%); transition: 0.5s cubic-bezier(0.4, 0, 0.2, 1); opacity: 0;
+    }
+    .mobile-menu.active { transform: translateY(0); opacity: 1; }
+    .mobile-menu a { font-size: 24px; font-weight: 900; color: #fff; text-decoration: none; text-transform: uppercase; letter-spacing: -0.02em; }
+    .mobile-menu a:hover { color: var(--Mint); }
 
     .hero { padding: 220px 0 100px; text-align: center; background: radial-gradient(circle at 50% 50%, rgba(87, 215, 192, 0.1), transparent 60%); }
     .hero h1 { font-size: 64px; font-weight: 900; letter-spacing: -0.04em; color: var(--Mint); margin-bottom: 24px; }
@@ -77,6 +100,8 @@
       .hero h1 { font-size: 40px; }
       .grid-impact, .grid-swapped { grid-template-columns: 1fr; gap: var(--S-48); }
       nav { display: none; }
+      .hamburger { display: flex; }
+      #authButtons { display: none !important; }
       .footer-links { grid-template-columns: repeat(2, 1fr); }
     }
   </style>
@@ -93,19 +118,30 @@
         <a href="/casestudies.html">Merchant Success</a>
         <a href="/about.html">About</a>
       </nav>
-      <div style="flex:1"></div>
-      <div style="display:flex; align-items:center; gap:16px">
+      <div class="header-auth">
         <div id="authButtons" style="display:flex; gap:12px">
-          <a class="btn btn-outline" style="height:40px" href="/signin.html">Sign In</a>
-          <a class="btn btn-primary" style="height:40px" href="/signup.html">Get Access</a>
+          <a class="btn btn-outline" style="height:40px; border:none; opacity:0.6; padding:0 12px" href="/signin.html">Sign In</a>
+          <a class="btn btn-primary" style="height:40px; padding: 0 20px;" href="/signup.html">Get Access</a>
         </div>
         <div id="signedBar" style="display:none">
-          <a class="btn btn-primary" style="height:40px" id="btnGoWorkbench" href="/dashboard">Workbench</a>
-          <button class="btn btn-outline" id="btnSignOut" style="color:var(--Error); height:36px; padding: 0 12px; margin-left:12px">Exit</button>
+          <a class="btn btn-primary" style="height:40px; padding: 0 20px;" id="btnGoWorkbench" href="/dashboard">Workbench</a>
+          <button class="btn btn-outline" id="btnSignOut" style="color:var(--Error); height:36px; padding: 0 12px; margin-left:12px; border-color:rgba(214,48,49,0.2)">Exit</button>
+        </div>
+        <div class="hamburger" id="btnHamburger">
+          <span></span><span></span><span></span>
         </div>
       </div>
     </div>
   </header>
+
+  <div class="mobile-menu" id="mobileMenu">
+    <a href="/#technology" onclick="toggleMenu()">Technology</a>
+    <a href="/casestudies.html">Success Stories</a>
+    <a href="/about.html">About KORRA</a>
+    <a href="/signin.html">Merchant Portal</a>
+    <div style="width:100%; height:1px; background:var(--Glass-Border); margin:16px 0"></div>
+    <a href="/signup.html" class="btn btn-primary" style="width:100%; height:64px; font-size:16px">Get Access Now</a>
+  </div>
 
   <main>
     <section class="hero">
@@ -226,6 +262,19 @@
   <script src="/assets/supabase.min.js"></script>
   <script>
     (function() {
+      // 1. MOBILE MENU LOGIC
+      const hamburger = document.getElementById('btnHamburger');
+      const mobileMenu = document.getElementById('mobileMenu');
+
+      window.toggleMenu = function() {
+        if (!hamburger || !mobileMenu) return;
+        hamburger.classList.toggle('active');
+        mobileMenu.classList.toggle('active');
+        document.body.style.overflow = mobileMenu.classList.contains('active') ? 'hidden' : '';
+      };
+
+      if (hamburger) hamburger.addEventListener('click', toggleMenu);
+
       function initSupabase() {
         if (typeof window.supabase === 'undefined') { setTimeout(initSupabase, 500); return; }
         const config = { supabaseUrl: 'https://blsettabymllulsxtziw.supabase.co', supabaseKey: 'sb_publishable_miCOIXHtlxLkfDgpwE0N-g_BA1Q-x8y' };
