@@ -11,18 +11,49 @@
   <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800;900&display=swap" rel="stylesheet" />
 
   <style>
+    /* --- UNIFIED HEADER SYSTEM --- */
+    header {
+      width: 100%; height: 80px; display: flex; align-items: center; position: fixed; top: 0; z-index: 999999;
+      background: rgba(0, 0, 0, 0.8); backdrop-filter: blur(20px); border-bottom: 1px solid var(--Glass-Border); transition: all 0.3s ease;
+    }
+    header.scrolled { height: 64px; background: rgba(0, 0, 0, 0.95); }
+    header .container { display: flex; align-items: center; justify-content: space-between; padding: 0; position: relative; }
+
+    .logo { display: flex; align-items: center; gap: var(--S-12); cursor: pointer; text-decoration: none; color: inherit; z-index: 1000001; }
+    .logo-mark { width: 32px; height: 32px; border-radius: 8px; background: var(--Mint); transform: rotate(-8deg); }
+    .logo-text { font-size: 20px; font-weight: 900; letter-spacing: -0.05em; }
+
+    nav.main-nav { display: flex; gap: var(--S-32); position: absolute; left: 50%; transform: translateX(-50%); }
+    nav.main-nav a { font-size: 13px; font-weight: 600; color: var(--White); text-decoration: none; text-transform: uppercase; letter-spacing: 0.1em; opacity: 0.6; transition: 0.2s; }
+    nav.main-nav a:hover, nav.main-nav a.active { opacity: 1; color: var(--Mint); }
+
+    .header-auth { display: flex; align-items: center; gap: var(--S-16); z-index: 1000001; }
+
+    .hamburger {
+      display: none; width: 44px; height: 44px; background: var(--Glass); border: 1px solid var(--Glass-Border);
+      border-radius: 12px; cursor: pointer; flex-direction: column; align-items: center; justify-content: center; gap: 5px;
+      z-index: 1000001; transition: 0.2s; position: relative;
+    }
+    .hamburger:hover { border-color: var(--Mint); background: rgba(255,255,255,0.08); }
+    .hamburger span { width: 22px; height: 2px; background: var(--Mint); border-radius: 2px; transition: 0.4s cubic-bezier(0.4, 0, 0.2, 1); }
+    .hamburger.active span:nth-child(1) { transform: translateY(7px) rotate(45deg); width: 24px; }
+    .hamburger.active span:nth-child(2) { opacity: 0; transform: translateX(-10px); }
+    .hamburger.active span:nth-child(3) { transform: translateY(-7px) rotate(-45deg); width: 24px; }
+
+    .mobile-menu {
+      position: fixed; inset: 0; background: rgba(0,0,0,0.98); backdrop-filter: blur(40px);
+      z-index: 1000000; display: flex; flex-direction: column; align-items: center; justify-content: center;
+      gap: 32px; padding: 40px; transform: translateY(-100%); transition: 0.6s cubic-bezier(0.4, 0, 0.2, 1); opacity: 0; pointer-events: none;
+    }
+    .mobile-menu.active { transform: translateY(0); opacity: 1; pointer-events: auto; }
+    .mobile-menu a { font-size: 28px; font-weight: 900; color: #fff; text-decoration: none; text-transform: uppercase; letter-spacing: -0.02em; transition: 0.3s; }
+    .mobile-menu a:hover { color: var(--Mint); transform: scale(1.05); }
+    .mobile-close-hint { position: absolute; bottom: 40px; font-size: 10px; font-weight: 800; color: var(--Neutral-500); text-transform: uppercase; letter-spacing: 0.2em; }
+
     :root {
       /* PERFECTED COLORS - DO NOT TOUCH */
-      --Obsidian: #000000;
-      --Mint: #57D7C0;
-      --Teal-900: #002D2A;
-      --Glass: rgba(255, 255, 255, 0.04);
-      --Glass-Border: rgba(255, 255, 255, 0.1);
-      --Neutral-400: #A3A3A3;
-      --Neutral-500: #737373;
-      --White: #FFFFFF;
-      --Error: #D63031;
-
+      --Obsidian: #000000; --Mint: #57D7C0; --Teal-900: #002D2A; --Glass: rgba(255, 255, 255, 0.04);
+      --Glass-Border: rgba(255, 255, 255, 0.1); --Neutral-400: #A3A3A3; --Neutral-500: #737373; --White: #FFFFFF; --Error: #D63031;
       --S-8: 8px; --S-16: 16px; --S-24: 24px; --S-32: 32px; --S-48: 48px; --S-64: 64px; --S-80: 80px; --S-120: 120px; --S-160: 160px; --S-200: 200px;
       --Radius-M: 12px; --Radius-L: 20px; --Radius-XL: 999px;
     }
@@ -36,39 +67,7 @@
 
     .container { width: 100%; max-width: 1150px; margin: 0 auto; padding: 0 var(--S-48); position: relative; }
 
-        header {
-      width: 100%; height: 80px; display: flex; align-items: center; position: fixed; top: 0; z-index: 999999;
-      background: rgba(0, 0, 0, 0.8); backdrop-filter: blur(20px); border-bottom: 1px solid var(--Glass-Border); transition: all 0.3s ease;
-    }
-    header.scrolled { height: 64px; background: rgba(0, 0, 0, 0.95); }
-    header .container { display: flex; align-items: center; justify-content: space-between; padding: 0; position: relative; }
-
     
-
-    nav.main-
-
-    .header-auth { display: flex; align-items: center; gap: var(--S-16); z-index: 1000001; }
-
-    /* HAMBURGER */
-    .hamburger {
-      display: none; width: 40px; height: 40px; background: var(--Glass); border: 1px solid var(--Glass-Border);
-      border-radius: 10px; cursor: pointer; flex-direction: column; align-items: center; justify-content: center; gap: 4px;
-      z-index: 1000001; transition: 0.2s;
-    }
-    .hamburger:hover { border-color: var(--Mint); }
-    .hamburger span { width: 20px; height: 2px; background: var(--Mint); border-radius: 2px; transition: 0.3s; }
-    .hamburger.active span:nth-child(1) { transform: translateY(6px) rotate(45deg); }
-    .hamburger.active span:nth-child(2) { opacity: 0; }
-    .hamburger.active span:nth-child(3) { transform: translateY(-6px) rotate(-45deg); }
-
-    .mobile-menu {
-      position: fixed; inset: 0; background: rgba(0,0,0,0.95); backdrop-filter: blur(40px);
-      z-index: 1000000; display: flex; flex-direction: column; align-items: center; justify-content: center;
-      gap: 32px; padding: 40px; transform: translateY(-100%); transition: 0.5s cubic-bezier(0.4, 0, 0.2, 1); opacity: 0;
-    }
-    .mobile-menu.active { transform: translateY(0); opacity: 1; }
-    .mobile-menu a { font-size: 24px; font-weight: 900; color: #fff; text-decoration: none; text-transform: uppercase; letter-spacing: -0.02em; }
-    .mobile-menu a:hover { color: var(--Mint); }
 
     .btn {
       height: 48px; padding: 0 var(--S-24); border-radius: 12px; border: 1px solid transparent; font-size: 13px; font-weight: 800;
@@ -79,7 +78,7 @@
     .btn-outline:hover { background: var(--Glass); border-color: var(--White); }
     .btn-large { height: 64px; padding: 0 var(--S-48); font-size: 16px; }
 
-section.block { padding: var(--S-160) 0; }
+    section.block { padding: var(--S-160) 0; }
     .section-eyebrow { font-size: 11px; font-weight: 900; color: var(--Mint); text-transform: uppercase; letter-spacing: 0.2em; margin-bottom: var(--S-16); }
     .section-title { font-size: 48px; font-weight: 800; line-height: 1.1; letter-spacing: -0.03em; margin: 0; }
     .section-desc { font-size: 18px; color: var(--Neutral-400); line-height: 1.6; margin-top: var(--S-24); max-width: 550px; font-weight: 500; }
@@ -165,8 +164,7 @@ section.block { padding: var(--S-160) 0; }
 
     @media (max-width: 1050px) {
       .hero-headline { font-size: 36px; white-space: normal; }
-      nav { display: none; }
-      .hamburger { display: flex; }
+            .hamburger { display: flex; }
       .container { padding: 0 var(--S-24); }
       header .container { padding: 0 24px; }
       #authButtons { display: none !important; }
@@ -196,91 +194,15 @@ section.block { padding: var(--S-160) 0; }
       .hero-cta-card style { flex-direction: column; }
     }
   </style>
-<script>
-    // HYPER-DETAILED IMAGE DEBUGGER
-    (function() {
-      const IMAGE_SELECTORS = ['img', '.hero-visual img', '.image-card img', '.mosaic-img'];
-      const assetImages = [
-        '/assets/hero1.png', '/assets/hero2.png', '/assets/body-capture.png', '/assets/homepage_image.png'
-      ];
-
-      function checkImage(src, callback) {
-        const img = new Image();
-        img.onload = function() { callback({ src, status: 'LOADED', width: this.naturalWidth, height: this.naturalHeight }); };
-        img.onerror = function() { callback({ src, status: 'ERROR', error: 'Failed to load' }); };
-        img.onabort = function() { callback({ src, status: 'ABORTED' }); };
-        img.src = src;
-      }
-
-      // Check all potential asset images
-      console.log('%c🖼️ KORRA IMAGE DEBUGGER', 'color: #57D7C0; font-size: 14px; font-weight: bold;');
-      console.log('%c----------------------------', 'color: #57D7C0');
-
-      assetImages.forEach(src => {
-        checkImage(src, result => {
-          const color = result.status === 'LOADED' ? '#57D7C0' : '#D63031';
-          console.log(`%c[${result.status}] ${result.src}`, `color: ${color}; font-weight: bold`);
-          if (result.status === 'LOADED') {
-            console.log(`   ↳ Dimensions: ${result.width}x${result.height}`);
-          } else {
-            console.log(`   ↳ Error: ${result.error || 'Unknown'}`);
-          }
-        });
-      });
-
-      // Check all DOM images
-      console.log('%c\n📋 DOM IMAGE INVENTORY', 'color: #57D7C0; font-size: 14px; font-weight: bold;');
-      console.log('%c-------------------------', 'color: #57D7C0');
-
-      const allImages = document.querySelectorAll('img');
-      console.log(`Found ${allImages.length} <img> elements in DOM`);
-
-      allImages.forEach((img, idx) => {
-        const src = img.src || img.getAttribute('src') || 'NO SRC';
-        const alt = img.alt || 'NO ALT';
-        const complete = img.complete;
-        const naturalWidth = img.naturalWidth || 0;
-        const naturalHeight = img.naturalHeight || 0;
-
-        console.log(`%c[${idx + 1}] ${alt}`, 'color: #A3A3A3; font-weight: bold');
-        console.log(`   ↳ src: ${src.substring(0, 100)}${src.length > 100 ? '...' : ''}`);
-        console.log(`   ↳ complete: ${complete}, natural: ${naturalWidth}x${naturalHeight}`);
-
-        if (!complete && naturalWidth === 0) {
-          console.log(`   ⚠️ IMAGE NOT LOADED - checking network...`);
-          fetch(src, { method: 'HEAD', mode: 'no-cors' })
-            .then(() => console.log(`   ✅ Network request succeeded`))
-            .catch(err => console.log(`   ❌ Network request failed: ${err.message}`));
-        }
-      });
-
-      // Log any 404 errors from page
-      window.addEventListener('error', function(e) {
-        if (e.target.tagName === 'IMG') {
-          console.log('%c❌ IMAGE LOAD ERROR', 'color: #D63031; font-weight: bold');
-          console.log(`   ↳ Element:`, e.target);
-          console.log(`   ↳ src:`, e.target.src);
-          console.log(`   ↳ Error Event:`, e.message);
-        }
-      }, true);
-
-      console.log('%c\n✅ Debugger initialized. Reload page to see all image statuses.', 'color: #57D7C0; font-style: italic');
-    })();
-
-    if (window.top !== window.self && !window.location.pathname.includes('/widget')) {
-        window.top.location.href = window.location.href;
-    }
-  </script>
 </head>
 <body>
-
-    <header id="mainHeader">
+  <header id="mainHeader">
     <div class="container">
       <a class="logo" href="/">
         <div class="logo-mark"></div>
         <div class="logo-text">KORRA</div>
       </a>
-      
+
       <nav class="main-nav">
         <a href="/#technology">Technology</a>
         <a href="/casestudies.html">Success Stories</a>
@@ -289,7 +211,7 @@ section.block { padding: var(--S-160) 0; }
       </nav>
 
       <div class="header-auth">
-        <div id="authButtons" style="display:flex; gap:12px">
+        <div id="authButtons" style="display:flex; gap:var(--S-12)">
           <a class="btn btn-outline" style="height:40px; border:none; opacity:0.6; padding:0 12px" href="/signin.html">Sign In</a>
           <a class="btn btn-primary" style="height:40px; padding:0 20px" href="/signup.html">Get Access</a>
         </div>
@@ -304,20 +226,23 @@ section.block { padding: var(--S-160) 0; }
     </div>
   </header>
 
-<div class="mobile-menu" id="mobileMenu">
+  <div class="mobile-menu" id="mobileMenu">
     <a href="/#technology" onclick="toggleMenu()">Technology</a>
     <a href="/casestudies.html">Success Stories</a>
     <a href="/about.html">About KORRA</a>
     <a href="/theoryofchange.html">Theory of Change</a>
     <a href="/signin.html">Merchant Portal</a>
-    <div style="width:100%; height:1px; background:var(--Glass-Border); margin:16px 0"></div>    <a href="/signup.html" class="btn btn-primary" style="width:100%; height:64px; font-size:16px">Get Access Now</a>
+    <div style="width:100%; height:1px; background:var(--Glass-Border); margin:16px 0"></div>
+    <a href="/signup.html" class="btn btn-primary" style="width:100%; height:64px; font-size:16px">Get Access Now</a>
+    <div class="mobile-close-hint">Tap Hamburger to Close</div>
   </div>
 
-  
 
   
 
-<!-- SECTION 0: HERO -->
+  
+  </div>
+
   <section class="hero" id="home">
     <div class="container">
       <h1 class="hero-headline">Fit infrastructure for remote tailoring.</h1>
@@ -680,21 +605,31 @@ section.block { padding: var(--S-160) 0; }
     </div>
   </footer>
 
-  <!-- --- TRUE INDUSTRIAL SELF-HOSTING --- -->
   <script src="/assets/supabase.min.js"></script>
   <script>
     (function() {
-      // 1. MOBILE MENU LOGIC
+      // --- MOBILE MENU LOGIC ---
       const hamburger = document.getElementById('btnHamburger');
       const mobileMenu = document.getElementById('mobileMenu');
 
       window.toggleMenu = function() {
+        if (!hamburger || !mobileMenu) return;
         hamburger.classList.toggle('active');
         mobileMenu.classList.toggle('active');
         document.body.style.overflow = mobileMenu.classList.contains('active') ? 'hidden' : '';
       };
 
-      hamburger.addEventListener('click', toggleMenu);
+      if (hamburger) hamburger.addEventListener('click', toggleMenu);
+
+      window.addEventListener('scroll', () => {
+        const header = document.getElementById('mainHeader');
+        if (header) {
+          if (window.scrollY > 40) header.classList.add('scrolled');
+          else header.classList.remove('scrolled');
+        }
+      });
+
+      
 
       // 2. ATOMIC INTERACTION SYSTEM
       document.addEventListener('click', (e) => {
@@ -712,7 +647,7 @@ section.block { padding: var(--S-160) 0; }
         }
       });
 
-      // 2. AUTH OBSERVER (Header State)
+      // 3. AUTH OBSERVER (Header State)
       function initSupabase() {
         if (typeof window.supabase === 'undefined') {
           setTimeout(initSupabase, 500);
@@ -750,12 +685,6 @@ section.block { padding: var(--S-160) 0; }
         } catch (err) { console.error("Auth init failed:", err); }
       }
       initSupabase();
-
-      window.addEventListener('scroll', () => {
-        const header = document.getElementById('mainHeader');
-        if (window.scrollY > 40) header.classList.add('scrolled');
-        else header.classList.remove('scrolled');
-      });
     })();
   </script>
 </body>
