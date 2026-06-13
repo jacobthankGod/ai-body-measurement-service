@@ -36,20 +36,16 @@
 
     .container { width: 100%; max-width: 1150px; margin: 0 auto; padding: 0 var(--S-48); position: relative; }
 
-    header {
+        header {
       width: 100%; height: 80px; display: flex; align-items: center; position: fixed; top: 0; z-index: 999999;
       background: rgba(0, 0, 0, 0.8); backdrop-filter: blur(20px); border-bottom: 1px solid var(--Glass-Border); transition: all 0.3s ease;
     }
     header.scrolled { height: 64px; background: rgba(0, 0, 0, 0.95); }
-    header .container { display: flex; align-items: center; justify-content: space-between; padding: 0; }
+    header .container { display: flex; align-items: center; justify-content: space-between; padding: 0; position: relative; }
 
-    .logo { display: flex; align-items: center; gap: var(--S-12); cursor: pointer; text-decoration: none; color: inherit; z-index: 1000001; }
-    .logo-mark { width: 32px; height: 32px; border-radius: 8px; background: var(--Mint); transform: rotate(-8deg); }
-    .logo-text { font-size: 20px; font-weight: 900; letter-spacing: -0.05em; }
+    
 
-    nav { display: flex; gap: var(--S-32); position: absolute; left: 50%; transform: translateX(-50%); }
-    nav a { font-size: 13px; font-weight: 600; color: var(--White); text-decoration: none; text-transform: uppercase; letter-spacing: 0.1em; opacity: 0.6; transition: 0.2s; }
-    nav a:hover { opacity: 1; color: var(--Mint); }
+    nav.main-
 
     .header-auth { display: flex; align-items: center; gap: var(--S-16); z-index: 1000001; }
 
@@ -278,23 +274,23 @@ section.block { padding: var(--S-160) 0; }
 </head>
 <body>
 
-  <header id="mainHeader">
+    <header id="mainHeader">
     <div class="container">
       <a class="logo" href="/">
         <div class="logo-mark"></div>
         <div class="logo-text">KORRA</div>
       </a>
-
-      <nav id="marketingNav">
-        <a href="#technology">Technology</a>
-        <a href="/casestudies.html">Merchant Success</a>
+      
+      <nav class="main-nav">
+        <a href="/#technology">Technology</a>
+        <a href="/casestudies.html">Success Stories</a>
         <a href="/about.html">About</a>
-        <a href="/signin.html">Merchant Login</a>
+        <a href="/theoryofchange.html">Change</a>
       </nav>
 
       <div class="header-auth">
-        <div id="authButtons" style="display:flex; gap:var(--S-12)">
-          <a class="btn btn-outline" style="height:40px; border:none; opacity:0.6" href="/signin.html">Sign In</a>
+        <div id="authButtons" style="display:flex; gap:12px">
+          <a class="btn btn-outline" style="height:40px; border:none; opacity:0.6; padding:0 12px" href="/signin.html">Sign In</a>
           <a class="btn btn-primary" style="height:40px; padding:0 20px" href="/signup.html">Get Access</a>
         </div>
         <div id="signedBar" style="display:none">
@@ -308,14 +304,18 @@ section.block { padding: var(--S-160) 0; }
     </div>
   </header>
 
-  <div class="mobile-menu" id="mobileMenu">
-    <a href="#technology" onclick="toggleMenu()">Technology</a>
+<div class="mobile-menu" id="mobileMenu">
+    <a href="/#technology" onclick="toggleMenu()">Technology</a>
     <a href="/casestudies.html">Success Stories</a>
     <a href="/about.html">About KORRA</a>
+    <a href="/theoryofchange.html">Theory of Change</a>
     <a href="/signin.html">Merchant Portal</a>
-    <div style="width:100%; height:1px; background:var(--Glass-Border); margin:16px 0"></div>
-    <a href="/signup.html" class="btn btn-primary" style="width:100%; height:64px; font-size:16px">Get Access Now</a>
+    <div style="width:100%; height:1px; background:var(--Glass-Border); margin:16px 0"></div>    <a href="/signup.html" class="btn btn-primary" style="width:100%; height:64px; font-size:16px">Get Access Now</a>
   </div>
+
+  
+
+  
 
 <!-- SECTION 0: HERO -->
   <section class="hero" id="home">

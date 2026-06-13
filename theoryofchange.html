@@ -11,15 +11,10 @@
   <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800;900&display=swap" rel="stylesheet" />
 
   <style>
-    :root {
-      --Obsidian: #000000;
-      --Mint: #57D7C0;
-      --Teal-900: #002D2A;
-      --Glass: rgba(255, 255, 255, 0.04);
-      --Glass-Border: rgba(255, 255, 255, 0.1);
-      --Neutral-400: #A3A3A3;
-      --White: #FFFFFF;
-      --S-32: 32px; --S-48: 48px;
+        :root {
+      --Obsidian: #000000; --Mint: #57D7C0; --Teal-900: #002D2A; --Glass: rgba(255, 255, 255, 0.04);
+      --Glass-Border: rgba(255, 255, 255, 0.1); --Neutral-400: #A3A3A3; --Neutral-500: #737373; --White: #FFFFFF; --Error: #D63031;
+      --S-8: 8px; --S-16: 16px; --S-24: 24px; --S-32: 32px; --S-48: 48px; --S-64: 64px; --S-80: 80px; --S-120: 120px; --S-160: 160px;
     }
 
     * { box-sizing: border-box; -webkit-font-smoothing: antialiased; margin: 0; padding: 0; }
@@ -27,19 +22,43 @@
 
     .container { width: 100%; max-width: 1150px; margin: 0 auto; padding: 0 var(--S-48); }
 
-    header {
-      width: 100%; height: 80px; display: flex; align-items: center; position: fixed; top: 0; z-index: 1000;
-      background: rgba(0, 0, 0, 0.8); backdrop-filter: blur(20px); border-bottom: 1px solid var(--Glass-Border);
+            header {
+      width: 100%; height: 80px; display: flex; align-items: center; position: fixed; top: 0; z-index: 999999;
+      background: rgba(0, 0, 0, 0.8); backdrop-filter: blur(20px); border-bottom: 1px solid var(--Glass-Border); transition: all 0.3s ease;
     }
-    header .container { display: flex; align-items: center; justify-content: space-between; padding: 0; }
+    header.scrolled { height: 64px; background: rgba(0, 0, 0, 0.95); }
+    header .container { display: flex; align-items: center; justify-content: space-between; padding: 0; position: relative; }
 
-    .logo { display: flex; align-items: center; gap: var(--S-12); text-decoration: none; color: inherit; }
-    .logo-mark { width: 32px; height: 32px; border-radius: 8px; background: var(--Mint); transform: rotate(-8deg); }
-    .logo-text { font-size: 20px; font-weight: 900; letter-spacing: -0.05em; }
+    
 
-    nav { display: flex; gap: var(--S-32); margin-left: var(--S-48); }
-    nav a { font-size: 11px; font-weight: 800; color: var(--White); text-decoration: none; text-transform: uppercase; letter-spacing: 0.1em; opacity: 0.5; transition: 0.2s; }
-    nav a:hover { opacity: 1; color: var(--Mint); }
+    nav.main-
+
+    .header-auth { display: flex; align-items: center; gap: 16px; z-index: 1000001; }
+
+    /* HAMBURGER */
+    .hamburger {
+      display: none; width: 40px; height: 40px; background: var(--Glass); border: 1px solid var(--Glass-Border);
+      border-radius: 10px; cursor: pointer; flex-direction: column; align-items: center; justify-content: center; gap: 4px;
+      z-index: 1000001; transition: 0.2s;
+    }
+    .hamburger:hover { border-color: var(--Mint); }
+    .hamburger span { width: 20px; height: 2px; background: var(--Mint); border-radius: 2px; transition: 0.3s; }
+    .hamburger.active span:nth-child(1) { transform: translateY(6px) rotate(45deg); }
+    .hamburger.active span:nth-child(2) { opacity: 0; }
+    .hamburger.active span:nth-child(3) { transform: translateY(-6px) rotate(-45deg); }
+
+    .mobile-menu {
+      position: fixed; inset: 0; background: rgba(0,0,0,0.95); backdrop-filter: blur(40px);
+      z-index: 1000000; display: flex; flex-direction: column; align-items: center; justify-content: center;
+      gap: 32px; padding: 40px; transform: translateY(-100%); transition: 0.5s cubic-bezier(0.4, 0, 0.2, 1); opacity: 0;
+    }
+    .mobile-menu.active { transform: translateY(0); opacity: 1; }
+    .mobile-menu a { font-size: 24px; font-weight: 900; color: #fff; text-decoration: none; text-transform: uppercase; letter-spacing: -0.02em; }
+    .mobile-menu a:hover { color: var(--Mint); }
+
+    
+
+    
 
     .btn {
       height: 48px; padding: 0 var(--S-24); border-radius: 12px; font-size: 13px; font-weight: 800;
@@ -77,24 +96,48 @@
 </head>
 <body>
 
-  <header>
+      <header id="mainHeader">
     <div class="container">
       <a class="logo" href="/">
         <div class="logo-mark"></div>
         <div class="logo-text">KORRA</div>
       </a>
-      <nav>
+      
+      <nav class="main-nav">
         <a href="/#technology">Technology</a>
-        <a href="/casestudies.html">Case Studies</a>
+        <a href="/casestudies.html">Success Stories</a>
         <a href="/about.html">About</a>
+        <a href="/theoryofchange.html">Change</a>
       </nav>
-      <div style="flex:1"></div>
-      <div id="authButtons" style="display:flex; gap:var(--S-12)">
-        <a class="btn btn-outline" href="/signin.html">Sign In</a>
-        <a class="btn btn-primary" href="/signup.html">Get Access</a>
+
+      <div class="header-auth">
+        <div id="authButtons" style="display:flex; gap:12px">
+          <a class="btn btn-outline" style="height:40px; border:none; opacity:0.6; padding:0 12px" href="/signin.html">Sign In</a>
+          <a class="btn btn-primary" style="height:40px; padding:0 20px" href="/signup.html">Get Access</a>
+        </div>
+        <div id="signedBar" style="display:none">
+          <a class="btn btn-primary" id="btnGoWorkbench" style="height:40px; padding:0 20px" href="/dashboard">Workbench</a>
+          <button class="btn btn-outline" id="btnSignOut" style="color:var(--Error); height:36px; padding:0 12px; margin-left:12px; border-color:rgba(214,48,49,0.2)">Exit</button>
+        </div>
+        <div class="hamburger" id="btnHamburger">
+          <span></span><span></span><span></span>
+        </div>
       </div>
     </div>
   </header>
+
+<div class="mobile-menu" id="mobileMenu">
+    <a href="/#technology" onclick="toggleMenu()">Technology</a>
+    <a href="/casestudies.html">Success Stories</a>
+    <a href="/about.html">About KORRA</a>
+    <a href="/theoryofchange.html">Theory of Change</a>
+    <a href="/signin.html">Merchant Portal</a>
+    <div style="width:100%; height:1px; background:var(--Glass-Border); margin:16px 0"></div>    <a href="/signup.html" class="btn btn-primary" style="width:100%; height:64px; font-size:16px">Get Access Now</a>
+  </div>
+
+  
+
+  
 
   <main>
     <div class="container">
@@ -142,5 +185,67 @@
     </div>
   </footer>
 
+<script>
+    
+    (function() {
+      // 1. MOBILE MENU LOGIC
+      const hamburger = document.getElementById('btnHamburger');
+      const mobileMenu = document.getElementById('mobileMenu');
+      
+      window.toggleMenu = function() {
+        if (!hamburger || !mobileMenu) return;
+        hamburger.classList.toggle('active');
+        mobileMenu.classList.toggle('active');
+        document.body.style.overflow = mobileMenu.classList.contains('active') ? 'hidden' : '';
+      };
+
+      if (hamburger) hamburger.addEventListener('click', toggleMenu);
+
+      window.addEventListener('scroll', () => {
+        const header = document.getElementById('mainHeader');
+        if (header) {
+          if (window.scrollY > 40) header.classList.add('scrolled');
+          else header.classList.remove('scrolled');
+        }
+      });
+      const hamburger = document.getElementById('btnHamburger');
+      const mobileMenu = document.getElementById('mobileMenu');
+      window.toggleMenu = function() {
+        if (!hamburger || !mobileMenu) return;
+        hamburger.classList.toggle('active');
+        mobileMenu.classList.toggle('active');
+        document.body.style.overflow = mobileMenu.classList.contains('active') ? 'hidden' : '';
+      };
+      if (hamburger) hamburger.addEventListener('click', toggleMenu);
+      
+      window.addEventListener('scroll', () => {
+        const header = document.getElementById('mainHeader');
+        if (header) {
+          if (window.scrollY > 40) header.classList.add('scrolled');
+          else header.classList.remove('scrolled');
+        }
+      });    })();</script><script src="/assets/supabase.min.js"></script>
+  <script>/* AUTH SYNC */ 
+    (function() {
+      // 1. MOBILE MENU LOGIC
+      const hamburger = document.getElementById('btnHamburger');
+      const mobileMenu = document.getElementById('mobileMenu');
+      
+      window.toggleMenu = function() {
+        if (!hamburger || !mobileMenu) return;
+        hamburger.classList.toggle('active');
+        mobileMenu.classList.toggle('active');
+        document.body.style.overflow = mobileMenu.classList.contains('active') ? 'hidden' : '';
+      };
+
+      if (hamburger) hamburger.addEventListener('click', toggleMenu);
+
+      window.addEventListener('scroll', () => {
+        const header = document.getElementById('mainHeader');
+        if (header) {
+          if (window.scrollY > 40) header.classList.add('scrolled');
+          else header.classList.remove('scrolled');
+        }
+      }); function initSupabase() { if (typeof window.supabase === "undefined") { setTimeout(initSupabase, 500); return; } const config = { supabaseUrl: "https://blsettabymllulsxtziw.supabase.co", supabaseKey: "sb_publishable_miCOIXHtlxLkfDgpwE0N-g_BA1Q-x8y" }; window.korraSupabase = window.supabase.createClient(config.supabaseUrl, config.supabaseKey); const ADMIN_LIST = ["springbionics@gmail.com", "admin@korra.work"]; window.korraSupabase.auth.onAuthStateChange((event, session) => { const authBtns = document.getElementById("authButtons"), bar = document.getElementById("signedBar"), goBtn = document.getElementById("btnGoWorkbench"); if (session) { if(authBtns) authBtns.style.display = "none"; if(bar) bar.style.display = "flex"; if (ADMIN_LIST.includes(session.user.email.toLowerCase())) { if(goBtn) { goBtn.href = "/admin"; goBtn.textContent = "Super-Workbench"; } } } else { if(bar) bar.style.display = "none"; if(authBtns) authBtns.style.display = "flex"; } }); } initSupabase(); document.addEventListener("click", e => { if (e.target.id === "btnSignOut") window.korraSupabase.auth.signOut().then(() => window.location.reload()); }); })(); </script>
 </body>
 </html>

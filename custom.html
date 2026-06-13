@@ -18,12 +18,41 @@
     html, body { background: var(--Obsidian); color: var(--White); font-family: 'Inter', sans-serif; overflow-x: hidden; }
     .container { width: 100%; max-width: 1150px; margin: 0 auto; padding: 0 48px; }
 
-    header {
+        header {
       width: 100%; height: 80px; display: flex; align-items: center; position: fixed; top: 0; z-index: 999999;
       background: rgba(0, 0, 0, 0.8); backdrop-filter: blur(20px); border-bottom: 1px solid var(--Glass-Border); transition: all 0.3s ease;
     }
     header.scrolled { height: 64px; background: rgba(0, 0, 0, 0.95); }
-    header .container { display: flex; align-items: center; justify-content: space-between; padding: 0; }
+    header .container { display: flex; align-items: center; justify-content: space-between; padding: 0; position: relative; }
+
+    
+
+    nav.main-nav { display: flex; gap: 32px; position: absolute; left: 50%; transform: translateX(-50%); }
+    nav.main-nav a { font-size: 13px; font-weight: 600; color: var(--White); text-decoration: none; text-transform: uppercase; letter-spacing: 0.1em; opacity: 0.6; transition: 0.2s; }
+    nav.main-nav a:hover, nav.main-nav a.active { opacity: 1; color: var(--Mint); }
+
+    .header-auth { display: flex; align-items: center; gap: 16px; z-index: 1000001; }
+
+    /* HAMBURGER */
+    .hamburger {
+      display: none; width: 40px; height: 40px; background: var(--Glass); border: 1px solid var(--Glass-Border);
+      border-radius: 10px; cursor: pointer; flex-direction: column; align-items: center; justify-content: center; gap: 4px;
+      z-index: 1000001; transition: 0.2s;
+    }
+    .hamburger:hover { border-color: var(--Mint); }
+    .hamburger span { width: 20px; height: 2px; background: var(--Mint); border-radius: 2px; transition: 0.3s; }
+    .hamburger.active span:nth-child(1) { transform: translateY(6px) rotate(45deg); }
+    .hamburger.active span:nth-child(2) { opacity: 0; }
+    .hamburger.active span:nth-child(3) { transform: translateY(-6px) rotate(-45deg); }
+
+    .mobile-menu {
+      position: fixed; inset: 0; background: rgba(0,0,0,0.95); backdrop-filter: blur(40px);
+      z-index: 1000000; display: flex; flex-direction: column; align-items: center; justify-content: center;
+      gap: 32px; padding: 40px; transform: translateY(-100%); transition: 0.5s cubic-bezier(0.4, 0, 0.2, 1); opacity: 0;
+    }
+    .mobile-menu.active { transform: translateY(0); opacity: 1; }
+    .mobile-menu a { font-size: 24px; font-weight: 900; color: #fff; text-decoration: none; text-transform: uppercase; letter-spacing: -0.02em; }
+    .mobile-menu a:hover { color: var(--Mint); }
 
     .logo { display: flex; align-items: center; gap: 12px; cursor: pointer; text-decoration: none; color: inherit; z-index: 1000001; }
 
@@ -113,25 +142,28 @@
   </style>
 </head>
 <body>
-  <header id="mainHeader">
+    <header id="mainHeader">
     <div class="container">
       <a class="logo" href="/">
         <div class="logo-mark"></div>
         <div class="logo-text">KORRA</div>
       </a>
-      <nav>
+      
+      <nav class="main-nav">
         <a href="/#technology">Technology</a>
-        <a href="/casestudies.html">Merchant Success</a>
+        <a href="/casestudies.html">Success Stories</a>
         <a href="/about.html">About</a>
+        <a href="/theoryofchange.html">Change</a>
       </nav>
+
       <div class="header-auth">
         <div id="authButtons" style="display:flex; gap:12px">
           <a class="btn btn-outline" style="height:40px; border:none; opacity:0.6; padding:0 12px" href="/signin.html">Sign In</a>
-          <a class="btn btn-primary" style="height:40px; padding: 0 20px;" href="/signup.html">Get Access</a>
+          <a class="btn btn-primary" style="height:40px; padding:0 20px" href="/signup.html">Get Access</a>
         </div>
         <div id="signedBar" style="display:none">
-          <a class="btn btn-primary" style="height:40px; padding: 0 20px;" id="btnGoWorkbench" href="/dashboard">Workbench</a>
-          <button class="btn btn-outline" id="btnSignOut" style="color:var(--Error); height:36px; padding: 0 12px; margin-left:12px; border-color:rgba(214,48,49,0.2)">Exit</button>
+          <a class="btn btn-primary" id="btnGoWorkbench" style="height:40px; padding:0 20px" href="/dashboard">Workbench</a>
+          <button class="btn btn-outline" id="btnSignOut" style="color:var(--Error); height:36px; padding:0 12px; margin-left:12px; border-color:rgba(214,48,49,0.2)">Exit</button>
         </div>
         <div class="hamburger" id="btnHamburger">
           <span></span><span></span><span></span>
@@ -140,14 +172,18 @@
     </div>
   </header>
 
-  <div class="mobile-menu" id="mobileMenu">
+<div class="mobile-menu" id="mobileMenu">
     <a href="/#technology" onclick="toggleMenu()">Technology</a>
     <a href="/casestudies.html">Success Stories</a>
     <a href="/about.html">About KORRA</a>
+    <a href="/theoryofchange.html">Theory of Change</a>
     <a href="/signin.html">Merchant Portal</a>
-    <div style="width:100%; height:1px; background:var(--Glass-Border); margin:16px 0"></div>
-    <a href="/signup.html" class="btn btn-primary" style="width:100%; height:64px; font-size:16px">Get Access Now</a>
+    <div style="width:100%; height:1px; background:var(--Glass-Border); margin:16px 0"></div>    <a href="/signup.html" class="btn btn-primary" style="width:100%; height:64px; font-size:16px">Get Access Now</a>
   </div>
+
+  
+
+  
 
   <main>
     <section class="hero">
@@ -267,6 +303,7 @@
 
   <script src="/assets/supabase.min.js"></script>
   <script>
+    
     (function() {
       // 1. MOBILE MENU LOGIC
       const hamburger = document.getElementById('btnHamburger');
@@ -280,6 +317,14 @@
       };
 
       if (hamburger) hamburger.addEventListener('click', toggleMenu);
+
+      window.addEventListener('scroll', () => {
+        const header = document.getElementById('mainHeader');
+        if (header) {
+          if (window.scrollY > 40) header.classList.add('scrolled');
+          else header.classList.remove('scrolled');
+        }
+      });
       function initSupabase() {
         if (typeof window.supabase === 'undefined') { setTimeout(initSupabase, 500); return; }
         const config = { supabaseUrl: 'https://blsettabymllulsxtziw.supabase.co', supabaseKey: 'sb_publishable_miCOIXHtlxLkfDgpwE0N-g_BA1Q-x8y' };
