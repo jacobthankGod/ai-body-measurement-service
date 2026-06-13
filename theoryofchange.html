@@ -18,7 +18,7 @@
     html, body { background: var(--Obsidian); color: var(--White); font-family: 'Inter', sans-serif; overflow-x: hidden; }
     .container { width: 100%; max-width: 1150px; margin: 0 auto; padding: 0 48px; }
 
-        /* --- UNIFIED HEADER SYSTEM --- */
+    /* --- UNIFIED HEADER SYSTEM --- */
     header {
       width: 100%; height: 80px; display: flex; align-items: center; position: fixed; top: 0; z-index: 999999;
       background: rgba(0, 0, 0, 0.8); backdrop-filter: blur(20px); border-bottom: 1px solid var(--Glass-Border); transition: all 0.3s ease;
@@ -57,31 +57,32 @@
     .mobile-menu a:hover { color: var(--Mint); transform: scale(1.05); }
     .mobile-close-hint { position: absolute; bottom: 40px; font-size: 10px; font-weight: 800; color: var(--Neutral-500); text-transform: uppercase; letter-spacing: 0.2em; }
 
-
     /* --- PAGE STYLES --- */
     main { padding-top: 180px; padding-bottom: 120px; }
-    section.block { padding: var(--S-120) 0; }
     .section-eyebrow { font-size: 11px; font-weight: 900; color: var(--Mint); text-transform: uppercase; letter-spacing: 0.2em; margin-bottom: var(--S-16); }
-    .section-title { font-size: 40px; font-weight: 800; line-height: 1.1; letter-spacing: -0.03em; margin: 0; }
-    .section-desc { font-size: 18px; color: var(--Neutral-400); line-height: 1.6; margin-top: var(--S-24); max-width: 550px; font-weight: 500; }
-    .glass-card { background: var(--Glass); border: 1px solid var(--Glass-Border); border-radius: 24px; padding: var(--S-48); transition: 0.3s; position: relative; overflow: hidden; }
-    .image-card { padding: 12px !important; border-radius: 24px !important; width: 100%; height: auto; aspect-ratio: 4/3; display: flex; }
-    .image-card img { width: 100%; height: 100%; object-fit: cover; border-radius: 16px; opacity: 0.7; transition: 0.4s; }
-    .grid-impact { display: grid; grid-template-columns: 1fr 1.2fr; gap: var(--S-80); align-items: center; }
-    .grid-swapped { grid-template-columns: 1.2fr 1fr; }
+    .section-title { font-size: 48px; font-weight: 800; line-height: 1.1; letter-spacing: -0.03em; margin-bottom: 60px; }
+
+    .content-grid { display: grid; grid-template-columns: 1fr 1.5fr; gap: 80px; }
+    .impact-block h3 { font-size: 24px; font-weight: 800; margin-bottom: 16px; color: #fff; }
+    .impact-block p { font-size: 16px; color: var(--Neutral-400); line-height: 1.6; margin-bottom: 32px; }
+
+    .stat-card { background: var(--Glass); border: 1px solid var(--Glass-Border); border-radius: 20px; padding: 32px; margin-bottom: 24px; }
+    .stat-card .value { font-size: 40px; font-weight: 900; color: var(--Mint); margin-bottom: 8px; }
+    .stat-card .label { font-size: 12px; font-weight: 800; color: var(--Neutral-500); text-transform: uppercase; }
+
     .btn { height: 52px; padding: 0 32px; border-radius: 12px; font-size: 13px; font-weight: 800; cursor: pointer; display: inline-flex; align-items: center; justify-content: center; gap: 12px; transition: 0.2s; text-decoration: none; text-transform: uppercase; }
     .btn-primary { background: var(--Mint); color: var(--Obsidian); border: none; }
     .btn-outline { background: transparent; border: 1px solid var(--Glass-Border); color: var(--White); }
-    .final-banner { background: linear-gradient(135deg, var(--Teal-900), #000); border-radius: 24px; padding: var(--S-64) var(--S-80); text-align: center; border: 1px solid var(--Glass-Border); margin-top: 80px; }
-    footer { padding: 120px 0 64px; border-top: 1px solid var(--Glass-Border); background: #000; }
-    .footer-links { display: grid; grid-template-columns: repeat(4, 1fr); gap: 64px; }
-    .footer-col h4 { font-size: 10px; font-weight: 900; text-transform: uppercase; color: var(--Neutral-500); margin-bottom: 24px; }
-    .footer-col a { display: block; color: var(--Neutral-400); text-decoration: none; margin-bottom: 12px; font-size: 13px; }
-    .footer-col a:hover { color: var(--Mint); }
+
     @media (max-width: 1050px) {
-      .grid-impact, .grid-swapped { grid-template-columns: 1fr; gap: var(--S-48); }
+      .container { padding: 0 24px; }
       nav.main-nav { display: none; }
-      .footer-links { grid-template-columns: repeat(2, 1fr); }
+      .hamburger { display: flex; }
+      #authButtons { display: none !important; }
+      .section-title { font-size: 32px; }
+      .content-grid { grid-template-columns: 1fr; gap: 48px; }
+      .stat-card { padding: 24px; }
+      .stat-card .value { font-size: 32px; }
     }
   </style>
 </head>
@@ -97,7 +98,7 @@
         <a href="/#technology">Technology</a>
         <a href="/casestudies.html">Success Stories</a>
         <a href="/about.html">About</a>
-        <a href="/theoryofchange.html">Change</a>
+        <a href="/theoryofchange.html" class="active">Change</a>
       </nav>
 
       <div class="header-auth">
@@ -127,8 +128,7 @@
     <div class="mobile-close-hint">Tap Hamburger to Close</div>
   </div>
 
-
-<main>
+  <main>
     <div class="container">
       <div class="section-eyebrow">Strategic Alignment</div>
       <h1 class="section-title">The KORRA<br>Theory of Change.</h1>
@@ -168,15 +168,8 @@
 
   <footer>
     <div class="container">
-      <div class="footer-links">
-        <div class="footer-col"><h4>Infrastructure</h4><a href="/#technology">Pattern Accuracy</a><a href="/dashboard#api">Merchant API</a><a href="/sizepassport.html">Size Passport</a></div>
-        <div class="footer-col"><h4>Organization</h4><a href="/about.html">About KORRA</a><a href="/casestudies.html">Case Studies</a></div>
-        <div class="footer-col"><h4>Resources</h4><a href="/theoryofchange.html">Theory of Change</a></div>
-        <div class="footer-col"><h4>Legal</h4><a href="/legal.html">Data Privacy</a><a href="/legal.html">Terms</a></div>
-      </div>
-      <div style="margin-top:80px; padding-top:40px; border-top:1px solid var(--Glass-Border); display:flex; justify-content:space-between; align-items:center; font-size:13px; opacity:0.3">
-        <span>© 2026 KORRA AI. Scaling global artisan infrastructure.</span>
-        <div style="display:flex; gap:32px"><span>Twitter</span><span>LinkedIn</span></div>
+      <div style="opacity: 0.3; font-size: 13px;">
+        © 2026 KORRA AI. Scaling Global Artisan Infrastructure.
       </div>
     </div>
   </footer>
@@ -184,7 +177,7 @@
   <script src="/assets/supabase.min.js"></script>
   <script>
     (function() {
-            // --- MOBILE MENU LOGIC ---
+      // --- MOBILE MENU LOGIC ---
       const hamburger = document.getElementById('btnHamburger');
       const mobileMenu = document.getElementById('mobileMenu');
 
@@ -204,7 +197,6 @@
           else header.classList.remove('scrolled');
         }
       });
-
 
       function initSupabase() {
         if (typeof window.supabase === 'undefined') { setTimeout(initSupabase, 500); return; }

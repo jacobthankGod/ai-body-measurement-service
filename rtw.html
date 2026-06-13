@@ -3,7 +3,7 @@
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>RTW | KORRA AI</title>
+  <title>Ready-to-Wear | KORRA AI</title>
   <link rel="icon" type="image/png" href="/assets/body-capture.png">
   <link rel="preconnect" href="https://fonts.googleapis.com" />
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
@@ -18,7 +18,7 @@
     html, body { background: var(--Obsidian); color: var(--White); font-family: 'Inter', sans-serif; overflow-x: hidden; }
     .container { width: 100%; max-width: 1150px; margin: 0 auto; padding: 0 48px; }
 
-        /* --- UNIFIED HEADER SYSTEM --- */
+    /* --- UNIFIED HEADER SYSTEM --- */
     header {
       width: 100%; height: 80px; display: flex; align-items: center; position: fixed; top: 0; z-index: 999999;
       background: rgba(0, 0, 0, 0.8); backdrop-filter: blur(20px); border-bottom: 1px solid var(--Glass-Border); transition: all 0.3s ease;
@@ -55,32 +55,49 @@
     .mobile-menu.active { transform: translateY(0); opacity: 1; pointer-events: auto; }
     .mobile-menu a { font-size: 28px; font-weight: 900; color: #fff; text-decoration: none; text-transform: uppercase; letter-spacing: -0.02em; transition: 0.3s; }
     .mobile-menu a:hover { color: var(--Mint); transform: scale(1.05); }
-    .mobile-close-hint { position: absolute; bottom: 40px; font-size: 10px; font-weight: 800; color: var(--Neutral-500); text-transform: uppercase; letter-spacing: 0.2em; }
 
+    /* --- INDUSTRY FOCUS UNIQUE STYLES --- */
+    main { padding-top: 120px; }
+    .hero { padding: 100px 0 100px; text-align: center; background: radial-gradient(circle at 50% 50%, rgba(87, 215, 192, 0.1), transparent 60%); }
+    .hero h1 { font-size: clamp(40px, 8vw, 64px); font-weight: 900; letter-spacing: -0.04em; color: var(--Mint); margin-bottom: 24px; }
+    .hero p { font-size: 20px; color: var(--Neutral-400); max-width: 700px; margin: 0 auto 40px; line-height: 1.6; font-weight: 500; }
 
-    /* --- PAGE STYLES --- */
-    main { padding-top: 180px; padding-bottom: 120px; }
     section.block { padding: var(--S-120) 0; }
     .section-eyebrow { font-size: 11px; font-weight: 900; color: var(--Mint); text-transform: uppercase; letter-spacing: 0.2em; margin-bottom: var(--S-16); }
     .section-title { font-size: 40px; font-weight: 800; line-height: 1.1; letter-spacing: -0.03em; margin: 0; }
     .section-desc { font-size: 18px; color: var(--Neutral-400); line-height: 1.6; margin-top: var(--S-24); max-width: 550px; font-weight: 500; }
+    .accordion-toggle { background: none; border: none; color: var(--Mint); font-size: 11px; font-weight: 700; cursor: pointer; margin-top: 16px; display: inline-flex; align-items: center; gap: 8px; text-transform: uppercase; letter-spacing: 0.1em; transition: 0.2s; }
+    .accordion-expand { display: none; margin-top: 20px; padding-top: 20px; border-top: 1px solid var(--Glass-Border); }
+    .accordion-expand.active { display: block; animation: fadeIn 0.3s ease-out; }
+
+    .grid-impact { display: grid; grid-template-columns: 1fr 1.2fr; gap: var(--S-80); align-items: center; }
+    .grid-swapped { grid-template-columns: 1.2fr 1fr; }
+
     .glass-card { background: var(--Glass); border: 1px solid var(--Glass-Border); border-radius: 24px; padding: var(--S-48); transition: 0.3s; position: relative; overflow: hidden; }
     .image-card { padding: 12px !important; border-radius: 24px !important; width: 100%; height: auto; aspect-ratio: 4/3; display: flex; }
     .image-card img { width: 100%; height: 100%; object-fit: cover; border-radius: 16px; opacity: 0.7; transition: 0.4s; }
-    .grid-impact { display: grid; grid-template-columns: 1fr 1.2fr; gap: var(--S-80); align-items: center; }
-    .grid-swapped { grid-template-columns: 1.2fr 1fr; }
+    .image-card:hover img { opacity: 0.9; transform: scale(1.02); }
+
     .btn { height: 52px; padding: 0 32px; border-radius: 12px; font-size: 13px; font-weight: 800; cursor: pointer; display: inline-flex; align-items: center; justify-content: center; gap: 12px; transition: 0.2s; text-decoration: none; text-transform: uppercase; }
     .btn-primary { background: var(--Mint); color: var(--Obsidian); border: none; }
     .btn-outline { background: transparent; border: 1px solid var(--Glass-Border); color: var(--White); }
+
     .final-banner { background: linear-gradient(135deg, var(--Teal-900), #000); border-radius: 24px; padding: var(--S-64) var(--S-80); text-align: center; border: 1px solid var(--Glass-Border); margin-top: 80px; }
+    .final-banner h2 { font-size: 40px; font-weight: 800; letter-spacing: -0.04em; margin-bottom: 16px; }
+    .final-banner p { font-size: 18px; color: var(--Neutral-400); margin-bottom: 32px; }
+
     footer { padding: 120px 0 64px; border-top: 1px solid var(--Glass-Border); background: #000; }
     .footer-links { display: grid; grid-template-columns: repeat(4, 1fr); gap: 64px; }
     .footer-col h4 { font-size: 10px; font-weight: 900; text-transform: uppercase; color: var(--Neutral-500); margin-bottom: 24px; }
     .footer-col a { display: block; color: var(--Neutral-400); text-decoration: none; margin-bottom: 12px; font-size: 13px; }
     .footer-col a:hover { color: var(--Mint); }
+
     @media (max-width: 1050px) {
+      .container { padding: 0 24px; }
       .grid-impact, .grid-swapped { grid-template-columns: 1fr; gap: var(--S-48); }
       nav.main-nav { display: none; }
+      .hamburger { display: flex; }
+      #authButtons { display: none !important; }
       .footer-links { grid-template-columns: repeat(2, 1fr); }
     }
   </style>
@@ -92,26 +109,22 @@
         <div class="logo-mark"></div>
         <div class="logo-text">KORRA</div>
       </a>
-
       <nav class="main-nav">
         <a href="/#technology">Technology</a>
         <a href="/casestudies.html">Success Stories</a>
         <a href="/about.html">About</a>
         <a href="/theoryofchange.html">Change</a>
       </nav>
-
       <div class="header-auth">
-        <div id="authButtons" style="display:flex; gap:var(--S-12)">
-          <a class="btn btn-outline" style="height:40px; border:none; opacity:0.6; padding:0 12px" href="/signin.html">Sign In</a>
-          <a class="btn btn-primary" style="height:40px; padding:0 20px" href="/signup.html">Get Access</a>
+        <div id="authButtons" style="display:flex; gap:12px">
+          <a class="btn btn-outline" style="opacity:0.6; border:none" href="/signin.html">Sign In</a>
+          <a class="btn btn-primary" href="/signup.html">Get Access</a>
         </div>
         <div id="signedBar" style="display:none">
-          <a class="btn btn-primary" id="btnGoWorkbench" style="height:40px; padding:0 20px" href="/dashboard">Workbench</a>
-          <button class="btn btn-outline" id="btnSignOut" style="color:var(--Error); height:36px; padding:0 12px; margin-left:12px; border-color:rgba(214,48,49,0.2)">Exit</button>
+          <a class="btn btn-primary" id="btnGoWorkbench" href="/dashboard">Workbench</a>
+          <button class="btn btn-outline" id="btnSignOut" style="color:var(--Error); height:36px; padding: 0 12px; margin-left:12px; border-color:rgba(214,48,49,0.2)">Exit</button>
         </div>
-        <div class="hamburger" id="btnHamburger">
-          <span></span><span></span><span></span>
-        </div>
+        <div class="hamburger" id="btnHamburger"><span></span><span></span><span></span></div>
       </div>
     </div>
   </header>
@@ -127,15 +140,14 @@
     <div class="mobile-close-hint">Tap Hamburger to Close</div>
   </div>
 
-
-<main>
+  <main>
     <section class="hero">
       <div class="container">
         <div style="font-size: 11px; font-weight: 900; color: var(--Mint); text-transform: uppercase; letter-spacing: 0.2em; margin-bottom: 16px;">Industry Focus</div>
         <h1>Ready-To-Wear</h1>
-        <p>Minimize returns and maximize conversion. Data-driven size recommendations for modern apparel brands.</p>
+        <p>Eliminate sizing guesswork and reduce return rates with clinical-grade fit data. Build size confidence for every shopper.</p>
         <div style="display:flex; justify-content:center; gap:16px">
-            <a href="/signup.html" class="btn btn-primary">Start Scaling</a>
+            <a href="/signup.html" class="btn btn-primary">Start Fitting</a>
             <a href="/#technology" class="btn btn-outline">See Technology</a>
         </div>
       </div>
@@ -146,16 +158,16 @@
       <div class="container">
         <div class="grid-impact">
           <div>
-            <div class="section-eyebrow">Optimization</div>
+            <div class="section-eyebrow">Conversions</div>
             <h2 class="section-title">Reduce Returns</h2>
-            <p class="section-desc">Lower your return rate by providing customers with high-accuracy size recommendations based on their unique 3D body profile.</p>
-          
+            <p class="section-desc">Stop the cycle of bracket ordering. Give your customers the confidence to buy the right size the first time, every time.</p>
             <button class="accordion-toggle" onclick="this.nextElementSibling.classList.toggle('active'); this.textContent = this.nextElementSibling.classList.contains('active') ? 'Show Less ↑' : 'View Details ↓'">View Details ↓</button>
-            <div class="accordion-expand" id="accordion-reduce-returns">
-              <p style="font-size:14px; color:var(--Neutral-400); line-height:1.6">Help customers find their perfect fit with accurate measurements. Reduce return rates by providing size guidance based on actual body data rather than generic size charts. Integration with Shopify, Magento, and custom e-commerce platforms displays personalized size recommendations at checkout.</p>
-            </div></div>
+            <div class="accordion-expand">
+              <p style="font-size:14px; color:var(--Neutral-400); line-height:1.6">Integrate the KORRA Fit-Widget into your PDP. Customers perform a 60-second scan and receive instant size recommendations based on your specific garment specs. Reduce return rates by up to 35% and increase conversion by providing a technical source of truth for sizing.</p>
+            </div>
+          </div>
           <div class="glass-card image-card">
-            <img src="/assets/Reduce-Returns.png" alt="Reduce Returns">
+            <img src="/assets/sections/reduce-returns.jpg" alt="Reduce Returns">
           </div>
         </div>
       </div>
@@ -169,14 +181,14 @@
             <img src="/assets/Size-Confidence.png" alt="Size Confidence">
           </div>
           <div>
-            <div class="section-eyebrow">Conversion</div>
+            <div class="section-eyebrow">Experience</div>
             <h2 class="section-title">Size Confidence</h2>
-            <p class="section-desc">Give your customers the confidence to click 'Buy' by removing the guesswork from online sizing charts.</p>
-          
+            <p class="section-desc">Empower your shoppers with a personal biometric identity. No more tape measures or confusing size charts.</p>
             <button class="accordion-toggle" onclick="this.nextElementSibling.classList.toggle('active'); this.textContent = this.nextElementSibling.classList.contains('active') ? 'Show Less ↑' : 'View Details ↓'">View Details ↓</button>
-            <div class="accordion-expand" id="accordion-size-confidence">
-              <p style="font-size:14px; color:var(--Neutral-400); line-height:1.6">Build customer trust with personalized size recommendations. AI-powered suggestions consider body measurements, style preferences, and fabric stretch. Machine learning models continuously improve recommendations based on actual return data, learning which fit preferences correlate with lower return rates.</p>
-            </div></div>
+            <div class="accordion-expand">
+              <p style="font-size:14px; color:var(--Neutral-400); line-height:1.6">Shoppers carry their persistent KORRA Size Passport across all partner brands. This biometric digital twin removes the friction of re-measuring, creating a seamless, one-click fit experience that drives brand loyalty and repeat purchases.</p>
+            </div>
+          </div>
         </div>
       </div>
     </section>
@@ -188,12 +200,12 @@
           <div>
             <div class="section-eyebrow">Intelligence</div>
             <h2 class="section-title">Inventory Analytics</h2>
-            <p class="section-desc">Gain deep insights into your customers' actual body distributions to optimize your manufacturing and inventory allocation.</p>
-          
+            <p class="section-desc">Optimize your production runs based on the actual body shapes of your customer base, not just historical sales data.</p>
             <button class="accordion-toggle" onclick="this.nextElementSibling.classList.toggle('active'); this.textContent = this.nextElementSibling.classList.contains('active') ? 'Show Less ↑' : 'View Details ↓'">View Details ↓</button>
-            <div class="accordion-expand" id="accordion-inventory-analytics">
-              <p style="font-size:14px; color:var(--Neutral-400); line-height:1.6">Aggregate anonymized size data to identify trends. Make smarter purchasing decisions based on actual customer body type distribution. Dashboard visualizations reveal size demand patterns by region, season, and style, enabling data-driven inventory planning.</p>
-            </div></div>
+            <div class="accordion-expand">
+              <p style="font-size:14px; color:var(--Neutral-400); line-height:1.6">Access aggregated, anonymized body data to refine your sizing curves. Understand your customers' actual proportions and adjust your inventory distribution to match real-world biometrics, reducing overstock and stockouts in key sizes.</p>
+            </div>
+          </div>
           <div class="glass-card image-card">
             <img src="/assets/sections/inventory-analytics.jpg" alt="Inventory Analytics">
           </div>
@@ -209,23 +221,23 @@
             <img src="/assets/Seamless-Integration.png" alt="Seamless Integration">
           </div>
           <div>
-            <div class="section-eyebrow">E-Commerce</div>
+            <div class="section-eyebrow">Scalability</div>
             <h2 class="section-title">Seamless Integration</h2>
-            <p class="section-desc">Easily embed the KORRA widget into your existing Shopify, Magento, or custom e-commerce storefront.</p>
-          
+            <p class="section-desc">Deploy KORRA on Shopify, Magento, or custom headless stacks with a few lines of code. Fit infrastructure that scales with you.</p>
             <button class="accordion-toggle" onclick="this.nextElementSibling.classList.toggle('active'); this.textContent = this.nextElementSibling.classList.contains('active') ? 'Show Less ↑' : 'View Details ↓'">View Details ↓</button>
-            <div class="accordion-expand" id="accordion-seamless-integration">
-              <p style="font-size:14px; color:var(--Neutral-400); line-height:1.6">Connect with your existing POS and e-commerce systems. Enable barcode scanning and size lookup for faster checkout experiences. Works with Square, Shopify POS, and major retail systems to display customer size passports instantly at point of sale.</p>
-            </div></div>
+            <div class="accordion-expand">
+              <p style="font-size:14px; color:var(--Neutral-400); line-height:1.6">Our platform-agnostic Merchant API and pre-built widgets ensure rapid deployment. Whether you're an emerging boutique or a global enterprise, KORRA integrates into your existing tech stack without disrupting your checkout flow.</p>
+            </div>
+          </div>
         </div>
       </div>
     </section>
 
     <section class="container" style="padding-bottom: 80px;">
       <div class="final-banner">
-         <h2>Ready to scale your fit?</h2>
-         <p>Join the brands using KORRA to revolutionize their RTW experience.</p>
-         <a href="/signup.html" class="btn btn-primary">Get Started</a>
+         <h2>Ready to fix your returns?</h2>
+         <p>Join the brands using KORRA to drive size confidence in RTW.</p>
+         <a href="/signup.html" class="btn btn-primary">Get RTW Access</a>
       </div>
     </section>
   </main>
@@ -240,7 +252,6 @@
       </div>
       <div style="margin-top:80px; padding-top:40px; border-top:1px solid var(--Glass-Border); display:flex; justify-content:space-between; align-items:center; font-size:13px; opacity:0.3">
         <span>© 2026 KORRA AI. Scaling global artisan infrastructure.</span>
-        <div style="display:flex; gap:32px"><span>Twitter</span><span>LinkedIn</span></div>
       </div>
     </div>
   </footer>
@@ -248,27 +259,19 @@
   <script src="/assets/supabase.min.js"></script>
   <script>
     (function() {
-            // --- MOBILE MENU LOGIC ---
       const hamburger = document.getElementById('btnHamburger');
       const mobileMenu = document.getElementById('mobileMenu');
-
       window.toggleMenu = function() {
         if (!hamburger || !mobileMenu) return;
         hamburger.classList.toggle('active');
         mobileMenu.classList.toggle('active');
         document.body.style.overflow = mobileMenu.classList.contains('active') ? 'hidden' : '';
       };
-
       if (hamburger) hamburger.addEventListener('click', toggleMenu);
-
       window.addEventListener('scroll', () => {
         const header = document.getElementById('mainHeader');
-        if (header) {
-          if (window.scrollY > 40) header.classList.add('scrolled');
-          else header.classList.remove('scrolled');
-        }
+        if (header) { if (window.scrollY > 40) header.classList.add('scrolled'); else header.classList.remove('scrolled'); }
       });
-
 
       function initSupabase() {
         if (typeof window.supabase === 'undefined') { setTimeout(initSupabase, 500); return; }
@@ -280,7 +283,7 @@
           if (session) {
             if(authBtns) authBtns.style.display = 'none'; if(bar) bar.style.display = 'flex';
             if (ADMIN_LIST.includes(session.user.email.toLowerCase())) { if(goBtn) { goBtn.href = '/admin'; goBtn.textContent = 'Super-Workbench'; } }
-          } else { if(bar) bar.style.display = 'none'; if(authBtns) authBtns.style.display = 'flex'; }
+          } else { if(bar) bar.style.display = 'none'; if(authBtns) authButtons.style.display = 'flex'; }
         });
       }
       initSupabase();
