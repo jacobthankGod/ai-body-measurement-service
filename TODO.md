@@ -1,18 +1,27 @@
 # TODO - Image Loading Fix Implementation
 
-## Status: ✅ FIX #1 COMPLETED
+## Status: ✅ GITHUB FIX COMPLETED - NEEDS DEPLOYMENT
 
 ### Fix #1: Server-Side Static File Mounting ✅ DONE
 - Added explicit `StaticFiles` mounting in `api/main.py`
 - Configured MIME types for all asset types (PNG, JPG, WEBP, SVG, ICO, JS, CSS, fonts)
 - Mounted `/assets` path from `public/assets`
 - Mounted `/static` fallback path from `public`
+- **PR #6 MERGED** to main branch
 
 ### Fix #2: Client-Side Fallback (index.html)
 - **Status**: Deferred (server fix should resolve production issue)
-- Would require modifying the JavaScript debugger code block in index.html
 
-### Next Steps
-1. Redeploy to Cloud Run to test the fix
-2. Verify images load correctly in production
-3. If issues persist, implement Fix #2 (client-side fallback)
+### DEPLOYMENT REQUIRED
+The fix has been merged to GitHub but NOT yet deployed to Cloud Run.
+
+To deploy, run:
+```bash
+gcloud run deploy korra --source . --region us-central1
+```
+
+Or rebuild Docker image:
+```bash
+gcloud builds submit --tag gcr.io/PROJECT_ID/korra
+gcloud run deploy korra --image gcr.io/PROJECT_ID/korra --region us-central1
+```

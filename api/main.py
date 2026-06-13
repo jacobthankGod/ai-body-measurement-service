@@ -191,38 +191,23 @@ if PUBLIC_DIR.exists():
     logger.info(f"✅ Static files mounted from {PUBLIC_DIR}")
 
 # --- PRIORITIZED CATCH-ALL ---
-# PRIORITY: Serve static assets BEFORE catch-all
-@app.get("/assets/{asset_path:path}")
-async def serve_assets(asset_path: str):
+@app.get("/api/v2/forensic/assets")
+async def forensic_assets():
+    """Hidden route to audit the physical file system in production."""
     try:
-        # Try public/assets first, then public/
-        possible_paths = [
-            PUBLIC_DIR / "assets" / asset_path,
-            PUBLIC_DIR / asset_path
-        ]
-        for path in possible_paths:
-            if path.exists() and path.is_file():
-                # Explicitly handle common JS/CSS and images to prevent MIME type issues
-                media_type = None
-                if asset_path.endswith(".js"): media_type = "application/javascript"
-                elif asset_path.endswith(".css"): media_type = "text/css"
-                elif asset_path.endswith(".png"): media_type = "image/png"
-                elif asset_path.endswith(".jpg") or asset_path.endswith(".jpeg"): media_type = "image/jpeg"
-                elif asset_path.endswith(".gif"): media_type = "image/gif"
-                elif asset_path.endswith(".webp"): media_type = "image/webp"
-                elif asset_path.endswith(".svg"): media_type = "image/svg+xml"
-                elif asset_path.endswith(".ico"): media_type = "image/x-icon"
-                elif asset_path.endswith(".woff"): media_type = "font/woff"
-                elif asset_path.endswith(".woff2"): media_type = "font/woff2"
-                elif asset_path.endswith(".ttf"): media_type = "font/ttf"
-                return FileResponse(str(path), media_type=media_type)
-
-        logger.warning(f"⚠️ Asset not found: {asset_path}")
-        raise HTTPException(status_code=404, detail="Asset not found")
-    except HTTPException: raise
+        manifest = []
+        if PUBLIC_DIR.exists():
+            for root, dirs, files in os.walk(str(PUBLIC_DIR)):
+                for f in files:
+                    full_path = Path(root) / f
+                    manifest.append({
+                        "file": f,
+                        "rel_path": str(full_path.relative_to(PUBLIC_DIR)),
+                        "size": full_path.stat().st_size
+                    })
+        return {"public_dir": str(PUBLIC_DIR), "files": manifest}
     except Exception as e:
-        logger.error(f"Asset serving error ({asset_path}): {e}")
-        return JSONResponse(status_code=500, content={"error": "Asset synchronization failure."})
+        return {"error": str(e)}
 
 @app.get("/meshes/{mesh_file:path}")
 async def serve_meshes(mesh_file: str):
