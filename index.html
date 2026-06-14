@@ -152,12 +152,12 @@
 
     .badge-card { position: absolute; bottom: 24px; right: 24px; background: var(--Obsidian); border: 1px solid var(--Glass-Border); padding: 10px 16px; border-radius: 8px; font-size: 10px; font-weight: 800; color: var(--Mint); }
 
-    .step-img-container { position: relative; border-radius: 24px; overflow: hidden; border: 1px solid var(--Glass-Border); aspect-ratio: 4/5; }
-    .step-img-container img { width: 100%; height: 100%; object-fit: cover; }
-    .step-badge { position: absolute; top: 20px; right: 20px; width: 40px; height: 40px; background: var(--Mint); border-radius: 50%; display: flex; align-items: center; justify-content: center; color: var(--Obsidian); font-weight: 900; font-size: 18px; z-index: 5; box-shadow: 0 4px 20px rgba(0,0,0,0.4); }
-    .step-overlay { position: absolute; inset: 0; background: linear-gradient(to top, rgba(0,0,0,0.8) 0%, transparent 60%); display: flex; flex-direction: column; justify-content: flex-end; padding: 32px; text-align: left; }
-    .step-title { font-size: 32px; font-weight: 900; color: var(--Mint); text-transform: uppercase; margin-bottom: 8px; line-height: 1; }
-    .step-description { font-size: 14px; color: #fff; font-weight: 500; opacity: 0.9; line-height: 1.4; }
+    .step-img-container { position: relative; border-radius: 24px; overflow: hidden; border: 1px solid var(--Glass-Border); aspect-ratio: 4/5; background: #000; margin-bottom: 24px; }
+    .step-img-container img { width: 100%; height: 100%; object-fit: contain; }
+    .step-badge { position: absolute; top: 20px; right: 20px; width: 40px; height: 40px; background: var(--Mint); border-radius: 50%; display: flex; align-items: center; justify-content: center; color: var(--Obsidian); font-weight: 900; font-size: 18px; z-index: 5; box-shadow: 0 4px 20px rgba(87, 215, 192, 0.4); }
+    .step-content-box { text-align: left; padding: 0 8px; }
+    .step-title-bold { font-size: 32px; font-weight: 900; color: var(--Mint); text-transform: uppercase; margin-bottom: 8px; line-height: 1; }
+    .step-desc-small { font-size: 14px; color: #fff; font-weight: 500; opacity: 0.9; line-height: 1.4; }
     .accordion-content.active { max-height: 800px; opacity: 1; margin-top: 24px; }
     .btn-view-more {
       display: inline-flex; align-items: center; gap: 8px; margin-top: 24px; color: var(--Mint); font-weight: 800; font-size: 12px; cursor: pointer; opacity: 0.7; transition: 0.2s; background: none; border: none; text-transform: uppercase; letter-spacing: 0.1em;
@@ -389,35 +389,41 @@
 
   <!-- SECTION 5: HOW IT WORKS -->
   <section class="block" id="technology">
-    <div class="container">
+    <div class="container-wide" style="width: 100%; max-width: 1440px; margin: 0 auto; padding: 0 var(--S-48);">
       <div style="text-align:center; max-width:700px; margin:0 auto 80px">
         <div class="section-eyebrow">How it works</div>
         <h2 class="section-title">How KORRA works</h2>
         <p class="section-desc" style="margin-left:auto; margin-right:auto">Built for tailors who want speed and individuals who want fit.</p>
       </div>
-      <div class="grid-3">
-        <div class="step-img-container">
-          <img src="/assets/How it works 1.png" alt="Scan">
-          <div class="step-badge">1</div>
-          <div class="step-overlay">
-            <div class="step-title">SCAN</div>
-            <div class="step-description">Stand in front of your phone and capture your measurements.</div>
+      <div class="grid-3" style="gap: 40px;">
+        <div class="step-card-visual">
+          <div class="step-img-container">
+            <img src="/assets/How it works 1.png" alt="Scan">
+            <div class="step-badge">1</div>
+          </div>
+          <div class="step-content-box">
+            <div class="step-title-bold">SCAN</div>
+            <div class="step-desc-small">Stand in front of your phone and capture your measurements.</div>
           </div>
         </div>
-        <div class="step-img-container">
-          <img src="/assets/How it works 2.png" alt="Save">
-          <div class="step-badge">2</div>
-          <div class="step-overlay">
-            <div class="step-title">SAVE</div>
-            <div class="step-description">Your measurements become a reusable size passport.</div>
+        <div class="step-card-visual">
+          <div class="step-img-container">
+            <img src="/assets/How it works 2.png" alt="Save">
+            <div class="step-badge">2</div>
+          </div>
+          <div class="step-content-box">
+            <div class="step-title-bold">SAVE</div>
+            <div class="step-desc-small">Your measurements become a reusable size passport.</div>
           </div>
         </div>
-        <div class="step-img-container">
-          <img src="/assets/How it works 3.png" alt="Share">
-          <div class="step-badge">3</div>
-          <div class="step-overlay">
-            <div class="step-title">SHARE</div>
-            <div class="step-description">Send your profile to a tailor, brand, or shopping platform.</div>
+        <div class="step-card-visual">
+          <div class="step-img-container">
+            <img src="/assets/How it works 3.png" alt="Share">
+            <div class="step-badge">3</div>
+          </div>
+          <div class="step-content-box">
+            <div class="step-title-bold">SHARE</div>
+            <div class="step-desc-small">Send your profile to a tailor, brand, or shopping platform.</div>
           </div>
         </div>
       </div>
