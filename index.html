@@ -48,6 +48,13 @@
     .mobile-menu.active { transform: translateY(0); opacity: 1; pointer-events: auto; }
     .mobile-menu a { font-size: 28px; font-weight: 900; color: #fff; text-decoration: none; text-transform: uppercase; letter-spacing: -0.02em; transition: 0.3s; }
     .mobile-menu a:hover { color: var(--Mint); transform: scale(1.05); }
+    .mobile-close-btn {
+      position: absolute; top: 20px; right: 24px; width: 44px; height: 44px;
+      background: var(--Glass); border: 1px solid var(--Glass-Border); border-radius: 12px;
+      color: var(--Mint); font-size: 32px; display: flex; align-items: center; justify-content: center;
+      cursor: pointer; z-index: 1000002;
+    }
+    .mobile-close-btn:hover { border-color: var(--Mint); background: rgba(255,255,255,0.08); }
     .mobile-close-hint { position: absolute; bottom: 40px; font-size: 10px; font-weight: 800; color: var(--Neutral-500); text-transform: uppercase; letter-spacing: 0.2em; }
 
     :root {
@@ -94,18 +101,8 @@
       line-height: 1.6; text-align: center; display: block;
     }
 
-    .hero-visual {
-      width: 100%; max-width: 1200px; margin: 0 auto; height: auto; min-height: 400px;
-      position: relative; display: flex; align-items: center; justify-content: center; gap: 40px;
-      padding: 40px 0; background: transparent;
-    }
-    .hero-visual img { width: 45%; height: auto; object-fit: contain; border-radius: 20px; background: transparent; }
-    .hero-arrow {
-      width: 60px; height: 60px; background: var(--Mint); border-radius: 50%;
-      display: flex; align-items: center; justify-content: center; color: var(--Obsidian);
-      font-size: 28px; font-weight: 900; box-shadow: 0 0 30px rgba(87, 215, 192, 0.4);
-      flex-shrink: 0; z-index: 5;
-    }
+    .hero-visual { width: 100%; max-width: 1000px; margin: 0 auto var(--S-48); border-radius: 32px; overflow: hidden; border: 1px solid var(--Glass-Border); box-shadow: 0 40px 100px rgba(0,0,0,0.5); }
+    .hero-visual img { width: 100%; height: auto; display: block; }
 
     .hero-cta-card {
         width: 100%; max-width: 1000px; margin: -100px auto 0; background: #000; border: 1px solid var(--Mint); border-radius: 24px;
@@ -155,7 +152,12 @@
 
     .badge-card { position: absolute; bottom: 24px; right: 24px; background: var(--Obsidian); border: 1px solid var(--Glass-Border); padding: 10px 16px; border-radius: 8px; font-size: 10px; font-weight: 800; color: var(--Mint); }
 
-    .accordion-content { max-height: 0; overflow: hidden; transition: max-height 0.6s cubic-bezier(0.4, 0, 0.2, 1); opacity: 0; }
+    .step-img-container { position: relative; border-radius: 24px; overflow: hidden; border: 1px solid var(--Glass-Border); aspect-ratio: 4/5; }
+    .step-img-container img { width: 100%; height: 100%; object-fit: cover; }
+    .step-badge { position: absolute; top: 20px; right: 20px; width: 40px; height: 40px; background: var(--Mint); border-radius: 50%; display: flex; align-items: center; justify-content: center; color: var(--Obsidian); font-weight: 900; font-size: 18px; z-index: 5; box-shadow: 0 4px 20px rgba(0,0,0,0.4); }
+    .step-overlay { position: absolute; inset: 0; background: linear-gradient(to top, rgba(0,0,0,0.8) 0%, transparent 60%); display: flex; flex-direction: column; justify-content: flex-end; padding: 32px; text-align: left; }
+    .step-title { font-size: 32px; font-weight: 900; color: var(--Mint); text-transform: uppercase; margin-bottom: 8px; line-height: 1; }
+    .step-description { font-size: 14px; color: #fff; font-weight: 500; opacity: 0.9; line-height: 1.4; }
     .accordion-content.active { max-height: 800px; opacity: 1; margin-top: 24px; }
     .btn-view-more {
       display: inline-flex; align-items: center; gap: 8px; margin-top: 24px; color: var(--Mint); font-weight: 800; font-size: 12px; cursor: pointer; opacity: 0.7; transition: 0.2s; background: none; border: none; text-transform: uppercase; letter-spacing: 0.1em;
@@ -164,7 +166,8 @@
 
     @media (max-width: 1050px) {
       .hero-headline { font-size: 36px; white-space: normal; }
-            .hamburger { display: flex; }
+      .hamburger { display: flex; }
+      nav.main-nav { display: none !important; }
       .container { padding: 0 var(--S-24); }
       header .container { padding: 0 24px; }
       #authButtons { display: none !important; }
@@ -174,9 +177,7 @@
       .final-banner p { margin: 0; }
 
       .hero { padding: 140px 0 var(--S-64); }
-      .hero-visual { flex-direction: column; gap: 20px; }
-      .hero-visual img { width: 90%; }
-      .hero-arrow { transform: rotate(90deg); }
+    .hero-visual { flex-direction: column; gap: 0; }
       .hero-cta-card { margin-top: 40px; flex-direction: column; gap: 32px; padding: 32px; }
       .hero-cta-card h3 { font-size: 24px; }
 
@@ -227,6 +228,7 @@
   </header>
 
   <div class="mobile-menu" id="mobileMenu">
+    <button class="mobile-close-btn" onclick="toggleMenu()">×</button>
     <a href="/#technology" onclick="toggleMenu()">Technology</a>
     <a href="/casestudies.html">Success Stories</a>
     <a href="/about.html">About KORRA</a>
@@ -291,7 +293,7 @@
           </p>
         </div>
         <div class="glass-card image-card">
-          <img src="/assets/body-capture.png" alt="Industrial Error">
+          <img src="/assets/Remote apparel still runs on guesswork..png" alt="Industrial Error">
           <div class="badge-card">INDUSTRIAL ERROR VISUALIZATION</div>
         </div>
       </div>
@@ -331,7 +333,7 @@
     <div class="container">
       <div class="grid-impact grid-swapped">
         <div class="glass-card image-card">
-           <img src="/assets/body-capture.png" alt="Global Connectivity">
+           <img src="/assets/Built for distance, designed for trust..png" alt="Global Connectivity">
            <div class="badge-card">LMIC INCLUSION ENGINE</div>
         </div>
         <div>
@@ -378,7 +380,7 @@
           </div>
         </div>
         <div class="glass-card image-card">
-           <img src="/assets/body-capture.png" alt="Clinical Precision">
+           <img src="/assets/A faster way to measure, store, and share fit data..png" alt="Clinical Precision">
            <div class="badge-card">CLINICAL AI PRECISION</div>
         </div>
       </div>
@@ -394,17 +396,29 @@
         <p class="section-desc" style="margin-left:auto; margin-right:auto">Built for tailors who want speed and individuals who want fit.</p>
       </div>
       <div class="grid-3">
-        <div class="glass-card step-card">
-          <span class="step-num">01. SCAN</span><br>
-          <span class="step-text" style="font-size:20px; margin-top:16px; display:block">Stand in front of your phone and capture your measurements.</span>
+        <div class="step-img-container">
+          <img src="/assets/How it works 1.png" alt="Scan">
+          <div class="step-badge">1</div>
+          <div class="step-overlay">
+            <div class="step-title">SCAN</div>
+            <div class="step-description">Stand in front of your phone and capture your measurements.</div>
+          </div>
         </div>
-        <div class="glass-card step-card">
-          <span class="step-num">02. SAVE</span><br>
-          <span class="step-text" style="font-size:20px; margin-top:16px; display:block">Your measurements become a reusable size passport.</span>
+        <div class="step-img-container">
+          <img src="/assets/How it works 2.png" alt="Save">
+          <div class="step-badge">2</div>
+          <div class="step-overlay">
+            <div class="step-title">SAVE</div>
+            <div class="step-description">Your measurements become a reusable size passport.</div>
+          </div>
         </div>
-        <div class="glass-card step-card">
-          <span class="step-num">03. SHARE</span><br>
-          <span class="step-text" style="font-size:20px; margin-top:16px; display:block">Send your profile to a tailor, brand, or shopping platform.</span>
+        <div class="step-img-container">
+          <img src="/assets/How it works 3.png" alt="Share">
+          <div class="step-badge">3</div>
+          <div class="step-overlay">
+            <div class="step-title">SHARE</div>
+            <div class="step-description">Send your profile to a tailor, brand, or shopping platform.</div>
+          </div>
         </div>
       </div>
     </div>
@@ -429,7 +443,7 @@
           </div>
         </div>
         <div class="glass-card image-card">
-           <img src="/assets/body-capture.png" alt="Size Passport Interface">
+           <img src="/assets/Your global size passport..png" alt="Size Passport Interface">
            <div class="badge-card">KORRA SIZE PASSPORT</div>
         </div>
       </div>
@@ -492,7 +506,7 @@
           <a class="btn btn-outline" style="margin-top:40px" href="/signup.html">Request a demo</a>
         </div>
         <div class="glass-card image-card">
-           <img src="/assets/body-capture.png" alt="Merchant Workbench">
+           <img src="/assets/Mass-Personalization.png" alt="Merchant Workbench">
            <div class="badge-card">MERCHANT COMMAND CENTER</div>
         </div>
       </div>
@@ -569,7 +583,7 @@
           <a class="btn btn-primary" style="margin-top:40px" href="/signup.html">Get Started</a>
         </div>
         <div class="glass-card image-card">
-           <img src="/assets/body-capture.png" alt="Economic Value">
+           <img src="/assets/Sustainable-Scale.png" alt="Economic Value">
            <div class="badge-card">ECONOMIC MULTIPLIER</div>
         </div>
       </div>
