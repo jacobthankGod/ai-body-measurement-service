@@ -154,10 +154,12 @@
     .footer-col a { display: block; color: var(--Neutral-400); text-decoration: none; margin-bottom: var(--S-12); font-size: 13px; }
     .footer-col a:hover { color: var(--Mint); }
 
-    .badge-card { position: absolute; bottom: 24px; right: 24px; background: var(--Obsidian); border: 1px solid var(--Glass-Border); padding: 10px 16px; border-radius: 8px; font-size: 10px; font-weight: 800; color: var(--Mint); }
 
-    .step-img-container { position: relative; border-radius: 24px; overflow: hidden; border: 1px solid var(--Glass-Border); aspect-ratio: 3/4; background: #000; margin-bottom: 24px; display: flex; align-items: center; justify-content: center; }
+    .step-img-container { position: relative; border-radius: 24px; overflow: hidden; border: 1px solid var(--Glass-Border); aspect-ratio: 4/5; background: #000; margin-bottom: 16px; display: flex; align-items: center; justify-content: center; }
     .step-img-container img { width: 100%; height: 100%; object-fit: contain; }
+    .step-badge { position: absolute; top: 24px; right: 24px; width: 48px; height: 48px; background: var(--Mint); border-radius: 50%; display: flex; align-items: center; justify-content: center; color: var(--Obsidian); font-weight: 900; font-size: 20px; z-index: 5; box-shadow: 0 4px 30px rgba(87, 215, 192, 0.5); }
+    .step-content-box { text-align: left; padding: 0 12px; }
+    .step-title-bold { font-size: 40px; font-weight: 900; color: var(--Mint); text-transform: uppercase; margin-bottom: 12px; line-height: 1; letter-spacing: -0.02em; }
     .step-desc-small { font-size: 22px; color: #fff; font-weight: 500; opacity: 0.95; line-height: 1.4; }
     .accordion-content.active { max-height: 800px; opacity: 1; margin-top: 24px; }
     .btn-view-more {
@@ -165,8 +167,8 @@
     }
     .btn-view-more:hover { opacity: 1; transform: translateX(4px); }
 
-    @media (max-width: 1050px) {
-      .hero-headline { font-size: 36px; white-space: normal; }
+    @media (max-width: 900px) {
+      .hero-headline { font-size: 32px; white-space: normal; }
       .hamburger { display: flex; }
       nav.main-nav { display: none !important; }
       .container { padding: 0 var(--S-24); }
@@ -178,7 +180,8 @@
       .final-banner p { margin: 0; }
 
       .hero { padding: 140px 0 var(--S-64); }
-    .hero-visual { flex-direction: column; gap: 0; }
+      .hero-visual { flex-direction: column; gap: 40px; }
+      .hero-visual img { width: 90%; }
       .hero-cta-card { margin-top: 40px; flex-direction: column; gap: 32px; padding: 32px; }
       .hero-cta-card h3 { font-size: 24px; }
 
@@ -497,27 +500,27 @@
 
       <div class="mosaic-grid">
         <a class="mosaic-card" href="/luxury-mtm">
-          <img src="/assets/body-capture.png" class="mosaic-img" alt="Luxury MTM">
+          <img src="/assets/m-t-m.jpg" class="mosaic-img" alt="Luxury MTM">
           <div class="mosaic-overlay"><div class="mosaic-title">Luxury made-to-measure</div><div class="mosaic-desc">For premium custom brands.</div></div>
         </a>
         <a class="mosaic-card" href="/manufacturing">
-          <img src="/assets/homepage_image.png" class="mosaic-img" alt="Manufacturing">
+          <img src="/assets/ready-to-wear.jpg" class="mosaic-img" alt="Manufacturing">
           <div class="mosaic-overlay"><div class="mosaic-title">On-demand manufacturing</div><div class="mosaic-desc">For production workflows that need fit data.</div></div>
         </a>
         <a class="mosaic-card" href="/rtw">
-          <img src="/assets/body-capture.png" class="mosaic-img" alt="RTW">
+          <img src="/assets/ready-to-wear-womens-wear.jpg" class="mosaic-img" alt="RTW">
           <div class="mosaic-overlay"><div class="mosaic-title">Ready-to-wear</div><div class="mosaic-desc">For brands improving size confidence.</div></div>
         </a>
         <a class="mosaic-card" href="/bridal">
-          <img src="/assets/homepage_image.png" class="mosaic-img" alt="Bridal">
+          <img src="/assets/bridal-and-tuxedo-.jpg" class="mosaic-img" alt="Bridal">
           <div class="mosaic-overlay"><div class="mosaic-title">Bridal and tuxedo</div><div class="mosaic-desc">For high-stakes occasions where fit matters.</div></div>
         </a>
         <a class="mosaic-card" href="/custom">
-          <img src="/assets/body-capture.png" class="mosaic-img" alt="Custom">
+          <img src="/assets/Fit-First-Design.png" class="mosaic-img" alt="Custom">
           <div class="mosaic-overlay"><div class="mosaic-title">Custom apparel</div><div class="mosaic-desc">For businesses delivering personalized garments.</div></div>
         </a>
         <a class="mosaic-card" href="/uniforms">
-          <img src="/assets/homepage_image.png" class="mosaic-img" alt="Uniforms">
+          <img src="/assets/uniform-manufacturer-hero.png.webp" class="mosaic-img" alt="Uniforms">
           <div class="mosaic-overlay"><div class="mosaic-title">Uniform manufacturers</div><div class="mosaic-desc">For schools, companies, and institutions.</div></div>
         </a>
       </div>
