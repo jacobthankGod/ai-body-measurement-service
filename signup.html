@@ -40,13 +40,13 @@
     .side-overlay h1 { font-size: 48px; font-weight: 900; line-height: 1.1; letter-spacing: -0.04em; color: #fff; }
     .side-overlay p { font-size: 18px; color: var(--Mint); margin-top: 16px; font-weight: 600; }
 
-    .form-panel { display: flex; align-items: center; justify-content: center; padding: 64px; overflow-y: auto; background: #000; }
-    .form-container { width: 100%; max-width: 440px; }
+    .form-panel { display: flex; align-items: flex-start; justify-content: center; padding: 64px; overflow-y: auto; background: #000; }
+    .form-container { width: 100%; max-width: 440px; padding-bottom: 120px; }
 
     @media (max-width: 1000px) {
-      .split-layout { grid-template-columns: 1fr; }
+      .split-layout { grid-template-columns: 1fr; height: auto; min-height: 100vh; }
       .side-panel { display: none; }
-      .form-panel { padding: 48px 24px; }
+      .form-panel { padding: 48px 24px; align-items: flex-start; }
     }
 
     .logo-area { display: flex; align-items: center; gap: 12px; margin-bottom: 48px; text-decoration: none; color: inherit; }

@@ -10,6 +10,9 @@
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
   <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800;900&display=swap" rel="stylesheet" />
 
+  <!-- --- TRUE INDUSTRIAL SELF-HOSTING --- -->
+  <script src="/assets/supabase.min.js"></script>
+
   <style>
     :root {
       --Obsidian: #000000;
@@ -24,25 +27,34 @@
     * { box-sizing: border-box; -webkit-font-smoothing: antialiased; margin: 0; padding: 0; }
     html, body { height: 100%; background: var(--Obsidian); color: var(--White); font-family: 'Inter', sans-serif; overflow: hidden; }
 
-    .auth-container { width: 100%; height: 100vh; display: flex; align-items: center; justify-content: center; padding: 20px; }
+    .split-layout { display: grid; grid-template-columns: 1fr 1.2fr; width: 100%; height: 100vh; }
 
-    .auth-card {
-      width: 100%; max-width: 440px; background: var(--Glass); border: 1px solid var(--Glass-Border);
-      border-radius: 24px; padding: var(--S-48); backdrop-filter: blur(20px);
+    .side-panel {
+        background: url('/assets/custom-apparel.webp') center center / cover no-repeat;
+        border-right: 1px solid var(--Glass-Border); position: relative;
+    }
+    .side-overlay {
+        position: absolute; inset: 0; background: linear-gradient(to bottom, rgba(0,0,0,0.2) 0%, rgba(0,0,0,0.8) 100%);
+        display: flex; flex-direction: column; justify-content: flex-end; padding: 64px;
+    }
+    .side-overlay h1 { font-size: 48px; font-weight: 900; line-height: 1.1; letter-spacing: -0.04em; color: #fff; }
+    .side-overlay p { font-size: 18px; color: var(--Mint); margin-top: 16px; font-weight: 600; }
+
+    .form-panel { display: flex; align-items: center; justify-content: center; padding: 64px; overflow-y: auto; background: #000; }
+    .form-container { width: 100%; max-width: 440px; }
+
+    @media (max-width: 1000px) {
+      .split-layout { grid-template-columns: 1fr; }
+      .side-panel { display: none; }
+      .form-panel { padding: 48px 24px; }
     }
 
-    @media (max-width: 480px) {
-      .auth-card { padding: 32px 24px; border-radius: 16px; border: none; background: transparent; backdrop-filter: none; }
-      h2 { font-size: 28px; }
-      p { margin-bottom: 32px; }
-    }
-
-        .logo-area { display: flex; align-items: center; gap: 12px; margin-bottom: 40px; text-decoration: none; color: inherit; }
+    .logo-area { display: flex; align-items: center; gap: 12px; margin-bottom: 48px; text-decoration: none; color: inherit; }
     .logo-mark { width: 32px; height: 32px; border-radius: 8px; background: var(--Mint); transform: rotate(-8deg); }
     .logo-text { font-size: 20px; font-weight: 900; letter-spacing: -0.05em; }
 
     h2 { font-size: 32px; font-weight: 800; margin-bottom: 12px; letter-spacing: -0.03em; }
-    p { color: var(--Neutral-400); margin-bottom: 40px; font-size: 15px; }
+    .sub-p { color: var(--Neutral-400); margin-bottom: 40px; font-size: 15px; }
 
     .form-group { margin-bottom: 24px; }
     .form-label { display: block; font-size: 10px; font-weight: 900; text-transform: uppercase; color: var(--Neutral-400); letter-spacing: 0.1em; margin-bottom: 8px; }
@@ -65,36 +77,45 @@
 </head>
 <body>
 
-  <div class="auth-container">
-    <div class="auth-card">
-            <a href="/" class="logo-area">
-        <div class="logo-mark"></div>
-        <div class="logo-text">KORRA</div>
-      </a>
-      <h2>Welcome back</h2>
-      <p>Identify yourself to enter the command center.</p>
+  <div class="split-layout">
+    <!-- LEFT: SIDE PANEL -->
+    <div class="side-panel">
+      <div class="side-overlay">
+        <h1>Welcome Back.</h1>
+        <p>Your industrial fit engine is ready.</p>
+      </div>
+    </div>
 
-      <form id="signInForm">
-        <div class="form-group">
-          <label class="form-label">Email Address</label>
-          <input type="email" class="form-input" id="inEmail" placeholder="name@company.com" required>
-        </div>
-        <div class="form-group">
-          <label class="form-label">Password</label>
-          <input type="password" class="form-input" id="inPass" placeholder="••••••••" required>
-        </div>
-        <button type="submit" class="btn">Enter Workbench</button>
-      </form>
+    <!-- RIGHT: FORM PANEL -->
+    <div class="form-panel">
+      <div class="form-container">
+        <a href="/" class="logo-area">
+          <div class="logo-mark"></div>
+          <div class="logo-text">KORRA</div>
+        </a>
 
-      <a href="/signup" class="switch-link">Don't have an account? <span>Sign Up</span></a>
+        <h2>Sign In</h2>
+        <p class="sub-p">Identify yourself to enter the command center.</p>
+
+        <form id="signInForm">
+          <div class="form-group">
+            <label class="form-label">Email Address</label>
+            <input type="email" class="form-input" id="inEmail" placeholder="name@email.com" required>
+          </div>
+          <div class="form-group">
+            <label class="form-label">Password</label>
+            <input type="password" class="form-input" id="inPass" placeholder="••••••••" required>
+          </div>
+          <button type="submit" class="btn">Sign In</button>
+        </form>
+
+        <a href="/signup" class="switch-link">Don't have an account? <span>Sign Up</span></a>
+      </div>
     </div>
   </div>
 
-  <!-- --- TRUE INDUSTRIAL SELF-HOSTING --- -->
-  <script src="/assets/supabase.min.js"></script>
   <script>
     (function() {
-      // --- SUPER-USER AUTHORITY LIST ---
       const ADMIN_LIST = ['springbionics@gmail.com', 'admin@korra.work'];
 
       function initSupabase() {
@@ -116,26 +137,18 @@
           btn.textContent = 'Verifying Authority...';
           btn.style.opacity = '0.7';
 
-          const { data, error } = await supabase.auth.signInWithPassword({ email, password });
+          const { error } = await supabase.auth.signInWithPassword({ email, password });
 
           if (error) {
             alert(error.message);
-            btn.textContent = 'Enter Workbench';
+            btn.textContent = 'Sign In';
             btn.style.opacity = '1';
           } else {
-            console.log("PfDebug: Auth Success. Routing for", email);
-
             const params = new URLSearchParams(window.location.search);
             const next = params.get('next');
-
-            // --- SMART ROUTING ---
-            if (next) {
-              window.location.href = next;
-            } else if (ADMIN_LIST.includes(email.toLowerCase())) {
-              window.location.href = '/admin';
-            } else {
-              window.location.href = '/dashboard';
-            }
+            if (next) window.location.href = next;
+            else if (ADMIN_LIST.includes(email.toLowerCase())) window.location.href = '/admin';
+            else window.location.href = '/dashboard';
           }
         });
       }

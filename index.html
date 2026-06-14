@@ -169,22 +169,29 @@
     .btn-view-more:hover { opacity: 1; transform: translateX(4px); }
 
     @media (max-width: 900px) {
+      .frustration-header { flex-direction: column; align-items: center !important; text-align: center; gap: 24px; }
+      .btn-frustration { width: 100%; }
       .hero-headline { font-size: 32px; white-space: normal; }
       .hamburger { display: flex; }
       nav.main-nav { display: none !important; }
-      .container { padding: 0 var(--S-24); }
+      .container, .container-wide { padding: 0 var(--S-24); }
       header .container { padding: 0 24px; }
       #authButtons { display: none !important; }
 
       .grid-impact, .grid-swapped, .mosaic-grid, .grid-3, .grid-4 { grid-template-columns: 1fr !important; gap: var(--S-48); }
+      .image-card { height: auto !important; aspect-ratio: auto !important; }
+      .image-card img { height: auto !important; }
+
       .final-banner { flex-direction: column; text-align: center; gap: var(--S-32); padding: 48px 24px; }
       .final-banner p { margin: 0; }
 
       .hero { padding: 140px 0 var(--S-64); }
       .hero-visual { flex-direction: column; gap: 40px; }
       .hero-visual img { width: 90%; }
-      .hero-cta-card { margin-top: 40px; flex-direction: column; gap: 32px; padding: 32px; }
+      .hero-cta-card { margin-top: 40px; flex-direction: column; gap: 32px; padding: 32px; text-align: center; }
+      .hero-cta-card div { width: 100%; }
       .hero-cta-card h3 { font-size: 24px; }
+      .hero-cta-card .btn { width: 100%; }
 
       .section-title { font-size: 32px; }
       .footer-links { grid-template-columns: repeat(2, 1fr); gap: 40px; }
@@ -307,13 +314,13 @@
   <!-- SECTION 2: THE FRUSTRATION LOOP -->
   <section class="block" style="background:rgba(255,255,255,0.01)">
     <div class="container-wide">
-      <div style="display:flex; justify-content:space-between; align-items:flex-end; margin-bottom:var(--S-64)">
+      <div class="frustration-header" style="display:flex; justify-content:space-between; align-items:flex-end; margin-bottom:var(--S-64)">
         <div style="max-width:700px">
           <div class="section-eyebrow">The Frustration Loop</div>
           <h2 class="section-title">The cost of bad measurements adds up fast.</h2>
           <p class="section-desc">A cycle of failed expectations created by inconsistent data.</p>
         </div>
-        <a class="btn btn-primary" href="/signup.html">Get Started Now</a>
+        <a class="btn btn-primary btn-frustration" href="/signup.html">Sign Up Now</a>
       </div>
       <div class="grid-3">
          <div class="glass-card">
