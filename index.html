@@ -120,8 +120,8 @@
     .glass-card { background: var(--Glass); border: 1px solid var(--Glass-Border); border-radius: var(--Radius-L); padding: var(--S-48); transition: 0.3s; position: relative; overflow: hidden; }
     .glass-card:hover { border-color: var(--Mint); }
 
-    .image-card { padding: 12px !important; border-radius: 24px !important; width: 100%; height: auto; aspect-ratio: 4/3; display: flex; }
-    .image-card img { width: 100%; height: 100%; object-fit: cover; border-radius: 16px; }
+    .image-card { padding: 12px !important; border-radius: 24px !important; width: 100%; height: 600px; display: flex; }
+    .image-card img { width: 100%; height: 100%; object-fit: contain; border-radius: 16px; background: rgba(0,0,0,0.2); }
 
     .grid-4 { display: grid; grid-template-columns: repeat(4, 1fr); gap: var(--S-24); }
     .grid-3 { display: grid; grid-template-columns: repeat(3, 1fr); gap: var(--S-32); }
@@ -156,7 +156,7 @@
 
     .badge-card { position: absolute; bottom: 24px; right: 24px; background: var(--Obsidian); border: 1px solid var(--Glass-Border); padding: 10px 16px; border-radius: 8px; font-size: 10px; font-weight: 800; color: var(--Mint); }
 
-    .step-img-container { position: relative; border-radius: 24px; overflow: hidden; border: 1px solid var(--Glass-Border); height: 600px; background: #000; margin-bottom: 32px; }
+    .step-img-container { position: relative; border-radius: 24px; overflow: hidden; border: 1px solid var(--Glass-Border); aspect-ratio: 4/5; background: #000; margin-bottom: 32px; }
     .step-img-container img { width: 100%; height: 100%; object-fit: contain; padding: 20px; }
     .step-badge { position: absolute; top: 24px; right: 24px; width: 48px; height: 48px; background: var(--Mint); border-radius: 50%; display: flex; align-items: center; justify-content: center; color: var(--Obsidian); font-weight: 900; font-size: 20px; z-index: 5; box-shadow: 0 4px 30px rgba(87, 215, 192, 0.5); }
     .step-content-box { text-align: left; padding: 0 12px; }
