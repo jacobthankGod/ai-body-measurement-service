@@ -119,4 +119,5 @@
 
     KorraWidget.init();
     window.KorraWidget = KorraWidget;
+    window.KORRA = KorraWidget; // Global Alias for simpler developer UX
 })();
