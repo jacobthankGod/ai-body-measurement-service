@@ -299,6 +299,19 @@
                 </div>
               </div>
 
+              <div style="margin-bottom:32px">
+                <h4 style="font-size:10px; font-weight:900; color:var(--Mint); margin-bottom:12px">ADVANCED (WITH CALLBACKS)</h4>
+                <div style="background:#000; padding:20px; border:1px solid var(--Glass-Border); border-radius:12px;">
+                  <code style="color:var(--Mint); font-size:11px; word-break:break-all">&lt;script&gt;
+  KORRA.init({
+    apiKey: 'YOUR_API_KEY',
+    onScanComplete: (data) => console.log('Measurements:', data),
+    onError: (err) => console.error('Error:', err)
+  });
+&lt;/script&gt;</code>
+                </div>
+              </div>
+
               <div>
                 <h4 style="font-size:10px; font-weight:900; color:var(--Mint); margin-bottom:12px">AVAILABLE METHODS</h4>
                 <div style="display:grid; grid-template-columns:1fr 1fr; gap:12px">
@@ -348,6 +361,26 @@
                 <h4 style="font-size:10px; font-weight:900; color:var(--Error); margin-bottom:12px">CRITICAL INFRASTRUCTURE</h4>
                 <p style="font-size:11px; color:var(--Neutral-400); margin-bottom:20px">Force a synchronization check of all AI weight clusters.</p>
                 <button class="btn-primary" id="btnRestoreBrain" style="background:var(--Error); color:#fff; width:100%">🚀 Restore AI Brain</button>
+              </div>
+
+              <h4 style="font-size:10px; font-weight:900; color:var(--Mint); margin:32px 0 16px">ENDPOINT STATUS</h4>
+              <div class="table-container">
+                <table>
+                  <thead>
+                    <tr>
+                      <th>Endpoint</th>
+                      <th>Method</th>
+                      <th>Status</th>
+                      <th>Latency</th>
+                    </tr>
+                  </thead>
+                  <tbody id="healthEndpoints">
+                    <tr><td>/api/v2/measurements/extract</td><td>POST</td><td><span class="health-status status-ok">HEALTHY</span></td><td>~200ms</td></tr>
+                    <tr><td>/api/v2/measurements/status/:id</td><td>GET</td><td><span class="health-status status-ok">HEALTHY</span></td><td>~50ms</td></tr>
+                    <tr><td>/api/v2/health</td><td>GET</td><td><span class="health-status status-ok">HEALTHY</span></td><td>~10ms</td></tr>
+                    <tr><td>/api/v2/auth/session</td><td>GET</td><td><span class="health-status status-ok">HEALTHY</span></td><td>~30ms</td></tr>
+                  </tbody>
+                </table>
               </div>
             </div>
           </div>
