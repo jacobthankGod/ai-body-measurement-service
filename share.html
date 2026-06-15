@@ -256,7 +256,7 @@
       } else { alignmentStartTime = 0; speak(feedback); }
       msg.textContent = feedback; msg.style.background = aligned ? "var(--Mint)" : "rgba(0, 0, 0, 0.8)"; msg.style.color = aligned ? "var(--Obsidian)" : "#fff";
       isPoseAligned = aligned;
-      ctx.strokeStyle = aligned ? "#57D7C0" : "#FFFFFF"; ctx.lineWidth = aligned ? 8 : 4; ctx.lineCap = "round";
+      ctx.strokeStyle = aligned ? "#57D7C0" : "#FFFFFF"; ctx.lineWidth = aligned ? 12 : 8; ctx.lineCap = "round";
       const conns = [ [11, 12], [11, 13], [13, 15], [12, 14], [14, 16], [11, 23], [12, 24], [23, 24], [23, 25], [25, 27], [24, 26], [26, 28] ];
       conns.forEach(([i, j]) => {
         const p1 = landmarks[i], p2 = landmarks[j];
