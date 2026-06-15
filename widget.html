@@ -14,8 +14,18 @@
     }
     * { box-sizing: border-box; -webkit-font-smoothing: antialiased; margin: 0; padding: 0; }
     html, body { height: 100%; background: var(--Obsidian); color: var(--White); font-family: 'Inter', sans-serif; overflow: hidden; }
-    .widget-viewport { height: 100vh; display: flex; flex-direction: column; align-items: center; justify-content: center; padding: 20px; }
-    .widget-card { width: 100%; max-width: 400px; background: var(--Glass); border: 1px solid var(--Glass-Border); border-radius: 24px; padding: 32px; position: relative; overflow: hidden; backdrop-filter: blur(10px); }
+.widget-viewport { height: 100vh; display: flex; flex-direction: column; align-items: center; justify-content: center; padding: 20px; }
+    .widget-card { width: 100%; max-width: 800px; background: var(--Glass); border: 1px solid var(--Glass-Border); border-radius: 24px; padding: 40px; position: relative; overflow: hidden; backdrop-filter: blur(10px); }
+    
+    /* LANDSCAPE LAYOUT */
+    .widget-card-landscape { display: grid; grid-template-columns: 1fr 1fr; gap: 32px; align-items: start; }
+    .widget-left { text-align: center; }
+    .widget-right { display: flex; flex-direction: column; gap: 16px; }
+    
+    /* ENSURE BUTTONS ARE VISIBLE */
+    .widget-card { overflow-y: auto; max-height: 90vh; }
+    .btn-submit { min-height: 52px; padding: 16px 24px; margin-top: 16px; }
+    .btn-outline { min-height: 44px; padding: 12px 20px; margin-top: 8px; }
     .title { font-size: 18px; font-weight: 800; text-align: center; margin-bottom: 8px; }
     .subtitle { font-size: 12px; color: var(--Neutral-400); text-align: center; margin-bottom: 32px; }
     .input { width: 100%; height: 50px; background: rgba(255,255,255,0.05); border: 1px solid var(--Glass-Border); border-radius: 12px; padding: 0 16px; color: #fff; font-size: 14px; margin-bottom: 16px; outline: none; transition: 0.2s; }
@@ -70,8 +80,28 @@
 
     .pro-tips-card { background: rgba(87, 215, 192, 0.05); border: 1px solid rgba(87, 215, 192, 0.2); border-radius: 20px; padding: 20px; margin-bottom: 24px; text-align: left; }
     .pro-tips-card h4 { font-size: 11px; font-weight: 900; color: var(--Mint); text-transform: uppercase; margin-bottom: 12px; display: flex; align-items: center; gap: 8px; }
-    .tip-row { display: flex; gap: 12px; margin-bottom: 10px; font-size: 11px; color: var(--Neutral-400); line-height: 1.4; }
+.tip-row { display: flex; gap: 12px; margin-bottom: 10px; font-size: 11px; color: var(--Neutral-400); line-height: 1.4; }
     .tip-bullet { color: var(--Mint); font-weight: 900; }
+    
+    /* PROGRESS RING AROUND SHUTTER */
+    .shutter-ring { position: absolute; inset: -4px; border-radius: 50%; border: 3px solid transparent; border-top-color: var(--Mint); animation: shutterSpin 1s linear infinite; display: none; }
+    .shutter-ring.active { display: block; }
+    @keyframes shutterSpin { from { transform: rotate(0deg); } to { transform: rotate(360deg); } }
+    
+    /* SCANNING GRID OVERLAY */
+    .scan-grid { position: absolute; inset: 0; pointer-events: none; z-index: 15; display: none; }
+    .scan-grid.active { display: block; }
+    .scan-grid canvas { width: 100%; height: 100%; }
+    .grid-line { position: absolute; background: rgba(87,215,192,0.15); }
+    .grid-line.h { width: 100%; height: 1px; }
+    .grid-line.v { width: 1px; height: 100%; }
+    
+    /* SUCCESS PULSE */
+    @keyframes successPulse { 0% { box-shadow: 0 0 0 0 rgba(87,215,192,0.7); } 70% { box-shadow: 0 0 0 20px rgba(87,215,192,0); } 100% { box-shadow: 0 0 0 0 rgba(87,215,192,0); } }
+    .btn-submit.pulse { animation: successPulse 0.6s ease-out; }
+    
+    /* GLASSMORPHISM GUIDANCE */
+    .camera-guidance { background: rgba(0,0,0,0.7) !important; backdrop-filter: blur(20px) !important; border: 2px solid rgba(87,215,192,0.3) !important; }
   </style>
 </head>
 <body>
@@ -86,8 +116,11 @@
         <div class="camera-close" onclick="window.closeCamera()">✕</div>
       </div>
     </div>
-    <div class="camera-controls" id="shutter-container">
-      <div class="shutter-btn" onclick="window.snapPhoto()"><div style="width:56px; height:56px; border-radius:50%; background:var(--Mint); opacity:0.2"></div></div>
+<div class="camera-controls" id="shutter-container">
+      <div class="shutter-btn" onclick="window.snapPhoto()">
+        <div class="shutter-ring" id="shutterRing"></div>
+        <div style="width:56px; height:56px; border-radius:50%; background:var(--Mint); opacity:0.2"></div>
+      </div>
     </div>
     <div class="camera-review-controls" id="review-container">
       <button class="btn-review btn-redo" onclick="window.retakePhoto()">Recapture</button>
@@ -266,10 +299,14 @@
         window.speak(feedback);
       }
 
-      msg.textContent = feedback;
+msg.textContent = feedback;
       msg.style.background = aligned ? "var(--Mint)" : "rgba(0,0,0,0.8)";
       msg.style.color = aligned ? "var(--Obsidian)" : "#fff";
       isPoseAligned = aligned;
+      
+      // ACTIVATE PROGRESS RING WHEN ALIGNED
+      const ring = document.getElementById('shutterRing');
+      if (ring) { if (aligned) ring.classList.add('active'); else ring.classList.remove('active'); }
 
       ctx.strokeStyle = aligned ? "#57D7C0" : "#FFFFFF";
       ctx.lineWidth = aligned ? 12 : 8;

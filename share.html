@@ -70,11 +70,20 @@
     #camera-video { width: 100%; height: 100%; object-fit: cover; transform: scaleX(-1); }
     #camera-canvas { position: absolute; inset: 0; width: 100%; height: 100%; z-index: 10; transform: scaleX(-1); }
     .camera-overlay { position: absolute; inset: 0; z-index: 20; pointer-events: none; display: flex; flex-direction: column; align-items: center; justify-content: space-between; padding: 60px 24px; }
-    .camera-guidance {
-      background: rgba(0,0,0,0.8); backdrop-filter: blur(12px); padding: 16px 32px; border-radius: 99px;
-      border: 2px solid var(--Mint); color: var(--White); font-size: 16px; font-weight: 900;
+.camera-guidance {
+      background: rgba(0,0,0,0.7); backdrop-filter: blur(20px); padding: 16px 32px; border-radius: 99px;
+      border: 2px solid rgba(87,215,192,0.3); color: var(--White); font-size: 16px; font-weight: 900;
       text-align: center; text-transform: uppercase; letter-spacing: 0.05em; box-shadow: 0 0 30px rgba(87, 215, 192, 0.3);
     }
+    
+    /* PROGRESS RING AROUND SHUTTER */
+    .shutter-ring { position: absolute; inset: -4px; border-radius: 50%; border: 3px solid transparent; border-top-color: var(--Mint); animation: shutterSpin 1s linear infinite; display: none; }
+    .shutter-ring.active { display: block; }
+    @keyframes shutterSpin { from { transform: rotate(0deg); } to { transform: rotate(360deg); } }
+    
+    /* SUCCESS PULSE */
+    @keyframes successPulse { 0% { box-shadow: 0 0 0 0 rgba(87,215,192,0.7); } 70% { box-shadow: 0 0 0 20px rgba(87,215,192,0); } 100% { box-shadow: 0 0 0 0 rgba(87,215,192,0); } }
+    .btn-submit.pulse { animation: successPulse 0.6s ease-out; }
     .camera-controls { position: absolute; bottom: 40px; left: 0; right: 0; display: flex; justify-content: center; align-items: center; gap: 32px; z-index: 30; }
     .camera-review-controls { position: absolute; bottom: 40px; left: 0; right: 0; display: none; justify-content: center; align-items: center; gap: 24px; z-index: 50; padding: 0 24px; }
     .btn-review { height: 56px; border-radius: 12px; font-weight: 800; cursor: pointer; flex: 1; text-transform: uppercase; font-size: 14px; border: none; }
@@ -190,9 +199,12 @@
           <div class="camera-close" onclick="window.closeCamera()">✕</div>
         </div>
       </div>
-      <div class="camera-controls" id="shutter-container">
-        <div class="shutter-btn" onclick="window.snapPhoto()"><div style="width:56px; height:56px; border-radius:50%; background:var(--Mint); opacity:0.2"></div></div>
+<div class="camera-controls" id="shutter-container">
+      <div class="shutter-btn" onclick="window.snapPhoto()">
+        <div class="shutter-ring" id="shutterRing"></div>
+        <div style="width:56px; height:56px; border-radius:50%; background:var(--Mint); opacity:0.2"></div>
       </div>
+    </div>
       <div class="camera-review-controls" id="review-container">
         <button class="btn-review btn-redo" onclick="window.retakePhoto()">Recapture</button>
         <button class="btn-review btn-keep" onclick="window.keepPhoto()">Keep Photo</button>
@@ -278,8 +290,13 @@
         const rem = Math.max(0, 1500 - (Date.now() - alignmentStartTime));
         feedback = rem > 0 ? `Capturing in ${(rem/1000).toFixed(1)}s...` : "Processing...";
       } else { alignmentStartTime = 0; window.speak(feedback); }
-      msg.textContent = feedback; msg.style.background = aligned ? "var(--Mint)" : "rgba(0,0,0,0.8)"; msg.style.color = aligned ? "var(--Obsidian)" : "#fff";
+msg.textContent = feedback; msg.style.background = aligned ? "var(--Mint)" : "rgba(0,0,0,0.8)"; msg.style.color = aligned ? "var(--Obsidian)" : "#fff";
       isPoseAligned = aligned;
+      
+      // ACTIVATE PROGRESS RING WHEN ALIGNED
+      const ring = document.getElementById('shutterRing');
+      if (ring) { if (aligned) ring.classList.add('active'); else ring.classList.remove('active'); }
+      
       ctx.strokeStyle = aligned ? "#57D7C0" : "#FFFFFF"; ctx.lineWidth = aligned ? 12 : 8; ctx.lineCap = "round";
       const conns = [ [11, 12], [11, 13], [13, 15], [12, 14], [14, 16], [11, 23], [12, 24], [23, 24], [23, 25], [25, 27], [24, 26], [26, 28] ];
       conns.forEach(([i, j]) => {
