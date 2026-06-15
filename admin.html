@@ -3,7 +3,7 @@
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>KORRA | Super-Workbench</title>
+<title>KORRA | Admin Panel</title>
   <link rel="icon" type="image/png" href="/assets/body-capture.png">
   <link rel="preconnect" href="https://fonts.googleapis.com" />
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
@@ -121,8 +121,8 @@
     </div>
   </div>
 
-  <div id="loadingOverlay">INITIALIZING AUTHORITY...</div>
-  <div id="offlineOverlay"><div class="offline-card"><div style="font-size:32px; margin-bottom:24px">📡</div><h2 style="font-size:18px; font-weight:800; margin-bottom:12px">Sync Interrupted</h2><p style="font-size:12px; color:var(--Neutral-400)">Internet connection lost. KORRA has paused handshakes.</p></div></div>
+<div id="loadingOverlay">INITIALIZING AUTHORITY...</div>
+  <div id="offlineOverlay"><div class="offline-card"><div style="font-size:32px; margin-bottom:24px">📡</div><h2 style="font-size:18px; font-weight:800; margin-bottom:12px">Sync Interrupted</h2><p style="font-size:12px; color:var(--Neutral-400)">Internet connection lost. KORRA has paused syncing.</p></div></div>
 
   <div class="modal-overlay" id="adminScanModal">
     <div class="modal-card">
@@ -184,16 +184,15 @@
         </div>
       </form>
     </div>
-  </div>
-
-  <header><div class="container"><a class="logo" href="/"><div class="logo-mark"></div><div class="logo-text">KORRA <span style="font-size:10px; color:var(--Mint); margin-left:8px">ADMIN</span></div></a><div style="display:flex; align-items:center; gap:24px"><div id="networkStatus"><div class="status-dot"></div><span>Sync Active</span></div><span id="adminUser" style="font-size:12px; font-weight:700; color:var(--Mint)"></span><button class="btn-action" id="btnExit">Exit</button></div></div></header>
+</div>
+  </header>
 
   <main>
     <div class="container">
       <div class="admin-grid">
         <aside>
           <div class="sidebar-card">
-            <h4 style="font-size:10px; font-weight:900; color:var(--Mint); margin-bottom:16px">SUPER-BENCH</h4>
+<h4 style="font-size:10px; font-weight:900; color:var(--Mint); margin-bottom:16px">ADMIN</h4>
             <nav class="sidebar-nav">
               <div class="sidebar-label">Platform Core</div>
               <a onclick="window.switchTab('overview')" id="tab-overview" class="active">Global Overview</a>
@@ -442,14 +441,14 @@
             window.addEventListener('online', () => this.update(true));
             window.addEventListener('offline', () => this.update(false));
             this.update(navigator.onLine);
-        },
+},
         update: function(online) {
             this.isOnline = online;
             const statusEl = document.getElementById('networkStatus');
             const overlay = document.getElementById('offlineOverlay');
             if (statusEl) {
-                if (online) { statusEl.classList.remove('offline'); statusEl.querySelector('span').textContent = 'Sync Active'; if (overlay) overlay.style.display = 'none'; }
-                else { statusEl.classList.add('offline'); statusEl.querySelector('span').textContent = 'Sync Paused'; if (overlay) overlay.style.display = 'flex'; }
+                if (online) { statusEl.classList.remove('offline'); statusEl.querySelector('span').textContent = 'Connected'; if (overlay) overlay.style.display = 'none'; }
+                else { statusEl.classList.add('offline'); statusEl.querySelector('span').textContent = 'Disconnected'; }
             }
         },
         retry: async function(fn, retries = 10, delay = 2000) {
@@ -461,7 +460,7 @@
                     const isNet = err.message === "OFFLINE" || err.message.includes("fetch") || err.name === "TypeError" || err.message.includes("network") || err.message.includes("connection");
                     if (i === retries - 1) { this.update(false); throw err; }
                     const wait = (delay * Math.pow(1.8, i)) + (Math.random() * 1000);
-                    console.warn(`🔄 Handshake retry ${i+1}/${retries} in ${Math.round(wait)}ms...`);
+console.warn(`🔄 Syncing retry ${i+1}/${retries} in ${Math.round(wait)}ms...`);
                     await new Promise(r => setTimeout(r, wait));
                 }
             }
@@ -702,11 +701,11 @@
               } catch (err) {
                   const isClosed = err.message.includes("CLOSED") || err.message.includes("fetch");
                   if (attempt === 11) {
-                      console.error("🏁 KORRA: Resilient fetch exhausted all retries.");
+console.error("🏁 KORRA: Syncing exhausted all retries.");
                       throw err;
                   }
                   const backoff = (1500 * Math.pow(1.6, attempt)) + (Math.random() * 800);
-                  console.warn(`🔄 Handshake failure (${err.message}). Retrying ${attempt+1}/12 in ${Math.round(backoff)}ms...`);
+console.warn(`🔄 Sync failure (${err.message}). Retrying ${attempt+1}/12 in ${Math.round(backoff)}ms...`);
                   await new Promise(r => setTimeout(r, backoff));
               }
           }
