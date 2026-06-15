@@ -166,30 +166,51 @@ async def serve_custom(): return get_safe_file("custom.html")
 @app.get("/uniforms")
 async def serve_uniforms(): return get_safe_file("uniforms.html")
 
-# --- EXPLICIT STATIC FILE MOUNT ---
-# Mount public/assets as static files for reliable serving
-# Ensure correct MIME types for all asset types
-mimetypes.add_type("image/png", ".png")
-mimetypes.add_type("image/jpeg", ".jpg")
-mimetypes.add_type("image/jpeg", ".jpeg")
-mimetypes.add_type("image/webp", ".webp")
-mimetypes.add_type("image/svg+xml", ".svg")
-mimetypes.add_type("image/x-icon", ".ico")
-mimetypes.add_type("application/javascript", ".js")
-mimetypes.add_type("text/css", ".css")
-mimetypes.add_type("font/woff", ".woff")
-mimetypes.add_type("font/woff2", ".woff2")
-mimetypes.add_type("font/ttf", ".ttf")
+# --- PRIORITIZED ASSET SERVING ---
+@app.get("/assets/{asset_path:path}")
+async def serve_assets(asset_path: str):
+    """
+    Expert Asset Delivery Engine.
+    Manually resolves and serves static files to ensure 100% visibility on Render/Vercel.
+    """
+    try:
+        # 1. PATH RESOLUTION (Audit both internal and external structures)
+        # We check public/assets/FILE and then public/FILE
+        search_paths = [
+            PUBLIC_DIR / "assets" / asset_path,
+            PUBLIC_DIR / asset_path
+        ]
 
-# Mount static files from public/assets
-if (PUBLIC_DIR / "assets").exists():
-    app.mount("/assets", StaticFiles(directory=str(PUBLIC_DIR / "assets"), html=True), name="assets")
-    logger.info(f"✅ Static files mounted from {PUBLIC_DIR / 'assets'}")
+        for full_path in search_paths:
+            if full_path.exists() and full_path.is_file():
+                # 2. MIMETYPE HANDSHAKE
+                # Force mimetypes for common technical assets
+                ext = full_path.suffix.lower()
+                mime_map = {
+                    ".js": "application/javascript",
+                    ".css": "text/css",
+                    ".png": "image/png",
+                    ".jpg": "image/jpeg",
+                    ".jpeg": "image/jpeg",
+                    ".webp": "image/webp",
+                    ".svg": "image/svg+xml",
+                    ".ico": "image/x-icon",
+                    ".obj": "text/plain",
+                    ".task": "application/octet-stream"
+                }
+                media_type = mime_map.get(ext) or mimetypes.guess_type(str(full_path))[0]
 
-# Mount static files from public root (fallback)
-if PUBLIC_DIR.exists():
-    app.mount("/static", StaticFiles(directory=str(PUBLIC_DIR), html=True), name="static")
-    logger.info(f"✅ Static files mounted from {PUBLIC_DIR}")
+                # logger.info(f"💎 KORRA: Serving {asset_path} [Mime: {media_type}]")
+                return FileResponse(str(full_path), media_type=media_type)
+
+        # 3. 404 LOGGING
+        logger.error(f"❌ ASSET MISSING: {asset_path} (Searched in {PUBLIC_DIR})")
+        raise HTTPException(status_code=404, detail="Asset not found")
+
+    except Exception as e:
+        if isinstance(e, HTTPException): raise e
+        logger.error(f"🔥 Asset Serving Crash ({asset_path}): {e}")
+        return JSONResponse(status_code=500, content={"error": "Asset Delivery Failure"})
 
 # --- PRIORITIZED CATCH-ALL ---
 @app.get("/api/v2/forensic/assets")
