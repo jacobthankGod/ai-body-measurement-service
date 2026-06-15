@@ -72,6 +72,7 @@
 
             const iframe = document.createElement('iframe');
             iframe.src = `${this.config.host}/widget?merchant=${this.config.merchantId}`;
+            iframe.allow = "camera; microphone; display-capture; autoplay;"; // CRITICAL: Grant Device Permissions
             iframe.style.cssText = `
                 width: 100%;
                 max-width: 480px;

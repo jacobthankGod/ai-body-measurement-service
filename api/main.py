@@ -102,6 +102,7 @@ async def add_security_headers(request: Request, call_next):
     response = await call_next(request)
     response.headers["X-Frame-Options"] = "ALLOWALL"
     response.headers["Content-Security-Policy"] = "frame-ancestors *; default-src 'self' * 'unsafe-inline' 'unsafe-eval' data: blob:;"
+    response.headers["Permissions-Policy"] = "camera=*, microphone=(), geolocation=()"
     return response
 
 # --- API ROUTE REGISTRATION ---
