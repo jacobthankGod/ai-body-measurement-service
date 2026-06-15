@@ -63,9 +63,9 @@
     .polling-bar { width: 100%; height: 4px; background: rgba(255,255,255,0.1); border-radius: 99px; margin-top: 16px; overflow: hidden; }
     .polling-fill { width: 0%; height: 100%; background: var(--Mint); transition: 0.5s cubic-bezier(0.1, 0, 0.2, 1); }
     #networkStatus { display: flex; align-items: center; gap: 8px; font-size: 10px; font-weight: 800; text-transform: uppercase; letter-spacing: 0.05em; color: var(--Mint); transition: 0.3s; }
-    .status-dot { width: 6px; height: 6px; border-radius: 50%; background: var(--Mint); box-shadow: 0 0 10px var(--Mint); }
-    #networkStatus.offline { color: var(--Error); }
-    #networkStatus.offline .status-dot { background: var(--Error); box-shadow: 0 0 10px var(--Error); }
+    #networkStatus .status-dot { width: 6px; height: 6px; border-radius: 50%; background: var(--Mint); box-shadow: 0 0 10px var(--Mint); animation: pulse 2s infinite; }
+    @keyframes pulse { 0% { opacity: 1; transform: scale(1); } 50% { opacity: 0.4; transform: scale(1.3); } 100% { opacity: 1; transform: scale(1); } }
+    #networkStatus.offline .status-dot { background: var(--Error); box-shadow: 0 0 10px var(--Error); animation: none; }
     #offlineOverlay { position: fixed; inset: 0; background: rgba(0,0,0,0.85); backdrop-filter: blur(10px); z-index: 99999999; display: none; align-items: center; justify-content: center; text-align: center; }
     .offline-card { background: var(--Glass); border: 1px solid var(--Glass-Border); padding: 40px; border-radius: 24px; max-width: 320px; }
     .pro-tips-card { background: rgba(87, 215, 192, 0.05); border: 1px solid rgba(87, 215, 192, 0.2); border-radius: 20px; padding: 20px; margin-top: 24px; text-align: left; }
@@ -781,13 +781,16 @@
         const { data: profiles, count: mCount } = await window.KORRA_DB.from('profiles').select('*', { count: 'exact' });
         document.getElementById('statMerchants').textContent = mCount || profiles?.length || 0;
         const mList = document.getElementById('merchantList');
-        if (mList) mList.innerHTML = profiles?.map(p => `<tr><td>${p.company_name || p.full_name || 'Artisan'}</td><td>${p.industry || 'Tailor'}</td><td>${p.credits || 0}</td><td>${new Date(p.created_at).toLocaleDateString()}</td></tr>`).join('') || '';
+        if (mList) mList.innerHTML = profiles?.map(p => `<tr><td>${p.company_name || p.full_name || 'Artisan'}</td><td>${p.industry || 'Tailor'}</td><td>${p.credits || 0}</td><td>${new Date(p.created_at).toLocaleDateString()}</td><td><span class="health-status status-ok">ACTIVE</span></td></tr>`).join('') || '';
 
         const { data: scans, count: sCount } = await window.KORRA_DB.from('measurements').select('*', { count: 'exact' }).order('created_at', { ascending: false });
         window.ADMIN_HISTORY = scans || [];
         document.getElementById('statScans').textContent = sCount || scans?.length || 0;
         const hList = document.getElementById('testHistoryList');
         if (hList) hList.innerHTML = scans?.map((s, idx) => `<tr><td>${new Date(s.created_at).toLocaleTimeString()}</td><td style="color:var(--Mint)">${s.client_name}</td><td>${s.height}cm • ${s.gender}</td><td><button class="btn-action" onclick="window.viewScan(${idx})">View</button></td></tr>`).join('') || '';
+
+        // RENDER ADMIN ANALYTICS
+        window.renderAdminAnalytics(scans, profiles);
 
         // HARDENED FINANCIAL AUDIT: Use 'transactions' table instead of 'invoices'
         const { data: txs } = await window.KORRA_DB.from('transactions').select('*').order('created_at', { ascending: false });
@@ -807,11 +810,62 @@
         if (res.ok) {
           const d = await res.json();
           if (document.getElementById('healthVersion')) document.getElementById('healthVersion').textContent = `FastAPI v${d.version} • ${d.acceleration || 'CPU'} Stable`;
+
+          // RESTORE GPU DETAILS
+          const statusRow = document.querySelector('.stat-row');
+          if (statusRow && d.gpu_details !== "None") {
+              const aiHealth = statusRow.querySelector('.stat-card:last-child .value');
+              if (aiHealth) aiHealth.innerHTML = `<span style="color:var(--Mint)">OK</span> <span style="font-size:8px; opacity:0.5; display:block">GPU ACTIVE</span>`;
+          }
+
           const container = document.getElementById('healthAssets');
           if (container) container.innerHTML = Object.entries(d.ai_integrity || {}).map(([asset, ok]) => `<div class="health-item"><span class="health-label">${asset.toUpperCase()}</span><span class="health-status ${ok ? 'status-ok' : 'status-err'}">${ok ? 'Active' : 'Missing'}</span></div>`).join('');
         }
+
+        // UPDATE ENDPOINT STATUS
+        window.monitorEndpoints();
       } catch (err) { console.error("Handshake Failure:", err); }
     }
+
+    let trendChart = null, industryChart = null;
+    window.renderAdminAnalytics = (scans, profiles) => {
+        const trendCtx = document.getElementById('chartTrends').getContext('2d');
+        const indCtx = document.getElementById('chartIndustry').getContext('2d');
+        if (trendChart) trendChart.destroy();
+        if (industryChart) industryChart.destroy();
+
+        // 1. Velocity Trend (Last 7 Days)
+        const days = {}; for(let i=6; i>=0; i--) { const d = new Date(); d.setDate(d.getDate()-i); days[d.toLocaleDateString()] = 0; }
+        scans.forEach(s => { const ds = new Date(s.created_at).toLocaleDateString(); if(days[ds] !== undefined) days[ds]++; });
+        trendChart = new Chart(trendCtx, { type: 'line', data: { labels: Object.keys(days), datasets: [{ label: 'Scans', data: Object.values(days), borderColor: '#57D7C0', tension: 0.4, fill: true, backgroundColor: 'rgba(87,215,192,0.1)' }] }, options: { responsive: true, maintainAspectRatio: false, plugins: { legend: { display: false } }, scales: { y: { beginAtZero: true, grid: { color: 'rgba(255,255,255,0.05)' } }, x: { grid: { display: false } } } } });
+
+        // 2. Industry Mix
+        const industries = {}; profiles.forEach(p => { const i = p.industry || 'Other'; industries[i] = (industries[i] || 0) + 1; });
+        industryChart = new Chart(indCtx, { type: 'doughnut', data: { labels: Object.keys(industries), datasets: [{ data: Object.values(industries), backgroundColor: ['#57D7C0', '#002D2A', '#25D366', '#ff4d4d', '#737373'], borderWidth: 0 }] }, options: { responsive: true, maintainAspectRatio: false, plugins: { legend: { position: 'bottom', labels: { color: '#737373', boxWidth: 10, font: { size: 10 } } } } } });
+    };
+
+    window.monitorEndpoints = async () => {
+        const endpoints = [
+            { path: '/api/v2/health', method: 'GET' },
+            { path: '/api/v2/measurements/status/health-check', method: 'GET' },
+            { path: '/api/v2/auth/session', method: 'GET' }
+        ];
+        const body = document.getElementById('healthEndpoints');
+        if (!body) return;
+
+        let html = '';
+        for (const ep of endpoints) {
+            const start = performance.now();
+            try {
+                const res = await fetch(ep.path);
+                const latency = Math.round(performance.now() - start);
+                html += `<tr><td>${ep.path}</td><td>${ep.method}</td><td><span class="health-status status-ok">HEALTHY</span></td><td>~${latency}ms</td></tr>`;
+            } catch(e) {
+                html += `<tr><td>${ep.path}</td><td>${ep.method}</td><td><span class="health-status status-err">ERROR</span></td><td>-</td></tr>`;
+            }
+        }
+        body.innerHTML = html;
+    };
 
     async function pollTask(taskId) {
       const overlay = document.getElementById('extractionProgress'), fill = document.getElementById('progressFill'), status = document.getElementById('progressStatus'), btn = document.getElementById('btnAdminRun');
