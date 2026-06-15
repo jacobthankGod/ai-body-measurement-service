@@ -99,22 +99,22 @@
       <img id="review-img" alt="Capture Review">
       <div class="camera-overlay">
         <div class="camera-guidance" id="camera-msg">Initializing guidance...</div>
-        <div class="camera-close" onclick="closeCamera()">✕</div>
+        <div class="camera-close" onclick="window.closeCamera()">✕</div>
       </div>
     </div>
     <div class="camera-controls" id="shutter-container">
-      <div class="shutter-btn" onclick="snapPhoto()"><div style="width:56px; height:56px; border-radius:50%; background:var(--Mint); opacity:0.2"></div></div>
+      <div class="shutter-btn" onclick="window.snapPhoto()"><div style="width:56px; height:56px; border-radius:50%; background:var(--Mint); opacity:0.2"></div></div>
     </div>
     <div class="camera-review-controls" id="review-container">
-      <button class="btn-review btn-redo" onclick="retakePhoto()">Recapture</button>
-      <button class="btn-review btn-keep" onclick="keepPhoto()">Keep Photo</button>
+      <button class="btn-review btn-redo" onclick="window.retakePhoto()">Recapture</button>
+      <button class="btn-review btn-keep" onclick="window.keepPhoto()">Keep Photo</button>
     </div>
   </div>
 
   <!-- COMPARISON MODAL -->
   <div class="modal-overlay" id="compareModal">
     <div class="modal-card modal-card-landscape">
-      <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:24px"><div><h2 style="font-size:24px; margin-bottom:4px">Comparison Mode</h2><p style="color:var(--Neutral-400); margin:0">Comparing Baseline vs. Latest scan.</p></div><button class="btn-outline" style="border-color:var(--Mint); color:var(--Mint)" id="btnHeatmapToggle" onclick="toggleHeatmap()">Activate Heatmap Overlay</button></div>
+      <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:24px"><div><h2 style="font-size:24px; margin-bottom:4px">Comparison Mode</h2><p style="color:var(--Neutral-400); margin:0">Comparing Baseline vs. Latest scan.</p></div><button class="btn-outline" style="border-color:var(--Mint); color:var(--Mint)" id="btnHeatmapToggle" onclick="window.toggleHeatmap()">Activate Heatmap Overlay</button></div>
       <div class="landscape-grid" id="compareGrid">
         <div style="text-align:center"><div style="font-size:10px; font-weight:900; color:var(--Neutral-500); margin-bottom:12px; text-transform:uppercase">Baseline Scan</div><div id="compare-baseline-viz" style="width:100%; height:450px; background:#000; border-radius:16px; border:1px solid var(--Glass-Border); overflow:hidden; position:relative"></div><div id="baselineDate" style="font-size:11px; color:var(--Mint); margin-top:12px"></div></div>
         <div style="text-align:center"><div style="font-size:10px; font-weight:900; color:var(--Neutral-500); margin-bottom:12px; text-transform:uppercase">Latest Scan</div><div id="compare-latest-viz" style="width:100%; height:450px; background:#000; border-radius:16px; border:1px solid var(--Mint); overflow:hidden; position:relative"></div><div id="latestDate" style="font-size:11px; color:var(--Mint); margin-top:12px"></div></div>
@@ -130,7 +130,7 @@
 
   <div id="offlineOverlay"><div class="offline-card"><div style="font-size:32px; margin-bottom:24px">📡</div><h2 style="font-size:18px; font-weight:800; margin-bottom:12px">Sync Interrupted</h2><p style="font-size:12px; color:var(--Neutral-400)">Your internet connection is unstable. KORRA has paused updates.</p></div></div>
 
-  <div id="creditOverlay"><div class="credit-card"><div style="font-size:48px; margin-bottom:32px">💎</div><h2 style="font-size:24px; font-weight:900; margin-bottom:16px">Credits Depleted</h2><p style="font-size:14px; color:var(--Neutral-400); margin-bottom:40px">Your balance has reached 0 credits. Please top up to continue.</p><button class="btn-primary" style="width:100%; height:56px" onclick="dismissCreditError(); switchTab('billing'); document.getElementById('topUpModal').classList.add('active');">Top Up Now</button><button class="btn-outline" style="width:100%; border:none; margin-top:16px; color:var(--Neutral-500)" onclick="dismissCreditError()">Later</button></div></div>
+  <div id="creditOverlay"><div class="credit-card"><div style="font-size:48px; margin-bottom:32px">💎</div><h2 style="font-size:24px; font-weight:900; margin-bottom:16px">Credits Depleted</h2><p style="font-size:14px; color:var(--Neutral-400); margin-bottom:40px">Your balance has reached 0 credits. Please top up to continue.</p><button class="btn-primary" style="width:100%; height:56px" onclick="window.dismissCreditError(); window.switchTab('billing'); document.getElementById('topUpModal').classList.add('active');">Top Up Now</button><button class="btn-outline" style="width:100%; border:none; margin-top:16px; color:var(--Neutral-500)" onclick="window.dismissCreditError()">Later</button></div></div>
 
   <div class="modal-overlay" id="scanModal">
     <div class="modal-card modal-card-landscape">
@@ -139,7 +139,7 @@
       <form id="scanForm">
         <div class="landscape-grid">
           <div>
-            <div style="margin-bottom:24px"><label style="font-size:10px; font-weight:900; color:var(--Neutral-500); display:block; margin-bottom:8px">CLIENT NAME</label><input type="text" id="scanClientName" class="input-field" style="margin-bottom:0; width:100%" placeholder="e.g. James" required></div>
+            <div style="margin-bottom:24px"><label for="scanClientName" style="font-size:10px; font-weight:900; color:var(--Neutral-500); display:block; margin-bottom:8px">CLIENT NAME</label><input type="text" id="scanClientName" class="input-field" style="margin-bottom:0; width:100%" placeholder="e.g. James" required></div>
             <div style="display:grid; grid-template-columns: 1fr 1fr; gap:16px; margin-bottom:32px">
               <div><label style="font-size:10px; font-weight:900; color:var(--Neutral-500); display:block; margin-bottom:8px">HEIGHT (CM)</label><input type="number" id="scanHeight" class="input-field" style="margin-bottom:0; width:100%" placeholder="180" required></div>
               <div><label style="font-size:10px; font-weight:900; color:var(--Neutral-500); display:block; margin-bottom:8px">GENDER</label><select id="scanGender" class="input-field" style="margin-bottom:0; width:100%; appearance:none; cursor:pointer"><option value="male">Male</option><option value="female">Female</option></select></div>
@@ -148,17 +148,17 @@
           </div>
           <div>
             <div style="display:grid; grid-template-columns: 1fr 1fr; gap:16px; margin-bottom:24px">
-               <div class="preview-box" id="frontLabel" onclick="handlePreviewClick('front')">
+               <div class="preview-box" id="frontLabel" onclick="window.handlePreviewClick('front')">
                  <img class="preview-img" alt="Front Preview">
-                 <div class="preview-overlay" style="position:absolute; inset:0; background:rgba(0,0,0,0.6); display:none; flex-direction:column; align-items:center; justify-content:center; z-index:10" onclick="openCamera('front'); event.stopPropagation();"><span style="font-size:10px; font-weight:900; color:#fff">TAP TO RETAKE</span></div>
+                 <div class="preview-overlay" style="position:absolute; inset:0; background:rgba(0,0,0,0.6); display:none; flex-direction:column; align-items:center; justify-content:center; z-index:10" onclick="window.openCamera('front'); event.stopPropagation();"><span style="font-size:10px; font-weight:900; color:#fff">TAP TO RETAKE</span></div>
                  <div class="placeholder-content" style="display:flex; flex-direction:column; align-items:center; z-index:1"><span>Front A-Pose</span><div style="font-size:8px; color:var(--Mint); margin-top:4px; font-weight:700">TAP TO SNAP</div></div>
-                 <input type="file" id="frontPhoto" accept="image/*" required style="display:none" onchange="handleFile(this, 'frontLabel')">
+                 <input type="file" id="frontPhoto" accept="image/*" required style="display:none" onchange="window.handleFile(this, 'frontLabel')">
                </div>
-               <div class="preview-box" id="sideLabel" onclick="handlePreviewClick('side')">
+               <div class="preview-box" id="sideLabel" onclick="window.handlePreviewClick('side')">
                  <img class="preview-img" alt="Side Preview">
-                 <div class="preview-overlay" style="position:absolute; inset:0; background:rgba(0,0,0,0.6); display:none; flex-direction:column; align-items:center; justify-content:center; z-index:10" onclick="openCamera('side'); event.stopPropagation();"><span style="font-size:10px; font-weight:900; color:#fff">TAP TO RETAKE</span></div>
+                 <div class="preview-overlay" style="position:absolute; inset:0; background:rgba(0,0,0,0.6); display:none; flex-direction:column; align-items:center; justify-content:center; z-index:10" onclick="window.openCamera('side'); event.stopPropagation();"><span style="font-size:10px; font-weight:900; color:#fff">TAP TO RETAKE</span></div>
                  <div class="placeholder-content" style="display:flex; flex-direction:column; align-items:center; z-index:1"><span>Side Profile</span><div style="font-size:8px; color:var(--Mint); margin-top:4px; font-weight:700">TAP TO SNAP</div></div>
-                 <input type="file" id="sidePhoto" accept="image/*" required style="display:none" onchange="handleFile(this, 'sideLabel')">
+                 <input type="file" id="sidePhoto" accept="image/*" required style="display:none" onchange="window.handleFile(this, 'sideLabel')">
                </div>
             </div>
             <div id="extractionProgress" class="polling-overlay" style="margin-top:0; margin-bottom:24px"><div style="font-size:11px; font-weight:900; color:var(--Mint); letter-spacing:0.1em" id="progressStatus">QUEUEING TASK...</div><div class="polling-bar"><div class="polling-fill" id="progressFill"></div></div></div>
@@ -175,19 +175,19 @@
       <h2 style="font-size:24px; margin-bottom:12px">Purchase Credits</h2>
       <p style="color:var(--Neutral-400); margin-bottom:32px">Select a bundle to top up your balance.</p>
       <div style="display:grid; grid-template-columns: 1fr; gap:16px; margin-bottom:32px">
-        <div class="glass-card" style="padding:20px; cursor:pointer; border-color:var(--Mint)" onclick="selectBundle(this, 50, 25)">
+        <div class="glass-card" style="padding:20px; cursor:pointer; border-color:var(--Mint)" onclick="window.selectBundle(this, 50, 25)">
           <div style="display:flex; justify-content:space-between; align-items:center"><div><div style="font-size:18px; font-weight:900">50 Scan Bundle</div><div style="font-size:12px; color:var(--Neutral-400)">$0.50 per scan</div></div><div style="font-size:20px; font-weight:900; color:var(--Mint)">$25.00</div></div>
         </div>
-        <div class="glass-card" style="padding:20px; cursor:pointer" onclick="selectBundle(this, 150, 60)">
+        <div class="glass-card" style="padding:20px; cursor:pointer" onclick="window.selectBundle(this, 150, 60)">
           <div style="display:flex; justify-content:space-between; align-items:center"><div><div style="font-size:18px; font-weight:900">150 Scan Bundle</div><div style="font-size:12px; color:var(--Neutral-400)">$0.40 per scan (Save 20%)</div></div><div style="font-size:20px; font-weight:900; color:var(--Mint)">$60.00</div></div>
         </div>
-        <div class="glass-card" style="padding:20px; cursor:pointer" onclick="selectBundle(this, 500, 150)">
+        <div class="glass-card" style="padding:20px; cursor:pointer" onclick="window.selectBundle(this, 500, 150)">
           <div style="display:flex; justify-content:space-between; align-items:center"><div><div style="font-size:18px; font-weight:900">500 Scan Bundle</div><div style="font-size:12px; color:var(--Neutral-400)">$0.30 per scan (Save 40%)</div></div><div style="font-size:20px; font-weight:900; color:var(--Mint)">$150.00</div></div>
         </div>
       </div>
       <div style="margin-bottom:32px">
         <label style="font-size:10px; font-weight:900; color:var(--Neutral-500); display:block; margin-bottom:8px">PROMO CODE</label>
-        <div style="display:flex; gap:12px"><input type="text" id="promoCodeInput" class="input-field" style="margin-bottom:0; flex:1" placeholder="Enter code..."><button class="btn-outline" style="height:52px" onclick="applyPromo()">Apply</button></div>
+        <div style="display:flex; gap:12px"><input type="text" id="promoCodeInput" class="input-field" style="margin-bottom:0; flex:1" placeholder="Enter code..."><button class="btn-outline" style="height:52px" onclick="window.applyPromo()">Apply</button></div>
         <div id="promoStatus" style="font-size:10px; margin-top:8px; display:none"></div>
       </div>
       <button class="btn-primary" id="btnConfirmPurchase" style="width:100%; height:52px">Purchase Credits</button>
@@ -200,8 +200,8 @@
       <h2 style="font-size:24px; margin-bottom:12px">Invite Link</h2>
       <p style="color:var(--Neutral-400); margin-bottom:32px">Generate a link to share with your client.</p>
       <div style="margin-bottom:24px"><label style="font-size:10px; font-weight:900; color:var(--Neutral-500); display:block; margin-bottom:8px">CLIENT NAME</label><input type="text" id="shareName" class="input-field" placeholder="e.g. James" required></div>
-      <div id="linkGeneratedArea" style="display:none; margin-bottom:32px"><div style="background:rgba(0,0,0,0.3); border-radius:12px; padding:20px; border:1px solid var(--Glass-Border); margin-bottom:20px"><code id="deepLinkDisplay" style="font-family:monospace; color:var(--Mint); font-size:12px; word-break:break-all">https://...</code></div><div style="display:grid; grid-template-columns:1fr 1fr; gap:12px"><button class="btn-outline" onclick="copyDeepLink()">Copy Link</button><button class="btn-primary" style="background:#25D366; color:#fff" onclick="shareToWhatsApp()">WhatsApp</button></div></div>
-      <button type="button" class="btn-primary" id="btnGenerateLink" style="width:100%; height:52px" onclick="generateDeepLink()">Generate Link</button>
+      <div id="linkGeneratedArea" style="display:none; margin-bottom:32px"><div style="background:rgba(0,0,0,0.3); border-radius:12px; padding:20px; border:1px solid var(--Glass-Border); margin-bottom:20px"><code id="deepLinkDisplay" style="font-family:monospace; color:var(--Mint); font-size:12px; word-break:break-all">https://...</code></div><div style="display:grid; grid-template-columns:1fr 1fr; gap:12px"><button class="btn-outline" onclick="window.copyDeepLink()">Copy Link</button><button class="btn-primary" style="background:#25D366; color:#fff" onclick="window.shareToWhatsApp()">WhatsApp</button></div></div>
+      <button type="button" class="btn-primary" id="btnGenerateLink" style="width:100%; height:52px" onclick="window.generateDeepLink()">Generate Link</button>
       <button type="button" class="btn-outline" style="width:100%; border:none; margin-top:12px" onclick="document.getElementById('shareModal').classList.remove('active')">Cancel</button>
     </div>
   </div>
@@ -224,21 +224,21 @@
         <aside>
           <nav class="sidebar-nav">
             <div class="sidebar-label">Workspace</div>
-            <a onclick="switchTab('overview')" id="tab-overview">Overview</a>
-            <a onclick="switchTab('vault')" id="tab-vault" class="active">Measurement History</a>
-            <a onclick="switchTab('passports')" id="tab-passports">Size Profiles</a>
+            <a onclick="window.switchTab('overview')" id="tab-overview">Overview</a>
+            <a onclick="window.switchTab('vault')" id="tab-vault" class="active">Measurement History</a>
+            <a onclick="window.switchTab('passports')" id="tab-passports">Size Profiles</a>
             <div class="sidebar-label">Implementation</div>
-            <a onclick="switchTab('widget')" id="tab-widget">Widget Setup</a>
-            <a onclick="switchTab('webhooks')" id="tab-webhooks">Webhooks & API</a>
+            <a onclick="window.switchTab('widget')" id="tab-widget">Widget Setup</a>
+            <a onclick="window.switchTab('webhooks')" id="tab-webhooks">Webhooks & API</a>
             <div class="sidebar-label">Account</div>
-            <a onclick="switchTab('settings')" id="tab-settings">Settings</a>
-            <a onclick="switchTab('billing')" id="tab-billing">Billing & Plans</a>
+            <a onclick="window.switchTab('settings')" id="tab-settings">Settings</a>
+            <a onclick="window.switchTab('billing')" id="tab-billing">Billing & Plans</a>
           </nav>
         </aside>
 
         <section>
           <div id="view-overview" class="tab-view">
-            <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:24px"><div><h2 style="font-size:24px; margin-bottom:4px">Artisan Overview</h2><p style="color:var(--Neutral-400)">Intelligence on scan velocity and precision.</p></div><button class="btn-outline" style="border-color:var(--Mint); color:var(--Mint)" onclick="openQRPoster()">Generate Studio Poster</button></div>
+            <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:24px"><div><h2 style="font-size:24px; margin-bottom:4px">Artisan Overview</h2><p style="color:var(--Neutral-400)">Intelligence on scan velocity and precision.</p></div><button class="btn-outline" style="border-color:var(--Mint); color:var(--Mint)" onclick="window.openQRPoster()">Generate Studio Poster</button></div>
             <div class="stat-grid"><div class="glass-card stat-card"><h4>Total Scans</h4><div class="value" id="overviewTotal">0</div></div><div class="glass-card stat-card"><h4>Avg Precision</h4><div class="value">High</div></div><div class="glass-card stat-card"><h4>Health</h4><div class="value" style="color:var(--Mint)">ACTIVE</div></div></div>
             <div class="glass-card" style="margin-bottom:32px; padding:32px"><h4 style="font-size:12px; font-weight:900; color:var(--Neutral-500); text-transform:uppercase; margin-bottom:24px">Scan Velocity</h4><div style="height:300px; width:100%"><canvas id="usageChart"></canvas></div></div>
           </div>
@@ -249,7 +249,7 @@
               <div class="visual-column">
                 <div id="dashboard-3d-viewport"><span>3D Model Viewer</span></div>
                 <div id="measurementResultsCard" class="glass-card" style="display:none; margin-bottom:48px; background:linear-gradient(135deg, rgba(87,215,192,0.05) 0%, rgba(0,0,0,0.4) 100%)">
-                  <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:24px"><h4 style="font-size:16px; font-weight:900; color:var(--Mint); margin:0">MEASUREMENT RESULTS</h4><div class="unit-toggle" style="background:rgba(255,255,255,0.1); border-radius:20px; padding:2px; display:flex; cursor:pointer" onclick="toggleUnits()"><div id="unit-cm" style="padding:4px 12px; border-radius:18px; font-size:10px; font-weight:900; background:var(--Mint); color:var(--Teal-900)">CM</div><div id="unit-in" style="padding:4px 12px; border-radius:18px; font-size:10px; font-weight:900; color:var(--Neutral-400)">IN</div></div></div>
+                  <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:24px"><h4 style="font-size:16px; font-weight:900; color:var(--Mint); margin:0">MEASUREMENT RESULTS</h4><div class="unit-toggle" style="background:rgba(255,255,255,0.1); border-radius:20px; padding:2px; display:flex; cursor:pointer" onclick="window.toggleUnits()"><div id="unit-cm" style="padding:4px 12px; border-radius:18px; font-size:10px; font-weight:900; background:var(--Mint); color:var(--Teal-900)">CM</div><div id="unit-in" style="padding:4px 12px; border-radius:18px; font-size:10px; font-weight:900; color:var(--Neutral-400)">IN</div></div></div>
                   <div style="margin-bottom:20px"><h5 style="font-size:11px; font-weight:900; color:#fff; text-transform:uppercase; margin-bottom:12px">Measurements</h5><div id="measurementGridUpper" style="display:grid; grid-template-columns:repeat(3,1fr); gap:8px"></div></div>
                   <div id="measurementGridMiddle" style="display:grid; grid-template-columns:repeat(3,1fr); gap:8px; margin-bottom:20px"></div>
                   <div id="measurementGridLower" style="display:grid; grid-template-columns:repeat(3,1fr); gap:8px; margin-bottom:20px"></div>
@@ -266,17 +266,17 @@
                        <div><div style="font-size:9px; color:var(--Neutral-500)">POSTURE</div><div style="font-size:13px; font-weight:700; color:var(--Mint); margin-top:4px" id="diagPosture">Analyzing...</div></div>
                     </div>
                   </div>
-                  <div style="display:flex; gap:12px"><button class="btn-primary" onclick="exportToPDF()">Export PDF</button><button class="btn-outline" onclick="document.getElementById('measurementResultsCard').style.display='none'">Dismiss</button></div>
+                  <div style="display:flex; gap:12px"><button class="btn-primary" onclick="window.exportToPDF()">Export PDF</button><button class="btn-outline" onclick="document.getElementById('measurementResultsCard').style.display='none'">Dismiss</button></div>
                 </div>
               </div>
               <div class="data-column">
                 <div class="glass-card" style="padding:24px">
                   <div style="display:flex; flex-direction:column; gap:20px; margin-bottom:32px">
-                    <div style="display:flex; justify-content:space-between; align-items:center"><h2 style="font-size:20px">Ledger</h2><button class="btn-outline" style="height:32px; font-size:10px" onclick="exportLedgerCSV()">Export CSV</button></div>
+                    <div style="display:flex; justify-content:space-between; align-items:center"><h2 style="font-size:20px">Ledger</h2><button class="btn-outline" style="height:32px; font-size:10px" onclick="window.exportLedgerCSV()">Export CSV</button></div>
                     <input type="text" id="ledgerSearch" class="input-field" style="margin-bottom:0; height:44px" placeholder="Search clients...">
                     <div style="display:grid; grid-template-columns: 1fr 1fr; gap:12px"><button class="btn-outline" onclick="document.getElementById('scanModal').classList.add('active')">+ Start Scan</button><button class="btn-primary" onclick="document.getElementById('shareModal').classList.add('active')">+ Invite</button></div>
-                    <button class="btn-outline" style="width:100%; border-style:dashed; color:var(--Neutral-500); font-size:10px" onclick="triggerBulkImport()">↑ Bulk Import Clients (CSV)</button>
-                    <input type="file" id="bulkImportFile" accept=".csv" style="display:none" onchange="handleBulkImport(this)">
+                    <button class="btn-outline" style="width:100%; border-style:dashed; color:var(--Neutral-500); font-size:10px" onclick="window.triggerBulkImport()">↑ Bulk Import Clients (CSV)</button>
+                    <input type="file" id="bulkImportFile" accept=".csv" style="display:none" onchange="window.handleBulkImport(this)">
                   </div>
                   <div id="scanList" style="max-height:800px; overflow-y:auto"></div>
                 </div>
@@ -324,7 +324,7 @@
           <div id="view-billing" class="tab-view"><div class="glass-card"><h2>Billing & Plans</h2><div style="display:grid; grid-template-columns:1.5fr 1fr; gap:32px; margin-top:32px"><div style="padding:24px; background:rgba(87,215,192,0.05); border:1px solid var(--Mint); border-radius:16px"><h4>CURRENT PLAN</h4><div style="font-size:24px; font-weight:900" id="billingPlanName">Loading...</div><button class="btn-primary" style="margin-top:20px; width:100%">Manage</button></div><div style="padding:24px; background:var(--Glass); border:1px solid var(--Glass-Border); border-radius:16px"><h4>AVAILABLE CREDITS</h4><div style="font-size:32px; font-weight:900" id="billingCredits">0</div><button class="btn-outline" style="margin-top:20px; width:100%" onclick="document.getElementById('topUpModal').classList.add('active')">Top Up</button></div></div><div style="margin-top:48px"><h4>Transaction History</h4><div class="table-container"><table><thead><tr><th>DATE</th><th>TYPE</th><th>AMOUNT</th><th>STATUS</th></tr></thead><tbody id="billingHistoryBody"></tbody></table></div></div></div></div>
           <div id="view-settings" class="tab-view">
              <div class="glass-card"><h2>Settings</h2><div style="max-width:600px; margin-top:32px"><label style="font-size:10px; font-weight:900; color:var(--Neutral-500)">PROFESSIONAL NAME</label><input type="text" id="settingsName" class="input-field" placeholder="Loading..."><button class="btn-primary" id="btnSaveSettings">Save Profile</button></div></div>
-             <div class="glass-card" style="margin-top:32px"><h3>API Access</h3><div style="background:rgba(0,0,0,0.3); border-radius:12px; padding:20px; border:1px solid var(--Glass-Border); display:flex; align-items:center; justify-content:space-between; gap:20px; margin-top:16px"><code id="apiKeyDisplay" style="font-family:monospace; color:var(--Mint); font-size:14px; word-break:break-all">********************************</code><button class="btn-outline" style="height:32px; font-size:10px; flex-shrink:0" onclick="copyApiKey()">Copy</button></div><button class="btn-outline" style="border-color:var(--Error); color:var(--Error); font-size:10px; margin-top:16px" id="btnRegenKey">Regenerate Key</button></div>
+             <div class="glass-card" style="margin-top:32px"><h3>API Access</h3><div style="background:rgba(0,0,0,0.3); border-radius:12px; padding:20px; border:1px solid var(--Glass-Border); display:flex; align-items:center; justify-content:space-between; gap:20px; margin-top:16px"><code id="apiKeyDisplay" style="font-family:monospace; color:var(--Mint); font-size:14px; word-break:break-all">********************************</code><button class="btn-outline" style="height:32px; font-size:10px; flex-shrink:0" onclick="window.copyApiKey()">Copy</button></div><button class="btn-outline" style="border-color:var(--Error); color:var(--Error); font-size:10px; margin-top:16px" id="btnRegenKey">Regenerate Key</button></div>
           </div>
         </section>
       </div>
@@ -342,9 +342,11 @@
   <script src="/assets/korra_export.js"></script>
 
   <script>
-// Paystack key loaded from environment - do not hardcode in production
+    // --- ENV & CONFIG ---
     const PAYSTACK_PUBLIC_KEY = window.ENV?.PAYSTACK_PUBLIC_KEY || 'pk_test_placeholder';
     const CONFIG = { url: 'https://blsettabymllulsxtziw.supabase.co', key: 'sb_publishable_miCOIXHtlxLkfDgpwE0N-g_BA1Q-x8y', paystack: PAYSTACK_PUBLIC_KEY };
+
+    // --- KORRA ENGINE STATE ---
     let sessionData = null, userId = null, masterHistory = [], activeCameraType = null, poseModel = null, cameraInstance = null, isPoseAligned = false, alignmentStartTime = 0, autoSnapTriggered = false, isReviewing = false, capturedDataUrl = null;
     let lastSpokenText = "", lastSpokenTime = 0, usageChart = null, selectedBundle = { credits: 50, price: 25 };
 
@@ -380,43 +382,41 @@
         }
     };
 
-    function speak(text, force = false) {
+    // --- 1. CORE UTILITIES ---
+    window.speak = (text, force = false) => {
       if (!window.speechSynthesis) return;
       const now = Date.now(); if (!force && text === lastSpokenText && now - lastSpokenTime < 3000) return;
       if (!force && window.speechSynthesis.speaking) return; if (force) window.speechSynthesis.cancel();
       const utterance = new SpeechSynthesisUtterance(text);
       const voices = window.speechSynthesis.getVoices(); utterance.voice = voices.find(v => v.name.includes('Google') || v.name.includes('Siri')) || voices[0];
       window.speechSynthesis.speak(utterance); lastSpokenText = text; lastSpokenTime = now;
-    }
+    };
 
-    async function openCamera(type) {
-      activeCameraType = type; alignmentStartTime = 0; autoSnapTriggered = false; isReviewing = false;
-      document.getElementById('shutter-container').style.display = 'flex';
-      document.getElementById('review-container').style.display = 'none';
-      document.getElementById('camera-video').style.display = 'block';
-      document.getElementById('camera-canvas').style.display = 'block';
-      document.getElementById('review-img').style.display = 'none';
-      document.getElementById('step-camera').classList.add('active');
-      const video = document.getElementById('camera-video');
-      if (!poseModel) {
-        poseModel = new Pose({ locateFile: (file) => `https://cdn.jsdelivr.net/npm/@mediapipe/pose@0.5.1675469404/${file}` });
-        poseModel.setOptions({ modelComplexity: 1, smoothLandmarks: true, minDetectionConfidence: 0.5, minTrackingConfidence: 0.5 });
-        poseModel.onResults(onPoseResults);
-      }
-      cameraInstance = new Camera(video, { onFrame: async () => { await poseModel.send({image: video}); }, width: 1280, height: 720 });
-      cameraInstance.start();
-    }
+    window.drawSilhouette = (ctx, w, h, type) => {
+      ctx.beginPath();
+      ctx.strokeStyle = isPoseAligned ? "rgba(87,215,192,0.3)" : "rgba(255,255,255,0.1)";
+      ctx.setLineDash([10, 5]); ctx.lineWidth = 2;
+      const cx = w/2, cy = h/2;
+      ctx.moveTo(cx, cy - h*0.4); ctx.lineTo(cx - w*0.1, cy - h*0.2); ctx.lineTo(cx - w*0.2, cy + h*0.1);
+      ctx.moveTo(cx, cy - h*0.4); ctx.lineTo(cx + w*0.1, cy - h*0.2); ctx.lineTo(cx + w*0.2, cy + h*0.1);
+      ctx.moveTo(cx, cy - h*0.2); ctx.lineTo(cx, cy + h*0.1); ctx.lineTo(cx - w*0.1, cy + h*0.4);
+      ctx.moveTo(cx, cy + h*0.1); ctx.lineTo(cx + w*0.1, cy + h*0.4);
+      ctx.stroke(); ctx.setLineDash([]);
+    };
 
-    function closeCamera() { if (cameraInstance) cameraInstance.stop(); document.getElementById('step-camera').classList.remove('active'); activeCameraType = null; }
-
-    function onPoseResults(results) {
+    window.onPoseResults = (results) => {
       if (isReviewing) return;
-      const canvas = document.getElementById('camera-canvas'), ctx = canvas.getContext('2d'), msg = document.getElementById('camera-msg');
+      const canvas = document.getElementById('camera-canvas'), ctx = canvas?.getContext('2d'), msg = document.getElementById('camera-msg');
+      if (!canvas || !ctx || !msg) return;
+
       canvas.width = canvas.clientWidth; canvas.height = canvas.clientHeight;
       ctx.clearRect(0, 0, canvas.width, canvas.height);
-      if (!results.poseLandmarks) { msg.textContent = "Searching for you..."; isPoseAligned = false; return; }
+      if (!results.poseLandmarks) {
+        msg.textContent = "Searching for you..."; isPoseAligned = false; alignmentStartTime = 0; return;
+      }
+      window.drawSilhouette(ctx, canvas.width, canvas.height, activeCameraType);
       const l = results.poseLandmarks;
-      const head = l[0], lSh = l[11], rSh = l[12], lHi = l[23], rHi = l[24], lAn = l[27], rAn = l[28], lWr = l[15], rWrist = l[16];
+      const head = l[0], lAn = l[27], rAn = l[28], lWr = l[15], rWrist = l[16], lHi = l[23], rHi = l[24], lSh = l[11], rSh = l[12];
       let aligned = true, feedback = "Hold steady...";
       if (head.visibility < 0.5 || lAn.visibility < 0.5 || rAn.visibility < 0.5) { feedback = "Step back: Head and feet must be visible."; aligned = false; }
       else if (activeCameraType === 'front') {
@@ -429,23 +429,49 @@
         if (sideRatio > 0.3 || zDelta < 0.12) { feedback = "Turn Side: Face fully side."; aligned = false; }
       }
       if (aligned) {
-        if (alignmentStartTime === 0) { alignmentStartTime = Date.now(); speak("Hold still.", true); }
-        else if (Date.now() - alignmentStartTime > 1500 && !autoSnapTriggered) { autoSnapTriggered = true; snapPhoto(); return; }
+        if (alignmentStartTime === 0) { alignmentStartTime = Date.now(); window.speak("Hold still.", true); }
+        else if (Date.now() - alignmentStartTime > 1500 && !autoSnapTriggered) { autoSnapTriggered = true; window.snapPhoto(); return; }
         const rem = Math.max(0, 1500 - (Date.now() - alignmentStartTime));
         feedback = rem > 0 ? `Capturing in ${(rem/1000).toFixed(1)}s...` : "Processing...";
-      } else { alignmentStartTime = 0; speak(feedback); }
-      msg.textContent = feedback; msg.style.background = aligned ? "var(--Mint)" : "rgba(0,0,0,0.8)";
-      msg.style.color = aligned ? "var(--Obsidian)" : "#fff";
+      } else { alignmentStartTime = 0; window.speak(feedback); }
+      msg.textContent = feedback; msg.style.background = aligned ? "var(--Mint)" : "rgba(0,0,0,0.8)"; msg.style.color = aligned ? "var(--Obsidian)" : "#fff";
       isPoseAligned = aligned;
-      ctx.strokeStyle = aligned ? "#57D7C0" : "#FFFFFF"; ctx.lineWidth = aligned ? 12 : 8;
-      ctx.lineCap = "round";
+      ctx.strokeStyle = aligned ? "#57D7C0" : "#FFFFFF"; ctx.lineWidth = aligned ? 12 : 8; ctx.lineCap = "round";
       const conns = [ [11, 12], [11, 13], [13, 15], [12, 14], [14, 16], [11, 23], [12, 24], [23, 24], [23, 25], [25, 27], [24, 26], [26, 28] ];
       conns.forEach(([i, j]) => {
         const p1 = l[i], p2 = l[j]; if (p1.visibility > 0.5 && p2.visibility > 0.5) { ctx.beginPath(); ctx.moveTo(p1.x * canvas.width, p1.y * canvas.height); ctx.lineTo(p2.x * canvas.width, p2.y * canvas.height); ctx.stroke(); }
       });
-    }
+    };
 
-    function snapPhoto() {
+    // --- 2. UI HANDLERS ---
+    window.openCamera = async (type) => {
+      activeCameraType = type; alignmentStartTime = 0; autoSnapTriggered = false; isReviewing = false;
+      const shutter = document.getElementById('shutter-container');
+      const review = document.getElementById('review-container');
+      const video = document.getElementById('camera-video');
+      const canvas = document.getElementById('camera-canvas');
+      const reviewImg = document.getElementById('review-img');
+      const stepCamera = document.getElementById('step-camera');
+
+      if (shutter) shutter.style.display = 'flex';
+      if (review) review.style.display = 'none';
+      if (video) video.style.display = 'block';
+      if (canvas) canvas.style.display = 'block';
+      if (reviewImg) reviewImg.style.display = 'none';
+      if (stepCamera) stepCamera.classList.add('active');
+
+      if (!poseModel) {
+        poseModel = new Pose({ locateFile: (file) => `https://cdn.jsdelivr.net/npm/@mediapipe/pose@0.5.1675469404/${file}` });
+        poseModel.setOptions({ modelComplexity: 1, smoothLandmarks: true, minDetectionConfidence: 0.5, minTrackingConfidence: 0.5 });
+        poseModel.onResults(window.onPoseResults);
+      }
+      cameraInstance = new Camera(video, { onFrame: async () => { if (poseModel) await poseModel.send({image: video}); }, width: 1280, height: 720 });
+      cameraInstance.start();
+    };
+
+    window.closeCamera = () => { if (cameraInstance) cameraInstance.stop(); document.getElementById('step-camera').classList.remove('active'); activeCameraType = null; };
+
+    window.snapPhoto = () => {
       if (isReviewing) return;
       const video = document.getElementById('camera-video'), canvas = document.createElement('canvas');
       canvas.width = video.videoWidth; canvas.height = video.videoHeight;
@@ -453,25 +479,30 @@
       capturedDataUrl = canvas.toDataURL('image/jpeg');
       isReviewing = true; document.getElementById('camera-video').style.display = 'none'; document.getElementById('camera-canvas').style.display = 'none'; document.getElementById('shutter-container').style.display = 'none';
       const rImg = document.getElementById('review-img'); rImg.src = capturedDataUrl; rImg.style.display = 'block';
-      document.getElementById('review-container').style.display = 'flex'; document.getElementById('camera-msg').textContent = "Review your photo"; speak("Captured. Review.", true);
-    }
+      document.getElementById('review-container').style.display = 'flex'; document.getElementById('camera-msg').textContent = "Review your photo";
+      window.speak("Captured. Review.", true);
+    };
 
-    function retakePhoto() { isReviewing = false; autoSnapTriggered = false; alignmentStartTime = 0; document.getElementById('camera-video').style.display = 'block'; document.getElementById('camera-canvas').style.display = 'block'; document.getElementById('review-img').style.display = 'none'; document.getElementById('shutter-container').style.display = 'flex'; document.getElementById('review-container').style.display = 'none'; }
+    window.retakePhoto = () => {
+      isReviewing = false; autoSnapTriggered = false; alignmentStartTime = 0;
+      document.getElementById('camera-video').style.display = 'block'; document.getElementById('camera-canvas').style.display = 'block'; document.getElementById('review-img').style.display = 'none';
+      document.getElementById('shutter-container').style.display = 'flex'; document.getElementById('review-container').style.display = 'none'; document.getElementById('camera-msg').textContent = "Re-aligning...";
+    };
 
-    function keepPhoto() {
+    window.keepPhoto = () => {
       const fileId = activeCameraType === 'front' ? 'frontPhoto' : 'sidePhoto', labelId = activeCameraType === 'front' ? 'frontLabel' : 'sideLabel';
       const label = document.getElementById(labelId), img = label.querySelector('.preview-img');
       img.src = capturedDataUrl; img.style.display = 'block';
       label.querySelector('.placeholder-content').style.display = 'none'; label.querySelector('.preview-overlay').style.display = 'flex';
-      speak("Photo confirmed.", true);
+      window.speak("Photo confirmed.", true);
       fetch(capturedDataUrl).then(res => res.blob()).then(blob => {
-        const file = new File([blob], `${activeCameraType}.jpg`, { type: "image/jpeg" });
-        const container = new DataTransfer(); container.items.add(file);
-        document.getElementById(fileId).files = container.files; closeCamera();
+          const file = new File([blob], `${activeCameraType}.jpg`, { type: "image/jpeg" });
+          const container = new DataTransfer(); container.items.add(file);
+          document.getElementById(fileId).files = container.files; window.closeCamera();
       });
-    }
+    };
 
-    function handleFile(input, labelId) {
+    window.handleFile = (input, labelId) => {
       if (input.files && input.files[0]) {
         const reader = new FileReader(); reader.onload = (e) => {
           const label = document.getElementById(labelId), img = label.querySelector('.preview-img');
@@ -479,24 +510,24 @@
           label.querySelector('.placeholder-content').style.display = 'none'; label.querySelector('.preview-overlay').style.display = 'flex';
         }; reader.readAsDataURL(input.files[0]);
       }
-    }
+    };
 
-    function handlePreviewClick(type) {
+    window.handlePreviewClick = (type) => {
       const label = document.getElementById(type === 'front' ? 'frontLabel' : 'sideLabel');
-      if (label.querySelector('.placeholder-content').style.display !== 'none') openCamera(type);
+      if (label.querySelector('.placeholder-content').style.display !== 'none') window.openCamera(type);
       else { const img = label.querySelector('.preview-img'); if (img.src) window.open(img.src, '_blank'); }
-    }
+    };
 
-    function switchTab(id) {
+    window.switchTab = (id) => {
       document.querySelectorAll('.tab-view').forEach(t => t.classList.remove('active'));
       document.querySelectorAll('.sidebar-nav a').forEach(a => a.classList.remove('active'));
       document.getElementById('view-' + id)?.classList.add('active');
       document.getElementById('tab-' + id)?.classList.add('active');
-      if (id === 'settings' || id === 'billing' || id === 'overview') loadSettings();
-      if (id === 'passports') renderPassports();
-    }
+      if (id === 'settings' || id === 'billing' || id === 'overview') window.loadSettings();
+      if (id === 'passports') window.renderPassports();
+    };
 
-    async function loadSettings() {
+    window.loadSettings = async () => {
       const { data: profile } = await window.KORRA_DB.from('profiles').select('*').eq('id', userId).single();
       if (profile) {
         document.getElementById('settingsName').value = profile.full_name || profile.company_name || "";
@@ -510,7 +541,7 @@
 
       const { data: txs } = await window.KORRA_DB.from('transactions').select('*').eq('user_id', userId).order('created_at', { ascending: false });
       if (txs) document.getElementById('billingHistoryBody').innerHTML = txs.map(t => `<tr><td>${new Date(t.created_at).toLocaleDateString()}</td><td>${t.type}</td><td>$${t.amount.toFixed(2)}</td><td>SUCCESS</td></tr>`).join('');
-    }
+    };
 
     async function fetchHistory() {
       const { data } = await window.KORRA_DB.from('measurements').select('*').eq('user_id', userId).order('created_at', { ascending: false });
@@ -518,7 +549,7 @@
     }
 
     window.CURRENT_UNIT = 'cm';
-    function toggleUnits() {
+    window.toggleUnits = () => {
         if (!window.LAST_MEASUREMENT_DATA) return;
         window.CURRENT_UNIT = window.CURRENT_UNIT === 'cm' ? 'in' : 'cm';
         const cmBtn = document.getElementById('unit-cm'), inBtn = document.getElementById('unit-in');
@@ -530,26 +561,42 @@
             cmBtn.style.background = 'transparent'; cmBtn.style.color = 'var(--Neutral-400)';
         }
         renderMeasurementGrids(window.LAST_MEASUREMENT_DATA);
-    }
+    };
 
     function renderMeasurementGrids(data) {
-      const grids = { upper: ['Shoulder', 'Neck Round', 'Chest Round'], middle: ['Waist Round', 'Stomach Round'], lower: ['Hip Round', 'Thigh Round', 'Inseam'] };
       const m = data.measurements || {};
       const unit = window.CURRENT_UNIT;
       const factor = unit === 'in' ? 0.393701 : 1;
+      const gender = (data.gender || 'male').toLowerCase();
+
+      const maleGrids = {
+          upper: ['Shoulder', 'Neck Round', 'Chest Round', 'Across Chest', 'Across Back'],
+          middle: ['Stomach Round', 'Waist Round', 'Half Length', 'Full Top Length'],
+          lower: ['Hip Round', 'Thigh Round', 'Knee Round', 'Calf Round', 'Ankle Round', 'Inseam', 'Trouser Length', 'Trouser Waist', 'Crotch Depth']
+      };
+
+      const femaleGrids = {
+          upper: ['Shoulder', 'Neck Round', 'Bust Round', 'High Bust', 'Under Bust', 'Bust Point', 'Shoulder to Bust Point', 'Shoulder to Under Bust', 'Across Chest', 'Across Back', 'Armhole Round'],
+          middle: ['Shoulder to Waist', 'Front Waist Length', 'Back Waist Length', 'Waist Round', 'Half Length', 'Waist to Hip', 'Sleeve Length', 'Bicep Round', 'Elbow Round', 'Wrist Round'],
+          lower: ['Upper Hip', 'Hip Round', 'Thigh Round', 'Knee Round', 'Calf Round', 'Ankle Round']
+      };
+
+      const grids = gender === 'female' ? femaleGrids : maleGrids;
 
       Object.keys(grids).forEach(g => {
-        document.getElementById(`measurementGrid${g.charAt(0).toUpperCase() + g.slice(1)}`).innerHTML = grids[g].map(k => {
-          if(!m[k]) return '';
-          const val = (m[k] * factor).toFixed(1);
-          return `<div style="padding:10px; background:rgba(255,255,255,0.05); border-radius:8px"><div>${k}</div><div style="font-size:16px; font-weight:700; color:var(--Mint)">${val}${unit}</div></div>`;
-        }).join('');
+        const gridEl = document.getElementById(`measurementGrid${g.charAt(0).toUpperCase() + g.slice(1)}`);
+        if (gridEl) {
+            gridEl.innerHTML = grids[g].map(k => {
+              if(!m[k]) return '';
+              const val = (m[k] * factor).toFixed(1);
+              return `<div style="padding:10px; background:rgba(255,255,255,0.05); border-radius:8px"><div>${k}</div><div style="font-size:16px; font-weight:700; color:var(--Mint)">${val}${unit}</div></div>`;
+            }).join('');
+        }
       });
       document.getElementById('measurementHeight').textContent = (data.height * factor).toFixed(1) + unit;
       document.getElementById('measurementShape').textContent = data.body_shape || 'Standard';
       document.getElementById('measurementSizeRec').textContent = data.size_recommendation || 'M';
 
-      // --- DYNAMIC FIT DIAGNOSTICS ---
       const sh = m['Shoulder'] || 0, ch = m['Chest Round'] || 0, wa = m['Waist Round'] || 1;
       const asymmetry = (sh > 40 && ch < 90) ? "SLIGHT ASYMMETRY" : "SYMMETRICAL";
       const posture = (data.debug && data.debug.includes("tilt")) ? "TILT DETECTED" : "OPTIMAL";
@@ -562,10 +609,9 @@
     function renderLedger(items) {
       const container = document.getElementById('scanList');
       if (!container) return;
-      container.innerHTML = items.map((s, idx) => `<div class="scan-item"><div class="scan-info"><h5>${s.client_name}</h5><p>${new Date(s.created_at).toLocaleDateString()} • ${s.height}cm</p></div><button class="btn-outline" style="height:32px; font-size:10px" onclick="viewScan(${idx})">View</button></div>`).join('');
+      container.innerHTML = items.map((s, idx) => `<div class="scan-item"><div class="scan-info"><h5>${s.client_name}</h5><p>${new Date(s.created_at).toLocaleDateString()} • ${s.height}cm</p></div><button class="btn-outline" style="height:32px; font-size:10px" onclick="window.viewScan(${idx})">View</button></div>`).join('');
     }
 
-    // --- SEARCH LOGIC ---
     document.getElementById('ledgerSearch').addEventListener('input', (e) => {
         const term = e.target.value.toLowerCase();
         const filtered = masterHistory.filter(s =>
@@ -584,7 +630,7 @@
         document.getElementById('measurementResultsCard').style.display = 'block';
     };
 
-    function renderPassports() {
+    window.renderPassports = () => {
       const groups = {}; masterHistory.forEach(s => { const n = s.client_name || "Unknown"; if(!groups[n]) groups[n] = []; groups[n].push(s); });
       document.getElementById('passportGrid').innerHTML = Object.entries(groups).map(([name, scans]) => `
         <div class="glass-card" style="padding:24px">
@@ -592,11 +638,11 @@
             <div style="width:40px; height:40px; background:var(--Mint); border-radius:50%; display:flex; align-items:center; justify-content:center; color:var(--Obsidian); font-weight:900">${name[0]}</div>
             <div><h5>${name}</h5><p style="font-size:10px; color:var(--Neutral-500)">${scans.length} Scans</p></div>
           </div>
-          <button class="btn-primary" style="width:100%; height:36px; font-size:10px" onclick="exportPassport('${name}')">Export Passport</button>
-          <button class="btn-outline" style="width:100%; height:36px; font-size:10px; margin-top:8px" onclick="openComparison('${name}')">Compare Scans</button>
+          <button class="btn-primary" style="width:100%; height:36px; font-size:10px" onclick="window.exportPassport('${name}')">Export Passport</button>
+          <button class="btn-outline" style="width:100%; height:36px; font-size:10px; margin-top:8px" onclick="window.openComparison('${name}')">Compare Scans</button>
         </div>
       `).join('');
-    }
+    };
 
     window.exportPassport = (name) => {
         const s = masterHistory.find(h => h.client_name === name);
@@ -654,27 +700,15 @@
                         height: height,
                         gender: gender || 'male',
                         biometrics: {},
-                        merchant_id: userId // Establishing Professional record
+                        merchant_id: userId
                     });
                     count++;
                 }
             }
-            alert(`INDUSTRIAL SYNC: ${count} subjects successfully enrolled. Measurements will appear as scans are completed.`);
+            alert(`INDUSTRIAL SYNC: ${count} subjects successfully enrolled.`);
             fetchHistory();
         };
         reader.readAsText(input.files[0]);
-    };
-
-    // --- Institutional Demo Logic ---
-    window.requestIndustrialDemo = async () => {
-        const email = document.getElementById('userEmail').textContent;
-        alert(`DEMO REQUESTED: Our industrial team will contact you at ${email} within 24 hours.`);
-        // Track as interest lead in background
-        await window.KORRA_DB.from('interest_leads').insert({
-            email: email,
-            context: 'INDUSTRIAL_DEMO',
-            source: 'MERCHANT_DASHBOARD'
-        });
     };
 
     async function init() {
@@ -700,7 +734,7 @@
       const { data: { session } } = await window.KORRA_DB.auth.getSession();
       if (!session) { window.location.href = '/signin'; return; }
       userId = session.user.id; document.getElementById('loadingOverlay').style.display = 'none';
-      fetchHistory(); loadSettings(); if (window.KORRA_VIZ) window.KORRA_VIZ.init('dashboard-3d-viewport');
+      fetchHistory(); window.loadSettings(); if (window.KORRA_VIZ) window.KORRA_VIZ.init('dashboard-3d-viewport');
     }
 
     async function pollTask(taskId) {
@@ -724,7 +758,7 @@
     });
 
     document.getElementById('btnSignOut').onclick = async () => { await window.KORRA_DB.auth.signOut(); window.location.href = '/signin'; };
-    // --- REVENUE & PAYMENTS ---
+
     window.selectBundle = (el, credits, price) => {
         document.querySelectorAll('#topUpModal .glass-card').forEach(c => c.style.borderColor = 'var(--Glass-Border)');
         el.style.borderColor = 'var(--Mint)';
@@ -748,33 +782,20 @@
     document.getElementById('btnConfirmPurchase').onclick = async () => {
         const btn = document.getElementById('btnConfirmPurchase');
         btn.disabled = true; btn.textContent = 'INITIALIZING...';
-
         const { data: { user } } = await window.KORRA_DB.auth.getUser();
-
         const handler = PaystackPop.setup({
-            key: CONFIG.paystack,
-            email: user.email,
-            amount: selectedBundle.price * 100, // in cents/kobo
-            currency: "USD",
+            key: CONFIG.paystack, email: user.email, amount: selectedBundle.price * 100, currency: "USD",
             metadata: { user_id: userId, type: 'bundle', credits: selectedBundle.credits },
             callback: async (response) => {
-                // Verify payment on backend
                 const res = await fetch(`/api/v2/payments/verify/${response.reference}`);
-                if (res.ok) {
-                    alert(`Success! ${selectedBundle.credits} credits added.`);
-                    document.getElementById('topUpModal').classList.remove('active');
-                    loadSettings();
-                }
+                if (res.ok) { alert(`Success! ${selectedBundle.credits} credits added.`); document.getElementById('topUpModal').classList.remove('active'); window.loadSettings(); }
                 btn.disabled = false; btn.textContent = 'Purchase Credits';
             },
-            onClose: () => {
-                btn.disabled = false; btn.textContent = 'Purchase Credits';
-            }
+            onClose: () => { btn.disabled = false; btn.textContent = 'Purchase Credits'; }
         });
         handler.openIframe();
     };
 
-    // --- PROFILE & SETTINGS ---
     document.getElementById('btnSaveSettings').onclick = async () => {
         const name = document.getElementById('settingsName').value;
         const btn = document.getElementById('btnSaveSettings');
@@ -791,13 +812,9 @@
         if (!confirm("Regenerating your API key will break existing integrations. Continue?")) return;
         const newKey = 'korra_live_' + Math.random().toString(36).substring(2, 15) + Math.random().toString(36).substring(2, 15);
         const { error } = await window.KORRA_DB.from('profiles').update({ api_key: newKey }).eq('id', userId);
-        if (!error) {
-            document.getElementById('apiKeyDisplay').textContent = newKey;
-            alert("New API key generated.");
-        }
+        if (!error) { document.getElementById('apiKeyDisplay').textContent = newKey; alert("New API key generated."); }
     };
 
-    // --- QR & WHATSAPP ---
     window.openQRPoster = () => {
         document.getElementById('qrPosterModal').classList.add('active');
         const qrContainer = document.getElementById('posterQr');
@@ -823,6 +840,7 @@
     };
 
     window.dismissCreditError = () => { document.getElementById('creditOverlay').style.display = 'none'; };
+    window.exportToPDF = () => { if (window.LAST_MEASUREMENT_DATA) window.KORRA_EXPORT.pdf(window.LAST_MEASUREMENT_DATA.client_name, window.LAST_MEASUREMENT_DATA.measurements, window.LAST_MEASUREMENT_DATA.gender, window.LAST_MEASUREMENT_DATA.height); };
 
     init();
   </script>

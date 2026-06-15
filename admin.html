@@ -18,7 +18,7 @@
     header { width: 100%; height: 80px; display: flex; align-items: center; position: fixed; top: 0; z-index: 9999999; background: rgba(0, 0, 0, 0.8); backdrop-filter: blur(20px); border-bottom: 1px solid var(--Glass-Border); }
     .container { width: 100%; max-width: 1400px; margin: 0 auto; padding: 0 48px; }
     header .container { display: flex; align-items: center; justify-content: space-between; padding: 0; }
-        .logo { display: flex; align-items: center; gap: 12px; cursor: pointer; text-decoration: none; color: inherit; }
+    .logo { display: flex; align-items: center; gap: 12px; cursor: pointer; text-decoration: none; color: inherit; }
     .logo-mark { width: 32px; height: 32px; border-radius: 8px; background: var(--Mint); transform: rotate(-8deg); }
     .logo-text { font-size: 20px; font-weight: 900; letter-spacing: -0.05em; }
     main { padding-top: 120px; height: 100vh; overflow-y: auto; }
@@ -99,15 +99,15 @@
       <img id="review-img" alt="Capture Review">
       <div class="camera-overlay">
         <div class="camera-guidance" id="camera-msg">Initializing guidance...</div>
-        <div class="camera-close" onclick="closeCamera()">✕</div>
+        <div class="camera-close" onclick="window.closeCamera()">✕</div>
       </div>
     </div>
     <div class="camera-controls" id="shutter-container">
-      <div class="shutter-btn" onclick="snapPhoto()"><div style="width:56px; height:56px; border-radius:50%; background:var(--Mint); opacity:0.2"></div></div>
+      <div class="shutter-btn" onclick="window.snapPhoto()"><div style="width:56px; height:56px; border-radius:50%; background:var(--Mint); opacity:0.2"></div></div>
     </div>
     <div class="camera-review-controls" id="review-container">
-      <button class="btn-review btn-redo" onclick="retakePhoto()">Recapture</button>
-      <button class="btn-review btn-keep" onclick="keepPhoto()">Keep Photo</button>
+      <button class="btn-review btn-redo" onclick="window.retakePhoto()">Recapture</button>
+      <button class="btn-review btn-keep" onclick="window.keepPhoto()">Keep Photo</button>
     </div>
   </div>
 
@@ -121,7 +121,7 @@
       <form id="adminScanForm">
         <div class="landscape-grid">
           <div>
-            <div style="margin-bottom:24px"><label style="font-size:10px; font-weight:900; color:var(--Neutral-500); display:block; margin-bottom:8px">SUBJECT FULL NAME</label><input type="text" id="adminSubjectName" class="search-input" style="width:100%" placeholder="e.g. James" required></div>
+            <div style="margin-bottom:24px"><label for="adminSubjectName" style="font-size:10px; font-weight:900; color:var(--Neutral-500); display:block; margin-bottom:8px">SUBJECT FULL NAME</label><input type="text" id="adminSubjectName" class="search-input" style="width:100%" placeholder="e.g. James" required></div>
             <div style="display:grid; grid-template-columns:1fr 1fr; gap:16px; margin-bottom:32px">
               <div><label style="font-size:10px; font-weight:900; color:var(--Neutral-500); display:block; margin-bottom:8px">HEIGHT (CM)</label><input type="number" id="adminHeight" class="search-input" style="width:100%" placeholder="180" required></div>
               <div><label style="font-size:10px; font-weight:900; color:var(--Neutral-500); display:block; margin-bottom:8px">GENDER</label><select id="adminGender" class="search-input" style="width:100%; appearance:none; cursor:pointer"><option value="male">Male</option><option value="female">Female</option></select></div>
@@ -130,17 +130,17 @@
           </div>
           <div>
             <div style="display:grid; grid-template-columns: 1fr 1fr; gap:16px; margin-bottom:24px">
-               <div class="preview-box" id="adminFrontLabel" onclick="handlePreviewClick('front')">
+               <div class="preview-box" id="adminFrontLabel" onclick="window.handlePreviewClick('front')">
                  <img class="preview-img" alt="Front Preview">
-                 <div class="preview-overlay" style="position:absolute; inset:0; background:rgba(0,0,0,0.6); display:none; flex-direction:column; align-items:center; justify-content:center; z-index:10" onclick="openCamera('front'); event.stopPropagation();"><span style="font-size:10px; font-weight:900; color:#fff">RECAPTURE</span></div>
+                 <div class="preview-overlay" style="position:absolute; inset:0; background:rgba(0,0,0,0.6); display:none; flex-direction:column; align-items:center; justify-content:center; z-index:10" onclick="window.openCamera('front'); event.stopPropagation();"><span style="font-size:10px; font-weight:900; color:#fff">RECAPTURE</span></div>
                  <div class="placeholder-content" style="display:flex; flex-direction:column; align-items:center; z-index:1"><span>Front A-Pose</span><div style="font-size:8px; color:var(--Mint); margin-top:4px; font-weight:700">TAP TO SNAP</div></div>
-                 <input type="file" id="adminFrontPhoto" accept="image/*" required style="display:none" onchange="handleAdminFile(this, 'adminFrontLabel')">
+                 <input type="file" id="adminFrontPhoto" accept="image/*" required style="display:none" onchange="window.handleAdminFile(this, 'adminFrontLabel')">
                </div>
-               <div class="preview-box" id="adminSideLabel" onclick="handlePreviewClick('side')">
+               <div class="preview-box" id="adminSideLabel" onclick="window.handlePreviewClick('side')">
                  <img class="preview-img" alt="Side Preview">
-                 <div class="preview-overlay" style="position:absolute; inset:0; background:rgba(0,0,0,0.6); display:none; flex-direction:column; align-items:center; justify-content:center; z-index:10" onclick="openCamera('side'); event.stopPropagation();"><span style="font-size:10px; font-weight:900; color:#fff">RECAPTURE</span></div>
+                 <div class="preview-overlay" style="position:absolute; inset:0; background:rgba(0,0,0,0.6); display:none; flex-direction:column; align-items:center; justify-content:center; z-index:10" onclick="window.openCamera('side'); event.stopPropagation();"><span style="font-size:10px; font-weight:900; color:#fff">RECAPTURE</span></div>
                  <div class="placeholder-content" style="display:flex; flex-direction:column; align-items:center; z-index:1"><span>Side Profile</span><div style="font-size:8px; color:var(--Mint); margin-top:4px; font-weight:700">TAP TO SNAP</div></div>
-                 <input type="file" id="adminSidePhoto" accept="image/*" required style="display:none" onchange="handleAdminFile(this, 'adminSideLabel')">
+                 <input type="file" id="adminSidePhoto" accept="image/*" required style="display:none" onchange="window.handleAdminFile(this, 'adminSideLabel')">
                </div>
             </div>
             <div id="extractionProgress" class="polling-overlay" style="margin-top:0; margin-bottom:24px"><div style="font-size:11px; font-weight:900; color:var(--Mint); letter-spacing:0.1em" id="progressStatus">QUEUEING ASYNC TASK...</div><div class="polling-bar"><div class="polling-fill" id="progressFill"></div></div></div>
@@ -163,16 +163,16 @@
             <h4 style="font-size:10px; font-weight:900; color:var(--Mint); margin-bottom:16px">SUPER-BENCH</h4>
             <nav class="sidebar-nav">
               <div class="sidebar-label">Platform Core</div>
-              <a onclick="switchTab('overview')" id="tab-overview" class="active">Global Overview</a>
-              <a onclick="switchTab('registry')" id="tab-registry">Merchant Registry</a>
-              <a onclick="switchTab('lab')" id="tab-lab">Testing Lab</a>
+              <a onclick="window.switchTab('overview')" id="tab-overview" class="active">Global Overview</a>
+              <a onclick="window.switchTab('registry')" id="tab-registry">Merchant Registry</a>
+              <a onclick="window.switchTab('lab')" id="tab-lab">Testing Lab</a>
               <div class="sidebar-label">Artisan Features</div>
-              <a onclick="switchTab('passports')" id="tab-passports">Size Passports</a>
-              <a onclick="switchTab('widget')" id="tab-widget">Widget SDK</a>
+              <a onclick="window.switchTab('passports')" id="tab-passports">Size Passports</a>
+              <a onclick="window.switchTab('widget')" id="tab-widget">Widget SDK</a>
               <div class="sidebar-label">Operations</div>
-              <a onclick="switchTab('health')" id="tab-health">System Health</a>
-              <a onclick="switchTab('finance')" id="tab-finance">Financial Audit</a>
-              <a onclick="switchTab('settings')" id="tab-settings">Platform Settings</a>
+              <a onclick="window.switchTab('health')" id="tab-health">System Health</a>
+              <a onclick="window.switchTab('finance')" id="tab-finance">Financial Audit</a>
+              <a onclick="window.switchTab('settings')" id="tab-settings">Platform Settings</a>
             </nav>
           </div>
         </aside>
@@ -202,17 +202,16 @@
                 </div>
               </div>
 
-              <!-- QR CODE BOX -->
-              <div id="qrBox" class="qr-container" style="background:#fff; padding:32px; border-radius:16px; margin-bottom:32px; display:none">
+              <div id="qrBox" class="qr-container">
                 <div style="color:#000; font-size:12px; font-weight:900; text-transform:uppercase; margin-bottom:16px">In-Store Scanning QR</div>
-                <img id="qrImg" src="" alt="Scanning QR Code" style="width:200px; height:200px; margin-bottom:16px">
+                <img id="qrImg" src="" alt="Scanning QR Code">
                 <div id="qrUrl" style="color:var(--Neutral-500); font-size:10px; word-break:break-all"></div>
                 <button class="btn-action" style="margin-top:20px; border-color:#ddd; color:#000" onclick="document.getElementById('qrBox').style.display='none'">Dismiss QR</button>
               </div>
 
               <div id="korra-3d-viewport"></div>
               <div id="measurementResultsCard" class="glass-card" style="display:none; margin-top:24px; background:linear-gradient(135deg, rgba(87,215,192,0.05) 0%, rgba(0,0,0,0.4) 100%)">
-                <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:24px"><h4 style="font-size:16px; font-weight:900; color:var(--Mint); margin:0">MEASUREMENT RESULTS</h4><div class="unit-toggle" style="background:rgba(255,255,255,0.1); border-radius:20px; padding:2px; display:flex; cursor:pointer" onclick="toggleUnits()"><div id="unit-cm" style="padding:4px 12px; border-radius:18px; font-size:10px; font-weight:900; background:var(--Mint); color:var(--Teal-900)">CM</div><div id="unit-in" style="padding:4px 12px; border-radius:18px; font-size:10px; font-weight:900; color:var(--Neutral-400)">IN</div></div></div>
+                <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:24px"><h4 style="font-size:16px; font-weight:900; color:var(--Mint); margin:0">MEASUREMENT RESULTS</h4><div class="unit-toggle" style="background:rgba(255,255,255,0.1); border-radius:20px; padding:2px; display:flex; cursor:pointer" onclick="window.toggleUnits()"><div id="unit-cm" style="padding:4px 12px; border-radius:18px; font-size:10px; font-weight:900; background:var(--Mint); color:var(--Teal-900)">CM</div><div id="unit-in" style="padding:4px 12px; border-radius:18px; font-size:10px; font-weight:900; color:var(--Neutral-400)">IN</div></div></div>
                 <div id="measurementGridUpper" style="display:grid; grid-template-columns:repeat(4,1fr); gap:8px; margin-bottom:20px"></div>
                 <div id="measurementGridMiddle" style="display:grid; grid-template-columns:repeat(4,1fr); gap:8px; margin-bottom:20px"></div>
                 <div id="measurementGridLower" style="display:grid; grid-template-columns:repeat(4,1fr); gap:8px; margin-bottom:20px"></div>
@@ -240,7 +239,7 @@
             </div>
           </div>
 
-<div id="view-settings" class="tab-view">
+          <div id="view-settings" class="tab-view">
             <div class="glass-card">
               <h2 class="section-title">Platform Settings</h2>
               <div style="display:grid; grid-template-columns: 1fr 1fr; gap:32px">
@@ -248,7 +247,7 @@
                   <h4 style="font-size:10px; font-weight:900; color:var(--Mint); margin-bottom:16px">GLOBAL PRICING (USD)</h4>
                   <div style="margin-bottom:20px"><label style="font-size:10px; color:var(--Neutral-500); display:block; margin-bottom:8px">TAILOR PRO (10 Scans)</label><input type="number" id="pricePro" class="search-input" value="29.99"></div>
                   <div style="margin-bottom:20px"><label style="font-size:10px; color:var(--Neutral-500); display:block; margin-bottom:8px">TAILOR ELITE (50 Scans)</label><input type="number" id="priceElite" class="search-input" value="74.99"></div>
-                  <button class="btn-primary" style="width:100%" onclick="savePricing()">Update Global Rates</button>
+                  <button class="btn-primary" style="width:100%" onclick="window.savePricing()">Update Global Rates</button>
                 </div>
                 <div>
                   <h4 style="font-size:10px; font-weight:900; color:var(--Mint); margin-bottom:16px">INFRASTRUCTURE</h4>
@@ -300,19 +299,6 @@
                 </div>
               </div>
 
-              <div style="margin-bottom:32px">
-                <h4 style="font-size:10px; font-weight:900; color:var(--Mint); margin-bottom:12px">ADVANCED (WITH CALLBACKS)</h4>
-                <div style="background:#000; padding:20px; border:1px solid var(--Glass-Border); border-radius:12px;">
-                  <code style="color:var(--Mint); font-size:11px; word-break:break-all">&lt;script&gt;
-  KORRA.init({
-    apiKey: 'YOUR_API_KEY',
-    onScanComplete: (data) => console.log('Measurements:', data),
-    onError: (err) => console.error('Error:', err)
-  });
-&lt;/script&gt;</code>
-                </div>
-              </div>
-
               <div>
                 <h4 style="font-size:10px; font-weight:900; color:var(--Mint); margin-bottom:12px">AVAILABLE METHODS</h4>
                 <div style="display:grid; grid-template-columns:1fr 1fr; gap:12px">
@@ -357,26 +343,6 @@
                 <p style="font-size:11px; color:var(--Neutral-400); margin-bottom:20px">Force a synchronization check of all AI weight clusters.</p>
                 <button class="btn-primary" id="btnRestoreBrain" style="background:var(--Error); color:#fff; width:100%">🚀 Restore AI Brain</button>
               </div>
-
-              <h4 style="font-size:10px; font-weight:900; color:var(--Mint); margin:32px 0 16px">ENDPOINT STATUS</h4>
-              <div class="table-container">
-                <table>
-                  <thead>
-                    <tr>
-                      <th>Endpoint</th>
-                      <th>Method</th>
-                      <th>Status</th>
-                      <th>Latency</th>
-                    </tr>
-                  </thead>
-                  <tbody id="healthEndpoints">
-                    <tr><td>/api/v2/measurements/extract</td><td>POST</td><td><span class="health-status status-ok">HEALTHY</span></td><td>~200ms</td></tr>
-                    <tr><td>/api/v2/measurements/status/:id</td><td>GET</td><td><span class="health-status status-ok">HEALTHY</span></td><td>~50ms</td></tr>
-                    <tr><td>/api/v2/health</td><td>GET</td><td><span class="health-status status-ok">HEALTHY</span></td><td>~10ms</td></tr>
-                    <tr><td>/api/v2/auth/session</td><td>GET</td><td><span class="health-status status-ok">HEALTHY</span></td><td>~30ms</td></tr>
-                  </tbody>
-                </table>
-              </div>
             </div>
           </div>
         </section>
@@ -387,181 +353,15 @@
   <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
   <script src="https://cdn.jsdelivr.net/npm/@mediapipe/pose@0.5.1675469404"></script>
   <script src="https://cdn.jsdelivr.net/npm/@mediapipe/camera_utils@0.3.1675466862/camera_utils.js"></script>
-<script src="/assets/supabase.min.js"></script>
+  <script src="/assets/supabase.min.js"></script>
   <script src="/assets/three.min.js"></script>
-  <script src="/assets/korra-widget.js"></script>
   <script src="/assets/korra_viz.js"></script>
   <script src="/assets/korra_export.js"></script>
 
   <script>
+    // --- KORRA ADMIN ENGINE (Hardened Global Scope) ---
     let activeCameraType = null, poseModel = null, cameraInstance = null, isPoseAligned = false, alignmentStartTime = 0, autoSnapTriggered = false, isReviewing = false, capturedDataUrl = null;
-    let lastSpokenText = "", lastSpokenTime = 0;
-
-    function speak(text, force = false) {
-      if (!window.speechSynthesis) return;
-      const now = Date.now(); if (!force && text === lastSpokenText && now - lastSpokenTime < 3000) return;
-      if (!force && window.speechSynthesis.speaking) return; if (force) window.speechSynthesis.cancel();
-      const utterance = new SpeechSynthesisUtterance(text);
-      const voices = window.speechSynthesis.getVoices(); utterance.voice = voices.find(v => v.name.includes('Google') || v.name.includes('Siri')) || voices[0];
-      window.speechSynthesis.speak(utterance); lastSpokenText = text; lastSpokenTime = now;
-    }
-
-    async function openCamera(type) {
-      activeCameraType = type; alignmentStartTime = 0; autoSnapTriggered = false; isReviewing = false;
-      document.getElementById('shutter-container').style.display = 'flex';
-      document.getElementById('review-container').style.display = 'none';
-      document.getElementById('camera-video').style.display = 'block';
-      document.getElementById('camera-canvas').style.display = 'block';
-      document.getElementById('review-img').style.display = 'none';
-      document.getElementById('step-camera').classList.add('active');
-      const video = document.getElementById('camera-video');
-      if (!poseModel) {
-        poseModel = new Pose({ locateFile: (file) => `https://cdn.jsdelivr.net/npm/@mediapipe/pose@0.5.1675469404/${file}` });
-        poseModel.setOptions({ modelComplexity: 1, smoothLandmarks: true, minDetectionConfidence: 0.5, minTrackingConfidence: 0.5 });
-        poseModel.onResults(onPoseResults);
-      }
-      cameraInstance = new Camera(video, { onFrame: async () => { await poseModel.send({image: video}); }, width: 1280, height: 720 });
-      cameraInstance.start();
-    }
-
-    function closeCamera() { if (cameraInstance) cameraInstance.stop(); document.getElementById('step-camera').classList.remove('active'); activeCameraType = null; }
-
-    function onPoseResults(results) {
-      if (isReviewing) return;
-      const canvas = document.getElementById('camera-canvas'), ctx = canvas.getContext('2d'), msg = document.getElementById('camera-msg');
-      canvas.width = canvas.clientWidth; canvas.height = canvas.clientHeight;
-      ctx.clearRect(0, 0, canvas.width, canvas.height);
-      if (!results.poseLandmarks) { msg.textContent = "Searching for you..."; isPoseAligned = false; return; }
-      const l = results.poseLandmarks;
-      const head = l[0], lSh = l[11], rSh = l[12], lHi = l[23], rHi = l[24], lAn = l[27], rAn = l[28], lWr = l[15], rWrist = l[16];
-      let aligned = true, feedback = "Hold steady...";
-      if (head.visibility < 0.5 || lAn.visibility < 0.5 || rAn.visibility < 0.5) { feedback = "Step back: Head and feet must be visible."; aligned = false; }
-      else if (activeCameraType === 'front') {
-        const handsDown = lWr.y > lSh.y && rWrist.y > rSh.y;
-        if (!handsDown) { feedback = "A-POSE: Move arms down."; aligned = false; }
-        else if (Math.abs(lWr.x - lHi.x) < 0.15 || Math.abs(rWrist.x - rHi.x) < 0.15) { feedback = "A-POSE: Spread arms."; aligned = false; }
-      } else if (activeCameraType === 'side') {
-        const zDelta = Math.abs(lSh.z - rSh.z), xDelta = Math.abs(lSh.x - rSh.x);
-        const sideRatio = xDelta / Math.abs(lSh.y - lHi.y);
-        if (sideRatio > 0.3 || zDelta < 0.12) { feedback = "Turn Side: Face fully side."; aligned = false; }
-      }
-      if (aligned) {
-        if (alignmentStartTime === 0) { alignmentStartTime = Date.now(); speak("Hold still.", true); }
-        else if (Date.now() - alignmentStartTime > 1500 && !autoSnapTriggered) { autoSnapTriggered = true; snapPhoto(); return; }
-        const rem = Math.max(0, 1500 - (Date.now() - alignmentStartTime));
-        feedback = rem > 0 ? `Capturing in ${(rem/1000).toFixed(1)}s...` : "Processing...";
-      } else { alignmentStartTime = 0; speak(feedback); }
-      msg.textContent = feedback; msg.style.background = aligned ? "var(--Mint)" : "rgba(0,0,0,0.8)";
-      msg.style.color = aligned ? "var(--Obsidian)" : "#fff";
-      isPoseAligned = aligned;
-      ctx.strokeStyle = aligned ? "#57D7C0" : "#FFFFFF"; ctx.lineWidth = aligned ? 12 : 8;
-      ctx.lineCap = "round";
-      const conns = [ [11, 12], [11, 13], [13, 15], [12, 14], [14, 16], [11, 23], [12, 24], [23, 24], [23, 25], [25, 27], [24, 26], [26, 28] ];
-      conns.forEach(([i, j]) => {
-        const p1 = l[i], p2 = l[j]; if (p1.visibility > 0.5 && p2.visibility > 0.5) { ctx.beginPath(); ctx.moveTo(p1.x * canvas.width, p1.y * canvas.height); ctx.lineTo(p2.x * canvas.width, p2.y * canvas.height); ctx.stroke(); }
-      });
-    }
-
-    function snapPhoto() {
-      if (isReviewing) return;
-      const video = document.getElementById('camera-video'), canvas = document.createElement('canvas');
-      canvas.width = video.videoWidth; canvas.height = video.videoHeight;
-      const ctx = canvas.getContext('2d'); ctx.translate(canvas.width, 0); ctx.scale(-1, 1); ctx.drawImage(video, 0, 0);
-      capturedDataUrl = canvas.toDataURL('image/jpeg');
-      isReviewing = true; document.getElementById('camera-video').style.display = 'none'; document.getElementById('camera-canvas').style.display = 'none'; document.getElementById('shutter-container').style.display = 'none';
-      const rImg = document.getElementById('review-img'); rImg.src = capturedDataUrl; rImg.style.display = 'block';
-      document.getElementById('review-container').style.display = 'flex'; document.getElementById('camera-msg').textContent = "Review your photo"; speak("Captured. Review.", true);
-    }
-
-    function retakePhoto() { isReviewing = false; autoSnapTriggered = false; alignmentStartTime = 0; document.getElementById('camera-video').style.display = 'block'; document.getElementById('camera-canvas').style.display = 'block'; document.getElementById('review-img').style.display = 'none'; document.getElementById('shutter-container').style.display = 'flex'; document.getElementById('review-container').style.display = 'none'; }
-
-    function keepPhoto() {
-      const labelId = activeCameraType === 'front' ? 'adminFrontLabel' : 'adminSideLabel', inputId = activeCameraType === 'front' ? 'adminFrontPhoto' : 'adminSidePhoto';
-      const label = document.getElementById(labelId), img = label.querySelector('.preview-img');
-      img.src = capturedDataUrl; img.style.display = 'block';
-      label.querySelector('.placeholder-content').style.display = 'none'; label.querySelector('.preview-overlay').style.display = 'flex';
-      fetch(capturedDataUrl).then(res => res.blob()).then(blob => {
-        const file = new File([blob], `${activeCameraType}.jpg`, { type: "image/jpeg" });
-        const container = new DataTransfer(); container.items.add(file);
-        document.getElementById(inputId).files = container.files; closeCamera();
-      });
-    }
-
-    function handleAdminFile(input, labelId) {
-      if (input.files && input.files[0]) {
-        const reader = new FileReader(); reader.onload = (e) => {
-          const label = document.getElementById(labelId), img = label.querySelector('.preview-img');
-          img.src = e.target.result; img.style.display = 'block';
-          label.querySelector('.placeholder-content').style.display = 'none'; label.querySelector('.preview-overlay').style.display = 'flex';
-        }; reader.readAsDataURL(input.files[0]);
-      }
-    }
-
-    function handlePreviewClick(type) {
-      const label = document.getElementById(type === 'front' ? 'adminFrontLabel' : 'adminSideLabel');
-      if (label.querySelector('.placeholder-content').style.display !== 'none') openCamera(type);
-      else { const img = label.querySelector('.preview-img'); if (img.src) window.open(img.src, '_blank'); }
-    }
-
-    function switchTab(id) {
-      document.querySelectorAll('.tab-view').forEach(t => t.classList.remove('active'));
-      document.querySelectorAll('.sidebar-nav a').forEach(a => a.classList.remove('active'));
-      document.getElementById('view-' + id)?.classList.add('active');
-      document.getElementById('tab-' + id)?.classList.add('active');
-      if (id === 'passports') renderGlobalPassports();
-    }
-
-    function adminLog(text) { const el = document.getElementById('adminConsole'); if(!el) return; el.style.display = 'block'; const entry = document.createElement('div'); entry.className = 'log-entry'; entry.textContent = `[${new Date().toLocaleTimeString()}] ${text}`; el.appendChild(entry); }
-
-    window.CURRENT_UNIT = 'cm';
-    function toggleUnits() {
-        if (!window.LAST_MEASUREMENT_DATA) return;
-        window.CURRENT_UNIT = window.CURRENT_UNIT === 'cm' ? 'in' : 'cm';
-        const cmBtn = document.getElementById('unit-cm'), inBtn = document.getElementById('unit-in');
-        if (window.CURRENT_UNIT === 'cm') {
-            cmBtn.style.background = 'var(--Mint)'; cmBtn.style.color = 'var(--Teal-900)';
-            inBtn.style.background = 'transparent'; inBtn.style.color = 'var(--Neutral-400)';
-        } else {
-            inBtn.style.background = 'var(--Mint)'; inBtn.style.color = 'var(--Teal-900)';
-            cmBtn.style.background = 'transparent'; cmBtn.style.color = 'var(--Neutral-400)';
-        }
-        renderMeasurementGrids(window.LAST_MEASUREMENT_DATA);
-    }
-
-    function renderMeasurementGrids(data) {
-      const grids = { upper: ['Shoulder', 'Neck Round', 'Chest Round'], middle: ['Waist Round', 'Stomach Round'], lower: ['Hip Round', 'Thigh Round', 'Inseam'] };
-      const m = data.measurements || {};
-      const unit = window.CURRENT_UNIT;
-      const factor = unit === 'in' ? 0.393701 : 1;
-
-      Object.keys(grids).forEach(g => {
-        const gridEl = document.getElementById(`measurementGrid${g.charAt(0).toUpperCase() + g.slice(1)}`);
-        if(gridEl) gridEl.innerHTML = grids[g].map(k => {
-          if(!m[k]) return '';
-          const val = (m[k] * factor).toFixed(1);
-          return `<div style="padding:10px; background:rgba(255,255,255,0.05); border-radius:8px"><div>${k}</div><div style="font-size:16px; font-weight:700; color:var(--Mint)">${val}${unit}</div></div>`;
-        }).join('');
-      });
-      const hEl = document.getElementById('measurementHeight');
-      if(hEl) hEl.textContent = (data.height * factor).toFixed(1) + unit;
-      const gEl = document.getElementById('measurementGender');
-      if(gEl) gEl.textContent = data.gender || 'Male';
-    }
-
-    async function renderGlobalPassports() {
-      const container = document.getElementById('passportGrid');
-      if(!container) return;
-      try {
-        const { data } = await window.KORRA_DB.from('measurements').select('*').order('created_at', { ascending: false });
-        const groups = {}; data?.forEach(s => { const n = s.client_name || "Anonymous"; if (!groups[n]) groups[n] = []; groups[n].push(s); });
-        container.innerHTML = Object.entries(groups).map(([name, scans]) => `
-          <div class="glass-card" style="padding:24px">
-            <h5 style="margin:0">${name}</h5><p style="font-size:10px; color:var(--Neutral-500)">${scans.length} Measurements</p>
-            <button class="btn-action" style="width:100%; margin-top:12px" onclick="window.KORRA_VIZ.loadMesh('${scans[0].mesh_url}'); switchTab('lab'); window.scrollTo(0,0);">Inspect 3D Twin</button>
-          </div>
-        `).join('');
-      } catch(e) { container.innerHTML = 'Vault Failed.'; }
-    }
+    let lastSpokenText = "", lastSpokenTime = 0, usageChartInstance = null;
 
     const NetworkGuard = {
         isOnline: navigator.onLine,
@@ -595,6 +395,226 @@
         }
     };
 
+    // --- 1. CORE UTILITIES ---
+    window.speak = (text, force = false) => {
+      if (!window.speechSynthesis) return;
+      const now = Date.now(); if (!force && text === lastSpokenText && now - lastSpokenTime < 3000) return;
+      if (!force && window.speechSynthesis.speaking) return; if (force) window.speechSynthesis.cancel();
+      const utterance = new SpeechSynthesisUtterance(text);
+      const voices = window.speechSynthesis.getVoices(); utterance.voice = voices.find(v => v.name.includes('Google') || v.name.includes('Siri')) || voices[0];
+      window.speechSynthesis.speak(utterance); lastSpokenText = text; lastSpokenTime = now;
+    };
+
+    window.drawSilhouette = (ctx, w, h, type) => {
+      ctx.beginPath();
+      ctx.strokeStyle = isPoseAligned ? "rgba(87,215,192,0.3)" : "rgba(255,255,255,0.1)";
+      ctx.setLineDash([10, 5]); ctx.lineWidth = 2;
+      const cx = w/2, cy = h/2;
+      ctx.moveTo(cx, cy - h*0.4); ctx.lineTo(cx - w*0.1, cy - h*0.2); ctx.lineTo(cx - w*0.2, cy + h*0.1);
+      ctx.moveTo(cx, cy - h*0.4); ctx.lineTo(cx + w*0.1, cy - h*0.2); ctx.lineTo(cx + w*0.2, cy + h*0.1);
+      ctx.moveTo(cx, cy - h*0.2); ctx.lineTo(cx, cy + h*0.1); ctx.lineTo(cx - w*0.1, cy + h*0.4);
+      ctx.moveTo(cx, cy + h*0.1); ctx.lineTo(cx + w*0.1, cy + h*0.4);
+      ctx.stroke(); ctx.setLineDash([]);
+    };
+
+    window.onPoseResults = (results) => {
+      if (isReviewing) return;
+      const canvas = document.getElementById('camera-canvas'), ctx = canvas?.getContext('2d'), msg = document.getElementById('camera-msg');
+      if (!canvas || !ctx || !msg) return;
+
+      canvas.width = canvas.clientWidth; canvas.height = canvas.clientHeight;
+      ctx.clearRect(0, 0, canvas.width, canvas.height);
+      if (!results.poseLandmarks) {
+        msg.textContent = "Searching for you..."; isPoseAligned = false; alignmentStartTime = 0; return;
+      }
+      window.drawSilhouette(ctx, canvas.width, canvas.height, activeCameraType);
+      const l = results.poseLandmarks;
+      const head = l[0], lAn = l[27], rAn = l[28], lWr = l[15], rWrist = l[16], lHi = l[23], rHi = l[24], lSh = l[11], rSh = l[12];
+      let aligned = true, feedback = "Hold steady...";
+      if (head.visibility < 0.5 || lAn.visibility < 0.5 || rAn.visibility < 0.5) { feedback = "Step back: Head and feet must be visible."; aligned = false; }
+      else if (activeCameraType === 'front') {
+        const handsDown = lWr.y > lSh.y && rWrist.y > rSh.y;
+        if (!handsDown) { feedback = "A-POSE: Move arms down."; aligned = false; }
+        else if (Math.abs(lWr.x - lHi.x) < 0.15 || Math.abs(rWrist.x - rHi.x) < 0.15) { feedback = "A-POSE: Spread arms."; aligned = false; }
+      } else if (activeCameraType === 'side') {
+        const zDelta = Math.abs(lSh.z - rSh.z), xDelta = Math.abs(lSh.x - rSh.x);
+        const sideRatio = xDelta / Math.abs(lSh.y - lHi.y);
+        if (sideRatio > 0.3 || zDelta < 0.12) { feedback = "Turn Side: Face fully side."; aligned = false; }
+      }
+      if (aligned) {
+        if (alignmentStartTime === 0) { alignmentStartTime = Date.now(); window.speak("Hold still.", true); }
+        else if (Date.now() - alignmentStartTime > 1500 && !autoSnapTriggered) { autoSnapTriggered = true; window.snapPhoto(); return; }
+        const rem = Math.max(0, 1500 - (Date.now() - alignmentStartTime));
+        feedback = rem > 0 ? `Capturing in ${(rem/1000).toFixed(1)}s...` : "Processing...";
+      } else { alignmentStartTime = 0; window.speak(feedback); }
+      msg.textContent = feedback; msg.style.background = aligned ? "var(--Mint)" : "rgba(0,0,0,0.8)"; msg.style.color = aligned ? "var(--Obsidian)" : "#fff";
+      isPoseAligned = aligned;
+      ctx.strokeStyle = aligned ? "#57D7C0" : "#FFFFFF"; ctx.lineWidth = aligned ? 12 : 8; ctx.lineCap = "round";
+      const conns = [ [11, 12], [11, 13], [13, 15], [12, 14], [14, 16], [11, 23], [12, 24], [23, 24], [23, 25], [25, 27], [24, 26], [26, 28] ];
+      conns.forEach(([i, j]) => {
+        const p1 = l[i], p2 = l[j]; if (p1.visibility > 0.5 && p2.visibility > 0.5) { ctx.beginPath(); ctx.moveTo(p1.x * canvas.width, p1.y * canvas.height); ctx.lineTo(p2.x * canvas.width, p2.y * canvas.height); ctx.stroke(); }
+      });
+    };
+
+    // --- 2. UI HANDLERS ---
+    window.openCamera = async (type) => {
+      activeCameraType = type; alignmentStartTime = 0; autoSnapTriggered = false; isReviewing = false;
+      const shutter = document.getElementById('shutter-container');
+      const review = document.getElementById('review-container');
+      const video = document.getElementById('camera-video');
+      const canvas = document.getElementById('camera-canvas');
+      const reviewImg = document.getElementById('review-img');
+      const stepCamera = document.getElementById('step-camera');
+
+      if (shutter) shutter.style.display = 'flex';
+      if (review) review.style.display = 'none';
+      if (video) video.style.display = 'block';
+      if (canvas) canvas.style.display = 'block';
+      if (reviewImg) reviewImg.style.display = 'none';
+      if (stepCamera) stepCamera.classList.add('active');
+
+      if (!poseModel) {
+        poseModel = new Pose({ locateFile: (file) => `https://cdn.jsdelivr.net/npm/@mediapipe/pose@0.5.1675469404/${file}` });
+        poseModel.setOptions({ modelComplexity: 1, smoothLandmarks: true, minDetectionConfidence: 0.5, minTrackingConfidence: 0.5 });
+        poseModel.onResults(window.onPoseResults);
+      }
+      cameraInstance = new Camera(video, { onFrame: async () => { if (poseModel) await poseModel.send({image: video}); }, width: 1280, height: 720 });
+      cameraInstance.start();
+    };
+
+    window.closeCamera = () => { if (cameraInstance) cameraInstance.stop(); document.getElementById('step-camera').classList.remove('active'); activeCameraType = null; };
+
+    window.snapPhoto = () => {
+      if (isReviewing) return;
+      const video = document.getElementById('camera-video'), canvas = document.createElement('canvas');
+      canvas.width = video.videoWidth; canvas.height = video.videoHeight;
+      const ctx = canvas.getContext('2d'); ctx.translate(canvas.width, 0); ctx.scale(-1, 1); ctx.drawImage(video, 0, 0);
+      capturedDataUrl = canvas.toDataURL('image/jpeg');
+      isReviewing = true; document.getElementById('camera-video').style.display = 'none'; document.getElementById('camera-canvas').style.display = 'none'; document.getElementById('shutter-container').style.display = 'none';
+      const rImg = document.getElementById('review-img'); rImg.src = capturedDataUrl; rImg.style.display = 'block';
+      document.getElementById('review-container').style.display = 'flex'; document.getElementById('camera-msg').textContent = "Review photo";
+      window.speak("Captured. Review.", true);
+    };
+
+    window.retakePhoto = () => {
+      isReviewing = false; autoSnapTriggered = false; alignmentStartTime = 0;
+      document.getElementById('camera-video').style.display = 'block'; document.getElementById('camera-canvas').style.display = 'block'; document.getElementById('review-img').style.display = 'none';
+      document.getElementById('shutter-container').style.display = 'flex'; document.getElementById('review-container').style.display = 'none';
+    };
+
+    window.keepPhoto = () => {
+      const labelId = activeCameraType === 'front' ? 'adminFrontLabel' : 'adminSideLabel', inputId = activeCameraType === 'front' ? 'adminFrontPhoto' : 'adminSidePhoto';
+      const label = document.getElementById(labelId), img = label.querySelector('.preview-img');
+      img.src = capturedDataUrl; img.style.display = 'block';
+      label.querySelector('.placeholder-content').style.display = 'none'; label.querySelector('.preview-overlay').style.display = 'flex';
+      fetch(capturedDataUrl).then(res => res.blob()).then(blob => {
+        const file = new File([blob], `${activeCameraType}.jpg`, { type: "image/jpeg" });
+        const container = new DataTransfer(); container.items.add(file);
+        document.getElementById(inputId).files = container.files; window.closeCamera();
+      });
+    };
+
+    window.handleAdminFile = (input, labelId) => {
+      if (input.files && input.files[0]) {
+        const reader = new FileReader(); reader.onload = (e) => {
+          const label = document.getElementById(labelId), img = label.querySelector('.preview-img');
+          img.src = e.target.result; img.style.display = 'block';
+          label.querySelector('.placeholder-content').style.display = 'none'; label.querySelector('.preview-overlay').style.display = 'flex';
+        }; reader.readAsDataURL(input.files[0]);
+      }
+    };
+
+    window.handlePreviewClick = (type) => {
+      const label = document.getElementById(type === 'front' ? 'adminFrontLabel' : 'adminSideLabel');
+      if (label.querySelector('.placeholder-content').style.display !== 'none') window.openCamera(type);
+      else { const img = label.querySelector('.preview-img'); if (img.src) window.open(img.src, '_blank'); }
+    };
+
+    window.switchTab = (id) => {
+      document.querySelectorAll('.tab-view').forEach(t => t.classList.remove('active'));
+      document.querySelectorAll('.sidebar-nav a').forEach(a => a.classList.remove('active'));
+      document.getElementById('view-' + id)?.classList.add('active');
+      document.getElementById('tab-' + id)?.classList.add('active');
+      if (id === 'passports') window.renderGlobalPassports();
+    };
+
+    window.adminLog = (text) => { const el = document.getElementById('adminConsole'); if(!el) return; el.style.display = 'block'; const entry = document.createElement('div'); entry.className = 'log-entry'; entry.textContent = `[${new Date().toLocaleTimeString()}] ${text}`; el.appendChild(entry); };
+
+    window.viewScan = (idx) => {
+        const s = window.ADMIN_HISTORY[idx];
+        if(!s) return;
+        window.LAST_MEASUREMENT_DATA = s;
+        if(window.KORRA_VIZ) window.KORRA_VIZ.loadMesh(s.mesh_url);
+        renderMeasurementGrids(s);
+        document.getElementById('measurementResultsCard').style.display = 'block';
+        window.switchTab('lab');
+        window.scrollTo({ top: 0, behavior: 'smooth' });
+    };
+
+    window.CURRENT_UNIT = 'cm';
+    window.toggleUnits = () => {
+        if (!window.LAST_MEASUREMENT_DATA) return;
+        window.CURRENT_UNIT = window.CURRENT_UNIT === 'cm' ? 'in' : 'cm';
+        const cmBtn = document.getElementById('unit-cm'), inBtn = document.getElementById('unit-in');
+        if (window.CURRENT_UNIT === 'cm') {
+            cmBtn.style.background = 'var(--Mint)'; cmBtn.style.color = 'var(--Teal-900)';
+            inBtn.style.background = 'transparent'; inBtn.style.color = 'var(--Neutral-400)';
+        } else {
+            inBtn.style.background = 'var(--Mint)'; inBtn.style.color = 'var(--Teal-900)';
+            cmBtn.style.background = 'transparent'; cmBtn.style.color = 'var(--Neutral-400)';
+        }
+        renderMeasurementGrids(window.LAST_MEASUREMENT_DATA);
+    };
+
+    function renderMeasurementGrids(data) {
+      const m = data.measurements || {};
+      const unit = window.CURRENT_UNIT;
+      const factor = unit === 'in' ? 0.393701 : 1;
+      const gender = (data.gender || 'male').toLowerCase();
+
+      const maleGrids = {
+          upper: ['Shoulder', 'Neck Round', 'Chest Round', 'Across Chest', 'Across Back'],
+          middle: ['Stomach Round', 'Waist Round', 'Half Length', 'Full Top Length'],
+          lower: ['Hip Round', 'Thigh Round', 'Knee Round', 'Calf Round', 'Ankle Round', 'Inseam', 'Trouser Length', 'Trouser Waist', 'Crotch Depth']
+      };
+
+      const femaleGrids = {
+          upper: ['Shoulder', 'Neck Round', 'Bust Round', 'High Bust', 'Under Bust', 'Bust Point', 'Shoulder to Bust Point', 'Shoulder to Under Bust', 'Across Chest', 'Across Back', 'Armhole Round'],
+          middle: ['Shoulder to Waist', 'Front Waist Length', 'Back Waist Length', 'Waist Round', 'Half Length', 'Waist to Hip', 'Sleeve Length', 'Bicep Round', 'Elbow Round', 'Wrist Round'],
+          lower: ['Upper Hip', 'Hip Round', 'Thigh Round', 'Knee Round', 'Calf Round', 'Ankle Round']
+      };
+
+      const grids = gender === 'female' ? femaleGrids : maleGrids;
+
+      Object.keys(grids).forEach(g => {
+        const gridEl = document.getElementById(`measurementGrid${g.charAt(0).toUpperCase() + g.slice(1)}`);
+        if(gridEl) gridEl.innerHTML = grids[g].map(k => {
+          if(!m[k]) return '';
+          const val = (m[k] * factor).toFixed(1);
+          return `<div style="padding:10px; background:rgba(255,255,255,0.05); border-radius:8px"><div>${k}</div><div style="font-size:16px; font-weight:700; color:var(--Mint)">${val}${unit}</div></div>`;
+        }).join('');
+      });
+      const hEl = document.getElementById('measurementHeight');
+      if(hEl) hEl.textContent = (data.height * factor).toFixed(1) + unit;
+      const gEl = document.getElementById('measurementGender');
+      if(gEl) gEl.textContent = data.gender || 'Male';
+    }
+
+    window.renderGlobalPassports = async () => {
+      const container = document.getElementById('passportGrid');
+      if(!container) return;
+      try {
+        const { data } = await window.KORRA_DB.from('measurements').select('*').order('created_at', { ascending: false });
+        const groups = {}; data?.forEach(s => { const n = s.client_name || "Anonymous"; if (!groups[n]) groups[n] = []; groups[n].push(s); });
+        container.innerHTML = Object.entries(groups).map(([name, scans]) => `
+          <div class="glass-card" style="padding:24px">
+            <h5 style="margin:0">${name}</h5><p style="font-size:10px; color:var(--Neutral-500)">${scans.length} Measurements</p>
+            <button class="btn-action" style="width:100%; margin-top:12px" onclick="window.KORRA_VIZ.loadMesh('${scans[0].mesh_url}'); window.switchTab('lab'); window.scrollTo(0,0);">Inspect 3D Twin</button>
+          </div>
+        `).join('');
+      } catch(e) { container.innerHTML = 'Vault Failed.'; }
+    }
+
     async function initAdmin() {
       if (typeof window.supabase === 'undefined') { setTimeout(initAdmin, 500); return; }
       NetworkGuard.init();
@@ -603,12 +623,8 @@
           for (let attempt = 0; attempt < 12; attempt++) {
               try {
                   const res = await fetch(url, options);
-                  // Explicitly check for successful response
                   if (res.ok) return res;
-
-                  // If server error or transient (404 on auth can be transient during migrations)
                   if (res.status === 404 || res.status >= 500) throw new Error(`HTTP_${res.status}`);
-
                   return res;
               } catch (err) {
                   const isClosed = err.message.includes("CLOSED") || err.message.includes("fetch");
@@ -616,7 +632,6 @@
                       console.error("🏁 KORRA: Resilient fetch exhausted all retries.");
                       throw err;
                   }
-                  // Adaptive backoff
                   const backoff = (1500 * Math.pow(1.6, attempt)) + (Math.random() * 800);
                   console.warn(`🔄 Handshake failure (${err.message}). Retrying ${attempt+1}/12 in ${Math.round(backoff)}ms...`);
                   await new Promise(r => setTimeout(r, backoff));
@@ -671,7 +686,7 @@
                     const res = await fetch('/api/v2/health/restore', { method: 'POST' });
                     if(res.ok) {
                         alert("Unicorn Restoration Initiated. Checking for 347MB Weights. Please wait 1-2 minutes.");
-                        setTimeout(loadGlobalStats, 15000);
+                        setTimeout(window.loadGlobalStats, 15000);
                     }
                 } catch(e) { alert("Restoration sequence failed."); }
                 finally { btnRestore.disabled = false; btnRestore.textContent = '🚀 Restore AI Brain'; }
@@ -692,7 +707,7 @@
                 e.preventDefault();
                 const btn = document.getElementById('btnAdminRun');
                 if (btn) btn.disabled = true;
-                adminLog("INITIATING ASYNC HANDSHAKE...");
+                window.adminLog("INITIATING ASYNC HANDSHAKE...");
                 const fd = new FormData();
                 fd.append('front', document.getElementById('adminFrontPhoto').files[0]);
                 fd.append('side', document.getElementById('adminSidePhoto').files[0]);
@@ -717,11 +732,11 @@
             window.KORRA_EXPORT.pdf(d.client_name || "Admin Test", d.measurements, d.gender, d.height);
         };
 
-        loadGlobalStats();
+        window.loadGlobalStats();
       } catch(e) { console.error("FATAL Handshake Failure:", e); }
     }
 
-    async function loadGlobalStats() {
+    window.loadGlobalStats = async () => {
       try {
         const { data: profiles, count: mCount } = await window.KORRA_DB.from('profiles').select('*', { count: 'exact' });
         document.getElementById('statMerchants').textContent = mCount || profiles?.length || 0;
@@ -732,22 +747,18 @@
         window.ADMIN_HISTORY = scans || [];
         document.getElementById('statScans').textContent = sCount || scans?.length || 0;
         const hList = document.getElementById('testHistoryList');
-        if (hList) hList.innerHTML = scans?.map((s, idx) => `<tr><td>${new Date(s.created_at).toLocaleTimeString()}</td><td style="color:var(--Mint)">${s.client_name}</td><td>${s.height}cm • ${s.gender}</td><td><button class="btn-action" onclick="viewScan(${idx})">View</button></td></tr>`).join('') || '';
+        if (hList) hList.innerHTML = scans?.map((s, idx) => `<tr><td>${new Date(s.created_at).toLocaleTimeString()}</td><td style="color:var(--Mint)">${s.client_name}</td><td>${s.height}cm • ${s.gender}</td><td><button class="btn-action" onclick="window.viewScan(${idx})">View</button></td></tr>`).join('') || '';
 
         // HARDENED FINANCIAL AUDIT: Use 'transactions' table instead of 'invoices'
         const { data: txs } = await window.KORRA_DB.from('transactions').select('*').order('created_at', { ascending: false });
         if(txs) {
             const total = txs.reduce((sum, t) => sum + (parseFloat(t.amount) || 0), 0);
             document.getElementById('statRevenue').textContent = '$' + total.toLocaleString(undefined, { minimumFractionDigits: 2 });
-
-            const fVol = document.getElementById('financeTotalVolume');
-            if (fVol) fVol.textContent = '$' + total.toLocaleString(undefined, { minimumFractionDigits: 2 });
-
+            if (document.getElementById('financeTotalVolume')) document.getElementById('financeTotalVolume').textContent = '$' + total.toLocaleString(undefined, { minimumFractionDigits: 2 });
             const bCount = txs.filter(t => t.type === 'bundle_purchase').length;
-            const sCount = txs.filter(t => t.type === 'single_scan_payment').length;
+            const sPaymentCount = txs.filter(t => t.type === 'single_scan_payment').length;
             if (document.getElementById('financeBundleCount')) document.getElementById('financeBundleCount').textContent = bCount;
-            if (document.getElementById('financeSingleCount')) document.getElementById('financeSingleCount').textContent = sCount;
-
+            if (document.getElementById('financeSingleCount')) document.getElementById('financeSingleCount').textContent = sPaymentCount;
             const tList = document.getElementById('transactionList');
             if (tList) tList.innerHTML = txs.map(t => `<tr><td>${new Date(t.created_at).toLocaleDateString()}</td><td>${t.user_id.substring(0,8)}...</td><td>$${t.amount}</td><td><span style="font-size:9px; background:rgba(255,255,255,0.1); padding:2px 6px; border-radius:4px">${t.type.replace('_',' ')}</span></td><td>${t.reference || '-'}</td></tr>`).join('');
         }
@@ -755,54 +766,41 @@
         const res = await fetch('/api/v2/health');
         if (res.ok) {
           const d = await res.json();
-          const hVer = document.getElementById('healthVersion');
-          if (hVer) hVer.textContent = `FastAPI v${d.version} • ${d.acceleration || 'CPU'} Stable`;
+          if (document.getElementById('healthVersion')) document.getElementById('healthVersion').textContent = `FastAPI v${d.version} • ${d.acceleration || 'CPU'} Stable`;
           const container = document.getElementById('healthAssets');
           if (container) container.innerHTML = Object.entries(d.ai_integrity || {}).map(([asset, ok]) => `<div class="health-item"><span class="health-label">${asset.toUpperCase()}</span><span class="health-status ${ok ? 'status-ok' : 'status-err'}">${ok ? 'Active' : 'Missing'}</span></div>`).join('');
         }
       } catch (err) { console.error("Handshake Failure:", err); }
     }
 
-    window.viewScan = (idx) => {
-        const s = window.ADMIN_HISTORY[idx]; if(!s) return;
-        window.LAST_MEASUREMENT_DATA = s; if(window.KORRA_VIZ) window.KORRA_VIZ.loadMesh(s.mesh_url);
-        renderMeasurementGrids(s);
-        document.getElementById('measurementResultsCard').style.display = 'block';
-        window.scrollTo({top: 0, behavior: 'smooth'});
-    };
-
     async function pollTask(taskId) {
       const overlay = document.getElementById('extractionProgress'), fill = document.getElementById('progressFill'), status = document.getElementById('progressStatus'), btn = document.getElementById('btnAdminRun');
       overlay.style.display = 'flex'; let progress = 10;
       const interval = setInterval(async () => {
         try {
-          let res = null, data = null;
-          // ULTRA-RESILIENT: Retry on 404/502/503/504
+          let data = null;
           for (let i = 0; i < 5; i++) {
               try {
-                res = await fetch(`/api/v2/measurements/status/${taskId}`);
+                const res = await fetch(`/api/v2/measurements/status/${taskId}`);
                 if (res.ok) { data = await res.json(); break; }
               } catch(e) {}
               await new Promise(r => setTimeout(r, 2000));
           }
-
           if (!data) return;
-          const msgs = ["INITIALIZING ISOLATED AI...", "EXECUTING SKELETAL DETECTION...", "RUNNING VOLUMETRIC REGRESSION...", "MAPPING VERTEX CLOUD...", "SCALING BIOMETRICS...", "MATERIALIZING 3D TWIN...", "SYNCING HANDSHAKE COMPLETE."];
-          if (data.status === 'processing') { progress = Math.min(progress + 5, 95); status.textContent = msgs[Math.floor((progress/100) * msgs.length)]; }
-          else if (data.status === 'completed') { clearInterval(interval); progress = 100; status.textContent = 'SUCCESS'; if (window.KORRA_VIZ) window.KORRA_VIZ.loadMesh(data.mesh_url); window.LAST_MEASUREMENT_DATA = data; renderMeasurementGrids(data); loadGlobalStats(); setTimeout(() => { overlay.style.display = 'none'; btn.disabled = false; document.getElementById('adminScanModal').classList.remove('active'); document.getElementById('measurementResultsCard').style.display='block'; }, 1000); }
-          else if (data.status === 'failed') { clearInterval(interval); adminLog("FAILED: " + data.error); overlay.style.display = 'none'; btn.disabled = false; }
+          const msgs = ["INITIALIZING ISOLATED AI...", "EXECUTING SKELETAL DETECTION...", "RUNNING VOLUMETRIC REGRESSION...", "MAPPING VERTEX CLOUD...", "SCALING BIOMETRICS...", "MATERIALIZING 3D TWIN..."];
+          if (data.status === 'processing') { progress = Math.min(progress + 5, 95); status.textContent = msgs[Math.floor((progress/100) * msgs.length)] || "PROCESSING..."; }
+          else if (data.status === 'completed') { clearInterval(interval); progress = 100; status.textContent = 'SUCCESS'; if (window.KORRA_VIZ) window.KORRA_VIZ.loadMesh(data.mesh_url); window.LAST_MEASUREMENT_DATA = data; renderMeasurementGrids(data); window.loadGlobalStats(); setTimeout(() => { overlay.style.display = 'none'; if(btn) btn.disabled = false; document.getElementById('adminScanModal').classList.remove('active'); document.getElementById('measurementResultsCard').style.display='block'; }, 1000); }
+          else if (data.status === 'failed') { clearInterval(interval); window.adminLog("FAILED: " + data.error); overlay.style.display = 'none'; if(btn) btn.disabled = false; }
           fill.style.width = progress + '%';
         } catch (e) {}
       }, 2000);
     }
 
-    async function savePricing() {
-        alert("Global price override requires Platform Master Key. Changes cached for session.");
-    }
+    window.savePricing = async () => {
+        alert("Global price override requires Platform Master Key.");
+    };
 
-    document.addEventListener('DOMContentLoaded', () => {
-        initAdmin();
-    });
+    document.addEventListener('DOMContentLoaded', () => { initAdmin(); });
   </script>
 </body>
 </html>

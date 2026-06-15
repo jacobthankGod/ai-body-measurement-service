@@ -98,7 +98,7 @@
           <div class="instruction-item"><span class="instruction-icon">02</span><span>Ensure full body (head to toe) is in frame.</span></div>
           <div class="instruction-item"><span class="instruction-icon">03</span><span>Use a neutral, well-lit background.</span></div>
         </div>
-        <button class="btn-submit" onclick="goToStep('scan')">Start Capture</button>
+        <button class="btn-submit" onclick="window.goToStep('scan')">Start Capture</button>
       </div>
 
       <div id="step-scan" class="step-view">
@@ -107,23 +107,23 @@
           <input type="number" id="height" class="input" placeholder="Height in CM (e.g. 180)" required>
           <select id="gender" class="input" style="appearance:none;"><option value="male">Male</option><option value="female">Female</option></select>
           <div class="file-grid">
-            <div class="file-box" id="fLabel" onclick="handlePreviewClick('front')">
+            <div class="file-box" id="fLabel" onclick="window.handlePreviewClick('front')">
               <div class="ghost-overlay placeholder-content"><div class="ghost-shape"></div></div>
               <img class="preview-img" id="fPrev" alt="Front Preview">
-              <div class="preview-overlay" style="position:absolute; inset:0; background:rgba(0,0,0,0.6); display:none; flex-direction:column; align-items:center; justify-content:center; z-index:10" onclick="openCamera('front'); event.stopPropagation();">
+              <div class="preview-overlay" style="position:absolute; inset:0; background:rgba(0,0,0,0.6); display:none; flex-direction:column; align-items:center; justify-content:center; z-index:10" onclick="window.openCamera('front'); event.stopPropagation();">
                  <span style="font-size:10px; font-weight:900; color:#fff">TAP TO RETAKE</span>
               </div>
               <div class="placeholder-content"><span>Front A-Pose</span><div style="font-size:8px; color:var(--Mint); margin-top:4px; font-weight:700">TAP TO SNAP</div></div>
-              <input type="file" id="front" accept="image/*" required style="display:none" onchange="preview(this, 'fPrev')">
+              <input type="file" id="front" accept="image/*" required style="display:none" onchange="window.preview(this, 'fPrev')">
             </div>
-            <div class="file-box" id="sLabel" onclick="handlePreviewClick('side')">
+            <div class="file-box" id="sLabel" onclick="window.handlePreviewClick('side')">
               <div class="ghost-overlay placeholder-content"><div class="ghost-shape" style="width:25%"></div></div>
               <img class="preview-img" id="sPrev" alt="Side Preview">
-              <div class="preview-overlay" style="position:absolute; inset:0; background:rgba(0,0,0,0.6); display:none; flex-direction:column; align-items:center; justify-content:center; z-index:10" onclick="openCamera('side'); event.stopPropagation();">
+              <div class="preview-overlay" style="position:absolute; inset:0; background:rgba(0,0,0,0.6); display:none; flex-direction:column; align-items:center; justify-content:center; z-index:10" onclick="window.openCamera('side'); event.stopPropagation();">
                  <span style="font-size:10px; font-weight:900; color:#fff">TAP TO RETAKE</span>
               </div>
               <div class="placeholder-content"><span>Side Profile</span><div style="font-size:8px; color:var(--Mint); margin-top:4px; font-weight:700">TAP TO SNAP</div></div>
-              <input type="file" id="side" accept="image/*" required style="display:none" onchange="preview(this, 'sPrev')">
+              <input type="file" id="side" accept="image/*" required style="display:none" onchange="window.preview(this, 'sPrev')">
             </div>
           </div>
           <div class="pro-tips-card">
@@ -154,15 +154,15 @@
         <img id="review-img">
         <div class="camera-overlay">
           <div class="camera-guidance" id="camera-msg">Initializing guidance...</div>
-          <div class="camera-close" onclick="closeCamera()">✕</div>
+          <div class="camera-close" onclick="window.closeCamera()">✕</div>
         </div>
       </div>
       <div class="camera-controls" id="shutter-container">
-        <div class="shutter-btn" onclick="snapPhoto()"><div style="width:56px; height:56px; border-radius:50%; background:var(--Mint); opacity:0.2"></div></div>
+        <div class="shutter-btn" onclick="window.snapPhoto()"><div style="width:56px; height:56px; border-radius:50%; background:var(--Mint); opacity:0.2"></div></div>
       </div>
       <div class="camera-review-controls" id="review-container">
-        <button class="btn-review btn-redo" onclick="retakePhoto()">Recapture</button>
-        <button class="btn-review btn-keep" onclick="keepPhoto()">Keep Photo</button>
+        <button class="btn-review btn-redo" onclick="window.retakePhoto()">Recapture</button>
+        <button class="btn-review btn-keep" onclick="window.keepPhoto()">Keep Photo</button>
       </div>
     </div>
   </div>
@@ -177,7 +177,7 @@
   <script src="/assets/korra_export.js"></script>
 
   <script>
-// Paystack key loaded from environment - do not hardcode in production
+    // --- ENV & CONFIG ---
     const PAYSTACK_PUBLIC_KEY = window.ENV?.PAYSTACK_PUBLIC_KEY || 'pk_test_placeholder';
     const CONFIG = {
       url: 'https://blsettabymllulsxtziw.supabase.co',
@@ -185,10 +185,12 @@
       paystack: PAYSTACK_PUBLIC_KEY
     };
 
+    // --- KORRA ENGINE STATE ---
     let sessionData = null, merchantCredits = 0, userId = null, activeCameraType = null, poseModel = null, cameraInstance = null, isPoseAligned = false, alignmentStartTime = 0, autoSnapTriggered = false, isReviewing = false, capturedDataUrl = null;
     let lastSpokenText = "", lastSpokenTime = 0;
 
-    function speak(text, force = false) {
+    // --- 1. CORE UTILITIES ---
+    window.speak = (text, force = false) => {
       if (!window.speechSynthesis) return;
       const now = Date.now();
       if (!force && text === lastSpokenText && now - lastSpokenTime < 3000) return;
@@ -199,9 +201,61 @@
       utterance.voice = voices.find(v => v.name.includes('Google') || v.name.includes('Siri')) || voices[0];
       window.speechSynthesis.speak(utterance);
       lastSpokenText = text; lastSpokenTime = now;
-    }
+    };
 
-    async function openCamera(type) {
+    window.drawSilhouette = (ctx, w, h, type) => {
+      ctx.beginPath();
+      ctx.strokeStyle = isPoseAligned ? "rgba(87,215,192,0.3)" : "rgba(255,255,255,0.1)";
+      ctx.setLineDash([10, 5]); ctx.lineWidth = 2;
+      const cx = w/2, cy = h/2;
+      ctx.moveTo(cx, cy - h*0.4); ctx.lineTo(cx - w*0.1, cy - h*0.2); ctx.lineTo(cx - w*0.2, cy + h*0.1);
+      ctx.moveTo(cx, cy - h*0.4); ctx.lineTo(cx + w*0.1, cy - h*0.2); ctx.lineTo(cx + w*0.2, cy + h*0.1);
+      ctx.moveTo(cx, cy - h*0.2); ctx.lineTo(cx, cy + h*0.1); ctx.lineTo(cx - w*0.1, cy + h*0.4);
+      ctx.moveTo(cx, cy + h*0.1); ctx.lineTo(cx + w*0.1, cy + h*0.4);
+      ctx.stroke(); ctx.setLineDash([]);
+    };
+
+    window.onPoseResults = (results) => {
+      if (isReviewing) return;
+      const canvas = document.getElementById('camera-canvas'), ctx = canvas?.getContext('2d'), msg = document.getElementById('camera-msg');
+      if (!canvas || !ctx || !msg) return;
+
+      canvas.width = canvas.clientWidth; canvas.height = canvas.clientHeight;
+      ctx.clearRect(0, 0, canvas.width, canvas.height);
+      if (!results.poseLandmarks) {
+        msg.textContent = "Searching for you..."; isPoseAligned = false; alignmentStartTime = 0; return;
+      }
+      window.drawSilhouette(ctx, canvas.width, canvas.height, activeCameraType);
+      const l = results.poseLandmarks;
+      const head = l[0], lAn = l[27], rAn = l[28], lWr = l[15], rWrist = l[16], lHi = l[23], rHi = l[24], lSh = l[11], rSh = l[12];
+      let aligned = true, feedback = "Hold steady...";
+      if (head.visibility < 0.5 || lAn.visibility < 0.5 || rAn.visibility < 0.5) { feedback = "Step back: Head and feet must be visible."; aligned = false; }
+      else if (activeCameraType === 'front') {
+        const handsDown = lWr.y > lSh.y && rWrist.y > rSh.y;
+        if (!handsDown) { feedback = "A-POSE: Move arms down."; aligned = false; }
+        else if (Math.abs(lWr.x - lHi.x) < 0.15 || Math.abs(rWrist.x - rHi.x) < 0.15) { feedback = "A-POSE: Spread arms."; aligned = false; }
+      } else if (activeCameraType === 'side') {
+        const zDelta = Math.abs(lSh.z - rSh.z), xDelta = Math.abs(lSh.x - rSh.x);
+        const sideRatio = xDelta / Math.abs(lSh.y - lHi.y);
+        if (sideRatio > 0.3 || zDelta < 0.12) { feedback = "Turn Side: Face fully side."; aligned = false; }
+      }
+      if (aligned) {
+        if (alignmentStartTime === 0) { alignmentStartTime = Date.now(); window.speak("Hold still.", true); }
+        else if (Date.now() - alignmentStartTime > 1500 && !autoSnapTriggered) { autoSnapTriggered = true; window.snapPhoto(); return; }
+        const rem = Math.max(0, 1500 - (Date.now() - alignmentStartTime));
+        feedback = rem > 0 ? `Capturing in ${(rem/1000).toFixed(1)}s...` : "Processing...";
+      } else { alignmentStartTime = 0; window.speak(feedback); }
+      msg.textContent = feedback; msg.style.background = aligned ? "var(--Mint)" : "rgba(0,0,0,0.8)"; msg.style.color = aligned ? "var(--Obsidian)" : "#fff";
+      isPoseAligned = aligned;
+      ctx.strokeStyle = aligned ? "#57D7C0" : "#FFFFFF"; ctx.lineWidth = aligned ? 12 : 8; ctx.lineCap = "round";
+      const conns = [ [11, 12], [11, 13], [13, 15], [12, 14], [14, 16], [11, 23], [12, 24], [23, 24], [23, 25], [25, 27], [24, 26], [26, 28] ];
+      conns.forEach(([i, j]) => {
+        const p1 = l[i], p2 = l[j]; if (p1.visibility > 0.5 && p2.visibility > 0.5) { ctx.beginPath(); ctx.moveTo(p1.x * canvas.width, p1.y * canvas.height); ctx.lineTo(p2.x * canvas.width, p2.y * canvas.height); ctx.stroke(); }
+      });
+    };
+
+    // --- 2. UI HANDLERS ---
+    window.openCamera = async (type) => {
       activeCameraType = type; alignmentStartTime = 0; autoSnapTriggered = false; isReviewing = false;
       document.getElementById('shutter-container').style.display = 'flex';
       document.getElementById('review-container').style.display = 'none';
@@ -213,68 +267,15 @@
       if (!poseModel) {
         poseModel = new Pose({ locateFile: (file) => `https://cdn.jsdelivr.net/npm/@mediapipe/pose@0.5.1675469404/${file}` });
         poseModel.setOptions({ modelComplexity: 1, smoothLandmarks: true, minDetectionConfidence: 0.5, minTrackingConfidence: 0.5 });
-        poseModel.onResults(onPoseResults);
+        poseModel.onResults(window.onPoseResults);
       }
-      cameraInstance = new Camera(video, { onFrame: async () => { await poseModel.send({image: video}); }, width: 1280, height: 720, facingMode: 'user' });
+      cameraInstance = new Camera(video, { onFrame: async () => { if (poseModel) await poseModel.send({image: video}); }, width: 1280, height: 720, facingMode: 'user' });
       cameraInstance.start();
-    }
+    };
 
-    function closeCamera() { if (cameraInstance) cameraInstance.stop(); document.getElementById('step-camera').classList.remove('active'); activeCameraType = null; }
+    window.closeCamera = () => { if (cameraInstance) cameraInstance.stop(); document.getElementById('step-camera').classList.remove('active'); activeCameraType = null; };
 
-    function onPoseResults(results) {
-      if (isReviewing) return;
-      const canvas = document.getElementById('camera-canvas');
-      const ctx = canvas.getContext('2d');
-      const msg = document.getElementById('camera-msg');
-      canvas.width = canvas.clientWidth; canvas.height = canvas.clientHeight;
-      ctx.clearRect(0, 0, canvas.width, canvas.height);
-      if (!results.poseLandmarks) {
-        const feedback = "Searching for you..."; msg.textContent = feedback; speak(feedback);
-        isPoseAligned = false; alignmentStartTime = 0; return;
-      }
-      drawSilhouette(ctx, canvas.width, canvas.height, activeCameraType);
-      const landmarks = results.poseLandmarks;
-      const head = landmarks[0], lAnkle = landmarks[27], rAnkle = landmarks[28], lWrist = landmarks[15], rWrist = landmarks[16], lHip = landmarks[23], rHip = landmarks[24], lShoulder = landmarks[11], rShoulder = landmarks[12];
-      let aligned = true, feedback = "Hold steady...";
-      if (head.visibility < 0.5 || lAnkle.visibility < 0.5 || rAnkle.visibility < 0.5) { feedback = "Step back: Head and feet must be visible."; aligned = false; }
-      else if (activeCameraType === 'front') {
-        const lArmDist = Math.abs(lWrist.x - lHip.x), rArmDist = Math.abs(rWrist.x - rHip.x);
-        const handsDown = lWrist.y > lShoulder.y && rWrist.y > rShoulder.y;
-        if (!handsDown) { feedback = "A-POSE: Drop arms away from waist."; aligned = false; }
-        else if (lArmDist < 0.15 || rArmDist < 0.15) { feedback = "A-POSE: Spread arms away from body."; aligned = false; }
-      } else if (activeCameraType === 'side') {
-        const zDelta = Math.abs(lShoulder.z - rShoulder.z), xDelta = Math.abs(lShoulder.x - rShoulder.x);
-        const sideRatio = xDelta / Math.abs(lShoulder.y - lHip.y);
-        if (sideRatio > 0.3 || zDelta < 0.12) { feedback = "Turn Side: Face fully 90 degrees."; aligned = false; }
-        else { if (!(lWrist.y > lShoulder.y && rWrist.y > rShoulder.y)) { feedback = "Keep arms down at your sides."; aligned = false; } }
-      }
-      if (aligned) {
-        if (alignmentStartTime === 0) { alignmentStartTime = Date.now(); speak("Perfect, hold still.", true); }
-        else if (Date.now() - alignmentStartTime > 1500 && !autoSnapTriggered) { autoSnapTriggered = true; snapPhoto(); return; }
-        const rem = Math.max(0, 1500 - (Date.now() - alignmentStartTime));
-        feedback = rem > 0 ? `Capturing in ${(rem/1000).toFixed(1)}s...` : "Processing...";
-      } else { alignmentStartTime = 0; speak(feedback); }
-      msg.textContent = feedback; msg.style.background = aligned ? "var(--Mint)" : "rgba(0, 0, 0, 0.8)"; msg.style.color = aligned ? "var(--Obsidian)" : "#fff";
-      isPoseAligned = aligned;
-      ctx.strokeStyle = aligned ? "#57D7C0" : "#FFFFFF"; ctx.lineWidth = aligned ? 12 : 8; ctx.lineCap = "round";
-      const conns = [ [11, 12], [11, 13], [13, 15], [12, 14], [14, 16], [11, 23], [12, 24], [23, 24], [23, 25], [25, 27], [24, 26], [26, 28] ];
-      conns.forEach(([i, j]) => {
-        const p1 = landmarks[i], p2 = landmarks[j];
-        if (p1.visibility > 0.5 && p2.visibility > 0.5) { ctx.beginPath(); ctx.moveTo(p1.x * canvas.width, p1.y * canvas.height); ctx.lineTo(p2.x * canvas.width, p2.y * canvas.height); ctx.stroke(); }
-      });
-    }
-
-    function drawSilhouette(ctx, w, h, type) {
-      ctx.beginPath(); ctx.strokeStyle = isPoseAligned ? "var(--Mint)" : "rgba(255,255,255,0.1)"; ctx.setLineDash([10, 5]); ctx.lineWidth = 2;
-      const cx = w/2, cy = h/2;
-      ctx.moveTo(cx, cy - h*0.4); ctx.lineTo(cx - w*0.1, cy - h*0.2); ctx.lineTo(cx - w*0.2, cy + h*0.1);
-      ctx.moveTo(cx, cy - h*0.4); ctx.lineTo(cx + w*0.1, cy - h*0.2); ctx.lineTo(cx + w*0.2, cy + h*0.1);
-      ctx.moveTo(cx, cy - h*0.2); ctx.lineTo(cx, cy + h*0.1); ctx.lineTo(cx - w*0.1, cy + h*0.4);
-      ctx.moveTo(cx, cy + h*0.1); ctx.lineTo(cx + w*0.1, cy + h*0.4);
-      ctx.stroke(); ctx.setLineDash([]);
-    }
-
-    function snapPhoto() {
+    window.snapPhoto = () => {
       if (isReviewing) return;
       const video = document.getElementById('camera-video'), canvas = document.createElement('canvas');
       canvas.width = video.videoWidth; canvas.height = video.videoHeight;
@@ -283,48 +284,48 @@
       isReviewing = true; document.getElementById('camera-video').style.display = 'none'; document.getElementById('camera-canvas').style.display = 'none'; document.getElementById('shutter-container').style.display = 'none';
       const rImg = document.getElementById('review-img'); rImg.src = capturedDataUrl; rImg.style.display = 'block';
       document.getElementById('review-container').style.display = 'flex'; document.getElementById('camera-msg').textContent = "Review your photo";
-      speak("Captured. Review your photo.", true);
-    }
+      window.speak("Captured. Review.", true);
+    };
 
-    function retakePhoto() {
+    window.retakePhoto = () => {
       isReviewing = false; autoSnapTriggered = false; alignmentStartTime = 0;
       document.getElementById('camera-video').style.display = 'block'; document.getElementById('camera-canvas').style.display = 'block'; document.getElementById('review-img').style.display = 'none';
       document.getElementById('shutter-container').style.display = 'flex'; document.getElementById('review-container').style.display = 'none'; document.getElementById('camera-msg').textContent = "Re-aligning...";
-    }
+    };
 
-    function keepPhoto() {
+    window.keepPhoto = () => {
       const fileId = activeCameraType === 'front' ? 'front' : 'side', labelId = activeCameraType === 'front' ? 'fLabel' : 'sLabel';
       const label = document.getElementById(labelId), img = label.querySelector('.preview-img');
       img.src = capturedDataUrl; img.style.display = 'block';
       label.querySelector('.placeholder-content').style.display = 'none'; label.querySelector('.preview-overlay').style.display = 'flex';
-      speak(activeCameraType === 'front' ? "Photo confirmed. Now turn to your side." : "Photo confirmed. Generating your results.", true);
+      window.speak(activeCameraType === 'front' ? "Photo confirmed. Now turn to your side." : "Photo confirmed. Generating results.", true);
       fetch(capturedDataUrl).then(res => res.blob()).then(blob => {
           const file = new File([blob], `${activeCameraType}.jpg`, { type: "image/jpeg" });
           const container = new DataTransfer(); container.items.add(file);
-          document.getElementById(fileId).files = container.files; closeCamera();
+          document.getElementById(fileId).files = container.files; window.closeCamera();
       });
-    }
+    };
 
-    function handlePreviewClick(type) {
+    window.handlePreviewClick = (type) => {
         const label = document.getElementById(type === 'front' ? 'fLabel' : 'sLabel');
         const placeholder = label.querySelector('.placeholder-content');
-        if (placeholder && placeholder.style.display !== 'none') openCamera(type);
-        else { const img = label.querySelector('.preview-img'); if (img.src) window.open(img.src, '_blank'); }
-    }
+        if (placeholder && placeholder.style.display !== 'none') window.openCamera(type);
+        else { const img = label.querySelector('.preview-img'); if (img && img.src) window.open(img.src, '_blank'); }
+    };
 
-    function goToStep(step) { document.querySelectorAll('.step-view').forEach(v => v.classList.remove('active')); document.getElementById('step-' + step).classList.add('active'); if (step === 'scan') speak("Guidelines. Stand 2 meters away. Full body in frame.", true); }
+    window.goToStep = (step) => { document.querySelectorAll('.step-view').forEach(v => v.classList.remove('active')); document.getElementById('step-' + step).classList.add('active'); if (step === 'scan') window.speak("Step back and stand in view.", true); };
 
-    function preview(input, id) {
+    window.preview = (input, id) => {
       if (input.files && input.files[0]) {
         const reader = new FileReader();
         reader.onload = e => {
-            document.getElementById(id).src = e.target.result; document.getElementById(id).style.display = 'block';
+            const img = document.getElementById(id); img.src = e.target.result; img.style.display = 'block';
             const label = document.getElementById(id === 'fPrev' ? 'fLabel' : 'sLabel');
             label.querySelector('.placeholder-content').style.display = 'none'; label.querySelector('.preview-overlay').style.display = 'flex';
         };
         reader.readAsDataURL(input.files[0]);
       }
-    }
+    };
 
     async function init() {
       const params = new URLSearchParams(window.location.search);
@@ -368,13 +369,20 @@
 
     function renderResults(data) {
         const b = data.measurements;
-        document.getElementById('summaryBody').innerHTML = `
-            <div style="display:flex; justify-content:space-between"><span>Chest:</span> <b style="color:var(--Mint)">${b['Chest Round']}cm</b></div>
-            <div style="display:flex; justify-content:space-between"><span>Waist:</span> <b style="color:var(--Mint)">${b['Waist Round']}cm</b></div>
-            <div style="display:flex; justify-content:space-between"><span>Hips:</span> <b style="color:var(--Mint)">${b['Hip Round']}cm</b></div>
-            <div style="display:flex; justify-content:space-between"><span>Shoulder:</span> <b style="color:var(--Mint)">${b['Shoulder']}cm</b></div>
-        `;
-        speak(`Connection secured. Your chest is ${b['Chest Round']}cm, waist is ${b['Waist Round']}cm, and hips are ${b['Hip Round']}cm.`, true);
+        const gender = (document.getElementById('gender').value || 'male').toLowerCase();
+        const keys = gender === 'female' ?
+            ['Bust Round', 'Waist Round', 'Hip Round', 'Shoulder', 'Sleeve Length', 'Thigh Round', 'Inseam'] :
+            ['Chest Round', 'Waist Round', 'Hip Round', 'Shoulder', 'Thigh Round', 'Inseam', 'Trouser Length'];
+
+        let html = '';
+        keys.forEach(k => {
+            if (b[k]) {
+                html += `<div style="display:flex; justify-content:space-between"><span>${k}:</span> <b style="color:var(--Mint)">${b[k]}cm</b></div>`;
+            }
+        });
+
+        document.getElementById('summaryBody').innerHTML = html;
+        speak(`Connection secured. Biometrics extracted and synced with professional.`, true);
         if (window.KORRA_VIZ) { const viewport = document.getElementById('share-3d-viewport'); viewport.style.display = 'block'; window.KORRA_VIZ.init('share-3d-viewport'); if (data.mesh_url) window.KORRA_VIZ.loadMesh(data.mesh_url); }
         document.getElementById('btnPdf').onclick = () => window.KORRA_EXPORT.pdf(sessionData?.client_name || 'Guest', b, document.getElementById('gender').value, document.getElementById('height').value);
         setTimeout(() => { document.getElementById('loadingOverlay').style.display = 'none'; goToStep('success'); }, 800);
