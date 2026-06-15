@@ -308,6 +308,12 @@
                   <div class="health-item"><span class="health-label">exportPDF()</span><span class="health-status status-ok">READY</span></div>
                 </div>
               </div>
+
+              <div style="margin-top:48px; padding:32px; background:rgba(87,215,192,0.05); border:1px solid var(--Mint); border-radius:16px">
+                <h4 style="font-size:10px; font-weight:900; color:var(--Mint); margin-bottom:12px">WIDGET TESTING LAB</h4>
+                <p style="font-size:11px; color:var(--Neutral-400); margin-bottom:20px">Simulate a merchant integration and verify the end-to-end scanning flow.</p>
+                <button class="btn-primary" onclick="window.launchWidgetTest()">Launch Widget Test</button>
+              </div>
             </div>
           </div>
 
@@ -357,6 +363,7 @@
   <script src="/assets/three.min.js"></script>
   <script src="/assets/korra_viz.js"></script>
   <script src="/assets/korra_export.js"></script>
+  <script src="/assets/korra-widget.js" data-merchant="ADMIN_BENCHMARK"></script>
 
   <script>
     // --- KORRA ADMIN ENGINE (Hardened Global Scope) ---
@@ -798,6 +805,14 @@
 
     window.savePricing = async () => {
         alert("Global price override requires Platform Master Key.");
+    };
+
+    window.launchWidgetTest = () => {
+        if (window.KorraWidget) {
+            window.KorraWidget.open();
+        } else {
+            alert("Widget Loader Offline.");
+        }
     };
 
     document.addEventListener('DOMContentLoaded', () => { initAdmin(); });
