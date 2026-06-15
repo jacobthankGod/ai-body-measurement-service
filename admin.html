@@ -194,7 +194,22 @@
 
           <div id="view-lab" class="tab-view">
             <div class="glass-card">
-              <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:32px"><h2 class="section-title" style="margin:0">Testing Lab</h2><button class="btn-primary" onclick="document.getElementById('adminScanModal').classList.add('active')">+ Launch Admin Scan</button></div>
+              <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:32px">
+                <h2 class="section-title" style="margin:0">Testing Lab</h2>
+                <div style="display:flex; gap:12px">
+                   <button class="btn-action" id="btnGenerateQR">Generate In-Store QR</button>
+                   <button class="btn-primary" onclick="document.getElementById('adminScanModal').classList.add('active')">+ Launch Admin Scan</button>
+                </div>
+              </div>
+
+              <!-- QR CODE BOX -->
+              <div id="qrBox" class="qr-container" style="background:#fff; padding:32px; border-radius:16px; margin-bottom:32px; display:none">
+                <div style="color:#000; font-size:12px; font-weight:900; text-transform:uppercase; margin-bottom:16px">In-Store Scanning QR</div>
+                <img id="qrImg" src="" alt="Scanning QR Code" style="width:200px; height:200px; margin-bottom:16px">
+                <div id="qrUrl" style="color:var(--Neutral-500); font-size:10px; word-break:break-all"></div>
+                <button class="btn-action" style="margin-top:20px; border-color:#ddd; color:#000" onclick="document.getElementById('qrBox').style.display='none'">Dismiss QR</button>
+              </div>
+
               <div id="korra-3d-viewport"></div>
               <div id="measurementResultsCard" class="glass-card" style="display:none; margin-top:24px; background:linear-gradient(135deg, rgba(87,215,192,0.05) 0%, rgba(0,0,0,0.4) 100%)">
                 <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:24px"><h4 style="font-size:16px; font-weight:900; color:var(--Mint); margin:0">MEASUREMENT RESULTS</h4><div class="unit-toggle" style="background:rgba(255,255,255,0.1); border-radius:20px; padding:2px; display:flex; cursor:pointer" onclick="toggleUnits()"><div id="unit-cm" style="padding:4px 12px; border-radius:18px; font-size:10px; font-weight:900; background:var(--Mint); color:var(--Teal-900)">CM</div><div id="unit-in" style="padding:4px 12px; border-radius:18px; font-size:10px; font-weight:900; color:var(--Neutral-400)">IN</div></div></div>
@@ -336,6 +351,12 @@
 
               <h4 style="font-size:10px; font-weight:900; color:var(--Mint); margin-bottom:16px">ASSET INTEGRITY</h4>
               <div id="healthAssets"></div>
+
+              <div style="margin-top:32px; padding:24px; background:rgba(214,48,49,0.05); border:1px solid rgba(214,48,49,0.2); border-radius:16px">
+                <h4 style="font-size:10px; font-weight:900; color:var(--Error); margin-bottom:12px">CRITICAL INFRASTRUCTURE</h4>
+                <p style="font-size:11px; color:var(--Neutral-400); margin-bottom:20px">Force a synchronization check of all AI weight clusters.</p>
+                <button class="btn-primary" id="btnRestoreBrain" style="background:var(--Error); color:#fff; width:100%">🚀 Restore AI Brain</button>
+              </div>
 
               <h4 style="font-size:10px; font-weight:900; color:var(--Mint); margin:32px 0 16px">ENDPOINT STATUS</h4>
               <div class="table-container">
@@ -579,28 +600,123 @@
       NetworkGuard.init();
 
       const resilientFetch = async (url, options = {}) => {
-          for (let attempt = 0; attempt < 10; attempt++) {
+          for (let attempt = 0; attempt < 12; attempt++) {
               try {
                   const res = await fetch(url, options);
-                  if (!res.ok && res.status === 0) throw new Error("NETWORK_ERROR");
+                  // Explicitly check for successful response
+                  if (res.ok) return res;
+
+                  // If server error or transient (404 on auth can be transient during migrations)
+                  if (res.status === 404 || res.status >= 500) throw new Error(`HTTP_${res.status}`);
+
                   return res;
               } catch (err) {
-                  if (attempt === 9) throw err;
-                  const backoff = (2000 * Math.pow(1.8, attempt)) + (Math.random() * 1000);
-                  console.warn(`🔄 Connection failure. Retrying ${attempt+1}/10...`);
+                  const isClosed = err.message.includes("CLOSED") || err.message.includes("fetch");
+                  if (attempt === 11) {
+                      console.error("🏁 KORRA: Resilient fetch exhausted all retries.");
+                      throw err;
+                  }
+                  // Adaptive backoff
+                  const backoff = (1500 * Math.pow(1.6, attempt)) + (Math.random() * 800);
+                  console.warn(`🔄 Handshake failure (${err.message}). Retrying ${attempt+1}/12 in ${Math.round(backoff)}ms...`);
                   await new Promise(r => setTimeout(r, backoff));
               }
           }
       };
 
-      window.KORRA_DB = window.supabase.createClient('https://blsettabymllulsxtziw.supabase.co', 'sb_publishable_miCOIXHtlxLkfDgpwE0N-g_BA1Q-x8y', { global: { fetch: resilientFetch } });
-      try {
-        const { data: { session } } = await NetworkGuard.retry(() => window.KORRA_DB.auth.getSession());
-        if (!session) { window.location.href = '/signin'; return; }
+      window.KORRA_DB = window.supabase.createClient('https://blsettabymllulsxtziw.supabase.co', 'sb_publishable_miCOIXHtlxLkfDgpwE0N-g_BA1Q-x8y', {
+        global: { fetch: resilientFetch },
+        auth: { persistSession: true, autoRefreshToken: true }
+      });
 
-        document.getElementById('loadingOverlay').style.display = 'none';
-        document.getElementById('adminUser').textContent = session.user.email;
+      try {
+        const { data: { session }, error: sErr } = await NetworkGuard.retry(() => window.KORRA_DB.auth.getSession());
+        if (sErr || !session) { window.location.href = '/signin'; return; }
+
+        const loading = document.getElementById('loadingOverlay');
+        if (loading) loading.style.display = 'none';
+
+        const userEl = document.getElementById('adminUser');
+        if (userEl) userEl.textContent = session.user.email;
+
         if (window.KORRA_VIZ) window.KORRA_VIZ.init('korra-3d-viewport');
+
+        // --- EVENT LISTENER HARDENING ---
+        const btnQR = document.getElementById('btnGenerateQR');
+        if (btnQR) {
+            btnQR.onclick = async () => {
+                btnQR.disabled = true; btnQR.textContent = 'GENERATING...';
+                const fd = new FormData();
+                fd.append('merchant_id', session.user.id);
+                fd.append('client_name', 'In-Store Customer');
+                try {
+                    const res = await fetch('/api/v2/qrcode/generate', { method: 'POST', body: fd });
+                    if(res.ok) {
+                        const data = await res.json();
+                        document.getElementById('qrImg').src = data.qr_code_base64;
+                        document.getElementById('qrUrl').textContent = data.scan_url;
+                        document.getElementById('qrBox').style.display = 'block';
+                        window.scrollTo({ top: 0, behavior: 'smooth' });
+                    }
+                } catch(e) { console.error("QR Error:", e); }
+                finally { btnQR.disabled = false; btnQR.textContent = 'Generate In-Store QR'; }
+            };
+        }
+
+        const btnRestore = document.getElementById('btnRestoreBrain');
+        if (btnRestore) {
+            btnRestore.onclick = async () => {
+                btnRestore.disabled = true; btnRestore.textContent = 'RESTORING...';
+                try {
+                    const res = await fetch('/api/v2/health/restore', { method: 'POST' });
+                    if(res.ok) {
+                        alert("Unicorn Restoration Initiated. Checking for 347MB Weights. Please wait 1-2 minutes.");
+                        setTimeout(loadGlobalStats, 15000);
+                    }
+                } catch(e) { alert("Restoration sequence failed."); }
+                finally { btnRestore.disabled = false; btnRestore.textContent = '🚀 Restore AI Brain'; }
+            };
+        }
+
+        const btnExit = document.getElementById('btnExit');
+        if (btnExit) {
+            btnExit.onclick = async () => {
+                if (window.KORRA_DB) await window.KORRA_DB.auth.signOut();
+                window.location.href = '/signin';
+            };
+        }
+
+        const adminForm = document.getElementById('adminScanForm');
+        if (adminForm) {
+            adminForm.onsubmit = async (e) => {
+                e.preventDefault();
+                const btn = document.getElementById('btnAdminRun');
+                if (btn) btn.disabled = true;
+                adminLog("INITIATING ASYNC HANDSHAKE...");
+                const fd = new FormData();
+                fd.append('front', document.getElementById('adminFrontPhoto').files[0]);
+                fd.append('side', document.getElementById('adminSidePhoto').files[0]);
+                fd.append('height', document.getElementById('adminHeight').value);
+                fd.append('gender', document.getElementById('adminGender').value);
+                fd.append('client_name', document.getElementById('adminSubjectName').value);
+                try {
+                    const res = await fetch('/api/v2/measurements/extract', {
+                        method: 'POST',
+                        headers: { 'X-API-Key': 'korra_admin_auth_01J0PK82X92K4' },
+                        body: fd
+                    });
+                    if (res.ok) { const d = await res.json(); pollTask(d.task_id); }
+                    else if (btn) { btn.disabled = false; }
+                } catch (err) { if (btn) btn.disabled = false; }
+            };
+        }
+
+        window.exportToPDF = function() {
+            if (!window.LAST_MEASUREMENT_DATA) return;
+            const d = window.LAST_MEASUREMENT_DATA;
+            window.KORRA_EXPORT.pdf(d.client_name || "Admin Test", d.measurements, d.gender, d.height);
+        };
+
         loadGlobalStats();
       } catch(e) { console.error("FATAL Handshake Failure:", e); }
     }
@@ -680,22 +796,9 @@
       }, 2000);
     }
 
-    const adminForm = document.getElementById('adminScanForm');
-    if (adminForm) {
-      adminForm.addEventListener('submit', async (e) => {
-        e.preventDefault(); const btn = document.getElementById('btnAdminRun'); btn.disabled = true; adminLog("INITIATING ASYNC HANDSHAKE...");
-        const fd = new FormData(); fd.append('front', document.getElementById('adminFrontPhoto').files[0]); fd.append('side', document.getElementById('adminSidePhoto').files[0]); fd.append('height', document.getElementById('adminHeight').value); fd.append('gender', document.getElementById('adminGender').value); fd.append('client_name', document.getElementById('adminSubjectName').value);
-        try { const res = await fetch('/api/v2/measurements/extract', { method: 'POST', headers: { 'X-API-Key': 'korra_admin_auth_01J0PK82X92K4' }, body: fd }); if (res.ok) { const d = await res.json(); pollTask(d.task_id); } else { btn.disabled = false; } } catch (err) { btn.disabled = false; }
-      });
-    }
-
     async function savePricing() {
         alert("Global price override requires Platform Master Key. Changes cached for session.");
-        // In a real implementation, this would hit a secure endpoint
     }
-
-    document.getElementById('btnExit').onclick = () => { window.location.href = '/'; };
-    window.exportToPDF = function() { if (!window.LAST_MEASUREMENT_DATA) return; const d = window.LAST_MEASUREMENT_DATA; window.KORRA_EXPORT.pdf(d.client_name || "Admin Test", d.measurements, d.gender, d.height); };
 
     document.addEventListener('DOMContentLoaded', () => {
         initAdmin();
