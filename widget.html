@@ -159,112 +159,100 @@
   <script src="/assets/korra_export.js"></script>
 
   <script>
+    // --- KORRA WIDGET ENGINE ---
     let activeCameraType = null, poseModel = null, cameraInstance = null, isPoseAligned = false, alignmentStartTime = 0, autoSnapTriggered = false, isReviewing = false, capturedDataUrl = null;
     let lastSpokenText = "", lastSpokenTime = 0;
 
     // --- GLOBAL UI HANDLERS (Exported for inline onclick) ---
-    window.openCamera = openCamera;
-    window.closeCamera = closeCamera;
-    window.snapPhoto = snapPhoto;
-    window.retakePhoto = retakePhoto;
-    window.keepPhoto = keepPhoto;
-    window.handlePreviewClick = handlePreviewClick;
-
-    function speak(text, force = false) {
-      if (!window.speechSynthesis) return;
-      const now = Date.now(); if (!force && text === lastSpokenText && now - lastSpokenTime < 3000) return;
-      if (!force && window.speechSynthesis.speaking) return; if (force) window.speechSynthesis.cancel();
-      const utterance = new SpeechSynthesisUtterance(text);
-      const voices = window.speechSynthesis.getVoices(); utterance.voice = voices.find(v => v.name.includes('Google') || v.name.includes('Siri')) || voices[0];
-      window.speechSynthesis.speak(utterance); lastSpokenText = text; lastSpokenTime = now;
-    }
-
-    async function openCamera(type) {
+    window.openCamera = async (type) => {
       activeCameraType = type; alignmentStartTime = 0; autoSnapTriggered = false; isReviewing = false;
-      document.getElementById('shutter-container').style.display = 'flex';
-      document.getElementById('review-container').style.display = 'none';
-      document.getElementById('camera-video').style.display = 'block';
-      document.getElementById('camera-canvas').style.display = 'block';
-      document.getElementById('review-img').style.display = 'none';
-      document.getElementById('step-camera').classList.add('active');
+      const shutter = document.getElementById('shutter-container');
+      const review = document.getElementById('review-container');
       const video = document.getElementById('camera-video');
+      const canvas = document.getElementById('camera-canvas');
+      const reviewImg = document.getElementById('review-img');
+      const stepCamera = document.getElementById('step-camera');
+
+      if (shutter) shutter.style.display = 'flex';
+      if (review) review.style.display = 'none';
+      if (video) video.style.display = 'block';
+      if (canvas) canvas.style.display = 'block';
+      if (reviewImg) reviewImg.style.display = 'none';
+      if (stepCamera) stepCamera.classList.add('active');
+
       if (!poseModel) {
-        poseModel = new Pose({ locateFile: (file) => `https://cdn.jsdelivr.net/npm/@mediapipe/pose@0.5.1675469404/${file}` });
-        poseModel.setOptions({ modelComplexity: 1, smoothLandmarks: true, minDetectionConfidence: 0.5, minTrackingConfidence: 0.5 });
-        poseModel.onResults(onPoseResults);
+        try {
+          poseModel = new Pose({ locateFile: (file) => `https://cdn.jsdelivr.net/npm/@mediapipe/pose@0.5.1675469404/${file}` });
+          poseModel.setOptions({ modelComplexity: 1, smoothLandmarks: true, minDetectionConfidence: 0.5, minTrackingConfidence: 0.5 });
+          poseModel.onResults(onPoseResults);
+        } catch (e) { console.error("Pose Init Failed:", e); }
       }
-      cameraInstance = new Camera(video, { onFrame: async () => { await poseModel.send({image: video}); }, width: 1280, height: 720 });
-      cameraInstance.start();
-    }
 
-    function closeCamera() { if (cameraInstance) cameraInstance.stop(); document.getElementById('step-camera').classList.remove('active'); activeCameraType = null; }
-
-    function onPoseResults(results) {
-      if (isReviewing) return;
-      const canvas = document.getElementById('camera-canvas'), ctx = canvas.getContext('2d'), msg = document.getElementById('camera-msg');
-      canvas.width = canvas.clientWidth; canvas.height = canvas.clientHeight;
-      ctx.clearRect(0, 0, canvas.width, canvas.height);
-      if (!results.poseLandmarks) { msg.textContent = "Searching for you..."; isPoseAligned = false; return; }
-      const l = results.poseLandmarks;
-      const head = l[0], lAn = l[27], rAn = l[28], lWr = l[15], rWrist = l[16], lHi = l[23], rHi = l[24], lSh = l[11], rSh = l[12];
-      let aligned = true, feedback = "Hold steady...";
-      if (head.visibility < 0.5 || lAn.visibility < 0.5 || rAn.visibility < 0.5) { feedback = "Step back: Head and feet must be visible."; aligned = false; }
-      else if (activeCameraType === 'front') {
-        const handsDown = lWr.y > lSh.y && rWrist.y > rSh.y;
-        if (!handsDown) { feedback = "A-POSE: Move arms down."; aligned = false; }
-        else if (Math.abs(lWr.x - lHi.x) < 0.15 || Math.abs(rWrist.x - rHi.x) < 0.15) { feedback = "A-POSE: Spread arms."; aligned = false; }
-      } else if (activeCameraType === 'side') {
-        const zDelta = Math.abs(lSh.z - rSh.z), xDelta = Math.abs(lSh.x - rSh.x);
-        const sideRatio = xDelta / Math.abs(lSh.y - lHi.y);
-        if (sideRatio > 0.3 || zDelta < 0.12) { feedback = "Turn Side: Face fully side."; aligned = false; }
+      if (video) {
+        cameraInstance = new Camera(video, { onFrame: async () => { if (poseModel) await poseModel.send({image: video}); }, width: 1280, height: 720 });
+        cameraInstance.start();
       }
-      if (aligned) {
-        if (alignmentStartTime === 0) { alignmentStartTime = Date.now(); speak("Hold still.", true); }
-        else if (Date.now() - alignmentStartTime > 1500 && !autoSnapTriggered) { autoSnapTriggered = true; snapPhoto(); return; }
-        const rem = Math.max(0, 1500 - (Date.now() - alignmentStartTime));
-        feedback = rem > 0 ? `Capturing in ${(rem/1000).toFixed(1)}s...` : "Processing...";
-      } else { alignmentStartTime = 0; speak(feedback); }
-      msg.textContent = feedback; msg.style.background = aligned ? "var(--Mint)" : "rgba(0,0,0,0.8)";
-      msg.style.color = aligned ? "var(--Obsidian)" : "#fff";
-      isPoseAligned = aligned;
-      ctx.strokeStyle = aligned ? "#57D7C0" : "#FFFFFF"; ctx.lineWidth = aligned ? 12 : 8;
-      ctx.lineCap = "round";
-      const conns = [ [11, 12], [11, 13], [13, 15], [12, 14], [14, 16], [11, 23], [12, 24], [23, 24], [23, 25], [25, 27], [24, 26], [26, 28] ];
-      conns.forEach(([i, j]) => {
-        const p1 = l[i], p2 = l[j]; if (p1.visibility > 0.5 && p2.visibility > 0.5) { ctx.beginPath(); ctx.moveTo(p1.x * canvas.width, p1.y * canvas.height); ctx.lineTo(p2.x * canvas.width, p2.y * canvas.height); ctx.stroke(); }
-      });
-    }
+    };
 
-    function snapPhoto() {
+    window.closeCamera = () => { if (cameraInstance) cameraInstance.stop(); document.getElementById('step-camera').classList.remove('active'); activeCameraType = null; };
+
+    window.snapPhoto = () => {
       if (isReviewing) return;
       const video = document.getElementById('camera-video'), canvas = document.createElement('canvas');
+      if (!video) return;
       canvas.width = video.videoWidth; canvas.height = video.videoHeight;
       const ctx = canvas.getContext('2d'); ctx.translate(canvas.width, 0); ctx.scale(-1, 1); ctx.drawImage(video, 0, 0);
       capturedDataUrl = canvas.toDataURL('image/jpeg');
-      isReviewing = true; document.getElementById('camera-video').style.display = 'none'; document.getElementById('camera-canvas').style.display = 'none'; document.getElementById('shutter-container').style.display = 'none';
+      isReviewing = true;
+      document.getElementById('camera-video').style.display = 'none';
+      document.getElementById('camera-canvas').style.display = 'none';
+      document.getElementById('shutter-container').style.display = 'none';
       const rImg = document.getElementById('review-img'); rImg.src = capturedDataUrl; rImg.style.display = 'block';
-      document.getElementById('review-container').style.display = 'flex'; document.getElementById('camera-msg').textContent = "Review your photo"; speak("Captured. Review.", true);
-    }
+      document.getElementById('review-container').style.display = 'flex';
+      document.getElementById('camera-msg').textContent = "Review your photo"; speak("Captured. Review.", true);
+    };
 
-    function retakePhoto() { isReviewing = false; autoSnapTriggered = false; alignmentStartTime = 0; document.getElementById('camera-video').style.display = 'block'; document.getElementById('camera-canvas').style.display = 'block'; document.getElementById('review-img').style.display = 'none'; document.getElementById('shutter-container').style.display = 'flex'; document.getElementById('review-container').style.display = 'none'; }
+    window.retakePhoto = () => {
+      isReviewing = false; autoSnapTriggered = false; alignmentStartTime = 0;
+      document.getElementById('camera-video').style.display = 'block';
+      document.getElementById('camera-canvas').style.display = 'block';
+      document.getElementById('review-img').style.display = 'none';
+      document.getElementById('shutter-container').style.display = 'flex';
+      document.getElementById('review-container').style.display = 'none';
+    };
 
-    function keepPhoto() {
+    window.keepPhoto = () => {
       const labelId = activeCameraType === 'front' ? 'fLabel' : 'sLabel', inputId = activeCameraType === 'front' ? 'front' : 'side';
       const label = document.getElementById(labelId), img = label.querySelector('.preview-img');
       img.src = capturedDataUrl; img.style.display = 'block';
-      label.querySelector('.placeholder-content').style.display = 'none'; label.querySelector('.preview-overlay').style.display = 'flex';
+      label.querySelectorAll('.placeholder-content').forEach(el => el.style.display = 'none');
+      label.querySelector('.preview-overlay').style.display = 'flex';
       fetch(capturedDataUrl).then(res => res.blob()).then(blob => {
         const file = new File([blob], `${activeCameraType}.jpg`, { type: "image/jpeg" });
         const container = new DataTransfer(); container.items.add(file);
         document.getElementById(inputId).files = container.files; closeCamera();
       });
-    }
+    };
 
-    function handlePreviewClick(type) {
+    window.handlePreviewClick = (type) => {
       const label = document.getElementById(type === 'front' ? 'fLabel' : 'sLabel');
-      if (label.querySelector('.placeholder-content').style.display !== 'none') openCamera(type);
-      else { const img = label.querySelector('.preview-img'); if (img.src) window.open(img.src, '_blank'); }
-    }
+      const placeholder = label.querySelector('.placeholder-content');
+      if (placeholder && placeholder.style.display !== 'none') window.openCamera(type);
+      else { const img = label.querySelector('.preview-img'); if (img && img.src) window.open(img.src, '_blank'); }
+    };
+
+    window.preview = (input, id) => {
+      if (input.files && input.files[0]) {
+        const reader = new FileReader();
+        reader.onload = e => {
+            const img = document.getElementById(id); img.src = e.target.result; img.style.display = 'block';
+            const label = document.getElementById(id === 'fPrev' ? 'fLabel' : 'sLabel');
+            label.querySelectorAll('.placeholder-content').forEach(el => el.style.display = 'none');
+            label.querySelector('.preview-overlay').style.display = 'flex';
+        };
+        reader.readAsDataURL(input.files[0]);
+      }
+    };
 
     function preview(input, id) {
       if (input.files && input.files[0]) {
