@@ -21,12 +21,15 @@
     .input { width: 100%; height: 50px; background: rgba(255,255,255,0.05); border: 1px solid var(--Glass-Border); border-radius: 12px; padding: 0 16px; color: #fff; font-size: 14px; margin-bottom: 16px; outline: none; transition: 0.2s; }
     .input:focus { border-color: var(--Mint); }
     .photo-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; margin-bottom: 24px; }
-    .photo-box { height: 140px; border: 1px dashed var(--Glass-Border); border-radius: 20px; display: flex; flex-direction: column; align-items: center; justify-content: center; cursor: pointer; position: relative; overflow: hidden; background: rgba(0,0,0,0.2); transition: 0.3s; }
+    .slot-column { display: flex; flex-direction: column; gap: 8px; }
+    .guide-box { height: 120px; background: #000; border-radius: 12px; border: 1px solid var(--Glass-Border); overflow: hidden; position: relative; display: flex; align-items: center; justify-content: center; }
+    .guide-box img { width: 100%; height: 100%; object-fit: contain; }
+    .guide-tag { position: absolute; top: 8px; left: 8px; background: var(--Mint); color: var(--Obsidian); font-size: 6px; font-weight: 900; padding: 2px 6px; border-radius: 3px; letter-spacing: 0.05em; }
+
+    .photo-box { height: 60px; border: 1px dashed var(--Glass-Border); border-radius: 12px; display: flex; flex-direction: column; align-items: center; justify-content: center; cursor: pointer; position: relative; overflow: hidden; background: rgba(255,255,255,0.02); transition: 0.2s; }
     .photo-box:hover { border-color: var(--Mint); background: rgba(87,215,192,0.02); }
-    .pose-guide { position: absolute; inset: 0; width: 100%; height: 100%; object-fit: cover; opacity: 0.12; filter: grayscale(100%); pointer-events: none; z-index: 1; transition: 0.3s; }
-    .photo-box:hover .pose-guide { opacity: 0.2; filter: grayscale(0%); }
-    .photo-box span { font-size: 9px; font-weight: 800; color: var(--White); text-transform: uppercase; z-index: 2; margin-top: 60px; }
-    .photo-box .tap-hint { font-size: 7px; color: var(--Mint); margin-top: 2px; font-weight: 700; z-index: 2; }
+    .photo-box span { font-size: 8px; font-weight: 800; color: var(--White); text-transform: uppercase; z-index: 2; }
+    .photo-box .tap-hint { font-size: 6px; color: var(--Mint); margin-top: 2px; font-weight: 700; z-index: 2; }
     .photo-box input { position: absolute; inset: 0; opacity: 0; cursor: pointer; z-index: 10; }
     .preview-img { position: absolute; inset: 0; width: 100%; height: 100%; object-fit: cover; display: none; z-index: 5; }
     .btn-submit { width: 100%; height: 52px; background: var(--Mint); color: var(--Obsidian); border: none; border-radius: 12px; font-weight: 800; cursor: pointer; transition: 0.2s; text-transform: uppercase; font-size: 12px; letter-spacing: 0.05em; }
@@ -110,29 +113,40 @@
           <select id="gender" class="input" style="appearance:none;"><option value="male">Male</option><option value="female">Female</option></select>
 
           <div class="photo-grid">
-            <div class="photo-box" id="fLabel" onclick="window.handlePreviewClick('front')">
-              <img src="/assets/front_pose.png" class="pose-guide placeholder-content" alt="Front Guide">
-              <img class="preview-img" id="fPrev">
-              <div class="preview-overlay" style="position:absolute; inset:0; background:rgba(0,0,0,0.6); display:none; flex-direction:column; align-items:center; justify-content:center; z-index:10" onclick="window.openCamera('front'); event.stopPropagation();">
-                 <span style="font-size:8px; font-weight:900; color:#fff; margin:0">RETAKE</span>
+            <div class="slot-column">
+              <div class="guide-box">
+                <img src="/assets/front_pose.png" alt="Front Reference">
+                <span class="guide-tag">REF: FRONT</span>
               </div>
-              <div class="placeholder-content" style="display:flex; flex-direction:column; align-items:center">
-                <span>Front Photo</span>
-                <div class="tap-hint">TAP TO SNAP</div>
+              <div class="photo-box" id="fLabel" onclick="window.handlePreviewClick('front')">
+                <img class="preview-img" id="fPrev">
+                <div class="preview-overlay" style="position:absolute; inset:0; background:rgba(0,0,0,0.6); display:none; flex-direction:column; align-items:center; justify-content:center; z-index:10" onclick="window.openCamera('front'); event.stopPropagation();">
+                   <span style="font-size:8px; font-weight:900; color:#fff; margin:0">RETAKE</span>
+                </div>
+                <div class="placeholder-content" style="display:flex; flex-direction:column; align-items:center">
+                  <span>Photo: Front</span>
+                  <div class="tap-hint">TAP TO SNAP</div>
+                </div>
+                <input type="file" id="front" accept="image/*" required style="display:none" onchange="window.preview(this, 'fPrev')">
               </div>
-              <input type="file" id="front" accept="image/*" required style="display:none" onchange="window.preview(this, 'fPrev')">
             </div>
-            <div class="photo-box" id="sLabel" onclick="window.handlePreviewClick('side')">
-              <img src="/assets/side_pose.png" class="pose-guide placeholder-content" alt="Side Guide">
-              <img class="preview-img" id="sPrev">
-              <div class="preview-overlay" style="position:absolute; inset:0; background:rgba(0,0,0,0.6); display:none; flex-direction:column; align-items:center; justify-content:center; z-index:10" onclick="window.openCamera('side'); event.stopPropagation();">
-                 <span style="font-size:8px; font-weight:900; color:#fff; margin:0">RETAKE</span>
+
+            <div class="slot-column">
+              <div class="guide-box">
+                <img src="/assets/side_pose.png" alt="Side Reference">
+                <span class="guide-tag">REF: SIDE</span>
               </div>
-              <div class="placeholder-content" style="display:flex; flex-direction:column; align-items:center">
-                <span>Side Photo</span>
-                <div class="tap-hint">TAP TO SNAP</div>
+              <div class="photo-box" id="sLabel" onclick="window.handlePreviewClick('side')">
+                <img class="preview-img" id="sPrev">
+                <div class="preview-overlay" style="position:absolute; inset:0; background:rgba(0,0,0,0.6); display:none; flex-direction:column; align-items:center; justify-content:center; z-index:10" onclick="window.openCamera('side'); event.stopPropagation();">
+                   <span style="font-size:8px; font-weight:900; color:#fff; margin:0">RETAKE</span>
+                </div>
+                <div class="placeholder-content" style="display:flex; flex-direction:column; align-items:center">
+                  <span>Photo: Side</span>
+                  <div class="tap-hint">TAP TO SNAP</div>
+                </div>
+                <input type="file" id="side" accept="image/*" required style="display:none" onchange="window.preview(this, 'sPrev')">
               </div>
-              <input type="file" id="side" accept="image/*" required style="display:none" onchange="window.preview(this, 'sPrev')">
             </div>
           </div>
 

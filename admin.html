@@ -48,11 +48,15 @@
     .modal-overlay.active { display: flex; }
     .modal-card { width: 100%; max-width: 1000px; background: #0a0a0a; border: 1px solid var(--Glass-Border); border-radius: 24px; padding: 40px; max-height: 90vh; overflow-y: auto; }
     .landscape-grid { display: grid; grid-template-columns: 1fr 1.2fr; gap: 48px; align-items: start; }
-    .preview-box { width: 100%; height: 180px; border-radius: 20px; border: 1px dashed var(--Glass-Border); display: flex; flex-direction: column; align-items: center; justify-content: center; overflow: hidden; position: relative; cursor: pointer; background: rgba(0,0,0,0.2); transition: 0.3s; }
+    .photo-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 20px; margin-bottom: 24px; }
+    .slot-column { display: flex; flex-direction: column; gap: 12px; }
+    .guide-box { height: 160px; background: #000; border-radius: 16px; border: 1px solid var(--Glass-Border); overflow: hidden; position: relative; display: flex; align-items: center; justify-content: center; }
+    .guide-box img { width: 100%; height: 100%; object-fit: contain; }
+    .guide-tag { position: absolute; top: 12px; left: 12px; background: var(--Mint); color: var(--Obsidian); font-size: 8px; font-weight: 900; padding: 4px 8px; border-radius: 4px; letter-spacing: 0.05em; }
+
+    .preview-box { width: 100%; height: 80px; border-radius: 12px; border: 1px dashed var(--Glass-Border); display: flex; flex-direction: column; align-items: center; justify-content: center; overflow: hidden; position: relative; cursor: pointer; background: rgba(255,255,255,0.02); transition: 0.2s; }
     .preview-box:hover { border-color: var(--Mint); background: rgba(87,215,192,0.02); }
-    .pose-guide { position: absolute; inset: 0; width: 100%; height: 100%; object-fit: cover; opacity: 0.12; filter: grayscale(100%); pointer-events: none; z-index: 1; transition: 0.3s; }
-    .preview-box:hover .pose-guide { opacity: 0.2; filter: grayscale(0%); }
-    .preview-box span { font-size: 10px; font-weight: 900; color: var(--White); text-transform: uppercase; z-index: 2; margin-top: 100px; }
+    .preview-box span { font-size: 10px; font-weight: 900; color: var(--White); text-transform: uppercase; z-index: 2; }
     .preview-box .tap-hint { font-size: 8px; color: var(--Mint); margin-top: 4px; font-weight: 700; z-index: 2; }
     .preview-img { position: absolute; inset: 0; width: 100%; height: 100%; object-fit: cover; z-index: 5; display: none; }
     #korra-3d-viewport { width: 100%; height: 400px; background: #000; border-radius: 12px; margin-top: 24px; border: 1px solid var(--Glass-Border); overflow: hidden; position: relative; }
@@ -139,26 +143,37 @@
             </div>
           </div>
           <div>
-            <div style="display:grid; grid-template-columns: 1fr 1fr; gap:16px; margin-bottom:24px">
-               <div class="preview-box" id="adminFrontLabel" onclick="window.handlePreviewClick('front')">
-                 <img src="/assets/front_pose.png" class="pose-guide placeholder-content" alt="Front Guide">
-                 <img class="preview-img" alt="Front Preview">
-                 <div class="preview-overlay" style="position:absolute; inset:0; background:rgba(0,0,0,0.6); display:none; flex-direction:column; align-items:center; justify-content:center; z-index:10" onclick="window.openCamera('front'); event.stopPropagation();"><span style="font-size:10px; font-weight:900; color:#fff; margin:0">RECAPTURE</span></div>
-                 <div class="placeholder-content" style="display:flex; flex-direction:column; align-items:center">
-                    <span>Front A-Pose</span>
-                    <div class="tap-hint">TAP TO SNAP</div>
+            <div class="photo-grid">
+               <div class="slot-column">
+                 <div class="guide-box">
+                   <img src="/assets/front_pose.png" alt="Front Reference">
+                   <span class="guide-tag">REF: FRONT</span>
                  </div>
-                 <input type="file" id="adminFrontPhoto" accept="image/*" required style="display:none" onchange="window.handleAdminFile(this, 'adminFrontLabel')">
+                 <div class="preview-box" id="adminFrontLabel" onclick="window.handlePreviewClick('front')">
+                   <img class="preview-img" alt="Front Preview">
+                   <div class="preview-overlay" style="position:absolute; inset:0; background:rgba(0,0,0,0.6); display:none; flex-direction:column; align-items:center; justify-content:center; z-index:10" onclick="window.openCamera('front'); event.stopPropagation();"><span style="font-size:10px; font-weight:900; color:#fff; margin:0">RECAPTURE</span></div>
+                   <div class="placeholder-content" style="display:flex; flex-direction:column; align-items:center">
+                      <span>Capture: Front</span>
+                      <div class="tap-hint">TAP TO SNAP</div>
+                   </div>
+                   <input type="file" id="adminFrontPhoto" accept="image/*" required style="display:none" onchange="window.handleAdminFile(this, 'adminFrontLabel')">
+                 </div>
                </div>
-               <div class="preview-box" id="adminSideLabel" onclick="window.handlePreviewClick('side')">
-                 <img src="/assets/side_pose.png" class="pose-guide placeholder-content" alt="Side Guide">
-                 <img class="preview-img" alt="Side Preview">
-                 <div class="preview-overlay" style="position:absolute; inset:0; background:rgba(0,0,0,0.6); display:none; flex-direction:column; align-items:center; justify-content:center; z-index:10" onclick="window.openCamera('side'); event.stopPropagation();"><span style="font-size:10px; font-weight:900; color:#fff; margin:0">RECAPTURE</span></div>
-                 <div class="placeholder-content" style="display:flex; flex-direction:column; align-items:center">
-                    <span>Side Profile</span>
-                    <div class="tap-hint">TAP TO SNAP</div>
+
+               <div class="slot-column">
+                 <div class="guide-box">
+                   <img src="/assets/side_pose.png" alt="Side Reference">
+                   <span class="guide-tag">REF: SIDE</span>
                  </div>
-                 <input type="file" id="adminSidePhoto" accept="image/*" required style="display:none" onchange="window.handleAdminFile(this, 'adminSideLabel')">
+                 <div class="preview-box" id="adminSideLabel" onclick="window.handlePreviewClick('side')">
+                   <img class="preview-img" alt="Side Preview">
+                   <div class="preview-overlay" style="position:absolute; inset:0; background:rgba(0,0,0,0.6); display:none; flex-direction:column; align-items:center; justify-content:center; z-index:10" onclick="window.openCamera('side'); event.stopPropagation();"><span style="font-size:10px; font-weight:900; color:#fff; margin:0">RECAPTURE</span></div>
+                   <div class="placeholder-content" style="display:flex; flex-direction:column; align-items:center">
+                      <span>Capture: Side</span>
+                      <div class="tap-hint">TAP TO SNAP</div>
+                   </div>
+                   <input type="file" id="adminSidePhoto" accept="image/*" required style="display:none" onchange="window.handleAdminFile(this, 'adminSideLabel')">
+                 </div>
                </div>
             </div>
             <div id="extractionProgress" class="polling-overlay" style="margin-top:0; margin-bottom:24px"><div style="font-size:11px; font-weight:900; color:var(--Mint); letter-spacing:0.1em" id="progressStatus">QUEUEING ASYNC TASK...</div><div class="polling-bar"><div class="polling-fill" id="progressFill"></div></div></div>

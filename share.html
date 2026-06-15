@@ -22,12 +22,15 @@
     .input { width: 100%; height: 52px; background: rgba(255,255,255,0.05); border: 1px solid var(--Glass-Border); border-radius: 12px; padding: 0 16px; color: #fff; font-size: 14px; margin-bottom: 20px; outline: none; }
     .input:focus { border-color: var(--Mint); }
 
-    .file-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 16px; margin-bottom: 32px; }
-    .file-box { height: 160px; border: 1px dashed var(--Glass-Border); border-radius: 20px; display: flex; flex-direction: column; align-items: center; justify-content: center; cursor: pointer; position: relative; overflow: hidden; background: rgba(0,0,0,0.2); transition: 0.3s; }
+    .photo-slots { display: grid; grid-template-columns: 1fr 1fr; gap: 20px; margin-bottom: 32px; }
+    .slot-column { display: flex; flex-direction: column; gap: 12px; }
+    .guide-box { height: 180px; background: #000; border-radius: 16px; border: 1px solid var(--Glass-Border); overflow: hidden; position: relative; display: flex; align-items: center; justify-content: center; }
+    .guide-box img { width: 100%; height: 100%; object-fit: contain; }
+    .guide-tag { position: absolute; top: 12px; left: 12px; background: var(--Mint); color: var(--Obsidian); font-size: 8px; font-weight: 900; padding: 4px 8px; border-radius: 4px; letter-spacing: 0.05em; }
+
+    .file-box { height: 100px; border: 1px dashed var(--Glass-Border); border-radius: 16px; display: flex; flex-direction: column; align-items: center; justify-content: center; cursor: pointer; position: relative; overflow: hidden; background: rgba(255,255,255,0.02); transition: 0.2s; }
     .file-box:hover { border-color: var(--Mint); background: rgba(87,215,192,0.02); }
-    .pose-guide { position: absolute; inset: 0; width: 100%; height: 100%; object-fit: cover; opacity: 0.15; filter: grayscale(100%); pointer-events: none; z-index: 1; transition: 0.3s; }
-    .file-box:hover .pose-guide { opacity: 0.25; filter: grayscale(0%); }
-    .file-box span { font-size: 10px; font-weight: 800; color: var(--White); text-transform: uppercase; z-index: 2; margin-top: 80px; }
+    .file-box span { font-size: 10px; font-weight: 800; color: var(--White); text-transform: uppercase; z-index: 2; }
     .file-box .tap-hint { font-size: 8px; color: var(--Mint); margin-top: 4px; font-weight: 700; z-index: 2; letter-spacing: 0.1em; }
 
     .ghost-overlay { position: absolute; inset: 0; border: 2px solid var(--Mint); border-radius: 16px; pointer-events: none; z-index: 8; opacity: 0.2; display: flex; align-items: center; justify-content: center; }
@@ -110,30 +113,41 @@
         <form id="shareForm">
           <input type="number" id="height" class="input" placeholder="Height in CM (e.g. 180)" required>
           <select id="gender" class="input" style="appearance:none;"><option value="male">Male</option><option value="female">Female</option></select>
-          <div class="file-grid">
-            <div class="file-box" id="fLabel" onclick="window.handlePreviewClick('front')">
-              <img src="/assets/front_pose.png" class="pose-guide placeholder-content" alt="Front Guide">
-              <img class="preview-img" id="fPrev" alt="Front Preview">
-              <div class="preview-overlay" style="position:absolute; inset:0; background:rgba(0,0,0,0.6); display:none; flex-direction:column; align-items:center; justify-content:center; z-index:10" onclick="window.openCamera('front'); event.stopPropagation();">
-                 <span style="font-size:10px; font-weight:900; color:#fff; margin:0">TAP TO RETAKE</span>
+          <div class="photo-slots">
+            <div class="slot-column">
+              <div class="guide-box">
+                <img src="/assets/front_pose.png" alt="Front Reference">
+                <span class="guide-tag">REFERENCE: FRONT</span>
               </div>
-              <div class="placeholder-content" style="display:flex; flex-direction:column; align-items:center">
-                <span>Front A-Pose</span>
-                <div class="tap-hint">TAP TO SNAP</div>
+              <div class="file-box" id="fLabel" onclick="window.handlePreviewClick('front')">
+                <img class="preview-img" id="fPrev" alt="Front Preview">
+                <div class="preview-overlay" style="position:absolute; inset:0; background:rgba(0,0,0,0.6); display:none; flex-direction:column; align-items:center; justify-content:center; z-index:10" onclick="window.openCamera('front'); event.stopPropagation();">
+                   <span style="font-size:10px; font-weight:900; color:#fff; margin:0">TAP TO RETAKE</span>
+                </div>
+                <div class="placeholder-content" style="display:flex; flex-direction:column; align-items:center">
+                  <span>Capture Front</span>
+                  <div class="tap-hint">TAP TO SNAP</div>
+                </div>
+                <input type="file" id="front" accept="image/*" required style="display:none" onchange="window.preview(this, 'fPrev')">
               </div>
-              <input type="file" id="front" accept="image/*" required style="display:none" onchange="window.preview(this, 'fPrev')">
             </div>
-            <div class="file-box" id="sLabel" onclick="window.handlePreviewClick('side')">
-              <img src="/assets/side_pose.png" class="pose-guide placeholder-content" alt="Side Guide">
-              <img class="preview-img" id="sPrev" alt="Side Preview">
-              <div class="preview-overlay" style="position:absolute; inset:0; background:rgba(0,0,0,0.6); display:none; flex-direction:column; align-items:center; justify-content:center; z-index:10" onclick="window.openCamera('side'); event.stopPropagation();">
-                 <span style="font-size:10px; font-weight:900; color:#fff; margin:0">TAP TO RETAKE</span>
+
+            <div class="slot-column">
+              <div class="guide-box">
+                <img src="/assets/side_pose.png" alt="Side Reference">
+                <span class="guide-tag">REFERENCE: SIDE</span>
               </div>
-              <div class="placeholder-content" style="display:flex; flex-direction:column; align-items:center">
-                <span>Side Profile</span>
-                <div class="tap-hint">TAP TO SNAP</div>
+              <div class="file-box" id="sLabel" onclick="window.handlePreviewClick('side')">
+                <img class="preview-img" id="sPrev" alt="Side Preview">
+                <div class="preview-overlay" style="position:absolute; inset:0; background:rgba(0,0,0,0.6); display:none; flex-direction:column; align-items:center; justify-content:center; z-index:10" onclick="window.openCamera('side'); event.stopPropagation();">
+                   <span style="font-size:10px; font-weight:900; color:#fff; margin:0">TAP TO RETAKE</span>
+                </div>
+                <div class="placeholder-content" style="display:flex; flex-direction:column; align-items:center">
+                  <span>Capture Side</span>
+                  <div class="tap-hint">TAP TO SNAP</div>
+                </div>
+                <input type="file" id="side" accept="image/*" required style="display:none" onchange="window.preview(this, 'sPrev')">
               </div>
-              <input type="file" id="side" accept="image/*" required style="display:none" onchange="window.preview(this, 'sPrev')">
             </div>
           </div>
           <div class="pro-tips-card">
