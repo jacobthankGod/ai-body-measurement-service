@@ -55,6 +55,13 @@
     .mobile-menu.active { transform: translateY(0); opacity: 1; pointer-events: auto; }
     .mobile-menu a { font-size: 28px; font-weight: 900; color: #fff; text-decoration: none; text-transform: uppercase; letter-spacing: -0.02em; transition: 0.3s; }
     .mobile-menu a:hover { color: var(--Mint); transform: scale(1.05); }
+    .mobile-close-btn {
+      position: absolute; top: 20px; right: 24px; width: 44px; height: 44px;
+      background: var(--Glass); border: 1px solid var(--Glass-Border); border-radius: 12px;
+      color: var(--Mint); font-size: 32px; display: flex; align-items: center; justify-content: center;
+      cursor: pointer; z-index: 1000002;
+    }
+    .mobile-close-btn:hover { border-color: var(--Mint); background: rgba(255,255,255,0.08); }
     .mobile-close-hint { position: absolute; bottom: 40px; font-size: 10px; font-weight: 800; color: var(--Neutral-500); text-transform: uppercase; letter-spacing: 0.2em; }
 
     /* --- PAGE STYLES --- */
@@ -84,7 +91,7 @@
 
     @media (max-width: 1050px) {
       .container { padding: 0 24px; }
-      nav.main-nav { display: none; }
+      nav.main-nav { display: none !important; }
       .hamburger { display: flex; }
       #authButtons { display: none !important; }
       .section-title { font-size: 32px; }
@@ -127,6 +134,7 @@
   </header>
 
   <div class="mobile-menu" id="mobileMenu">
+    <button class="mobile-close-btn" onclick="toggleMenu()">×</button>
     <a href="/#technology" onclick="toggleMenu()">Technology</a>
     <a href="/casestudies.html">Success Stories</a>
     <a href="/about.html">About KORRA</a>
