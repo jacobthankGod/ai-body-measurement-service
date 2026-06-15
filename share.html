@@ -23,8 +23,12 @@
     .input:focus { border-color: var(--Mint); }
 
     .file-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 16px; margin-bottom: 32px; }
-    .file-box { height: 120px; border: 1px dashed var(--Glass-Border); border-radius: 16px; display: flex; flex-direction: column; align-items: center; justify-content: center; cursor: pointer; position: relative; overflow: hidden; }
-    .file-box span { font-size: 10px; font-weight: 800; color: var(--Neutral-500); text-transform: uppercase; }
+    .file-box { height: 160px; border: 1px dashed var(--Glass-Border); border-radius: 20px; display: flex; flex-direction: column; align-items: center; justify-content: center; cursor: pointer; position: relative; overflow: hidden; background: rgba(0,0,0,0.2); transition: 0.3s; }
+    .file-box:hover { border-color: var(--Mint); background: rgba(87,215,192,0.02); }
+    .pose-guide { position: absolute; inset: 0; width: 100%; height: 100%; object-fit: cover; opacity: 0.15; filter: grayscale(100%); pointer-events: none; z-index: 1; transition: 0.3s; }
+    .file-box:hover .pose-guide { opacity: 0.25; filter: grayscale(0%); }
+    .file-box span { font-size: 10px; font-weight: 800; color: var(--White); text-transform: uppercase; z-index: 2; margin-top: 80px; }
+    .file-box .tap-hint { font-size: 8px; color: var(--Mint); margin-top: 4px; font-weight: 700; z-index: 2; letter-spacing: 0.1em; }
 
     .ghost-overlay { position: absolute; inset: 0; border: 2px solid var(--Mint); border-radius: 16px; pointer-events: none; z-index: 8; opacity: 0.2; display: flex; align-items: center; justify-content: center; }
     .ghost-shape { width: 40%; height: 80%; border: 1px solid var(--Mint); border-radius: 50% 50% 40% 40%; }
@@ -108,29 +112,44 @@
           <select id="gender" class="input" style="appearance:none;"><option value="male">Male</option><option value="female">Female</option></select>
           <div class="file-grid">
             <div class="file-box" id="fLabel" onclick="window.handlePreviewClick('front')">
-              <div class="ghost-overlay placeholder-content"><div class="ghost-shape"></div></div>
+              <img src="/assets/front.jpeg" class="pose-guide placeholder-content" alt="Front Guide">
               <img class="preview-img" id="fPrev" alt="Front Preview">
               <div class="preview-overlay" style="position:absolute; inset:0; background:rgba(0,0,0,0.6); display:none; flex-direction:column; align-items:center; justify-content:center; z-index:10" onclick="window.openCamera('front'); event.stopPropagation();">
-                 <span style="font-size:10px; font-weight:900; color:#fff">TAP TO RETAKE</span>
+                 <span style="font-size:10px; font-weight:900; color:#fff; margin:0">TAP TO RETAKE</span>
               </div>
-              <div class="placeholder-content"><span>Front A-Pose</span><div style="font-size:8px; color:var(--Mint); margin-top:4px; font-weight:700">TAP TO SNAP</div></div>
+              <div class="placeholder-content" style="display:flex; flex-direction:column; align-items:center">
+                <span>Front A-Pose</span>
+                <div class="tap-hint">TAP TO SNAP</div>
+              </div>
               <input type="file" id="front" accept="image/*" required style="display:none" onchange="window.preview(this, 'fPrev')">
             </div>
             <div class="file-box" id="sLabel" onclick="window.handlePreviewClick('side')">
-              <div class="ghost-overlay placeholder-content"><div class="ghost-shape" style="width:25%"></div></div>
+              <img src="/assets/side.jpeg" class="pose-guide placeholder-content" alt="Side Guide">
               <img class="preview-img" id="sPrev" alt="Side Preview">
               <div class="preview-overlay" style="position:absolute; inset:0; background:rgba(0,0,0,0.6); display:none; flex-direction:column; align-items:center; justify-content:center; z-index:10" onclick="window.openCamera('side'); event.stopPropagation();">
-                 <span style="font-size:10px; font-weight:900; color:#fff">TAP TO RETAKE</span>
+                 <span style="font-size:10px; font-weight:900; color:#fff; margin:0">TAP TO RETAKE</span>
               </div>
-              <div class="placeholder-content"><span>Side Profile</span><div style="font-size:8px; color:var(--Mint); margin-top:4px; font-weight:700">TAP TO SNAP</div></div>
+              <div class="placeholder-content" style="display:flex; flex-direction:column; align-items:center">
+                <span>Side Profile</span>
+                <div class="tap-hint">TAP TO SNAP</div>
+              </div>
               <input type="file" id="side" accept="image/*" required style="display:none" onchange="window.preview(this, 'sPrev')">
             </div>
           </div>
           <div class="pro-tips-card">
             <h4><span style="font-size:14px">✨</span> Pro-Tips for Precision</h4>
-            <div class="tip-row"><span class="tip-bullet">&bull;</span><span><b>The A-Pose:</b> Keep arms 15" away from body.</span></div>
-            <div class="tip-row"><span class="tip-bullet">&bull;</span><span><b>Clothing:</b> Wear form-fitting gym wear.</span></div>
-            <div class="tip-row"><span class="tip-bullet">&bull;</span><span><b>Contrast:</b> Stand against a plain wall.</span></div>
+            <div class="tip-row">
+              <span class="tip-bullet">📏</span>
+              <span><b>The A-Pose:</b> Keep arms 15" away from body. This helps AI distinguish your torso from your arms.</span>
+            </div>
+            <div class="tip-row">
+              <span class="tip-bullet">👕</span>
+              <span><b>Clothing:</b> Wear form-fitting gym wear. Baggy clothes will lead to over-estimated measurements.</span>
+            </div>
+            <div class="tip-row">
+              <span class="tip-bullet">🧱</span>
+              <span><b>Contrast:</b> Stand against a plain wall. Lighting should be bright and from the front.</span>
+            </div>
           </div>
           <button type="submit" class="btn-submit" id="btnSubmit" style="margin-top:32px">Calculate Measurements</button>
         </form>

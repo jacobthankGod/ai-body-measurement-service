@@ -48,7 +48,13 @@
     .modal-overlay.active { display: flex; }
     .modal-card { width: 100%; max-width: 1000px; background: #0a0a0a; border: 1px solid var(--Glass-Border); border-radius: 24px; padding: 40px; max-height: 90vh; overflow-y: auto; }
     .landscape-grid { display: grid; grid-template-columns: 1fr 1.2fr; gap: 48px; align-items: start; }
-    .preview-box { width: 100%; height: 160px; border-radius: 12px; border: 1px dashed var(--Glass-Border); display: flex; align-items: center; justify-content: center; overflow: hidden; position: relative; cursor: pointer; }
+    .preview-box { width: 100%; height: 180px; border-radius: 20px; border: 1px dashed var(--Glass-Border); display: flex; flex-direction: column; align-items: center; justify-content: center; overflow: hidden; position: relative; cursor: pointer; background: rgba(0,0,0,0.2); transition: 0.3s; }
+    .preview-box:hover { border-color: var(--Mint); background: rgba(87,215,192,0.02); }
+    .pose-guide { position: absolute; inset: 0; width: 100%; height: 100%; object-fit: cover; opacity: 0.12; filter: grayscale(100%); pointer-events: none; z-index: 1; transition: 0.3s; }
+    .preview-box:hover .pose-guide { opacity: 0.2; filter: grayscale(0%); }
+    .preview-box span { font-size: 10px; font-weight: 900; color: var(--White); text-transform: uppercase; z-index: 2; margin-top: 100px; }
+    .preview-box .tap-hint { font-size: 8px; color: var(--Mint); margin-top: 4px; font-weight: 700; z-index: 2; }
+    .preview-img { position: absolute; inset: 0; width: 100%; height: 100%; object-fit: cover; z-index: 5; display: none; }
     #korra-3d-viewport { width: 100%; height: 400px; background: #000; border-radius: 12px; margin-top: 24px; border: 1px solid var(--Glass-Border); overflow: hidden; position: relative; }
     .console-box { background: #000; border: 1px solid var(--Glass-Border); border-radius: 8px; padding: 12px; font-family: monospace; font-size: 10px; color: var(--Neutral-400); margin-top: 20px; height: 120px; overflow-y: auto; }
     .log-entry { margin-bottom: 4px; border-left: 2px solid var(--Mint); padding-left: 8px; }
@@ -126,20 +132,32 @@
               <div><label style="font-size:10px; font-weight:900; color:var(--Neutral-500); display:block; margin-bottom:8px">HEIGHT (CM)</label><input type="number" id="adminHeight" class="search-input" style="width:100%" placeholder="180" required></div>
               <div><label style="font-size:10px; font-weight:900; color:var(--Neutral-500); display:block; margin-bottom:8px">GENDER</label><select id="adminGender" class="search-input" style="width:100%; appearance:none; cursor:pointer"><option value="male">Male</option><option value="female">Female</option></select></div>
             </div>
-            <div class="pro-tips-card" style="margin-top:0"><h4><span style="font-size:14px">✨</span> Pro-Tips</h4><div class="tip-row"><span class="tip-bullet">&bull;</span><span><b>A-Pose:</b> Keep arms 15" away.</span></div><div class="tip-row"><span class="tip-bullet">&bull;</span><span><b>Contrast:</b> Use a plain background.</span></div></div>
+            <div class="pro-tips-card" style="margin-top:0">
+              <h4><span style="font-size:14px">✨</span> Pro-Tips</h4>
+              <div class="tip-row"><span class="tip-bullet">📏</span><span><b>A-Pose:</b> Keep arms 15" away.</span></div>
+              <div class="tip-row"><span class="tip-bullet">🧱</span><span><b>Contrast:</b> Use a plain background.</span></div>
+            </div>
           </div>
           <div>
             <div style="display:grid; grid-template-columns: 1fr 1fr; gap:16px; margin-bottom:24px">
                <div class="preview-box" id="adminFrontLabel" onclick="window.handlePreviewClick('front')">
+                 <img src="/assets/front.jpeg" class="pose-guide placeholder-content" alt="Front Guide">
                  <img class="preview-img" alt="Front Preview">
-                 <div class="preview-overlay" style="position:absolute; inset:0; background:rgba(0,0,0,0.6); display:none; flex-direction:column; align-items:center; justify-content:center; z-index:10" onclick="window.openCamera('front'); event.stopPropagation();"><span style="font-size:10px; font-weight:900; color:#fff">RECAPTURE</span></div>
-                 <div class="placeholder-content" style="display:flex; flex-direction:column; align-items:center; z-index:1"><span>Front A-Pose</span><div style="font-size:8px; color:var(--Mint); margin-top:4px; font-weight:700">TAP TO SNAP</div></div>
+                 <div class="preview-overlay" style="position:absolute; inset:0; background:rgba(0,0,0,0.6); display:none; flex-direction:column; align-items:center; justify-content:center; z-index:10" onclick="window.openCamera('front'); event.stopPropagation();"><span style="font-size:10px; font-weight:900; color:#fff; margin:0">RECAPTURE</span></div>
+                 <div class="placeholder-content" style="display:flex; flex-direction:column; align-items:center">
+                    <span>Front A-Pose</span>
+                    <div class="tap-hint">TAP TO SNAP</div>
+                 </div>
                  <input type="file" id="adminFrontPhoto" accept="image/*" required style="display:none" onchange="window.handleAdminFile(this, 'adminFrontLabel')">
                </div>
                <div class="preview-box" id="adminSideLabel" onclick="window.handlePreviewClick('side')">
+                 <img src="/assets/side.jpeg" class="pose-guide placeholder-content" alt="Side Guide">
                  <img class="preview-img" alt="Side Preview">
-                 <div class="preview-overlay" style="position:absolute; inset:0; background:rgba(0,0,0,0.6); display:none; flex-direction:column; align-items:center; justify-content:center; z-index:10" onclick="window.openCamera('side'); event.stopPropagation();"><span style="font-size:10px; font-weight:900; color:#fff">RECAPTURE</span></div>
-                 <div class="placeholder-content" style="display:flex; flex-direction:column; align-items:center; z-index:1"><span>Side Profile</span><div style="font-size:8px; color:var(--Mint); margin-top:4px; font-weight:700">TAP TO SNAP</div></div>
+                 <div class="preview-overlay" style="position:absolute; inset:0; background:rgba(0,0,0,0.6); display:none; flex-direction:column; align-items:center; justify-content:center; z-index:10" onclick="window.openCamera('side'); event.stopPropagation();"><span style="font-size:10px; font-weight:900; color:#fff; margin:0">RECAPTURE</span></div>
+                 <div class="placeholder-content" style="display:flex; flex-direction:column; align-items:center">
+                    <span>Side Profile</span>
+                    <div class="tap-hint">TAP TO SNAP</div>
+                 </div>
                  <input type="file" id="adminSidePhoto" accept="image/*" required style="display:none" onchange="window.handleAdminFile(this, 'adminSideLabel')">
                </div>
             </div>
