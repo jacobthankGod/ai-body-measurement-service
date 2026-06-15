@@ -183,10 +183,18 @@
   <script src="/assets/jspdf.min.js"></script>
   <script src="/assets/korra_export.js"></script>
 
-  <script>
+<script>
     // --- KORRA WIDGET ENGINE (Hardened Global Scope) ---
     let activeCameraType = null, poseModel = null, cameraInstance = null, isPoseAligned = false, alignmentStartTime = 0, autoSnapTriggered = false, isReviewing = false, capturedDataUrl = null;
     let lastSpokenText = "", lastSpokenTime = 0;
+
+    // Define functions globally for onclick handlers (must be at top level for iframe compatibility)
+    window.handlePreviewClick = function(type) {
+      const label = document.getElementById(type === 'front' ? 'fLabel' : 'sLabel');
+      const placeholder = label?.querySelector('.placeholder-content');
+      if (placeholder && placeholder.style.display !== 'none') window.openCamera(type);
+      else { const img = label?.querySelector('.preview-img'); if (img && img.src) window.open(img.src, '_blank'); }
+    };
 
     // --- 1. CORE UTILITIES ---
     window.speak = (text, force = false) => {
@@ -347,15 +355,8 @@
       fetch(capturedDataUrl).then(res => res.blob()).then(blob => {
         const file = new File([blob], `${activeCameraType}.jpg`, { type: "image/jpeg" });
         const container = new DataTransfer(); container.items.add(file);
-        document.getElementById(inputId).files = container.files; window.closeCamera();
+document.getElementById(inputId).files = container.files; window.closeCamera();
       });
-    };
-
-    window.handlePreviewClick = (type) => {
-      const label = document.getElementById(type === 'front' ? 'fLabel' : 'sLabel');
-      const placeholder = label?.querySelector('.placeholder-content');
-      if (placeholder && placeholder.style.display !== 'none') window.openCamera(type);
-      else { const img = label?.querySelector('.preview-img'); if (img && img.src) window.open(img.src, '_blank'); }
     };
 
     window.preview = (input, id) => {

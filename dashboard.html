@@ -323,43 +323,51 @@
           <div id="view-passports" class="tab-view"><h2 style="font-size:24px; margin-bottom:32px">Size Profiles</h2><div id="passportGrid" style="display:grid; grid-template-columns:repeat(auto-fill, minmax(300px, 1fr)); gap:24px"></div></div>
           <div id="view-widget" class="tab-view">
             <div class="glass-card">
-              <h2>Widget Setup</h2>
-              <p style="color:var(--Neutral-400); margin-bottom:32px">Embed body scanning on your site.</p>
+              <h2 style="font-size: 24px; margin-bottom: 8px">Widget Customizer</h2>
+              <p style="color:var(--Neutral-400); margin-bottom:40px">Link your biometric scanner to your brand identity.</p>
               
-              <div style="margin-bottom:32px">
-                <h4 style="font-size:10px; font-weight:900; color:var(--Mint); margin-bottom:12px">STANDARD EMBED</h4>
-                <div style="background:#000; padding:20px; border:1px solid var(--Glass-Border); border-radius:12px;">
-<code style="color:var(--Mint); font-size:12px; word-break:break-all">&lt;script src="https://korra-436814609100.us-central1.run.app/assets/korra-widget.js"&gt;&lt;/script&gt;</code>
-                </div>
-              </div>
+              <div class="workbench-split" style="grid-template-columns: 1fr 1fr; gap: 48px;">
+                <div class="customizer-controls">
+                  <div style="margin-bottom:32px">
+                    <h4 style="font-size:10px; font-weight:900; color:var(--Mint); margin-bottom:16px">BRANDING</h4>
+                    <div style="margin-bottom:20px">
+                      <label style="font-size:10px; color:var(--Neutral-500); display:block; margin-bottom:8px">PRIMARY ACCENT COLOR</label>
+                      <div style="display:flex; gap:12px; align-items:center">
+                        <input type="color" id="widgetColorPrimary" class="input-field" style="width:60px; padding:4px; margin:0; height:44px" value="#57D7C0" oninput="window.updateWidgetPreview()">
+                        <input type="text" id="widgetColorText" class="input-field" style="flex:1; margin:0; height:44px" value="#57D7C0" oninput="document.getElementById('widgetColorPrimary').value = this.value; window.updateWidgetPreview()">
+                      </div>
+                    </div>
+                    <div style="margin-bottom:20px">
+                      <label style="font-size:10px; color:var(--Neutral-500); display:block; margin-bottom:8px">SURFACE THEME</label>
+                      <select id="widgetTheme" class="input-field" style="appearance:none;" onchange="window.updateWidgetPreview()">
+                        <option value="dark">Luxury Obsidian (Dark)</option>
+                        <option value="light">Artisan Paper (Light)</option>
+                        <option value="glass">Holographic Glass</option>
+                      </select>
+                    </div>
+                  </div>
 
-              <div style="margin-bottom:32px">
-                <h4 style="font-size:10px; font-weight:900; color:var(--Mint); margin-bottom:12px">ADVANCED (WITH CALLBACKS)</h4>
-                <div style="background:#000; padding:20px; border:1px solid var(--Glass-Border); border-radius:12px;">
-                  <code style="color:var(--Mint); font-size:11px; word-break:break-all">&lt;script&gt;
-  KORRA.init({
-    apiKey: 'YOUR_API_KEY',
-    onScanComplete: (data) => console.log('Measurements:', data),
-    onError: (err) => console.error('Error:', err)
-  });
-&lt;/script&gt;</code>
-                </div>
-              </div>
+                  <div style="margin-bottom:32px">
+                    <h4 style="font-size:10px; font-weight:900; color:var(--Mint); margin-bottom:16px">EMBED CODE</h4>
+                    <div style="background:#000; padding:20px; border:1px solid var(--Glass-Border); border-radius:12px; position:relative">
+                      <code id="widgetSnippet" style="color:var(--Mint); font-size:11px; word-break:break-all; display:block; padding-right:40px">
+                        &lt;script src="https://korra-436814609100.us-central1.run.app/assets/korra-widget.js" data-merchant="LOADING..."&gt;&lt;/script&gt;
+                      </code>
+                      <button class="btn-outline" style="position:absolute; top:12px; right:12px; height:24px; font-size:8px; padding:0 8px" onclick="window.copyWidgetCode()">Copy</button>
+                    </div>
+                  </div>
 
-              <div>
-                <h4 style="font-size:10px; font-weight:900; color:var(--Mint); margin-bottom:12px">AVAILABLE METHODS</h4>
-                <div style="display:grid; grid-template-columns:1fr 1fr; gap:12px">
-                  <div style="display:flex; align-items:center; justify-content:space-between; padding:16px; border-radius:12px; background:rgba(255,255,255,0.02); border:1px solid var(--Glass-Border)"><span style="font-size:12px; font-weight:700">init(config)</span><span style="font-size:10px; font-weight:900; text-transform:uppercase; padding:4px 8px; border-radius:4px; color:var(--Mint); background:rgba(87,215,192,0.1)">READY</span></div>
-                  <div style="display:flex; align-items:center; justify-content:space-between; padding:16px; border-radius:12px; background:rgba(255,255,255,0.02); border:1px solid var(--Glass-Border)"><span style="font-size:12px; font-weight:700">openCamera()</span><span style="font-size:10px; font-weight:900; text-transform:uppercase; padding:4px 8px; border-radius:4px; color:var(--Mint); background:rgba(87,215,192,0.1)">READY</span></div>
-                  <div style="display:flex; align-items:center; justify-content:space-between; padding:16px; border-radius:12px; background:rgba(255,255,255,0.02); border:1px solid var(--Glass-Border)"><span style="font-size:12px; font-weight:700">getMeasurements()</span><span style="font-size:10px; font-weight:900; text-transform:uppercase; padding:4px 8px; border-radius:4px; color:var(--Mint); background:rgba(87,215,192,0.1)">READY</span></div>
-                  <div style="display:flex; align-items:center; justify-content:space-between; padding:16px; border-radius:12px; background:rgba(255,255,255,0.02); border:1px solid var(--Glass-Border)"><span style="font-size:12px; font-weight:700">exportPDF()</span><span style="font-size:10px; font-weight:900; text-transform:uppercase; padding:4px 8px; border-radius:4px; color:var(--Mint); background:rgba(87,215,192,0.1)">READY</span></div>
+                  <button class="btn-primary" style="width:100%" onclick="window.saveWidgetSettings()">Save Widget Settings</button>
                 </div>
-              </div>
 
-              <div style="margin-top:48px; padding:32px; background:rgba(87,215,192,0.05); border:1px solid var(--Mint); border-radius:16px">
-                <h4 style="font-size:10px; font-weight:900; color:var(--Mint); margin-bottom:12px">WIDGET PLAYGROUND</h4>
-                <p style="font-size:11px; color:var(--Neutral-400); margin-bottom:20px">Test your site's integration without leaving the workbench.</p>
-                <button class="btn-primary" onclick="window.launchWidgetTest()">Launch Live Preview</button>
+                <div class="preview-column" style="text-align:center">
+                  <h4 style="font-size:10px; font-weight:900; color:var(--Neutral-500); margin-bottom:16px; text-transform:uppercase">Live Preview</h4>
+                  <div id="widgetLivePreview" style="background:#000; border:1px solid var(--Glass-Border); border-radius:24px; height:480px; width:100%; position:relative; overflow:hidden; display:flex; flex-direction:column; align-items:center; justify-content:center; transition:0.3s">
+                    <!-- PREVIEW UI -->
+                    <div id="previewTrigger" style="background:#57D7C0; color:#000; padding:12px 24px; border-radius:99px; font-weight:800; font-size:11px; cursor:pointer; box-shadow: 0 10px 30px rgba(87,215,192,0.3)">Get Measured with AI</div>
+                    <div style="margin-top:24px; font-size:10px; color:var(--Neutral-500)">SIMULATED HOST SITE</div>
+                  </div>
+                </div>
               </div>
             </div>
           </div>
@@ -578,6 +586,14 @@
         document.getElementById('statCredits').textContent = profile.credits || 0;
         document.getElementById('billingCredits').textContent = profile.credits || 0;
         document.getElementById('apiKeyDisplay').textContent = profile.api_key || "REGENERATE TO VIEW";
+
+        // SYNC WIDGET SETTINGS
+        if (profile.widget_config) {
+            document.getElementById('widgetColorPrimary').value = profile.widget_config.primary || "#57D7C0";
+            document.getElementById('widgetColorText').value = profile.widget_config.primary || "#57D7C0";
+            document.getElementById('widgetTheme').value = profile.widget_config.theme || "dark";
+        }
+        window.updateWidgetPreview();
       }
       const { data: sub } = await window.KORRA_DB.from('subscriptions').select('plan_id').eq('user_id', userId).single();
       document.getElementById('billingPlanName').textContent = sub?.plan_id ? sub.plan_id.toUpperCase() : 'FREE';
@@ -904,6 +920,49 @@
 
     window.dismissCreditError = () => { document.getElementById('creditOverlay').style.display = 'none'; };
     window.exportToPDF = () => { if (window.LAST_MEASUREMENT_DATA) window.KORRA_EXPORT.pdf(window.LAST_MEASUREMENT_DATA.client_name, window.LAST_MEASUREMENT_DATA.measurements, window.LAST_MEASUREMENT_DATA.gender, window.LAST_MEASUREMENT_DATA.height); };
+
+    window.updateWidgetPreview = () => {
+        const color = document.getElementById('widgetColorPrimary').value;
+        const theme = document.getElementById('widgetTheme').value;
+        const trigger = document.getElementById('previewTrigger');
+        const container = document.getElementById('widgetLivePreview');
+        const snippet = document.getElementById('widgetSnippet');
+
+        if (trigger) {
+            trigger.style.background = color;
+            trigger.style.boxShadow = `0 10px 30px ${color}4d`;
+        }
+
+        if (container) {
+            if (theme === 'light') container.style.background = '#f5f5f5';
+            else if (theme === 'glass') container.style.background = 'linear-gradient(135deg, #111, #333)';
+            else container.style.background = '#000';
+        }
+
+        if (snippet) {
+            snippet.innerHTML = `&lt;script src="https://korra-436814609100.us-central1.run.app/assets/korra-widget.js"
+  data-merchant="${userId}"
+  data-primary="${color.replace('#','')}"
+  data-theme="${theme}"&gt;&lt;/script&gt;`;
+        }
+    };
+
+    window.saveWidgetSettings = async () => {
+        const config = {
+            primary: document.getElementById('widgetColorPrimary').value,
+            theme: document.getElementById('widgetTheme').value
+        };
+        try {
+            const { error } = await window.KORRA_DB.from('profiles').update({ widget_config: config }).eq('id', userId);
+            if (error) throw error;
+            alert("Widget aesthetics synchronized.");
+        } catch(e) { alert("Save failed: " + e.message); }
+    };
+
+    window.copyWidgetCode = () => {
+        const code = document.getElementById('widgetSnippet').textContent.trim();
+        navigator.clipboard.writeText(code).then(() => alert("Snippet copied to clipboard."));
+    };
 
     window.launchWidgetTest = () => {
         if (window.KorraWidget) {

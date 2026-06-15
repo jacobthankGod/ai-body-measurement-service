@@ -46,3 +46,11 @@ async def get_current_user(credentials: HTTPAuthorizationCredentials = Security(
     user = await verify_supabase_token(credentials.credentials)
     if not user: raise HTTPException(status_code=401, detail="Invalid or expired token")
     return {"success": True, "user": user}
+
+@router.get("/auth/session")
+async def get_session(credentials: HTTPAuthorizationCredentials = Security(security)):
+    """Get current session - required for admin panel"""
+    if not credentials: raise HTTPException(status_code=401, detail="Authorization token required")
+    user = await verify_supabase_token(credentials.credentials)
+    if not user: raise HTTPException(status_code=401, detail="Invalid or expired token")
+    return {"success": True, "session": user}
