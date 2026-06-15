@@ -162,6 +162,14 @@
     let activeCameraType = null, poseModel = null, cameraInstance = null, isPoseAligned = false, alignmentStartTime = 0, autoSnapTriggered = false, isReviewing = false, capturedDataUrl = null;
     let lastSpokenText = "", lastSpokenTime = 0;
 
+    // --- GLOBAL UI HANDLERS (Exported for inline onclick) ---
+    window.openCamera = openCamera;
+    window.closeCamera = closeCamera;
+    window.snapPhoto = snapPhoto;
+    window.retakePhoto = retakePhoto;
+    window.keepPhoto = keepPhoto;
+    window.handlePreviewClick = handlePreviewClick;
+
     function speak(text, force = false) {
       if (!window.speechSynthesis) return;
       const now = Date.now(); if (!force && text === lastSpokenText && now - lastSpokenTime < 3000) return;
