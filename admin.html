@@ -141,7 +141,7 @@
           <div>
             <div style="display:grid; grid-template-columns: 1fr 1fr; gap:16px; margin-bottom:24px">
                <div class="preview-box" id="adminFrontLabel" onclick="window.handlePreviewClick('front')">
-                 <img src="/assets/front.jpeg" class="pose-guide placeholder-content" alt="Front Guide">
+                 <img src="/assets/front_pose.png" class="pose-guide placeholder-content" alt="Front Guide">
                  <img class="preview-img" alt="Front Preview">
                  <div class="preview-overlay" style="position:absolute; inset:0; background:rgba(0,0,0,0.6); display:none; flex-direction:column; align-items:center; justify-content:center; z-index:10" onclick="window.openCamera('front'); event.stopPropagation();"><span style="font-size:10px; font-weight:900; color:#fff; margin:0">RECAPTURE</span></div>
                  <div class="placeholder-content" style="display:flex; flex-direction:column; align-items:center">
@@ -151,7 +151,7 @@
                  <input type="file" id="adminFrontPhoto" accept="image/*" required style="display:none" onchange="window.handleAdminFile(this, 'adminFrontLabel')">
                </div>
                <div class="preview-box" id="adminSideLabel" onclick="window.handlePreviewClick('side')">
-                 <img src="/assets/side.jpeg" class="pose-guide placeholder-content" alt="Side Guide">
+                 <img src="/assets/side_pose.png" class="pose-guide placeholder-content" alt="Side Guide">
                  <img class="preview-img" alt="Side Preview">
                  <div class="preview-overlay" style="position:absolute; inset:0; background:rgba(0,0,0,0.6); display:none; flex-direction:column; align-items:center; justify-content:center; z-index:10" onclick="window.openCamera('side'); event.stopPropagation();"><span style="font-size:10px; font-weight:900; color:#fff; margin:0">RECAPTURE</span></div>
                  <div class="placeholder-content" style="display:flex; flex-direction:column; align-items:center">

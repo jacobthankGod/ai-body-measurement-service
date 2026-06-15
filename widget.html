@@ -111,7 +111,7 @@
 
           <div class="photo-grid">
             <div class="photo-box" id="fLabel" onclick="window.handlePreviewClick('front')">
-              <img src="/assets/front.jpeg" class="pose-guide placeholder-content" alt="Front Guide">
+              <img src="/assets/front_pose.png" class="pose-guide placeholder-content" alt="Front Guide">
               <img class="preview-img" id="fPrev">
               <div class="preview-overlay" style="position:absolute; inset:0; background:rgba(0,0,0,0.6); display:none; flex-direction:column; align-items:center; justify-content:center; z-index:10" onclick="window.openCamera('front'); event.stopPropagation();">
                  <span style="font-size:8px; font-weight:900; color:#fff; margin:0">RETAKE</span>
@@ -123,7 +123,7 @@
               <input type="file" id="front" accept="image/*" required style="display:none" onchange="window.preview(this, 'fPrev')">
             </div>
             <div class="photo-box" id="sLabel" onclick="window.handlePreviewClick('side')">
-              <img src="/assets/side.jpeg" class="pose-guide placeholder-content" alt="Side Guide">
+              <img src="/assets/side_pose.png" class="pose-guide placeholder-content" alt="Side Guide">
               <img class="preview-img" id="sPrev">
               <div class="preview-overlay" style="position:absolute; inset:0; background:rgba(0,0,0,0.6); display:none; flex-direction:column; align-items:center; justify-content:center; z-index:10" onclick="window.openCamera('side'); event.stopPropagation();">
                  <span style="font-size:8px; font-weight:900; color:#fff; margin:0">RETAKE</span>
