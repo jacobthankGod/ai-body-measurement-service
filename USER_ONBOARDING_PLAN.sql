@@ -155,6 +155,14 @@ CREATE TABLE IF NOT EXISTS public.industry_verticals (
     created_at TIMESTAMPTZ DEFAULT NOW()
 );
 
+-- Ensure column exists if table was created without it previously
+DO $$
+BEGIN
+    IF NOT EXISTS (SELECT 1 FROM information_schema.columns WHERE table_name='industry_verticals' AND column_name='category_type') THEN
+        ALTER TABLE public.industry_verticals ADD COLUMN category_type TEXT CHECK (category_type IN ('production', 'product', 'tech'));
+    END IF;
+END $$;
+
 INSERT INTO public.industry_verticals (id, name, category_type) VALUES
 ('rtw', 'Ready-To-Wear', 'production'),
 ('mtm', 'Made-To-Measure', 'production'),
@@ -163,7 +171,7 @@ INSERT INTO public.industry_verticals (id, name, category_type) VALUES
 ('outerwear', 'Outerwear & Jackets', 'product'),
 ('workwear', 'Workwear & Industrial', 'product'),
 ('fashion_tech', 'Fashion Technology', 'tech')
-ON CONFLICT (id) DO NOTHING;
+ON CONFLICT (id) DO UPDATE SET category_type = EXCLUDED.category_type;
 
 -- 2E. VERTICAL-PRODUCT MAPPING (junction table)
 CREATE TABLE IF NOT EXISTS public.vertical_products (
