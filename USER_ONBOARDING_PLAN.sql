@@ -81,36 +81,134 @@ INSERT INTO public.countries_reference (code, name, region_supported, default_cu
 ('ZM', 'Zambia', 'Africa', 'ZMW'), ('ZW', 'Zimbabwe', 'Africa', 'ZWL')
 ON CONFLICT (code) DO NOTHING;
 
--- 2. INDUSTRY VERTICALS REFERENCE TABLE
-CREATE TABLE IF NOT EXISTS public.industry_verticals (
+-- 2A. PRODUCTION METHODS REFERENCE (Industry Standard: RTW, MTM, Custom)
+CREATE TABLE IF NOT EXISTS public.production_methods (
     id TEXT PRIMARY KEY,
     name TEXT NOT NULL,
-    sub_specialties JSONB DEFAULT '[]'::jsonb,
+    description TEXT,
     created_at TIMESTAMPTZ DEFAULT NOW()
 );
 
--- Seed All 20 Industry Verticals from Reference Plan
-INSERT INTO public.industry_verticals (id, name, sub_specialties) VALUES
-('luxury_mtm', 'Luxury Made-To-Measure (MTM)', '["Bespoke suits & jackets", "Hand-stitched leather goods", "Custom shirts (Shirtmaking)", "Made-to-measure overcoats", "Personalized lining selection", "Monogram customization"]'),
-('bridal', 'Bridal & Tuxedo', '["Wedding gowns", "Bridesmaid dresses", "Groom''s formal wear", "Tuxedo rentals & sales", "Flower girl / page boy outfits", "Cultural wedding attire"]'),
-('rtw', 'Ready-To-Wear (RTW)', '["Casual wear (denim, t-shirts)", "Sportswear & athleisure", "Corporate attire", "Kidswear", "Maternity wear", "Petite & plus sizing", "Sustainable fashion"]'),
-('manufacturing', 'Manufacturing', '["Mass production", "Technical textiles", "Workwear & uniforms", "Protective equipment (PPE)", "Medical textiles", "Automotive textiles", "Sustainable manufacturing"]'),
-('custom_apparel', 'Custom Apparel', '["Sports team uniforms", "Corporate uniforms", "School uniforms", "Theatrical costuming", "Dance costumes", "Performance wear", "Military uniforms"]'),
-('healthcare_fitness', 'Healthcare & Fitness', '["Surgical gowns & drapes", "Medical scrubs", "Patient wear", "Compression garments", "Orthopedic supports", "Activewear", "Swimwear", "Yoga wear"]'),
-('textiles_fabrics', 'Textiles & Fabrics', '["Natural fibers (cotton, wool, silk, linen)", "Technical fabrics", "Performance textiles", "Sustainable fabrics", "Denim & indigo", "Lace & embroidery"]'),
-('retail_ecommerce', 'Retail & E-commerce', '["Online fit guides", "Virtual try-on", "Size recommendation engines", "Made-to-order production", "Print-on-demand", "Customization platforms"]'),
-('footwear', 'Footwear', '["Formal shoes", "Casual shoes", "Athletic footwear", "Orthopedic footwear", "Safety footwear", "Luxury bespoke"]'),
-('outerwear_jackets', 'Outerwear & Jackets', '["Coats & overcoats", "Leather jackets", "Puffer jackets", "Raincoats", "Military outerwear", "Winter sports outerwear"]'),
-('sportswear_athleisure', 'Sportswear & Athleisure', '["Gym & fitness wear", "Running & jogging", "Yoga & pilates", "Cycling apparel", "Swimming & aquatics", "Golf attire", "Tennis apparel"]'),
-('uniforms_corporate', 'Uniforms & Corporate Apparel', '["Corporate suits", "Service uniforms", "Hospitality wear", "Front-of-house attire", "Security uniforms", "Delivery & logistics", "Airline & aviation"]'),
-('childrens_wear', 'Children''s Wear', '["Newborn & infantwear", "Kids casual wear", "Kids formal wear", "School uniforms", "Baby wear", "Kids activewear"]'),
-('modest_fashion', 'Modest Fashion', '["Modest dresses", "Abaya & jilbab", "Hijab fashion", "Modest swimwear", "Modest activewear", "Traditional modest wear"]'),
-('sustainable_ethical', 'Sustainable & Ethical Fashion', '["Organic materials", "Recycled textiles", "Circular fashion", "Upcycled fashion", "Vegan materials", "Fair trade apparel"]'),
-('workwear_industrial', 'Workwear & Industrial', '["Construction wear", "Mining & extraction", "Industrial uniforms", "Safety footwear", "Flame-resistant (FR)", "High-visibility clothing"]'),
-('lingerie_intimates', 'Lingerie & Intimates', '["Bras & bralettes", "Panties & briefs", "Shapewear", "Loungewear", "Sleepwear", "Hosiery"]'),
-('hat_accessory', 'Hat & Accessory Design', '["Hats & caps", "Scarves & wraps", "Leather goods", "Belts & small leather", "Ties & pocket squares", "Gloves"]'),
-('denim_indigo', 'Denim & Indigo', '["Raw denim", "Selvedge denim", "Distressed denim", "Eco-denim", "Custom Denim", "Jeans customization"]'),
-('fashion_tech', 'Fashion Technology', '["3D body scanning", "Virtual try-on", "AR/VR experiences", "Smart textiles", "Wearable tech", "Size recommendation AI", "Digital fashion"]')
+INSERT INTO public.production_methods (id, name, description) VALUES
+('rtw', 'Ready-To-Wear', 'Off-the-shelf standard sizing'),
+('mtm', 'Made-To-Measure', 'Custom-made to individual measurements'),
+('custom', 'Custom Apparel', 'Team/specialty customization')
+ON CONFLICT (id) DO NOTHING;
+
+-- 2B. PRODUCT CATEGORIES REFERENCE
+CREATE TABLE IF NOT EXISTS public.product_categories (
+    id TEXT PRIMARY KEY,
+    name TEXT NOT NULL,
+    parent_category TEXT,
+    created_at TIMESTAMPTZ DEFAULT NOW()
+);
+
+INSERT INTO public.product_categories (id, name, parent_category) VALUES
+('casual', 'Casual Wear', NULL),
+('sportswear', 'Sportswear & Athleisure', NULL),
+('denim', 'Denim & Indigo', NULL),
+('kidswear', 'Kidswear', NULL),
+('modest', 'Modest Fashion', NULL),
+('sustainable', 'Sustainable Fashion', NULL),
+('corporate', 'Corporate Attire', NULL),
+('bridal', 'Bridal & Tuxedo', NULL),
+('outerwear', 'Outerwear & Jackets', NULL),
+('workwear', 'Workwear & Industrial', NULL),
+('healthcare', 'Healthcare & Fitness', NULL),
+('uniforms', 'Uniforms', NULL),
+('fashion_tech', 'Fashion Technology', NULL),
+('theatrical', 'Theatrical Costuming', NULL)
+ON CONFLICT (id) DO NOTHING;
+
+-- 2C. CULTURAL ATTIRE REFERENCE (MTM country-specific)
+CREATE TABLE IF NOT EXISTS public.cultural_attire (
+    id TEXT PRIMARY KEY,
+    name TEXT NOT NULL,
+    country_code TEXT REFERENCES public.countries_reference(code),
+    region TEXT,
+    description TEXT,
+    created_at TIMESTAMPTZ DEFAULT NOW()
+);
+
+INSERT INTO public.cultural_attire (id, name, country_code, region, description) VALUES
+('bespoke_eu', 'Bespoke Suits', 'IT', 'Europe', 'Italian/European bespoke tailoring'),
+('savile_row', 'Savile Row Bespoke', 'GB', 'Europe', 'British bespoke tailoring'),
+('haute_couture', 'Haute Couture', 'FR', 'Europe', 'French high fashion'),
+('cheongsam', 'Cheongsam/Qipao', 'CN', 'Asia', 'Chinese traditional'),
+('kimono', 'Kimono', 'JP', 'Asia', 'Japanese traditional'),
+('shervani', 'Shervani/Lehenga', 'IN', 'Asia', 'Indian formal wear'),
+('hanbok', 'Hanbok', 'KR', 'Asia', 'Korean traditional'),
+('agbada', 'Agbada/Dashiki', 'NG', 'Africa', 'Nigerian formal'),
+('kente', 'Kente', 'GH', 'Africa', 'G Ghanaian traditional'),
+('kilt', 'Kilt', 'GB', 'Europe', 'Scottish formal'),
+('thobe', 'Thobe/Kandura', 'AE', 'Middle East', 'Middle Eastern formal'),
+('shalwar', 'Shalwar Kameez', 'PK', 'Asia', 'South Asian'),
+('batik', 'Batik/Kebaya', 'ID', 'Asia', 'Indonesian traditional'),
+('sari', 'Sari', 'IN', 'Asia', 'Indian drape')
+ON CONFLICT (id) DO NOTHING;
+
+-- 2D. VERTICAL CATEGORIES (simplified)
+CREATE TABLE IF NOT EXISTS public.industry_verticals (
+    id TEXT PRIMARY KEY,
+    name TEXT NOT NULL,
+    category_type TEXT CHECK (category_type IN ('production', 'product', 'tech')),
+    created_at TIMESTAMPTZ DEFAULT NOW()
+);
+
+INSERT INTO public.industry_verticals (id, name, category_type) VALUES
+('rtw', 'Ready-To-Wear', 'production'),
+('mtm', 'Made-To-Measure', 'production'),
+('custom', 'Custom Apparel', 'production'),
+('bridal', 'Bridal & Tuxedo', 'product'),
+('outerwear', 'Outerwear & Jackets', 'product'),
+('workwear', 'Workwear & Industrial', 'product'),
+('fashion_tech', 'Fashion Technology', 'tech')
+ON CONFLICT (id) DO NOTHING;
+
+-- 2E. VERTICAL-PRODUCT MAPPING (junction table)
+CREATE TABLE IF NOT EXISTS public.vertical_products (
+    vertical_id TEXT REFERENCES public.industry_verticals(id),
+    product_category_id TEXT REFERENCES public.product_categories(id),
+    PRIMARY KEY (vertical_id, product_category_id)
+);
+
+INSERT INTO public.vertical_products (vertical_id, product_category_id) VALUES
+('rtw', 'casual'), ('rtw', 'sportswear'), ('rtw', 'denim'), ('rtw', 'kidswear'),
+('rtw', 'modest'), ('rtw', 'sustainable'), ('rtw', 'corporate'),
+('mtm', 'casual'), ('mtm', 'corporate'),
+('custom', 'uniforms'), ('custom', 'theatrical'),
+('bridal', 'bridal'),
+('outerwear', 'outerwear'),
+('workwear', 'workwear'), ('workwear', 'healthcare'), ('workwear', 'uniforms'),
+('fashion_tech', 'fashion_tech')
+ON CONFLICT (id) DO NOTHING;
+
+-- 2F. VERTICAL-COUNTRY CONTEXT (junction table for MTM)
+CREATE TABLE IF NOT EXISTS public.vertical_country_context (
+    vertical_id TEXT REFERENCES public.industry_verticals(id),
+    country_code TEXT REFERENCES public.countries_reference(code),
+    cultural_attire_id TEXT REFERENCES public.cultural_attire(id),
+    is_primary BOOLEAN DEFAULT FALSE,
+    PRIMARY KEY (vertical_id, country_code)
+);
+
+INSERT INTO public.vertical_country_context (vertical_id, country_code, cultural_attire_id, is_primary) VALUES
+('mtm', 'IT', 'bespoke_eu', TRUE),
+('mtm', 'GB', 'savile_row', TRUE),
+('mtm', 'FR', 'haute_couture', TRUE),
+('mtm', 'CN', 'cheongsam', TRUE),
+('mtm', 'JP', 'kimono', TRUE),
+('mtm', 'IN', 'shervani', TRUE),
+('mtm', 'KR', 'hanbok', TRUE),
+('mtm', 'NG', 'agbada', TRUE),
+('mtm', 'GH', 'kente', TRUE),
+('mtm', 'AE', 'thobe', TRUE),
+('mtm', 'PK', 'shalwar', TRUE),
+('mtm', 'ID', 'batik', TRUE),
+('bridal', 'IN', 'sari', FALSE),
+('bridal', 'CN', 'cheongsam', FALSE),
+('bridal', 'JP', 'kimono', FALSE),
+('bridal', 'NG', 'agbada', FALSE)
 ON CONFLICT (id) DO NOTHING;
 
 -- 3. EXPAND PROFILES FOR COMPREHENSIVE ONBOARDING DATA (Phase 2-8)
@@ -133,14 +231,26 @@ ADD COLUMN IF NOT EXISTS onboarding_completed_at TIMESTAMPTZ;
 -- 4. SECURITY (RLS)
 ALTER TABLE public.countries_reference ENABLE ROW LEVEL SECURITY;
 ALTER TABLE public.industry_verticals ENABLE ROW LEVEL SECURITY;
+ALTER TABLE public.production_methods ENABLE ROW LEVEL SECURITY;
+ALTER TABLE public.product_categories ENABLE ROW LEVEL SECURITY;
+ALTER TABLE public.cultural_attire ENABLE ROW LEVEL SECURITY;
+ALTER TABLE public.vertical_products ENABLE ROW LEVEL SECURITY;
+ALTER TABLE public.vertical_country_context ENABLE ROW LEVEL SECURITY;
 
 CREATE POLICY "Allow public read for reference tables" ON public.countries_reference FOR SELECT USING (true);
 CREATE POLICY "Allow public read for industry verticals" ON public.industry_verticals FOR SELECT USING (true);
+CREATE POLICY "Allow public read for production methods" ON public.production_methods FOR SELECT USING (true);
+CREATE POLICY "Allow public read for product categories" ON public.product_categories FOR SELECT USING (true);
+CREATE POLICY "Allow public read for cultural attire" ON public.cultural_attire FOR SELECT USING (true);
 
 -- 5. INDEXING FOR PERFORMANCE
 CREATE INDEX IF NOT EXISTS idx_profile_onboarding_phase ON public.profiles(onboarding_phase);
 CREATE INDEX IF NOT EXISTS idx_profile_country ON public.profiles(country_code);
+CREATE INDEX IF NOT EXISTS idx_cultural_attire_country ON public.cultural_attire(country_code);
+CREATE INDEX IF NOT EXISTS idx_vertical_country ON public.vertical_country_context(country_code);
 
 -- 6. VERIFICATION COMMENT
 COMMENT ON TABLE public.countries_reference IS 'Mandatory reference table for geographic context in onboarding.';
-COMMENT ON TABLE public.industry_verticals IS 'Reference table for all 20 industry verticals and their sub-specialties.';
+COMMENT ON TABLE public.industry_verticals IS 'Reference table for 7 core verticals with production/product/tech types.';
+COMMENT ON TABLE public.production_methods IS 'Production method reference: RTW, MTM, Custom.';
+COMMENT ON TABLE public.cultural_attire IS 'Cultural attire reference for country-specific MTM context.';

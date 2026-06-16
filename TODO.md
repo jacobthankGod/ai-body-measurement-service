@@ -1,21 +1,40 @@
-# TODO: Styled Notification for Widget Color Selection
+# TODO.md - User Onboarding Implementation
 
-## Task: Replace JavaScript alert() popup with styled in-page toast notification
+## Status: IN PROGRESS
 
-### Implementation Steps:
-- [x] 1. Add CSS styles for toast notification component in dashboard.html
-- [x] 2. Add HTML container for toast notification in dashboard
-- [x] 3. Add JavaScript function to show/hide styled notification
-- [x] 4. Replace `alert("Widget aesthetics synchronized.")` with styled notification
+### ✅ AUDIT COMPLETED
+- [x] USER_ONBOARDING_PLAN.sql - 7 verticals, relational schema
+- [x] INDUSTRY_VERTICALS_REFERENCE.md - Updated to new schema
 
-### Files Edited:
-- dashboard.html
+### PHASES (8)
 
-### Summary:
-The widget setup tab in the merchant dashboard uses a native JavaScript alert() popup when saving widget settings. This needs to be replaced with a styled in-page toast notification for a more polished UX.
+#### Phase 1: Welcome & Orientation
+- ⏳ PENDING - Create onboarding.html entry point
 
-### Changes Made:
-1. Added CSS styles for toast notification (positioned at bottom-right, with slide-up animation, gradient background, checkmark icon)
-2. Added HTML container for toast with success icon, title, message, and close button
-3. Added JavaScript functions: `window.showToast()` and `window.hideToast()` to control the notification
-4. Replaced `alert()` calls in `window.saveWidgetSettings()` with styled notification calls
+#### Phase 2: Account Type Confirmation
+- ⏳ PENDING - 4 account type cards
+
+#### Phase 3: Geographic Context
+- ⏳ PENDING - Country/region selector
+
+#### Phase 4: Business Profile
+- ⏳ PENDING - Business details (skip for Individual)
+
+#### Phase 5: Industry Context
+- ⏳ PENDING - Industry selector (7 verticals)
+
+#### Phase 6: Measurement Preferences
+- ⏳ PENDING - Metric/Imperial toggle
+
+#### Phase 7: Subscription Tier  
+- ⏳ PENDING - Plan selection
+
+#### Phase 8: Completion & Success
+- ⏳ PENDING - Dashboard redirect
+
+---
+
+## DEPENDENCIES COMPLETE
+- [x] USER_ONBOARDING_PLAN.sql
+- [x] INDUSTRY_VERTICALS_REFERENCE.md
+- [ ] Database tables (run SQL)

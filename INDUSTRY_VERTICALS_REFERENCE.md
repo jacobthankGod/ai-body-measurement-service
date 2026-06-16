@@ -1,463 +1,108 @@
-# INDUSTRY VERTICALS & SUB-SPECIALTIES
-## Comprehensive Reference by Continent & Country
+# INDUSTRY VERTICALS REFERENCE
+## Industry-Standard Relational Schema
 
 ---
 
-## 1. LUXURY MADE-TO-MEASURE (MTM)
+## DATABASE TABLES (Industry Standard)
 
-### Global Luxury Fashion Houses
-- **Italy (Milano, Firenze)**: Savile Row bespoke, Roman haute couture, Neapolitan tailoring
-- **France (Paris, Lyon)**: Parisian haute couture, Chantilly lacework, Lyonnaise silk
-- **UK (London)**: Savile Row bespoke, British tailoring heritage
-- **Switzerland (Geneva, Zürich)**: Swiss precision tailoring
-- **Germany (München)**: German precision Engineering
+### 1. production_methods
+| id | name | description |
+|---|---|---|
+| rtw | Ready-To-Wear | Off-the-shelf standard sizing |
+| mtm | Made-To-Measure | Custom-made to individual measurements |
+| custom | Custom Apparel | Team/specialty customization |
 
-### Sub-Specialties:
-- Bespoke suits & jackets
-- Hand-stitched leather goods
-- Custom shirts (Shirtmaking)
-- Made-to-measure overcoats
-- Personalized lining selection
-- monogram customization
+### 2. product_categories
+| id | name | parent_category |
+|---|---|---|
+| casual | Casual Wear | NULL |
+| sportswear | Sportswear & Athleisure | NULL |
+| denim | Denim & Indigo | NULL |
+| kidswear | Kidswear | NULL |
+| modest | Modest Fashion | NULL |
+| sustainable | Sustainable Fashion | NULL |
+| corporate | Corporate Attire | NULL |
+| bridal | Bridal & Tuxedo | NULL |
+| outerwear | Outerwear & Jackets | NULL |
+| workwear | Workwear & Industrial | NULL |
+| healthcare | Healthcare & Fitness | NULL |
+| uniforms | Uniforms | NULL |
+| fashion_tech | Fashion Technology | NULL |
+| theatrical | Theatrical Costuming | NULL |
 
----
+### 3. cultural_attire (Country-Specific MTM Context)
+| id | name | country_code | region | description |
+|---|---|---|---|---|
+| bespoke_eu | Bespoke Suits | IT | Europe | Italian/European bespoke |
+| savile_row | Savile Row Bespoke | GB | Europe | British bespoke |
+| haute_couture | Haute Couture | FR | Europe | French high fashion |
+| cheongsam | Cheongsam/Qipao | CN | Asia | Chinese traditional |
+| kimono | Kimono | JP | Asia | Japanese traditional |
+| shervani | Shervani/Lehenga | IN | Asia | Indian formal wear |
+| hanbok | Hanbok | KR | Asia | Korean traditional |
+| agbada | Agbada/Dashiki | NG | Africa | Nigerian formal |
+| kente | Kente | GH | Africa | Ghanaian traditional |
+| kilt | Kilt | GB | Europe | Scottish formal |
+| thobe | Thobe/Kandura | AE | Middle East | Middle Eastern |
+| shalwar | Shalwar Kameez | PK | Asia | South Asian |
+| batik | Batik/Kebaya | ID | Asia | Indonesian |
+| sari | Sari | IN | Asia | Indian drape |
 
-## 2. BRIDAL & TUXEDO
+### 4. industry_verticals
+| id | name | category_type |
+|---|---|---|
+| rtw | Ready-To-Wear | production |
+| mtm | Made-To-Measure | production |
+| custom | Custom Apparel | production |
+| bridal | Bridal & Tuxedo | product |
+| outerwear | Outerwear & Jackets | product |
+| workwear | Workwear & Industrial | product |
+| fashion_tech | Fashion Technology | tech |
 
-### Major Markets
-- **USA (New York, Los Angeles, Dallas)**: Largest bridal market globally
-- **UK (London, Birmingham)**: Major European bridal hub
-- **Spain (Barcelona, Madrid)**: Flamenco-influenced bridal
-- **Italy (Firenze, Roma)**: Italian luxury bridal
-- **India (Mumbai, Delhi)**: Massive bridal industry
+### 5. vertical_products (junction)
+| vertical_id | product_category_id |
+|---|---|
+| rtw | casual, sportswear, denim, kidswear, modest, sustainable, corporate |
+| mtm | casual, corporate |
+| custom | uniforms, theatrical |
+| bridal | bridal |
+| outerwear | outerwear |
+| workwear | workwear, healthcare, uniforms |
+| fashion_tech | fashion_tech |
 
-### Sub-Specialties:
-- Wedding gowns (white/cream/color)
-- Bridesmaid dresses
-- Groom's formal wear
-- Tuxedo rentals & sales
-- Flower girl / page boy outfits
-- Cultural wedding attire:
-  - Indian (Lehenga, Saree, Shervani)
-  - Chinese (Qipao, Cheongsam)
-  - Japanese (Kimono)
-  - Nigerian (Gele, Aso Oke)
-  - Scottish (Kilt)
-  - Jewish (Rabbinic attire)
-
----
-
-## 3. READY-TO-WEAR (RTW)
-
-### Major Markets
-- **USA**: Largest RTW market (NY, LA, Miami)
-- **China (Shanghai, Beijing, Guangzhou)**: Fastest growing RTW
-- **Italy (Milano)**: Premium RTW hub
-- **France (Paris)**: Haute couture diffusion
-- **UK (London)**: Streetwear & heritage
-- **Japan (Tokyo)**: Designer RTW
-- **South Korea (Seoul)**: K-fashion influence
-- **India (Mumbai, Bangalore)**: Export-oriented RTW
-
-### Sub-Specialties:
-- Casual wear (denim, t-shirts)
-- Sportswear & athleisure
-- Corporate attire
-- Kidswear
-- Maternity wear
-- Petite & plus sizing
-- Sustainable fashion
-
----
-
-## 4. MANUFACTURING
-
-### Industrial Hubs
-- **China (Guangdong, Jiangsu, Zhejiang)**: Global manufacturing hub
-- **Bangladesh (Dhaka, Chittagong)**: Mass production
-- **Vietnam (Ho Chi Minh, Hanoi)**: Growing capacity
-- **India (Gujarat, Maharashtra)**: Diverse manufacturing
-- **Turkey (Istanbul)**: Europe-Africa bridge
-- **Italy (Prato, Brescia)**: Premium textiles
-- **Portugal (Porto Braga)**: European production
-- **Mexico (Mexico City, Puebla)**: Americas hub
-- **USA (Los Angeles, New York)**: Domestic production
-
-### Sub-Specialties:
-- Mass production
-- Technical textiles
-- Workwear & uniforms
-- Protective equipment (PPE)
-- Medical textiles
-- Automotive textiles
-- Technical fabrics
-- Sustainable manufacturing
+### 6. vertical_country_context (MTM Mappings)
+| vertical_id | country_code | cultural_attire_id | is_primary |
+|---|---|---|---|
+| mtm | IT | bespoke_eu | TRUE |
+| mtm | GB | savile_row | TRUE |
+| mtm | FR | haute_couture | TRUE |
+| mtm | CN | cheongsam | TRUE |
+| mtm | JP | kimono | TRUE |
+| mtm | IN | shervani | TRUE |
+| mtm | KR | hanbok | TRUE |
+| mtm | NG | agbada | TRUE |
+| mtm | GH | kente | TRUE |
+| mtm | AE | thobe | TRUE |
+| mtm | PK | shalwar | TRUE |
+| mtm | ID | batik | TRUE |
 
 ---
 
-## 5. CUSTOM APPAREL
-
-### Specialty Markets
-- **USA**: Sports team apparel, corporate uniforms
-- **UK**: School uniforms, theatrical
-- **Japan**: Corporate uniforms
-- **Australia**: School uniforms
-- **UAE**: Traditional attire customization
-
-### Sub-Specialties:
-- Sports team uniforms
-- Corporate uniforms
-- School uniforms
-- Theatrical costuming
-- Dance costumes
-- Performance wear
-- Military uniforms
-- Security/SCBA apparel
-
----
-
-## 6. HEALTHCARE & FITNESS
-
-### Medical Markets
-- **USA** (largest healthcare market)
-- **Germany**
-- **UK**
-- **Japan**
-- **Australia**
-- **UAE** (medical tourism)
-
-### Healthcare Sub-Specialties:
-- Surgical gowns & drapes
-- Medical scrubs
-- Patient wear
-- Compression garments
-- Orthopedic supports
-- Diabetic footwear
-- Post-surgical garments
-- Maternity support wear
-- Medical uniform design
-
-### Fitness Sub-Specialties:
-- Activewear
-- Swimwear
-- Yoga wear
-- Running apparel
-- Cycling gear
-- Sports bras
-- Compression sportswear
-
----
-
-## 7. TEXTILES & FABRICS
-
-### Textile Hubs
-- **Italy (Biella, Prato)**: Premium wool
-- **UK (Yorkshire)**: Heritage wool
-- **Japan (Okayama)**: Premium denim
-- **India (Gujarat)**: Cotton & silk
-- **China (Suzhou)**: Silk production
-- **France (Lyon)**: Silk heritage
-- **Pakistan (Karachi)**: Cotton production
-
-### Sub-Specialties:
-- Natural fibers (cotton, wool, silk, linen)
-- Technical fabrics
-- Performance textiles
-- Sustainable fabrics
-- Denim & indigo
-- Lace & embroidery
-- Technical knits
-
----
-
-## 8. RETAIL & E-COMMERCE
-
-### E-Commerce Markets
-- **USA** (largest)
-- **China** (Alibaba, JD.com)
-- **UK**
-- **Germany**
-- **Japan**
-- **South Korea**
-
-### Sub-Specialties:
-- Online fit guides
-- Virtual try-on
-- Size recommendation engines
-- Made-to-order production
-- Print-on-demand
-- Customization platforms
-
----
-
-## 9. FOOTWEAR
-
-### Footwear Hubs
-- **Italy (Milan, Fiesso)**: Luxury footwear
-- **USA (Boston, New England)**: Athletic
-- **China (Wenzhou)**: Mass production
-- **Vietnam**: Export production
-- **India (Ranipet, Chennai)**: Leather footwear
-- **Brazil (Novo Hamburgo)**: Casual footwear
-- **Spain**: Sandals & casual
-
-### Sub-Specialties:
-- Formal shoes
-- Casual shoes
-- Athletic footwear
-- Orthopedic footwear
-- Safety footwear
-- Custom orthopedic
-- Dance footwear
-- Luxury bespoke
-
----
-
-## 10. OUTERWEAR & JACKETS
-
-### Outerwear Hubs
-- **Italy**: Leather & wool
-- **Canada (Toronto, Montreal)**: Parkas
-- **UK**: Heritage outerwear
-- **USA**: Casual outerwear
-- **Japan**: Tech outerwear
-- **France**: Luxury coats
-
-### Sub-Specialties:
-- Coats & overcoats
-- Leather jackets
-- Puffer jackets
-- Raincoats
-- Military outerwear
-- Winter sports outerwear
-- Hi-vis workwear
-
----
-
-## 11. SPORTSWEAR & ATHLEISURE
-
-### Sportswear Markets
-- **USA**: Nike, Under Armour HQ
-- **Germany (Adidas)**: Herzogenaurach
-- **Japan**: Descente, Asics
-- **UK**: Gymshark
-- **China**: Anta, Li-Ning
-
-### Sub-Specialties:
-- Gym & fitness wear
-- Running & jogging
-- Yoga & pilates
-- Cycling apparel
-- Swimming & aquatics
-- Winter sports
-- Golf attire
-- Tennis apparel
-
----
-
-## 12. UNIFORMS & Corporate Apparel
-
-### Corporate Uniforms
-- **USA**: Corporate uniform market
-- **UK**: Service industry uniforms
-- **Japan**: Corporate suits
-- **Middle East**: Corporate abaya
-
-### Sub-Specialties:
-- Corporate suits
-- Service uniforms
-- Hospitality wear
-- Front-of-house attire
-- Security uniforms
-- Delivery & logistics
-- Airline & aviation
-
----
-
-## 13. CHILDREN'S WEAR
-
-### Kidswear Markets
-- **USA**: Largest market
-- **UK**: Premium kidswear
-- **Japan**: Designer kids
-- **China**: Production hub
-- **Italy**: Luxury kids
-
-### Sub-Specialties:
-- Newborn & infantwear
-- Kids casual wear
-- Kids formal wear
-- School uniforms
-- Baby wear
-- Kids activewear
-
----
-
-## 14. MODEST FASHION
-
-### Modest Fashion Markets
-- **UAE** (Dubai): Global hub
-- **Saudi Arabia**
-- **Malaysia**
-- **Indonesia**
-- **Turkey**
-- **UK**: Muslim fashion
-
-### Sub-Specialties:
-- Modest dresses
-- Abaya & jilbab
-- Hijab fashion
-- Modest swimwear
-- Modest activewear
-- Traditional modest wear
-
----
-
-## 15. SUSTAINABLE & ETHICAL FASHION
-
-### Sustainability Hubs
-- **Scandinavia** (Sweden, Norway)
-- **Netherlands**
-- **UK**
-- **Australia**
-- **USA**
-
-### Sub-Specialties:
-- Organic materials
-- Recycled textiles
-- Circular fashion
-- Upcycled fashion
-- Vegan materials
-- Fair trade apparel
-
----
-
-## 16. WORKWEAR & INDUSTRIAL
-
-### Workwear Markets
-- **USA**: Oil, gas, construction
-- **Australia**: Mining & industrial
-- **UK**: Construction & utilities
-- **Germany**: Engineering
-- **Middle East**: Oil/gas
-
-### Sub-Specialties:
-- Construction wear
-- Mining & extraction
-- Industrial uniforms
-- Safety footwear
-- Flame-resistant (FR)
-- High-visibility clothing
-- Tool accessories
-
----
-
-## 17. LINGERIE & INTIMATES
-
-### Intimate Apparel Hubs
-- **USA (Virginia)**: Leadership
-- **France (Lyon)**: Heritage
-- **UK**
-- **China**
-- **Vietnam**
-
-### Sub-Specialties:
-- Bras & bralettes
-- Panties & briefs
-- Shapewear
-- Loungewear
-- Sleepwear
-- Hosiery
-
----
-
-## 18. HAT & ACCESSORY DESIGN
-
-### Accessory Markets
-- **Italy**: Leather goods
-- **France**: Luxury accessories
-- **USA**: Hats & caps
-- **Panama**: Panama hats
-- **Morocco**: Leather
-
-### Sub-Specialties:
-- Hats & caps
-- Scarves & wraps
-- Leather goods
-- Belts & small leather
-- Ties & pocket squares
-- Gloves
-
----
-
-## 19. DENIM & INDIGO
-
-### Denim Hubs
-- **Japan (Kobe, Okayama)**: Premium denim
-- **USA (Los Angeles)**: Heritage
-- **Italy**: Designer denim
-- **Turkey**: Production
-- **Mexico**: Export
-
-### Sub-Specialties:
-- Raw denim
-- Selvedge denim
-- Distressed denim
-- Eco-denim
-- Custom Denim
-- Jeans customization
-
----
-
-## 20. FASHION TECHNOLOGY
-
-### Tech Fashion Hubs
-- **USA (Silicon Valley)**: Tech integration
-- **UK (London)**: Fashion tech
-- **Japan**: Smart textiles
-- **China**: Manufacturing tech
-- **Germany**: Technical innovation
-
-### Sub-Specialties:
-- 3D body scanning
-- Virtual try-on
-- AR/VR experiences
-- Smart textiles
-- Wearable tech
-- Size recommendation AI
-- Digital fashion
-
----
-
-## COUNTRY/REGION QUICK REFERENCE
-
-| Region | Primary Industries |
-|--------|------------------|
-| **North America** | RTW, Sportswear, Manufacturing, Activewear |
-| **UK** | Bespoke, Heritage,modest, sustainable |
-| **France** | Haute couture, Luxury, Lingerie |
-| **Italy** | Luxury MTM, Footwear, Leather, Textiles |
-| **Germany** | Technical, Manufacturing, Sportswear |
-| **Spain** | Bridal, Footwear, Fashion |
-| **China** | Manufacturing, RTW, E-commerce |
-| **Japan** | Premium Denim, Technical, Designer |
-| **South Korea** | K-fashion, Fast fashion |
-| **India** | Manufacturing, Bridal, Textiles |
-| **UAE** | Modest fashion, Luxury |
-| **Australia** | Swimwear, Sustainable, Workwear |
-| **Bangladesh** | Manufacturing, Mass production |
-| **Vietnam** | Manufacturing, Export |
-| **Turkey** | Manufacturing, Denim |
-
----
-
-## DATA SCHEMA
-
-```json
-{
-  "industry_vertical": "string",
-  "regions": ["string"],
-  "sub_specialties": ["string"],
-  "market_size": "string",
-  "key_cities": ["string"]
-}
+## RELATIONAL QUERIES
+
+### Get MTM options for a country:
+```sql
+SELECT v.name, ca.name, ca.description
+FROM vertical_country_context vcc
+JOIN industry_verticals v ON v.id = vcc.vertical_id
+JOIN cultural_attire ca ON ca.id = vcc.cultural_attire_id
+WHERE vcc.country_code = 'IN';
+```
+
+### Get all products for a vertical:
+```sql
+SELECT v.name, pc.name
+FROM vertical_products vp
+JOIN industry_verticals v ON v.id = vp.vertical_id
+JOIN product_categories pc ON pc.id = vp.product_category_id;
+```
