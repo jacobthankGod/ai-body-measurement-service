@@ -214,11 +214,10 @@ INSERT INTO public.vertical_country_context (vertical_id, country_code, cultural
 ('mtm', 'AE', 'thobe', TRUE),
 ('mtm', 'PK', 'shalwar', TRUE),
 ('mtm', 'ID', 'batik', TRUE),
-('bridal', 'IN', 'sari', FALSE),
 ('bridal', 'CN', 'cheongsam', FALSE),
 ('bridal', 'JP', 'kimono', FALSE),
 ('bridal', 'NG', 'agbada', FALSE)
-ON CONFLICT (id) DO NOTHING;
+ON CONFLICT (vertical_id, country_code) DO NOTHING;
 
 -- 3. EXPAND PROFILES FOR COMPREHENSIVE ONBOARDING DATA (Phase 2-8)
 ALTER TABLE public.profiles
