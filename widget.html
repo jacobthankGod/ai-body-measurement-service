@@ -188,7 +188,7 @@
                 </div>
               </div>
 
-              <button type="submit" class="btn-submit">Generate Profile</button>
+              <button type="submit" class="btn-submit">Get Body Measurements</button>
             </div>
           </div>
         </form>
@@ -244,31 +244,57 @@
       ctx.clearRect(0, 0, canvas.width, canvas.height);
       if (!results.poseLandmarks) { msg.textContent = "Searching for you..."; isPoseAligned = false; return; }
       const l = results.poseLandmarks;
-      const head = l[0], lSh = l[11], rSh = l[12], lAn = l[27], rAn = l[28], lWr = l[15], rWrist = l[16];
+      const head = l[0], lSh = l[11], rSh = l[12], lAn = l[27], rAn = l[28], lWr = l[15], rWrist = l[16], lHi = l[23], rHi = l[24];
+
       let aligned = true, feedback = "Hold steady...";
-      if (head.visibility < 0.5 || lAn.visibility < 0.5 || rAn.visibility < 0.5) { feedback = "Step back: Head and feet must be visible."; aligned = false; }
-      else if (activeCameraType === 'front') {
-        if (lWr.y < lSh.y || rWrist.y < rSh.y) { feedback = "Move arms down."; aligned = false; }
+
+      // 1. Visibility Check
+      if (head.visibility < 0.5 || lAn.visibility < 0.5 || rAn.visibility < 0.5) {
+        feedback = "Step back: Head and feet must be visible."; aligned = false;
       }
+      // 2. Pose Specific Validation
+      else if (activeCameraType === 'front') {
+        const armsDown = lWr.y > lSh.y && rWrist.y > rSh.y;
+        const armsSpread = Math.abs(lWr.x - lHi.x) > 0.12 && Math.abs(rWrist.x - rHi.x) > 0.12;
+        if (!armsDown) { feedback = "A-POSE: Move arms down."; aligned = false; }
+        else if (!armsSpread) { feedback = "A-POSE: Spread arms away from body."; aligned = false; }
+      } else if (activeCameraType === 'side') {
+        const xDelta = Math.abs(lSh.x - rSh.x);
+        const sideRatio = xDelta / Math.abs(lSh.y - lHi.y);
+        if (sideRatio > 0.25) { feedback = "Turn Side: Face fully 90 degrees."; aligned = false; }
+      }
+
       if (aligned) {
         if (alignmentStartTime === 0) { alignmentStartTime = Date.now(); window.speak("Hold still.", true); }
         else if (Date.now() - alignmentStartTime > 1500 && !autoSnapTriggered) { autoSnapTriggered = true; window.snapPhoto(); return; }
-        feedback = `Capturing in ${((1500 - (Date.now() - alignmentStartTime))/1000).toFixed(1)}s...`;
-      } else { alignmentStartTime = 0; }
-      msg.textContent = feedback; isPoseAligned = aligned;
+        const rem = Math.max(0, 1500 - (Date.now() - alignmentStartTime));
+        feedback = `Capturing in ${(rem/1000).toFixed(1)}s...`;
+      } else {
+        alignmentStartTime = 0;
+      }
+
+      msg.textContent = feedback;
+      msg.style.background = aligned ? "var(--Mint)" : "rgba(0,0,0,0.7)";
+      msg.style.color = aligned ? "var(--Obsidian)" : "#fff";
+      isPoseAligned = aligned;
+
       const ring = document.getElementById('shutterRing'); if (ring) { if (aligned) ring.classList.add('active'); else ring.classList.remove('active'); }
-      ctx.strokeStyle = aligned ? "#57D7C0" : "#FFFFFF"; ctx.lineWidth = 10;
-      [[11,12], [11,23], [12,24], [23,24]].forEach(([i,j]) => {
-        ctx.beginPath(); ctx.moveTo(l[i].x*canvas.width, l[i].y*canvas.height); ctx.lineTo(l[j].x*canvas.width, l[j].y*canvas.height); ctx.stroke();
+      ctx.strokeStyle = aligned ? "#57D7C0" : "#FFFFFF"; ctx.lineWidth = 8; ctx.lineCap = "round";
+
+      const conns = [[11,12], [11,13], [13,15], [12,14], [14,16], [11,23], [12,24], [23,24], [23,25], [25,27], [24,26], [26,28]];
+      conns.forEach(([i,j]) => {
+        if (l[i].visibility > 0.5 && l[j].visibility > 0.5) {
+          ctx.beginPath(); ctx.moveTo(l[i].x*canvas.width, l[i].y*canvas.height); ctx.lineTo(l[j].x*canvas.width, l[j].y*canvas.height); ctx.stroke();
+        }
       });
     };
 
-    window.openCamera = async (type) => {
-      activeCameraType = type; autoSnapTriggered = false; isReviewing = false;
+window.openCamera = async (type) => {
+      activeCameraType = type; alignmentStartTime = 0; autoSnapTriggered = false; isReviewing = false;
       document.getElementById('step-camera').classList.add('active');
       if (!poseModel) {
         poseModel = new Pose({ locateFile: (file) => `https://cdn.jsdelivr.net/npm/@mediapipe/pose@0.5.1675469404/${file}` });
-        poseModel.setOptions({ modelComplexity: 1, smoothLandmarks: true, minDetectionConfidence: 0.5 });
+        poseModel.setOptions({ modelComplexity: 2, smoothLandmarks: true, minDetectionConfidence: 0.6, minTrackingConfidence: 0.6 });
         poseModel.onResults(window.onPoseResults);
       }
       cameraInstance = new Camera(document.getElementById('camera-video'), { onFrame: async () => { if (poseModel) await poseModel.send({image: document.getElementById('camera-video')}); }, width: 1280, height: 720 });
