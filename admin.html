@@ -885,13 +885,22 @@ console.warn(`🔄 Sync failure (${err.message}). Retrying ${attempt+1}/12 in ${
         const body = document.getElementById('healthEndpoints');
         if (!body) return;
 
+        // AUTHENTICATION HYDRATION FOR MONITORING
+        let authHeaders = {};
+        if (window.KORRA_DB) {
+          const { data: { session } } = await window.KORRA_DB.auth.getSession();
+          if (session) authHeaders['Authorization'] = `Bearer ${session.access_token}`;
+        }
+
         let html = '';
         for (const ep of endpoints) {
             const start = performance.now();
             try {
-                const res = await fetch(ep.path);
+                const res = await fetch(ep.path, { headers: authHeaders });
                 const latency = Math.round(performance.now() - start);
-                html += `<tr><td>${ep.path}</td><td>${ep.method}</td><td><span class="health-status status-ok">HEALTHY</span></td><td>~${latency}ms</td></tr>`;
+                const statusClass = res.ok ? 'status-ok' : 'status-err';
+                const statusText = res.ok ? 'HEALTHY' : `ERR ${res.status}`;
+                html += `<tr><td>${ep.path}</td><td>${ep.method}</td><td><span class="health-status ${statusClass}">${statusText}</span></td><td>~${latency}ms</td></tr>`;
             } catch(e) {
                 html += `<tr><td>${ep.path}</td><td>${ep.method}</td><td><span class="health-status status-err">ERROR</span></td><td>-</td></tr>`;
             }

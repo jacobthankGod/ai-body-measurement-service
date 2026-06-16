@@ -60,7 +60,7 @@
             overlay.style.cssText = `
                 position: fixed;
                 inset: 0;
-                background: rgba(0,0,0,0.85);
+                background: rgba(0,0,0,0.95);
                 backdrop-filter: blur(20px);
                 z-index: 9999999;
                 display: flex;
@@ -73,9 +73,10 @@
             const iframe = document.createElement('iframe');
             iframe.src = `${this.config.host}/widget?merchant=${this.config.merchantId}`;
             iframe.style.cssText = `
-                width: 100%;
-                max-width: 480px;
-                height: 600px;
+                width: 95%;
+                max-width: 900px;
+                height: 90vh;
+                max-height: 600px;
                 border: none;
                 border-radius: 32px;
                 box-shadow: 0 40px 100px rgba(0,0,0,0.5);
