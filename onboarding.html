@@ -581,8 +581,16 @@
       const { data: { session } } = await KORRA_CORE.auth.getSession();
       if (!session) {
         window.location.href = '/signin?next=/onboarding';
-      } else {
-        // Resume from last phase
+        return;
+      }
+
+      // Check if email is verified
+      if (!session.user.email_confirmed_at) {
+        window.location.href = '/verify';
+        return;
+      }
+
+      // Resume from last phase
         const { data: profile } = await KORRA_CORE
           .from('profiles')
           .select('*')

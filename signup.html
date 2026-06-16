@@ -159,8 +159,8 @@
         </div>
 
         <div id="successView">
-          <div class="success-icon">✓</div>
-          <h2 style="color:var(--Mint)">Account Created</h2>
+          <div class="success-icon">✉</div>
+          <h2 style="color:var(--Mint)">Verify Your Email</h2>
           <p class="sub-p">Your precision workbench is almost ready. Please check your email to verify your portal before completing your onboarding.</p>
           <a id="successLoginLink" href="/signin?next=/onboarding" class="btn" style="text-decoration:none; display:flex; align-items:center; justify-content:center">Continue to Onboarding</a>
         </div>
@@ -220,7 +220,12 @@
 
         try {
           const { error } = await KORRA_CORE.auth.signUp({
-            email, password, options: { data: metadata }
+            email,
+            password,
+            options: {
+              data: metadata,
+              emailRedirectTo: 'https://korra.work/verify'
+            }
           });
 
           if (error) {
