@@ -9,58 +9,59 @@
   <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800;900&display=swap" rel="stylesheet" />
   <style>
     :root {
-      --Obsidian: #000000; --Mint: #57D7C0; --Glass: rgba(255, 255, 255, 0.04); --Glass-Border: rgba(255, 255, 255, 0.1);
-      --Neutral-400: #A3A3A3; --Neutral-500: #737373; --White: #FFFFFF; --Error: #D63031;
+      --Obsidian: #000000; --Mint: #57D7C0; --Teal-900: #002D2A; --Glass: rgba(255, 255, 255, 0.04);
+      --Glass-Border: rgba(255, 255, 255, 0.1); --Neutral-400: #A3A3A3; --Neutral-500: #737373; --White: #FFFFFF; --Error: #D63031;
     }
     * { box-sizing: border-box; -webkit-font-smoothing: antialiased; margin: 0; padding: 0; }
     html, body { height: 100%; background: var(--Obsidian); color: var(--White); font-family: 'Inter', sans-serif; overflow: hidden; }
-.widget-viewport { height: 100vh; display: flex; flex-direction: column; align-items: center; justify-content: center; padding: 20px; }
-    .widget-card { width: 100%; max-width: 800px; background: var(--Glass); border: 1px solid var(--Glass-Border); border-radius: 24px; padding: 40px; position: relative; overflow: hidden; backdrop-filter: blur(10px); }
+
+    .widget-viewport { height: 100vh; display: flex; flex-direction: column; align-items: center; justify-content: center; padding: 20px; }
     
-    /* LANDSCAPE LAYOUT */
-    .widget-card-landscape { display: grid; grid-template-columns: 1fr 1fr; gap: 32px; align-items: start; }
-    .widget-left { text-align: center; }
-    .widget-right { display: flex; flex-direction: column; gap: 16px; }
-    
-    /* ENSURE BUTTONS ARE VISIBLE */
-    .widget-card { overflow-y: auto; max-height: 90vh; }
-    .btn-submit { min-height: 52px; padding: 16px 24px; margin-top: 16px; }
-    .btn-outline { min-height: 44px; padding: 12px 20px; margin-top: 8px; }
-    .title { font-size: 18px; font-weight: 800; text-align: center; margin-bottom: 8px; }
-    .subtitle { font-size: 12px; color: var(--Neutral-400); text-align: center; margin-bottom: 32px; }
-    .input { width: 100%; height: 50px; background: rgba(255,255,255,0.05); border: 1px solid var(--Glass-Border); border-radius: 12px; padding: 0 16px; color: #fff; font-size: 14px; margin-bottom: 16px; outline: none; transition: 0.2s; }
-    .input:focus { border-color: var(--Mint); }
-    .photo-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; margin-bottom: 24px; }
-    .slot-column { display: flex; flex-direction: column; gap: 8px; }
-    .guide-box { height: 120px; background: #000; border-radius: 12px; border: 1px solid var(--Glass-Border); overflow: hidden; position: relative; display: flex; align-items: center; justify-content: center; }
+    .widget-card {
+      width: 100%; max-width: 900px; background: var(--Glass); border: 1px solid var(--Glass-Border);
+      border-radius: 32px; padding: 40px; position: relative; overflow: hidden;
+      backdrop-filter: blur(20px); box-shadow: 0 40px 100px rgba(0,0,0,0.5);
+      max-height: 95vh; overflow-y: auto;
+    }
+
+    .cockpit-grid { display: grid; grid-template-columns: 1fr 1.5fr; gap: 40px; align-items: start; }
+
+    .title { font-size: 24px; font-weight: 900; text-align: left; margin-bottom: 8px; color: var(--Mint); }
+    .subtitle { font-size: 14px; color: var(--Neutral-400); text-align: left; margin-bottom: 32px; font-weight: 500; }
+
+    .input { width: 100%; height: 52px; background: rgba(255,255,255,0.05); border: 1px solid var(--Glass-Border); border-radius: 14px; padding: 0 16px; color: #fff; font-size: 14px; margin-bottom: 16px; outline: none; transition: 0.2s; font-weight: 600; }
+    .input:focus { border-color: var(--Mint); background: rgba(255,255,255,0.08); }
+
+    .photo-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 16px; margin-bottom: 24px; }
+    .slot-column { display: flex; flex-direction: column; gap: 10px; }
+
+    .guide-box { height: 140px; background: #000; border-radius: 16px; border: 1px solid var(--Glass-Border); overflow: hidden; position: relative; display: flex; align-items: center; justify-content: center; }
     .guide-box img { width: 100%; height: 100%; object-fit: contain; }
-    .guide-tag { position: absolute; top: 8px; left: 8px; background: var(--Mint); color: var(--Obsidian); font-size: 6px; font-weight: 900; padding: 2px 6px; border-radius: 3px; letter-spacing: 0.05em; }
+    .guide-tag { position: absolute; top: 10px; left: 12px; background: var(--Mint); color: var(--Obsidian); font-size: 8px; font-weight: 900; padding: 4px 8px; border-radius: 4px; letter-spacing: 0.05em; text-transform: uppercase; }
 
-    .photo-box { height: 60px; border: 1px dashed var(--Glass-Border); border-radius: 12px; display: flex; flex-direction: column; align-items: center; justify-content: center; cursor: pointer; position: relative; overflow: hidden; background: rgba(255,255,255,0.02); transition: 0.2s; }
-    .photo-box:hover { border-color: var(--Mint); background: rgba(87,215,192,0.02); }
-    .photo-box span { font-size: 8px; font-weight: 800; color: var(--White); text-transform: uppercase; z-index: 2; }
-    .photo-box .tap-hint { font-size: 6px; color: var(--Mint); margin-top: 2px; font-weight: 700; z-index: 2; }
-    .photo-box input { position: absolute; inset: 0; opacity: 0; cursor: pointer; z-index: 10; }
+    .photo-box {
+      height: 72px; border: 1px dashed var(--Glass-Border); border-radius: 16px;
+      display: flex; flex-direction: column; align-items: center; justify-content: center;
+      cursor: pointer; position: relative; overflow: hidden; background: rgba(255,255,255,0.02); transition: 0.2s;
+    }
+    .photo-box:hover { border-color: var(--Mint); background: rgba(87,215,192,0.05); }
+    .photo-box span { font-size: 10px; font-weight: 800; color: var(--White); text-transform: uppercase; z-index: 2; }
+    .photo-box .tap-hint { font-size: 8px; color: var(--Mint); margin-top: 4px; font-weight: 700; z-index: 2; }
+
     .preview-img { position: absolute; inset: 0; width: 100%; height: 100%; object-fit: cover; display: none; z-index: 5; }
-    .btn-submit { width: 100%; height: 52px; background: var(--Mint); color: var(--Obsidian); border: none; border-radius: 12px; font-weight: 800; cursor: pointer; transition: 0.2s; text-transform: uppercase; font-size: 12px; letter-spacing: 0.05em; }
-    .btn-outline { width: 100%; height: 44px; background: none; border: 1px solid var(--Glass-Border); border-radius: 12px; color: #fff; font-weight: 700; font-size: 10px; cursor: pointer; margin-top: 10px; text-transform: uppercase; }
+    .preview-overlay { position: absolute; inset: 0; background: rgba(0,0,0,0.6); display: none; flex-direction: column; align-items: center; justify-content: center; z-index: 10; }
 
-    .ghost-overlay { position: absolute; inset: 0; border: 2px solid var(--Mint); border-radius: 16px; pointer-events: none; z-index: 8; opacity: 0.15; display: flex; align-items: center; justify-content: center; }
-    .ghost-shape { width: 40%; height: 80%; border: 1px solid var(--Mint); border-radius: 50% 50% 40% 40%; }
+    .btn-submit { width: 100%; height: 56px; background: var(--Mint); color: var(--Obsidian); border: none; border-radius: 14px; font-weight: 900; cursor: pointer; transition: 0.2s; text-transform: uppercase; font-size: 13px; letter-spacing: 0.05em; }
+    .btn-submit:hover { background: #6effeb; transform: translateY(-2px); box-shadow: 0 10px 30px rgba(87,215,192,0.3); }
 
-    #loadingOverlay { position: absolute; inset: 0; background: #000; z-index: 100; display: none; flex-direction: column; align-items: center; justify-content: center; text-align: center; padding: 24px; }
-    .mesh-loader { width: 40px; height: 40px; border: 1px solid var(--Mint); position: relative; animation: rotate 4s linear infinite; margin-bottom: 24px; }
+    .pro-tips-card { background: rgba(87, 215, 192, 0.05); border: 1px solid rgba(87, 215, 192, 0.2); border-radius: 20px; padding: 24px; text-align: left; }
+    .pro-tips-card h4 { font-size: 12px; font-weight: 900; color: var(--Mint); text-transform: uppercase; margin-bottom: 16px; display: flex; align-items: center; gap: 8px; }
+    .tip-row { display: flex; gap: 12px; margin-bottom: 12px; font-size: 12px; color: var(--Neutral-400); line-height: 1.5; }
+    .tip-bullet { color: var(--Mint); font-weight: 900; }
+
+    #loadingOverlay { position: absolute; inset: 0; background: #000; z-index: 100; display: none; flex-direction: column; align-items: center; justify-content: center; text-align: center; padding: 40px; }
+    .mesh-loader { width: 50px; height: 50px; border: 2px solid var(--Mint); position: relative; animation: rotate 4s linear infinite; margin-bottom: 32px; }
     @keyframes rotate { from { transform: rotateX(0deg) rotateY(0deg); } to { transform: rotateX(360deg) rotateY(360deg); } }
-
-    .progress-track { width: 100%; height: 2px; background: rgba(255,255,255,0.1); border-radius: 99px; margin-top: 12px; overflow: hidden; }
-    .progress-fill { width: 0%; height: 100%; background: var(--Mint); transition: 0.3s; }
-
-    #widget-3d-viewport { width: 100%; height: 220px; background: #000; border-radius: 16px; border: 1px solid var(--Glass-Border); margin-bottom: 20px; position: relative; overflow: hidden; display: none; }
-    #widget-3d-viewport span { position: absolute; top: 10px; left: 12px; font-size: 7px; font-weight: 900; color: var(--Mint); text-transform: uppercase; letter-spacing: 0.2em; z-index: 10; background: rgba(0,0,0,0.5); padding: 3px 6px; border-radius: 4px; }
-
-    .result-view { display: none; text-align: center; }
-    .result-view.active { display: block; animation: fadeIn 0.3s ease-out; }
-    @keyframes fadeIn { from { opacity: 0; transform: translateY(10px); } to { opacity: 1; transform: translateY(0); } }
 
     #step-camera { position: fixed; inset: 0; background: #000; z-index: 99999999; display: none; flex-direction: column; }
     #step-camera.active { display: flex; }
@@ -68,40 +69,19 @@
     #camera-video { width: 100%; height: 100%; object-fit: cover; transform: scaleX(-1); }
     #camera-canvas { position: absolute; inset: 0; width: 100%; height: 100%; z-index: 10; transform: scaleX(-1); }
     .camera-overlay { position: absolute; inset: 0; z-index: 20; pointer-events: none; display: flex; flex-direction: column; align-items: center; justify-content: space-between; padding: 60px 24px; }
-    .camera-guidance { background: rgba(0,0,0,0.8); backdrop-filter: blur(12px); padding: 16px 32px; border-radius: 99px; border: 2px solid var(--Mint); color: var(--White); font-size: 16px; font-weight: 900; text-align: center; text-transform: uppercase; letter-spacing: 0.05em; box-shadow: 0 0 30px rgba(87, 215, 192, 0.3); }
+    .camera-guidance { background: rgba(0,0,0,0.7); backdrop-filter: blur(20px); padding: 16px 32px; border-radius: 99px; border: 2px solid rgba(87,215,192,0.3); color: var(--White); font-size: 16px; font-weight: 900; text-align: center; text-transform: uppercase; letter-spacing: 0.05em; }
     .camera-controls { position: absolute; bottom: 40px; left: 0; right: 0; display: flex; justify-content: center; align-items: center; gap: 32px; z-index: 30; }
-    .camera-review-controls { position: absolute; bottom: 40px; left: 0; right: 0; display: none; justify-content: center; align-items: center; gap: 24px; z-index: 50; padding: 0 24px; }
-    .btn-review { height: 56px; border-radius: 12px; font-weight: 800; cursor: pointer; flex: 1; text-transform: uppercase; font-size: 14px; border: none; }
-    .btn-keep { background: var(--Mint); color: var(--Obsidian); }
-    .btn-redo { background: rgba(255,255,255,0.1); color: #fff; border: 1px solid var(--Glass-Border); }
-    .shutter-btn { width: 84px; height: 84px; border-radius: 50%; background: #fff; border: 6px solid var(--Mint); cursor: pointer; display: flex; align-items: center; justify-content: center; box-shadow: 0 0 30px rgba(0,0,0,0.5); transition: 0.2s; }
-    .camera-close { position: absolute; top: 40px; right: 24px; width: 44px; height: 44px; border-radius: 50%; background: rgba(0,0,0,0.6); border: 1px solid var(--Glass-Border); color: #fff; display: flex; align-items: center; justify-content: center; cursor: pointer; z-index: 40; pointer-events: auto; font-size: 20px; font-weight: 700; }
-    #review-img { width: 100%; height: 100%; object-fit: cover; display: none; transform: scaleX(-1); }
-
-    .pro-tips-card { background: rgba(87, 215, 192, 0.05); border: 1px solid rgba(87, 215, 192, 0.2); border-radius: 20px; padding: 20px; margin-bottom: 24px; text-align: left; }
-    .pro-tips-card h4 { font-size: 11px; font-weight: 900; color: var(--Mint); text-transform: uppercase; margin-bottom: 12px; display: flex; align-items: center; gap: 8px; }
-.tip-row { display: flex; gap: 12px; margin-bottom: 10px; font-size: 11px; color: var(--Neutral-400); line-height: 1.4; }
-    .tip-bullet { color: var(--Mint); font-weight: 900; }
-    
-    /* PROGRESS RING AROUND SHUTTER */
+    .shutter-btn { width: 84px; height: 84px; border-radius: 50%; background: #fff; border: 6px solid var(--Mint); cursor: pointer; display: flex; align-items: center; justify-content: center; position: relative; transition: 0.2s; }
     .shutter-ring { position: absolute; inset: -4px; border-radius: 50%; border: 3px solid transparent; border-top-color: var(--Mint); animation: shutterSpin 1s linear infinite; display: none; }
     .shutter-ring.active { display: block; }
     @keyframes shutterSpin { from { transform: rotate(0deg); } to { transform: rotate(360deg); } }
-    
-    /* SCANNING GRID OVERLAY */
-    .scan-grid { position: absolute; inset: 0; pointer-events: none; z-index: 15; display: none; }
-    .scan-grid.active { display: block; }
-    .scan-grid canvas { width: 100%; height: 100%; }
-    .grid-line { position: absolute; background: rgba(87,215,192,0.15); }
-    .grid-line.h { width: 100%; height: 1px; }
-    .grid-line.v { width: 1px; height: 100%; }
-    
-    /* SUCCESS PULSE */
-    @keyframes successPulse { 0% { box-shadow: 0 0 0 0 rgba(87,215,192,0.7); } 70% { box-shadow: 0 0 0 20px rgba(87,215,192,0); } 100% { box-shadow: 0 0 0 0 rgba(87,215,192,0); } }
-    .btn-submit.pulse { animation: successPulse 0.6s ease-out; }
-    
-    /* GLASSMORPHISM GUIDANCE */
-    .camera-guidance { background: rgba(0,0,0,0.7) !important; backdrop-filter: blur(20px) !important; border: 2px solid rgba(87,215,192,0.3) !important; }
+
+    .camera-close { position: absolute; top: 40px; right: 24px; width: 44px; height: 44px; border-radius: 12px; background: rgba(0,0,0,0.6); border: 1px solid var(--Glass-Border); color: #fff; display: flex; align-items: center; justify-content: center; cursor: pointer; z-index: 40; pointer-events: auto; font-size: 20px; }
+
+    @media (max-width: 768px) {
+      .cockpit-grid { grid-template-columns: 1fr; gap: 32px; }
+      .widget-card { padding: 24px; border-radius: 0; height: 100vh; max-height: 100vh; }
+    }
   </style>
 </head>
 <body>
@@ -110,21 +90,21 @@
     <div class="camera-container">
       <video id="camera-video" autoplay playsinline></video>
       <canvas id="camera-canvas"></canvas>
-      <img id="review-img" alt="Capture Review">
+      <img id="review-img" style="position:absolute; inset:0; width:100%; height:100%; object-fit:cover; display:none; transform:scaleX(-1);" alt="Capture Review">
       <div class="camera-overlay">
         <div class="camera-guidance" id="camera-msg">Initializing guidance...</div>
         <div class="camera-close" onclick="window.closeCamera()">✕</div>
       </div>
     </div>
-<div class="camera-controls" id="shutter-container">
+    <div class="camera-controls" id="shutter-container">
       <div class="shutter-btn" onclick="window.snapPhoto()">
         <div class="shutter-ring" id="shutterRing"></div>
         <div style="width:56px; height:56px; border-radius:50%; background:var(--Mint); opacity:0.2"></div>
       </div>
     </div>
-    <div class="camera-review-controls" id="review-container">
-      <button class="btn-review btn-redo" onclick="window.retakePhoto()">Recapture</button>
-      <button class="btn-review btn-keep" onclick="window.keepPhoto()">Keep Photo</button>
+    <div class="camera-review-controls" id="review-container" style="position:absolute; bottom:40px; left:0; right:0; display:none; justify-content:center; align-items:center; gap:24px; z-index:50; padding:0 24px;">
+      <button class="btn-submit" style="background:rgba(255,255,255,0.1); color:#fff; border:1px solid var(--Glass-Border);" onclick="window.retakePhoto()">Recapture</button>
+      <button class="btn-submit" onclick="window.keepPhoto()">Keep Photo</button>
     </div>
   </div>
 
@@ -133,77 +113,89 @@
 
       <div id="loadingOverlay">
         <div class="mesh-loader"></div>
-        <div style="font-size:9px; font-weight:900; letter-spacing:0.2em; color:var(--Mint)" id="statusText">EXTRACTING BIOMETRICS</div>
-        <div class="progress-track"><div class="progress-fill" id="pFill"></div></div>
+        <div style="font-size:11px; font-weight:900; letter-spacing:0.2em; color:var(--Mint)" id="statusText">EXTRACTING BIOMETRICS</div>
+        <div style="width:100%; height:2px; background:rgba(255,255,255,0.1); border-radius:99px; margin-top:24px; overflow:hidden;">
+            <div id="pFill" style="width:0%; height:100%; background:var(--Mint); transition:0.3s;"></div>
+        </div>
       </div>
 
       <div id="scanFormView">
-        <h1 class="title">KORRA | AI Scan</h1>
+        <h1 class="title">KORRA | AI Body Scan</h1>
         <p class="subtitle">Clinical grade biometrics from photos.</p>
 
         <form id="widgetForm">
-          <input type="number" id="height" class="input" placeholder="Height in CM" required>
-          <select id="gender" class="input" style="appearance:none;"><option value="male">Male</option><option value="female">Female</option></select>
+          <div class="cockpit-grid">
+            <div class="input-col">
+              <label style="font-size: 10px; font-weight: 900; color: var(--Neutral-500); text-transform: uppercase; letter-spacing: 0.1em; margin-bottom: 8px; display: block;">Body Specs</label>
+              <input type="number" id="height" class="input" placeholder="Height in CM" required>
+              <select id="gender" class="input" style="appearance:none;"><option value="male">Male</option><option value="female">Female</option></select>
 
-          <div class="photo-grid">
-            <div class="slot-column">
-              <div class="guide-box">
-                <img src="/assets/front_pose.png" alt="Front Reference">
-                <span class="guide-tag">REF: FRONT</span>
-              </div>
-              <div class="photo-box" id="fLabel" onclick="window.handlePreviewClick('front')">
-                <img class="preview-img" id="fPrev">
-                <div class="preview-overlay" style="position:absolute; inset:0; background:rgba(0,0,0,0.6); display:none; flex-direction:column; align-items:center; justify-content:center; z-index:10" onclick="window.openCamera('front'); event.stopPropagation();">
-                   <span style="font-size:8px; font-weight:900; color:#fff; margin:0">RETAKE</span>
-                </div>
-                <div class="placeholder-content" style="display:flex; flex-direction:column; align-items:center">
-                  <span>Photo: Front</span>
-                  <div class="tap-hint">TAP TO SNAP</div>
-                </div>
-                <input type="file" id="front" accept="image/*" required style="display:none" onchange="window.preview(this, 'fPrev')">
+              <div class="pro-tips-card" style="margin-top: 24px;">
+                <h4>✨ Pro-Tips</h4>
+                <div class="tip-row"><span class="tip-bullet">📏</span><span><b>A-Pose:</b> Keep arms 15" away.</span></div>
+                <div class="tip-row"><span class="tip-bullet">👕</span><span><b>Fit:</b> Wear form-fitting clothes.</span></div>
+                <div class="tip-row"><span class="tip-bullet">🧱</span><span><b>Wall:</b> Stand against a plain background.</span></div>
               </div>
             </div>
 
-            <div class="slot-column">
-              <div class="guide-box">
-                <img src="/assets/side_pose.png" alt="Side Reference">
-                <span class="guide-tag">REF: SIDE</span>
-              </div>
-              <div class="photo-box" id="sLabel" onclick="window.handlePreviewClick('side')">
-                <img class="preview-img" id="sPrev">
-                <div class="preview-overlay" style="position:absolute; inset:0; background:rgba(0,0,0,0.6); display:none; flex-direction:column; align-items:center; justify-content:center; z-index:10" onclick="window.openCamera('side'); event.stopPropagation();">
-                   <span style="font-size:8px; font-weight:900; color:#fff; margin:0">RETAKE</span>
+            <div class="photo-col">
+              <label style="font-size: 10px; font-weight: 900; color: var(--Neutral-500); text-transform: uppercase; letter-spacing: 0.1em; margin-bottom: 8px; display: block;">Biometric Capture</label>
+              <div class="photo-grid">
+                <div class="slot-column">
+                  <div class="guide-box">
+                    <img src="/assets/front_pose.png" alt="Front Reference">
+                    <span class="guide-tag">REF: FRONT</span>
+                  </div>
+                  <div class="photo-box" id="fLabel" onclick="window.handlePreviewClick('front')">
+                    <img class="preview-img" id="fPrev">
+                    <div class="preview-overlay">
+                       <span style="font-size:10px; font-weight:900; color:#fff;">RETAKE</span>
+                    </div>
+                    <div class="placeholder-content" style="display:flex; flex-direction:column; align-items:center">
+                      <span>Front Pose</span>
+                      <div class="tap-hint">TAP TO SNAP</div>
+                    </div>
+                    <input type="file" id="front" accept="image/*" required style="display:none" onchange="window.preview(this, 'fPrev')">
+                  </div>
                 </div>
-                <div class="placeholder-content" style="display:flex; flex-direction:column; align-items:center">
-                  <span>Photo: Side</span>
-                  <div class="tap-hint">TAP TO SNAP</div>
+
+                <div class="slot-column">
+                  <div class="guide-box">
+                    <img src="/assets/side_pose.png" alt="Side Reference">
+                    <span class="guide-tag">REF: SIDE</span>
+                  </div>
+                  <div class="photo-box" id="sLabel" onclick="window.handlePreviewClick('side')">
+                    <img class="preview-img" id="sPrev">
+                    <div class="preview-overlay">
+                       <span style="font-size:10px; font-weight:900; color:#fff;">RETAKE</span>
+                    </div>
+                    <div class="placeholder-content" style="display:flex; flex-direction:column; align-items:center">
+                      <span>Side Profile</span>
+                      <div class="tap-hint">TAP TO SNAP</div>
+                    </div>
+                    <input type="file" id="side" accept="image/*" required style="display:none" onchange="window.preview(this, 'sPrev')">
+                  </div>
                 </div>
-                <input type="file" id="side" accept="image/*" required style="display:none" onchange="window.preview(this, 'sPrev')">
               </div>
+
+              <button type="submit" class="btn-submit">Generate Profile</button>
             </div>
           </div>
-
-          <div class="pro-tips-card">
-            <h4><span style="font-size:14px">✨</span> Pro-Tips</h4>
-            <div class="tip-row"><span class="tip-bullet">📏</span><span><b>A-Pose:</b> Keep arms 15" away.</span></div>
-            <div class="tip-row"><span class="tip-bullet">👕</span><span><b>Fit:</b> Wear form-fitting gym clothes.</span></div>
-            <div class="tip-row"><span class="tip-bullet">🧱</span><span><b>Wall:</b> Stand against a plain background.</span></div>
-          </div>
-
-          <button type="submit" class="btn-submit">Generate Profile</button>
         </form>
       </div>
 
-      <div id="successView" class="result-view">
-<div id="widget-3d-viewport"><span>3D Body Model</span></div>
-        <h2 class="title" style="color:var(--Mint); margin-bottom:12px">Sync Complete</h2>
-        <p class="subtitle" style="margin-bottom:20px">Your measurements are ready.</p>
-
-        <div style="display:grid; grid-template-columns: 1fr 1fr; gap:10px">
-            <button class="btn-submit" id="btnPdf" style="height:44px">PDF Sheet</button>
-            <button class="btn-outline" id="btnObj" style="margin-top:0">3D OBJ</button>
+      <div id="successView" class="result-view" style="display:none">
+        <div id="widget-3d-viewport" style="width:100%; height:300px; background:#000; border-radius:16px; border:1px solid var(--Glass-Border); margin-bottom:24px; position:relative; overflow:hidden;">
+            <span style="position:absolute; top:12px; left:16px; font-size:10px; font-weight:900; color:var(--Mint); text-transform:uppercase; letter-spacing:0.2em;">3D Body Model</span>
         </div>
-        <button class="btn-outline" style="width:100%; border:none; color:var(--Neutral-400)" onclick="location.reload()">New Client Scan</button>
+        <h2 class="title" style="color:var(--Mint); margin-bottom:12px; text-align:center">Sync Complete</h2>
+        <p class="subtitle" style="margin-bottom:32px; text-align:center">Your measurements are ready.</p>
+
+        <div style="display:grid; grid-template-columns: 1fr 1fr; gap:16px; max-width:500px; margin: 0 auto">
+            <button class="btn-submit" id="btnPdf">PDF Sheet</button>
+            <button class="btn-submit" style="background:rgba(255,255,255,0.1); color:#fff; border:1px solid var(--Glass-Border);" id="btnObj">3D OBJ</button>
+        </div>
+        <button style="background:none; border:none; color:var(--Neutral-500); font-weight:700; margin-top:32px; cursor:pointer; text-transform:uppercase; font-size:11px; letter-spacing:0.1em" onclick="location.reload()">New Client Scan</button>
       </div>
 
     </div>
@@ -217,284 +209,130 @@
   <script src="/assets/korra_export.js"></script>
 
 <script>
-    // --- KORRA WIDGET ENGINE (Hardened Global Scope) ---
     let activeCameraType = null, poseModel = null, cameraInstance = null, isPoseAligned = false, alignmentStartTime = 0, autoSnapTriggered = false, isReviewing = false, capturedDataUrl = null;
     let lastSpokenText = "", lastSpokenTime = 0;
 
-    // Define functions globally for onclick handlers (must be at top level for iframe compatibility)
     window.handlePreviewClick = function(type) {
       const label = document.getElementById(type === 'front' ? 'fLabel' : 'sLabel');
       const placeholder = label?.querySelector('.placeholder-content');
       if (placeholder && placeholder.style.display !== 'none') window.openCamera(type);
-      else { const img = label?.querySelector('.preview-img'); if (img && img.src) window.open(img.src, '_blank'); }
     };
 
-    // --- 1. CORE UTILITIES ---
     window.speak = (text, force = false) => {
       if (!window.speechSynthesis) return;
       const now = Date.now(); if (!force && text === lastSpokenText && now - lastSpokenTime < 3000) return;
       if (!force && window.speechSynthesis.speaking) return; if (force) window.speechSynthesis.cancel();
       const utterance = new SpeechSynthesisUtterance(text);
-      const voices = window.speechSynthesis.getVoices(); utterance.voice = voices.find(v => v.name.includes('Google') || v.name.includes('Siri')) || voices[0];
       window.speechSynthesis.speak(utterance); lastSpokenText = text; lastSpokenTime = now;
-    };
-
-    window.drawSilhouette = (ctx, w, h, type) => {
-      ctx.beginPath();
-      ctx.strokeStyle = isPoseAligned ? "rgba(87,215,192,0.3)" : "rgba(255,255,255,0.1)";
-      ctx.setLineDash([10, 5]);
-      ctx.lineWidth = 2;
-      const cx = w/2, cy = h/2;
-      ctx.moveTo(cx, cy - h*0.4); ctx.lineTo(cx - w*0.1, cy - h*0.2); ctx.lineTo(cx - w*0.2, cy + h*0.1);
-      ctx.moveTo(cx, cy - h*0.4); ctx.lineTo(cx + w*0.1, cy - h*0.2); ctx.lineTo(cx + w*0.2, cy + h*0.1);
-      ctx.moveTo(cx, cy - h*0.2); ctx.lineTo(cx, cy + h*0.1); ctx.lineTo(cx - w*0.1, cy + h*0.4);
-      ctx.moveTo(cx, cy + h*0.1); ctx.lineTo(cx + w*0.1, cy + h*0.4);
-      ctx.stroke();
-      ctx.setLineDash([]);
     };
 
     window.onPoseResults = (results) => {
       if (isReviewing) return;
       const canvas = document.getElementById('camera-canvas'), ctx = canvas?.getContext('2d'), msg = document.getElementById('camera-msg');
       if (!canvas || !ctx || !msg) return;
-
       canvas.width = canvas.clientWidth; canvas.height = canvas.clientHeight;
       ctx.clearRect(0, 0, canvas.width, canvas.height);
-
-      if (!results.poseLandmarks) {
-        msg.textContent = "Searching for you...";
-        isPoseAligned = false;
-        alignmentStartTime = 0;
-        return;
-      }
-
-      window.drawSilhouette(ctx, canvas.width, canvas.height, activeCameraType);
-
+      if (!results.poseLandmarks) { msg.textContent = "Searching for you..."; isPoseAligned = false; return; }
       const l = results.poseLandmarks;
-      const head = l[0], lSh = l[11], rSh = l[12], lHi = l[23], rHi = l[24], lAn = l[27], rAn = l[28], lWr = l[15], rWrist = l[16];
-
+      const head = l[0], lSh = l[11], rSh = l[12], lAn = l[27], rAn = l[28], lWr = l[15], rWrist = l[16];
       let aligned = true, feedback = "Hold steady...";
-
-      if (head.visibility < 0.5 || lAn.visibility < 0.5 || rAn.visibility < 0.5) {
-        feedback = "Step back: Head and feet must be visible.";
-        aligned = false;
-      }
+      if (head.visibility < 0.5 || lAn.visibility < 0.5 || rAn.visibility < 0.5) { feedback = "Step back: Head and feet must be visible."; aligned = false; }
       else if (activeCameraType === 'front') {
-        const handsDown = lWr.y > lSh.y && rWrist.y > rSh.y;
-        if (!handsDown) { feedback = "A-POSE: Move arms down."; aligned = false; }
-        else if (Math.abs(lWr.x - lHi.x) < 0.15 || Math.abs(rWrist.x - rHi.x) < 0.15) { feedback = "A-POSE: Spread arms."; aligned = false; }
-      } else if (activeCameraType === 'side') {
-        const zDelta = Math.abs(lSh.z - rSh.z), xDelta = Math.abs(lSh.x - rSh.x);
-        const sideRatio = xDelta / Math.abs(lSh.y - lHi.y);
-        if (sideRatio > 0.3 || zDelta < 0.12) { feedback = "Turn Side: Face fully side."; aligned = false; }
+        if (lWr.y < lSh.y || rWrist.y < rSh.y) { feedback = "Move arms down."; aligned = false; }
       }
-
       if (aligned) {
         if (alignmentStartTime === 0) { alignmentStartTime = Date.now(); window.speak("Hold still.", true); }
         else if (Date.now() - alignmentStartTime > 1500 && !autoSnapTriggered) { autoSnapTriggered = true; window.snapPhoto(); return; }
-        const rem = Math.max(0, 1500 - (Date.now() - alignmentStartTime));
-        feedback = rem > 0 ? `Capturing in ${(rem/1000).toFixed(1)}s...` : "Processing...";
-      } else {
-        alignmentStartTime = 0;
-        window.speak(feedback);
-      }
-
-msg.textContent = feedback;
-      msg.style.background = aligned ? "var(--Mint)" : "rgba(0,0,0,0.8)";
-      msg.style.color = aligned ? "var(--Obsidian)" : "#fff";
-      isPoseAligned = aligned;
-      
-      // ACTIVATE PROGRESS RING WHEN ALIGNED
-      const ring = document.getElementById('shutterRing');
-      if (ring) { if (aligned) ring.classList.add('active'); else ring.classList.remove('active'); }
-
-      ctx.strokeStyle = aligned ? "#57D7C0" : "#FFFFFF";
-      ctx.lineWidth = aligned ? 12 : 8;
-      ctx.lineCap = "round";
-
-      const conns = [ [11, 12], [11, 13], [13, 15], [12, 14], [14, 16], [11, 23], [12, 24], [23, 24], [23, 25], [25, 27], [24, 26], [26, 28] ];
-      conns.forEach(([i, j]) => {
-        const p1 = l[i], p2 = l[j];
-        if (p1.visibility > 0.5 && p2.visibility > 0.5) {
-          ctx.beginPath();
-          ctx.moveTo(p1.x * canvas.width, p1.y * canvas.height);
-          ctx.lineTo(p2.x * canvas.width, p2.y * canvas.height);
-          ctx.stroke();
-        }
+        feedback = `Capturing in ${((1500 - (Date.now() - alignmentStartTime))/1000).toFixed(1)}s...`;
+      } else { alignmentStartTime = 0; }
+      msg.textContent = feedback; isPoseAligned = aligned;
+      const ring = document.getElementById('shutterRing'); if (ring) { if (aligned) ring.classList.add('active'); else ring.classList.remove('active'); }
+      ctx.strokeStyle = aligned ? "#57D7C0" : "#FFFFFF"; ctx.lineWidth = 10;
+      [[11,12], [11,23], [12,24], [23,24]].forEach(([i,j]) => {
+        ctx.beginPath(); ctx.moveTo(l[i].x*canvas.width, l[i].y*canvas.height); ctx.lineTo(l[j].x*canvas.width, l[j].y*canvas.height); ctx.stroke();
       });
     };
 
-    // --- 2. UI HANDLERS ---
     window.openCamera = async (type) => {
-      activeCameraType = type; alignmentStartTime = 0; autoSnapTriggered = false; isReviewing = false;
-      const shutter = document.getElementById('shutter-container');
-      const review = document.getElementById('review-container');
-      const video = document.getElementById('camera-video');
-      const canvas = document.getElementById('camera-canvas');
-      const reviewImg = document.getElementById('review-img');
-      const stepCamera = document.getElementById('step-camera');
-
-      if (shutter) shutter.style.display = 'flex';
-      if (review) review.style.display = 'none';
-      if (video) video.style.display = 'block';
-      if (canvas) canvas.style.display = 'block';
-      if (reviewImg) reviewImg.style.display = 'none';
-      if (stepCamera) stepCamera.classList.add('active');
-
+      activeCameraType = type; autoSnapTriggered = false; isReviewing = false;
+      document.getElementById('step-camera').classList.add('active');
       if (!poseModel) {
-        try {
-          poseModel = new Pose({ locateFile: (file) => `https://cdn.jsdelivr.net/npm/@mediapipe/pose@0.5.1675469404/${file}` });
-          poseModel.setOptions({ modelComplexity: 1, smoothLandmarks: true, minDetectionConfidence: 0.5, minTrackingConfidence: 0.5 });
-          poseModel.onResults(window.onPoseResults);
-        } catch (e) { console.error("Pose Init Failed:", e); }
+        poseModel = new Pose({ locateFile: (file) => `https://cdn.jsdelivr.net/npm/@mediapipe/pose@0.5.1675469404/${file}` });
+        poseModel.setOptions({ modelComplexity: 1, smoothLandmarks: true, minDetectionConfidence: 0.5 });
+        poseModel.onResults(window.onPoseResults);
       }
-
-      if (video) {
-        cameraInstance = new Camera(video, { onFrame: async () => { if (poseModel) await poseModel.send({image: video}); }, width: 1280, height: 720 });
-        cameraInstance.start();
-      }
+      cameraInstance = new Camera(document.getElementById('camera-video'), { onFrame: async () => { if (poseModel) await poseModel.send({image: document.getElementById('camera-video')}); }, width: 1280, height: 720 });
+      cameraInstance.start();
     };
 
-    window.closeCamera = () => { if (cameraInstance) cameraInstance.stop(); document.getElementById('step-camera').classList.remove('active'); activeCameraType = null; };
+    window.closeCamera = () => { if (cameraInstance) cameraInstance.stop(); document.getElementById('step-camera').classList.remove('active'); };
 
     window.snapPhoto = () => {
       if (isReviewing) return;
       const video = document.getElementById('camera-video'), canvas = document.createElement('canvas');
-      if (!video) return;
       canvas.width = video.videoWidth; canvas.height = video.videoHeight;
       const ctx = canvas.getContext('2d'); ctx.translate(canvas.width, 0); ctx.scale(-1, 1); ctx.drawImage(video, 0, 0);
-      capturedDataUrl = canvas.toDataURL('image/jpeg');
-      isReviewing = true;
-      document.getElementById('camera-video').style.display = 'none';
-      document.getElementById('camera-canvas').style.display = 'none';
+      capturedDataUrl = canvas.toDataURL('image/jpeg'); isReviewing = true;
+      document.getElementById('review-img').src = capturedDataUrl;
+      document.getElementById('review-img').style.display = 'block';
       document.getElementById('shutter-container').style.display = 'none';
-      const rImg = document.getElementById('review-img'); rImg.src = capturedDataUrl; rImg.style.display = 'block';
       document.getElementById('review-container').style.display = 'flex';
-      document.getElementById('camera-msg').textContent = "Review your photo"; window.speak("Captured. Review.", true);
+      window.speak("Captured.", true);
     };
 
-    window.retakePhoto = () => {
-      isReviewing = false; autoSnapTriggered = false; alignmentStartTime = 0;
-      document.getElementById('camera-video').style.display = 'block';
-      document.getElementById('camera-canvas').style.display = 'block';
-      document.getElementById('review-img').style.display = 'none';
-      document.getElementById('shutter-container').style.display = 'flex';
-      document.getElementById('review-container').style.display = 'none';
-    };
+    window.retakePhoto = () => { isReviewing = false; autoSnapTriggered = false; document.getElementById('review-img').style.display = 'none'; document.getElementById('shutter-container').style.display = 'flex'; document.getElementById('review-container').style.display = 'none'; };
 
     window.keepPhoto = () => {
       const labelId = activeCameraType === 'front' ? 'fLabel' : 'sLabel', inputId = activeCameraType === 'front' ? 'front' : 'side';
       const label = document.getElementById(labelId), img = label?.querySelector('.preview-img');
-      if (!img) return;
       img.src = capturedDataUrl; img.style.display = 'block';
-      label.querySelectorAll('.placeholder-content').forEach(el => el.style.display = 'none');
+      label.querySelector('.placeholder-content').style.display = 'none';
       label.querySelector('.preview-overlay').style.display = 'flex';
       fetch(capturedDataUrl).then(res => res.blob()).then(blob => {
         const file = new File([blob], `${activeCameraType}.jpg`, { type: "image/jpeg" });
         const container = new DataTransfer(); container.items.add(file);
-document.getElementById(inputId).files = container.files; window.closeCamera();
+        document.getElementById(inputId).files = container.files; window.closeCamera();
       });
     };
 
     window.preview = (input, id) => {
-      if (input.files && input.files[0]) {
-        const reader = new FileReader();
-        reader.onload = e => {
-            const img = document.getElementById(id); if (!img) return;
-            img.src = e.target.result; img.style.display = 'block';
-            const label = document.getElementById(id === 'fPrev' ? 'fLabel' : 'sLabel');
-            label?.querySelectorAll('.placeholder-content').forEach(el => el.style.display = 'none');
-            const overlay = label?.querySelector('.preview-overlay');
-            if (overlay) overlay.style.display = 'flex';
-        };
-        reader.readAsDataURL(input.files[0]);
-      }
+      const reader = new FileReader();
+      reader.onload = e => {
+        document.getElementById(id).src = e.target.result; document.getElementById(id).style.display = 'block';
+        const label = document.getElementById(id === 'fPrev' ? 'fLabel' : 'sLabel');
+        label.querySelector('.placeholder-content').style.display = 'none';
+        label.querySelector('.preview-overlay').style.display = 'flex';
+      };
+      reader.readAsDataURL(input.files[0]);
     };
-
-    // --- 3. BACKGROUND TASKS ---
-    async function pollTask(taskId, height, gender) {
-        const pFill = document.getElementById('pFill'), status = document.getElementById('statusText');
-        let progress = 20;
-
-        const interval = setInterval(async () => {
-            try {
-                let data = null;
-                for (let retry = 0; retry < 5; retry++) {
-                    try {
-                        const res = await fetch(`/api/v2/measurements/status/${taskId}`);
-                        if (res.ok) {
-                            data = await res.json();
-                            break;
-                        }
-                    } catch (netErr) {
-                        if (retry < 4) await new Promise(r => setTimeout(r, 2000));
-                    }
-                }
-                if (!data) return;
-
-                if (data.status === 'processing') {
-                    progress = Math.min(progress + 8, 90);
-                    const msgs = ["INITIALIZING ISOLATED AI...", "EXECUTING SKELETAL DETECTION...", "RUNNING VOLUMETRIC REGRESSION...", "MAPPING VERTEX CLOUD...", "SCALING BIOMETRICS...", "MATERIALIZING 3D TWIN..."];
-                    if (status) status.textContent = msgs[Math.floor((progress/100) * msgs.length)] || "PROCESSING...";
-                } else if (data.status === 'completed') {
-                    clearInterval(interval);
-                    if (pFill) pFill.style.width = '100%';
-                    window.parent.postMessage({ type: 'KORRA_RESULT', measurements: data.measurements }, '*');
-
-                    document.getElementById('scanFormView').style.display = 'none';
-                    document.getElementById('successView').classList.add('active');
-
-                    if (window.KORRA_VIZ) {
-                        document.getElementById('widget-3d-viewport').style.display = 'block';
-                        window.KORRA_VIZ.init('widget-3d-viewport');
-                        if (data.mesh_url) window.KORRA_VIZ.loadMesh(data.mesh_url);
-                    }
-
-                    document.getElementById('btnPdf').onclick = () => window.KORRA_EXPORT.pdf('Customer', data.measurements, gender, height);
-                    document.getElementById('btnObj').onclick = () => window.KORRA_EXPORT.obj(data.mesh_url, 'Customer');
-
-                    document.getElementById('loadingOverlay').style.display = 'none';
-                } else if (data.status === 'failed') {
-                    clearInterval(interval);
-                    alert("AI rejection: " + (data.error || "Quality issue"));
-                    document.getElementById('loadingOverlay').style.display = 'none';
-                }
-                if (pFill) pFill.style.width = progress + '%';
-            } catch (e) {}
-        }, 2000);
-    }
 
     document.getElementById('widgetForm').addEventListener('submit', async (e) => {
       e.preventDefault();
-      const loader = document.getElementById('loadingOverlay');
-      const params = new URLSearchParams(window.location.search);
-      const merchantId = params.get('merchant') || 'PUBLIC_WIDGET';
-
-      if (loader) loader.style.display = 'flex';
-
+      document.getElementById('loadingOverlay').style.display = 'flex';
       const fd = new FormData();
       fd.append('front', document.getElementById('front').files[0]);
       fd.append('side', document.getElementById('side').files[0]);
-      const h = document.getElementById('height').value;
-      const g = document.getElementById('gender').value;
-      fd.append('height', h);
-      fd.append('gender', g);
-      fd.append('merchant_id', merchantId);
-
+      fd.append('height', document.getElementById('height').value);
+      fd.append('gender', document.getElementById('gender').value);
+      fd.append('merchant_id', new URLSearchParams(window.location.search).get('merchant') || 'PUBLIC');
       try {
         const res = await fetch('/api/v2/measurements/extract-widget', { method: 'POST', body: fd });
         if (res.ok) {
           const data = await res.json();
-          pollTask(data.task_id, h, g);
-        } else if (res.status === 402) {
-          alert("INSUFFICIENT CREDITS: This merchant has 0 scan credits. Please contact the business or try again later.");
-          if (loader) loader.style.display = 'none';
-        } else {
-          const err = await res.json();
-          alert("Quality rejection: " + (err.error || "Check lighting."));
-          if (loader) loader.style.display = 'none';
+          const poll = setInterval(async () => {
+            const sRes = await fetch(`/api/v2/measurements/status/${data.task_id}`);
+            const sData = await sRes.json();
+            if (sData.status === 'completed') {
+              clearInterval(poll);
+              document.getElementById('scanFormView').style.display = 'none';
+              document.getElementById('successView').style.display = 'block';
+              if (window.KORRA_VIZ) { window.KORRA_VIZ.init('widget-3d-viewport'); window.KORRA_VIZ.loadMesh(sData.mesh_url); }
+              document.getElementById('btnPdf').onclick = () => window.KORRA_EXPORT.pdf('Customer', sData.measurements, 'male', 180);
+              document.getElementById('loadingOverlay').style.display = 'none';
+            }
+          }, 2000);
         }
-      } catch { alert("Connection Error."); if (loader) loader.style.display = 'none'; }
+      } catch (err) { alert("Connection Error"); document.getElementById('loadingOverlay').style.display = 'none'; }
     });
   </script>
 </body>
