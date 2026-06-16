@@ -108,9 +108,15 @@
           <p class="sub-p" id="viewSub">Start your precision journey today.</p>
 
           <form id="signUpForm">
-            <div class="form-group">
-              <label class="form-label">Full Name</label>
-              <input type="text" class="form-input" id="upName" placeholder="Your Name" required>
+<div class="form-group" style="display: grid; grid-template-columns: 1fr 1fr; gap: 16px;">
+              <div>
+                <label class="form-label">First Name</label>
+                <input type="text" class="form-input" id="upFirstName" placeholder="First" required>
+              </div>
+              <div>
+                <label class="form-label">Last Name</label>
+                <input type="text" class="form-input" id="upLastName" placeholder="Last" required>
+              </div>
             </div>
 
             <div class="form-group">
@@ -178,9 +184,11 @@
 
       form.addEventListener('submit', async (e) => {
         e.preventDefault();
-        const email = document.getElementById('upEmail').value;
+const email = document.getElementById('upEmail').value;
         const password = document.getElementById('upPass').value;
-        const name = document.getElementById('upName').value;
+        const firstName = document.getElementById('upFirstName').value;
+        const lastName = document.getElementById('upLastName').value;
+        const fullName = `${firstName} ${lastName}`.trim();
 
         // Map URL role to schema-compliant account_type
         let userType = 'artisan'; // default
@@ -190,7 +198,9 @@
         else if (role === 'client') userType = 'individual';
 
         const metadata = {
-            full_name: name,
+            full_name: fullName,
+            first_name: firstName,
+            last_name: lastName,
             account_type: userType
         };
 

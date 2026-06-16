@@ -222,6 +222,8 @@ ON CONFLICT (vertical_id, country_code) DO NOTHING;
 -- 3. EXPAND PROFILES FOR COMPREHENSIVE ONBOARDING DATA (Phase 2-8)
 ALTER TABLE public.profiles
 ADD COLUMN IF NOT EXISTS account_type TEXT CHECK (account_type IN ('individual', 'artisan', 'merchant', 'enterprise')),
+ADD COLUMN IF NOT EXISTS first_name TEXT,
+ADD COLUMN IF NOT EXISTS last_name TEXT,
 ADD COLUMN IF NOT EXISTS country_code TEXT REFERENCES public.countries_reference(code),
 ADD COLUMN IF NOT EXISTS region TEXT,
 ADD COLUMN IF NOT EXISTS currency TEXT DEFAULT 'USD',
