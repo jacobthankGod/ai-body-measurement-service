@@ -871,21 +871,15 @@ if (!poseModel) {
     window.requestIndustrialDemo = async () => {
         const email = document.getElementById('userEmail').textContent;
         alert(`DEMO REQUESTED: Our industrial team will contact you at ${email} within 24 hours.`);
-        await window.KORRA_DB.from('interest_leads').insert({
-            email: email,
-            context: 'INDUSTRIAL_DEMO',
-            source: 'MERCHANT_DASHBOARD'
-        });
-    };
-
-    window.requestIndustrialDemo = async () => {
-        const email = document.getElementById('userEmail').textContent;
-        alert(`DEMO REQUESTED: Our industrial team will contact you at ${email} within 24 hours.`);
-        await window.KORRA_DB.from('interest_leads').insert({
-            email: email,
-            context: 'INDUSTRIAL_DEMO',
-            source: 'MERCHANT_DASHBOARD'
-        });
+        try {
+            await window.KORRA_DB.from('interest_leads').insert({
+                email: email,
+                context: 'INDUSTRIAL_DEMO',
+                source: 'MERCHANT_DASHBOARD'
+            });
+        } catch (e) {
+            console.warn("Interest lead could not be saved. Ensure 'interest_leads' table exists.");
+        }
     };
 
     async function init() {

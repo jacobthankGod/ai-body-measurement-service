@@ -178,14 +178,22 @@
 
       const params = new URLSearchParams(window.location.search);
       const next = params.get('next');
-      const role = params.get('role');
+      const role = params.get('role'); // individual | artisan | merchant | enterprise
       const mId = params.get('m');
 
-      if (role === 'client') {
+      if (role === 'individual') {
           document.getElementById('viewTitle').textContent = "Join KORRA";
           document.getElementById('viewSub').textContent = "Secure your Size Passport for a perfect fit.";
           document.getElementById('merchantFields').style.display = 'none';
           document.getElementById('btnSignUp').textContent = 'Create My Fit Profile';
+      } else if (role === 'merchant') {
+          document.getElementById('viewTitle').textContent = "Merchant Onboarding";
+          document.getElementById('viewSub').textContent = "Scale your brand with precision sizing.";
+          document.getElementById('btnSignUp').textContent = 'Initialize Brand Account';
+      } else if (role === 'enterprise') {
+          document.getElementById('viewTitle').textContent = "Enterprise Portal";
+          document.getElementById('viewSub').textContent = "Industrial-scale biometrics and manufacturing.";
+          document.getElementById('btnSignUp').textContent = 'Start Integration';
       }
 
       if (next) {
@@ -204,10 +212,19 @@
         const password = document.getElementById('upPass').value;
         const name = document.getElementById('upName').value;
 
-        const userType = role === 'client' ? 'INDIVIDUAL' : 'ARTISAN';
-        const metadata = { full_name: name, user_type: userType };
+        // Map URL role to schema-compliant account_type
+        let userType = 'artisan'; // default
+        if (role === 'individual') userType = 'individual';
+        else if (role === 'merchant') userType = 'merchant';
+        else if (role === 'enterprise') userType = 'enterprise';
+        else if (role === 'client') userType = 'individual'; // compatibility for old links
 
-        if (userType === 'ARTISAN') {
+        const metadata = {
+            full_name: name,
+            account_type: userType
+        };
+
+        if (userType !== 'individual') {
             metadata.company_name = document.getElementById('upCompany').value;
             metadata.industry = document.getElementById('upIndustry').value;
             metadata.monthly_volume = document.getElementById('upVolume').value;
