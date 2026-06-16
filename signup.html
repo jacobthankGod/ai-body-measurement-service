@@ -118,35 +118,6 @@
               <input type="email" class="form-input" id="upEmail" placeholder="name@email.com" required>
             </div>
 
-            <div id="merchantFields">
-              <div style="display:grid; grid-template-columns: 1fr 1fr; gap: 20px; margin-bottom: 24px;">
-                  <div class="form-group" style="margin-bottom:0">
-                    <label class="form-label">Company Name</label>
-                    <input type="text" class="form-input" id="upCompany" placeholder="Brand Name">
-                  </div>
-                  <div class="form-group" style="margin-bottom:0">
-                    <label class="form-label">Industry</label>
-                    <select id="upIndustry">
-                        <option value="luxury_mtm">Luxury MTM</option>
-                        <option value="manufacturing">Manufacturing</option>
-                        <option value="bridal">Bridal & Tuxedo</option>
-                        <option value="ready_to_wear">Ready-To-Wear</option>
-                        <option value="custom_apparel">Custom Apparel</option>
-                    </select>
-                  </div>
-              </div>
-
-              <div class="form-group">
-                  <label class="form-label">Monthly Volume (Scans)</label>
-                  <select id="upVolume">
-                    <option value="0-50">1 - 50 scans</option>
-                    <option value="51-200">51 - 200 scans</option>
-                    <option value="201-1000">201 - 1,000 scans</option>
-                    <option value="1000+">1,000+ scans</option>
-                  </select>
-              </div>
-            </div>
-
             <div class="form-group">
               <label class="form-label">Create Key (Password)</label>
               <input type="password" class="form-input" id="upPass" placeholder="••••••••" required>
@@ -184,7 +155,6 @@
       if (role === 'individual') {
           document.getElementById('viewTitle').textContent = "Join KORRA";
           document.getElementById('viewSub').textContent = "Secure your Size Passport for a perfect fit.";
-          document.getElementById('merchantFields').style.display = 'none';
           document.getElementById('btnSignUp').textContent = 'Create My Fit Profile';
       } else if (role === 'merchant') {
           document.getElementById('viewTitle').textContent = "Merchant Onboarding";
@@ -217,18 +187,14 @@
         if (role === 'individual') userType = 'individual';
         else if (role === 'merchant') userType = 'merchant';
         else if (role === 'enterprise') userType = 'enterprise';
-        else if (role === 'client') userType = 'individual'; // compatibility for old links
+        else if (role === 'client') userType = 'individual';
 
         const metadata = {
             full_name: name,
             account_type: userType
         };
 
-        if (userType !== 'individual') {
-            metadata.company_name = document.getElementById('upCompany').value;
-            metadata.industry = document.getElementById('upIndustry').value;
-            metadata.monthly_volume = document.getElementById('upVolume').value;
-        } else if (mId) {
+        if (mId) {
             metadata.invited_by = mId;
         }
 
