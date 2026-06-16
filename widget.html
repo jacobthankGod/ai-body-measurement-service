@@ -298,10 +298,10 @@ window.openCamera = async (type) => {
         poseModel.onResults(window.onPoseResults);
       }
       cameraInstance = new Camera(document.getElementById('camera-video'), { onFrame: async () => { if (poseModel) await poseModel.send({image: document.getElementById('camera-video')}); }, width: 1280, height: 720 });
-      cameraInstance.start();
-    };
+cameraInstance.start();
+};
 
-    window.closeCamera = () => { if (cameraInstance) cameraInstance.stop(); document.getElementById('step-camera').classList.remove('active'); };
+window.closeCamera = () => { if (cameraInstance) cameraInstance.stop(); document.getElementById('step-camera').classList.remove('active'); };
 
     window.snapPhoto = () => {
       if (isReviewing) return;
