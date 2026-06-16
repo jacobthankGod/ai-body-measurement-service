@@ -59,8 +59,9 @@ def initialize_pose_detector():
             base_options=base_options,
             running_mode=vision.RunningMode.IMAGE,
             num_poses=1,
-            min_pose_detection_confidence=0.5,
-            min_tracking_confidence=0.5,
+            model_complexity=2,  # PHASE 15 UPGRADE: Full clinical precision (0=light,1=medium,2=full)
+            min_pose_detection_confidence=0.6,
+            min_tracking_confidence=0.6,
             output_segmentation_masks=False
         )
         pose_landmarker = PoseLandmarker.create_from_options(options)

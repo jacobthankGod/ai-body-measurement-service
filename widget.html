@@ -259,9 +259,10 @@
         if (!armsDown) { feedback = "A-POSE: Move arms down."; aligned = false; }
         else if (!armsSpread) { feedback = "A-POSE: Spread arms away from body."; aligned = false; }
       } else if (activeCameraType === 'side') {
+        const zDelta = Math.abs(lSh.z - rSh.z); // Perspective Depth Refinement
         const xDelta = Math.abs(lSh.x - rSh.x);
         const sideRatio = xDelta / Math.abs(lSh.y - lHi.y);
-        if (sideRatio > 0.25) { feedback = "Turn Side: Face fully 90 degrees."; aligned = false; }
+        if (sideRatio > 0.3 || zDelta < 0.15) { feedback = "Turn Side: Face fully 90 degrees."; aligned = false; }
       }
 
       if (aligned) {
@@ -279,7 +280,11 @@
       isPoseAligned = aligned;
 
       const ring = document.getElementById('shutterRing'); if (ring) { if (aligned) ring.classList.add('active'); else ring.classList.remove('active'); }
-      ctx.strokeStyle = aligned ? "#57D7C0" : "#FFFFFF"; ctx.lineWidth = 8; ctx.lineCap = "round";
+
+      // --- HARDENED SKELETON RENDERING ---
+      ctx.strokeStyle = aligned ? "#57D7C0" : "#FFFFFF";
+      ctx.lineWidth = aligned ? 10 : 4;
+      ctx.lineCap = "round";
 
       const conns = [[11,12], [11,13], [13,15], [12,14], [14,16], [11,23], [12,24], [23,24], [23,25], [25,27], [24,26], [26,28]];
       conns.forEach(([i,j]) => {
@@ -287,6 +292,16 @@
           ctx.beginPath(); ctx.moveTo(l[i].x*canvas.width, l[i].y*canvas.height); ctx.lineTo(l[j].x*canvas.width, l[j].y*canvas.height); ctx.stroke();
         }
       });
+
+      // --- ACTIVE ALIGNMENT MARKERS (10px Mint) ---
+      if (aligned) {
+          ctx.fillStyle = "#57D7C0";
+          [11, 12, 23, 24, 27, 28].forEach(idx => {
+              ctx.beginPath();
+              ctx.arc(l[idx].x * canvas.width, l[idx].y * canvas.height, 10, 0, Math.PI * 2);
+              ctx.fill();
+          });
+      }
     };
 
 window.openCamera = async (type) => {
