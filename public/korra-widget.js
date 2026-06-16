@@ -76,7 +76,7 @@
                 width: 95%;
                 max-width: 900px;
                 height: 90vh;
-                max-height: 600px;
+                max-height: 850px;
                 border: none;
                 border-radius: 32px;
                 box-shadow: 0 40px 100px rgba(0,0,0,0.5);

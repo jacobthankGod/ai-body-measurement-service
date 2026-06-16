@@ -35,7 +35,7 @@
     .photo-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 16px; margin-bottom: 24px; }
     .slot-column { display: flex; flex-direction: column; gap: 10px; }
 
-    .guide-box { height: 140px; background: #000; border-radius: 16px; border: 1px solid var(--Glass-Border); overflow: hidden; position: relative; display: flex; align-items: center; justify-content: center; }
+    .guide-box { height: 160px; background: #000; border-radius: 16px; border: 1px solid var(--Glass-Border); overflow: hidden; position: relative; display: flex; align-items: center; justify-content: center; }
     .guide-box img { width: 100%; height: 100%; object-fit: contain; }
     .guide-tag { position: absolute; top: 10px; left: 12px; background: var(--Mint); color: var(--Obsidian); font-size: 8px; font-weight: 900; padding: 4px 8px; border-radius: 4px; letter-spacing: 0.05em; text-transform: uppercase; }
 
@@ -57,7 +57,7 @@
     .pro-tips-card { background: rgba(87, 215, 192, 0.05); border: 1px solid rgba(87, 215, 192, 0.2); border-radius: 20px; padding: 24px; text-align: left; }
     .pro-tips-card h4 { font-size: 12px; font-weight: 900; color: var(--Mint); text-transform: uppercase; margin-bottom: 16px; display: flex; align-items: center; gap: 8px; }
     .tip-row { display: flex; gap: 12px; margin-bottom: 12px; font-size: 12px; color: var(--Neutral-400); line-height: 1.5; }
-    .tip-bullet { color: var(--Mint); font-weight: 900; }
+    .tip-bullet { color: var(--Mint); font-weight: 900; display: flex; align-items: center; }
 
     #loadingOverlay { position: absolute; inset: 0; background: #000; z-index: 100; display: none; flex-direction: column; align-items: center; justify-content: center; text-align: center; padding: 40px; }
     .mesh-loader { width: 50px; height: 50px; border: 2px solid var(--Mint); position: relative; animation: rotate 4s linear infinite; margin-bottom: 32px; }
@@ -121,20 +121,30 @@
 
       <div id="scanFormView">
         <h1 class="title">KORRA | AI Body Scan</h1>
-        <p class="subtitle">Clinical grade biometrics from photos.</p>
+        <p class="subtitle">Get accurate body measurements from your photos.</p>
 
         <form id="widgetForm">
           <div class="cockpit-grid">
             <div class="input-col">
               <label style="font-size: 10px; font-weight: 900; color: var(--Neutral-500); text-transform: uppercase; letter-spacing: 0.1em; margin-bottom: 8px; display: block;">Body Specs</label>
+              <input type="text" id="client_name" class="input" placeholder="Full Name" required>
               <input type="number" id="height" class="input" placeholder="Height in CM" required>
               <select id="gender" class="input" style="appearance:none;"><option value="male">Male</option><option value="female">Female</option></select>
 
               <div class="pro-tips-card" style="margin-top: 24px;">
-                <h4>✨ Pro-Tips</h4>
-                <div class="tip-row"><span class="tip-bullet">📏</span><span><b>A-Pose:</b> Keep arms 15" away.</span></div>
-                <div class="tip-row"><span class="tip-bullet">👕</span><span><b>Fit:</b> Wear form-fitting clothes.</span></div>
-                <div class="tip-row"><span class="tip-bullet">🧱</span><span><b>Wall:</b> Stand against a plain background.</span></div>
+                <h4><svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" style="color:var(--Mint)"><path d="m12 3 1.912 5.813a2 2 0 0 0 1.275 1.275L21 12l-5.813 1.912a2 2 0 0 0-1.275 1.275L12 21l-1.912-5.813a2 2 0 0 0-1.275-1.275L3 12l5.813-1.912a2 2 0 0 0 1.275-1.275L12 3Z"/><path d="M5 3v4"/><path d="M19 17v4"/><path d="M3 5h4"/><path d="M17 19h4"/></svg> Pro-Tips</h4>
+                <div class="tip-row">
+                    <span class="tip-bullet"><svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M21.3 15.3a2.4 2.4 0 0 1 0 3.4l-2.6 2.6a2.4 2.4 0 0 1-3.4 0L2.7 8.7a2.4 2.4 0 0 1 0-3.4l2.6-2.6a2.4 2.4 0 0 1 3.4 0Z"/><path d="m7.5 10.5 2 2"/><path d="m10.5 7.5 2 2"/><path d="m13.5 4.5 2 2"/><path d="m4.5 13.5 2 2"/></svg></span>
+                    <span><b>A-Pose:</b> Keep arms 15" away.</span>
+                </div>
+                <div class="tip-row">
+                    <span class="tip-bullet"><svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M20.38 3.46 16 2a4 4 0 0 1-8 0L3.62 3.46a2 2 0 0 0-1.34 2.23l.58 3.47a1 1 0 0 0 .99.84H6v10c0 1.1.9 2 2 2h8a2 2 0 0 0 2-2V10h2.15a1 1 0 0 0 .99-.84l.58-3.47a2 2 0 0 0-1.34-2.23z"/></svg></span>
+                    <span><b>Fit:</b> Wear form-fitting clothes.</span>
+                </div>
+                <div class="tip-row">
+                    <span class="tip-bullet"><svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><rect width="18" height="18" x="3" y="3" rx="2"/><path d="M3 9h18"/><path d="M3 15h18"/><path d="M9 3v18"/><path d="M15 3v18"/></svg></span>
+                    <span><b>Wall:</b> Stand against a plain background.</span>
+                </div>
               </div>
             </div>
 
@@ -185,7 +195,7 @@
       </div>
 
       <div id="successView" class="result-view" style="display:none">
-        <div id="widget-3d-viewport" style="width:100%; height:300px; background:#000; border-radius:16px; border:1px solid var(--Glass-Border); margin-bottom:24px; position:relative; overflow:hidden;">
+        <div id="widget-3d-viewport" style="width:100%; height:320px; background:#000; border-radius:16px; border:1px solid var(--Glass-Border); margin-bottom:24px; position:relative; overflow:hidden;">
             <span style="position:absolute; top:12px; left:16px; font-size:10px; font-weight:900; color:var(--Mint); text-transform:uppercase; letter-spacing:0.2em;">3D Body Model</span>
         </div>
         <h2 class="title" style="color:var(--Mint); margin-bottom:12px; text-align:center">Sync Complete</h2>
@@ -312,6 +322,7 @@
       const fd = new FormData();
       fd.append('front', document.getElementById('front').files[0]);
       fd.append('side', document.getElementById('side').files[0]);
+      fd.append('client_name', document.getElementById('client_name').value);
       fd.append('height', document.getElementById('height').value);
       fd.append('gender', document.getElementById('gender').value);
       fd.append('merchant_id', new URLSearchParams(window.location.search).get('merchant') || 'PUBLIC');
@@ -327,7 +338,7 @@
               document.getElementById('scanFormView').style.display = 'none';
               document.getElementById('successView').style.display = 'block';
               if (window.KORRA_VIZ) { window.KORRA_VIZ.init('widget-3d-viewport'); window.KORRA_VIZ.loadMesh(sData.mesh_url); }
-              document.getElementById('btnPdf').onclick = () => window.KORRA_EXPORT.pdf('Customer', sData.measurements, 'male', 180);
+              document.getElementById('btnPdf').onclick = () => window.KORRA_EXPORT.pdf(document.getElementById('client_name').value || 'Customer', sData.measurements, document.getElementById('gender').value, document.getElementById('height').value);
               document.getElementById('loadingOverlay').style.display = 'none';
             }
           }, 2000);
