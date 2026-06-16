@@ -167,9 +167,10 @@ ON CONFLICT (id) DO NOTHING;
 
 -- 2E. VERTICAL-PRODUCT MAPPING (junction table)
 CREATE TABLE IF NOT EXISTS public.vertical_products (
+    id UUID DEFAULT gen_random_uuid() PRIMARY KEY,
     vertical_id TEXT REFERENCES public.industry_verticals(id),
     product_category_id TEXT REFERENCES public.product_categories(id),
-    PRIMARY KEY (vertical_id, product_category_id)
+    UNIQUE (vertical_id, product_category_id)
 );
 
 INSERT INTO public.vertical_products (vertical_id, product_category_id) VALUES
@@ -181,7 +182,7 @@ INSERT INTO public.vertical_products (vertical_id, product_category_id) VALUES
 ('outerwear', 'outerwear'),
 ('workwear', 'workwear'), ('workwear', 'healthcare'), ('workwear', 'uniforms'),
 ('fashion_tech', 'fashion_tech')
-ON CONFLICT (id) DO NOTHING;
+ON CONFLICT DO NOTHING;
 
 -- 2F. VERTICAL-COUNTRY CONTEXT (junction table for MTM)
 CREATE TABLE IF NOT EXISTS public.vertical_country_context (
@@ -226,7 +227,9 @@ ADD COLUMN IF NOT EXISTS unit_preference TEXT DEFAULT 'metric' CHECK (unit_prefe
 ADD COLUMN IF NOT EXISTS measurement_standard TEXT DEFAULT 'standard',
 ADD COLUMN IF NOT EXISTS selected_plan TEXT DEFAULT 'starter',
 ADD COLUMN IF NOT EXISTS onboarding_phase INTEGER DEFAULT 1,
-ADD COLUMN IF NOT EXISTS onboarding_completed_at TIMESTAMPTZ;
+ADD COLUMN IF NOT EXISTS onboarding_completed_at TIMESTAMPTZ,
+ADD COLUMN IF NOT EXISTS gender TEXT,
+ADD COLUMN IF NOT EXISTS age_group TEXT;
 
 -- 4. SECURITY (RLS)
 ALTER TABLE public.countries_reference ENABLE ROW LEVEL SECURITY;
