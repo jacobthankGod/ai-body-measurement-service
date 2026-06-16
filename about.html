@@ -3,7 +3,7 @@
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>About | KORRA</title>
+  <title>Our Story | KORRA</title>
   <link rel="icon" type="image/png" href="/assets/body-capture.png">
   <link rel="preconnect" href="https://fonts.googleapis.com" />
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
@@ -36,58 +36,37 @@
 
     .header-auth { display: flex; align-items: center; gap: var(--S-16); z-index: 1000001; }
 
-    .hamburger {
-      display: none; width: 44px; height: 44px; background: var(--Glass); border: 1px solid var(--Glass-Border);
-      border-radius: 12px; cursor: pointer; flex-direction: column; align-items: center; justify-content: center; gap: 5px;
-      z-index: 1000001; transition: 0.2s; position: relative;
-    }
-    .hamburger:hover { border-color: var(--Mint); background: rgba(255,255,255,0.08); }
-    .hamburger span { width: 22px; height: 2px; background: var(--Mint); border-radius: 2px; transition: 0.4s cubic-bezier(0.4, 0, 0.2, 1); }
-    .hamburger.active span:nth-child(1) { transform: translateY(7px) rotate(45deg); width: 24px; }
-    .hamburger.active span:nth-child(2) { opacity: 0; transform: translateX(-10px); }
-    .hamburger.active span:nth-child(3) { transform: translateY(-7px) rotate(-45deg); width: 24px; }
-
-    .mobile-menu {
-      position: fixed; inset: 0; background: rgba(0,0,0,0.98); backdrop-filter: blur(40px);
-      z-index: 1000000; display: flex; flex-direction: column; align-items: center; justify-content: center;
-      gap: 32px; padding: 40px; transform: translateY(-100%); transition: 0.6s cubic-bezier(0.4, 0, 0.2, 1); opacity: 0; pointer-events: none;
-    }
-    .mobile-menu.active { transform: translateY(0); opacity: 1; pointer-events: auto; }
-    .mobile-menu a { font-size: 28px; font-weight: 900; color: #fff; text-decoration: none; text-transform: uppercase; letter-spacing: -0.02em; transition: 0.3s; }
-    .mobile-menu a:hover { color: var(--Mint); transform: scale(1.05); }
-    .mobile-close-btn {
-      position: absolute; top: 20px; right: 24px; width: 44px; height: 44px;
-      background: var(--Glass); border: 1px solid var(--Glass-Border); border-radius: 12px;
-      color: var(--Mint); font-size: 32px; display: flex; align-items: center; justify-content: center;
-      cursor: pointer; z-index: 1000002;
-    }
-    .mobile-close-btn:hover { border-color: var(--Mint); background: rgba(255,255,255,0.08); }
-    .mobile-close-hint { position: absolute; bottom: 40px; font-size: 10px; font-weight: 800; color: var(--Neutral-500); text-transform: uppercase; letter-spacing: 0.2em; }
-
-    /* --- PAGE STYLES --- */
-    main { padding-top: 180px; padding-bottom: 120px; }
-    .section-eyebrow { font-size: 11px; font-weight: 900; color: var(--Mint); text-transform: uppercase; letter-spacing: 0.2em; margin-bottom: var(--S-16); }
-    .section-title { font-size: 48px; font-weight: 800; line-height: 1.1; letter-spacing: -0.03em; margin-bottom: 40px; }
-    .content-text { font-size: 18px; color: var(--Neutral-400); line-height: 1.6; max-width: 800px; }
-    .content-text p { margin-bottom: 32px; }
-
-    .grid-values { display: grid; grid-template-columns: repeat(3, 1fr); gap: var(--S-32); margin-top: 80px; }
-    .value-card { background: var(--Glass); border: 1px solid var(--Glass-Border); border-radius: 20px; padding: var(--S-32); transition: 0.3s; }
-    .value-card:hover { border-color: var(--Mint); transform: translateY(-4px); }
-    .value-card h3 { color: var(--Mint); font-size: 18px; font-weight: 900; margin-bottom: 16px; }
-
     .btn { height: 52px; padding: 0 32px; border-radius: 12px; font-size: 13px; font-weight: 800; cursor: pointer; display: inline-flex; align-items: center; justify-content: center; gap: 12px; transition: 0.2s; text-decoration: none; text-transform: uppercase; }
     .btn-primary { background: var(--Mint); color: var(--Obsidian); border: none; }
     .btn-outline { background: transparent; border: 1px solid var(--Glass-Border); color: var(--White); }
 
+    /* --- STORY PAGE STYLES --- */
+    main { padding-top: 180px; padding-bottom: 120px; }
+    .story-hero { margin-bottom: 120px; }
+    .story-hero h1 { font-size: 80px; font-weight: 900; line-height: 1; letter-spacing: -0.05em; margin-bottom: 40px; }
+
+    .manifesto-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 80px; align-items: start; }
+    .manifesto-text { font-size: 22px; color: #fff; line-height: 1.5; font-weight: 500; }
+    .manifesto-text span { color: var(--Mint); font-weight: 800; }
+    .side-details { font-size: 16px; color: var(--Neutral-400); line-height: 1.7; }
+
+    .origin-section { margin: 160px 0; background: var(--Glass); border-radius: 48px; border: 1px solid var(--Glass-Border); padding: 80px; display: grid; grid-template-columns: 1fr 1.2fr; gap: 80px; align-items: center; }
+    .origin-img { border-radius: 32px; overflow: hidden; height: 400px; }
+    .origin-img img { width: 100%; height: 100%; object-fit: cover; }
+
+    .values-grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 40px; margin-top: 120px; }
+    .value-card { background: var(--Teal-900); border-radius: 32px; padding: 48px; min-height: 320px; display: flex; flex-direction: column; justify-content: space-between; }
+    .value-card h3 { font-size: 28px; font-weight: 800; margin-bottom: 16px; }
+    .value-card p { font-size: 15px; color: rgba(255,255,255,0.6); line-height: 1.6; }
+
+    .footer-cta { text-align: center; margin-top: 160px; }
+    .footer-cta h2 { font-size: 48px; font-weight: 900; margin-bottom: 40px; }
+
     @media (max-width: 1050px) {
-      .container { padding: 0 24px; }
-      nav.main-nav { display: none !important; }
-      .hamburger { display: flex; }
-      #authButtons { display: none !important; }
-      .section-title { font-size: 32px; }
-      .content-text { font-size: 16px; }
-      .grid-values { grid-template-columns: 1fr; gap: 24px; }
+      .story-hero h1 { font-size: 48px; }
+      .manifesto-grid, .origin-section { grid-template-columns: 1fr; gap: 40px; }
+      .origin-section { padding: 40px; }
+      .values-grid { grid-template-columns: 1fr; }
     }
   </style>
 </head>
@@ -103,115 +82,80 @@
         <a href="/#technology">Technology</a>
         <a href="/casestudies.html">Success Stories</a>
         <a href="/about.html" class="active">About</a>
-        <a href="/theoryofchange.html">Change</a>
+        <a href="/impact.html">Our Mission</a>
       </nav>
 
       <div class="header-auth">
         <div id="authButtons" style="display:flex; gap:var(--S-12)">
           <a class="btn btn-outline" style="height:40px; border:none; opacity:0.6; padding:0 12px" href="/signin.html">Sign In</a>
-          <a class="btn btn-primary" style="height:40px; padding:0 20px" href="/signup.html">Get Access</a>
-        </div>
-        <div id="signedBar" style="display:none">
-          <a class="btn btn-primary" id="btnGoWorkbench" style="height:40px; padding:0 20px" href="/dashboard">Workbench</a>
-          <button class="btn btn-outline" id="btnSignOut" style="color:var(--Error); height:36px; padding:0 12px; margin-left:12px; border-color:rgba(214,48,49,0.2)">Exit</button>
-        </div>
-        <div class="hamburger" id="btnHamburger">
-          <span></span><span></span><span></span>
+          <a class="btn btn-primary" style="height:40px; padding:0 20px" href="/signup.html">Sign Up</a>
         </div>
       </div>
     </div>
   </header>
 
-  <div class="mobile-menu" id="mobileMenu">
-    <button class="mobile-close-btn" onclick="toggleMenu()">×</button>
-    <a href="/#technology" onclick="toggleMenu()">Technology</a>
-    <a href="/casestudies.html">Success Stories</a>
-    <a href="/about.html">About KORRA</a>
-    <a href="/theoryofchange.html">Theory of Change</a>
-    <a href="/signin.html">Merchant Portal</a>
-    <div style="width:100%; height:1px; background:var(--Glass-Border); margin:16px 0"></div>
-    <a href="/signup.html" class="btn btn-primary" style="width:100%; height:64px; font-size:16px">Get Access Now</a>
-    <div class="mobile-close-hint">Tap Hamburger to Close</div>
-  </div>
-
   <main>
     <div class="container">
-      <div class="section-eyebrow">Our Mission</div>
-      <h1 class="section-title">Scaling Global Artisan Infrastructure.</h1>
+      <section class="story-hero">
+        <div class="section-eyebrow">The Origin</div>
+        <h1>We Built the<br>Fit Engine for<br>the Next Billion.</h1>
+      </section>
 
-      <div class="content-text">
-        <p>KORRA was built to solve the "Distance Factor"—the fundamental gap between elite craftsmanship and global clients. For too long, the physical requirement of a fitting has limited the growth of independent tailors and artisans in emerging economies.</p>
-
-        <p>By offloading clinical-grade 3D body modeling to the smartphone, we remove the need for expensive industrial hardware and physical travel. We empower a tailor in Lagos to serve a client in London with absolute fit confidence, ensuring that quality artistry is never restricted by location.</p>
-
-        <p>Our goal is to build a borderless digital ecosystem where biometric identity is portable, precision is automated, and fashion waste is a relic of the past.</p>
-      </div>
-
-      <div class="grid-values">
-        <div class="value-card">
-          <h3>Precision First</h3>
-          <p style="font-size: 14px; color: var(--Neutral-400);">±1cm accuracy through advanced computer vision, ensuring the first cut is the final cut.</p>
+      <div class="manifesto-grid">
+        <div class="manifesto-text">
+          KORRA wasn't born in a boardroom. It was born at the <span>intersection of elite AI and artisanal heritage.</span> We realized that while the world was obsessing over digital clothes, the physical world—where real people make real garments—was being left behind by 19th-century measurement standards.
         </div>
-        <div class="value-card">
-          <h3>Economic Inclusion</h3>
-          <p style="font-size: 14px; color: var(--Neutral-400);">Hardware-free infrastructure designed to reach the next 1 billion users in LMICs.</p>
-        </div>
-        <div class="value-card">
-          <h3>Sustainability</h3>
-          <p style="font-size: 14px; color: var(--Neutral-400);">90% reduction in fabric waste by eliminating measurement error and multiple remakes.</p>
+        <div class="side-details">
+          <p>For too long, the barrier to global commerce for a master tailor in Lagos or Lima wasn't their skill—it was the "Distance Factor." The physical requirement of a fitting prevented elite craftsmanship from scaling. We decided to solve that with clinical-grade computer vision.</p>
+          <br>
+          <p>Today, KORRA is the infrastructure layer for the borderless artisan economy. We turn any smartphone into a precision measurement workbench, empowering creators to serve anyone, anywhere, with absolute confidence.</p>
         </div>
       </div>
+
+      <section class="origin-section">
+        <div class="origin-img">
+          <img src="/public/assets/sections/artisan-velocity.jpg" alt="Artisan at work">
+        </div>
+        <div>
+          <div class="section-eyebrow">Our Philosophy</div>
+          <h2 style="font-size: 32px; margin: 24px 0;">Clinical Data.<br>Human Soul.</h2>
+          <p style="color:var(--Neutral-400); line-height: 1.6;">We believe technology should be invisible. Our goal isn't to replace the tailor's eye, but to give them a digital superpower. By automating the extraction of 80+ clinical landmarks, we free the artisan to focus on what matters: style, heritage, and the perfect drape.</p>
+        </div>
+      </section>
+
+      <div class="values-grid">
+        <div class="value-card">
+          <h3>01<br>Precision</h3>
+          <p>We don't do "estimated" sizes. We capture high-fidelity biometric truth, ensuring the first cut is the final cut.</p>
+        </div>
+        <div class="value-card">
+          <h3>02<br>Inclusion</h3>
+          <p>Hardware-free. Resource-light. Built to empower the small business as much as the global factory.</p>
+        </div>
+        <div class="value-card">
+          <h3>03<br>Legacy</h3>
+          <p>We are preserving the craft of tailoring by making it globally competitive in a digital-first world.</p>
+        </div>
+      </div>
+
+      <section class="footer-cta">
+        <h2>Ready to build?</h2>
+        <div style="display:flex; justify-content:center; gap:20px">
+          <a href="/signup.html" class="btn btn-primary">Sign Up Now</a>
+          <a href="/impact.html" class="btn btn-outline">View Our Impact</a>
+        </div>
+      </section>
     </div>
   </main>
 
   <footer>
     <div class="container">
-      <div style="opacity: 0.3; font-size: 13px;">
-        © 2026 KORRA AI. Scaling Global Artisan Infrastructure.
+      <div style="opacity: 0.3; font-size: 13px; text-align: center; padding: 60px 0;">
+        © 2026 KORRA AI. Engineering the Borderless Artisan Economy.
       </div>
     </div>
   </footer>
 
   <script src="/assets/supabase.min.js"></script>
-  <script>
-    (function() {
-      // --- MOBILE MENU LOGIC ---
-      const hamburger = document.getElementById('btnHamburger');
-      const mobileMenu = document.getElementById('mobileMenu');
-
-      window.toggleMenu = function() {
-        if (!hamburger || !mobileMenu) return;
-        hamburger.classList.toggle('active');
-        mobileMenu.classList.toggle('active');
-        document.body.style.overflow = mobileMenu.classList.contains('active') ? 'hidden' : '';
-      };
-
-      if (hamburger) hamburger.addEventListener('click', toggleMenu);
-
-      window.addEventListener('scroll', () => {
-        const header = document.getElementById('mainHeader');
-        if (header) {
-          if (window.scrollY > 40) header.classList.add('scrolled');
-          else header.classList.remove('scrolled');
-        }
-      });
-
-      function initSupabase() {
-        if (typeof window.supabase === 'undefined') { setTimeout(initSupabase, 500); return; }
-        const config = { supabaseUrl: 'https://blsettabymllulsxtziw.supabase.co', supabaseKey: 'sb_publishable_miCOIXHtlxLkfDgpwE0N-g_BA1Q-x8y' };
-        window.korraSupabase = window.supabase.createClient(config.supabaseUrl, config.supabaseKey);
-        const ADMIN_LIST = ['springbionics@gmail.com', 'admin@korra.work'];
-        window.korraSupabase.auth.onAuthStateChange((event, session) => {
-          const authBtns = document.getElementById('authButtons'), bar = document.getElementById('signedBar'), goBtn = document.getElementById('btnGoWorkbench');
-          if (session) {
-            if(authBtns) authBtns.style.display = 'none'; if(bar) bar.style.display = 'flex';
-            if (ADMIN_LIST.includes(session.user.email.toLowerCase())) { if(goBtn) { goBtn.href = '/admin'; goBtn.textContent = 'Super-Workbench'; } }
-          } else { if(bar) bar.style.display = 'none'; if(authBtns) authBtns.style.display = 'flex'; }
-        });
-      }
-      initSupabase();
-      document.addEventListener('click', e => { if (e.target.id === 'btnSignOut') window.korraSupabase.auth.signOut().then(() => window.location.reload()); });
-    })();
-  </script>
 </body>
 </html>

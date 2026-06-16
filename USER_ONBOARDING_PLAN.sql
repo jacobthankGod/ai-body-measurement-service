@@ -247,11 +247,25 @@ ALTER TABLE public.cultural_attire ENABLE ROW LEVEL SECURITY;
 ALTER TABLE public.vertical_products ENABLE ROW LEVEL SECURITY;
 ALTER TABLE public.vertical_country_context ENABLE ROW LEVEL SECURITY;
 
-CREATE POLICY "Allow public read for reference tables" ON public.countries_reference FOR SELECT USING (true);
-CREATE POLICY "Allow public read for industry verticals" ON public.industry_verticals FOR SELECT USING (true);
-CREATE POLICY "Allow public read for production methods" ON public.production_methods FOR SELECT USING (true);
-CREATE POLICY "Allow public read for product categories" ON public.product_categories FOR SELECT USING (true);
-CREATE POLICY "Allow public read for cultural attire" ON public.cultural_attire FOR SELECT USING (true);
+-- Policy creation with safety checks
+DO $$
+BEGIN
+    IF NOT EXISTS (SELECT 1 FROM pg_policies WHERE policyname = 'Allow public read for reference tables') THEN
+        CREATE POLICY "Allow public read for reference tables" ON public.countries_reference FOR SELECT USING (true);
+    END IF;
+    IF NOT EXISTS (SELECT 1 FROM pg_policies WHERE policyname = 'Allow public read for industry verticals') THEN
+        CREATE POLICY "Allow public read for industry verticals" ON public.industry_verticals FOR SELECT USING (true);
+    END IF;
+    IF NOT EXISTS (SELECT 1 FROM pg_policies WHERE policyname = 'Allow public read for production methods') THEN
+        CREATE POLICY "Allow public read for production methods" ON public.production_methods FOR SELECT USING (true);
+    END IF;
+    IF NOT EXISTS (SELECT 1 FROM pg_policies WHERE policyname = 'Allow public read for product categories') THEN
+        CREATE POLICY "Allow public read for product categories" ON public.product_categories FOR SELECT USING (true);
+    END IF;
+    IF NOT EXISTS (SELECT 1 FROM pg_policies WHERE policyname = 'Allow public read for cultural attire') THEN
+        CREATE POLICY "Allow public read for cultural attire" ON public.cultural_attire FOR SELECT USING (true);
+    END IF;
+END $$;
 
 -- 5. INDEXING FOR PERFORMANCE
 CREATE INDEX IF NOT EXISTS idx_profile_onboarding_phase ON public.profiles(onboarding_phase);

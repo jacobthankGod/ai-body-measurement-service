@@ -1,0 +1,168 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Our Mission | KORRA</title>
+  <link rel="icon" type="image/png" href="/assets/body-capture.png">
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800;900&display=swap" rel="stylesheet" />
+  <style>
+    :root {
+      --Obsidian: #000000; --Mint: #57D7C0; --Teal-900: #002D2A; --Glass: rgba(255, 255, 255, 0.04);
+      --Glass-Border: rgba(255, 255, 255, 0.1); --Neutral-400: #A3A3A3; --Neutral-500: #737373; --White: #FFFFFF; --Error: #D63031;
+      --S-8: 8px; --S-16: 16px; --S-24: 24px; --S-32: 32px; --S-48: 48px; --S-64: 64px; --S-80: 80px; --S-120: 120px; --S-160: 160px;
+    }
+    * { box-sizing: border-box; -webkit-font-smoothing: antialiased; margin: 0; padding: 0; }
+    html, body { background: var(--Obsidian); color: var(--White); font-family: 'Inter', sans-serif; overflow-x: hidden; }
+    .container { width: 100%; max-width: 1150px; margin: 0 auto; padding: 0 48px; }
+
+    /* --- UNIFIED HEADER SYSTEM --- */
+    header {
+      width: 100%; height: 80px; display: flex; align-items: center; position: fixed; top: 0; z-index: 999999;
+      background: rgba(0, 0, 0, 0.8); backdrop-filter: blur(20px); border-bottom: 1px solid var(--Glass-Border); transition: all 0.3s ease;
+    }
+    header.scrolled { height: 64px; background: rgba(0, 0, 0, 0.95); }
+    header .container { display: flex; align-items: center; justify-content: space-between; padding: 0; position: relative; }
+
+    .logo { display: flex; align-items: center; gap: var(--S-12); cursor: pointer; text-decoration: none; color: inherit; z-index: 1000001; }
+    .logo-mark { width: 32px; height: 32px; border-radius: 8px; background: var(--Mint); transform: rotate(-8deg); }
+    .logo-text { font-size: 20px; font-weight: 900; letter-spacing: -0.05em; }
+
+    nav.main-nav { display: flex; gap: var(--S-32); position: absolute; left: 50%; transform: translateX(-50%); }
+    nav.main-nav a { font-size: 13px; font-weight: 600; color: var(--White); text-decoration: none; text-transform: uppercase; letter-spacing: 0.1em; opacity: 0.6; transition: 0.2s; }
+    nav.main-nav a:hover, nav.main-nav a.active { opacity: 1; color: var(--Mint); }
+
+    .header-auth { display: flex; align-items: center; gap: var(--S-16); z-index: 1000001; }
+
+    .btn { height: 52px; padding: 0 32px; border-radius: 12px; font-size: 13px; font-weight: 800; cursor: pointer; display: inline-flex; align-items: center; justify-content: center; gap: 12px; transition: 0.2s; text-decoration: none; text-transform: uppercase; }
+    .btn-primary { background: var(--Mint); color: var(--Obsidian); border: none; }
+    .btn-outline { background: transparent; border: 1px solid var(--Glass-Border); color: var(--White); }
+
+    /* --- MISSION PAGE STYLES --- */
+    main { padding-top: 160px; padding-bottom: 160px; }
+    .hero-section { text-align: center; margin-bottom: 120px; }
+    .hero-section h1 { font-size: 72px; font-weight: 900; line-height: 1; letter-spacing: -0.05em; margin-bottom: 24px; background: linear-gradient(180deg, #fff 0%, rgba(255,255,255,0.4) 100%); -webkit-background-clip: text; -webkit-text-fill-color: transparent; }
+    .hero-section p { font-size: 20px; color: var(--Neutral-400); max-width: 600px; margin: 0 auto; line-height: 1.5; }
+
+    .mission-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 40px; margin-bottom: 160px; }
+    .mission-card { background: var(--Glass); border: 1px solid var(--Glass-Border); border-radius: 32px; padding: 48px; position: relative; overflow: hidden; display: flex; flex-direction: column; justify-content: flex-end; min-height: 500px; }
+    .mission-card h2 { font-size: 40px; font-weight: 800; margin-bottom: 16px; position: relative; z-index: 2; }
+    .mission-card p { font-size: 16px; color: var(--Neutral-400); line-height: 1.6; position: relative; z-index: 2; }
+    .card-bg { position: absolute; inset: 0; object-fit: cover; opacity: 0.3; transition: 0.5s; z-index: 1; }
+    .mission-card:hover .card-bg { opacity: 0.5; transform: scale(1.05); }
+
+    .blueprint-section { background: var(--Teal-900); border-radius: 48px; padding: 80px; margin-bottom: 160px; display: grid; grid-template-columns: 1.2fr 1fr; gap: 80px; align-items: center; }
+    .blueprint-content h3 { font-size: 11px; font-weight: 900; color: var(--Mint); text-transform: uppercase; letter-spacing: 0.2em; margin-bottom: 24px; }
+    .blueprint-content h2 { font-size: 48px; font-weight: 800; line-height: 1.1; margin-bottom: 32px; }
+    .blueprint-content p { font-size: 18px; color: rgba(255,255,255,0.7); line-height: 1.6; margin-bottom: 40px; }
+
+    .stat-row { display: grid; grid-template-columns: repeat(3, 1fr); gap: 32px; }
+    .stat-box { border-top: 1px solid rgba(255,255,255,0.1); padding-top: 24px; }
+    .stat-box .value { font-size: 32px; font-weight: 900; color: var(--Mint); }
+    .stat-box .label { font-size: 10px; font-weight: 800; color: var(--Neutral-500); text-transform: uppercase; margin-top: 4px; }
+
+    .cta-banner { text-align: center; background: linear-gradient(135deg, #0a0a0a 0%, #111 100%); border: 1px solid var(--Glass-Border); border-radius: 40px; padding: 100px 40px; }
+    .cta-banner h2 { font-size: 56px; font-weight: 900; letter-spacing: -0.04em; margin-bottom: 24px; }
+    .cta-banner p { font-size: 18px; color: var(--Neutral-400); margin-bottom: 48px; }
+
+    @media (max-width: 1000px) {
+      .hero-section h1 { font-size: 48px; }
+      .mission-grid { grid-template-columns: 1fr; }
+      .blueprint-section { grid-template-columns: 1fr; padding: 40px; gap: 40px; }
+      .cta-banner h2 { font-size: 32px; }
+    }
+  </style>
+</head>
+<body>
+  <header id="mainHeader">
+    <div class="container">
+      <a class="logo" href="/">
+        <div class="logo-mark"></div>
+        <div class="logo-text">KORRA</div>
+      </a>
+
+      <nav class="main-nav">
+        <a href="/#technology">Technology</a>
+        <a href="/casestudies.html">Success Stories</a>
+        <a href="/about.html">About</a>
+        <a href="/impact.html" class="active">Our Mission</a>
+      </nav>
+
+      <div class="header-auth">
+        <div id="authButtons" style="display:flex; gap:var(--S-12)">
+          <a class="btn btn-outline" style="height:40px; border:none; opacity:0.6; padding:0 12px" href="/signin.html">Sign In</a>
+          <a class="btn btn-primary" style="height:40px; padding:0 20px" href="/signup.html">Sign Up</a>
+        </div>
+      </div>
+    </div>
+  </header>
+
+  <main>
+    <div class="container">
+      <section class="hero-section">
+        <h1>Engineering a Borderless<br>Artisan Economy.</h1>
+        <p>KORRA is the clinical-grade biometric infrastructure built to eliminate the physical distance between master craftsmanship and the global consumer.</p>
+      </section>
+
+      <div class="mission-grid">
+        <div class="mission-card">
+          <img src="/public/assets/sections/global-bespoke.jpg" class="card-bg" alt="Global Bespoke">
+          <h2>Democratizing<br>Precision.</h2>
+          <p>We are replacing $20,000 industrial scanners with the smartphone in your pocket. By offloading 3D landmark extraction to the edge, we enable tailors in Lagos, London, and Lima to capture the exact same fidelity of data.</p>
+        </div>
+        <div class="mission-card">
+          <img src="/public/assets/sections/sustainable-scale.jpg" class="card-bg" alt="Sustainable Scale">
+          <h2>Ending<br>Guesswork.</h2>
+          <p>62% of fashion returns are due to poor fit. This isn't just a business problem—it's an environmental catastrophe. KORRA provides a permanent "Size Passport" that ensures right-first-time production, every time.</p>
+        </div>
+      </div>
+
+      <section class="blueprint-section">
+        <div class="blueprint-content">
+          <h3>The Blueprint</h3>
+          <h2>Clinical Data.<br>Artisanal Soul.</h2>
+          <p>We believe that technology shouldn't replace the artisan—it should amplify them. KORRA provides the high-fidelity biometric "truth" that allows master tailors to focus on what they do best: creation, style, and heritage.</p>
+          <div class="stat-row">
+            <div class="stat-box">
+              <div class="value">90%</div>
+              <div class="label">Waste Reduction</div>
+            </div>
+            <div class="stat-box">
+              <div class="value">$0.50</div>
+              <div class="label">Per Capture</div>
+            </div>
+            <div class="stat-box">
+              <div class="value">2X</div>
+              <div class="label">Artisan Velocity</div>
+            </div>
+          </div>
+        </div>
+        <div style="border-radius:32px; overflow:hidden; border:1px solid rgba(255,255,255,0.1)">
+          <img src="/public/assets/sections/digital-savile-row.jpg" style="width:100%; height:100%; object-fit:cover" alt="Industrial Blueprint">
+        </div>
+      </section>
+
+      <section class="cta-banner">
+        <h2>Join the Precision<br>Revolution.</h2>
+        <p>Whether you're a master tailor or a global brand, KORRA is your industrial workbench for the future of fit.</p>
+        <div style="display:flex; justify-content:center; gap:20px">
+          <a href="/signup.html" class="btn btn-primary">Start Your Onboarding</a>
+          <a href="/about.html" class="btn btn-outline">Our Story</a>
+        </div>
+      </section>
+    </div>
+  </main>
+
+  <footer>
+    <div class="container">
+      <div style="opacity: 0.3; font-size: 13px; text-align: center; padding: 40px 0;">
+        © 2026 KORRA AI. Scaling Global Artisan Infrastructure.
+      </div>
+    </div>
+  </footer>
+
+  <script src="/assets/supabase.min.js"></script>
+</body>
+</html>
