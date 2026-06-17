@@ -172,9 +172,21 @@
           document.getElementById('btnSignUp').textContent = 'Start Integration';
       }
 
-      if (next) {
+if (next) {
         document.getElementById('linkSignIn').href = `/signin?next=${encodeURIComponent(next)}`;
         document.getElementById('successLoginLink').href = `/signin?next=${encodeURIComponent(next)}`;
+      }
+
+      // Build the redirect URL for email verification - default to /onboarding
+      let redirectUrl = 'https://korra.work/verify';
+      if (role || next) {
+        const redirectParams = new URLSearchParams();
+        if (role) redirectParams.set('role', role);
+        if (next) redirectParams.set('next', next);
+        redirectUrl += '?' + redirectParams.toString();
+      } else {
+        // Default to onboarding for standard signups
+        redirectUrl += '?next=/onboarding';
       }
 
       const form = document.getElementById('signUpForm');
@@ -215,9 +227,9 @@ const email = document.getElementById('upEmail').value;
           const { error } = await KORRA_CORE.auth.signUp({
             email,
             password,
-            options: {
+options: {
               data: metadata,
-              emailRedirectTo: 'https://korra.work/verify'
+              emailRedirectTo: redirectUrl
             }
           });
 
