@@ -429,11 +429,11 @@
 
       await KORRA_CORE
         .from('profiles')
-        .update({
+        .upsert({
+          id: user.id,
           onboarding_phase: currentPhase,
           ...userData
-        })
-        .eq('id', user.id);
+        });
     }
 
     function selectAccountType(type) {
@@ -479,11 +479,11 @@
 
       const { error } = await KORRA_CORE
         .from('profiles')
-        .update({
+        .upsert({
+          id: user.id,
           ...userData,
           onboarding_completed_at: new Date().toISOString()
-        })
-        .eq('id', user.id);
+        });
 
       if (error) {
         alert(error.message);
@@ -502,16 +502,26 @@
         .select('code, name, default_currency')
         .order('name');
 
-      if (!error && data) {
+      if (!error && data && data.length > 0) {
         countries = data;
-        const select = document.getElementById('countrySelect');
-        data.forEach(c => {
-          const opt = document.createElement('option');
-          opt.value = c.code;
-          opt.textContent = c.name;
-          select.appendChild(opt);
-        });
+      } else {
+        // Fallback if reference table is empty
+        countries = [
+            { code: 'US', name: 'United States', default_currency: 'USD' },
+            { code: 'GB', name: 'United Kingdom', default_currency: 'GBP' },
+            { code: 'NG', name: 'Nigeria', default_currency: 'NGN' },
+            { code: 'IN', name: 'India', default_currency: 'INR' },
+            { code: 'CA', name: 'Canada', default_currency: 'CAD' }
+        ];
       }
+
+      const select = document.getElementById('countrySelect');
+      countries.forEach(c => {
+        const opt = document.createElement('option');
+        opt.value = c.code;
+        opt.textContent = c.name;
+        select.appendChild(opt);
+      });
     }
 
     function updateCountrySelection() {
@@ -538,16 +548,25 @@
         .from('industry_verticals')
         .select('id, name');
 
-      if (!error && data) {
+      if (!error && data && data.length > 0) {
         verticals = data;
-        const select = document.getElementById('verticalSelect');
-        data.forEach(v => {
-          const opt = document.createElement('option');
-          opt.value = v.id;
-          opt.textContent = v.name;
-          select.appendChild(opt);
-        });
+      } else {
+        // Fallback for verticals
+        verticals = [
+            { id: 'rtw', name: 'Ready-To-Wear' },
+            { id: 'mtm', name: 'Made-To-Measure' },
+            { id: 'bridal', name: 'Bridal & Tuxedo' },
+            { id: 'workwear', name: 'Workwear & Industrial' }
+        ];
       }
+
+      const select = document.getElementById('verticalSelect');
+      verticals.forEach(v => {
+        const opt = document.createElement('option');
+        opt.value = v.id;
+        opt.textContent = v.name;
+        select.appendChild(opt);
+      });
     }
 
     async function updateVerticalSelection() {

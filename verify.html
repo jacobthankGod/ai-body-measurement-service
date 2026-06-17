@@ -100,8 +100,8 @@
       const params = new URLSearchParams(window.location.search);
       const next = params.get('next') || '/onboarding';
 
-      // Give it a moment to catch the hash if redirected from email
-      setTimeout(async () => {
+      // Handle verification via session or auth state change (more reliable for hash tokens)
+      const checkVerification = async () => {
         const { data: { session }, error } = await KORRA_CORE.auth.getSession();
 
         if (error) {
@@ -115,11 +115,23 @@
           const redirectTarget = next.startsWith('/') ? next : '/' + next;
           setTimeout(() => { window.location.href = redirectTarget; }, 2500);
         } else {
-          // No session found, might be a direct hit or failed hash parsing
-          document.getElementById('loading').style.display = 'none';
-          document.getElementById('error').style.display = 'block';
+           // No session yet, wait a bit longer if there's a hash in the URL
+           if (!window.location.hash) {
+             document.getElementById('loading').style.display = 'none';
+             document.getElementById('error').style.display = 'block';
+           }
         }
-      }, 1000);
+      };
+
+      // Listen for auth changes which trigger when hash is parsed
+      KORRA_CORE.auth.onAuthStateChange((event, session) => {
+        if (event === 'SIGNED_IN' || event === 'USER_UPDATED') {
+          checkVerification();
+        }
+      });
+
+      // Run initial check after short delay
+      setTimeout(checkVerification, 1500);
     })();
   </script>
 </body>

@@ -177,8 +177,8 @@ if (next) {
         document.getElementById('successLoginLink').href = `/signin?next=${encodeURIComponent(next)}`;
       }
 
-      // Build the redirect URL for email verification - default to /onboarding
-      let redirectUrl = 'https://korra.work/verify';
+      // Build the redirect URL for email verification - support all environments
+      let redirectUrl = window.location.origin + '/verify';
       if (role || next) {
         const redirectParams = new URLSearchParams();
         if (role) redirectParams.set('role', role);
