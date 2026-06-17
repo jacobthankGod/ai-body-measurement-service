@@ -106,7 +106,10 @@ class KorraVisualizer {
         }
 
         try {
-            const response = await fetch(objUrl);
+            const controller = new AbortController();
+            const id = setTimeout(() => controller.abort(), 10000); // 10s timeout for mesh load
+            const response = await fetch(objUrl, { signal: controller.signal });
+            clearTimeout(id);
             if (!response.ok) throw new Error("File Missing");
             const text = await response.text();
             const meshData = this.parseAndRenderOBJ(text);
