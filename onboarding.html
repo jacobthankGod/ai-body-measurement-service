@@ -3,7 +3,7 @@
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>Onboarding | KORRA</title>
+  <title>Setup | KORRA</title>
 
   <link rel="icon" type="image/png" href="/assets/body-capture.png">
   <link rel="preconnect" href="https://fonts.googleapis.com" />
@@ -40,9 +40,9 @@
     .side-overlay h1 { font-size: 48px; font-weight: 900; line-height: 1.1; letter-spacing: -0.04em; color: #fff; }
     .side-overlay p { font-size: 18px; color: var(--Mint); margin-top: 16px; font-weight: 600; }
 
-    .form-panel { display: flex; align-items: center; justify-content: center; padding: 48px 24px; background: #000; height: 100vh; overflow-y: auto; scrollbar-width: none; }
+    .form-panel { display: flex; align-items: flex-start; justify-content: center; padding: 48px 24px; background: #000; height: 100vh; overflow-y: auto; scrollbar-width: none; }
     .form-panel::-webkit-scrollbar { display: none; }
-    .form-container { width: 100%; max-width: 520px; }
+    .form-container { width: 100%; max-width: 520px; padding-top: 40px; padding-bottom: 80px; }
 
     @media (max-width: 1000px) {
       .split-layout { grid-template-columns: 1fr; }
@@ -54,24 +54,23 @@
     .logo-mark { width: 32px; height: 32px; border-radius: 8px; background: var(--Mint); transform: rotate(-8deg); }
     .logo-text { font-size: 20px; font-weight: 900; letter-spacing: -0.05em; }
 
-    .progress-container { margin-bottom: 48px; }
-    .progress-track { display: flex; gap: 8px; justify-content: space-between; margin-bottom: 12px; }
-    .progress-step { height: 4px; flex: 1; background: var(--Glass); border-radius: 2px; transition: 0.4s ease; }
-    .progress-step.active { background: var(--Mint); box-shadow: 0 0 10px rgba(87, 215, 192, 0.3); }
-    .progress-text { font-size: 11px; font-weight: 900; text-transform: uppercase; color: var(--Neutral-400); letter-spacing: 0.1em; display: block; text-align: right; }
+    /* MODERN SEGMENTED PROGRESS INDICATOR */
+    .progress-segments { display: flex; gap: 6px; margin-bottom: 48px; }
+    .segment { height: 4px; flex: 1; background: var(--Glass); border-radius: 2px; transition: 0.4s cubic-bezier(0.4, 0, 0.2, 1); }
+    .segment.active { background: var(--Mint); box-shadow: 0 0 10px rgba(87, 215, 192, 0.4); }
 
     h2 { font-size: 32px; font-weight: 800; margin-bottom: 12px; letter-spacing: -0.03em; }
     .sub-p { color: var(--Neutral-400); margin-bottom: 40px; font-size: 15px; line-height: 1.6; }
 
-    .phase-container { display: none; opacity: 0; transition: 0.3s; transform: translateY(10px); }
+    .phase-container { display: none; opacity: 0; transition: 0.4s; transform: translateY(10px); }
     .phase-container.active { display: block; opacity: 1; transform: translateY(0); }
 
     .form-group { margin-bottom: 24px; }
-    .form-label { display: block; font-size: 10px; font-weight: 900; text-transform: uppercase; color: var(--Neutral-400); letter-spacing: 0.1em; margin-bottom: 12px; }
+    .form-label { display: block; font-size: 10px; font-weight: 900; text-transform: uppercase; color: var(--Neutral-500); letter-spacing: 0.12em; margin-bottom: 12px; }
 
     .form-input, select {
-      width: 100%; height: 52px; background: rgba(255,255,255,0.05); border: 1px solid var(--Glass-Border);
-      border-radius: 12px; padding: 0 16px; color: #fff; font-size: 14px; transition: 0.2s;
+      width: 100%; height: 56px; background: rgba(255,255,255,0.05); border: 1px solid var(--Glass-Border);
+      border-radius: 14px; padding: 0 20px; color: #fff; font-size: 14px; transition: 0.2s; font-weight: 600;
     }
     .form-input:focus, select:focus { outline: none; border-color: var(--Mint); background: rgba(255,255,255,0.08); }
     select option { background: #000; color: #fff; }
@@ -82,18 +81,18 @@
       padding: 24px; cursor: pointer; transition: 0.3s cubic-bezier(0.2, 1, 0.3, 1); position: relative;
       display: flex; flex-direction: column; height: 100%;
     }
-    .option-card:hover { border-color: var(--Mint); background: rgba(87, 215, 192, 0.05); transform: translateY(-4px); }
-    .option-card.selected { border-color: var(--Mint); background: rgba(87, 215, 192, 0.1); box-shadow: 0 10px 30px rgba(87, 215, 192, 0.1); }
+    .option-card:hover { border-color: var(--Mint); background: rgba(87,215,192,0.05); transform: translateY(-4px); }
+    .option-card.selected { border-color: var(--Mint); background: rgba(87,215,192,0.1); box-shadow: 0 10px 30px rgba(87, 215, 192, 0.1); }
     .option-card .icon-wrap { width: 48px; height: 48px; margin-bottom: 20px; display: flex; align-items: center; justify-content: center; }
     .option-card .icon-wrap img { width: 100%; height: 100%; object-fit: contain; }
     .option-card .title { font-size: 16px; font-weight: 700; margin-bottom: 8px; color: #fff; }
-    .option-card .desc { font-size: 12px; color: var(--Neutral-400); line-height: 1.5; }
+    .option-card .desc { font-size: 11px; color: var(--Neutral-400); line-height: 1.5; }
 
     .btn-row { display: flex; gap: 16px; margin-top: 40px; }
     .btn {
-      flex: 1; height: 52px; background: var(--Mint); color: var(--Obsidian); border: none;
-      border-radius: 12px; font-size: 13px; font-weight: 800; cursor: pointer; transition: 0.3s;
-      display: flex; align-items: center; justify-content: center; text-transform: uppercase; letter-spacing: 0.05em;
+      flex: 1; height: 56px; background: var(--Mint); color: var(--Obsidian); border: none;
+      border-radius: 14px; font-size: 13px; font-weight: 800; cursor: pointer; transition: 0.3s;
+      display: flex; align-items: center; justify-content: center; text-transform: uppercase; letter-spacing: 0.08em;
     }
     .btn:hover { background: #6effeb; transform: translateY(-2px); box-shadow: 0 10px 20px rgba(87, 215, 192, 0.2); }
     .btn.secondary { background: var(--Glass); color: var(--White); border: 1px solid var(--Glass-Border); }
@@ -110,7 +109,7 @@
   <div class="split-layout">
     <div class="side-panel">
       <div class="side-overlay">
-        <h1 id="sideTitle">Welcome to the Workbench.</h1>
+        <h1 id="sideTitle">Configuration Active.</h1>
         <p id="sideSub">Precision at scale starts here.</p>
       </div>
     </div>
@@ -122,25 +121,24 @@
           <div class="logo-text">KORRA</div>
         </div>
 
-        <div class="progress-container">
-          <div class="progress-track">
-            <div class="progress-step active"></div>
-            <div class="progress-step"></div>
-            <div class="progress-step"></div>
-            <div class="progress-step"></div>
-            <div class="progress-step"></div>
-            <div class="progress-step"></div>
-            <div class="progress-step"></div>
-            <div class="progress-step"></div>
-          </div>
-          <span id="progressText" class="progress-text">Step 1 of 8</span>
+        <div class="progress-segments" id="progressSegments">
+          <div class="segment active"></div>
+          <div class="segment"></div>
+          <div class="segment"></div>
+          <div class="segment"></div>
+          <div class="segment"></div>
+          <div class="segment"></div>
+          <div class="segment"></div>
+          <div class="segment"></div>
         </div>
 
-        <!-- PHASE 1: WELCOME (Now with Demographics) -->
+        <!-- PHASE 1: WELCOME -->
         <div id="phase1" class="phase-container active">
-          <div class="success-icon-wrap" style="width:120px; height:120px; margin-bottom:24px;"><img src="https://cdn3d.iconscout.com/3d/free/thumb/free-hand-shake-3683042-3071364.png" alt="Welcome"></div>
-          <h2>Welcome to your precision workbench</h2>
-          <p class="sub-p">Let's configure your workspace for the best possible experience. Start by providing some basic details.</p>
+          <div class="success-icon-wrap" style="width:140px; height:140px; margin-bottom:32px;">
+            <img src="https://cdn3d.iconscout.com/3d/premium/thumb/handshake-5381804-4501217.png" alt="Welcome">
+          </div>
+          <h2>Welcome to your workspace</h2>
+          <p class="sub-p">Let's configure your precision environment for the best possible experience. Start by providing some basic details.</p>
 
           <div style="display:grid; grid-template-columns: 1fr 1fr; gap: 20px; margin-bottom: 24px;">
             <div class="form-group">
@@ -167,49 +165,51 @@
           </div>
 
           <div class="btn-row">
-            <button id="btnPhase1" onclick="nextPhase()" class="btn" disabled>Let's Get Started</button>
+            <button id="btnPhase1" onclick="nextPhase()" class="btn" disabled>Initialize Workspace</button>
           </div>
         </div>
 
         <!-- PHASE 2: ACCOUNT TYPE -->
         <div id="phase2" class="phase-container">
           <h2>Choose Your Path</h2>
-          <p class="sub-p">Confirm your account type so we can tailor your industrial tools.</p>
+          <p class="sub-p">Identify your role so we can personalize your dashboard tools and biometric logic.</p>
 
           <div class="grid-options">
             <div class="option-card" onclick="selectAccountType('individual', event)">
               <div class="icon-wrap"><img src="https://cdn3d.iconscout.com/3d/free/thumb/free-user-profile-5054320-4209594.png" alt="Individual"></div>
               <div class="title">Individual</div>
-              <div class="desc">Personal Fit Profile & Digital Twin</div>
+              <div class="desc">Personal Fit Profile & Global Digital Twin.</div>
             </div>
             <div class="option-card" onclick="selectAccountType('artisan', event)">
               <div class="icon-wrap"><img src="https://cdn3d.iconscout.com/3d/free/thumb/free-scissors-5037380-4201777.png" alt="Artisan"></div>
               <div class="title">Artisan</div>
-              <div class="desc">Measurement Professional & Tailor</div>
+              <div class="desc">Measurement Professional & Custom Tailor.</div>
             </div>
             <div class="option-card" onclick="selectAccountType('merchant', event)">
               <div class="icon-wrap"><img src="https://cdn3d.iconscout.com/3d/free/thumb/free-shop-5037381-4201778.png" alt="Merchant"></div>
               <div class="title">Merchant</div>
-              <div class="desc">Retailer or E-commerce Brand</div>
+              <div class="desc">Retailer, Boutique, or E-commerce Brand.</div>
             </div>
             <div class="option-card" onclick="selectAccountType('enterprise', event)">
               <div class="icon-wrap"><img src="https://cdn3d.iconscout.com/3d/free/thumb/free-office-building-5037382-4201779.png" alt="Enterprise"></div>
               <div class="title">Enterprise</div>
-              <div class="desc">Large Organization & Factory</div>
+              <div class="desc">Large Organization, Factory, or Institution.</div>
             </div>
           </div>
 
           <div class="btn-row">
             <button onclick="prevPhase()" class="btn secondary">Back</button>
-            <button id="btnPhase2" onclick="nextPhase()" class="btn" disabled>Continue</button>
+            <button id="btnPhase2" onclick="nextPhase()" class="btn" disabled>Confirm Path</button>
           </div>
         </div>
 
         <!-- PHASE 3: GEOGRAPHIC -->
         <div id="phase3" class="phase-container">
-          <div class="success-icon-wrap" style="width:100px; height:100px; margin-bottom:24px;"><img src="https://cdn3d.iconscout.com/3d/free/thumb/free-location-2978430-2476735.png" alt="Location"></div>
+          <div class="success-icon-wrap" style="width:120px; height:120px; margin-bottom:32px;">
+            <img src="https://cdn3d.iconscout.com/3d/free/thumb/free-location-2978430-2476735.png" alt="Location">
+          </div>
           <h2>Your Location</h2>
-          <p class="sub-p">Regional settings and compliance defaults. We'll pre-select your currency based on your country.</p>
+          <p class="sub-p">Regional settings and compliance defaults. We'll synchronize your currency automatically.</p>
 
           <div class="form-group">
             <label class="form-label" for="countrySelect">Country</label>
@@ -237,22 +237,24 @@
 
         <!-- PHASE 4: BUSINESS PROFILE -->
         <div id="phase4" class="phase-container">
-          <div class="success-icon-wrap" style="width:100px; height:100px; margin-bottom:24px;"><img src="https://cdn3d.iconscout.com/3d/free/thumb/free-briefcase-3683058-3071380.png" alt="Business"></div>
+          <div class="success-icon-wrap" style="width:120px; height:120px; margin-bottom:32px;">
+            <img src="https://cdn3d.iconscout.com/3d/free/thumb/free-briefcase-3683058-3071380.png" alt="Business">
+          </div>
           <h2>Business Details</h2>
-          <p class="sub-p">Configure your professional workspace identity.</p>
+          <p class="sub-p">Configure your professional identity and brand presence.</p>
 
           <div class="form-group">
             <label class="form-label">Company / Brand Name</label>
-            <input type="text" class="form-input" id="companyInput" placeholder="e.g. Savile Row Tailors" oninput="userData.company_name = this.value; checkPhase4()">
+            <input type="text" class="form-input" id="companyInput" placeholder="e.g. Savile Row Masters" oninput="userData.company_name = this.value; checkPhase4()">
           </div>
 
           <div class="form-group">
             <label class="form-label">Business Type</label>
             <select id="businessTypeSelect" onchange="userData.business_type = this.value; checkPhase4()">
               <option value="">Select business type</option>
-              <option value="retail">Retail</option>
-              <option value="wholesale">Wholesale</option>
-              <option value="manufacturing">Manufacturing</option>
+              <option value="retail">Retail (Direct to Consumer)</option>
+              <option value="wholesale">Wholesale (Distribution)</option>
+              <option value="manufacturing">Manufacturing (Production)</option>
             </select>
           </div>
 
@@ -273,7 +275,7 @@
           <p class="sub-p">Select the industry verticals you operate in. You can select multiple for a comprehensive profile.</p>
 
           <div id="verticalsGrid" class="grid-options">
-            <!-- Dynamically populated -->
+            <!-- Dynamically populated as premium cards -->
           </div>
 
           <div id="subSpecialtiesArea" style="display:none; margin-top: 32px;">
@@ -285,15 +287,17 @@
 
           <div class="btn-row">
             <button onclick="prevPhase()" class="btn secondary">Back</button>
-            <button id="btnPhase5" onclick="nextPhase()" class="btn" disabled>Continue</button>
+            <button id="btnPhase5" onclick="nextPhase()" class="btn" disabled>Confirm Industry</button>
           </div>
         </div>
 
         <!-- PHASE 6: MEASUREMENT PREFERENCES -->
         <div id="phase6" class="phase-container">
-          <div class="success-icon-wrap" style="width:100px; height:100px; margin-bottom:24px;"><img src="https://cdn3d.iconscout.com/3d/free/thumb/free-ruler-3683045-3071367.png" alt="Standards"></div>
+          <div class="success-icon-wrap" style="width:120px; height:120px; margin-bottom:32px;">
+            <img src="https://cdn3d.iconscout.com/3d/free/thumb/free-ruler-3683045-3071367.png" alt="Standards">
+          </div>
           <h2>Measurement Standards</h2>
-          <p class="sub-p">Set your default units and measurement systems. You can always change these later in settings.</p>
+          <p class="sub-p">Set your default units and measurement systems. These determine your biometric data output.</p>
 
           <div class="form-group">
             <label class="form-label">Unit Preference</label>
@@ -307,58 +311,58 @@
             <label class="form-label">Measurement Standard</label>
             <select id="standardSelect" onchange="userData.measurement_standard = this.value">
               <option value="standard">Standard Body Measurements</option>
-              <option value="alvanon">Alvanon Sizing</option>
+              <option value="alvanon">Alvanon Sizing (US/EU)</option>
               <option value="custom">Custom Measurement Set</option>
             </select>
           </div>
 
           <div class="btn-row">
             <button onclick="prevPhase()" class="btn secondary">Back</button>
-            <button onclick="nextPhase()" class="btn">Continue</button>
+            <button onclick="nextPhase()" class="btn">Confirm Standards</button>
           </div>
         </div>
 
         <!-- PHASE 7: PLAN SELECTION -->
         <div id="phase7" class="phase-container">
           <h2>Select Your Tier</h2>
-          <p class="sub-p">Choose the plan that matches your monthly scanning volume.</p>
+          <p class="sub-p">Choose the capacity that matches your monthly scanning requirements.</p>
 
           <div class="grid-options" style="grid-template-columns: 1fr;">
             <div class="option-card selected" onclick="selectPlan('starter', this)">
-              <div style="display:flex; align-items:center; gap: 20px;">
-                <div class="icon-wrap" style="width:60px; height:60px;"><img src="https://cdn3d.iconscout.com/3d/free/thumb/free-rocket-3683053-3071375.png" alt="Starter"></div>
+              <div style="display:flex; align-items:center; gap: 24px;">
+                <div class="icon-wrap" style="width:64px; height:64px;"><img src="https://cdn3d.iconscout.com/3d/premium/thumb/rocket-3683053-3071375.png" alt="Starter"></div>
                 <div style="flex:1">
-                  <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:4px;">
+                  <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:6px;">
                     <div class="title" style="margin-bottom:0">Starter</div>
-                    <div style="font-weight:900; color:var(--Mint)">FREE</div>
+                    <div style="font-weight:900; color:var(--Mint); font-size:16px;">FREE</div>
                   </div>
-                  <div class="desc">1 - 50 scans per month. Perfect for individuals and small artisans.</div>
+                  <div class="desc">1 - 50 scans per month. Ideal for individuals.</div>
                 </div>
               </div>
             </div>
 
             <div class="option-card" onclick="selectPlan('pro', this)">
-              <div style="display:flex; align-items:center; gap: 20px;">
-                <div class="icon-wrap" style="width:60px; height:60px;"><img src="https://cdn3d.iconscout.com/3d/free/thumb/free-crown-3683051-3071374.png" alt="Pro"></div>
+              <div style="display:flex; align-items:center; gap: 24px;">
+                <div class="icon-wrap" style="width:64px; height:64px;"><img src="https://cdn3d.iconscout.com/3d/premium/thumb/crown-3683051-3071374.png" alt="Pro"></div>
                 <div style="flex:1">
-                  <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:4px;">
+                  <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:6px;">
                     <div class="title" style="margin-bottom:0">Pro</div>
-                    <div style="font-weight:900; color:var(--Mint)">$25/mo</div>
+                    <div style="font-weight:900; color:var(--Mint); font-size:16px;">$25/mo</div>
                   </div>
-                  <div class="desc">Unlimited scans, priority processing, and advanced export options.</div>
+                  <div class="desc">Unlimited scans, priority GPU processing.</div>
                 </div>
               </div>
             </div>
 
             <div class="option-card" onclick="selectPlan('business', this)">
-              <div style="display:flex; align-items:center; gap: 20px;">
-                <div class="icon-wrap" style="width:60px; height:60px;"><img src="https://cdn3d.iconscout.com/3d/free/thumb/free-diamond-3683052-3071371.png" alt="Business"></div>
+              <div style="display:flex; align-items:center; gap: 24px;">
+                <div class="icon-wrap" style="width:64px; height:64px;"><img src="https://cdn3d.iconscout.com/3d/premium/thumb/diamond-3683052-3071371.png" alt="Business"></div>
                 <div style="flex:1">
-                  <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:4px;">
+                  <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:6px;">
                     <div class="title" style="margin-bottom:0">Business</div>
-                    <div style="font-weight:900; color:var(--Mint)">$99/mo</div>
+                    <div style="font-weight:900; color:var(--Mint); font-size:16px;">$99/mo</div>
                   </div>
-                  <div class="desc">Team management, API access, and merchant widget integration.</div>
+                  <div class="desc">Team seats, API access, and Merchant SDK.</div>
                 </div>
               </div>
             </div>
@@ -370,12 +374,15 @@
           </div>
         </div>
 
+        <!-- PHASE 8: COMPLETION -->
         <div id="phase8" class="phase-container">
-          <div class="success-icon-wrap"><img src="https://cdn3d.iconscout.com/3d/free/thumb/free-verify-7013962-5722359.png" alt="Success"></div>
-          <h2 style="text-align:center; color:var(--Mint)">Workspace Ready</h2>
-          <p class="sub-p" style="text-align:center">Your precision environment has been configured. You are now ready to begin scanning.</p>
+          <div class="success-icon-wrap" style="width:160px; height:160px;">
+            <img src="https://cdn3d.iconscout.com/3d/premium/thumb/success-7013962-5722359.png" alt="Success">
+          </div>
+          <h2 style="text-align:center; color:var(--Mint)">Dashboard Ready</h2>
+          <p class="sub-p" style="text-align:center">Your precision environment has been synchronized. You are now authorized to begin AI scanning.</p>
           <div class="btn-row">
-            <button id="btnFinal" onclick="completeOnboarding(event)" class="btn">Go to Dashboard</button>
+            <button id="btnFinal" onclick="completeOnboarding(event)" class="btn">Launch Dashboard</button>
           </div>
         </div>
 
@@ -395,8 +402,8 @@
       company_name: '',
       business_type: '',
       business_address: '',
-      industry_vertical_id: '', // Primary
-      selected_verticals: [], // New for multiple industries
+      industry_vertical_id: '',
+      selected_verticals: [],
       selected_sub_specialties: [],
       unit_preference: 'metric',
       measurement_standard: 'standard',
@@ -411,23 +418,18 @@
     const KORRA_CORE = window.supabase.createClient(config.url, config.key);
 
     function updateProgress() {
-      document.querySelectorAll('.progress-step').forEach((step, idx) => {
-        if (idx < currentPhase) step.classList.add('active');
-        else step.classList.remove('active');
+      document.querySelectorAll('.segment').forEach((seg, idx) => {
+        if (idx < currentPhase) seg.classList.add('active');
+        else seg.classList.remove('active');
       });
-      // Ensure no "Phase" text is visible, using modern Step terminology
-      const pText = document.getElementById('progressText');
-      if (pText) pText.textContent = `Step ${currentPhase} of 8`;
     }
 
     function nextPhase() {
-      // Validation check before proceeding
       if (currentPhase === 5 && userData.selected_verticals.length === 0) {
           alert("Please select at least one industry vertical.");
           return;
       }
 
-      // Logic for skipping Phase 4 & 5 if Individual
       if (currentPhase === 3 && userData.account_type === 'individual') {
         currentPhase = 6;
       } else {
@@ -450,7 +452,8 @@
       currentPhase = phase;
       userData.onboarding_phase = phase;
       document.querySelectorAll('.phase-container').forEach(p => p.classList.remove('active'));
-      document.getElementById(`phase${phase}`).classList.add('active');
+      const target = document.getElementById(`phase${phase}`);
+      if (target) target.classList.add('active');
       updateProgress();
       window.scrollTo(0, 0);
 
@@ -459,36 +462,38 @@
     }
 
     async function saveProgress() {
-      const { data: { user } } = await KORRA_CORE.auth.getUser();
-      if (!user) return;
-
-      const profileData = {};
-      const knownColumns = [
-          'account_type', 'gender', 'age_group', 'country_code', 'region', 'currency',
-          'company_name', 'business_type', 'business_address', 'industry_vertical_id',
-          'selected_sub_specialties', 'unit_preference', 'measurement_standard',
-          'selected_plan', 'onboarding_phase'
-      ];
-
-      knownColumns.forEach(col => {
-          if (userData[col] !== undefined) profileData[col] = userData[col];
-      });
-
-      // Handle Primary vertical if multiple selected
-      if (userData.selected_verticals && userData.selected_verticals.length > 0) {
-          profileData.industry_vertical_id = userData.selected_verticals[0];
-      }
-
       try {
-        const { error } = await KORRA_CORE
-          .from('profiles')
-          .upsert({
-            id: user.id,
-            onboarding_phase: currentPhase,
-            ...profileData
-          }, { onConflict: 'id' });
+          const { data: { user } } = await KORRA_CORE.auth.getUser();
+          if (!user) return;
 
-        if (error) console.error("Progress save failed:", error);
+          const profileData = {
+              onboarding_phase: currentPhase,
+              updated_at: new Date().toISOString()
+          };
+
+          const knownColumns = [
+              'account_type', 'gender', 'age_group', 'country_code', 'region', 'currency',
+              'company_name', 'business_type', 'business_address', 'industry_vertical_id',
+              'selected_sub_specialties', 'unit_preference', 'measurement_standard',
+              'selected_plan'
+          ];
+
+          knownColumns.forEach(col => {
+              if (userData[col] !== undefined && userData[col] !== '') {
+                  profileData[col] = userData[col];
+              }
+          });
+
+          if (userData.selected_verticals.length > 0) {
+              profileData.industry_vertical_id = userData.selected_verticals[0];
+          }
+
+          const { error } = await KORRA_CORE
+            .from('profiles')
+            .update(profileData)
+            .eq('id', user.id);
+
+          if (error) console.error("Progress update failed:", error);
       } catch (e) {
           console.error("Progress save exception:", e);
       }
@@ -497,13 +502,13 @@
     function selectAccountType(type, ev) {
       userData.account_type = type;
       document.querySelectorAll('#phase2 .option-card').forEach(card => card.classList.remove('selected'));
-      ev.currentTarget.classList.add('selected');
+      const target = ev.currentTarget || ev.target.closest('.option-card');
+      if (target) target.classList.add('selected');
       document.getElementById('btnPhase2').disabled = false;
 
-      // Update side panel based on selection
       const themes = {
-          individual: { title: "Your Digital Twin.", sub: "Personal biometrics for a lifetime of fit." },
-          artisan: { title: "The Master's Tools.", sub: "Clinical precision for bespoke excellence." },
+          individual: { title: "Digital Twin Active.", sub: "Personal biometrics for a lifetime of fit." },
+          artisan: { title: "Master's Dashboard.", sub: "Clinical precision for bespoke excellence." },
           merchant: { title: "Scale Your Brand.", sub: "Unified sizing for global retail." },
           enterprise: { title: "Industrial Intelligence.", sub: "Mass personalization at factory scale." }
       };
@@ -520,17 +525,10 @@
 
     function selectUnit(unit) {
       userData.unit_preference = unit;
-      if (unit === 'metric') {
-        document.getElementById('unitMetric').classList.add('selected');
-        document.getElementById('unitMetric').classList.remove('secondary');
-        document.getElementById('unitImperial').classList.add('secondary');
-        document.getElementById('unitImperial').classList.remove('selected');
-      } else {
-        document.getElementById('unitImperial').classList.add('selected');
-        document.getElementById('unitImperial').classList.remove('secondary');
-        document.getElementById('unitMetric').classList.add('secondary');
-        document.getElementById('unitMetric').classList.remove('selected');
-      }
+      document.getElementById('unitMetric').classList.toggle('selected', unit === 'metric');
+      document.getElementById('unitMetric').classList.toggle('secondary', unit !== 'metric');
+      document.getElementById('unitImperial').classList.toggle('selected', unit === 'imperial');
+      document.getElementById('unitImperial').classList.toggle('secondary', unit !== 'imperial');
     }
 
     function selectPlan(plan, el) {
@@ -540,96 +538,77 @@
     }
 
     async function completeOnboarding(ev) {
-      // CAPTURE BUTTON REFERENCE IMMEDIATELY (Before async calls clear the event object)
-      const btn = ev ? (ev.currentTarget || ev.target) : null;
+      const btn = document.getElementById('btnFinal');
       if (btn) {
           btn.disabled = true;
-          btn.textContent = 'Finalizing...';
+          btn.textContent = 'Synchronizing...';
       }
 
-      const { data: { user } } = await KORRA_CORE.auth.getUser();
-      if (!user) {
-          if (btn) btn.disabled = false;
-          return alert("Session Expired");
-      }
+      try {
+          const { data: { user } } = await KORRA_CORE.auth.getUser();
+          if (!user) return alert("Session Expired");
 
-      const profileData = {};
-      const knownColumns = [
-          'account_type', 'gender', 'age_group', 'country_code', 'region', 'currency',
-          'company_name', 'business_type', 'business_address', 'industry_vertical_id',
-          'selected_sub_specialties', 'unit_preference', 'measurement_standard',
-          'selected_plan', 'onboarding_phase'
-      ];
+          const profileData = {
+              onboarding_completed_at: new Date().toISOString(),
+              onboarding_phase: 8
+          };
 
-      knownColumns.forEach(col => {
-          if (userData[col] !== undefined) profileData[col] = userData[col];
-      });
+          const knownColumns = [
+              'account_type', 'gender', 'age_group', 'country_code', 'region', 'currency',
+              'company_name', 'business_type', 'business_address', 'industry_vertical_id',
+              'selected_sub_specialties', 'unit_preference', 'measurement_standard',
+              'selected_plan'
+          ];
 
-      // Primary vertical
-      if (userData.selected_verticals && userData.selected_verticals.length > 0) {
-          profileData.industry_vertical_id = userData.selected_verticals[0];
-      }
+          knownColumns.forEach(col => {
+              if (userData[col] !== undefined && userData[col] !== '') profileData[col] = userData[col];
+          });
 
-      const { error } = await KORRA_CORE
-        .from('profiles')
-        .upsert({
-          id: user.id,
-          ...profileData,
-          onboarding_completed_at: new Date().toISOString()
-        }, { onConflict: 'id' });
+          if (userData.selected_verticals.length > 0) {
+              profileData.industry_vertical_id = userData.selected_verticals[0];
+          }
 
-      if (error) {
-        console.error("Onboarding completion error:", error);
-        alert("Failed to finalize profile: " + (error.message || "Unknown error"));
-        if (btn) {
-            btn.disabled = false;
-            btn.textContent = 'Go to Dashboard';
-        }
-      } else {
-        window.location.href = '/dashboard';
+          const { error } = await KORRA_CORE
+            .from('profiles')
+            .update(profileData)
+            .eq('id', user.id);
+
+          if (error) throw error;
+          window.location.href = '/dashboard';
+      } catch (error) {
+          console.error("Onboarding error:", error);
+          alert("Sync error: " + (error.message || "Please check your connection."));
+          if (btn) { btn.disabled = false; btn.textContent = 'Launch Dashboard'; }
       }
     }
 
-    // Fetch countries from Supabase
-    let countries = [];
     async function fetchCountries() {
-      const { data, error } = await KORRA_CORE
-        .from('countries_reference')
-        .select('code, name, default_currency')
-        .order('name');
+      try {
+          const { data, error } = await KORRA_CORE
+            .from('countries_reference')
+            .select('code, name, default_currency')
+            .order('name');
 
-      if (!error && data && data.length > 0) {
-        countries = data;
-      } else {
-        // Fallback if reference table is empty
-        countries = [
-            { code: 'US', name: 'United States', default_currency: 'USD' },
-            { code: 'GB', name: 'United Kingdom', default_currency: 'GBP' },
-            { code: 'NG', name: 'Nigeria', default_currency: 'NGN' },
-            { code: 'IN', name: 'India', default_currency: 'INR' },
-            { code: 'CA', name: 'Canada', default_currency: 'CAD' }
-        ];
-      }
-
-      const select = document.getElementById('countrySelect');
-      countries.forEach(c => {
-        const opt = document.createElement('option');
-        opt.value = c.code;
-        opt.textContent = c.name;
-        select.appendChild(opt);
-      });
+          if (!error && data) {
+            const select = document.getElementById('countrySelect');
+            data.forEach(c => {
+              const opt = document.createElement('option');
+              opt.value = c.code; opt.textContent = c.name;
+              select.appendChild(opt);
+            });
+            window.countries_data = data;
+          }
+      } catch(e) {}
     }
 
     function updateCountrySelection() {
       const code = document.getElementById('countrySelect').value;
-      const country = countries.find(c => c.code === code);
+      const country = window.countries_data?.find(c => c.code === code);
       if (country) {
         userData.country_code = code;
         userData.currency = country.default_currency;
         document.getElementById('currencyDisplay').value = country.default_currency;
         document.getElementById('btnPhase3').disabled = false;
-      } else {
-        document.getElementById('btnPhase3').disabled = true;
       }
     }
 
@@ -638,47 +617,36 @@
       document.getElementById('btnPhase4').disabled = !(company_name && business_type && business_address);
     }
 
-    let verticals = [];
     async function fetchVerticals() {
-      // Fallback descriptions for verticals
+      // Fallback descriptions
       const descriptions = {
-          rtw: "Off-the-shelf standard sizing for global retailers.",
-          mtm: "Custom-made garments tailored to individual body shapes.",
-          custom: "Specialty apparel for teams, theatrical, and uniforms.",
-          bridal: "High-precision fit for once-in-a-lifetime occasions.",
-          workwear: "Functional and protective apparel for industrial safety.",
-          fashion_tech: "Smart textiles and digital fashion innovation.",
-          outerwear: "High-performance jackets and technical clothing."
+          rtw: "Standardized sizing for mass-market retail and inventory.",
+          mtm: "Tailored patterns for individual body profiles.",
+          bridal: "Ultra-precise fit for high-stakes formal wear.",
+          manufacturing: "Industrial-grade data for factory production lines.",
+          custom_apparel: "Specialized team, military, or costuming workflows.",
+          healthcare_fitness: "Biometrics for compression, surgical, or activewear.",
+          fashion_tech: "Innovation in digital twins and virtual fit."
       };
 
-      const { data, error } = await KORRA_CORE
-        .from('industry_verticals')
-        .select('id, name');
+      try {
+          const { data, error } = await KORRA_CORE.from('industry_verticals').select('*').order('name');
+          const finalData = (!error && data && data.length > 0) ? data : [
+              { id: 'rtw', name: 'Ready-To-Wear', sub_specialties: ["Casual", "Sportswear"] },
+              { id: 'mtm', name: 'Made-To-Measure', sub_specialties: ["Bespoke Suits", "Shirts"] },
+              { id: 'bridal', name: 'Bridal & Tuxedo', sub_specialties: ["Gowns", "Tuxedos"] },
+              { id: 'custom_apparel', name: 'Custom Apparel', sub_specialties: ["Uniforms", "Theatrical"] }
+          ];
 
-      if (!error && data && data.length > 0) {
-        verticals = data;
-      } else {
-        verticals = [
-            { id: 'rtw', name: 'Ready-To-Wear' },
-            { id: 'mtm', name: 'Made-To-Measure' },
-            { id: 'bridal', name: 'Bridal & Tuxedo' },
-            { id: 'custom', name: 'Custom Apparel' },
-            { id: 'workwear', name: 'Workwear & Industrial' }
-        ];
-      }
-
-      const grid = document.getElementById('verticalsGrid');
-      grid.innerHTML = '';
-      verticals.forEach(v => {
-        const div = document.createElement('div');
-        div.className = 'option-card';
-        div.innerHTML = `
-            <div class="title">${v.name}</div>
-            <div class="desc">${descriptions[v.id] || "Specialized apparel production."}</div>
-        `;
-        div.onclick = () => toggleVerticalSelection(v.id, div);
-        grid.appendChild(div);
-      });
+          const grid = document.getElementById('verticalsGrid');
+          grid.innerHTML = finalData.map(v => `
+            <div class="option-card" onclick="toggleVerticalSelection('${v.id}', this)">
+              <div class="title">${v.name}</div>
+              <div class="desc">${descriptions[v.id] || 'Specialized biometric extraction and fitting logic.'}</div>
+            </div>
+          `).join('');
+          window.verticals_data = finalData;
+      } catch(e) {}
     }
 
     function toggleVerticalSelection(vid, el) {
@@ -691,123 +659,54 @@
         el.classList.add('selected');
       }
 
-      // If at least one selected, fetch sub-specialties for the last one selected
-      if (userData.selected_verticals.length > 0) {
-          updateSubSpecialties(userData.selected_verticals[userData.selected_verticals.length - 1]);
-      } else {
-          document.getElementById('subSpecialtiesArea').style.display = 'none';
-      }
+      const lastVid = userData.selected_verticals[userData.selected_verticals.length - 1];
+      if (lastVid) updateSubSpecialties(lastVid);
+      else document.getElementById('subSpecialtiesArea').style.display = 'none';
 
       document.getElementById('btnPhase5').disabled = userData.selected_verticals.length === 0;
     }
 
-    async function updateSubSpecialties(vid) {
-      const vertical = verticals.find(v => v.id === vid);
-      document.getElementById('activeVerticalName').textContent = vertical ? vertical.name : '';
+    function updateSubSpecialties(vid) {
+      const v = window.verticals_data?.find(item => item.id === vid);
+      if (!v) return;
 
-      // Fetch cultural context for MTM if applicable (Step 2F in SQL)
-      try {
-          const { data: culturalData } = await KORRA_CORE
-            .from('vertical_country_context')
-            .select('cultural_attire(name, description)')
-            .eq('vertical_id', vid)
-            .eq('country_code', userData.country_code);
-
-          // Handle possible single or empty results
-          const entry = Array.isArray(culturalData) ? culturalData[0] : culturalData;
-
-          if (entry && entry.cultural_attire) {
-            const ca = entry.cultural_attire;
-            const subP = document.querySelector('#phase5 .sub-p');
-            subP.innerHTML = `Regional Specialization for <strong>${vertical.name}</strong>: <strong>${ca.name}</strong> - ${ca.description}`;
-          }
-      } catch (e) {
-          console.warn("Cultural context fetch failed", e);
-      }
-
-      // Fetch products/sub-specialties for this vertical
-      const { data, error } = await KORRA_CORE
-        .from('vertical_products')
-        .select('product_category_id, product_categories(id, name)')
-        .eq('vertical_id', vid);
-
-      // Fallback sub-specialties if table or query fails
-      let categories = [];
-      if (!error && data && data.length > 0) {
-          categories = data.map(item => item.product_categories).filter(Boolean);
-      } else {
-          const fallbackMap = {
-              mtm: [{id: 'suits', name: 'Bespoke Suits'}, {id: 'ethnic', name: 'Traditional/Ethnic'}, {id: 'dresses', name: 'Custom Dresses'}],
-              luxury_mtm: [{id: 'suits', name: 'Bespoke Suits'}, {id: 'ethnic', name: 'Traditional/Ethnic'}, {id: 'dresses', name: 'Custom Dresses'}],
-              rtw: [{id: 'casual', name: 'Casual Wear'}, {id: 'formal', name: 'Formal Attire'}, {id: 'active', name: 'Activewear'}],
-              bridal: [{id: 'gowns', name: 'Bridal Gowns'}, {id: 'tux', name: 'Tuxedos'}, {id: 'bridesmaids', name: 'Bridesmaids'}],
-              custom: [{id: 'uniforms', name: 'Uniforms'}, {id: 'theatre', name: 'Costuming'}, {id: 'merch', name: 'Merchandise'}]
-          };
-          categories = fallbackMap[vid] || fallbackMap['rtw'];
-      }
-
+      document.getElementById('activeVerticalName').textContent = v.name;
       const list = document.getElementById('subSpecialtiesList');
-      list.innerHTML = '';
 
-      categories.forEach(pc => {
-          const div = document.createElement('div');
-          div.className = 'option-card';
-          div.style.padding = '20px';
-          div.innerHTML = `
-            <div class="title" style="margin-bottom:4px; font-size:15px;">${pc.name}</div>
-            <div class="desc">Targeted biometric extraction for ${pc.name.toLowerCase()} products.</div>
-          `;
-          if (userData.selected_sub_specialties.includes(pc.id)) div.classList.add('selected');
-          div.onclick = () => toggleSubSpecialty(pc.id, div);
-          list.appendChild(div);
-      });
+      let subs = [];
+      try {
+          subs = typeof v.sub_specialties === 'string' ? JSON.parse(v.sub_specialties) : v.sub_specialties;
+      } catch(e) { subs = ["General Production"]; }
+
+      list.innerHTML = subs.map(s => `
+        <div class="option-card ${userData.selected_sub_specialties.includes(s) ? 'selected' : ''}" style="padding:16px" onclick="toggleSub('${s}', this)">
+          <div class="title" style="font-size:13px; margin:0">${s}</div>
+        </div>
+      `).join('');
       document.getElementById('subSpecialtiesArea').style.display = 'block';
     }
 
-    function toggleSubSpecialty(id, el) {
-      const index = userData.selected_sub_specialties.indexOf(id);
-      if (index > -1) {
-        userData.selected_sub_specialties.splice(index, 1);
-        el.classList.remove('selected');
-      } else {
-        userData.selected_sub_specialties.push(id);
-        el.classList.add('selected');
-      }
+    function toggleSub(s, el) {
+      const idx = userData.selected_sub_specialties.indexOf(s);
+      if (idx > -1) { userData.selected_sub_specialties.splice(idx, 1); el.classList.remove('selected'); }
+      else { userData.selected_sub_specialties.push(s); el.classList.add('selected'); }
     }
 
-    // Initialize session check
     (async () => {
-      const { data: { session } } = await KORRA_CORE.auth.getSession();
-      if (!session) {
-        window.location.href = '/signin?next=/onboarding';
-        return;
-      }
+      try {
+          const { data: { session } } = await KORRA_CORE.auth.getSession();
+          if (!session) return window.location.href = '/signin?next=/onboarding';
+          if (!session.user.email_confirmed_at) return window.location.href = '/verify';
 
-      // Check if email is verified
-      if (!session.user.email_confirmed_at) {
-        window.location.href = '/verify';
-        return;
-      }
-
-      // Resume from last phase
-        const { data: profile } = await KORRA_CORE
-          .from('profiles')
-          .select('*')
-          .eq('id', session.user.id)
-          .single();
-
-        if (profile && profile.onboarding_phase > 1 && !profile.onboarding_completed_at) {
-          currentPhase = profile.onboarding_phase;
-          // Hydrate userData from profile
-          Object.keys(userData).forEach(key => {
-            if (profile[key] !== undefined) userData[key] = profile[key];
-          });
-          showPhase(currentPhase);
-        }
-
-        fetchCountries();
-        fetchVerticals();
-      })();
+          const { data: profile } = await KORRA_CORE.from('profiles').select('*').eq('id', session.user.id).single();
+          if (profile) {
+            Object.keys(userData).forEach(k => { if (profile[k]) userData[k] = profile[k]; });
+            if (profile.onboarding_phase > 1 && profile.onboarding_phase < 9) showPhase(profile.onboarding_phase);
+          }
+          fetchCountries();
+          fetchVerticals();
+      } catch(e) {}
+    })();
   </script>
 </body>
 </html>

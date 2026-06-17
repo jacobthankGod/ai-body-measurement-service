@@ -129,8 +129,8 @@
           <a class="btn btn-primary" href="/signup.html">Get Access</a>
         </div>
         <div id="signedBar" style="display:none">
-          <a class="btn btn-primary" id="btnGoWorkbench" href="/dashboard">Workbench</a>
-          <button class="btn btn-outline" id="btnSignOut" style="color:var(--Error); height:36px; padding: 0 12px; margin-left:12px; border-color:rgba(214,48,49,0.2)">Exit</button>
+          <a class="btn btn-primary" id="btnGoDashboard" href="/dashboard">Dashboard</a>
+          <button class="btn btn-outline" id="btnSignOut" style="color:var(--Error); height:36px; padding: 0 12px; margin-left:12px; border-color:rgba(214,48,49,0.2)">Logout</button>
         </div>
         <div class="hamburger" id="btnHamburger"><span></span><span></span><span></span></div>
       </div>
@@ -288,10 +288,10 @@
         window.korraSupabase = window.supabase.createClient(config.supabaseUrl, config.supabaseKey);
         const ADMIN_LIST = ['springbionics@gmail.com', 'admin@korra.work'];
         window.korraSupabase.auth.onAuthStateChange((event, session) => {
-          const authBtns = document.getElementById('authButtons'), bar = document.getElementById('signedBar'), goBtn = document.getElementById('btnGoWorkbench');
+          const authBtns = document.getElementById('authButtons'), bar = document.getElementById('signedBar'), goBtn = document.getElementById('btnGoDashboard');
           if (session) {
             if(authBtns) authBtns.style.display = 'none'; if(bar) bar.style.display = 'flex';
-            if (ADMIN_LIST.includes(session.user.email.toLowerCase())) { if(goBtn) { goBtn.href = '/admin'; goBtn.textContent = 'Super-Workbench'; } }
+            if (ADMIN_LIST.includes(session.user.email.toLowerCase())) { if(goBtn) { goBtn.href = '/admin'; goBtn.textContent = 'Super-Admin'; } }
           } else { if(bar) bar.style.display = 'none'; if(authBtns) authBtns.style.display = 'flex'; }
         });
       }

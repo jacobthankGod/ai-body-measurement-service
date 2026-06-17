@@ -56,11 +56,12 @@
     <img src="https://cdn3d.iconscout.com/3d/free/thumb/free-verify-7013962-5722359.png" alt="Verified" class="icon-3d">
 
     <h2>Handshake Secured</h2>
-    <p class="sub-p">Your identity has been verified. Your industrial precision workbench is ready for configuration.</p>
+    <p class="sub-p">Your identity has been verified. Your industrial precision dashboard is ready for configuration.</p>
 
-    <a id="actionBtn" href="/onboarding" class="btn">Enter Onboarding</a>
+    <a id="actionBtn" href="/onboarding" class="btn">Proceed to Dashboard</a>
   </div>
 
+  <script src="/assets/supabase.min.js"></script>
   <script>
     (async function() {
       if (typeof window.supabase === 'undefined') return;
@@ -78,10 +79,11 @@
           .eq('id', session.user.id)
           .single();
 
+        const btn = document.getElementById('actionBtn');
         if (profile && profile.onboarding_completed_at) {
-          const btn = document.getElementById('actionBtn');
           btn.href = '/dashboard';
-          btn.textContent = 'Go to Dashboard';
+        } else {
+          btn.href = '/onboarding';
         }
       }
     })();

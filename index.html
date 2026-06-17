@@ -208,6 +208,18 @@
       .hero-cta-card style { flex-direction: column; }
     }
   </style>
+  <style>
+    .logo-marquee-container {
+      width: 100%; overflow: hidden; position: relative; padding: 40px 0;
+      mask-image: linear-gradient(to right, transparent, #000 15%, #000 85%, transparent);
+      -webkit-mask-image: linear-gradient(to right, transparent, #000 15%, #000 85%, transparent);
+    }
+    .logo-marquee { display: flex; width: max-content; }
+    .marquee-content { display: flex; align-items: center; gap: 80px; animation: scroll 30s linear infinite; }
+    .marquee-content img { height: 40px; width: auto; filter: grayscale(1) invert(1) brightness(0.8); opacity: 0.5; transition: 0.3s; cursor: pointer; }
+    .marquee-content img:hover { filter: grayscale(0) invert(0) brightness(1); opacity: 1; transform: scale(1.1); }
+    @keyframes scroll { from { transform: translateX(0); } to { transform: translateX(-50%); } }
+  </style>
 </head>
 <body>
   <header id="mainHeader">
@@ -230,8 +242,8 @@
           <a class="btn btn-primary" style="height:40px; padding:0 20px" href="/signup.html">Sign Up</a>
         </div>
         <div id="signedBar" style="display:none">
-          <a class="btn btn-primary" id="btnGoWorkbench" style="height:40px; padding:0 20px" href="/dashboard">Workbench</a>
-          <button class="btn btn-outline" id="btnSignOut" style="color:var(--Error); height:36px; padding:0 12px; margin-left:12px; border-color:rgba(214,48,49,0.2)">Exit</button>
+          <a class="btn btn-primary" id="btnGoDashboard" style="height:40px; padding:0 20px" href="/dashboard">Dashboard</a>
+          <button class="btn btn-outline" id="btnSignOut" style="color:var(--Error); height:36px; padding:0 12px; margin-left:12px; border-color:rgba(214,48,49,0.2)">Logout</button>
         </div>
         <div class="hamburger" id="btnHamburger">
           <span></span><span></span><span></span>
@@ -498,6 +510,47 @@
     </div>
   </section>
 
+  <!-- SECTION 6.5: E-COMMERCE CONNECTIVITY -->
+  <section class="block" style="padding-top: 0; background: #000;">
+    <div class="container-wide">
+      <div style="text-align:center; margin-bottom: 60px;">
+        <div class="section-eyebrow">Universal Connectivity</div>
+        <h2 class="section-title" style="font-size: 36px; margin: 0 auto 20px;">Connect with Every Cart.</h2>
+        <p class="section-desc" style="margin: 0 auto; max-width: 700px;">Your KORRA size profile integrates seamlessly with the world's largest shopping platforms. Get a perfect fit on every order, from global retailers to independent designers.</p>
+      </div>
+
+      <div class="logo-marquee-container">
+        <div class="logo-marquee">
+          <div class="marquee-content">
+            <img src="https://upload.wikimedia.org/wikipedia/commons/a/a9/Amazon_logo.svg" alt="Amazon">
+            <img src="https://upload.wikimedia.org/wikipedia/commons/c/c1/Shopify_Logo.png" alt="Shopify">
+            <img src="https://upload.wikimedia.org/wikipedia/commons/b/b3/Temu_logo.svg" alt="Temu">
+            <img src="https://upload.wikimedia.org/wikipedia/commons/0/08/Pinterest-logo.png" alt="Pinterest">
+            <img src="https://upload.wikimedia.org/wikipedia/commons/4/41/Etsy_logo.svg" alt="Etsy">
+            <img src="https://upload.wikimedia.org/wikipedia/commons/a/a6/Logo_NIKE.svg" alt="Nike">
+            <img src="https://upload.wikimedia.org/wikipedia/commons/2/24/Adidas_logo.png" alt="Adidas">
+            <img src="https://upload.wikimedia.org/wikipedia/commons/b/b1/ASOS_Logo.svg" alt="ASOS">
+            <img src="https://upload.wikimedia.org/wikipedia/commons/e/e4/Shein_logo.svg" alt="Shein">
+            <img src="https://upload.wikimedia.org/wikipedia/commons/4/44/BMW.svg" alt="BMW (Workwear)">
+            <img src="https://upload.wikimedia.org/wikipedia/commons/b/b1/Tesla_logo.png" alt="Tesla (Manufacturing)">
+            <!-- REPEAT FOR LOOP -->
+            <img src="https://upload.wikimedia.org/wikipedia/commons/a/a9/Amazon_logo.svg" alt="Amazon">
+            <img src="https://upload.wikimedia.org/wikipedia/commons/c/c1/Shopify_Logo.png" alt="Shopify">
+            <img src="https://upload.wikimedia.org/wikipedia/commons/b/b3/Temu_logo.svg" alt="Temu">
+            <img src="https://upload.wikimedia.org/wikipedia/commons/0/08/Pinterest-logo.png" alt="Pinterest">
+            <img src="https://upload.wikimedia.org/wikipedia/commons/4/41/Etsy_logo.svg" alt="Etsy">
+            <img src="https://upload.wikimedia.org/wikipedia/commons/a/a6/Logo_NIKE.svg" alt="Nike">
+            <img src="https://upload.wikimedia.org/wikipedia/commons/2/24/Adidas_logo.png" alt="Adidas">
+            <img src="https://upload.wikimedia.org/wikipedia/commons/b/b1/ASOS_Logo.svg" alt="ASOS">
+            <img src="https://upload.wikimedia.org/wikipedia/commons/e/e4/Shein_logo.svg" alt="Shein">
+            <img src="https://upload.wikimedia.org/wikipedia/commons/4/44/BMW.svg" alt="BMW (Workwear)">
+            <img src="https://upload.wikimedia.org/wikipedia/commons/b/b1/Tesla_logo.png" alt="Tesla (Manufacturing)">
+          </div>
+        </div>
+      </div>
+    </div>
+  </section>
+
   <!-- SECTION 7: AUDIENCE MOSAIC -->
   <section class="block" style="background:rgba(255,255,255,0.01)">
     <div class="container-wide">
@@ -554,7 +607,7 @@
           <a class="btn btn-outline" style="margin-top:40px" href="/signup.html">Request a demo</a>
         </div>
         <div class="glass-card image-card">
-           <img src="/assets/Mass-Personalization.png" alt="Merchant Workbench">
+           <img src="/assets/Mass-Personalization.png" alt="Merchant Dashboard">
         </div>
       </div>
     </div>
@@ -703,7 +756,7 @@
           window.korraSupabase.auth.onAuthStateChange((event, session) => {
             const authBtns = document.getElementById('authButtons');
             const bar = document.getElementById('signedBar');
-            const goBtn = document.getElementById('btnGoWorkbench');
+            const goBtn = document.getElementById('btnGoDashboard');
 
             if (session) {
               if(authBtns) authBtns.style.display = 'none';
@@ -712,7 +765,7 @@
               // If Admin, update the portal link
               if (goBtn && ADMIN_LIST.includes(session.user.email.toLowerCase())) {
                 goBtn.href = '/admin';
-                goBtn.textContent = 'Go to Super-Workbench';
+                goBtn.textContent = 'Go to Super-Admin';
               }
             } else {
               if(bar) bar.style.display = 'none';

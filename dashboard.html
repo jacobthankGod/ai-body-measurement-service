@@ -3,7 +3,7 @@
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>Workbench | KORRA</title>
+  <title>Dashboard | KORRA</title>
   <link rel="icon" type="image/png" href="/assets/body-capture.png">
   <link rel="preconnect" href="https://fonts.googleapis.com" />
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
@@ -25,7 +25,7 @@
     .btn-outline { height: 40px; padding: 0 20px; border-radius: 8px; border: 1px solid var(--Glass-Border); color: var(--White); font-size: 12px; font-weight: 800; text-transform: uppercase; cursor: pointer; text-decoration: none; display: inline-flex; align-items: center; transition: 0.2s; background: none; }
     .btn-outline:hover { background: var(--Glass); border-color: var(--White); }
     .btn-primary { height: 40px; padding: 0 20px; border-radius: 8px; background: var(--Mint); color: var(--Obsidian); font-size: 12px; font-weight: 800; text-transform: uppercase; cursor: pointer; border: none; transition: 0.2s; }
-    .grid-workbench { display: grid; grid-template-columns: auto 1fr; gap: 0; align-items: start; height: calc(100vh - 80px); overflow: hidden; }
+    .grid-dashboard { display: grid; grid-template-columns: auto 1fr; gap: 0; align-items: start; height: calc(100vh - 80px); overflow: hidden; }
 
     .sidebar-nav {
       width: 260px;
@@ -124,7 +124,7 @@
       .preview-column { margin-bottom: 80px; }
     }
     .glass-card { background: var(--Glass); border: 1px solid var(--Glass-Border); border-radius: 20px; padding: 32px; }
-    .workbench-split { display: grid; grid-template-columns: 1.2fr 1fr; gap: 32px; align-items: start; }
+    .dashboard-split { display: grid; grid-template-columns: 1.2fr 1fr; gap: 32px; align-items: start; }
     .visual-column { position: sticky; top: 120px; }
     .stat-grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 24px; margin-bottom: 32px; }
     .stat-card { padding: 20px !important; }
@@ -322,7 +322,7 @@
          <div style="display:flex; align-items:center; gap:8px; font-size:10px; font-weight:700"><div style="width:12px; height:12px; border-radius:50%; background:#57D7C0"></div> REDUCTION</div>
          <div style="display:flex; align-items:center; gap:8px; font-size:10px; font-weight:700"><div style="width:12px; height:12px; border-radius:50%; background:#888"></div> NO CHANGE</div>
       </div>
-      <div style="display:flex; justify-content:center; gap:16px; margin-top:40px"><button class="btn-primary" style="padding:0 40px" onclick="location.reload()">Exit Comparison</button></div>
+      <div style="display:flex; justify-content:center; gap:16px; margin-top:40px"><button class="btn-primary" style="padding:0 40px" onclick="location.reload()">Logout Comparison</button></div>
     </div>
   </div>
 
@@ -441,11 +441,11 @@
     </div>
   </div>
 
-  <header><div class="container"><a class="logo" href="/"><div class="logo-mark"></div><div class="logo-text">KORRA</div></a><div style="display:flex; align-items:center; gap:24px"><div id="networkStatus"><div class="status-dot"></div><span>Sync Active</span></div><span id="userEmail" style="font-size:12px; font-weight:700; color:var(--Mint)"></span><button class="btn-outline" id="btnSignOut">Exit</button></div></div></header>
+  <header><div class="container"><a class="logo" href="/"><div class="logo-mark"></div><div class="logo-text">KORRA</div></a><div style="display:flex; align-items:center; gap:24px"><div id="networkStatus"><div class="status-dot"></div><span>Sync Active</span></div><span id="userEmail" style="font-size:12px; font-weight:700; color:var(--Mint)"></span><button class="btn-outline" id="btnSignOut">Logout</button></div></div></header>
 
   <main>
     <div class="container" style="max-width: 100%; padding: 0;">
-      <div class="grid-workbench">
+      <div class="grid-dashboard">
         <aside class="sidebar-nav" id="sidebar">
           <div class="sidebar-label">Precision Suite</div>
           <a onclick="window.switchTab('overview')" id="tab-overview">
@@ -496,7 +496,7 @@
 
           <div id="view-vault" class="tab-view active">
             <div class="stat-grid"><div class="glass-card stat-card"><h4>Total Profiles</h4><div class="value" id="statTotal">0</div></div><div class="glass-card stat-card"><h4>Avg Error</h4><div class="value">±1cm</div></div><div class="glass-card stat-card"><h4>Credits</h4><div class="value" id="statCredits">0</div></div></div>
-            <div class="workbench-split">
+            <div class="dashboard-split">
               <div class="visual-column">
                 <div id="dashboard-3d-viewport"><span>3D Model Viewer</span></div>
                 <div id="measurementResultsCard" class="glass-card" style="display:none; margin-bottom:48px; background:linear-gradient(135deg, rgba(87,215,192,0.05) 0%, rgba(0,0,0,0.4) 100%)">
@@ -542,7 +542,7 @@
               <h2 style="font-size: 24px; margin-bottom: 8px">Widget Customizer</h2>
               <p style="color:var(--Neutral-400); margin-bottom:40px">Link your biometric scanner to your brand identity.</p>
               
-              <div class="workbench-split" style="grid-template-columns: 1fr 1fr; gap: 48px;">
+              <div class="dashboard-split" style="grid-template-columns: 1fr 1fr; gap: 48px;">
                 <div class="customizer-controls">
                   <div style="margin-bottom:32px">
                     <h4 style="font-size:10px; font-weight:900; color:var(--Mint); margin-bottom:16px">BRANDING</h4>
