@@ -924,7 +924,15 @@ window.loadSettings = async () => {
         if (document.getElementById('settingsVertical')) document.getElementById('settingsVertical').value = profile.industry_vertical_id || 'rtw';
         if (document.getElementById('settingsStandard')) document.getElementById('settingsStandard').value = profile.measurement_standard || 'standard';
 
-        if (profile.unit_preference) window.updateLocalUnit(profile.unit_preference);
+        // PRE-FILL SCAN FORM DEFAULTS
+        const scanGender = document.getElementById('scanGender');
+        if (scanGender && profile.gender) scanGender.value = profile.gender;
+
+        if (profile.unit_preference) {
+            window.updateLocalUnit(profile.unit_preference);
+            // Apply global unit context
+            window.CURRENT_UNIT = profile.unit_preference === 'imperial' ? 'in' : 'cm';
+        }
 
         // SYNC WIDGET SETTINGS
         if (profile.widget_config) {
@@ -933,6 +941,14 @@ window.loadSettings = async () => {
             document.getElementById('widgetTheme').value = profile.widget_config.theme || "dark";
         }
         window.updateWidgetPreview();
+
+        // ACCOUNT TYPE CONTEXTUAL UI
+        if (profile.account_type === 'individual') {
+            const wTab = document.getElementById('tab-widget');
+            const whTab = document.getElementById('tab-webhooks');
+            if (wTab) wTab.style.display = 'none';
+            if (whTab) whTab.style.display = 'none';
+        }
       }
       const { data: sub } = await window.KORRA_DB.from('subscriptions').select('plan_id').eq('user_id', userId).single();
       document.getElementById('billingPlanName').textContent = sub?.plan_id ? sub.plan_id.toUpperCase() : 'FREE';
