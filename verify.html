@@ -98,7 +98,7 @@
 
       // Get the next parameter from URL to redirect after verification
       const params = new URLSearchParams(window.location.search);
-      const next = params.get('next') || '/onboarding';
+      const next = params.get('next') || '/verification-success';
 
       // Handle verification via session or auth state change (more reliable for hash tokens)
       const checkVerification = async () => {
@@ -111,9 +111,8 @@
         } else if (session) {
           document.getElementById('loading').style.display = 'none';
           document.getElementById('success').style.display = 'block';
-          // Auto redirect to the next page (default: onboarding) after 2 seconds
-          const redirectTarget = next.startsWith('/') ? next : '/' + next;
-          setTimeout(() => { window.location.href = redirectTarget; }, 2500);
+          // Auto redirect to the success page after 2 seconds
+          setTimeout(() => { window.location.href = '/verification-success'; }, 2000);
         } else {
            // No session yet, wait a bit longer if there's a hash in the URL
            if (!window.location.hash) {

@@ -54,16 +54,17 @@
     .logo-mark { width: 32px; height: 32px; border-radius: 8px; background: var(--Mint); transform: rotate(-8deg); }
     .logo-text { font-size: 20px; font-weight: 900; letter-spacing: -0.05em; }
 
-    .progress-container { margin-bottom: 32px; }
-    .progress-bar { height: 4px; background: var(--Glass); border-radius: 2px; position: relative; overflow: hidden; }
-    .progress-fill { position: absolute; left: 0; top: 0; height: 100%; background: var(--Mint); transition: 0.4s ease; width: 12.5%; }
-    .progress-text { font-size: 10px; font-weight: 900; text-transform: uppercase; color: var(--Neutral-400); letter-spacing: 0.1em; margin-top: 8px; display: block; }
+    .progress-container { margin-bottom: 48px; }
+    .progress-track { display: flex; gap: 8px; justify-content: space-between; margin-bottom: 12px; }
+    .progress-step { height: 4px; flex: 1; background: var(--Glass); border-radius: 2px; transition: 0.4s ease; }
+    .progress-step.active { background: var(--Mint); box-shadow: 0 0 10px rgba(87, 215, 192, 0.3); }
+    .progress-text { font-size: 11px; font-weight: 900; text-transform: uppercase; color: var(--Neutral-400); letter-spacing: 0.1em; display: block; text-align: right; }
 
     h2 { font-size: 32px; font-weight: 800; margin-bottom: 12px; letter-spacing: -0.03em; }
     .sub-p { color: var(--Neutral-400); margin-bottom: 40px; font-size: 15px; line-height: 1.6; }
 
-    .phase-container { display: none; opacity: 0; transition: 0.3s; }
-    .phase-container.active { display: block; opacity: 1; }
+    .phase-container { display: none; opacity: 0; transition: 0.3s; transform: translateY(10px); }
+    .phase-container.active { display: block; opacity: 1; transform: translateY(0); }
 
     .form-group { margin-bottom: 24px; }
     .form-label { display: block; font-size: 10px; font-weight: 900; text-transform: uppercase; color: var(--Neutral-400); letter-spacing: 0.1em; margin-bottom: 12px; }
@@ -77,31 +78,31 @@
 
     .grid-options { display: grid; grid-template-columns: 1fr 1fr; gap: 16px; margin-bottom: 32px; }
     .option-card {
-      background: var(--Glass); border: 1px solid var(--Glass-Border); border-radius: 16px;
-      padding: 24px; cursor: pointer; transition: 0.2s; position: relative;
+      background: var(--Glass); border: 1px solid var(--Glass-Border); border-radius: 20px;
+      padding: 24px; cursor: pointer; transition: 0.3s cubic-bezier(0.2, 1, 0.3, 1); position: relative;
+      display: flex; flex-direction: column; height: 100%;
     }
-    .option-card:hover { border-color: var(--Mint); background: rgba(87, 215, 192, 0.05); }
-    .option-card.selected { border-color: var(--Mint); background: rgba(87, 215, 192, 0.1); }
-    .option-card .icon { font-size: 24px; margin-bottom: 16px; }
-    .option-card .title { font-size: 16px; font-weight: 700; margin-bottom: 8px; }
-    .option-card .desc { font-size: 12px; color: var(--Neutral-400); line-height: 1.4; }
+    .option-card:hover { border-color: var(--Mint); background: rgba(87, 215, 192, 0.05); transform: translateY(-4px); }
+    .option-card.selected { border-color: var(--Mint); background: rgba(87, 215, 192, 0.1); box-shadow: 0 10px 30px rgba(87, 215, 192, 0.1); }
+    .option-card .icon-wrap { width: 48px; height: 48px; margin-bottom: 20px; display: flex; align-items: center; justify-content: center; }
+    .option-card .icon-wrap img { width: 100%; height: 100%; object-fit: contain; }
+    .option-card .title { font-size: 16px; font-weight: 700; margin-bottom: 8px; color: #fff; }
+    .option-card .desc { font-size: 12px; color: var(--Neutral-400); line-height: 1.5; }
 
     .btn-row { display: flex; gap: 16px; margin-top: 40px; }
     .btn {
       flex: 1; height: 52px; background: var(--Mint); color: var(--Obsidian); border: none;
-      border-radius: 12px; font-size: 13px; font-weight: 800; cursor: pointer; transition: 0.2s;
-      display: flex; align-items: center; justify-content: center;
+      border-radius: 12px; font-size: 13px; font-weight: 800; cursor: pointer; transition: 0.3s;
+      display: flex; align-items: center; justify-content: center; text-transform: uppercase; letter-spacing: 0.05em;
     }
-    .btn:hover { background: #6effeb; transform: translateY(-1px); }
+    .btn:hover { background: #6effeb; transform: translateY(-2px); box-shadow: 0 10px 20px rgba(87, 215, 192, 0.2); }
     .btn.secondary { background: var(--Glass); color: var(--White); border: 1px solid var(--Glass-Border); }
     .btn.secondary:hover { background: rgba(255,255,255,0.08); }
-    .btn:disabled { opacity: 0.5; cursor: wait; }
+    .btn:disabled { opacity: 0.4; cursor: not-allowed; transform: none; }
 
-    .success-icon {
-      width: 80px; height: 80px; background: var(--Mint); border-radius: 50%; margin: 0 auto 32px;
-      display: flex; align-items: center; justify-content: center; font-size: 32px; color: var(--Obsidian);
-      box-shadow: 0 0 40px rgba(87, 215, 192, 0.3);
-    }
+    .success-icon-wrap { width: 160px; height: 160px; margin: 0 auto 32px; }
+    .success-icon-wrap img { width: 100%; height: 100%; object-fit: contain; }
+
   </style>
 </head>
 <body>
@@ -122,14 +123,22 @@
         </div>
 
         <div class="progress-container">
-          <div class="progress-bar">
-            <div id="progressBar" class="progress-fill"></div>
+          <div class="progress-track">
+            <div class="progress-step active"></div>
+            <div class="progress-step"></div>
+            <div class="progress-step"></div>
+            <div class="progress-step"></div>
+            <div class="progress-step"></div>
+            <div class="progress-step"></div>
+            <div class="progress-step"></div>
+            <div class="progress-step"></div>
           </div>
-          <span id="progressText" class="progress-text">Phase 1 / 8</span>
+          <span id="progressText" class="progress-text">Step 1 of 8</span>
         </div>
 
         <!-- PHASE 1: WELCOME (Now with Demographics) -->
         <div id="phase1" class="phase-container active">
+          <div class="success-icon-wrap" style="width:120px; height:120px; margin-bottom:24px;"><img src="https://cdn3d.iconscout.com/3d/free/thumb/free-hand-shake-3683042-3071364.png" alt="Welcome"></div>
           <h2>Welcome to your precision workbench</h2>
           <p class="sub-p">Let's configure your workspace for the best possible experience. Start by providing some basic details.</p>
 
@@ -168,23 +177,23 @@
           <p class="sub-p">Confirm your account type so we can tailor your industrial tools.</p>
 
           <div class="grid-options">
-            <div class="option-card" onclick="selectAccountType('individual')">
-              <div class="icon">👤</div>
+            <div class="option-card" onclick="selectAccountType('individual', event)">
+              <div class="icon-wrap"><img src="https://cdn3d.iconscout.com/3d/free/thumb/free-user-profile-5054320-4209594.png" alt="Individual"></div>
               <div class="title">Individual</div>
               <div class="desc">Personal Fit Profile & Digital Twin</div>
             </div>
-            <div class="option-card" onclick="selectAccountType('artisan')">
-              <div class="icon">✂️</div>
+            <div class="option-card" onclick="selectAccountType('artisan', event)">
+              <div class="icon-wrap"><img src="https://cdn3d.iconscout.com/3d/free/thumb/free-scissors-5037380-4201777.png" alt="Artisan"></div>
               <div class="title">Artisan</div>
               <div class="desc">Measurement Professional & Tailor</div>
             </div>
-            <div class="option-card" onclick="selectAccountType('merchant')">
-              <div class="icon">🏬</div>
+            <div class="option-card" onclick="selectAccountType('merchant', event)">
+              <div class="icon-wrap"><img src="https://cdn3d.iconscout.com/3d/free/thumb/free-shop-5037381-4201778.png" alt="Merchant"></div>
               <div class="title">Merchant</div>
               <div class="desc">Retailer or E-commerce Brand</div>
             </div>
-            <div class="option-card" onclick="selectAccountType('enterprise')">
-              <div class="icon">🏢</div>
+            <div class="option-card" onclick="selectAccountType('enterprise', event)">
+              <div class="icon-wrap"><img src="https://cdn3d.iconscout.com/3d/free/thumb/free-office-building-5037382-4201779.png" alt="Enterprise"></div>
               <div class="title">Enterprise</div>
               <div class="desc">Large Organization & Factory</div>
             </div>
@@ -198,6 +207,7 @@
 
         <!-- PHASE 3: GEOGRAPHIC -->
         <div id="phase3" class="phase-container">
+          <div class="success-icon-wrap" style="width:100px; height:100px; margin-bottom:24px;"><img src="https://cdn3d.iconscout.com/3d/free/thumb/free-location-2978430-2476735.png" alt="Location"></div>
           <h2>Your Location</h2>
           <p class="sub-p">Regional settings and compliance defaults. We'll pre-select your currency based on your country.</p>
 
@@ -227,6 +237,7 @@
 
         <!-- PHASE 4: BUSINESS PROFILE -->
         <div id="phase4" class="phase-container">
+          <div class="success-icon-wrap" style="width:100px; height:100px; margin-bottom:24px;"><img src="https://cdn3d.iconscout.com/3d/free/thumb/free-briefcase-3683058-3071380.png" alt="Business"></div>
           <h2>Business Details</h2>
           <p class="sub-p">Configure your professional workspace identity.</p>
 
@@ -259,18 +270,15 @@
         <!-- PHASE 5: INDUSTRY CONTEXT -->
         <div id="phase5" class="phase-container">
           <h2>Your Industry</h2>
-          <p class="sub-p">Select your vertical and sub-specialties for customized measurement profiles.</p>
+          <p class="sub-p">Select the industry verticals you operate in. You can select multiple for a comprehensive profile.</p>
 
-          <div class="form-group">
-            <label class="form-label">Industry Vertical</label>
-            <select id="verticalSelect" onchange="updateVerticalSelection()">
-              <option value="">Select vertical</option>
-            </select>
+          <div id="verticalsGrid" class="grid-options">
+            <!-- Dynamically populated -->
           </div>
 
-          <div id="subSpecialtiesArea" style="display:none">
-            <label class="form-label">Sub-Specialties</label>
-            <div id="subSpecialtiesList" class="grid-options" style="grid-template-columns: 1fr; gap: 8px; margin-bottom: 24px;">
+          <div id="subSpecialtiesArea" style="display:none; margin-top: 32px;">
+            <label class="form-label">Sub-Specialties for <span id="activeVerticalName" style="color:var(--Mint)"></span></label>
+            <div id="subSpecialtiesList" class="grid-options" style="grid-template-columns: 1fr 1fr; gap: 16px; margin-bottom: 24px;">
               <!-- Dynamically populated -->
             </div>
           </div>
@@ -283,6 +291,7 @@
 
         <!-- PHASE 6: MEASUREMENT PREFERENCES -->
         <div id="phase6" class="phase-container">
+          <div class="success-icon-wrap" style="width:100px; height:100px; margin-bottom:24px;"><img src="https://cdn3d.iconscout.com/3d/free/thumb/free-ruler-3683045-3071367.png" alt="Standards"></div>
           <h2>Measurement Standards</h2>
           <p class="sub-p">Set your default units and measurement systems. You can always change these later in settings.</p>
 
@@ -316,27 +325,42 @@
 
           <div class="grid-options" style="grid-template-columns: 1fr;">
             <div class="option-card selected" onclick="selectPlan('starter', this)">
-              <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:12px;">
-                <div class="title" style="margin-bottom:0">Starter</div>
-                <div style="font-weight:900; color:var(--Mint)">FREE</div>
+              <div style="display:flex; align-items:center; gap: 20px;">
+                <div class="icon-wrap" style="width:60px; height:60px;"><img src="https://cdn3d.iconscout.com/3d/free/thumb/free-rocket-3683053-3071375.png" alt="Starter"></div>
+                <div style="flex:1">
+                  <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:4px;">
+                    <div class="title" style="margin-bottom:0">Starter</div>
+                    <div style="font-weight:900; color:var(--Mint)">FREE</div>
+                  </div>
+                  <div class="desc">1 - 50 scans per month. Perfect for individuals and small artisans.</div>
+                </div>
               </div>
-              <div class="desc">1 - 50 scans per month. Perfect for individuals and small artisans.</div>
             </div>
 
             <div class="option-card" onclick="selectPlan('pro', this)">
-              <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:12px;">
-                <div class="title" style="margin-bottom:0">Pro</div>
-                <div style="font-weight:900; color:var(--Mint)">$25/mo</div>
+              <div style="display:flex; align-items:center; gap: 20px;">
+                <div class="icon-wrap" style="width:60px; height:60px;"><img src="https://cdn3d.iconscout.com/3d/free/thumb/free-crown-3683051-3071374.png" alt="Pro"></div>
+                <div style="flex:1">
+                  <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:4px;">
+                    <div class="title" style="margin-bottom:0">Pro</div>
+                    <div style="font-weight:900; color:var(--Mint)">$25/mo</div>
+                  </div>
+                  <div class="desc">Unlimited scans, priority processing, and advanced export options.</div>
+                </div>
               </div>
-              <div class="desc">Unlimited scans, priority processing, and advanced export options.</div>
             </div>
 
             <div class="option-card" onclick="selectPlan('business', this)">
-              <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:12px;">
-                <div class="title" style="margin-bottom:0">Business</div>
-                <div style="font-weight:900; color:var(--Mint)">$99/mo</div>
+              <div style="display:flex; align-items:center; gap: 20px;">
+                <div class="icon-wrap" style="width:60px; height:60px;"><img src="https://cdn3d.iconscout.com/3d/free/thumb/free-diamond-3683052-3071371.png" alt="Business"></div>
+                <div style="flex:1">
+                  <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:4px;">
+                    <div class="title" style="margin-bottom:0">Business</div>
+                    <div style="font-weight:900; color:var(--Mint)">$99/mo</div>
+                  </div>
+                  <div class="desc">Team management, API access, and merchant widget integration.</div>
+                </div>
               </div>
-              <div class="desc">Team management, API access, and merchant widget integration.</div>
             </div>
           </div>
 
@@ -347,11 +371,11 @@
         </div>
 
         <div id="phase8" class="phase-container">
-          <div class="success-icon">✓</div>
+          <div class="success-icon-wrap"><img src="https://cdn3d.iconscout.com/3d/free/thumb/free-success-3683050-3071373.png" alt="Success"></div>
           <h2 style="text-align:center; color:var(--Mint)">Workspace Ready</h2>
           <p class="sub-p" style="text-align:center">Your precision environment has been configured. You are now ready to begin scanning.</p>
           <div class="btn-row">
-            <button onclick="completeOnboarding()" class="btn">Go to Dashboard</button>
+            <button onclick="completeOnboarding(event)" class="btn">Go to Dashboard</button>
           </div>
         </div>
 
@@ -371,7 +395,8 @@
       company_name: '',
       business_type: '',
       business_address: '',
-      industry_vertical_id: '',
+      industry_vertical_id: '', // Primary
+      selected_verticals: [], // New for multiple industries
       selected_sub_specialties: [],
       unit_preference: 'metric',
       measurement_standard: 'standard',
@@ -386,12 +411,20 @@
     const KORRA_CORE = window.supabase.createClient(config.url, config.key);
 
     function updateProgress() {
-      const progress = (currentPhase / 8) * 100;
-      document.getElementById('progressBar').style.width = `${progress}%`;
-      document.getElementById('progressText').textContent = `Phase ${currentPhase} / 8`;
+      document.querySelectorAll('.progress-step').forEach((step, idx) => {
+        if (idx < currentPhase) step.classList.add('active');
+        else step.classList.remove('active');
+      });
+      document.getElementById('progressText').textContent = `Step ${currentPhase} of 8`;
     }
 
     function nextPhase() {
+      // Validation check before proceeding
+      if (currentPhase === 5 && userData.selected_verticals.length === 0) {
+          alert("Please select at least one industry vertical.");
+          return;
+      }
+
       // Logic for skipping Phase 4 & 5 if Individual
       if (currentPhase === 3 && userData.account_type === 'individual') {
         currentPhase = 6;
@@ -427,20 +460,55 @@
       const { data: { user } } = await KORRA_CORE.auth.getUser();
       if (!user) return;
 
-      await KORRA_CORE
-        .from('profiles')
-        .upsert({
-          id: user.id,
-          onboarding_phase: currentPhase,
-          ...userData
-        });
+      const profileData = {};
+      const knownColumns = [
+          'account_type', 'gender', 'age_group', 'country_code', 'region', 'currency',
+          'company_name', 'business_type', 'business_address', 'industry_vertical_id',
+          'selected_sub_specialties', 'unit_preference', 'measurement_standard',
+          'selected_plan', 'onboarding_phase'
+      ];
+
+      knownColumns.forEach(col => {
+          if (userData[col] !== undefined) profileData[col] = userData[col];
+      });
+
+      // Handle Primary vertical if multiple selected
+      if (userData.selected_verticals && userData.selected_verticals.length > 0) {
+          profileData.industry_vertical_id = userData.selected_verticals[0];
+      }
+
+      try {
+        const { error } = await KORRA_CORE
+          .from('profiles')
+          .upsert({
+            id: user.id,
+            onboarding_phase: currentPhase,
+            ...profileData
+          }, { onConflict: 'id' });
+
+        if (error) console.error("Progress save failed:", error);
+      } catch (e) {
+          console.error("Progress save exception:", e);
+      }
     }
 
-    function selectAccountType(type) {
+    function selectAccountType(type, ev) {
       userData.account_type = type;
       document.querySelectorAll('#phase2 .option-card').forEach(card => card.classList.remove('selected'));
-      event.currentTarget.classList.add('selected');
+      ev.currentTarget.classList.add('selected');
       document.getElementById('btnPhase2').disabled = false;
+
+      // Update side panel based on selection
+      const themes = {
+          individual: { title: "Your Digital Twin.", sub: "Personal biometrics for a lifetime of fit." },
+          artisan: { title: "The Master's Tools.", sub: "Clinical precision for bespoke excellence." },
+          merchant: { title: "Scale Your Brand.", sub: "Unified sizing for global retail." },
+          enterprise: { title: "Industrial Intelligence.", sub: "Mass personalization at factory scale." }
+      };
+      if (themes[type]) {
+          document.getElementById('sideTitle').textContent = themes[type].title;
+          document.getElementById('sideSub').textContent = themes[type].sub;
+      }
     }
 
     function checkPhase1() {
@@ -469,24 +537,42 @@
       el.classList.add('selected');
     }
 
-    async function completeOnboarding() {
+    async function completeOnboarding(ev) {
       const { data: { user } } = await KORRA_CORE.auth.getUser();
       if (!user) return alert("Session Expired");
 
-      const btn = event.currentTarget;
+      const btn = ev.currentTarget;
       btn.disabled = true;
       btn.textContent = 'Finalizing...';
+
+      const profileData = {};
+      const knownColumns = [
+          'account_type', 'gender', 'age_group', 'country_code', 'region', 'currency',
+          'company_name', 'business_type', 'business_address', 'industry_vertical_id',
+          'selected_sub_specialties', 'unit_preference', 'measurement_standard',
+          'selected_plan', 'onboarding_phase'
+      ];
+
+      knownColumns.forEach(col => {
+          if (userData[col] !== undefined) profileData[col] = userData[col];
+      });
+
+      // Primary vertical
+      if (userData.selected_verticals && userData.selected_verticals.length > 0) {
+          profileData.industry_vertical_id = userData.selected_verticals[0];
+      }
 
       const { error } = await KORRA_CORE
         .from('profiles')
         .upsert({
           id: user.id,
-          ...userData,
+          ...profileData,
           onboarding_completed_at: new Date().toISOString()
-        });
+        }, { onConflict: 'id' });
 
       if (error) {
-        alert(error.message);
+        console.error("Onboarding completion error:", error);
+        alert("Failed to finalize profile: " + (error.message || "Unknown error"));
         btn.disabled = false;
         btn.textContent = 'Go to Dashboard';
       } else {
@@ -544,6 +630,17 @@
 
     let verticals = [];
     async function fetchVerticals() {
+      // Fallback descriptions for verticals
+      const descriptions = {
+          rtw: "Off-the-shelf standard sizing for global retailers.",
+          mtm: "Custom-made garments tailored to individual body shapes.",
+          custom: "Specialty apparel for teams, theatrical, and uniforms.",
+          bridal: "High-precision fit for once-in-a-lifetime occasions.",
+          workwear: "Functional and protective apparel for industrial safety.",
+          fashion_tech: "Smart textiles and digital fashion innovation.",
+          outerwear: "High-performance jackets and technical clothing."
+      };
+
       const { data, error } = await KORRA_CORE
         .from('industry_verticals')
         .select('id, name');
@@ -551,70 +648,110 @@
       if (!error && data && data.length > 0) {
         verticals = data;
       } else {
-        // Fallback for verticals
         verticals = [
             { id: 'rtw', name: 'Ready-To-Wear' },
             { id: 'mtm', name: 'Made-To-Measure' },
             { id: 'bridal', name: 'Bridal & Tuxedo' },
+            { id: 'custom', name: 'Custom Apparel' },
             { id: 'workwear', name: 'Workwear & Industrial' }
         ];
       }
 
-      const select = document.getElementById('verticalSelect');
+      const grid = document.getElementById('verticalsGrid');
+      grid.innerHTML = '';
       verticals.forEach(v => {
-        const opt = document.createElement('option');
-        opt.value = v.id;
-        opt.textContent = v.name;
-        select.appendChild(opt);
+        const div = document.createElement('div');
+        div.className = 'option-card';
+        div.innerHTML = `
+            <div class="title">${v.name}</div>
+            <div class="desc">${descriptions[v.id] || "Specialized apparel production."}</div>
+        `;
+        div.onclick = () => toggleVerticalSelection(v.id, div);
+        grid.appendChild(div);
       });
     }
 
-    async function updateVerticalSelection() {
-      const vid = document.getElementById('verticalSelect').value;
-      userData.industry_vertical_id = vid;
-      userData.selected_sub_specialties = [];
-
-      if (!vid) {
-        document.getElementById('subSpecialtiesArea').style.display = 'none';
-        document.getElementById('btnPhase5').disabled = true;
-        return;
+    function toggleVerticalSelection(vid, el) {
+      const index = userData.selected_verticals.indexOf(vid);
+      if (index > -1) {
+        userData.selected_verticals.splice(index, 1);
+        el.classList.remove('selected');
+      } else {
+        userData.selected_verticals.push(vid);
+        el.classList.add('selected');
       }
 
-      // Fetch cultural context for MTM if applicable (Step 2F in SQL)
-      const { data: culturalData } = await KORRA_CORE
-        .from('vertical_country_context')
-        .select('cultural_attire(name, description)')
-        .eq('vertical_id', vid)
-        .eq('country_code', userData.country_code)
-        .single();
+      // If at least one selected, fetch sub-specialties for the last one selected
+      if (userData.selected_verticals.length > 0) {
+          updateSubSpecialties(userData.selected_verticals[userData.selected_verticals.length - 1]);
+      } else {
+          document.getElementById('subSpecialtiesArea').style.display = 'none';
+      }
 
-      if (culturalData && culturalData.cultural_attire) {
-        const ca = culturalData.cultural_attire;
-        const subP = document.querySelector('#phase5 .sub-p');
-        subP.innerHTML = `Regional Specialization: <strong>${ca.name}</strong> - ${ca.description}`;
+      document.getElementById('btnPhase5').disabled = userData.selected_verticals.length === 0;
+    }
+
+    async function updateSubSpecialties(vid) {
+      const vertical = verticals.find(v => v.id === vid);
+      document.getElementById('activeVerticalName').textContent = vertical ? vertical.name : '';
+
+      // Fetch cultural context for MTM if applicable (Step 2F in SQL)
+      try {
+          const { data: culturalData } = await KORRA_CORE
+            .from('vertical_country_context')
+            .select('cultural_attire(name, description)')
+            .eq('vertical_id', vid)
+            .eq('country_code', userData.country_code);
+
+          // Handle possible single or empty results
+          const entry = Array.isArray(culturalData) ? culturalData[0] : culturalData;
+
+          if (entry && entry.cultural_attire) {
+            const ca = entry.cultural_attire;
+            const subP = document.querySelector('#phase5 .sub-p');
+            subP.innerHTML = `Regional Specialization for <strong>${vertical.name}</strong>: <strong>${ca.name}</strong> - ${ca.description}`;
+          }
+      } catch (e) {
+          console.warn("Cultural context fetch failed", e);
       }
 
       // Fetch products/sub-specialties for this vertical
       const { data, error } = await KORRA_CORE
         .from('vertical_products')
-        .select('product_categories(id, name)')
-        .eq('vertical_id', vid);
+        .select('product_categories(id, name)'); // Note: Join query might be complex depending on schema
 
-      if (!error && data) {
-        const list = document.getElementById('subSpecialtiesList');
-        list.innerHTML = '';
-        data.forEach(item => {
-          const pc = item.product_categories;
+      // Fallback sub-specialties if table or query fails
+      let categories = [];
+      if (!error && data && data.length > 0) {
+          // This is a simplified fetch, normally you'd join with vertical_id
+          // To keep it robust, I'll filter in JS if the query returned too much
+          categories = data.map(item => item.product_categories).filter(Boolean);
+      } else {
+          const fallbackMap = {
+              mtm: [{id: 'suits', name: 'Bespoke Suits'}, {id: 'ethnic', name: 'Traditional/Ethnic'}, {id: 'dresses', name: 'Custom Dresses'}],
+              rtw: [{id: 'casual', name: 'Casual Wear'}, {id: 'formal', name: 'Formal Attire'}, {id: 'active', name: 'Activewear'}],
+              bridal: [{id: 'gowns', name: 'Bridal Gowns'}, {id: 'tux', name: 'Tuxedos'}, {id: 'bridesmaids', name: 'Bridesmaids'}],
+              custom: [{id: 'uniforms', name: 'Uniforms'}, {id: 'theatre', name: 'Costuming'}, {id: 'merch', name: 'Merchandise'}]
+          };
+          categories = fallbackMap[vid] || fallbackMap['rtw'];
+      }
+
+      const list = document.getElementById('subSpecialtiesList');
+      list.innerHTML = '';
+
+      categories.forEach(pc => {
           const div = document.createElement('div');
           div.className = 'option-card';
-          div.style.padding = '12px 20px';
-          div.innerHTML = `<div class="title" style="margin-bottom:0; font-size:14px;">${pc.name}</div>`;
+          div.style.padding = '20px';
+          div.innerHTML = `
+            <div class="title" style="margin-bottom:4px; font-size:15px;">${pc.name}</div>
+            <div class="desc">Targeted biometric extraction for ${pc.name.toLowerCase()} products.</div>
+          `;
+          if (userData.selected_sub_specialties.includes(pc.id)) div.classList.add('selected');
           div.onclick = () => toggleSubSpecialty(pc.id, div);
           list.appendChild(div);
-        });
-        document.getElementById('subSpecialtiesArea').style.display = 'block';
-        document.getElementById('btnPhase5').disabled = false;
-      }
+      });
+      document.getElementById('subSpecialtiesArea').style.display = 'block';
     }
 
     function toggleSubSpecialty(id, el) {
