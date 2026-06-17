@@ -152,6 +152,17 @@ async def serve_widget(): return get_safe_file("widget.html")
 @app.get("/share")
 async def serve_share(): return get_safe_file("share.html")
 
+@app.get("/onboarding")
+async def serve_onboarding(): return get_safe_file("onboarding.html")
+@app.get("/verify")
+async def serve_verify(): return get_safe_file("verify.html")
+@app.get("/about")
+async def serve_about(): return get_safe_file("about.html")
+@app.get("/impact")
+async def serve_impact(): return get_safe_file("impact.html")
+@app.get("/casestudies")
+async def serve_casestudies(): return get_safe_file("casestudies.html")
+
 # --- INDUSTRY PAGES ---
 @app.get("/luxury-mtm")
 async def serve_luxury(): return get_safe_file("luxury-mtm.html")
