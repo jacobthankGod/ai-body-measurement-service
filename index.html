@@ -217,7 +217,7 @@
     .logo-marquee { display: flex; width: max-content; }
     .marquee-content { display: flex; align-items: center; gap: 40px; animation: scrollMarquee 50s linear infinite; }
 
-    .brand-card {
+.brand-card {
       background: #fff;
       border-radius: 16px;
       padding: 24px;
@@ -226,10 +226,11 @@
       display: flex;
       align-items: center;
       justify-content: center;
-      box-shadow: 0 10px 30px rgba(0,0,0,0.1);
+      box-shadow: 0 10px 30px rgba(0,0,0,0.15);
+      border: 1px solid rgba(0,0,0,0.05);
       transition: 0.3s cubic-bezier(0.4, 0, 0.2, 1);
     }
-    .brand-card:hover { transform: translateY(-5px) scale(1.05); box-shadow: 0 20px 40px rgba(87, 215, 192, 0.2); }
+    .brand-card:hover { transform: translateY(-5px) scale(1.05); box-shadow: 0 20px 40px rgba(87, 215, 192, 0.25); border-color: var(--Mint); }
 
     .brand-card img {
       max-width: 80%;
@@ -538,15 +539,18 @@
   <!-- SECTION 6.5: E-COMMERCE CONNECTIVITY -->
   <section class="block" style="padding-top: 0; background: #000;">
     <div class="container-wide">
-      <div style="text-align:center; margin-bottom: 60px;">
-        <div class="section-eyebrow">Universal Connectivity</div>
-        <h2 class="section-title" style="font-size: 36px; margin: 0 auto 20px;">Connect with Every Cart.</h2>
-        <p class="section-desc" style="margin: 0 auto; max-width: 700px;">Your KORRA size profile integrates seamlessly with the world's largest shopping platforms. Get a perfect fit on every order, from global retailers to independent designers.</p>
+<div style="text-align:center; margin-bottom: 60px;">
+        <div class="section-eyebrow">Universal Sizing</div>
+        <h2 class="section-title" style="font-size: 36px; margin: 0 auto 20px;">Know Your Size Across Every Brand.</h2>
+        <p class="section-desc" style="margin: 0 auto; max-width: 700px;">Different brands, different sizes. KORRA creates one universal size profile that translates your measurements into the perfect fit on Amazon, Shopify, Temu, and 7,000+ other apparel retailers worldwide.<br><br>Whether you're a Small, Medium, Large, XL, or XXL — KORRA instantly tells you what size to select on any site. No more guessing, no more returns.</p>
       </div>
 
-      <div class="logo-marquee-container">
+<div class="logo-marquee-container">
         <div class="logo-marquee">
           <div class="marquee-content">
+            <div class="brand-card"><img src="https://upload.wikimedia.org/wikipedia/commons/a/a9/Amazon_%28company%29.svg" alt="Amazon"></div>
+            <div class="brand-card"><img src="https://upload.wikimedia.org/wikipedia/commons/9/9a/Shopify_logo.svg" alt="Shopify"></div>
+            <div class="brand-card"><img src="https://imgix.datahero.es/wp-content/uploads/2023/07/Temu-logo.png" alt="Temu"></div>
             <div class="brand-card"><img src="https://upload.wikimedia.org/wikipedia/commons/e/e4/Zalando_logo.svg" alt="Zalando"></div>
             <div class="brand-card"><img src="https://upload.wikimedia.org/wikipedia/commons/b/b1/ASOS_Logo.svg" alt="ASOS"></div>
             <div class="brand-card"><img src="https://upload.wikimedia.org/wikipedia/commons/e/e4/Shein_logo.svg" alt="Shein"></div>
@@ -556,6 +560,9 @@
             <div class="brand-card"><img src="https://upload.wikimedia.org/wikipedia/commons/5/53/H%26M-Logo.svg" alt="H&M"></div>
 
             <!-- REPEAT FOR LOOP -->
+            <div class="brand-card"><img src="https://upload.wikimedia.org/wikipedia/commons/a/a9/Amazon_%28company%29.svg" alt="Amazon"></div>
+            <div class="brand-card"><img src="https://upload.wikimedia.org/wikipedia/commons/9/9a/Shopify_logo.svg" alt="Shopify"></div>
+            <div class="brand-card"><img src="https://imgix.datahero.es/wp-content/uploads/2023/07/Temu-logo.png" alt="Temu"></div>
             <div class="brand-card"><img src="https://upload.wikimedia.org/wikipedia/commons/e/e4/Zalando_logo.svg" alt="Zalando"></div>
             <div class="brand-card"><img src="https://upload.wikimedia.org/wikipedia/commons/b/b1/ASOS_Logo.svg" alt="ASOS"></div>
             <div class="brand-card"><img src="https://upload.wikimedia.org/wikipedia/commons/e/e4/Shein_logo.svg" alt="Shein"></div>
