@@ -210,18 +210,39 @@
   </style>
   <style>
     .logo-marquee-container {
-      width: 100%; overflow: hidden; position: relative; padding: 60px 0;
-      mask-image: linear-gradient(to right, transparent, #000 15%, #000 85%, transparent);
-      -webkit-mask-image: linear-gradient(to right, transparent, #000 15%, #000 85%, transparent);
-      background: rgba(255,255,255,0.01);
+      width: 100%; overflow: hidden; position: relative; padding: 80px 0;
+      mask-image: linear-gradient(to right, transparent, #000 10%, #000 90%, transparent);
+      -webkit-mask-image: linear-gradient(to right, transparent, #000 10%, #000 90%, transparent);
     }
     .logo-marquee { display: flex; width: max-content; }
-    .marquee-content { display: flex; align-items: center; gap: 100px; animation: scrollMarquee 40s linear infinite; }
-    .marquee-content img {
-      height: 44px; width: auto; opacity: 0.8; transition: 0.4s; cursor: pointer;
-      filter: drop-shadow(0 0 2px rgba(255,255,255,0.3));
+    .marquee-content { display: flex; align-items: center; gap: 40px; animation: scrollMarquee 50s linear infinite; }
+
+    .brand-card {
+      background: #fff;
+      border-radius: 16px;
+      padding: 24px;
+      width: 200px;
+      height: 100px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      box-shadow: 0 10px 30px rgba(0,0,0,0.1);
+      transition: 0.3s cubic-bezier(0.4, 0, 0.2, 1);
     }
-    .marquee-content img:hover { opacity: 1; transform: scale(1.15); filter: drop-shadow(0 0 10px rgba(87, 215, 192, 0.4)); }
+    .brand-card:hover { transform: translateY(-5px) scale(1.05); box-shadow: 0 20px 40px rgba(87, 215, 192, 0.2); }
+
+    .brand-card img {
+      max-width: 80%;
+      max-height: 50%;
+      width: auto;
+      height: auto;
+      object-fit: contain;
+      filter: grayscale(1);
+      opacity: 0.7;
+      transition: 0.3s;
+    }
+    .brand-card:hover img { filter: grayscale(0); opacity: 1; }
+
     @keyframes scrollMarquee { from { transform: translateX(0); } to { transform: translateX(-50%); } }
   </style>
 </head>
@@ -526,30 +547,22 @@
       <div class="logo-marquee-container">
         <div class="logo-marquee">
           <div class="marquee-content">
-            <img src="https://upload.wikimedia.org/wikipedia/commons/a/a9/Amazon_logo.svg" alt="Amazon">
-            <img src="https://upload.wikimedia.org/wikipedia/commons/e/e1/Shopify_Logo.png" alt="Shopify">
-            <img src="https://upload.wikimedia.org/wikipedia/commons/b/b3/Temu_logo.svg" alt="Temu">
-            <img src="https://upload.wikimedia.org/wikipedia/commons/1/1b/Ebay_logo.svg" alt="eBay">
-            <img src="https://upload.wikimedia.org/wikipedia/commons/e/e4/Zalando_logo.svg" alt="Zalando">
-            <img src="https://upload.wikimedia.org/wikipedia/commons/b/b1/ASOS_Logo.svg" alt="ASOS">
-            <img src="https://upload.wikimedia.org/wikipedia/commons/e/e4/Shein_logo.svg" alt="Shein">
-            <img src="https://upload.wikimedia.org/wikipedia/commons/a/a6/Logo_NIKE.svg" alt="Nike">
-            <img src="https://upload.wikimedia.org/wikipedia/commons/2/20/Adidas_Logo.svg" alt="Adidas">
-            <img src="https://upload.wikimedia.org/wikipedia/commons/f/fd/Zara_Logo.svg" alt="Zara">
-            <img src="https://upload.wikimedia.org/wikipedia/commons/5/53/H%26M-Logo.svg" alt="H&M">
+            <div class="brand-card"><img src="https://upload.wikimedia.org/wikipedia/commons/e/e4/Zalando_logo.svg" alt="Zalando"></div>
+            <div class="brand-card"><img src="https://upload.wikimedia.org/wikipedia/commons/b/b1/ASOS_Logo.svg" alt="ASOS"></div>
+            <div class="brand-card"><img src="https://upload.wikimedia.org/wikipedia/commons/e/e4/Shein_logo.svg" alt="Shein"></div>
+            <div class="brand-card"><img src="https://upload.wikimedia.org/wikipedia/commons/a/a6/Logo_NIKE.svg" alt="Nike"></div>
+            <div class="brand-card"><img src="https://upload.wikimedia.org/wikipedia/commons/2/20/Adidas_Logo.svg" alt="Adidas"></div>
+            <div class="brand-card"><img src="https://upload.wikimedia.org/wikipedia/commons/f/fd/Zara_Logo.svg" alt="Zara"></div>
+            <div class="brand-card"><img src="https://upload.wikimedia.org/wikipedia/commons/5/53/H%26M-Logo.svg" alt="H&M"></div>
 
             <!-- REPEAT FOR LOOP -->
-            <img src="https://upload.wikimedia.org/wikipedia/commons/a/a9/Amazon_logo.svg" alt="Amazon">
-            <img src="https://upload.wikimedia.org/wikipedia/commons/e/e1/Shopify_Logo.png" alt="Shopify">
-            <img src="https://upload.wikimedia.org/wikipedia/commons/b/b3/Temu_logo.svg" alt="Temu">
-            <img src="https://upload.wikimedia.org/wikipedia/commons/1/1b/Ebay_logo.svg" alt="eBay">
-            <img src="https://upload.wikimedia.org/wikipedia/commons/e/e4/Zalando_logo.svg" alt="Zalando">
-            <img src="https://upload.wikimedia.org/wikipedia/commons/b/b1/ASOS_Logo.svg" alt="ASOS">
-            <img src="https://upload.wikimedia.org/wikipedia/commons/e/e4/Shein_logo.svg" alt="Shein">
-            <img src="https://upload.wikimedia.org/wikipedia/commons/a/a6/Logo_NIKE.svg" alt="Nike">
-            <img src="https://upload.wikimedia.org/wikipedia/commons/2/20/Adidas_Logo.svg" alt="Adidas">
-            <img src="https://upload.wikimedia.org/wikipedia/commons/f/fd/Zara_Logo.svg" alt="Zara">
-            <img src="https://upload.wikimedia.org/wikipedia/commons/5/53/H%26M-Logo.svg" alt="H&M">
+            <div class="brand-card"><img src="https://upload.wikimedia.org/wikipedia/commons/e/e4/Zalando_logo.svg" alt="Zalando"></div>
+            <div class="brand-card"><img src="https://upload.wikimedia.org/wikipedia/commons/b/b1/ASOS_Logo.svg" alt="ASOS"></div>
+            <div class="brand-card"><img src="https://upload.wikimedia.org/wikipedia/commons/e/e4/Shein_logo.svg" alt="Shein"></div>
+            <div class="brand-card"><img src="https://upload.wikimedia.org/wikipedia/commons/a/a6/Logo_NIKE.svg" alt="Nike"></div>
+            <div class="brand-card"><img src="https://upload.wikimedia.org/wikipedia/commons/2/20/Adidas_Logo.svg" alt="Adidas"></div>
+            <div class="brand-card"><img src="https://upload.wikimedia.org/wikipedia/commons/f/fd/Zara_Logo.svg" alt="Zara"></div>
+            <div class="brand-card"><img src="https://upload.wikimedia.org/wikipedia/commons/5/53/H%26M-Logo.svg" alt="H&M"></div>
           </div>
         </div>
       </div>
