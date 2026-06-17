@@ -1022,7 +1022,7 @@ if (!poseModel) {
       localStorage.setItem('korra_sidebar_collapsed', isCollapsed);
     };
 
-    function init() {
+async function init() {
       NetworkGuard.init();
       if (typeof window.supabase === 'undefined') { setTimeout(init, 500); return; }
 
