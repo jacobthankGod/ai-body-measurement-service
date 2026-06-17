@@ -220,25 +220,24 @@ INSERT INTO public.vertical_country_context (vertical_id, country_code, cultural
 ON CONFLICT (vertical_id, country_code) DO NOTHING;
 
 -- 3. EXPAND PROFILES FOR COMPREHENSIVE ONBOARDING DATA (Phase 2-8)
-ALTER TABLE public.profiles
-ADD COLUMN IF NOT EXISTS account_type TEXT CHECK (account_type IN ('individual', 'artisan', 'merchant', 'enterprise')),
-ADD COLUMN IF NOT EXISTS first_name TEXT,
-ADD COLUMN IF NOT EXISTS last_name TEXT,
-ADD COLUMN IF NOT EXISTS country_code TEXT REFERENCES public.countries_reference(code),
-ADD COLUMN IF NOT EXISTS region TEXT,
-ADD COLUMN IF NOT EXISTS currency TEXT DEFAULT 'USD',
-ADD COLUMN IF NOT EXISTS company_name TEXT,
-ADD COLUMN IF NOT EXISTS business_type TEXT CHECK (business_type IN ('retail', 'wholesale', 'manufacturing')),
-ADD COLUMN IF NOT EXISTS business_address TEXT,
-ADD COLUMN IF NOT EXISTS industry_vertical_id TEXT REFERENCES public.industry_verticals(id),
-ADD COLUMN IF NOT EXISTS selected_sub_specialties JSONB DEFAULT '[]'::jsonb,
-ADD COLUMN IF NOT EXISTS unit_preference TEXT DEFAULT 'metric' CHECK (unit_preference IN ('metric', 'imperial')),
-ADD COLUMN IF NOT EXISTS measurement_standard TEXT DEFAULT 'standard',
-ADD COLUMN IF NOT EXISTS selected_plan TEXT DEFAULT 'starter',
-ADD COLUMN IF NOT EXISTS onboarding_phase INTEGER DEFAULT 1,
-ADD COLUMN IF NOT EXISTS onboarding_completed_at TIMESTAMPTZ,
-ADD COLUMN IF NOT EXISTS gender TEXT,
-ADD COLUMN IF NOT EXISTS age_group TEXT;
+ALTER TABLE public.profiles ADD COLUMN IF NOT EXISTS account_type TEXT CHECK (account_type IN ('individual', 'artisan', 'merchant', 'enterprise'));
+ALTER TABLE public.profiles ADD COLUMN IF NOT EXISTS first_name TEXT;
+ALTER TABLE public.profiles ADD COLUMN IF NOT EXISTS last_name TEXT;
+ALTER TABLE public.profiles ADD COLUMN IF NOT EXISTS country_code TEXT REFERENCES public.countries_reference(code);
+ALTER TABLE public.profiles ADD COLUMN IF NOT EXISTS region TEXT;
+ALTER TABLE public.profiles ADD COLUMN IF NOT EXISTS currency TEXT DEFAULT 'USD';
+ALTER TABLE public.profiles ADD COLUMN IF NOT EXISTS company_name TEXT;
+ALTER TABLE public.profiles ADD COLUMN IF NOT EXISTS business_type TEXT CHECK (business_type IN ('retail', 'wholesale', 'manufacturing'));
+ALTER TABLE public.profiles ADD COLUMN IF NOT EXISTS business_address TEXT;
+ALTER TABLE public.profiles ADD COLUMN IF NOT EXISTS industry_vertical_id TEXT REFERENCES public.industry_verticals(id);
+ALTER TABLE public.profiles ADD COLUMN IF NOT EXISTS selected_sub_specialties JSONB DEFAULT '[]'::jsonb;
+ALTER TABLE public.profiles ADD COLUMN IF NOT EXISTS unit_preference TEXT DEFAULT 'metric' CHECK (unit_preference IN ('metric', 'imperial'));
+ALTER TABLE public.profiles ADD COLUMN IF NOT EXISTS measurement_standard TEXT DEFAULT 'standard';
+ALTER TABLE public.profiles ADD COLUMN IF NOT EXISTS selected_plan TEXT DEFAULT 'starter';
+ALTER TABLE public.profiles ADD COLUMN IF NOT EXISTS onboarding_phase INTEGER DEFAULT 1;
+ALTER TABLE public.profiles ADD COLUMN IF NOT EXISTS onboarding_completed_at TIMESTAMPTZ;
+ALTER TABLE public.profiles ADD COLUMN IF NOT EXISTS gender TEXT;
+ALTER TABLE public.profiles ADD COLUMN IF NOT EXISTS age_group TEXT;
 
 -- 4. SECURITY (RLS)
 ALTER TABLE public.countries_reference ENABLE ROW LEVEL SECURITY;
