@@ -356,11 +356,16 @@ msg.textContent = feedback; msg.style.background = aligned ? "var(--Mint)" : "rg
       });
     };
 
-    window.handlePreviewClick = (type) => {
+window.handlePreviewClick = (type) => {
         const label = document.getElementById(type === 'front' ? 'fLabel' : 'sLabel');
         const placeholder = label.querySelector('.placeholder-content');
-        if (placeholder && placeholder.style.display !== 'none') window.openCamera(type);
-        else { const img = label.querySelector('.preview-img'); if (img && img.src) window.open(img.src, '_blank'); }
+        const previewImg = label.querySelector('.preview-img');
+        
+        // If placeholder is visible OR image already exists, open camera for retake
+        // Previously this opened image in new tab - now allows retake instead
+        if ((placeholder && placeholder.style.display !== 'none') || (previewImg && previewImg.src && previewImg.src !== window.location.href)) {
+            window.openCamera(type);
+        }
     };
 
     window.goToStep = (step) => { document.querySelectorAll('.step-view').forEach(v => v.classList.remove('active')); document.getElementById('step-' + step).classList.add('active'); if (step === 'scan') window.speak("Step back and stand in view.", true); };

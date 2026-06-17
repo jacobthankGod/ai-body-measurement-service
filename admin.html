@@ -599,10 +599,16 @@ if (!poseModel) {
       }
     };
 
-    window.handlePreviewClick = (type) => {
+window.handlePreviewClick = (type) => {
       const label = document.getElementById(type === 'front' ? 'adminFrontLabel' : 'adminSideLabel');
-      if (label.querySelector('.placeholder-content').style.display !== 'none') window.openCamera(type);
-      else { const img = label.querySelector('.preview-img'); if (img.src) window.open(img.src, '_blank'); }
+      const placeholder = label.querySelector('.placeholder-content');
+      const previewImg = label.querySelector('.preview-img');
+      
+      // If placeholder is visible OR image already exists, open camera for retake
+      // Previously this opened image in new tab - now allows retake instead
+      if (placeholder.style.display !== 'none' || (previewImg && previewImg.src && previewImg.src !== window.location.href)) {
+        window.openCamera(type);
+      }
     };
 
     window.switchTab = (id) => {
