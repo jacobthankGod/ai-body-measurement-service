@@ -371,11 +371,11 @@
         </div>
 
         <div id="phase8" class="phase-container">
-          <div class="success-icon-wrap"><img src="https://cdn3d.iconscout.com/3d/free/thumb/free-success-3683050-3071373.png" alt="Success"></div>
+          <div class="success-icon-wrap"><img src="https://cdn3d.iconscout.com/3d/free/thumb/free-verify-7013962-5722359.png" alt="Success"></div>
           <h2 style="text-align:center; color:var(--Mint)">Workspace Ready</h2>
           <p class="sub-p" style="text-align:center">Your precision environment has been configured. You are now ready to begin scanning.</p>
           <div class="btn-row">
-            <button onclick="completeOnboarding(event)" class="btn">Go to Dashboard</button>
+            <button id="btnFinal" onclick="completeOnboarding(event)" class="btn">Go to Dashboard</button>
           </div>
         </div>
 
@@ -415,7 +415,9 @@
         if (idx < currentPhase) step.classList.add('active');
         else step.classList.remove('active');
       });
-      document.getElementById('progressText').textContent = `Step ${currentPhase} of 8`;
+      // Ensure no "Phase" text is visible, using modern Step terminology
+      const pText = document.getElementById('progressText');
+      if (pText) pText.textContent = `Step ${currentPhase} of 8`;
     }
 
     function nextPhase() {
@@ -538,12 +540,18 @@
     }
 
     async function completeOnboarding(ev) {
-      const { data: { user } } = await KORRA_CORE.auth.getUser();
-      if (!user) return alert("Session Expired");
+      // CAPTURE BUTTON REFERENCE IMMEDIATELY (Before async calls clear the event object)
+      const btn = ev ? (ev.currentTarget || ev.target) : null;
+      if (btn) {
+          btn.disabled = true;
+          btn.textContent = 'Finalizing...';
+      }
 
-      const btn = ev.currentTarget;
-      btn.disabled = true;
-      btn.textContent = 'Finalizing...';
+      const { data: { user } } = await KORRA_CORE.auth.getUser();
+      if (!user) {
+          if (btn) btn.disabled = false;
+          return alert("Session Expired");
+      }
 
       const profileData = {};
       const knownColumns = [
@@ -573,8 +581,10 @@
       if (error) {
         console.error("Onboarding completion error:", error);
         alert("Failed to finalize profile: " + (error.message || "Unknown error"));
-        btn.disabled = false;
-        btn.textContent = 'Go to Dashboard';
+        if (btn) {
+            btn.disabled = false;
+            btn.textContent = 'Go to Dashboard';
+        }
       } else {
         window.location.href = '/dashboard';
       }
@@ -718,17 +728,17 @@
       // Fetch products/sub-specialties for this vertical
       const { data, error } = await KORRA_CORE
         .from('vertical_products')
-        .select('product_categories(id, name)'); // Note: Join query might be complex depending on schema
+        .select('product_category_id, product_categories(id, name)')
+        .eq('vertical_id', vid);
 
       // Fallback sub-specialties if table or query fails
       let categories = [];
       if (!error && data && data.length > 0) {
-          // This is a simplified fetch, normally you'd join with vertical_id
-          // To keep it robust, I'll filter in JS if the query returned too much
           categories = data.map(item => item.product_categories).filter(Boolean);
       } else {
           const fallbackMap = {
               mtm: [{id: 'suits', name: 'Bespoke Suits'}, {id: 'ethnic', name: 'Traditional/Ethnic'}, {id: 'dresses', name: 'Custom Dresses'}],
+              luxury_mtm: [{id: 'suits', name: 'Bespoke Suits'}, {id: 'ethnic', name: 'Traditional/Ethnic'}, {id: 'dresses', name: 'Custom Dresses'}],
               rtw: [{id: 'casual', name: 'Casual Wear'}, {id: 'formal', name: 'Formal Attire'}, {id: 'active', name: 'Activewear'}],
               bridal: [{id: 'gowns', name: 'Bridal Gowns'}, {id: 'tux', name: 'Tuxedos'}, {id: 'bridesmaids', name: 'Bridesmaids'}],
               custom: [{id: 'uniforms', name: 'Uniforms'}, {id: 'theatre', name: 'Costuming'}, {id: 'merch', name: 'Merchandise'}]
