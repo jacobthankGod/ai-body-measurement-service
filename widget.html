@@ -48,8 +48,9 @@
     .photo-box span { font-size: 10px; font-weight: 800; color: var(--White); text-transform: uppercase; z-index: 2; }
     .photo-box .tap-hint { font-size: 8px; color: var(--Mint); margin-top: 4px; font-weight: 700; z-index: 2; }
 
-    .preview-img { position: absolute; inset: 0; width: 100%; height: 100%; object-fit: cover; display: none; z-index: 5; }
-    .preview-overlay { position: absolute; inset: 0; background: rgba(0,0,0,0.6); display: none; flex-direction: column; align-items: center; justify-content: center; z-index: 10; }
+.preview-img { position: absolute; inset: 0; width: 100%; height: 100%; object-fit: cover; display: none; z-index: 5; }
+.preview-overlay { position: absolute; inset: 0; background: rgba(0,0,0,0.6); display: none; flex-direction: column; align-items: center; justify-content: center; z-index: 10; }
+    .preview-overlay:hover { cursor: pointer; }
 
     .btn-submit { width: 100%; height: 56px; background: var(--Mint); color: var(--Obsidian); border: none; border-radius: 14px; font-weight: 900; cursor: pointer; transition: 0.2s; text-transform: uppercase; font-size: 13px; letter-spacing: 0.05em; }
     .btn-submit:hover { background: #6effeb; transform: translateY(-2px); box-shadow: 0 10px 30px rgba(87,215,192,0.3); }
@@ -222,10 +223,15 @@
     let activeCameraType = null, poseModel = null, cameraInstance = null, isPoseAligned = false, alignmentStartTime = 0, autoSnapTriggered = false, isReviewing = false, capturedDataUrl = null;
     let lastSpokenText = "", lastSpokenTime = 0;
 
-    window.handlePreviewClick = function(type) {
+window.handlePreviewClick = function(type) {
       const label = document.getElementById(type === 'front' ? 'fLabel' : 'sLabel');
       const placeholder = label?.querySelector('.placeholder-content');
-      if (placeholder && placeholder.style.display !== 'none') window.openCamera(type);
+      const previewImg = label?.querySelector('.preview-img');
+      
+      // If placeholder is visible OR image already exists, open camera for retake
+      if ((placeholder && placeholder.style.display !== 'none') || (previewImg && previewImg.src && previewImg.src !== window.location.href)) {
+        window.openCamera(type);
+      }
     };
 
     window.speak = (text, force = false) => {

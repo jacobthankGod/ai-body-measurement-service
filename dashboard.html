@@ -610,9 +610,10 @@
     const PAYSTACK_PUBLIC_KEY = window.ENV?.PAYSTACK_PUBLIC_KEY || 'pk_test_placeholder';
     const CONFIG = { url: 'https://blsettabymllulsxtziw.supabase.co', key: 'sb_publishable_miCOIXHtlxLkfDgpwE0N-g_BA1Q-x8y', paystack: PAYSTACK_PUBLIC_KEY };
 
-    // --- KORRA ENGINE STATE ---
+// --- KORRA ENGINE STATE ---
     let sessionData = null, userId = null, masterHistory = [], activeCameraType = null, poseModel = null, cameraInstance = null, isPoseAligned = false, alignmentStartTime = 0, autoSnapTriggered = false, isReviewing = false, capturedDataUrl = null;
     let lastSpokenText = "", lastSpokenTime = 0, usageChart = null, selectedBundle = { credits: 50, price: 25 };
+    let currentApiKey = null; // Store user's API key for authenticated API calls
 
     const NetworkGuard = {
         isOnline: navigator.onLine,
@@ -781,10 +782,16 @@ if (!poseModel) {
       }
     };
 
-    window.handlePreviewClick = (type) => {
+window.handlePreviewClick = (type) => {
       const label = document.getElementById(type === 'front' ? 'frontLabel' : 'sideLabel');
-      if (label.querySelector('.placeholder-content').style.display !== 'none') window.openCamera(type);
-      else { const img = label.querySelector('.preview-img'); if (img.src) window.open(img.src, '_blank'); }
+      const placeholder = label.querySelector('.placeholder-content');
+      const previewImg = label.querySelector('.preview-img');
+      
+      // If placeholder is visible OR image already exists, open camera for retake
+      // Previously this opened image in new tab - now allows retake instead
+      if (placeholder.style.display !== 'none' || (previewImg && previewImg.src && previewImg.src !== window.location.href)) {
+        window.openCamera(type);
+      }
     };
 
     window.switchTab = (id) => {
@@ -796,7 +803,7 @@ if (!poseModel) {
       if (id === 'passports') window.renderPassports();
     };
 
-    window.loadSettings = async () => {
+window.loadSettings = async () => {
       const { data: profile } = await window.KORRA_DB.from('profiles').select('*').eq('id', userId).single();
       if (profile) {
         document.getElementById('settingsName').value = profile.full_name || profile.company_name || "";
@@ -804,6 +811,9 @@ if (!poseModel) {
         document.getElementById('statCredits').textContent = profile.credits || 0;
         document.getElementById('billingCredits').textContent = profile.credits || 0;
         document.getElementById('apiKeyDisplay').textContent = profile.api_key || "REGENERATE TO VIEW";
+        
+        // Store API key for authenticated API calls
+        currentApiKey = profile.api_key;
 
         // SYNC WIDGET SETTINGS
         if (profile.widget_config) {
@@ -1064,10 +1074,12 @@ async function init() {
       }, 2000);
     }
 
-    document.getElementById('scanForm').addEventListener('submit', async (e) => {
+document.getElementById('scanForm').addEventListener('submit', async (e) => {
       e.preventDefault(); const btn = document.getElementById('btnRunScan'); btn.disabled = true;
       const fd = new FormData(); fd.append('front', document.getElementById('frontPhoto').files[0]); fd.append('side', document.getElementById('sidePhoto').files[0]); fd.append('height', document.getElementById('scanHeight').value); fd.append('gender', document.getElementById('scanGender').value); fd.append('client_name', document.getElementById('scanClientName').value);
-      const res = await fetch('/api/v2/measurements/extract', { method: 'POST', headers: { 'X-API-Key': 'sb_publishable_miCOIXHtlxLkfDgpwE0N-g_BA1Q-x8y' }, body: fd });
+      // Use authenticated user's API key instead of hardcoded key
+      const apiKey = currentApiKey || 'sb_publishable_miCOIXHtlxLkfDgpwE0N-g_BA1Q-x8y';
+      const res = await fetch('/api/v2/measurements/extract', { method: 'POST', headers: { 'X-API-Key': apiKey }, body: fd });
       if (res.ok) { const d = await res.json(); pollTask(d.task_id); } else { btn.disabled = false; alert("Error starting scan."); }
     });
 
