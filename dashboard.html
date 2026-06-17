@@ -589,7 +589,94 @@
           </div>
           <div id="view-billing" class="tab-view"><div class="glass-card"><h2>Billing & Plans</h2><div style="display:grid; grid-template-columns:1.5fr 1fr; gap:32px; margin-top:32px"><div style="padding:24px; background:rgba(87,215,192,0.05); border:1px solid var(--Mint); border-radius:16px"><h4>CURRENT PLAN</h4><div style="font-size:24px; font-weight:900" id="billingPlanName">Loading...</div><button class="btn-primary" style="margin-top:20px; width:100%">Manage</button></div><div style="padding:24px; background:var(--Glass); border:1px solid var(--Glass-Border); border-radius:16px"><h4>AVAILABLE CREDITS</h4><div style="font-size:32px; font-weight:900" id="billingCredits">0</div><button class="btn-outline" style="margin-top:20px; width:100%" onclick="document.getElementById('topUpModal').classList.add('active')">Top Up</button></div></div><div style="margin-top:48px"><h4>Transaction History</h4><div class="table-container"><table><thead><tr><th>DATE</th><th>TYPE</th><th>AMOUNT</th><th>STATUS</th></tr></thead><tbody id="billingHistoryBody"></tbody></table></div></div></div></div>
           <div id="view-settings" class="tab-view">
-             <div class="glass-card"><h2>Settings</h2><div style="max-width:600px; margin-top:32px"><label style="font-size:10px; font-weight:900; color:var(--Neutral-500)">PROFESSIONAL NAME</label><input type="text" id="settingsName" class="input-field" placeholder="Loading..."><button class="btn-primary" id="btnSaveSettings">Save Profile</button></div></div>
+             <div class="glass-card">
+               <h2>Profile Settings</h2>
+               <p class="sub-p" style="margin-bottom: 32px;">Manage your professional identity and workspace configuration.</p>
+
+               <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 48px;">
+                 <div>
+                   <div style="margin-bottom:24px">
+                     <label class="form-label">PROFESSIONAL NAME</label>
+                     <input type="text" id="settingsName" class="input-field" placeholder="Your Name">
+                   </div>
+
+                   <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 20px; margin-bottom: 24px;">
+                     <div>
+                       <label class="form-label">ACCOUNT TYPE</label>
+                       <select id="settingsAccountType" class="input-field" style="appearance:none; cursor:pointer">
+                         <option value="individual">Individual</option>
+                         <option value="artisan">Artisan</option>
+                         <option value="merchant">Merchant</option>
+                         <option value="enterprise">Enterprise</option>
+                       </select>
+                     </div>
+                     <div>
+                       <label class="form-label">GENDER</label>
+                       <select id="settingsGender" class="input-field" style="appearance:none; cursor:pointer">
+                         <option value="male">Male</option>
+                         <option value="female">Female</option>
+                         <option value="non-binary">Non-Binary</option>
+                         <option value="prefer-not-to-say">Other</option>
+                       </select>
+                     </div>
+                   </div>
+
+                   <div style="margin-bottom:24px">
+                     <label class="form-label">COMPANY / BRAND</label>
+                     <input type="text" id="settingsCompany" class="input-field" placeholder="Savile Row">
+                   </div>
+
+                   <div style="margin-bottom:24px">
+                     <label class="form-label">BUSINESS ADDRESS</label>
+                     <input type="text" id="settingsAddress" class="input-field" placeholder="City, Country">
+                   </div>
+                 </div>
+
+                 <div>
+                   <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 20px; margin-bottom: 24px;">
+                     <div>
+                       <label class="form-label">COUNTRY</label>
+                       <input type="text" id="settingsCountry" class="input-field" placeholder="US">
+                     </div>
+                     <div>
+                       <label class="form-label">CURRENCY</label>
+                       <input type="text" id="settingsCurrency" class="input-field" placeholder="USD">
+                     </div>
+                   </div>
+
+                   <div style="margin-bottom:24px">
+                     <label class="form-label">INDUSTRY VERTICAL</label>
+                     <select id="settingsVertical" class="input-field" style="appearance:none; cursor:pointer">
+                        <option value="rtw">Ready-To-Wear</option>
+                        <option value="mtm">Made-To-Measure</option>
+                        <option value="bridal">Bridal & Tuxedo</option>
+                        <option value="custom">Custom Apparel</option>
+                        <option value="workwear">Workwear & Industrial</option>
+                     </select>
+                   </div>
+
+                   <div style="margin-bottom:24px">
+                     <label class="form-label">MEASUREMENT STANDARD</label>
+                     <select id="settingsStandard" class="input-field" style="appearance:none; cursor:pointer">
+                       <option value="standard">Standard Body Measurements</option>
+                       <option value="alvanon">Alvanon Sizing</option>
+                       <option value="custom">Custom Measurement Set</option>
+                     </select>
+                   </div>
+
+                   <div style="margin-bottom:32px">
+                     <label class="form-label">UNIT PREFERENCE</label>
+                     <div style="display:flex; gap: 12px;">
+                       <button id="setUnitMetric" class="btn-outline" style="flex:1" onclick="window.updateLocalUnit('metric')">Metric (cm)</button>
+                       <button id="setUnitImperial" class="btn-outline" style="flex:1" onclick="window.updateLocalUnit('imperial')">Imperial (in)</button>
+                     </div>
+                   </div>
+                 </div>
+               </div>
+
+               <button class="btn-primary" style="width:100%; height: 56px;" id="btnSaveSettings">Save Precision Profile</button>
+             </div>
+
              <div class="glass-card" style="margin-top:32px"><h3>API Access</h3><div style="background:rgba(0,0,0,0.3); border-radius:12px; padding:20px; border:1px solid var(--Glass-Border); display:flex; align-items:center; justify-content:space-between; gap:20px; margin-top:16px"><code id="apiKeyDisplay" style="font-family:monospace; color:var(--Mint); font-size:14px; word-break:break-all">********************************</code><button class="btn-outline" style="height:32px; font-size:10px; flex-shrink:0" onclick="window.copyApiKey()">Copy</button></div><button class="btn-outline" style="border-color:var(--Error); color:var(--Error); font-size:10px; margin-top:16px" id="btnRegenKey">Regenerate Key</button></div>
           </div>
         </section>
@@ -826,6 +913,18 @@ window.loadSettings = async () => {
         
         // Store API key for authenticated API calls
         currentApiKey = profile.api_key;
+
+        // HYDRATE ALL PROFILE FIELDS
+        if (document.getElementById('settingsAccountType')) document.getElementById('settingsAccountType').value = profile.account_type || 'merchant';
+        if (document.getElementById('settingsGender')) document.getElementById('settingsGender').value = profile.gender || 'male';
+        if (document.getElementById('settingsCompany')) document.getElementById('settingsCompany').value = profile.company_name || '';
+        if (document.getElementById('settingsAddress')) document.getElementById('settingsAddress').value = profile.business_address || '';
+        if (document.getElementById('settingsCountry')) document.getElementById('settingsCountry').value = profile.country_code || 'US';
+        if (document.getElementById('settingsCurrency')) document.getElementById('settingsCurrency').value = profile.currency || 'USD';
+        if (document.getElementById('settingsVertical')) document.getElementById('settingsVertical').value = profile.industry_vertical_id || 'rtw';
+        if (document.getElementById('settingsStandard')) document.getElementById('settingsStandard').value = profile.measurement_standard || 'standard';
+
+        if (profile.unit_preference) window.updateLocalUnit(profile.unit_preference);
 
         // SYNC WIDGET SETTINGS
         if (profile.widget_config) {
@@ -1161,15 +1260,42 @@ document.getElementById('scanForm').addEventListener('submit', async (e) => {
     };
 
     document.getElementById('btnSaveSettings').onclick = async () => {
-        const name = document.getElementById('settingsName').value;
+        const payload = {
+            full_name: document.getElementById('settingsName').value,
+            account_type: document.getElementById('settingsAccountType').value,
+            gender: document.getElementById('settingsGender').value,
+            company_name: document.getElementById('settingsCompany').value,
+            business_address: document.getElementById('settingsAddress').value,
+            country_code: document.getElementById('settingsCountry').value,
+            currency: document.getElementById('settingsCurrency').value,
+            industry_vertical_id: document.getElementById('settingsVertical').value,
+            measurement_standard: document.getElementById('settingsStandard').value,
+            unit_preference: window.LOCAL_UNIT_PREF || 'metric'
+        };
+
         const btn = document.getElementById('btnSaveSettings');
         btn.disabled = true;
+        btn.textContent = 'SYNCHRONIZING...';
+
         try {
-            const { error } = await window.KORRA_DB.from('profiles').update({ full_name: name }).eq('id', userId);
+            const { error } = await window.KORRA_DB.from('profiles').update(payload).eq('id', userId);
             if (error) throw error;
-            alert("Profile saved.");
+            window.showToast("Precision profile updated.");
         } catch (e) { alert("Save failed: " + e.message); }
-        finally { btn.disabled = false; }
+        finally { btn.disabled = false; btn.textContent = 'Save Precision Profile'; }
+    };
+
+    window.updateLocalUnit = (unit) => {
+        window.LOCAL_UNIT_PREF = unit;
+        const met = document.getElementById('setUnitMetric');
+        const imp = document.getElementById('setUnitImperial');
+        if (unit === 'metric') {
+            met.style.borderColor = 'var(--Mint)'; met.style.color = 'var(--Mint)';
+            imp.style.borderColor = 'var(--Glass-Border)'; imp.style.color = 'var(--White)';
+        } else {
+            imp.style.borderColor = 'var(--Mint)'; imp.style.color = 'var(--Mint)';
+            met.style.borderColor = 'var(--Glass-Border)'; met.style.color = 'var(--White)';
+        }
     };
 
     document.getElementById('btnRegenKey').onclick = async () => {
