@@ -80,8 +80,8 @@
   <style>
     /* --- UNIFIED HEADER SYSTEM --- */
     header {
-      width: 100%; height: 80px; display: flex; align-items: center; position: fixed; top: 0; z-index: 999999;
-      background: rgba(0, 0, 0, 0.8); backdrop-filter: blur(20px); border-bottom: 1px solid var(--Glass-Border); transition: all 0.3s ease;
+      width: 100%; height: 80px; display: flex; align-items: center; position: relative; z-index: 999999;
+      background: #000; border-bottom: 1px solid var(--Glass-Border);
     }
     header.scrolled { height: 64px; background: rgba(0, 0, 0, 0.95); }
     header .container { display: flex; align-items: center; justify-content: space-between; padding: 0; position: relative; }
@@ -159,7 +159,7 @@
     .section-desc { font-size: 18px; color: var(--Neutral-400); line-height: 1.6; margin-top: var(--S-24); max-width: 550px; font-weight: 500; }
 
 .hero { 
-      padding: 140px 0 400px; text-align: center; position: relative;
+      padding: 100px 0 400px; text-align: center; position: relative;
       background: linear-gradient(to bottom, rgba(255,255,255,0.15), rgba(255,255,255,0.05)), url('/assets/remote-tailoring-new.png');
       background-size: cover;
       background-position: center;
