@@ -133,7 +133,7 @@
         <!-- PHASE 1: CONTEXT (Welcome + Gender + Age) -->
         <div id="phase1" class="phase-container active">
           <div class="success-icon-wrap" style="width:140px; height:140px; margin-bottom:32px;">
-            <img src="/assets/handshake.png" alt="Front and side photo process using mobile 3D body scanning technology">
+<img src="/assets/handshake-new.png" alt="Front and side photo process using mobile 3D body scanning technology">
           </div>
           <h2>Unlock your pocket-sized fitting room.</h2>
           <p class="sub-p">Our smart digital body measurement solution will guide you through a quick front and side photo process to capture accurate body measurements.</p>
@@ -172,24 +172,24 @@
           <h2>Choose Your Path</h2>
           <p class="sub-p">Identify your role so we can personalize your dashboard tools and biometric logic.</p>
 
-          <div class="grid-options" style="margin-bottom: 48px;">
+<div class="grid-options" style="margin-bottom: 48px;">
             <div class="option-card" onclick="selectAccountType('individual', event)">
-              <div class="icon-wrap"><img src="/assets/user-profile.png" alt="Individual"></div>
+              <div class="icon-wrap"><img src="/assets/user-profile-new.png" alt="Individual"></div>
               <div class="title">Individual</div>
               <div class="desc">Personal Fit Profile & Global Digital Twin.</div>
             </div>
             <div class="option-card" onclick="selectAccountType('artisan', event)">
-              <div class="icon-wrap"><img src="/assets/scissors.png" alt="Artisan"></div>
+              <div class="icon-wrap"><img src="/assets/scissors-new.png" alt="Artisan"></div>
               <div class="title">Artisan</div>
               <div class="desc">Measurement Professional & Custom Tailor.</div>
             </div>
             <div class="option-card" onclick="selectAccountType('merchant', event)">
-              <div class="icon-wrap"><img src="/assets/shop.png" alt="Merchant"></div>
+              <div class="icon-wrap"><img src="/assets/shop-new.png" alt="Merchant"></div>
               <div class="title">Merchant</div>
               <div class="desc">Retailer, Boutique, or E-commerce Brand.</div>
             </div>
             <div class="option-card" onclick="selectAccountType('enterprise', event)">
-              <div class="icon-wrap"><img src="/assets/building.png" alt="Enterprise"></div>
+              <div class="icon-wrap"><img src="/assets/building-new.png" alt="Enterprise"></div>
               <div class="title">Enterprise</div>
               <div class="desc">Large Organization, Factory, or Institution.</div>
             </div>
@@ -217,8 +217,8 @@
 
         <!-- PHASE 3: GEOGRAPHIC & BUSINESS (Location + Company Details) -->
         <div id="phase3" class="phase-container">
-          <div class="success-icon-wrap" style="width:120px; height:120px; margin-bottom:32px;">
-            <img src="/assets/location.png" alt="Location">
+<div class="success-icon-wrap" style="width:120px; height:120px; margin-bottom:32px;">
+            <img src="/assets/location-new.png" alt="Location">
           </div>
           <h2>Regional Identity</h2>
           <p class="sub-p">Regional settings and compliance defaults. We'll synchronize your currency automatically.</p>
@@ -270,8 +270,8 @@
 
         <!-- PHASE 4: CONFIGURATION & PLAN (Units + Standard + Plan) -->
         <div id="phase4" class="phase-container">
-          <div class="success-icon-wrap" style="width:120px; height:120px; margin-bottom:32px;">
-            <img src="/assets/ruler.png" alt="Standards">
+<div class="success-icon-wrap" style="width:120px; height:120px; margin-bottom:32px;">
+            <img src="/assets/ruler-new.png" alt="Standards">
           </div>
           <h2>Measurement Standards</h2>
           <p class="sub-p">Set your default units and choose a plan that matches your monthly scanning requirements.</p>
@@ -295,10 +295,10 @@
           </div>
 
           <h4 class="form-label" style="margin-bottom: 24px;">Select Your Tier</h4>
-          <div class="grid-options" style="grid-template-columns: 1fr; margin-bottom: 40px;">
+<div class="grid-options" style="grid-template-columns: 1fr; margin-bottom: 40px;">
             <div class="option-card selected" onclick="selectPlan('starter', this)">
               <div style="display:flex; align-items:center; gap: 24px;">
-                <div class="icon-wrap" style="width:64px; height:64px;"><img src="/assets/rocket.png" alt="Starter"></div>
+                <div class="icon-wrap" style="width:64px; height:64px;"><img src="/assets/rocket-new.png" alt="Starter"></div>
                 <div style="flex:1">
                   <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:6px;">
                     <div class="title" style="margin-bottom:0">Starter</div>
@@ -310,7 +310,7 @@
             </div>
             <div class="option-card" onclick="selectPlan('pro', this)">
               <div style="display:flex; align-items:center; gap: 24px;">
-                <div class="icon-wrap" style="width:64px; height:64px;"><img src="/assets/crown.png" alt="Pro"></div>
+                <div class="icon-wrap" style="width:64px; height:64px;"><img src="/assets/crown-new.png" alt="Pro"></div>
                 <div style="flex:1">
                   <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:6px;">
                     <div class="title" style="margin-bottom:0">Pro</div>
@@ -322,7 +322,7 @@
             </div>
             <div class="option-card" onclick="selectPlan('business', this)">
               <div style="display:flex; align-items:center; gap: 24px;">
-                <div class="icon-wrap" style="width:64px; height:64px;"><img src="/assets/diamond.png" alt="Business"></div>
+                <div class="icon-wrap" style="width:64px; height:64px;"><img src="/assets/diamond-new.png" alt="Business"></div>
                 <div style="flex:1">
                   <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:6px;">
                     <div class="title" style="margin-bottom:0">Business</div>
@@ -659,21 +659,89 @@
       else { userData.selected_sub_specialties.push(s); el.classList.add('selected'); }
     }
 
-    (async () => {
+// Handle OAuth callback with retry logic for profile creation
+    async function initSession() {
       try {
-          const { data: { session } } = await KORRA_CORE.auth.getSession();
-          if (!session) return window.location.href = '/signin?next=/onboarding';
-          if (!session.user.email_confirmed_at) return window.location.href = '/verify';
-
-          const { data: profile } = await KORRA_CORE.from('profiles').select('*').eq('id', session.user.id).single();
-          if (profile) {
-            Object.keys(userData).forEach(k => { if (profile[k]) userData[k] = profile[k]; });
-            if (profile.onboarding_phase > 0 && profile.onboarding_phase < 5) showPhase(profile.onboarding_phase);
+        const { data: { session }, error: sessionError } = await KORRA_CORE.auth.getSession();
+        
+        if (sessionError) {
+          console.error("Session error:", sessionError);
+          return window.location.href = '/signin?next=/onboarding';
+        }
+        
+        if (!session) {
+          // Check if there's a pending OAuth session in URL hash
+          const hashParams = new URLSearchParams(window.location.hash.substring(1));
+          if (hashParams.has('access_token') || hashParams.has('code')) {
+            // OAuth just completed - give Supabase time to process
+            await new Promise(r => setTimeout(r, 2000));
+            const retrySession = await KORRA_CORE.auth.getSession();
+            if (retrySession.data.session) {
+              return handleValidSession(retrySession.data.session);
+            }
           }
-          fetchCountries();
-          fetchVerticals();
-      } catch(e) {}
-    })();
+          return window.location.href = '/signin?next=/onboarding';
+        }
+        
+        // Check email verification (skip for OAuth providers like Google)
+        const hasOAuthProvider = session.user.app_metadata?.provider === 'google' || 
+                                  session.user.app_metadata?.provider === 'github';
+        if (!session.user.email_confirmed_at && !hasOAuthProvider) {
+          return window.location.href = '/verify';
+        }
+        
+        return handleValidSession(session);
+      } catch(e) {
+        console.error("Init session error:", e);
+        return window.location.href = '/signin?next=/onboarding';
+      }
+    }
+    
+    async function handleValidSession(session) {
+      const user = session.user;
+      
+      // Retry profile fetch with backoff - handles race condition with Auth triggers
+      let profile = null;
+      for (let attempt = 0; attempt < 5; attempt++) {
+        const { data, error } = await KORRA_CORE.from('profiles').select('*').eq('id', user.id).single();
+        if (!error && data) {
+          profile = data;
+          break;
+        }
+        // Wait before retry: 500ms, 1s, 2s, 4s (exponential backoff)
+        await new Promise(r => setTimeout(r, 500 * Math.pow(2, attempt)));
+      }
+      
+      // If still no profile, create a basic one (handles Auth trigger race condition)
+      if (!profile) {
+        console.warn("Profile not found after retries, creating basic profile...");
+        const { error: insertError } = await KORRA_CORE.from('profiles').insert({
+          id: user.id,
+          email: user.email,
+          full_name: user.user_metadata?.full_name || user.user_metadata?.name || '',
+          account_type: 'individual',
+          onboarding_completed_at: null,
+          onboarding_phase: 1
+        });
+        
+        if (!insertError) {
+          // Fetch the newly created profile
+          const { data: newProfile } = await KORRA_CORE.from('profiles').select('*').eq('id', user.id).single();
+          profile = newProfile;
+        }
+      }
+      
+      if (profile) {
+        Object.keys(userData).forEach(k => { if (profile[k]) userData[k] = profile[k]; });
+        if (profile.onboarding_phase > 0 && profile.onboarding_phase < 5) showPhase(profile.onboarding_phase);
+      }
+      
+      fetchCountries();
+      fetchVerticals();
+    }
+    
+    // Initialize on page load
+    initSession();
   </script>
 </body>
 </html>
