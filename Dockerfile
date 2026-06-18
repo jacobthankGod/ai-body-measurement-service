@@ -2,7 +2,6 @@
 FROM python:3.11-slim
 
 # Install system dependencies for OpenCV, MediaPipe, and TensorFlow
-# Added build-essential and python3-dev for potential C extensions in legacy packages
 RUN apt-get update && apt-get install -y \
     build-essential \
     python3-dev \
@@ -21,7 +20,7 @@ WORKDIR /app
 # Upgrade pip to ensure the latest dependency resolver is used
 RUN pip install --no-cache-dir --upgrade pip setuptools wheel
 
-# Pre-install numpy and build chumpy without isolation to fix "ModuleNotFoundError: No module named 'pip'"
+# Pre-install numpy and build chumpy without isolation
 RUN pip install --no-cache-dir numpy==1.26.3
 RUN pip install --no-cache-dir chumpy==0.70 --no-build-isolation
 
@@ -32,13 +31,10 @@ RUN pip install --no-cache-dir -r requirements.txt
 # Copy the rest of the application
 COPY . .
 
-# Set environment variables
+# Environment variables for Cloud Run
 ENV PORT=8080
 ENV PYTHONUNBUFFERED=1
 
-# Expose the port
-EXPOSE 8080
-
 # Command to run the application
-# We use 1 worker and 4 threads for Cloud Run efficiency
-CMD ["python", "-m", "uvicorn", "api.main:app", "--host", "0.0.0.0", "--port", "8080", "--workers", "1"]
+# We use the dynamic PORT variable provided by Cloud Run
+CMD ["sh", "-c", "uvicorn api.main:app --host 0.0.0.0 --port ${PORT} --workers 1"]
