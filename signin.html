@@ -51,7 +51,7 @@
 
     .logo-area { display: flex; align-items: center; gap: 12px; margin-bottom: 48px; text-decoration: none; color: inherit; }
     .logo-mark { width: 32px; height: 32px; border-radius: 8px; background: var(--Mint); transform: rotate(-8deg); }
-    .logo-text { font-size: 20px; font-weight: 900; letter-spacing: -0.05em; }
+.logo-text { font-size: 20px; font-weight: 900; letter-spacing: -0.05em; }
 
     h2 { font-size: 32px; font-weight: 800; margin-bottom: 12px; letter-spacing: -0.03em; }
     .sub-p { color: var(--Neutral-400); margin-bottom: 40px; font-size: 15px; }
@@ -69,6 +69,18 @@
       border-radius: 12px; font-size: 13px; font-weight: 800; cursor: pointer; transition: 0.2s;
     }
     .btn:hover { background: #6effeb; transform: translateY(-1px); }
+
+    .btn-google {
+      width: 100%; height: 52px; background: #fff; color: #333; border: none;
+      border-radius: 12px; font-size: 13px; font-weight: 600; cursor: pointer; transition: 0.2s;
+      display: flex; align-items: center; justify-content: center; gap: 12px; margin-bottom: 16px;
+    }
+    .btn-google:hover { background: #f5f5f5; transform: translateY(-1px); }
+    .btn-google svg { width: 20px; height: 20px; }
+
+    .divider { display: flex; align-items: center; margin: 24px 0; color: var(--Neutral-400); font-size: 12px; }
+    .divider::before, .divider::after { content: ''; flex: 1; height: 1px; background: var(--Glass-Border); }
+    .divider span { padding: 0 16px; }
 
     .switch-link { display: block; text-align: center; margin-top: 24px; font-size: 13px; color: var(--Neutral-400); text-decoration: none; transition: 0.2s; }
     .switch-link span { color: var(--Mint); font-weight: 700; }
@@ -89,13 +101,26 @@
     <!-- RIGHT: FORM PANEL -->
     <div class="form-panel">
       <div class="form-container">
-        <a href="/" class="logo-area">
+<a href="/" class="logo-area">
           <div class="logo-mark"></div>
           <div class="logo-text">KORRA</div>
         </a>
 
         <h2>Sign In</h2>
         <p class="sub-p">Identify yourself to enter the command center.</p>
+
+        <!-- Google OAuth Button -->
+        <button type="button" class="btn-google" id="btnGoogleSignIn">
+          <svg viewBox="0 0 48 48" xmlns="http://www.w3.org/2000/svg">
+            <path fill="#4285F4" d="M45.12 24.5c0-2.6-2.1-4.7-4.7-4.7H24v8.4h11.8c-.5 2.7-2 5-4.3 6.6l6.6 5.1c3.8-3.5 6.2-8.7 6.2-15.4z"/>
+            <path fill="#34A853" d="M24 46c5.4 0 9.9-1.8 13.2-4.8l-6.6-5.1c-2 .8-4.5 1.3-6.6 1.3-5.1 0-9.4-3.4-11-8H2v5.3c3.4 6.6 8.2 12.3 14.5 12.3 3.6 0 6.9-.9 9.5-2.5l-2-1.8z"/>
+            <path fill="#FBBC05" d="M13 28.9c.3-.8.5-1.7.5-2.9s-.2-2.1-.5-2.9V18H2c-1.2 2.4-1.9 5-.1 7.4l7.9-4.5z"/>
+            <path fill="#EA4335" d="M24 10.3c3.1 0 5.8 1.1 7.9 3.1l4.3-4.3C35.6 5.1 30.3 2 24 2 17.7 2 12.5 5.7 9.5 12.3l7.9 6.1c1.6-4.6 5.9-8 8.6-8z"/>
+          </svg>
+          Continue with Google
+        </button>
+
+        <div class="divider"><span>or</span></div>
 
         <form id="signInForm">
           <div class="form-group">
@@ -111,7 +136,7 @@
 
         <a href="/signup" class="switch-link">Don't have an account? <span>Sign Up</span></a>
       </div>
-    </div>
+</div>
   </div>
 
   <script>
@@ -128,6 +153,32 @@
           supabaseKey: 'sb_publishable_miCOIXHtlxLkfDgpwE0N-g_BA1Q-x8y'
         };
         const supabase = window.supabase.createClient(config.supabaseUrl, config.supabaseKey);
+
+        // Google OAuth Sign-In Handler
+        document.getElementById('btnGoogleSignIn').addEventListener('click', async () => {
+          const btn = document.getElementById('btnGoogleSignIn');
+          btn.disabled = true;
+          btn.textContent = 'Connecting to Google...';
+
+          try {
+            const { data, error } = await supabase.auth.signInWithOAuth({
+              provider: 'google',
+              options: {
+                redirectTo: window.location.origin + '/onboarding'
+              }
+            });
+
+            if (error) {
+              alert(error.message);
+              btn.disabled = false;
+              btn.innerHTML = `<svg viewBox="0 0 48 48" xmlns="http://www.w3.org/2000/svg"><path fill="#4285F4" d="M45.12 24.5c0-2.6-2.1-4.7-4.7-4.7H24v8.4h11.8c-.5 2.7-2 5-4.3 6.6l6.6 5.1c3.8-3.5 6.2-8.7 6.2-15.4z"/><path fill="#34A853" d="M24 46c5.4 0 9.9-1.8 13.2-4.8l-6.6-5.1c-2 .8-4.5 1.3-6.6 1.3-5.1 0-9.4-3.4-11-8H2v5.3c3.4 6.6 8.2 12.3 14.5 12.3 3.6 0 6.9-.9 9.5-2.5l-2-1.8z"/><path fill="#FBBC05" d="M13 28.9c.3-.8.5-1.7.5-2.9s-.2-2.1-.5-2.9V18H2c-1.2 2.4-1.9 5-.1 7.4l7.9-4.5z"/><path fill="#EA4335" d="M24 10.3c3.1 0 5.8 1.1 7.9 3.1l4.3-4.3C35.6 5.1 30.3 2 24 2 17.7 2 12.5 5.7 9.5 12.3l7.9 6.1c1.6-4.6 5.9-8 8.6-8z"/></svg> Continue with Google`;
+            }
+          } catch (err) {
+            alert('Google sign-in failed. Please try again.');
+            btn.disabled = false;
+            btn.innerHTML = `<svg viewBox="0 0 48 48" xmlns="http://www.w3.org/2000/svg"><path fill="#4285F4" d="M45.12 24.5c0-2.6-2.1-4.7-4.7-4.7H24v8.4h11.8c-.5 2.7-2 5-4.3 6.6l6.6 5.1c3.8-3.5 6.2-8.7 6.2-15.4z"/><path fill="#34A853" d="M24 46c5.4 0 9.9-1.8 13.2-4.8l-6.6-5.1c-2 .8-4.5 1.3-6.6 1.3-5.1 0-9.4-3.4-11-8H2v5.3c3.4 6.6 8.2 12.3 14.5 12.3 3.6 0 6.9-.9 9.5-2.5l-2-1.8z"/><path fill="#FBBC05" d="M13 28.9c.3-.8.5-1.7.5-2.9s-.2-2.1-.5-2.9V18H2c-1.2 2.4-1.9 5-.1 7.4l7.9-4.5z"/><path fill="#EA4335" d="M24 10.3c3.1 0 5.8 1.1 7.9 3.1l4.3-4.3C35.6 5.1 30.3 2 24 2 17.7 2 12.5 5.7 9.5 12.3l7.9 6.1c1.6-4.6 5.9-8 8.6-8z"/></svg> Continue with Google`;
+          }
+        });
 
         document.getElementById('signInForm').addEventListener('submit', async (e) => {
           e.preventDefault();
