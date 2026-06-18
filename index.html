@@ -176,15 +176,17 @@
       text-shadow: 0 2px 10px rgba(0,0,0,0.5);
     }
 
-      width: 100%; max-width: 1300px; margin: 0 auto 120px;
+    .hero-visual {
+      width: 100%; max-width: 1100px; margin: 64px auto 0;
       position: relative; display: flex; flex-direction: row; align-items: center; justify-content: center; gap: 40px;
-      padding: 40px 0; background: transparent;
+      padding: 0; background: transparent;
     }
-    .hero-visual img { width: 45%; height: auto; object-fit: contain; border-radius: 24px; background: transparent; border: 1px solid var(--Glass-Border); box-shadow: 0 40px 100px rgba(0,0,0,0.5); }
+    .hero-visual img { width: 100%; height: auto; object-fit: contain; border-radius: 24px; background: transparent; border: 1px solid var(--Glass-Border); box-shadow: 0 40px 100px rgba(0,0,0,0.5); }
 
 .hero-cta-card {
-        width: 100%; max-width: 1000px; margin: 120px auto 0; background: #000; border: 1px solid var(--Mint); border-radius: 24px;
-        padding: var(--S-48) var(--S-64); display: flex; align-items: center; justify-content: space-between; text-align: left; position: relative; box-shadow: 0 40px 100px rgba(0,0,0,0.5);
+        width: 100%; max-width: 1000px; margin: -100px auto 0; background: #000; border: 1px solid var(--Mint); border-radius: 24px;
+        padding: var(--S-48) var(--S-64); display: flex; align-items: center; justify-content: space-between; text-align: left; position: relative; box-shadow: 0 40px 100px rgba(0,0,0,0.8);
+        z-index: 20;
     }
     .hero-cta-card h3 { font-size: 32px; font-weight: 900; margin: 0; color: #fff; line-height: 1.05; text-shadow: 0 2px 10px rgba(0,0,0,0.5); }
 
@@ -375,13 +377,12 @@
          <div style="text-align:center"><div style="font-size:32px; font-weight:900; color:var(--Mint)">10k+</div><div style="font-size:11px; font-weight:900; opacity:0.5; text-transform:uppercase">daily users</div></div>
          <div style="text-align:center"><div style="font-size:32px; font-weight:900; color:var(--Mint)">Shared</div><div style="font-size:11px; font-weight:900; opacity:0.5; text-transform:uppercase">size profile</div></div>
       </div>
-</div>
-<div class="hero-visual">
-      <img src="/assets/remote-tailoring.png" alt="Remote Tailoring - KORRA AI Body Measurement" title="KORRA Remote Tailoring" style="width:100%; max-width:900px;">
-    </div>
-    <div class="container">
+      <div class="hero-visual">
+        <img src="/assets/remote-tailoring.png" alt="Remote Tailoring - KORRA AI Body Measurement" title="KORRA Remote Tailoring">
+      </div>
+
       <div class="hero-cta-card">
-<div>
+        <div>
           <h3>Stop guessing. Start fitting.</h3>
           <div style="display:flex; flex-direction:column; gap:8px; margin-top:16px; text-shadow: 0 2px 10px rgba(0,0,0,0.5);">
             <span style="font-size:14px; color:var(--Neutral-400)">✓ Scan once. Fit everywhere.</span>
