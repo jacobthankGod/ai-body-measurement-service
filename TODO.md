@@ -1,40 +1,23 @@
-# TODO.md - User Onboarding Implementation
+# TODO: Replace Google Logo in Sign Up and Sign In Pages
 
-## Status: IN PROGRESS
+## Task: Replace the Google logo SVG in the "continue with Google" buttons with the new logo file `Google__G__logo.svg.webp`
 
-### ✅ AUDIT COMPLETED
-- [x] USER_ONBOARDING_PLAN.sql - 7 verticals, relational schema
-- [x] INDUSTRY_VERTICALS_REFERENCE.md - Updated to new schema
+### Steps:
+1. [x] Replace inline SVG in signup.html (btnGoogleSignUp button)
+2. [x] Replace inline SVG in signin.html (btnGoogleSignIn button)
+3. [x] Verify changes are complete
 
-### PHASES (8)
+### Details:
+- File locations:
+  - signup.html: Button ID `btnGoogleSignUp`
+  - signin.html: Button ID `btnGoogleSignIn`
+- New logo to use: `/assets/Google__G__logo.svg.webp`
 
-#### Phase 1: Welcome & Orientation
-- ⏳ PENDING - Create onboarding.html entry point
+### Changes Made:
+1. **signup.html**:
+   - Replaced inline SVG in HTML button with `<img src="/assets/Google__G__logo.svg.webp" alt="Google" style="width:20px;height:20px;">`
+   - Updated JavaScript error handlers to use new image logo
 
-#### Phase 2: Account Type Confirmation
-- ⏳ PENDING - 4 account type cards
-
-#### Phase 3: Geographic Context
-- ⏳ PENDING - Country/region selector
-
-#### Phase 4: Business Profile
-- ⏳ PENDING - Business details (skip for Individual)
-
-#### Phase 5: Industry Context
-- ⏳ PENDING - Industry selector (7 verticals)
-
-#### Phase 6: Measurement Preferences
-- ⏳ PENDING - Metric/Imperial toggle
-
-#### Phase 7: Subscription Tier  
-- ⏳ PENDING - Plan selection
-
-#### Phase 8: Completion & Success
-- ⏳ PENDING - Dashboard redirect
-
----
-
-## DEPENDENCIES COMPLETE
-- [x] USER_ONBOARDING_PLAN.sql
-- [x] INDUSTRY_VERTICALS_REFERENCE.md
-- [ ] Database tables (run SQL)
+2. **signin.html**:
+   - Replaced inline SVG in HTML button with `<img src="/assets/Google__G__logo.svg.webp" alt="Google" style="width:20px;height:20px;">`
+   - Updated JavaScript error handlers to use new image logo

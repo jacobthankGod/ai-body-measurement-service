@@ -64,8 +64,14 @@ FEATURES = {
 # CORS settings
 CORS_ORIGINS = os.environ.get(
     'CORS_ORIGINS', 
-    'http://localhost:3000,http://localhost:5001'
+    'http://localhost:3000,http://localhost:5001,https://korra.work'
 ).split(',')
+
+# Brevo (formerly Sendinblue) Configuration
+BREVO_API_KEY = os.environ.get('BREVO_API_KEY', '')
+BREVO_FROM_EMAIL = os.environ.get('BREVO_FROM_EMAIL', 'hello@korra.work')
+BREVO_FROM_NAME = os.environ.get('BREVO_FROM_NAME', 'KORRA AI')
+
 
 # Maximum function duration (Vercel Pro limit)
 MAX_FUNCTION_DURATION = int(os.environ.get('MAX_FUNCTION_DURATION', '60'))

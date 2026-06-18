@@ -275,7 +275,7 @@ const email = document.getElementById('upEmail').value;
             password,
 options: {
               data: metadata,
-              emailRedirectTo: redirectUrl
+              emailRedirectTo: window.location.origin + '/onboarding'
             }
           });
 

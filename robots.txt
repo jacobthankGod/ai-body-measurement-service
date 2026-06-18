@@ -1,10 +1,5 @@
-# PrecisionFit 3D AI Engine - Robots.txt
 User-agent: *
 Allow: /
-Allow: /index.html
-Allow: /docs/
-Disallow: /api/
-Disallow: /middleware/
-Disallow: /data/
 
-Sitemap: https://korra-436814609100.us-central1.run.app/sitemap.xml
+Sitemap: https://korra.work/sitemap.xml
+Host: https://korra.work
