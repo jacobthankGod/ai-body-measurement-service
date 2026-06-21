@@ -56,8 +56,28 @@
     <h2>Verification Successful</h2>
     <p class="sub-p">Your account is now ready. Let's finish setting up your profile so you can start scanning.</p>
 
-    <a href="/onboarding" class="btn">Enter Onboarding</a>
+    <a href="/onboarding" class="btn" id="btnNext">Enter Onboarding</a>
   </div>
 
+  <script>
+    // AUTOMATIC DOMAIN REDIRECTION
+    // If the user lands on the IP address, redirect them to the secure domain
+    // while keeping the hash (access_token) intact.
+    (function() {
+      const DOMAIN = 'korra.work';
+      if (window.location.hostname !== DOMAIN && window.location.hostname !== 'www.' + DOMAIN) {
+        console.log("Redirecting to secure production domain...");
+        const newUrl = 'https://' + DOMAIN + window.location.pathname + window.location.search + window.location.hash;
+        window.location.replace(newUrl);
+      }
+
+      // Handle the 'next' parameter if present
+      const params = new URLSearchParams(window.location.search);
+      const next = params.get('next');
+      if (next) {
+        document.getElementById('btnNext').href = next;
+      }
+    })();
+  </script>
 </body>
 </html>

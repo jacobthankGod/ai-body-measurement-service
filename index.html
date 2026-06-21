@@ -125,19 +125,53 @@
     .mobile-close-hint { position: absolute; bottom: 40px; font-size: 10px; font-weight: 800; color: var(--Neutral-500); text-transform: uppercase; letter-spacing: 0.2em; }
 
     :root {
-      /* PERFECTED COLORS - DO NOT TOUCH */
-      --Obsidian: #000000; --Mint: #57D7C0; --Teal-900: #002D2A; --Glass: rgba(255, 255, 255, 0.04);
-      --Glass-Border: rgba(255, 255, 255, 0.1); --Neutral-400: #A3A3A3; --Neutral-500: #737373; --White: #FFFFFF; --Error: #D63031;
+      /* UNICORN LUXURY PALETTE */
+      --Obsidian-Deep: #050505;
+      --Obsidian-Layer: #0B0B0C;
+      --Accent-Teal: #57D7C0;
+      --Accent-Gold: #FFC247;
+      --Surface-Soft: #171717;
+      --Glass-Border: rgba(255, 255, 255, 0.08);
+
+      /* ELEVATION SYSTEM */
+      --Elev-1: 0 4px 20px rgba(0,0,0,0.4);
+      --Elev-2: 0 12px 40px rgba(0,0,0,0.6);
+      --Elev-3: 0 24px 80px rgba(0,0,0,0.8);
+
+      /* LEGACY COMPATIBILITY */
+      --Obsidian: var(--Obsidian-Deep); --Mint: var(--Accent-Teal); --Teal-900: #002D2A; --Glass: rgba(255, 255, 255, 0.04);
+      --Neutral-400: #A3A3A3; --Neutral-500: #737373; --White: #FFFFFF; --Error: #D63031;
       --S-8: 8px; --S-16: 16px; --S-24: 24px; --S-32: 32px; --S-48: 48px; --S-64: 64px; --S-80: 80px; --S-120: 120px; --S-160: 160px; --S-200: 200px;
       --Radius-M: 12px; --Radius-L: 20px; --Radius-XL: 999px;
     }
 
     * { box-sizing: border-box; -webkit-font-smoothing: antialiased; margin: 0; padding: 0; }
-    html, body { height: 100%; background: var(--Obsidian); color: var(--White); font-family: 'Inter', sans-serif; overflow-x: hidden; }
+    html, body {
+      height: 100%;
+      background: var(--Obsidian-Deep);
+      color: var(--White);
+      font-family: 'Inter', sans-serif;
+      overflow-x: hidden;
+      letter-spacing: 0.01em; /* Typography Mastery: Subtext tracking */
+    }
 
-    ::-webkit-scrollbar { width: 6px; }
-    ::-webkit-scrollbar-track { background: var(--Obsidian); }
-    ::-webkit-scrollbar-thumb { background: var(--Glass-Border); border-radius: 99px; }
+    h1, h2, h3, h4, h5, h6 {
+      letter-spacing: -0.02em; /* Typography Mastery: Heading tracking */
+      font-weight: 800;
+    }
+
+    /* CUSTOM SCROLLBARS: Glass 2.0 Style */
+    ::-webkit-scrollbar { width: 4px; }
+    ::-webkit-scrollbar-track { background: transparent; }
+    ::-webkit-scrollbar-thumb {
+      background: transparent;
+      border-radius: 10px;
+      transition: background 0.3s;
+    }
+    body:hover ::-webkit-scrollbar-thumb {
+      background: rgba(87, 215, 192, 0.2);
+    }
+    ::-webkit-scrollbar-thumb:hover { background: var(--Accent-Teal) !important; }
 
     .container { width: 100%; max-width: 1200px; margin: 0 auto; padding: 0 var(--S-48); position: relative; }
     .container-wide { width: 100%; max-width: 1440px; margin: 0 auto; padding: 0 var(--S-48); position: relative; }
@@ -159,29 +193,51 @@
     .section-desc { font-size: 18px; color: var(--Neutral-400); line-height: 1.6; margin-top: var(--S-24); max-width: 550px; font-weight: 500; }
 
 .hero { 
-      padding: 64px 0 540px; text-align: center; position: relative;
-      background: linear-gradient(to bottom, rgba(255,255,255,0.15), rgba(255,255,255,0.05)), url('/assets/remote-tailoring-new.png');
+      padding: 20px 0 100px; text-align: center; position: relative;
+      background: linear-gradient(to bottom, rgba(0,0,0,0.85), rgba(0,0,0,0.5)), url('/assets/remote-tailoring-new.png');
       background-size: cover;
-      background-position: center bottom;
+      background-position: center center;
+      display: flex; align-items: flex-start; justify-content: center; min-height: 90vh;
+    }
+    @media (max-width: 900px) {
+      .hero {
+        padding: 0;
+        background: #000;
+        min-height: auto;
+        display: flex;
+        flex-direction: column;
+      }
+      .hero-content { order: 2; padding: 40px 24px 60px; }
+      .hero-visual-mobile { order: 1; display: block; width: 100%; margin-bottom: 0; line-height: 0; }
+      .hero-visual-mobile img { width: 100%; height: auto; border-radius: 0; border: none; box-shadow: none; }
     }
 .hero-headline {
-      font-size: clamp(28px, 3.5vw, 44px); font-weight: 900; line-height: 1.1; letter-spacing: -0.05em;
-      margin: 0 auto var(--S-24); color: #000; text-align: center; max-width: 800px;
+      font-size: clamp(32px, 5vw, 64px); font-weight: 900; line-height: 1.05; letter-spacing: -0.05em;
+      margin: 0 auto var(--S-24); color: #fff; text-align: center; max-width: 900px;
+      position: relative; z-index: 10;
     }
     .hero-sub {
-      font-size: clamp(16px, 1.8vw, 20px); color: #000;
-      max-width: 700px; margin: 0 auto;
-      line-height: 1.5; text-align: center; display: block;
-      font-weight: 700;
+      font-size: clamp(16px, 2vw, 20px); color: #FFFFFF !important;
+      max-width: 750px; margin: 0 auto 48px;
+      line-height: 1.6; text-align: center; display: block;
+      font-weight: 500;
       letter-spacing: -0.01em;
+      position: relative; z-index: 10;
+      opacity: 1 !important;
     }
 
     .hero-visual {
-      width: 100%; max-width: 1100px; margin: 64px auto 0;
+      width: 100%; max-width: 1100px; margin: 48px auto 0;
       position: relative; display: flex; flex-direction: row; align-items: center; justify-content: center; gap: 40px;
       padding: 0; background: transparent;
     }
+    .hero-visual-mobile { display: none; }
+    @media (max-width: 900px) {
+       .hero-visual { display: none; }
+    }
     .hero-visual img { width: 100%; height: auto; object-fit: contain; border-radius: 24px; background: transparent; border: 1px solid var(--Glass-Border); box-shadow: 0 40px 100px rgba(0,0,0,0.5); }
+
+    .hero-actions { display: flex; gap: 16px; justify-content: center; align-items: center; }
 
 .hero-cta-card {
         width: 100%; max-width: 1000px; margin: 0 auto; background: #000; border: 1px solid var(--Mint); border-radius: 24px;
@@ -216,6 +272,24 @@
     }
     .mosaic-title { font-size: 11px; font-weight: 900; color: var(--Mint); letter-spacing: 0.1em; text-transform: uppercase; margin-bottom: 8px; }
     .mosaic-desc { font-size: 20px; font-weight: 800; color: #fff; line-height: 1.1; }
+
+    /* STARTUP ANIMATIONS */
+    .reveal { opacity: 0; transform: translateY(30px); transition: 0.8s cubic-bezier(0.2, 0.8, 0.2, 1); }
+    .reveal.active { opacity: 1; transform: translateY(0); }
+
+    .reveal-left { opacity: 0; transform: translateX(-40px); transition: 1s cubic-bezier(0.2, 0.8, 0.2, 1); }
+    .reveal-left.active { opacity: 1; transform: translateX(0); }
+
+    .reveal-right { opacity: 0; transform: translateX(40px); transition: 1s cubic-bezier(0.2, 0.8, 0.2, 1); }
+    .reveal-right.active { opacity: 1; transform: translateX(0); }
+
+    .reveal-scale { opacity: 0; transform: scale(0.95); transition: 0.8s cubic-bezier(0.2, 0.8, 0.2, 1); }
+    .reveal-scale.active { opacity: 1; transform: scale(1); }
+
+    .stagger-1 { transition-delay: 0.1s; }
+    .stagger-2 { transition-delay: 0.2s; }
+    .stagger-3 { transition-delay: 0.3s; }
+    .stagger-4 { transition-delay: 0.4s; }
 
     .final-banner {
       background: linear-gradient(135deg, var(--Teal-900), #000); border-radius: 24px; padding: var(--S-64) var(--S-80);
@@ -333,7 +407,7 @@
       </a>
 
       <nav class="main-nav">
-        <a href="/#technology">Technology</a>
+        <a href="/#technology">How it works</a>
         <a href="/casestudies.html">Success Stories</a>
         <a href="/about.html">About</a>
         <a href="/impact.html">Our Mission</a>
@@ -357,27 +431,34 @@
 
   <div class="mobile-menu" id="mobileMenu">
     <button class="mobile-close-btn" onclick="toggleMenu()">×</button>
-    <a href="/#technology" onclick="toggleMenu()">Technology</a>
-    <a href="/casestudies.html">Success Stories</a>
-    <a href="/about.html">About KORRA</a>
-    <a href="/impact.html">Our Mission</a>
-    <a href="/signin.html">Merchant Portal</a>
+    <a href="/#technology" onclick="toggleMenu()">How it works</a>
+    <a href="/casestudies.html" onclick="toggleMenu()">Success Stories</a>
+    <a href="/about.html" onclick="toggleMenu()">About KORRA</a>
+    <a href="/impact.html" onclick="toggleMenu()">Our Mission</a>
+    <a href="/signin.html" onclick="toggleMenu()">Merchant Portal</a>
     <div style="width:100%; height:1px; background:var(--Glass-Border); margin:16px 0"></div>
     <a href="/signup.html" class="btn btn-primary" style="width:100%; height:64px; font-size:16px">Sign Up Now</a>
     <div class="mobile-close-hint">Tap Hamburger to Close</div>
   </div>
   <section class="hero" id="home">
-    <div class="container">
+    <div class="hero-visual-mobile">
+        <img src="/assets/remote-tailoring-new.png" alt="KORRA AI Body Scan">
+    </div>
+    <div class="container hero-content">
       <h1 class="hero-headline">Perfect fit for remote tailoring, powered by your phone.</h1>
-      <p class="hero-sub">Get accurate body measurements in 60 seconds. Create a digital size profile you can share with any tailor or brand worldwide. KORRA eliminates the guesswork, ensuring your clothes fit perfectly the first time.</p>
+      <p class="hero-sub">Get accurate body measurements in 60 seconds. Create a digital size profile you can share with any tailor or brand worldwide. KORRA ensures your clothes fit perfectly the first time.</p>
+      <div class="hero-actions">
+        <a href="/signup.html" class="btn btn-primary btn-large">Get Measured Now</a>
+        <a href="#technology" class="btn btn-outline btn-large">How it works</a>
+      </div>
     </div>
   </section>
 
   <!-- SECTION 1: THE CORE PROBLEM -->
-  <section class="block">
+  <section class="block reveal">
     <div class="container-wide">
       <div class="grid-impact">
-        <div>
+        <div class="reveal-left">
           <div class="section-eyebrow">The Problem</div>
           <h2 class="section-title">Remote ordering still runs on guesswork.</h2>
           <p class="section-desc">
@@ -386,7 +467,7 @@
             For tailors, it means wasted time. For customers, it means disappointment. KORRA solves this by creating one reliable standard for fit.
           </p>
         </div>
-        <div class="glass-card image-card">
+        <div class="glass-card image-card reveal-right">
           <img src="/assets/Remote apparel still runs on guesswork..png" alt="Remote apparel guesswork - Mobile Tailor solves fit issues" title="Industrial Measurement Errors">
         </div>
       </div>
@@ -396,7 +477,7 @@
   <!-- SECTION 2: THE FRUSTRATION LOOP -->
   <section class="block" style="background:rgba(255,255,255,0.01)">
     <div class="container-wide">
-      <div class="frustration-header" style="display:flex; justify-content:space-between; align-items:flex-end; margin-bottom:var(--S-64)">
+      <div class="frustration-header reveal" style="display:flex; justify-content:space-between; align-items:flex-end; margin-bottom:var(--S-64)">
         <div style="max-width:700px">
           <div class="section-eyebrow">The Frustration Loop</div>
           <h2 class="section-title">The cost of bad measurements adds up fast.</h2>
@@ -405,15 +486,15 @@
         <a class="btn btn-primary btn-frustration" href="/signup.html">Sign Up Now</a>
       </div>
       <div class="grid-3">
-         <div class="glass-card">
+         <div class="glass-card reveal stagger-1">
             <h4 style="color:var(--Mint); font-size:18px; font-weight:900; margin-bottom:16px">Fit still goes wrong</h4>
             <p style="font-size:14px; color:var(--Neutral-400); line-height:1.5">Even when measurements are provided, garments can still come back too tight, too loose, or too long.</p>
          </div>
-         <div class="glass-card">
+         <div class="glass-card reveal stagger-2">
             <h4 style="color:var(--Mint); font-size:18px; font-weight:900; margin-bottom:16px">Delayed delivery</h4>
             <p style="font-size:14px; color:var(--Neutral-400); line-height:1.5">Extra fittings and revision rounds slow down production and push timelines off track.</p>
          </div>
-         <div class="glass-card">
+         <div class="glass-card reveal stagger-3">
             <h4 style="color:var(--Mint); font-size:18px; font-weight:900; margin-bottom:16px">No shared standard</h4>
             <p style="font-size:14px; color:var(--Neutral-400); line-height:1.5">Measurements often vary from one person to another, making consistency hard to maintain.</p>
          </div>
@@ -425,10 +506,10 @@
   <section class="block">
     <div class="container-wide">
       <div class="grid-impact grid-swapped">
-        <div class="glass-card image-card">
+        <div class="glass-card image-card reveal-left">
            <img src="/assets/Built for distance, designed for trust..png" alt="Global connectivity with digital body measurement solution" title="Global Distance Connectivity">
         </div>
-        <div>
+        <div class="reveal-right">
           <div class="section-eyebrow">Global Reach</div>
           <h2 class="section-title">Designed for trust, regardless of distance.</h2>
           <p class="section-desc">
@@ -457,7 +538,7 @@
   <section class="block" style="background:rgba(255,255,255,0.01)">
     <div class="container-wide">
       <div class="grid-impact">
-        <div>
+        <div class="reveal-left">
           <div class="section-eyebrow">The Solution</div>
           <h2 class="section-title">A faster way to measure, store, and share 3D models and measurements.</h2>
           <p class="section-desc">
@@ -466,12 +547,12 @@
             Our AI-powered solution gives customers one "source of truth" for their size and gives brands a reliable record they can trust.
           </p>
           <div style="display:flex; flex-direction:column; gap:12px; margin-top:32px">
-            <span style="font-size:14px; font-weight:700; color:var(--Mint)">✓ Clinical precision</span>
-            <span style="font-size:14px; font-weight:700; color:var(--Mint)">✓ Your personal size profile</span>
-            <span style="font-size:14px; font-weight:700; color:var(--Mint)">✓ Instant global sharing</span>
+            <span style="font-size:14px; font-weight:700; color:var(--Mint)" class="reveal stagger-1">✓ Clinical precision</span>
+            <span style="font-size:14px; font-weight:700; color:var(--Mint)" class="reveal stagger-2">✓ Your personal size profile</span>
+            <span style="font-size:14px; font-weight:700; color:var(--Mint)" class="reveal stagger-3">✓ Instant global sharing</span>
           </div>
         </div>
-        <div class="glass-card image-card">
+        <div class="glass-card image-card reveal-right">
            <img src="/assets/A faster way to measure, store, and share fit data..png" alt="Precise 3D model and 85+ body measurements" title="Mobile Tailor Clinical Precision">
         </div>
       </div>
@@ -482,10 +563,10 @@
   <section class="block">
     <div class="container-wide">
       <div class="grid-impact grid-swapped">
-        <div class="glass-card image-card">
+        <div class="glass-card image-card reveal-left">
            <img src="/assets/Scaling-LMIC-Tailors.jpg" alt="Scaling LMIC tailors with AI-powered body measurement" title="Mobile Tailor for Developing Regions">
         </div>
-        <div>
+        <div class="reveal-right">
           <div class="section-eyebrow">Digital Inclusion</div>
           <h2 class="section-title">Helping tailors in developing countries serve customers worldwide.</h2>
           <p class="section-desc">
@@ -494,24 +575,24 @@
             Our <strong>custom widgets</strong> can be easily integrated into any brand's website, allowing merchants to offer body measurement capture directly on their platform. Combined with our <strong>body measurement API</strong>, businesses can automate the entire sizing workflow—from photo capture to detailed measurements delivered programmatically.
           </p>
           <div style="display:flex; flex-direction:column; gap:16px; margin-top:32px">
-            <div style="border-left: 2px solid var(--Mint); padding-left: 20px;">
+            <div style="border-left: 2px solid var(--Mint); padding-left: 20px;" class="reveal stagger-1">
               <div style="font-size: 11px; font-weight: 900; color: var(--Neutral-500); text-transform: uppercase;">Scalable Growth</div>
               <div style="font-size: 18px; font-weight: 700; margin-top: 4px;">Double your order capacity.</div>
             </div>
-            <div style="border-left: 2px solid var(--Mint); padding-left: 20px;">
+            <div style="border-left: 2px solid var(--Mint); padding-left: 20px;" class="reveal stagger-2">
               <div style="font-size: 11px; font-weight: 900; color: var(--Neutral-500); text-transform: uppercase;">Custom Widget Integration</div>
               <div style="font-size: 18px; font-weight: 700; margin-top: 4px;">Embed measurement capture on any website.</div>
             </div>
-            <div style="border-left: 2px solid var(--Mint); padding-left: 20px;">
+            <div style="border-left: 2px solid var(--Mint); padding-left: 20px;" class="reveal stagger-3">
               <div style="font-size: 11px; font-weight: 900; color: var(--Neutral-500); text-transform: uppercase;">Body Measurement API</div>
               <div style="font-size: 18px; font-weight: 700; margin-top: 4px;">Programmatic access to 85+ measurements.</div>
             </div>
-            <div style="border-left: 2px solid var(--Mint); padding-left: 20px;">
+            <div style="border-left: 2px solid var(--Mint); padding-left: 20px;" class="reveal stagger-4">
               <div style="font-size: 11px; font-weight: 900; color: var(--Neutral-500); text-transform: uppercase;">Worldwide Access</div>
               <div style="font-size: 18px; font-weight: 700; margin-top: 4px;">Join a global network of masters.</div>
             </div>
           </div>
-          <a class="btn btn-outline" style="margin-top:40px" href="/developers">View developer portal</a>
+          <a class="btn btn-outline reveal" style="margin-top:40px" href="/developers">View developer portal</a>
         </div>
       </div>
     </div>
@@ -520,13 +601,13 @@
   <!-- SECTION 5: HOW IT WORKS -->
   <section class="block" id="technology">
     <div class="container-wide">
-      <div style="text-align:center; max-width:800px; margin:0 auto 100px">
+      <div style="text-align:center; max-width:800px; margin:0 auto 100px" class="reveal">
         <div class="section-eyebrow">How it works</div>
         <h2 class="section-title">How KORRA works</h2>
         <p class="section-desc" style="margin-left:auto; margin-right:auto">Built for tailors who want speed and individuals who want fit.</p>
       </div>
       <div class="grid-3" style="gap: 48px;">
-        <div class="step-card-visual">
+        <div class="step-card-visual reveal stagger-1">
           <div class="step-img-container">
             <img src="/assets/How it works 1.png" alt="Mobile 3D body scanner front and side photo process" title="Scan your body">
             <div class="step-badge">1</div>
@@ -536,7 +617,7 @@
             <div class="step-desc-small">Stand in front of your phone and let our AI-powered mobile tailor guide you through a quick front and side photo process.</div>
           </div>
         </div>
-        <div class="step-card-visual">
+        <div class="step-card-visual reveal stagger-2">
           <div class="step-img-container">
             <img src="/assets/How it works 2.png" alt="AI-generated 3D model and body measurements" title="Save your profile">
             <div class="step-badge">2</div>
@@ -546,7 +627,7 @@
             <div class="step-desc-small">Your measurements are generated into a precise 3D model and saved as a secure digital size profile.</div>
           </div>
         </div>
-        <div class="step-card-visual">
+        <div class="step-card-visual reveal stagger-3">
           <div class="step-img-container">
             <img src="/assets/How it works 3.png" alt="Share your digital body measurement solution profile" title="Share with anyone">
             <div class="step-badge">3</div>
@@ -564,7 +645,7 @@
   <section class="block">
     <div class="container-wide">
       <div class="grid-impact">
-        <div>
+        <div class="reveal-left">
           <div class="section-eyebrow">Size Profile</div>
           <h2 class="section-title">Your global size profile.</h2>
           <p class="section-desc">
@@ -573,12 +654,12 @@
             KORRA gives you a secure digital size profile that can be used with local tailors, international brands, and online shopping sites.
           </p>
           <div style="display:flex; flex-direction:column; gap:12px; margin-top:40px">
-             <div style="display:flex; align-items:center; gap:12px; font-weight:700; color:var(--Neutral-400); font-size:14px"><span style="color:var(--Mint)">✓</span> Own your biometric identity</div>
-             <div style="display:flex; align-items:center; gap:12px; font-weight:700; color:var(--Neutral-400); font-size:14px"><span style="color:var(--Mint)">✓</span> No more repeated measurement visits</div>
-             <div style="display:flex; align-items:center; gap:12px; font-weight:700; color:var(--Neutral-400); font-size:14px"><span style="color:var(--Mint)">✓</span> Share with any tailor worldwide</div>
+             <div style="display:flex; align-items:center; gap:12px; font-weight:700; color:var(--Neutral-400); font-size:14px" class="reveal stagger-1"><span style="color:var(--Mint)">✓</span> Own your biometric identity</div>
+             <div style="display:flex; align-items:center; gap:12px; font-weight:700; color:var(--Neutral-400); font-size:14px" class="reveal stagger-2"><span style="color:var(--Mint)">✓</span> No more repeated measurement visits</div>
+             <div style="display:flex; align-items:center; gap:12px; font-weight:700; color:var(--Neutral-400); font-size:14px" class="reveal stagger-3"><span style="color:var(--Mint)">✓</span> Share with any tailor worldwide</div>
           </div>
         </div>
-        <div class="glass-card image-card">
+        <div class="glass-card image-card reveal-right">
            <img src="/assets/Your global size passport..png" alt="Mobile Tailor dashboard size profile interface" title="Digital Size Passport Interface">
         </div>
       </div>
@@ -588,13 +669,13 @@
   <!-- SECTION 6.5: E-COMMERCE CONNECTIVITY -->
   <section class="block" style="padding-top: 0; background: #000;">
     <div class="container-wide">
-<div style="text-align:center; margin-bottom: 60px;">
+<div style="text-align:center; margin-bottom: 60px;" class="reveal">
         <div class="section-eyebrow">Universal Sizing</div>
         <h2 class="section-title" style="font-size: 36px; margin: 0 auto 20px;">Know Your Size Across Every Brand.</h2>
         <p class="section-desc" style="margin: 0 auto; max-width: 700px;">Different brands, different sizes. KORRA creates one universal size profile that translates your measurements into the perfect fit on Amazon, Shopify, Temu, and 7,000+ other apparel retailers worldwide.<br><br>Whether you're a Small, Medium, Large, XL, or XXL — KORRA instantly tells you what size to select on any site. No more guessing, no more returns.</p>
       </div>
 
-<div class="logo-marquee-container">
+<div class="logo-marquee-container reveal-scale">
         <div class="logo-marquee">
           <div class="marquee-content">
             <img src="/assets/partners/amazon.webp" alt="Amazon">
@@ -708,8 +789,8 @@
           <p style="font-size:13px; color:var(--Neutral-400)">cost per measurement using smartphone AI</p>
         </div>
         <div class="glass-card" style="padding:var(--S-32)">
-          <h4 style="color:var(--Mint); font-size:24px; font-weight:900; margin-bottom:8px">99%</h4>
-          <p style="font-size:13px; color:var(--Neutral-400)">more consistent results across users</p>
+          <h4 style="color:var(--Mint); font-size:24px; font-weight:900; margin-bottom:8px">Clinical-Grade</h4>
+          <p style="font-size:13px; color:var(--Neutral-400)">Accuracy with 99% consistency across all body types</p>
         </div>
       </div>
     </div>
@@ -823,6 +904,20 @@
             supabaseKey: 'sb_publishable_miCOIXHtlxLkfDgpwE0N-g_BA1Q-x8y'
           };
           window.korraSupabase = window.supabase.createClient(config.supabaseUrl, config.supabaseKey);
+
+          // HYPER-ENGAGING STARTUP ANIMATIONS (Intersection Observer)
+          const observerOptions = { threshold: 0.15, rootMargin: '0px 0px -50px 0px' };
+          const revealObserver = new IntersectionObserver((entries) => {
+            entries.forEach(entry => {
+              if (entry.isIntersecting) {
+                entry.target.classList.add('active');
+              }
+            });
+          }, observerOptions);
+
+          document.querySelectorAll('.reveal, .reveal-left, .reveal-right, .reveal-scale').forEach(el => {
+              revealObserver.observe(el);
+          });
 
           // --- SMART ADMIN PERSISTENCE ---
           const ADMIN_LIST = ['springbionics@gmail.com', 'admin@korra.work'];

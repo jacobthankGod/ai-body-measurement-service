@@ -94,7 +94,7 @@
     <div class="side-panel">
       <div class="side-overlay">
         <h1>Welcome Back.</h1>
-        <p>Your industrial fit engine is ready.</p>
+        <p>Your AI Body Scanner is ready.</p>
       </div>
     </div>
 
@@ -107,7 +107,7 @@
         </a>
 
         <h2>Sign In</h2>
-        <p class="sub-p">Identify yourself to enter the command center.</p>
+        <p class="sub-p">Access your dashboard to manage measurements.</p>
 
 <!-- Google OAuth Button -->
         <button type="button" class="btn-google" id="btnGoogleSignIn">
@@ -153,7 +153,7 @@
         document.getElementById('btnGoogleSignIn').addEventListener('click', async () => {
           const btn = document.getElementById('btnGoogleSignIn');
           btn.disabled = true;
-          btn.textContent = 'Connecting to Google...';
+          btn.textContent = 'Connecting...';
 
           try {
             const { data, error } = await supabase.auth.signInWithOAuth({
@@ -180,7 +180,7 @@ if (error) {
           const email = document.getElementById('inEmail').value;
           const password = document.getElementById('inPass').value;
           const btn = e.target.querySelector('button');
-          btn.textContent = 'Verifying Authority...';
+          btn.textContent = 'Signing you in...';
           btn.style.opacity = '0.7';
 
           const { error } = await supabase.auth.signInWithPassword({ email, password });

@@ -55,6 +55,12 @@
         },
 
         open: function() {
+            if (!this.config.merchantId || this.config.merchantId === 'null') {
+                console.error("❌ KORRA: Missing data-merchant attribute. Cannot open widget.");
+                alert("KORRA Error: Widget missing merchant configuration.");
+                return;
+            }
+
             const overlay = document.createElement('div');
             overlay.id = 'korra-widget-overlay';
             overlay.style.cssText = `

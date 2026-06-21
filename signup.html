@@ -102,8 +102,8 @@
     <!-- LEFT: SIDE PANEL -->
     <div class="side-panel">
       <div class="side-overlay">
-        <h1>Master Your Patterns.</h1>
-        <p>Industrial-grade biometrics at your fingertips.</p>
+        <h1>Perfect Fit, Every Time.</h1>
+        <p>Get accurate body measurements from your phone.</p>
       </div>
     </div>
 
@@ -116,8 +116,8 @@
         </a>
 
         <div id="formContent">
-          <h2 id="viewTitle">Sign Up</h2>
-          <p class="sub-p" id="viewSub">Start your precision journey today.</p>
+          <h2 id="viewTitle">Create Your Account</h2>
+          <p class="sub-p" id="viewSub">Start your body scanning journey today.</p>
 
 <!-- Google OAuth Button -->
           <button type="button" class="btn-google" id="btnGoogleSignUp">
@@ -180,15 +180,15 @@
 
       if (role === 'individual') {
           document.getElementById('viewTitle').textContent = "Join KORRA";
-          document.getElementById('viewSub').textContent = "Secure your Size Passport for a perfect fit.";
-          document.getElementById('btnSignUp').textContent = 'Create My Fit Profile';
+          document.getElementById('viewSub').textContent = "Set up your profile for a perfect fit.";
+          document.getElementById('btnSignUp').textContent = 'Create My Profile';
       } else if (role === 'merchant') {
-          document.getElementById('viewTitle').textContent = "Merchant Onboarding";
-          document.getElementById('viewSub').textContent = "Scale your brand with precision sizing.";
-          document.getElementById('btnSignUp').textContent = 'Initialize Brand Account';
+          document.getElementById('viewTitle').textContent = "Join as a Fashion Professional";
+          document.getElementById('viewSub').textContent = "Grow your business with accurate sizing.";
+          document.getElementById('btnSignUp').textContent = 'Create Pro Account';
       } else if (role === 'enterprise') {
-          document.getElementById('viewTitle').textContent = "Enterprise Portal";
-          document.getElementById('viewSub').textContent = "Industrial-scale biometrics and manufacturing.";
+          document.getElementById('viewTitle').textContent = "Enterprise Solutions";
+          document.getElementById('viewSub').textContent = "Scale your production with precision data.";
           document.getElementById('btnSignUp').textContent = 'Start Integration';
       }
 
@@ -267,7 +267,7 @@ const email = document.getElementById('upEmail').value;
         }
 
         btn.disabled = true;
-        btn.textContent = 'Synchronizing Identity...';
+        btn.textContent = 'Creating Account...';
 
         try {
           const { error } = await KORRA_CORE.auth.signUp({
@@ -307,7 +307,7 @@ options: {
             }, 400);
           }
         } catch (err) {
-          alert("Handshake Failure.");
+          alert("Sign up failed. Please try again.");
         } finally {
           btn.disabled = false;
           btn.textContent = 'Sign Up';

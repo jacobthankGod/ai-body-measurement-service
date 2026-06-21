@@ -1,34 +1,31 @@
-# Modern UX Plan: Multi-Step Luxury Onboarding
+# Implementation Plan: Onboarding UX & Dashboard Hardening
 
-The current sign-up flow is too basic for a premium SaaS. We will replace the single-form signup with a **3-Step Engagement Flow** designed to feel diagnostic and professional.
+## 1. Onboarding Phase Recovery
+*   **Target:** `onboarding.html`
+*   **Action:** Update `showPhase()` to explicitly scroll the `.form-panel` container.
+*   **Logic:**
+    ```javascript
+    const formPanel = document.querySelector('.form-panel');
+    if (formPanel) formPanel.scrollTo({ top: 0, behavior: 'smooth' });
+    ```
+*   **State:** Check Supabase profile for `onboarding_phase` and resume automatically.
 
-## 1. The Onboarding Journey
+## 2. Dashboard De-Cluttering (The "Artisan" Mode)
+*   **Target:** `dashboard.html`
+*   **Sidebar Refactor:**
+    *   Primary: Home, Clients, Measurements, Settings.
+    *   Hidden/Grouped: API Keys, Webhooks, Webhooks Ledger.
+*   **Terminology Update:**
+    *   "Avg Precision" -> "Scan Confidence"
+    *   "Scan Velocity" -> "Measurement Trends"
 
-### Step 1: Personal Identification
-*   **Fields**: Full Name, Professional Email, Create Secure Password.
-*   **UX**: Smooth transition to step 2 upon validation.
+## 3. Brand Studio (Shopify-style Editor)
+*   **Target:** `dashboard.html` (Widget Tab)
+*   **Action:** implement a 60/40 split screen.
+    *   **Left (60%):** Configuration inputs (Brand color, Logo upload, Theme selection).
+    *   **Right (40%):** A fixed "Floating Mobile Device" mockup running the live widget.
+*   **Tech:** Use `element.style.setProperty('--primary-color', value)` to update the preview instantly.
 
-### Step 2: Business Profile
-*   **Fields**: Company Name, Industry (Tailoring, E-commerce, Fitness), Role (Owner, Developer, Manager).
-*   **UX**: Selectable tiles for "Industry" to minimize typing.
-
-### Step 3: Capacity & Goals
-*   **Fields**: Estimated Monthly Scans (1-50, 50-500, 500+), Primary Goal (Reduce Returns, Instant Sizing, Fitness Tracking).
-*   **UX**: Progress bar at the top to maintain engagement.
-
----
-
-## 2. Technical Implementation
-
-### [Frontend - index.html]
--   **Step Component**: Create a reusable `step-view` logic.
--   **Supabase Profile**: Automatically create a `user_profiles` entry in Supabase metadata upon signup.
--   **Animations**: Slide-in transitions for each step.
-
----
-
-## 3. Verification Plan
-1. **Validation Test**: Ensure step 2 cannot be reached without a valid email/pass.
-2. **Data Integrity**: Verify all 8+ fields are successfully sent to Supabase Auth metadata.
-
-**Protocol**: Every single file change will be immediately pushed to GitHub.
+## 4. Visual "Unicorn" Polish
+*   **Global CSS:** Implement a `.glass-panel` class with `backdrop-filter: blur(20px)` and semi-transparent borders.
+*   **Animations:** Use the already implemented Intersection Observer to reveal content with "Fade-Up" effects.

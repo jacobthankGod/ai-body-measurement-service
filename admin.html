@@ -121,7 +121,7 @@
     </div>
   </div>
 
-<div id="loadingOverlay">INITIALIZING AUTHORITY...</div>
+<div id="loadingOverlay">Signing you in...</div>
   <div id="offlineOverlay"><div class="offline-card"><div style="font-size:32px; margin-bottom:24px">📡</div><h2 style="font-size:18px; font-weight:800; margin-bottom:12px">Sync Interrupted</h2><p style="font-size:12px; color:var(--Neutral-400)">Internet connection lost. KORRA has paused syncing.</p></div></div>
 
   <div class="modal-overlay" id="adminScanModal">
@@ -394,8 +394,8 @@
 
               <div style="margin-top:32px; padding:24px; background:rgba(214,48,49,0.05); border:1px solid rgba(214,48,49,0.2); border-radius:16px">
                 <h4 style="font-size:10px; font-weight:900; color:var(--Error); margin-bottom:12px">CRITICAL INFRASTRUCTURE</h4>
-                <p style="font-size:11px; color:var(--Neutral-400); margin-bottom:20px">Force a synchronization check of all AI weight clusters.</p>
-                <button class="btn-primary" id="btnRestoreBrain" style="background:var(--Error); color:#fff; width:100%">🚀 Restore AI Brain</button>
+                <p style="font-size:11px; color:var(--Neutral-400); margin-bottom:20px">Reset system components and AI models.</p>
+                <button class="btn-primary" id="btnRestoreBrain" style="background:var(--Error); color:#fff; width:100%">🚀 Restore System AI</button>
               </div>
 
               <h4 style="font-size:10px; font-weight:900; color:var(--Mint); margin:32px 0 16px">ENDPOINT STATUS</h4>
@@ -930,7 +930,7 @@ console.warn(`🔄 Sync failure (${err.message}). Retrying ${attempt+1}/12 in ${
               await new Promise(r => setTimeout(r, 2000));
           }
           if (!data) return;
-          const msgs = ["INITIALIZING ISOLATED AI...", "EXECUTING SKELETAL DETECTION...", "RUNNING VOLUMETRIC REGRESSION...", "MAPPING VERTEX CLOUD...", "SCALING BIOMETRICS...", "MATERIALIZING 3D TWIN..."];
+          const msgs = ["Starting AI...", "Detecting body...", "Measuring shape...", "Processing results...", "Scaling data...", "Creating 3D model..."];
           if (data.status === 'processing') { progress = Math.min(progress + 5, 95); status.textContent = msgs[Math.floor((progress/100) * msgs.length)] || "PROCESSING..."; }
           else if (data.status === 'completed') { clearInterval(interval); progress = 100; status.textContent = 'SUCCESS'; if (window.KORRA_VIZ) window.KORRA_VIZ.loadMesh(data.mesh_url); window.LAST_MEASUREMENT_DATA = data; renderMeasurementGrids(data); window.loadGlobalStats(); setTimeout(() => { overlay.style.display = 'none'; if(btn) btn.disabled = false; document.getElementById('adminScanModal').classList.remove('active'); document.getElementById('measurementResultsCard').style.display='block'; }, 1000); }
           else if (data.status === 'failed') { clearInterval(interval); window.adminLog("FAILED: " + data.error); overlay.style.display = 'none'; if(btn) btn.disabled = false; }

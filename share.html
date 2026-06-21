@@ -348,7 +348,7 @@ msg.textContent = feedback; msg.style.background = aligned ? "var(--Mint)" : "rg
       const label = document.getElementById(labelId), img = label.querySelector('.preview-img');
       img.src = capturedDataUrl; img.style.display = 'block';
       label.querySelector('.placeholder-content').style.display = 'none'; label.querySelector('.preview-overlay').style.display = 'flex';
-      window.speak(activeCameraType === 'front' ? "Photo confirmed. Now turn to your side." : "Photo confirmed. Generating results.", true);
+      window.speak("Photo confirmed.", true);
       fetch(capturedDataUrl).then(res => res.blob()).then(blob => {
           const file = new File([blob], `${activeCameraType}.jpg`, { type: "image/jpeg" });
           const container = new DataTransfer(); container.items.add(file);

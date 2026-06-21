@@ -40,6 +40,25 @@ app.add_middleware(
     allow_headers=["*"],
 )
 
+# --- SECURITY HEADERS & HTTPS MIDDLEWARE ---
+@app.middleware("http")
+async def add_security_headers(request: Request, call_next):
+    # FORCE HTTPS: Redirect in production if not using SSL
+    # Note: X-Forwarded-Proto is typically set by Nginx reverse proxy
+    if request.headers.get("x-forwarded-proto") == "http" and os.environ.get("ENVIRONMENT") == "production":
+        url = request.url.replace(scheme="https")
+        from fastapi.responses import RedirectResponse
+        return RedirectResponse(url)
+
+    response = await call_next(request)
+    # Relax security policies to allow external integrations (Paystack, Widget iframes)
+    # Note: 'unsafe-none' and 'cross-origin' allow external assets to bypass NotSameOrigin blocks
+    response.headers["Cross-Origin-Opener-Policy"] = "unsafe-none"
+    response.headers["Cross-Origin-Embedder-Policy"] = "unsafe-none"
+    response.headers["Cross-Origin-Resource-Policy"] = "cross-origin"
+    response.headers["Access-Control-Allow-Origin"] = "*"
+    return response
+
 # --- API ROUTES ---
 app.include_router(health.router, tags=["System"], prefix="/api/v2")
 app.include_router(auth.router, prefix="/api/v2", tags=["Auth"])
@@ -90,6 +109,10 @@ async def serve_sizepassport(): return get_safe_file("sizepassport.html")
 
 @app.get("/developers")
 async def serve_developers(): return get_safe_file("api.html")
+
+@app.get("/widget")
+async def serve_widget(merchant: str = None):
+    return get_safe_file("widget.html")
 
 @app.get("/admin-panel") # Avoid conflict with admin router prefix
 async def serve_admin_page(): return get_safe_file("admin.html")
