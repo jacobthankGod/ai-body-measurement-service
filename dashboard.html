@@ -208,7 +208,7 @@
     /* WIDGET PREVIEW RECONSTRUCTION (1:1 PARITY) */
     #widgetLivePreviewFrame {
         width: 100%;
-        height: 600px;
+        height: 750px; /* Increased for mobile view */
         box-shadow: var(--Elev-3);
         margin: 0 auto;
         display: flex;
@@ -227,13 +227,24 @@
         transition: 0.3s; transform-origin: center center;
     }
     .mock-widget-card {
-        width: 100%; max-width: 440px; /* Mobile width by default */
+        width: 100%; max-width: 400px;
         background: rgba(23, 23, 23, 0.8); backdrop-filter: blur(40px);
         border: 1px solid rgba(255,255,255,0.1); border-radius: 32px;
         padding: 32px; position: relative; transition: 0.4s cubic-bezier(0.2, 0.8, 0.2, 1);
-        display: block;
+        display: flex; flex-direction: column; gap: 24px;
     }
-    .mock-widget-card.desktop { max-width: 900px; display: grid; grid-template-columns: 1fr 1.5fr; gap: 40px; padding: 48px; }
+    .mock-widget-card.desktop {
+        max-width: 900px;
+        display: grid;
+        grid-template-columns: 1fr 1.5fr;
+        grid-template-rows: auto auto;
+        gap: 32px;
+        padding: 48px;
+    }
+    .mock-widget-card.desktop #mockSubmitBtn {
+        grid-column: 1 / span 2;
+        margin-top: 8px;
+    }
 
     .mock-field { height: 44px; background: rgba(255,255,255,0.05); border: 1px solid rgba(255,255,255,0.1); border-radius: 12px; padding: 0 16px; display: flex; align-items: center; font-size: 13px; font-weight: 600; margin-bottom: 12px; }
     .mock-label { font-size: 8px; font-weight: 900; color: var(--Neutral-500); text-transform: uppercase; letter-spacing: 0.12em; display: block; margin-bottom: 8px; }
@@ -1076,11 +1087,10 @@
 
                                 <span class="mock-label">Body Specs</span>
                                 <div class="mock-field" id="mockFieldName">Full Name</div>
-                                <div style="display:grid; grid-template-columns: 1fr 1fr; gap:10px; margin-bottom:20px">
+                                <div style="display:grid; grid-template-columns: 1fr 1fr; gap:10px">
                                     <div class="mock-field" id="mockFieldHeight">180 cm</div>
                                     <div class="mock-field" id="mockFieldGender">Male</div>
                                 </div>
-                                <div id="mockSubmitBtn" class="btn-hero" style="width:100%; height:48px; font-size:11px">Get body measurements</div>
                             </div>
 
                             <div class="mock-capture-side">
@@ -1102,10 +1112,9 @@
                                     </div>
                                 </div>
                             </div>
-                        </div>
 
-                        <!-- FLOATING TRIGGER PREVIEW -->
-                        <div id="previewTrigger" style="position:absolute; bottom:32px; right:32px; padding: 12px 24px; border-radius: 99px; font-size: 11px; font-weight: 900; cursor:pointer;">Get Measured</div>
+                            <div id="mockSubmitBtn" class="btn-hero" style="width:100%; height:48px; font-size:11px">Get body measurements</div>
+                        </div>
                       </div>
                   </div>
                 </div>
@@ -1218,7 +1227,6 @@
   <script src="/assets/three.min.js"></script>
   <script src="/assets/korra_viz.js"></script>
   <script src="/assets/korra_export.js"></script>
-  <script src="/assets/korra-widget.js"></script>
 
   <script>
     // --- ENV & CONFIG ---
@@ -2130,7 +2138,6 @@ document.getElementById('scanForm').addEventListener('submit', async (e) => {
             btn_text_color: btnTextColor
         };
 
-        const trigger = document.getElementById('previewTrigger');
         const container = document.getElementById('widgetLivePreview');
         const snippet = document.getElementById('widgetSnippet');
         const mockCard = document.getElementById('mockWidgetCard');
@@ -2148,12 +2155,6 @@ document.getElementById('scanForm').addEventListener('submit', async (e) => {
 
         if (mockTitle) mockTitle.style.color = color;
 
-        if (trigger) {
-            trigger.textContent = btnMeasured;
-            trigger.style.background = btnColor;
-            trigger.style.color = btnTextColor;
-            trigger.style.boxShadow = `0 10px 30px ${btnColor}4d`;
-        }
         if (mockSubmit) {
             mockSubmit.textContent = btnFitting;
             mockSubmit.style.background = btnColor;
@@ -2221,27 +2222,28 @@ document.getElementById('scanForm').addEventListener('submit', async (e) => {
         document.querySelectorAll('.preview-size-btn').forEach(b => b.classList.remove('active'));
         document.getElementById('btn-size-' + type).classList.add('active');
 
-        // FORCE FIT: Detect current viewport and scale if on mobile
-        const viewWidth = frame.clientWidth;
+        const frameWidth = frame.offsetWidth;
+        const frameHeight = frame.offsetHeight;
 
         if (type === 'mobile') {
-            frame.style.height = '667px';
             card.classList.remove('desktop');
-            container.style.transform = 'scale(1)';
+            // Phone view should be full size or scaled to fit frame
+            const scale = Math.min(1, (frameWidth - 40) / 400);
+            container.style.transform = `scale(${scale})`;
+            frame.style.height = "750px";
         }
         else if (type === 'tablet') {
-            frame.style.height = '700px';
             card.classList.remove('desktop');
-            // Intelligent Scale-to-Fit
-            const scale = Math.min(1, (viewWidth - 40) / 440);
+            const scale = Math.min(1, (frameWidth - 40) / 600);
             container.style.transform = `scale(${scale})`;
+            frame.style.height = "700px";
         }
         else {
-            frame.style.height = '600px';
             card.classList.add('desktop');
-            // Intelligent Scale-to-Fit for Desktop Landscape
-            const scale = Math.min(1, (viewWidth - 40) / 950);
+            // For Desktop, we want it to be as large as possible but still fit
+            const scale = Math.min(1, (frameWidth - 60) / 950, (frameHeight - 60) / 600);
             container.style.transform = `scale(${scale})`;
+            frame.style.height = "600px";
         }
         window.updateWidgetPreview();
     };
