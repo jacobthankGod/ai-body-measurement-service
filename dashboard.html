@@ -245,6 +245,7 @@
         width: 100%; height: 100%; position: relative;
         display: flex; align-items: center; justify-content: center;
         transition: 0.3s; transform-origin: center center;
+        padding: 40px; /* Mandatory margin on all sides between widget and frame */
     }
     .mock-widget-card {
         width: 100%; max-width: 400px;
@@ -282,7 +283,7 @@
 
     /* ULTRA-MODERN CLIENT LEDGER: Mobile Stacked UI */
     @media (max-width: 900px) {
-        .hero-grid { grid-template-columns: 1fr 1fr !important; gap: 12px !important; width: 100% !important; padding: 0 !important; }
+        .hero-grid { grid-template-columns: 1fr 1fr !important; gap: 12px !important; width: 100% !important; padding: 0 !important; margin: 0 !important; }
         .action-card { height: 200px !important; border-radius: 24px !important; width: 100% !important; }
         .action-title { font-size: 14px !important; }
         .action-overlay { padding: 16px !important; width: 100% !important; }
@@ -307,7 +308,7 @@
     }
     .btn-back-modal { display: flex; align-items: center; gap: 8px; font-size: 12px; font-weight: 800; color: var(--Neutral-400); cursor: pointer; transition: 0.2s; }
     .btn-back-modal:hover { color: var(--White); }
-    header .container { display: flex; align-items: center; justify-content: space-between; padding: 0; }
+    header .container { display: flex; align-items: center; justify-content: space-between; padding: 0 32px; }
         .logo { display: flex; align-items: center; gap: 12px; cursor: pointer; text-decoration: none; color: inherit; }
     .logo-mark { width: 32px; height: 32px; border-radius: 8px; background: var(--Mint); transform: rotate(-8deg); }
     .logo-text { font-size: 20px; font-weight: 900; letter-spacing: -0.05em; }
@@ -1251,8 +1252,8 @@
                  <div>
                    <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 20px; margin-bottom: 24px;">
                      <div>
-                       <label class="form-label">COUNTRY</label>
-                       <input type="text" id="settingsCountry" class="input-field" placeholder="US">
+                       <label class="form-label">COUNTRY (2-LETTER CODE)</label>
+                       <input type="text" id="settingsCountry" class="input-field" placeholder="US" maxlength="2" style="text-transform: uppercase;">
                      </div>
                      <div>
                        <label class="form-label">CURRENCY</label>
@@ -1575,25 +1576,25 @@ window.handlePreviewClick = (type) => {
 window.loadSettings = async () => {
       const { data: profile } = await window.KORRA_DB.from('profiles').select('*').eq('id', userId).single();
       if (profile) {
-        if (document.getElementById('settingsName')) document.getElementById('settingsName').value = profile.full_name || profile.company_name || "";
-        document.getElementById('userEmail').textContent = profile.email;
-        document.getElementById('statCredits').textContent = profile.credits || 0;
-        document.getElementById('billingCredits').textContent = profile.credits || 0;
-        document.getElementById('headerCredits').textContent = profile.credits || 0;
-        document.getElementById('apiKeyDisplay').textContent = profile.api_key || "REGENERATE TO VIEW";
-        
-        // Store API key for authenticated API calls
-        currentApiKey = profile.api_key;
+        const safelySetText = (id, text) => { const el = document.getElementById(id); if (el) el.textContent = text; };
+        const safelySetVal = (id, val) => { const el = document.getElementById(id); if (el) el.value = val || ""; };
+
+        safelySetText('userEmail', profile.email);
+        safelySetText('statCredits', profile.credits || 0);
+        safelySetText('billingCredits', profile.credits || 0);
+        safelySetText('headerCredits', profile.credits || 0);
+        safelySetText('apiKeyDisplay', profile.api_key || "REGENERATE TO VIEW");
 
         // HYDRATE ALL PROFILE FIELDS
-        if (document.getElementById('settingsAccountType')) document.getElementById('settingsAccountType').value = profile.account_type || 'merchant';
-        if (document.getElementById('settingsGender')) document.getElementById('settingsGender').value = profile.gender || 'male';
-        if (document.getElementById('settingsCompany')) document.getElementById('settingsCompany').value = profile.company_name || '';
-        if (document.getElementById('settingsAddress')) document.getElementById('settingsAddress').value = profile.business_address || '';
-        if (document.getElementById('settingsCountry')) document.getElementById('settingsCountry').value = profile.country_code || 'US';
-        if (document.getElementById('settingsCurrency')) document.getElementById('settingsCurrency').value = profile.currency || 'USD';
-        if (document.getElementById('settingsVertical')) document.getElementById('settingsVertical').value = profile.industry_vertical_id || 'rtw';
-        if (document.getElementById('settingsStandard')) document.getElementById('settingsStandard').value = profile.measurement_standard || 'standard';
+        safelySetVal('settingsName', profile.full_name || profile.company_name);
+        safelySetVal('settingsAccountType', profile.account_type);
+        safelySetVal('settingsGender', profile.gender);
+        safelySetVal('settingsCompany', profile.company_name);
+        safelySetVal('settingsAddress', profile.business_address);
+        safelySetVal('settingsCountry', profile.country_code);
+        safelySetVal('settingsCurrency', profile.currency);
+        safelySetVal('settingsVertical', profile.industry_vertical_id);
+        safelySetVal('settingsStandard', profile.measurement_standard);
 
         // PRE-FILL SCAN FORM DEFAULTS
         const scanGender = document.getElementById('scanGender');
@@ -2315,39 +2316,33 @@ document.getElementById('scanForm').addEventListener('submit', async (e) => {
         document.getElementById('btn-size-' + type).classList.add('active');
 
         const frameWidth = frame.offsetWidth;
-        const frameHeight = frame.offsetHeight;
 
-        // RESET TRANSFORMS FIRST
+        // RESET TRANSFORMS FIRST (Ensures we don't shrink unnecessarily)
         container.style.transform = "scale(1)";
 
         if (type === 'mobile') {
             card.classList.remove('desktop');
             frame.style.height = "750px";
             frame.style.maxWidth = "400px";
-            // Only scale if dashboard width is physically smaller than mobile preview
+            // Scaling only as a fallback for tiny mobile screens
             if (frameWidth < 400) {
-                const scale = (frameWidth - 20) / 400;
-                container.style.transform = `scale(${scale})`;
+                container.style.transform = `scale(${(frameWidth - 20) / 400})`;
             }
         }
         else if (type === 'tablet') {
             card.classList.remove('desktop');
-            frame.style.height = "800px";
-            frame.style.maxWidth = "650px";
-            // Hard scaling only on mobile dashboards
-            if (frameWidth < 650) {
-                const scale = (frameWidth - 20) / 650;
-                container.style.transform = `scale(${scale})`;
+            frame.style.height = "1000px"; /* Bigger view */
+            frame.style.maxWidth = "800px";  /* Wider view */
+            if (frameWidth < 800) {
+                container.style.transform = `scale(${(frameWidth - 40) / 800})`;
             }
         }
         else {
             card.classList.add('desktop');
-            frame.style.height = "600px";
-            frame.style.maxWidth = "1100px";
-            // Prevent shrinking on Desktop monitors, only scale on mobile dashboards
-            if (frameWidth < 1000) {
-                const scale = (frameWidth - 20) / 1000;
-                container.style.transform = `scale(${scale})`;
+            frame.style.height = "700px";   /* Landscape Desktop */
+            frame.style.maxWidth = "1100px"; /* Full Industrial scale */
+            if (frameWidth < 1100) {
+                container.style.transform = `scale(${(frameWidth - 40) / 1100})`;
             }
         }
         window.updateWidgetPreview();
