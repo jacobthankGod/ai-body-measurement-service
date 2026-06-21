@@ -1527,16 +1527,29 @@ window.loadSettings = async () => {
             IS_INITIALIZING = false;
         }
       }
-    };const { data: sub } = await window.KORRA_DB.from('subscriptions').select('plan_id').eq('user_id', userId).single();
-      document.getElementById('billingPlanName').textContent = sub?.plan_id ? sub.plan_id.toUpperCase() : 'FREE';
+
+      const { data: sub } = await window.KORRA_DB.from('subscriptions').select('plan_id').eq('user_id', userId).single();
+      if (document.getElementById('billingPlanName')) {
+          document.getElementById('billingPlanName').textContent = sub?.plan_id ? sub.plan_id.toUpperCase() : 'FREE';
+      }
 
       const { data: txs } = await window.KORRA_DB.from('transactions').select('*').eq('user_id', userId).order('created_at', { ascending: false });
-      if (txs) document.getElementById('billingHistoryBody').innerHTML = txs.map(t => `<tr><td>${new Date(t.created_at).toLocaleDateString()}</td><td>${t.type}</td><td>$${t.amount.toFixed(2)}</td><td>SUCCESS</td></tr>`).join('');
+      if (txs && document.getElementById('billingHistoryBody')) {
+          document.getElementById('billingHistoryBody').innerHTML = txs.map(t => `<tr><td>${new Date(t.created_at).toLocaleDateString()}</td><td>${t.type}</td><td>$${t.amount.toFixed(2)}</td><td>SUCCESS</td></tr>`).join('');
+      }
     };
 
     async function fetchHistory() {
       const { data } = await window.KORRA_DB.from('measurements').select('*').eq('user_id', userId).order('created_at', { ascending: false }).limit(50);
-      if (data) { masterHistory = data; document.getElementById('statTotal').textContent = data.length; document.getElementById('overviewTotal').textContent = data.length; renderLedger(data); renderAnalytics(data); }
+      if (data) {
+          masterHistory = data;
+          const statTotal = document.getElementById('statTotal');
+          const overviewTotal = document.getElementById('overviewTotal');
+          if (statTotal) statTotal.textContent = data.length;
+          if (overviewTotal) overviewTotal.textContent = data.length;
+          renderLedger(data);
+          renderAnalytics(data);
+      }
     }
 
     window.CURRENT_UNIT = 'cm';
@@ -2066,6 +2079,18 @@ document.getElementById('scanForm').addEventListener('submit', async (e) => {
         const btnMeasured = document.getElementById('widgetBtnTextMeasured').value || "Get Measured";
         const btnColor = document.getElementById('widgetBtnColor').value || color;
 
+        // AUTO-SAVE STATE ON EACH INPUT
+        window.KORRA_STUDIO_STATE = {
+            brand_name: document.getElementById('widgetBrandName').value,
+            brand_color: document.getElementById('widgetBrandColor').value,
+            primary: document.getElementById('widgetColorPrimary').value,
+            theme: document.getElementById('widgetTheme').value,
+            logo_size: document.getElementById('widgetLogoSize').value,
+            btn_fitting: btnFitting,
+            btn_measured: btnMeasured,
+            btn_color: btnColor
+        };
+
         const trigger = document.getElementById('previewTrigger');
         const container = document.getElementById('widgetLivePreview');
         const snippet = document.getElementById('widgetSnippet');
@@ -2108,26 +2133,27 @@ document.getElementById('scanForm').addEventListener('submit', async (e) => {
         mockAccents.forEach(el => el.style.color = color);
 
         if (container && mockCard) {
+            // Ensure card is always distinct via border and shadow
+            mockCard.style.boxShadow = '0 30px 60px rgba(0,0,0,0.5)';
+            mockCard.style.border = '1px solid rgba(255,255,255,0.15)';
+
             if (theme === 'light') {
                 container.style.background = '#FFFFFF';
                 mockCard.style.background = '#F8F9FA';
-                mockCard.style.borderColor = '#E9ECEF';
+                mockCard.style.borderColor = '#DEE2E6';
                 mockCard.style.color = '#1A1A1A';
-                mockCard.style.boxShadow = '0 20px 60px rgba(0,0,0,0.15)';
                 mockCard.classList.remove('luxury-glass');
                 document.getElementById('mockSubtitle').style.color = '#6C757D';
                 if (brandColor.toUpperCase() === '#FFFFFF' || brandColor.toUpperCase() === '#FFF') mockBrandLabel.style.color = '#000000';
             } else if (theme === 'glass') {
-                container.style.background = 'radial-gradient(circle at 70% 30%, #1a1a1a 0%, #050505 100%)';
+                container.style.background = 'radial-gradient(circle at 70% 30%, #222 0%, #050505 100%)';
                 mockCard.style.background = 'rgba(255,255,255,0.03)';
-                mockCard.style.borderColor = 'rgba(255,255,255,0.1)';
                 mockCard.style.color = '#FFFFFF';
                 mockCard.classList.add('luxury-glass');
                 document.getElementById('mockSubtitle').style.color = 'var(--Neutral-400)';
             } else {
                 container.style.background = '#050505';
                 mockCard.style.background = '#111111';
-                mockCard.style.borderColor = 'rgba(255,255,255,0.05)';
                 mockCard.style.color = '#FFFFFF';
                 mockCard.classList.remove('luxury-glass');
                 document.getElementById('mockSubtitle').style.color = 'var(--Neutral-400)';
