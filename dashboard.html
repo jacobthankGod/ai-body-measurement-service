@@ -207,30 +207,43 @@
 
     /* WIDGET PREVIEW FIXES */
     #widgetLivePreviewFrame {
-        max-width: 100%;
+        width: 100%;
+        max-width: 440px; /* Default Mobile */
+        height: 720px;
         box-shadow: var(--Elev-3);
         margin: 0 auto;
         display: flex;
-        align-items: center;
-        justify-content: center;
         border: 12px solid #1a1a1a;
-        border-radius: 40px;
+        border-radius: 48px;
         background: #000;
         overflow: hidden;
         transition: 0.5s cubic-bezier(0.4, 0, 0.2, 1);
+        position: relative;
     }
     #widgetLivePreview {
         transition: 0.3s;
         width: 100%;
         height: 100%;
-        display: flex;
-        flex-direction: column;
-        align-items: center;
-        justify-content: center;
+        position: relative;
+        overflow: hidden;
     }
-    #btn-size-mobile.active { border-color: var(--Accent-Teal); color: var(--Accent-Teal); }
-    #btn-size-tablet.active { border-color: var(--Accent-Teal); color: var(--Accent-Teal); }
-    #btn-size-desktop.active { border-color: var(--Accent-Teal); color: var(--Accent-Teal); }
+    .preview-size-btn.active { border-color: var(--Accent-Teal) !important; color: var(--Accent-Teal) !important; }
+
+    /* MOCK COCKPIT GRID (MIRRORS LIVE WIDGET) */
+    .mock-cockpit { display: grid; grid-template-columns: 1fr; gap: 24px; width: 100%; height: 100%; padding: 40px; }
+    .mock-cockpit.desktop { grid-template-columns: 1fr 1.5fr; gap: 40px; align-items: start; max-width: 900px; margin: 0 auto; padding: 48px; }
+
+    .mock-card {
+        background: rgba(23, 23, 23, 0.6);
+        backdrop-filter: blur(20px);
+        border: 1px solid rgba(255,255,255,0.1);
+        border-radius: 32px;
+        padding: 32px;
+        width: 100%;
+        position: relative;
+    }
+    .mock-guide-box { height: 140px; background: #000; border-radius: 12px; border: 1px solid rgba(255,255,255,0.05); overflow: hidden; position: relative; margin-bottom: 12px; }
+    .mock-guide-box img { width: 100%; height: 100%; object-fit: contain; }
     @media (max-width: 1100px) {
         .dashboard-split.widget-editor { grid-template-columns: 1fr !important; }
         .preview-column { order: -1; margin-bottom: 48px; }
@@ -1047,43 +1060,52 @@
                       <button class="btn-outline preview-size-btn" id="btn-size-tablet" style="height:32px; font-size:9px; border-radius:20px" onclick="window.setPreviewSize('tablet')">Tablet</button>
                       <button class="btn-outline preview-size-btn" id="btn-size-desktop" style="height:32px; font-size:9px; border-radius:20px" onclick="window.setPreviewSize('desktop')">Desktop</button>
                   </div>
-                  <div id="widgetLivePreviewFrame" style="transition: 0.5s cubic-bezier(0.4, 0, 0.2, 1); width: 375px; height: 667px; position:relative;">
-                      <div id="widgetLivePreview" style="background:#000; min-height:100%; width:100%; position:relative; overflow:auto; transition:0.3s; padding: 40px; display:flex; flex-direction:column; align-items:center; justify-content:center;">
-                        <!-- MOCK WIDGET CONTENT -->
-                        <div id="mockWidgetCard" class="luxury-glass" style="padding:48px; text-align:left; border-radius:32px; border: 1px solid rgba(255,255,255,0.1); width:100%; max-width:480px; position:relative;">
-                          <div id="mockHeader" style="margin-bottom:32px; text-align:left; display:flex; align-items:center; justify-content:space-between;">
-                            <div style="display:flex; align-items:center; gap:10px">
-                                <div id="mockLogo" style="width:24px; height:24px; background:var(--Accent-Teal); border-radius:4px"></div>
-                                <span id="mockBrandName" style="font-weight:900; font-size:14px; letter-spacing:-0.02em">YOUR BRAND</span>
-                            </div>
-                            <div style="font-size:18px; color:var(--Neutral-500); cursor:pointer">×</div>
-                          </div>
-                          <h3 style="font-size:24px; font-weight:900; color:var(--Accent-Teal); margin-bottom:8px" id="mockTitle">KORRA | AI Scan</h3>
-                          <p style="font-size:14px; color:var(--Neutral-400); margin-bottom:32px" id="mockSubtitle">Accurate measurements from photos.</p>
+                  <div id="widgetLivePreviewFrame">
+                      <div id="widgetLivePreview">
+                        <div id="mockCockpit" class="mock-cockpit">
+                            <div class="mock-card luxury-glass" id="mockInputCard">
+                                <div id="mockHeader" style="margin-bottom:24px; text-align:left; display:flex; align-items:center; justify-content:space-between;">
+                                    <div style="display:flex; align-items:center; gap:10px">
+                                        <div id="mockLogo" style="width:24px; height:24px; background:var(--Accent-Teal); border-radius:4px"></div>
+                                        <span id="mockBrandName" style="font-weight:900; font-size:12px; letter-spacing:-0.02em">YOUR BRAND</span>
+                                    </div>
+                                    <div style="font-size:16px; color:var(--Neutral-500)">×</div>
+                                </div>
+                                <h3 style="font-size:18px; font-weight:900; color:var(--Accent-Teal); margin-bottom:4px" id="mockTitle">KORRA | AI Scan</h3>
+                                <p style="font-size:11px; color:var(--Neutral-400); margin-bottom:24px" id="mockSubtitle">Accurate measurements from photos.</p>
 
-                          <div style="margin-bottom:16px">
-                            <label style="font-size:9px; font-weight:900; color:var(--Neutral-500); display:block; margin-bottom:6px">HEIGHT (CM)</label>
-                            <div style="height:44px; background:rgba(255,255,255,0.05); border:1px solid rgba(255,255,255,0.1); border-radius:10px; padding:12px; color:#fff; font-size:13px">180</div>
-                          </div>
-
-                          <div style="display:grid; grid-template-columns:1fr 1fr; gap:12px; margin-bottom:24px">
-                            <div class="mock-pose-box" style="height:80px; border:1px dashed rgba(255,255,255,0.1); border-radius:12px; display:flex; flex-direction:column; align-items:center; justify-content:center; background:rgba(255,255,255,0.02)">
-                              <img src="/assets/front_pose.png" style="width:30px; height:45px; object-fit:contain; margin-bottom:4px; opacity:0.6">
-                              <span style="font-size:8px; font-weight:800; color:var(--Neutral-500)">FRONT</span>
-                              <div style="font-size:7px; color:var(--Accent-Teal); margin-top:2px; font-weight:700" class="mock-accent-text">READY</div>
+                                <label style="font-size:8px; font-weight:900; color:var(--Neutral-500); display:block; margin-bottom:6px">BODY SPECS</label>
+                                <div style="height:40px; background:rgba(255,255,255,0.05); border:1px solid rgba(255,255,255,0.1); border-radius:10px; padding:10px; color:#fff; font-size:12px; margin-bottom:12px">Full Name</div>
+                                <div style="display:grid; grid-template-columns: 1fr 1fr; gap:10px; margin-bottom:20px">
+                                    <div style="height:40px; background:rgba(255,255,255,0.05); border:1px solid rgba(255,255,255,0.1); border-radius:10px; padding:10px; color:#fff; font-size:12px">180 cm</div>
+                                    <div style="height:40px; background:rgba(255,255,255,0.05); border:1px solid rgba(255,255,255,0.1); border-radius:10px; padding:10px; color:#fff; font-size:12px">Male</div>
+                                </div>
+                                <div id="mockSubmitBtn" class="btn-hero" style="width:100%; height:48px; font-size:11px">Get body measurements</div>
                             </div>
-                            <div class="mock-pose-box" style="height:80px; border:1px dashed rgba(255,255,255,0.1); border-radius:12px; display:flex; flex-direction:column; align-items:center; justify-content:center; background:rgba(255,255,255,0.02)">
-                              <img src="/assets/side_pose.png" style="width:30px; height:45px; object-fit:contain; margin-bottom:4px; opacity:0.6">
-                              <span style="font-size:8px; font-weight:800; color:var(--Neutral-500)">SIDE</span>
-                              <div style="font-size:7px; color:var(--Accent-Teal); margin-top:2px; font-weight:700" class="mock-accent-text">READY</div>
-                            </div>
-                          </div>
 
-                          <div id="mockSubmitBtn" class="btn-hero" style="width:100%; height:48px; font-size:11px">Get body measurements</div>
+                            <div class="mock-card luxury-glass" id="mockCaptureCard">
+                                <label style="font-size:8px; font-weight:900; color:var(--Neutral-500); display:block; margin-bottom:12px">BIOMETRIC CAPTURE</label>
+                                <div style="display:grid; grid-template-columns: 1fr 1fr; gap:16px">
+                                    <div>
+                                        <div class="mock-guide-box"><img src="/assets/front_pose.png"></div>
+                                        <div style="height:44px; border:1px dashed rgba(255,255,255,0.2); border-radius:12px; display:flex; flex-direction:column; align-items:center; justify-content:center">
+                                            <span style="font-size:8px; font-weight:800; color:var(--Neutral-500)">FRONT POSE</span>
+                                            <div style="font-size:7px; color:var(--Accent-Teal); font-weight:700" class="mock-accent-text">READY</div>
+                                        </div>
+                                    </div>
+                                    <div>
+                                        <div class="mock-guide-box"><img src="/assets/side_pose.png"></div>
+                                        <div style="height:44px; border:1px dashed rgba(255,255,255,0.2); border-radius:12px; display:flex; flex-direction:column; align-items:center; justify-content:center">
+                                            <span style="font-size:8px; font-weight:800; color:var(--Neutral-500)">SIDE POSE</span>
+                                            <div style="font-size:7px; color:var(--Accent-Teal); font-weight:700" class="mock-accent-text">READY</div>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
                         </div>
 
                         <!-- FLOATING TRIGGER PREVIEW -->
-                        <div id="previewTrigger" style="position:absolute; bottom:40px; right:20px; padding: 12px 24px; border-radius: 99px; font-size: 11px; font-weight: 900; cursor:pointer;">Get Measured</div>
+                        <div id="previewTrigger" style="position:absolute; bottom:32px; right:32px; padding: 10px 20px; border-radius: 99px; font-size: 10px; font-weight: 900; cursor:pointer;">Get Measured</div>
                       </div>
                   </div>
                 </div>
@@ -2111,7 +2133,7 @@ document.getElementById('scanForm').addEventListener('submit', async (e) => {
         const trigger = document.getElementById('previewTrigger');
         const container = document.getElementById('widgetLivePreview');
         const snippet = document.getElementById('widgetSnippet');
-        const mockCard = document.getElementById('mockWidgetCard');
+        const mockCards = document.querySelectorAll('.mock-card');
         const mockSubmit = document.getElementById('mockSubmitBtn');
         const mockTitle = document.getElementById('mockTitle');
         const mockAccents = document.querySelectorAll('.mock-accent-text');
@@ -2149,32 +2171,32 @@ document.getElementById('scanForm').addEventListener('submit', async (e) => {
         }
         mockAccents.forEach(el => el.style.color = color);
 
-        if (container && mockCard) {
-            // Ensure card is always distinct via border and shadow
-            mockCard.style.boxShadow = '0 30px 60px rgba(0,0,0,0.5)';
-            mockCard.style.border = '1px solid rgba(255,255,255,0.15)';
+        if (container) {
+            container.style.background = (theme === 'light') ? '#FFFFFF' : '#050505';
 
-            if (theme === 'light') {
-                container.style.background = '#FFFFFF';
-                mockCard.style.background = '#F8F9FA';
-                mockCard.style.borderColor = '#DEE2E6';
-                mockCard.style.color = '#1A1A1A';
-                mockCard.classList.remove('luxury-glass');
-                document.getElementById('mockSubtitle').style.color = '#6C757D';
-                if (brandColor.toUpperCase() === '#FFFFFF' || brandColor.toUpperCase() === '#FFF') mockBrandLabel.style.color = '#000000';
-            } else if (theme === 'glass') {
-                container.style.background = 'radial-gradient(circle at 70% 30%, #222 0%, #050505 100%)';
-                mockCard.style.background = 'rgba(255,255,255,0.03)';
-                mockCard.style.color = '#FFFFFF';
-                mockCard.classList.add('luxury-glass');
-                document.getElementById('mockSubtitle').style.color = 'var(--Neutral-400)';
-            } else {
-                container.style.background = '#050505';
-                mockCard.style.background = '#111111';
-                mockCard.style.color = '#FFFFFF';
-                mockCard.classList.remove('luxury-glass');
-                document.getElementById('mockSubtitle').style.color = 'var(--Neutral-400)';
-            }
+            mockCards.forEach(card => {
+                card.style.boxShadow = '0 30px 60px rgba(0,0,0,0.5)';
+                card.style.border = '1px solid rgba(255,255,255,0.15)';
+
+                if (theme === 'light') {
+                    card.style.background = '#F8F9FA';
+                    card.style.borderColor = '#DEE2E6';
+                    card.style.color = '#1A1A1A';
+                    card.classList.remove('luxury-glass');
+                    if (brandColor.toUpperCase() === '#FFFFFF' || brandColor.toUpperCase() === '#FFF') mockBrandLabel.style.color = '#000000';
+                } else if (theme === 'glass') {
+                    card.style.background = 'rgba(255,255,255,0.03)';
+                    card.style.color = '#FFFFFF';
+                    card.classList.add('luxury-glass');
+                } else {
+                    card.style.background = '#111111';
+                    card.style.color = '#FFFFFF';
+                    card.classList.remove('luxury-glass');
+                }
+            });
+
+            const mockSubtitle = document.getElementById('mockSubtitle');
+            if (mockSubtitle) mockSubtitle.style.color = (theme === 'light') ? '#6C757D' : 'var(--Neutral-400)';
         }
 
         if (snippet) {
@@ -2192,25 +2214,24 @@ document.getElementById('scanForm').addEventListener('submit', async (e) => {
 
     window.setPreviewSize = (type) => {
         const frame = document.getElementById('widgetLivePreviewFrame');
-        const container = document.getElementById('widgetLivePreview');
+        const cockpit = document.getElementById('mockCockpit');
         document.querySelectorAll('.preview-size-btn').forEach(b => b.classList.remove('active'));
         document.getElementById('btn-size-' + type).classList.add('active');
 
-        // CORRECT RESPONSIVE LOGIC: Desktop is landscape, Tablet is portrait-wide
         if (type === 'mobile') {
-            frame.style.width = '375px';
-            frame.style.height = '667px';
-            container.style.transform = 'scale(1)';
+            frame.style.maxWidth = '375px'; frame.style.height = '667px';
+            frame.style.borderRadius = '48px';
+            cockpit.classList.remove('desktop');
         }
         else if (type === 'tablet') {
-            frame.style.width = '600px';
-            frame.style.height = '800px';
-            container.style.transform = 'scale(0.8)';
+            frame.style.maxWidth = '768px'; frame.style.height = '1024px';
+            frame.style.borderRadius = '48px';
+            cockpit.classList.remove('desktop');
         }
         else {
-            frame.style.width = '1000px';
-            frame.style.height = '600px';
-            container.style.transform = 'scale(0.7)';
+            frame.style.maxWidth = '1100px'; frame.style.height = '600px';
+            frame.style.borderRadius = '24px';
+            cockpit.classList.add('desktop');
         }
         window.updateWidgetPreview();
     };
