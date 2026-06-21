@@ -140,6 +140,26 @@
     [data-tooltip]:hover::before { opacity: 1; }
 
     header { width: 100%; height: 80px; display: flex; align-items: center; position: fixed; top: 0; z-index: 2100; background: rgba(12, 12, 12, 0.8); backdrop-filter: blur(20px); border-bottom: 1px solid var(--Glass-Border); }
+    .header-actions { display: flex; align-items: center; gap: 24px; position: relative; }
+    .profile-trigger { width: 44px; height: 44px; border-radius: 50%; border: 2px solid var(--Glass-Border); cursor: pointer; transition: 0.3s; overflow: hidden; position: relative; background: #000; display: flex; align-items: center; justify-content: center; }
+    .profile-trigger:hover { border-color: var(--Mint); transform: scale(1.05); }
+    .profile-trigger img { width: 100%; height: 100%; object-fit: cover; }
+
+    .profile-dropdown {
+        position: absolute; top: 60px; right: 0; width: 220px; background: rgba(15, 15, 15, 0.95);
+        backdrop-filter: blur(30px); border: 1px solid var(--Glass-Border); border-radius: 20px;
+        padding: 12px; display: none; flex-direction: column; gap: 4px; box-shadow: var(--Elev-3); z-index: 5000;
+        animation: fadeDown 0.3s cubic-bezier(0.2, 0.8, 0.2, 1);
+    }
+    @keyframes fadeDown { from { opacity: 0; transform: translateY(-10px); } to { opacity: 1; transform: translateY(0); } }
+    .profile-dropdown.active { display: flex; }
+    .dropdown-item {
+        display: flex; align-items: center; gap: 12px; padding: 12px 16px; border-radius: 12px;
+        color: var(--Neutral-400); font-size: 13px; font-weight: 600; text-decoration: none; transition: 0.2s; cursor: pointer;
+    }
+    .dropdown-item:hover { background: var(--Glass); color: var(--Mint); }
+    .dropdown-item.danger { color: #ff4d4d; }
+    .dropdown-item.danger:hover { background: rgba(255, 77, 77, 0.1); }
 
     /* CREDIT MONITOR BADGE */
     .credit-badge {
@@ -262,27 +282,28 @@
 
     /* ULTRA-MODERN CLIENT LEDGER: Mobile Stacked UI */
     @media (max-width: 900px) {
-        .hero-grid { grid-template-columns: 1fr 1fr !important; gap: 12px !important; }
-        .action-card { height: 240px !important; padding: 20px !important; border-radius: 24px !important; }
-        .action-title { font-size: 16px !important; }
-        .action-overlay { padding: 20px !important; }
-        .action-tag { font-size: 8px !important; margin-bottom: 8px !important; }
-        .action-cta { width: 32px !important; height: 32px !important; }
+        .hero-grid { grid-template-columns: 1fr 1fr !important; gap: 12px !important; width: 100% !important; padding: 0 !important; }
+        .action-card { height: 200px !important; border-radius: 24px !important; width: 100% !important; }
+        .action-title { font-size: 14px !important; }
+        .action-overlay { padding: 16px !important; width: 100% !important; }
+        .action-tag { font-size: 7px !important; margin-bottom: 6px !important; }
+        .action-cta { width: 28px !important; height: 28px !important; }
 
         .scan-item {
             flex-direction: column;
             align-items: flex-start;
             gap: 16px;
             padding: 24px;
-            background: rgba(255,255,255,0.02);
-            border: 1px solid var(--Glass-Border);
-            border-radius: 20px;
-            margin-bottom: 12px;
+            background: rgba(255,255,255,0.03);
+            border: 1px solid rgba(87,215,192,0.1);
+            border-radius: 24px;
+            margin-bottom: 16px;
             position: relative;
+            box-shadow: var(--Elev-1);
         }
         .scan-info { width: 100%; }
-        .scan-item .btn-ghost { width: 100%; height: 44px; margin-left: 0; }
-        .avatar-pro { position: absolute; top: 24px; right: 24px; width: 32px; height: 32px; font-size: 10px; }
+        .scan-item .btn-ghost { width: 100%; height: 48px; margin-left: 0; border-radius: 14px; background: var(--Glass); }
+        .avatar-pro { position: absolute; top: 24px; right: 24px; width: 36px; height: 36px; font-size: 11px; background: var(--Mint); color: var(--Obsidian); }
     }
     .btn-back-modal { display: flex; align-items: center; gap: 8px; font-size: 12px; font-weight: 800; color: var(--Neutral-400); cursor: pointer; transition: 0.2s; }
     .btn-back-modal:hover { color: var(--White); }
@@ -741,7 +762,35 @@
     </div>
   </div>
 
-  <header><div class="container"><a class="logo" href="/"><div class="logo-mark"></div><div class="logo-text">KORRA</div></a><div style="display:flex; align-items:center; gap:24px"><div id="networkStatus"><div class="status-dot"></div><span>Cloud Sync Live</span></div><div class="credit-badge" id="headerCreditMonitor"><span>CREDITS:</span> <b id="headerCredits">0</b></div><span id="userEmail" style="font-size:12px; font-weight:700; color:var(--Mint)"></span><button class="btn-outline" id="btnSignOut">Logout</button></div></div></header>
+  <header>
+    <div class="container">
+      <a class="logo" href="/">
+        <div class="logo-mark"></div>
+        <div class="logo-text">KORRA</div>
+      </a>
+      <div class="header-actions">
+        <div class="credit-badge" id="headerCreditMonitor"><span>CREDITS:</span> <b id="headerCredits">0</b></div>
+        <div class="profile-trigger" id="profileTrigger" onclick="window.toggleProfileMenu(event)">
+            <img src="/assets/user-profile-new.png" id="profileImageHeader" alt="User Profile">
+        </div>
+        <div class="profile-dropdown" id="profileDropdown">
+            <div class="dropdown-item" onclick="window.switchTab('settings')">
+                <svg class="korra-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor"><circle cx="12" cy="12" r="3"/><path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 0 1 0 2.83 2 2 0 0 1-2.83 0l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 0 1-2 2 2 2 0 0 1-2-2v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 0 1-2.83 0 2 2 0 0 1 0-2.83l.06-.06a1.65 1.65 0 0 0 .33-1.82 1.65 1.65 0 0 0-1.51-1H3a2 2 0 0 1-2-2 2 2 0 0 1 2-2h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 0 1 0-2.83 2 2 0 0 1 2.83 0l.06.06a1.65 1.65 0 0 0 1.82.33 1.65 1.65 0 0 0 1-1.51V3a2 2 0 0 1 2-2 2 2 0 0 1 2 2v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 0 1 2.83 0 2 2 0 0 1 0 2.83l-.06.06a1.65 1.65 0 0 0-.33 1.82 1.65 1.65 0 0 0 1.51 1H21a2 2 0 0 1 2 2 2 2 0 0 1-2 2h-.09a1.65 1.65 0 0 0-1.51 1z"/></svg>
+                <span>Account Settings</span>
+            </div>
+            <div class="dropdown-item" onclick="window.switchTab('billing')">
+                <svg class="korra-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor"><rect x="1" y="4" width="22" height="16" rx="2" ry="2"/><line x1="1" y1="10" x2="23" y2="10"/></svg>
+                <span>Billing & Plans</span>
+            </div>
+            <hr style="border: none; border-top: 1px solid var(--Glass-Border); margin: 8px 0;">
+            <div class="dropdown-item danger" onclick="window.signOut()">
+                <svg class="korra-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor"><path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4"/><polyline points="16 17 21 12 16 7"/><line x1="21" y1="12" x2="9" y2="12"/></svg>
+                <span>Logout</span>
+            </div>
+        </div>
+      </div>
+    </div>
+  </header>
 
   <div class="mobile-fab" onclick="document.getElementById('scanModal').classList.add('active')">
     <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"><line x1="12" y1="5" x2="12" y2="19"></line><line x1="5" y1="12" x2="19" y2="12"></line></svg>
@@ -1151,6 +1200,17 @@
 
                <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 48px;">
                  <div>
+                   <div style="margin-bottom:24px">
+                     <label class="form-label">PROFILE PICTURE</label>
+                     <div style="display:flex; align-items:center; gap:20px">
+                        <div class="profile-trigger" style="width:64px; height:64px; border-width:1px">
+                            <img src="/assets/user-profile-new.png" id="settingsProfilePreview">
+                        </div>
+                        <button class="btn-outline" style="font-size:10px" onclick="document.getElementById('profileImageUpload').click()">Change Picture</button>
+                        <input type="file" id="profileImageUpload" style="display:none" accept="image/*" onchange="window.handleProfileImage(this)">
+                     </div>
+                   </div>
+
                    <div style="margin-bottom:24px">
                      <label class="form-label">PROFESSIONAL NAME</label>
                      <input type="text" id="settingsName" class="input-field" placeholder="Your Name">
@@ -1976,7 +2036,17 @@ document.getElementById('scanForm').addEventListener('submit', async (e) => {
       }
     });
 
-    document.getElementById('btnSignOut').onclick = async () => { await window.KORRA_DB.auth.signOut(); window.location.href = '/signin'; };
+    window.toggleProfileMenu = (e) => {
+        e.stopPropagation();
+        document.getElementById('profileDropdown').classList.toggle('active');
+    };
+
+    // Close dropdown on outside click
+    window.addEventListener('click', () => {
+        document.getElementById('profileDropdown')?.classList.remove('active');
+    });
+
+    window.signOut = async () => { await window.KORRA_DB.auth.signOut(); window.location.href = '/signin'; };
 
     window.selectBundle = (el, credits, price) => {
         document.querySelectorAll('#topUpModal .glass-card').forEach(c => c.style.borderColor = 'var(--Glass-Border)');
@@ -2288,13 +2358,15 @@ document.getElementById('scanForm').addEventListener('submit', async (e) => {
         if (url) window.showToast("Success", "Webhook Destination Secured.");
     };
 
-    window.handleWidgetLogo = (input) => {
+    window.handleProfileImage = (input) => {
         if (input.files && input.files[0]) {
             const reader = new FileReader();
             reader.onload = (e) => {
-                logoDataUrl = e.target.result;
-                window.updateWidgetPreview();
-                window.showToast("Success", "Logo Preview Synchronized.");
+                const url = e.target.result;
+                document.getElementById('settingsProfilePreview').src = url;
+                document.getElementById('profileImageHeader').src = url;
+                window.showToast("Profile image updated locally.");
+                // Note: Actual upload logic would go here to Supabase Storage
             };
             reader.readAsDataURL(input.files[0]);
         }
