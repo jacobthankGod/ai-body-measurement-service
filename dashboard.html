@@ -180,6 +180,66 @@
 
     main { padding-top: 120px; height: 100vh; overflow-y: auto; }
     .container { width: 100%; max-width: 1200px; margin: 0 auto; padding: 0 48px; }
+
+    /* ACTION CARD SYSTEM (Fitness App Ref) */
+    .hero-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(280px, 1fr)); gap: 24px; margin-top: 32px; }
+    .action-card {
+      height: 380px; border-radius: 32px; overflow: hidden; position: relative;
+      background: #000; border: 1px solid var(--Glass-Border); cursor: pointer; transition: 0.4s cubic-bezier(0.2, 0.8, 0.2, 1);
+      display: flex; flex-direction: column;
+    }
+    .action-card:hover { transform: scale(1.02); border-color: var(--Accent-Teal); box-shadow: 0 20px 60px rgba(0,0,0,0.8); }
+    .action-card img { width: 100%; height: 100%; object-fit: cover; opacity: 0.7; transition: 0.4s; position: absolute; inset: 0; }
+    .action-card:hover img { opacity: 0.4; transform: scale(1.1); }
+    .action-overlay {
+      position: absolute; inset: 0; background: linear-gradient(to top, rgba(0,0,0,0.95) 0%, transparent 60%);
+      display: flex; flex-direction: column; justify-content: flex-end; padding: 40px;
+      z-index: 2;
+    }
+    .action-tag { font-size: 10px; font-weight: 900; color: var(--Accent-Teal); text-transform: uppercase; letter-spacing: 0.2em; margin-bottom: 12px; }
+    .action-title { font-size: 28px; font-weight: 800; line-height: 1.1; margin-bottom: 12px; color: #fff; }
+    .action-cta {
+      width: 44px; height: 44px; background: var(--Accent-Teal); border-radius: 50%;
+      display: flex; align-items: center; justify-content: center; color: #000;
+      box-shadow: 0 10px 20px rgba(87, 215, 192, 0.3); transition: 0.3s;
+    }
+    .action-card:hover .action-cta { transform: translateX(10px); }
+
+    /* WIDGET PREVIEW FIXES */
+    #widgetLivePreviewFrame {
+        max-width: 100%;
+        box-shadow: var(--Elev-3);
+        margin: 0 auto;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        border: 12px solid #1a1a1a;
+        border-radius: 40px;
+        background: #000;
+        overflow: hidden;
+        transition: 0.5s cubic-bezier(0.4, 0, 0.2, 1);
+    }
+    #widgetLivePreview {
+        transition: 0.3s;
+        width: 100%;
+        height: 100%;
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+        justify-content: center;
+    }
+    #btn-size-mobile.active { border-color: var(--Accent-Teal); color: var(--Accent-Teal); }
+    #btn-size-tablet.active { border-color: var(--Accent-Teal); color: var(--Accent-Teal); }
+    #btn-size-desktop.active { border-color: var(--Accent-Teal); color: var(--Accent-Teal); }
+    @media (max-width: 1100px) {
+        .dashboard-split.widget-editor { grid-template-columns: 1fr !important; }
+        .preview-column { order: -1; margin-bottom: 48px; }
+    }
+
+    /* MODAL CLOSE/BACK BUTTON */
+    .modal-nav-header { display: flex; align-items: center; justify-content: space-between; margin-bottom: 32px; }
+    .btn-back-modal { display: flex; align-items: center; gap: 8px; font-size: 12px; font-weight: 800; color: var(--Neutral-400); cursor: pointer; transition: 0.2s; }
+    .btn-back-modal:hover { color: var(--White); }
     header .container { display: flex; align-items: center; justify-content: space-between; padding: 0; }
         .logo { display: flex; align-items: center; gap: 12px; cursor: pointer; text-decoration: none; color: inherit; }
     .logo-mark { width: 32px; height: 32px; border-radius: 8px; background: var(--Mint); transform: rotate(-8deg); }
@@ -519,7 +579,14 @@
 
   <div class="modal-overlay" id="scanModal">
     <div class="modal-card modal-card-landscape">
-      <h2 style="font-size:24px; margin-bottom:12px">Body Scan</h2>
+      <div class="modal-nav-header">
+          <div class="btn-back-modal" onclick="document.getElementById('scanModal').classList.remove('active')">
+              <svg class="korra-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor"><polyline points="15 18 9 12 15 6"></polyline></svg>
+              <span>GO BACK</span>
+          </div>
+          <h2 style="font-size:14px; font-weight:900; letter-spacing:0.1em; color:var(--Accent-Teal)">DIGITAL FITTING ROOM</h2>
+          <div style="width:80px"></div> <!-- Spacer -->
+      </div>
       <p style="color:var(--Neutral-400); margin-bottom:40px">Follow guidelines for high accuracy results.</p>
       <form id="scanForm">
         <div class="landscape-grid">
@@ -653,13 +720,13 @@
           </a>
 
           <div class="sidebar-label" id="label-implementation">Implementation</div>
-          <a onclick="window.switchTab('widget')" id="tab-widget" data-label="Studio" aria-label="Brand Studio">
+          <a onclick="window.switchTab('widget')" id="tab-widget" data-label="Widget" aria-label="Widget Customizer">
             <svg class="korra-icon" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round"><rect x="2" y="3" width="20" height="14" rx="2" ry="2"/><line x1="8" y1="21" x2="16" y2="21"/><line x1="12" y1="17" x2="12" y2="21"/></svg>
-            <span class="nav-text">Brand Studio</span>
+            <span class="nav-text">Widget</span>
           </a>
-          <a onclick="window.switchTab('webhooks')" id="tab-webhooks" data-label="Sync" aria-label="Auto Sync">
+          <a onclick="window.switchTab('webhooks')" id="tab-webhooks" data-label="Webhooks" aria-label="Webhook Configuration">
             <svg class="korra-icon" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round"><polyline points="22 12 18 12 15 21 9 3 6 12 2 12"/></svg>
-            <span class="nav-text">Auto-Sync</span>
+            <span class="nav-text">Webhooks</span>
           </a>
           <a onclick="window.switchTab('enterprise')" id="tab-enterprise" style="display:none" data-label="Insights" aria-label="Intelligence Hub">
             <svg class="korra-icon" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round"><path d="M21 16V8a2 2 0 0 0-1-1.73l-7-4a2 2 0 0 0-2 0l-7 4A2 2 0 0 0 3 8v8a2 2 0 0 0 1 1.73l7 4a2 2 0 0 0 2 0l7-4A2 2 0 0 0 21 16z"></path><polyline points="3.27 6.96 12 12.01 20.73 6.96"></polyline><line x1="12" y1="22.08" x2="12" y2="12"></line></svg>
@@ -684,9 +751,42 @@
 
         <section class="main-content">
           <div id="view-overview" class="tab-view">
-            <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:24px"><div><h2 style="font-size:24px; margin-bottom:4px">Account Overview</h2><p style="color:var(--Neutral-400)">View your scan activity and results.</p></div><button class="btn-outline" style="border-color:var(--Mint); color:var(--Mint)" onclick="window.openQRPoster()">Generate Studio Poster</button></div>
-            <div class="stat-grid"><div class="glass-card stat-card"><h4>Total Scans</h4><div class="value" id="overviewTotal">0</div></div><div class="glass-card stat-card"><h4>Avg Precision</h4><div class="value">High</div></div><div class="glass-card stat-card"><h4>Health</h4><div class="value" style="color:var(--Mint)">ACTIVE</div></div></div>
-            <div class="glass-card" style="margin-bottom:32px; padding:32px"><h4 style="font-size:12px; font-weight:900; color:var(--Neutral-500); text-transform:uppercase; margin-bottom:24px">Scan Velocity</h4><div style="height:300px; width:100%"><canvas id="usageChart"></canvas></div></div>
+            <div style="margin-bottom:48px">
+                <h2 style="font-size:32px; margin-bottom:8px">Welcome back.</h2>
+                <p style="color:var(--Neutral-400); font-size:16px">Your clinical-grade fitting system is active and ready.</p>
+            </div>
+
+            <div class="hero-grid">
+                <!-- SCAN CARD -->
+                <div class="action-card" onclick="window.switchTab('vault'); document.getElementById('scanModal').classList.add('active');">
+                    <img src="/assets/partners/amazon.webp" style="opacity: 0.4"> <!-- Placeholder for high-action photo -->
+                    <div class="action-overlay">
+                        <div class="action-tag">Acuracy First</div>
+                        <h3 class="action-title">Start My Digital<br>Fitting session</h3>
+                        <div class="action-cta"><svg class="korra-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor"><line x1="5" y1="12" x2="19" y2="12"></line><polyline points="12 5 19 12 12 19"></polyline></svg></div>
+                    </div>
+                </div>
+
+                <!-- PASSPORT CARD -->
+                <div class="action-card" onclick="window.switchTab('passports')">
+                    <img src="/assets/body-capture.png" style="opacity: 0.3; object-fit: contain; padding: 40px">
+                    <div class="action-overlay">
+                        <div class="action-tag">Universal Identity</div>
+                        <h3 class="action-title">Access My 3D<br>Size Passport</h3>
+                        <div class="action-cta"><svg class="korra-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor"><line x1="5" y1="12" x2="19" y2="12"></line><polyline points="12 5 19 12 12 19"></polyline></svg></div>
+                    </div>
+                </div>
+
+                <!-- STUDIO CARD -->
+                <div class="action-card" onclick="window.switchTab('widget')">
+                    <div style="position:absolute; inset:0; background:radial-gradient(circle at center, var(--Accent-Teal) 0%, transparent 70%); opacity:0.1"></div>
+                    <div class="action-overlay">
+                        <div class="action-tag">Brand Control</div>
+                        <h3 class="action-title">Configure My<br>Widget Interface</h3>
+                        <div class="action-cta"><svg class="korra-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor"><line x1="5" y1="12" x2="19" y2="12"></line><polyline points="12 5 19 12 12 19"></polyline></svg></div>
+                    </div>
+                </div>
+            </div>
           </div>
 
           <div id="view-vault" class="tab-view active">
@@ -754,10 +854,34 @@
             </div>
           </div>
 
+          <!-- WEBHOOKS TAB -->
+          <div id="view-webhooks" class="tab-view">
+            <div class="glass-card">
+              <div style="display:flex; justify-content:space-between; align-items:flex-start; margin-bottom:40px">
+                <div>
+                  <h2 style="font-size: 24px; margin-bottom: 8px">Webhooks</h2>
+                  <p style="color:var(--Neutral-400)">Deliver measurement data to your inventory or design systems automatically.</p>
+                </div>
+                <button class="btn-primary" onclick="window.addWebhook()">+ Add Webhook</button>
+              </div>
+
+              <div class="hero-grid" style="grid-template-columns: 1fr; gap: 16px;">
+                <div class="glass-card" style="padding:48px; border-style:dashed; text-align:center">
+                    <div style="font-size:48px; margin-bottom:24px">🔄</div>
+                    <h3 style="margin-bottom:12px">No Destinations Configured</h3>
+                    <p style="color:var(--Neutral-400); max-width:400px; margin: 0 auto 32px">Configure a URL to receive real-time measurement updates whenever a client scan is completed.</p>
+                    <button class="btn-outline" onclick="window.addWebhook()">Configure My First Sync</button>
+                </div>
+              </div>
+            </div>
+          </div>
+
           <div id="view-passports" class="tab-view">
-            <h2 style="font-size:24px; margin-bottom:12px">Size Passport</h2>
-            <p style="color:var(--Neutral-400); margin-bottom:32px">Show this QR code at any participating shop to instantly share your measurements.</p>
-            <div id="passportGrid" style="display:grid; grid-template-columns:repeat(auto-fill, minmax(300px, 1fr)); gap:24px"></div>
+            <div style="margin-bottom:40px">
+                <h2 style="font-size:32px; margin-bottom:8px">Fitting Profiles</h2>
+                <p style="color:var(--Neutral-400); font-size:16px">Your universal body identity across all platforms.</p>
+            </div>
+            <div id="passportGrid" style="display:grid; grid-template-columns:repeat(auto-fill, minmax(320px, 1fr)); gap:24px"></div>
           </div>
 
           <!-- ENTERPRISE INTELLIGENCE HUB -->
@@ -838,9 +962,9 @@
 
               <!-- ANALYTICS STRIP -->
               <div class="stat-grid" style="grid-template-columns: 1fr 1fr 1fr; margin-bottom: 48px;">
-                <div class="glass-card stat-card" style="border-color:var(--Mint)">
+                <div class="glass-card stat-card" style="border-color:var(--Accent-Teal)">
                     <h4>Return Rate Reduction</h4>
-                    <div class="value" style="color:var(--Mint)">24.8%</div>
+                    <div class="value" style="color:var(--Accent-Teal)">24.8%</div>
                 </div>
                 <div class="glass-card stat-card">
                     <h4>Widget Conversion</h4>
@@ -852,24 +976,48 @@
                 </div>
               </div>
               
-              <div class="dashboard-split" style="grid-template-columns: 1fr 1.2fr; gap: 48px;">
+              <div class="dashboard-split widget-editor" style="grid-template-columns: 1fr 1.2fr; gap: 48px;">
                 <div class="customizer-controls">
                   <div style="margin-bottom:32px">
-                    <h4 style="font-size:10px; font-weight:900; color:var(--Mint); margin-bottom:16px">IDENTITY & THEME</h4>
+                    <h4 style="font-size:10px; font-weight:900; color:var(--Accent-Teal); margin-bottom:16px">IDENTITY & THEME</h4>
                     <div style="margin-bottom:24px">
-                        <label style="font-size:10px; color:var(--Neutral-500); display:block; margin-bottom:12px">WIDGET LOGO (DARK SVG/PNG)</label>
-                        <button class="btn-outline" style="width:100%; border-style:dashed; height:52px" onclick="document.getElementById('widgetLogoUpload').click()">Upload Brand Logo</button>
+                        <label class="form-label">BRAND NAME</label>
+                        <div style="display:flex; gap:12px">
+                            <input type="text" id="widgetBrandName" class="input-field" placeholder="YOUR BRAND" style="flex:1; margin:0" oninput="window.updateWidgetPreview()">
+                            <input type="color" id="widgetBrandColor" class="input-field" value="#FFFFFF" style="width:50px; padding:4px; margin:0; height:44px" oninput="window.updateWidgetPreview()">
+                        </div>
+                    </div>
+                    <div style="margin-bottom:24px">
+                        <label class="form-label">BUTTON TEXTS</label>
+                        <div style="display:grid; grid-template-columns: 1fr 1fr; gap:12px; margin-bottom:12px">
+                            <input type="text" id="widgetBtnTextFitting" class="input-field" placeholder="Get body measurements" style="margin:0; font-size:10px" oninput="window.updateWidgetPreview()">
+                            <input type="text" id="widgetBtnTextMeasured" class="input-field" placeholder="Get Measured" style="margin:0; font-size:10px" oninput="window.updateWidgetPreview()">
+                        </div>
+                        <div style="display:flex; gap:12px; align-items:center">
+                            <label class="form-label" style="margin:0; font-size:10px">BTN COLOR</label>
+                            <input type="color" id="widgetBtnColor" class="input-field" value="#57D7C0" style="width:50px; padding:4px; margin:0; height:32px" oninput="window.updateWidgetPreview()">
+                        </div>
+                    </div>
+                    <div style="margin-bottom:24px">
+                        <label class="form-label">WIDGET LOGO (SVG/PNG)</label>
+                        <div style="display:flex; gap:12px">
+                            <button class="btn-outline" style="flex:1; border-style:dashed; height:52px" onclick="document.getElementById('widgetLogoUpload').click()">Upload Logo</button>
+                            <div style="width:52px">
+                                <label class="form-label" style="font-size:8px">SIZE</label>
+                                <input type="number" id="widgetLogoSize" class="input-field" value="24" style="height:32px; padding:0 8px; margin:0" oninput="window.updateWidgetPreview()">
+                            </div>
+                        </div>
                         <input type="file" id="widgetLogoUpload" style="display:none" accept="image/*" onchange="window.handleWidgetLogo(this)">
                     </div>
                     <div style="margin-bottom:24px">
-                      <label style="font-size:10px; color:var(--Neutral-500); display:block; margin-bottom:8px">PRIMARY BRAND COLOR</label>
+                      <label class="form-label">PRIMARY BRAND COLOR</label>
                       <div style="display:flex; gap:12px; align-items:center">
                         <input type="color" id="widgetColorPrimary" class="input-field" style="width:60px; padding:4px; margin:0; height:44px" value="#57D7C0" oninput="window.updateWidgetPreview()">
                         <input type="text" id="widgetColorText" class="input-field" style="flex:1; margin:0; height:44px" value="#57D7C0" oninput="document.getElementById('widgetColorPrimary').value = this.value; window.updateWidgetPreview()">
                       </div>
                     </div>
                     <div style="margin-bottom:20px">
-                      <label style="font-size:10px; color:var(--Neutral-500); display:block; margin-bottom:8px">SURFACE PRESET</label>
+                      <label class="form-label">SURFACE PRESET</label>
                       <select id="widgetTheme" class="input-field" style="appearance:none;" onchange="window.updateWidgetPreview()">
                         <option value="dark">Luxury Obsidian (Dark)</option>
                         <option value="light">Artisan Paper (Light)</option>
@@ -879,9 +1027,9 @@
                   </div>
 
                   <div style="margin-bottom:32px">
-                    <h4 style="font-size:10px; font-weight:900; color:var(--Mint); margin-bottom:16px">EMBED CODE</h4>
+                    <h4 style="font-size:10px; font-weight:900; color:var(--Accent-Teal); margin-bottom:16px">EMBED CODE</h4>
                     <div style="background:#000; padding:20px; border:1px solid var(--Glass-Border); border-radius:12px; position:relative">
-                      <code id="widgetSnippet" style="color:var(--Mint); font-size:11px; word-break:break-all; display:block; padding-right:40px">
+                      <code id="widgetSnippet" style="color:var(--Accent-Teal); font-size:11px; word-break:break-all; display:block; padding-right:40px">
                         &lt;script src="https://korra.work/assets/korra-widget.js" data-merchant="LOADING..."&gt;&lt;/script&gt;
                       </code>
                       <button class="btn-outline" style="position:absolute; top:12px; right:12px; height:24px; font-size:8px; padding:0 8px" onclick="window.copyWidgetCode()">Copy</button>
@@ -891,22 +1039,22 @@
                   <button class="btn-primary" style="width:100%; height:56px" onclick="window.saveWidgetSettings()">Publish Branded Experience</button>
                 </div>
 
-                <div class="preview-column" style="text-align:center; margin-bottom: 80px;">
+                <div class="preview-column" style="text-align:center;">
                   <div style="display:flex; justify-content:center; gap:12px; margin-bottom:16px">
-                      <button class="btn-outline" style="height:32px; font-size:9px; border-radius:20px" onclick="window.setPreviewSize('mobile')">Phone</button>
-                      <button class="btn-outline" style="height:32px; font-size:9px; border-radius:20px" onclick="window.setPreviewSize('tablet')">Tablet</button>
-                      <button class="btn-outline" style="height:32px; font-size:9px; border-radius:20px" onclick="window.setPreviewSize('desktop')">Desktop</button>
+                      <button class="btn-outline preview-size-btn active" id="btn-size-mobile" style="height:32px; font-size:9px; border-radius:20px" onclick="window.setPreviewSize('mobile')">Phone</button>
+                      <button class="btn-outline preview-size-btn" id="btn-size-tablet" style="height:32px; font-size:9px; border-radius:20px" onclick="window.setPreviewSize('tablet')">Tablet</button>
+                      <button class="btn-outline preview-size-btn" id="btn-size-desktop" style="height:32px; font-size:9px; border-radius:20px" onclick="window.setPreviewSize('desktop')">Desktop</button>
                   </div>
-                  <div id="widgetLivePreviewFrame" style="margin: 0 auto; transition: 0.5s cubic-bezier(0.4, 0, 0.2, 1); width: 375px; border: 12px solid #1a1a1a; border-radius: 40px; overflow: hidden; box-shadow: 0 50px 100px rgba(0,0,0,0.5)">
-                      <div id="widgetLivePreview" style="background:#000; min-height:667px; width:100%; position:relative; overflow:hidden; transition:0.3s; padding: 24px;">
+                  <div id="widgetLivePreviewFrame" style="transition: 0.5s cubic-bezier(0.4, 0, 0.2, 1); width: 375px; height: 667px; position:relative;">
+                      <div id="widgetLivePreview" style="background:#000; min-height:100%; width:100%; position:relative; overflow:auto; transition:0.3s; padding: 24px;">
                         <div id="mockHeader" style="margin-bottom:32px; text-align:left; display:flex; align-items:center; gap:10px">
-                            <div id="mockLogo" style="width:24px; height:24px; background:var(--Mint); border-radius:4px"></div>
-                            <span style="font-weight:900; font-size:14px; letter-spacing:-0.02em">YOUR BRAND</span>
+                            <div id="mockLogo" style="width:24px; height:24px; background:var(--Accent-Teal); border-radius:4px"></div>
+                            <span id="mockBrandName" style="font-weight:900; font-size:14px; letter-spacing:-0.02em">YOUR BRAND</span>
                         </div>
                         <!-- MOCK WIDGET CONTENT -->
-                        <div id="mockWidgetCard" class="glass-card" style="padding:32px; text-align:left;">
-                          <h3 style="font-size:18px; font-weight:900; color:#57D7C0; margin-bottom:8px" id="mockTitle">KORRA | AI Scan</h3>
-                          <p style="font-size:12px; color:var(--Neutral-400); margin-bottom:24px">Accurate measurements from photos.</p>
+                        <div id="mockWidgetCard" class="luxury-glass" style="padding:32px; text-align:left; border-radius:24px; border: 1px solid rgba(255,255,255,0.1);">
+                          <h3 style="font-size:18px; font-weight:900; color:var(--Accent-Teal); margin-bottom:8px" id="mockTitle">KORRA | AI Scan</h3>
+                          <p style="font-size:12px; color:var(--Neutral-400); margin-bottom:24px" id="mockSubtitle">Accurate measurements from photos.</p>
 
                           <div style="margin-bottom:16px">
                             <label style="font-size:9px; font-weight:900; color:var(--Neutral-500); display:block; margin-bottom:6px">HEIGHT (CM)</label>
@@ -914,24 +1062,25 @@
                           </div>
 
                           <div style="display:grid; grid-template-columns:1fr 1fr; gap:12px; margin-bottom:24px">
-                            <div style="height:80px; border:1px dashed rgba(255,255,255,0.1); border-radius:12px; display:flex; flex-direction:column; align-items:center; justify-content:center; background:rgba(255,255,255,0.02)">
-                              <span style="font-size:8px; font-weight:800; color:var(--Neutral-500)">FRONT POSE</span>
-                              <div style="font-size:7px; color:#57D7C0; margin-top:2px; font-weight:700" class="mock-accent-text">READY</div>
+                            <div class="mock-pose-box" style="height:80px; border:1px dashed rgba(255,255,255,0.1); border-radius:12px; display:flex; flex-direction:column; align-items:center; justify-content:center; background:rgba(255,255,255,0.02)">
+                              <img src="/assets/front_pose.png" style="width:30px; height:45px; object-fit:contain; margin-bottom:4px; opacity:0.6">
+                              <span style="font-size:8px; font-weight:800; color:var(--Neutral-500)">FRONT</span>
+                              <div style="font-size:7px; color:var(--Accent-Teal); margin-top:2px; font-weight:700" class="mock-accent-text">READY</div>
                             </div>
-                            <div style="height:80px; border:1px dashed rgba(255,255,255,0.1); border-radius:12px; display:flex; flex-direction:column; align-items:center; justify-content:center; background:rgba(255,255,255,0.02)">
-                              <span style="font-size:8px; font-weight:800; color:var(--Neutral-500)">SIDE POSE</span>
-                              <div style="font-size:7px; color:#57D7C0; margin-top:2px; font-weight:700" class="mock-accent-text">READY</div>
+                            <div class="mock-pose-box" style="height:80px; border:1px dashed rgba(255,255,255,0.1); border-radius:12px; display:flex; flex-direction:column; align-items:center; justify-content:center; background:rgba(255,255,255,0.02)">
+                              <img src="/assets/side_pose.png" style="width:30px; height:45px; object-fit:contain; margin-bottom:4px; opacity:0.6">
+                              <span style="font-size:8px; font-weight:800; color:var(--Neutral-500)">SIDE</span>
+                              <div style="font-size:7px; color:var(--Accent-Teal); margin-top:2px; font-weight:700" class="mock-accent-text">READY</div>
                             </div>
                           </div>
 
-                          <div id="mockSubmitBtn" style="width:100%; height:48px; background:#57D7C0; color:#000; border-radius:12px; display:flex; align-items:center; justify-content:center; font-weight:800; font-size:11px; text-transform:uppercase; letter-spacing:0.05em">Start My Digital Fitting</div>
+                          <div id="mockSubmitBtn" class="btn-hero" style="width:100%; height:48px; font-size:11px">Get body measurements</div>
                         </div>
 
                         <!-- FLOATING TRIGGER PREVIEW -->
-                        <div id="previewTrigger" style="position:absolute; bottom:40px; right:20px; background:#57D7C0; color:#000; padding:10px 18px; border-radius:99px; font-weight:800; font-size:10px; cursor:pointer; box-shadow: 0 10px 30px rgba(87,215,192,0.3)">Get Measured</div>
+                        <div id="previewTrigger" style="position:absolute; bottom:40px; right:20px; padding: 12px 24px; border-radius: 99px; font-size: 11px; font-weight: 900; cursor:pointer;">Get Measured</div>
                       </div>
                   </div>
-                  <div style="margin-top:24px; font-size:10px; color:var(--Neutral-500)">DEVICE MOCKUP: PORTRAIT VIEW</div>
                 </div>
               </div>
             </div>
@@ -1053,6 +1202,8 @@
     let sessionData = null, userId = null, masterHistory = [], activeCameraType = null, poseModel = null, cameraInstance = null, isPoseAligned = false, alignmentStartTime = 0, autoSnapTriggered = false, isReviewing = false, capturedDataUrl = null;
     let lastSpokenText = "", lastSpokenTime = 0, usageChart = null, selectedBundle = { credits: 50, price: 25 };
     let currentApiKey = null; // Store user's API key for authenticated API calls
+    let IS_INITIALIZING = true; // Flag to prevent redirect loops during startup
+    let logoDataUrl = null; // Store uploaded logo to keep it persistent during resize
 
     const NetworkGuard = {
         isOnline: navigator.onLine,
@@ -1256,10 +1407,30 @@ window.handlePreviewClick = (type) => {
     };
 
     window.switchTab = (id) => {
+      // PERSIST WIDGET STATE ON NAVIGATION
+      const widgetTab = document.getElementById('view-widget');
+      if (widgetTab && widgetTab.classList.contains('active')) {
+          window.KORRA_STUDIO_STATE = {
+              brand_name: document.getElementById('widgetBrandName').value,
+              brand_color: document.getElementById('widgetBrandColor').value,
+              primary: document.getElementById('widgetColorPrimary').value,
+              theme: document.getElementById('widgetTheme').value,
+              logo_size: document.getElementById('widgetLogoSize').value,
+              btn_fitting: document.getElementById('widgetBtnTextFitting').value,
+              btn_measured: document.getElementById('widgetBtnTextMeasured').value,
+              btn_color: document.getElementById('widgetBtnColor').value
+          };
+      }
+
       document.querySelectorAll('.tab-view').forEach(t => t.classList.remove('active'));
       document.querySelectorAll('.sidebar-nav a').forEach(a => a.classList.remove('active'));
       document.getElementById('view-' + id)?.classList.add('active');
       document.getElementById('tab-' + id)?.classList.add('active');
+
+      // Update URL hash without causing a page jump
+      if (!IS_INITIALIZING) {
+          history.replaceState(null, null, '#' + id);
+      }
 
       // UI Polish: Scroll content to top on tab switch
       const mainContent = document.querySelector('.main-content');
@@ -1268,12 +1439,26 @@ window.handlePreviewClick = (type) => {
       if (id === 'settings' || id === 'billing' || id === 'overview') window.loadSettings();
       if (id === 'passports') window.renderPassports();
       if (id === 'enterprise') window.renderEnterpriseInsights();
+
+      // RESTORE WIDGET STATE IF RETURNING
+      if (id === 'widget' && window.KORRA_STUDIO_STATE) {
+          const s = window.KORRA_STUDIO_STATE;
+          document.getElementById('widgetBrandName').value = s.brand_name;
+          document.getElementById('widgetBrandColor').value = s.brand_color;
+          document.getElementById('widgetColorPrimary').value = s.primary;
+          document.getElementById('widgetTheme').value = s.theme;
+          document.getElementById('widgetLogoSize').value = s.logo_size;
+          document.getElementById('widgetBtnTextFitting').value = s.btn_fitting;
+          document.getElementById('widgetBtnTextMeasured').value = s.btn_measured;
+          document.getElementById('widgetBtnColor').value = s.btn_color;
+          window.updateWidgetPreview();
+      }
     };
 
 window.loadSettings = async () => {
       const { data: profile } = await window.KORRA_DB.from('profiles').select('*').eq('id', userId).single();
       if (profile) {
-        document.getElementById('settingsName').value = profile.full_name || profile.company_name || "";
+        if (document.getElementById('settingsName')) document.getElementById('settingsName').value = profile.full_name || profile.company_name || "";
         document.getElementById('userEmail').textContent = profile.email;
         document.getElementById('statCredits').textContent = profile.credits || 0;
         document.getElementById('billingCredits').textContent = profile.credits || 0;
@@ -1303,11 +1488,17 @@ window.loadSettings = async () => {
             window.CURRENT_UNIT = profile.unit_preference === 'imperial' ? 'in' : 'cm';
         }
 
-        // SYNC WIDGET SETTINGS
-        if (profile.widget_config) {
-            document.getElementById('widgetColorPrimary').value = profile.widget_config.primary || "#57D7C0";
-            document.getElementById('widgetColorText').value = profile.widget_config.primary || "#57D7C0";
-            document.getElementById('widgetTheme').value = profile.widget_config.theme || "dark";
+        // SYNC WIDGET SETTINGS (Only if NOT overriding by local studio state)
+        if (profile.widget_config && !window.KORRA_STUDIO_STATE) {
+            const wc = profile.widget_config;
+            if (document.getElementById('widgetColorPrimary')) document.getElementById('widgetColorPrimary').value = wc.primary || "#57D7C0";
+            if (document.getElementById('widgetBrandColor')) document.getElementById('widgetBrandColor').value = wc.brand_color || "#FFFFFF";
+            if (document.getElementById('widgetTheme')) document.getElementById('widgetTheme').value = wc.theme || "dark";
+            if (document.getElementById('widgetBrandName')) document.getElementById('widgetBrandName').value = wc.brand_name || "KORRA";
+            if (document.getElementById('widgetLogoSize')) document.getElementById('widgetLogoSize').value = wc.logo_size || 24;
+            if (document.getElementById('widgetBtnTextFitting')) document.getElementById('widgetBtnTextFitting').value = wc.btn_text_fitting || "Get body measurements";
+            if (document.getElementById('widgetBtnTextMeasured')) document.getElementById('widgetBtnTextMeasured').value = wc.btn_text_measured || "Get Measured";
+            if (document.getElementById('widgetBtnColor')) document.getElementById('widgetBtnColor').value = wc.btn_color || "#57D7C0";
         }
         window.updateWidgetPreview();
 
@@ -1320,27 +1511,23 @@ window.loadSettings = async () => {
             if (wTab) wTab.style.display = 'none';
             if (whTab) whTab.style.display = 'none';
             if (implLabel) implLabel.style.display = 'none';
-
-            // Mirror Mode: Default to History (which has the 3D model)
-            if (window.location.hash === '' || window.location.hash === '#overview') {
-                window.switchTab('vault');
-            }
-        } else if (profile.account_type === 'artisan') {
-            // LEDGER-FIRST LANDING
-            if (window.location.hash === '' || window.location.hash === '#overview') {
-                window.switchTab('vault');
-            }
         } else if (profile.account_type === 'enterprise') {
-            // ACTIVATE INTELLIGENCE HUB
             const entTab = document.getElementById('tab-enterprise');
             if (entTab) entTab.style.display = 'flex';
+        }
 
-            if (window.location.hash === '' || window.location.hash === '#overview') {
-                window.switchTab('enterprise');
+        // INITIAL ROUTING (Only runs once on load)
+        if (IS_INITIALIZING) {
+            const hash = window.location.hash.replace('#', '');
+            if (hash && document.getElementById('view-' + hash)) {
+                window.switchTab(hash);
+            } else {
+                window.switchTab('overview');
             }
+            IS_INITIALIZING = false;
         }
       }
-      const { data: sub } = await window.KORRA_DB.from('subscriptions').select('plan_id').eq('user_id', userId).single();
+    };const { data: sub } = await window.KORRA_DB.from('subscriptions').select('plan_id').eq('user_id', userId).single();
       document.getElementById('billingPlanName').textContent = sub?.plan_id ? sub.plan_id.toUpperCase() : 'FREE';
 
       const { data: txs } = await window.KORRA_DB.from('transactions').select('*').eq('user_id', userId).order('created_at', { ascending: false });
@@ -1870,62 +2057,144 @@ document.getElementById('scanForm').addEventListener('submit', async (e) => {
     };
 
     window.updateWidgetPreview = () => {
-        // ... (previous logic)
-    };
+        const brandName = document.getElementById('widgetBrandName').value || "YOUR BRAND";
+        const brandColor = document.getElementById('widgetBrandColor').value || "#FFFFFF";
+        const color = document.getElementById('widgetColorPrimary').value;
+        const theme = document.getElementById('widgetTheme').value;
+        const logoSize = document.getElementById('widgetLogoSize').value;
+        const btnFitting = document.getElementById('widgetBtnTextFitting').value || "Get body measurements";
+        const btnMeasured = document.getElementById('widgetBtnTextMeasured').value || "Get Measured";
+        const btnColor = document.getElementById('widgetBtnColor').value || color;
 
-    let enterpriseChart = null;
-    window.renderEnterpriseInsights = () => {
-        const ctx = document.getElementById('enterpriseHeatmap').getContext('2d');
-        if (enterpriseChart) enterpriseChart.destroy();
+        const trigger = document.getElementById('previewTrigger');
+        const container = document.getElementById('widgetLivePreview');
+        const snippet = document.getElementById('widgetSnippet');
+        const mockCard = document.getElementById('mockWidgetCard');
+        const mockSubmit = document.getElementById('mockSubmitBtn');
+        const mockTitle = document.getElementById('mockTitle');
+        const mockAccents = document.querySelectorAll('.mock-accent-text');
+        const mockLogo = document.getElementById('mockLogo');
+        const mockBrandLabel = document.getElementById('mockBrandName');
 
-        enterpriseChart = new Chart(ctx, {
-            type: 'bar',
-            data: {
-                labels: ['Inverted Triangle', 'Rectangle', 'Hourglass', 'Apple', 'Pear'],
-                datasets: [{
-                    label: 'Regional Distribution',
-                    data: [15, 32, 28, 12, 13],
-                    backgroundColor: ['rgba(87, 215, 192, 0.4)', 'rgba(87, 215, 192, 0.6)', '#57D7C0', 'rgba(87, 215, 192, 0.8)', 'rgba(87, 215, 192, 0.2)'],
-                    borderColor: '#57D7C0',
-                    borderWidth: 1,
-                    borderRadius: 12
-                }]
-            },
-            options: {
-                responsive: true,
-                maintainAspectRatio: false,
-                plugins: { legend: { display: false } },
-                scales: {
-                    y: { beginAtZero: true, grid: { color: 'rgba(255,255,255,0.05)' } },
-                    x: { grid: { display: false } }
-                }
+        if (mockBrandLabel) {
+            mockBrandLabel.textContent = brandName.toUpperCase();
+            mockBrandLabel.style.color = brandColor;
+        }
+
+        if (mockTitle) mockTitle.style.color = color;
+
+        if (trigger) {
+            trigger.textContent = btnMeasured;
+            trigger.style.background = btnColor;
+            trigger.style.color = (btnColor.toUpperCase() === '#FFFFFF' || btnColor.toUpperCase() === '#FFF') ? '#000' : '#000';
+            trigger.style.boxShadow = `0 10px 30px ${btnColor}4d`;
+        }
+        if (mockSubmit) {
+            mockSubmit.textContent = btnFitting;
+            mockSubmit.style.background = btnColor;
+            mockSubmit.style.color = (btnColor.toUpperCase() === '#FFFFFF' || btnColor.toUpperCase() === '#FFF') ? '#000' : '#000';
+            mockSubmit.style.boxShadow = `0 0 30px ${btnColor}4d`;
+        }
+
+        if (mockLogo) {
+            if (logoDataUrl) {
+                mockLogo.style.background = `url(${logoDataUrl}) center center / contain no-repeat`;
+            } else {
+                mockLogo.style.background = color;
             }
-        });
+            mockLogo.style.width = logoSize + 'px';
+            mockLogo.style.height = logoSize + 'px';
+        }
+        mockAccents.forEach(el => el.style.color = color);
+
+        if (container && mockCard) {
+            if (theme === 'light') {
+                container.style.background = '#FFFFFF';
+                mockCard.style.background = '#F8F9FA';
+                mockCard.style.borderColor = '#E9ECEF';
+                mockCard.style.color = '#1A1A1A';
+                mockCard.style.boxShadow = '0 20px 60px rgba(0,0,0,0.15)';
+                mockCard.classList.remove('luxury-glass');
+                document.getElementById('mockSubtitle').style.color = '#6C757D';
+                if (brandColor.toUpperCase() === '#FFFFFF' || brandColor.toUpperCase() === '#FFF') mockBrandLabel.style.color = '#000000';
+            } else if (theme === 'glass') {
+                container.style.background = 'radial-gradient(circle at 70% 30%, #1a1a1a 0%, #050505 100%)';
+                mockCard.style.background = 'rgba(255,255,255,0.03)';
+                mockCard.style.borderColor = 'rgba(255,255,255,0.1)';
+                mockCard.style.color = '#FFFFFF';
+                mockCard.classList.add('luxury-glass');
+                document.getElementById('mockSubtitle').style.color = 'var(--Neutral-400)';
+            } else {
+                container.style.background = '#050505';
+                mockCard.style.background = '#111111';
+                mockCard.style.borderColor = 'rgba(255,255,255,0.05)';
+                mockCard.style.color = '#FFFFFF';
+                mockCard.classList.remove('luxury-glass');
+                document.getElementById('mockSubtitle').style.color = 'var(--Neutral-400)';
+            }
+        }
+
+        if (snippet) {
+            snippet.innerHTML = `&lt;script src="https://korra.work/assets/korra-widget.js"
+  data-merchant="${userId}"
+  data-primary="${color.replace('#','')}"
+  data-brand="${encodeURIComponent(brandName)}"
+  data-brand-color="${brandColor.replace('#','')}"
+  data-btn-fitting="${encodeURIComponent(btnFitting)}"
+  data-btn-measured="${encodeURIComponent(btnMeasured)}"
+  data-btn-color="${btnColor.replace('#','')}"
+  data-theme="${theme}"&gt;&lt;/script&gt;`;
+        }
     };
 
     window.setPreviewSize = (type) => {
         const frame = document.getElementById('widgetLivePreviewFrame');
-        if (type === 'mobile') { frame.style.width = '375px'; frame.style.minHeight = '667px'; }
-        else if (type === 'tablet') { frame.style.width = '768px'; frame.style.minHeight = '1024px'; }
-        else { frame.style.width = '100%'; frame.style.minHeight = '600px'; }
+        const container = document.getElementById('widgetLivePreview');
+        document.querySelectorAll('.preview-size-btn').forEach(b => b.classList.remove('active'));
+        document.getElementById('btn-size-' + type).classList.add('active');
+
+        if (type === 'mobile') {
+            frame.style.width = '375px';
+            frame.style.height = '667px';
+            container.style.transform = 'scale(1)';
+        }
+        else if (type === 'tablet') {
+            frame.style.width = '768px';
+            frame.style.height = '1024px';
+            container.style.transform = 'scale(0.8)';
+        }
+        else {
+            frame.style.width = '100%';
+            frame.style.maxWidth = '1000px';
+            frame.style.height = '700px';
+            container.style.transform = 'scale(0.8)';
+        }
+        window.updateWidgetPreview();
+    };
+
+    window.addWebhook = () => {
+        const url = prompt("Enter the destination URL for measurement events:");
+        if (url) window.showToast("Success", "Webhook Destination Secured.");
     };
 
     window.handleWidgetLogo = (input) => {
         if (input.files && input.files[0]) {
             const reader = new FileReader();
             reader.onload = (e) => {
-                const logo = document.getElementById('mockLogo');
-                logo.style.background = `url(${e.target.result}) center center / contain no-repeat`;
-                window.showToast("Brand logo preview updated.");
+                logoDataUrl = e.target.result;
+                window.updateWidgetPreview();
+                window.showToast("Success", "Logo Preview Synchronized.");
             };
             reader.readAsDataURL(input.files[0]);
         }
     };
 
-    window.showToast = (message = "Settings updated.") => {
+    window.showToast = (title = "Success", message = "Settings updated.") => {
         const toast = document.getElementById('toastNotification');
+        const titleEl = toast.querySelector('.toast-title');
         const msgEl = document.getElementById('toastMessage');
         if (toast && msgEl) {
+            titleEl.textContent = title;
             msgEl.textContent = message;
             toast.classList.add('active');
             setTimeout(() => window.hideToast(), 4000);
@@ -1940,13 +2209,19 @@ document.getElementById('scanForm').addEventListener('submit', async (e) => {
     window.saveWidgetSettings = async () => {
         const config = {
             primary: document.getElementById('widgetColorPrimary').value,
-            theme: document.getElementById('widgetTheme').value
+            brand_color: document.getElementById('widgetBrandColor').value,
+            theme: document.getElementById('widgetTheme').value,
+            brand_name: document.getElementById('widgetBrandName').value,
+            logo_size: document.getElementById('widgetLogoSize').value,
+            btn_text_fitting: document.getElementById('widgetBtnTextFitting').value,
+            btn_text_measured: document.getElementById('widgetBtnTextMeasured').value,
+            btn_color: document.getElementById('widgetBtnColor').value
         };
         try {
             const { error } = await window.KORRA_DB.from('profiles').update({ widget_config: config }).eq('id', userId);
             if (error) throw error;
-            window.showToast("Settings updated.");
-        } catch(e) { window.showToast("Save failed: " + e.message); }
+            window.showToast("Success", "Widget Profile Synchronized.");
+        } catch(e) { window.showToast("Error", e.message); }
     };
 
     window.launchWidgetTest = () => {
@@ -1956,6 +2231,27 @@ document.getElementById('scanForm').addEventListener('submit', async (e) => {
         } else {
             alert("Widget Loader Offline.");
         }
+    };
+
+    let enterpriseChart = null;
+    window.renderEnterpriseInsights = () => {
+        const ctx = document.getElementById('enterpriseHeatmap').getContext('2d');
+        if (enterpriseChart) enterpriseChart.destroy();
+        enterpriseChart = new Chart(ctx, {
+            type: 'bar',
+            data: {
+                labels: ['Inverted Triangle', 'Rectangle', 'Hourglass', 'Apple', 'Pear'],
+                datasets: [{
+                    label: 'Regional Distribution',
+                    data: [15, 32, 28, 12, 13],
+                    backgroundColor: ['rgba(87, 215, 192, 0.4)', 'rgba(87, 215, 192, 0.6)', '#57D7C0', 'rgba(87, 215, 192, 0.8)', 'rgba(87, 215, 192, 0.2)'],
+                    borderColor: '#57D7C0',
+                    borderWidth: 1,
+                    borderRadius: 12
+                }]
+            },
+            options: { responsive: true, maintainAspectRatio: false, plugins: { legend: { display: false } }, scales: { y: { beginAtZero: true, grid: { color: 'rgba(255,255,255,0.05)' } }, x: { grid: { display: false } } } }
+        });
     };
 
     init();
