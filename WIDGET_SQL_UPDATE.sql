@@ -11,7 +11,8 @@ ADD COLUMN IF NOT EXISTS widget_config JSONB DEFAULT '{
   "logo_size": 24,
   "btn_text_fitting": "Get body measurements",
   "btn_text_measured": "Get Measured",
-  "btn_color": "#57D7C0"
+  "btn_color": "#57D7C0",
+  "btn_text_color": "#050505"
 }'::jsonb;
 
 -- 2. Audit Trial for Brand Changes
