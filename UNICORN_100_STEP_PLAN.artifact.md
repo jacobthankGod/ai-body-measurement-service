@@ -20,7 +20,7 @@
 
 ### Phase 2: Narrative Copy & Outcome-Driven Language (Steps 11–20)
 11. **Technical Scrub (Global):** Map all technical IDs/classes to descriptive narrative labels in the code comments.
-12. **CTA Redesign (Individual):** Change "Get Measurements" to "Start My Digital Fitting."
+12. **CTA Redesign (Individual):** Change "Get Measurements" to "Get body measurements."
 13. **CTA Redesign (Merchant):** Change "Synchronize Aesthetics" to "Publish Branded Experience."
 14. **Status Label Refactor:** Change "Handshake: ACTIVE" to "Cloud Sync Live."
 15. **Error Narrative:** Replace "OOM Failure" with "High Demand: Retrying in Secure Queue."
