@@ -997,7 +997,22 @@
                     </div>
 
                     <div style="display:grid; grid-template-columns: 1fr 1fr; gap:12px"><button class="btn-outline" onclick="document.getElementById('scanModal').classList.add('active')">+ Start Scan</button><button class="btn-primary" onclick="document.getElementById('shareModal').classList.add('active')">+ Invite</button></div>
-                    <button class="btn-outline" style="width:100%; border-style:dashed; color:var(--Neutral-500); font-size:10px" onclick="window.triggerBulkImport()">↑ Bulk Import Clients (CSV)</button>
+
+                  <!-- Phase 119: Privacy Controls -->
+                  <div style="margin-top:20px; padding:12px; background:rgba(255,255,255,0.02); border-radius:12px; border:1px solid var(--Glass-Border)">
+                    <div style="display:flex; justify-content:space-between; align-items:center">
+                      <div>
+                        <div style="font-size:11px; font-weight:700">Privacy Shield</div>
+                        <div style="font-size:9px; color:var(--Neutral-500)">Blur Digital Twin identity</div>
+                      </div>
+                      <label class="toggle-switch">
+                        <input type="checkbox" id="privacyShieldToggle" onchange="window.handlePrivacyToggle(this.checked)">
+                        <span class="slider"></span>
+                      </label>
+                    </div>
+                  </div>
+
+                    <button class="btn-outline" style="width:100%; border-style:dashed; color:var(--Neutral-500); font-size:10px; margin-top:20px" onclick="window.triggerBulkImport()">↑ Bulk Import Clients (CSV)</button>
                     <button class="btn-outline" style="width:100%; border-color:var(--Mint); color:var(--Mint); font-size:10px" onclick="window.requestIndustrialDemo()">Enterprise: Request Industrial Demo</button>
                     <input type="file" id="bulkImportFile" accept=".csv" style="display:none" onchange="window.handleBulkImport(this)">
                   </div>
@@ -2309,6 +2324,16 @@ document.getElementById('scanForm').addEventListener('submit', async (e) => {
     };
 
     window.dismissCreditError = () => { document.getElementById('creditOverlay').style.display = 'none'; };
+    window.handlePrivacyToggle = (active) => {
+        /**
+         * Phase 119: Privacy Shield Activation
+         */
+        if (window.KORRA_VIZ) {
+            window.KORRA_VIZ.togglePrivacyShield(active);
+            window.showToast("Privacy Layer", active ? "Face Blur ACTIVE" : "Face Blur INACTIVE");
+        }
+    };
+
     window.exportToPDF = () => { if (window.LAST_MEASUREMENT_DATA) window.KORRA_EXPORT.pdf(window.LAST_MEASUREMENT_DATA.client_name, window.LAST_MEASUREMENT_DATA.measurements, window.LAST_MEASUREMENT_DATA.gender, window.LAST_MEASUREMENT_DATA.height); };
 
     window.downloadMesh = () => {

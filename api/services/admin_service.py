@@ -36,6 +36,31 @@ class AdminService:
         # Phase 148: Administrative Audit Trail
         self.audit_log = [] # List of dicts with timestamp, admin_id, and change_detail
 
+        # Phase 154: Regional Tax/VAT Map (%)
+        self.regional_tax = {
+            "NG": 0.075, # 7.5% VAT Nigeria
+            "GH": 0.15,  # 15% VAT Ghana
+            "UK": 0.20,  # 20% VAT UK
+            "FR": 0.20,  # 20% VAT France
+            "US": 0.0,   # US varies by state, handled at checkout level
+            "DEFAULT": 0.05
+        }
+
+    def calculate_final_price(self, credit_amount: int, unit_price: float, country_code: str) -> dict:
+        """Phase 154: Regional Tax Calculation"""
+        tax_rate = self.regional_tax.get(country_code.upper(), self.regional_tax["DEFAULT"])
+        subtotal = credit_amount * unit_price
+        tax_amount = subtotal * tax_rate
+        total = subtotal + tax_amount
+
+        return {
+            "subtotal": round(subtotal, 2),
+            "tax_rate": f"{tax_rate * 100}%",
+            "tax_amount": round(tax_amount, 2),
+            "total": round(total, 2),
+            "currency": self.localize_currency_label(country_code)
+        }
+
     def log_audit(self, admin_id: str, action: str, details: dict):
         """Phase 148: Record administrative actions for transparency."""
         entry = {
