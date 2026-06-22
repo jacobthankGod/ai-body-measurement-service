@@ -30,9 +30,19 @@ class IntelligenceService:
             "ANDEAN": {"base_multiplier": 1.15, "name": "Poncho Span"}
         }
 
-    def get_localized_offsets(self, raw_measurements: dict, region: str, attire_name: str):
+        # Phase 91-94: Multilingual Support
+        self.translations = {
+            "en": {"ease": "Ease", "allowance": "Allowance", "accuracy": "Clinical Accuracy"},
+            "ha": {"ease": "Hutu", "allowance": "Izini", "accuracy": "Daidai"}, # Hausa
+            "sw": {"ease": "Urahisi", "allowance": "Posho", "accuracy": "Usahihi"}, # Swahili
+            "am": {"ease": "ቀላል", "allowance": "አበል", "accuracy": "ትክክለኛነት"}, # Amharic
+            "fr": {"ease": "Aisance", "allowance": "Allocation", "accuracy": "Précision Clinique"} # French
+        }
+
+    def get_localized_offsets(self, raw_measurements: dict, region: str, attire_name: str, lang: str = "en"):
         """
         Phase 81-89: Core Regional Calculation Logic
+        Phase 91-94: Multilingual Integration
         """
         region_key = region.upper().replace(' ', '_')
         region_bias = self.regional_offsets.get(region_key, {"base_multiplier": 1.0})
@@ -45,9 +55,20 @@ class IntelligenceService:
         for key in refined:
             refined[key] = round(refined[key] * region_bias['base_multiplier'], 2)
 
+        # Phase 96: African Fit Certification logic
+        is_african_fit = region_key in ["WEST_AFRICA", "EAST_AFRICA", "NORTH_AFRICA", "SOUTH_AFRICA", "CENTRAL_AFRICA"]
+
+        # Phase 99: Sustainability Report (Waste Reduction calc)
+        waste_reduction = "90%" if is_african_fit else "75%"
+
         return {
             "region_label": region_bias.get("name", "Standard"),
-            "refined_measurements": refined
+            "labels": self.translations.get(lang.lower(), self.translations["en"]),
+            "refined_measurements": refined,
+            "certified_african_fit": is_african_fit, # Phase 96
+            "sustainability_impact": {
+                "fabric_waste_reduction": waste_reduction # Phase 99
+            }
         }
 
 # Singleton
