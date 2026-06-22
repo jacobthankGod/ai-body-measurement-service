@@ -249,11 +249,11 @@
     }
     .mock-widget-card {
         width: 100%; height: 100%;
-        max-width: 400px;
         background: rgba(23, 23, 23, 0.8); backdrop-filter: blur(40px);
-        border: 1px solid rgba(255,255,255,0.1); border-radius: 32px;
+        border: none; border-radius: 0; /* Remove borders/radius to clip to main card */
         padding: 32px; position: relative; transition: 0.4s cubic-bezier(0.2, 0.8, 0.2, 1);
         display: flex; flex-direction: column; gap: 24px;
+        overflow-y: auto; /* Handle internal scroll for mobile view */
     }
     .mock-widget-card.desktop {
         max-width: 100%; /* Full stretch to main card */
@@ -1058,23 +1058,7 @@
                 </div>
               </div>
 
-              <!-- REAL-TIME ANALYTICS STRIP -->
-              <div class="stat-grid" style="grid-template-columns: 1fr 1fr 1fr; margin-bottom: 48px;">
-                <div class="glass-card stat-card" style="border-color:var(--Accent-Teal)">
-                    <h4>Avg Scan Accuracy</h4>
-                    <div class="value" style="color:var(--Accent-Teal)" id="statAccuracy">98.2%</div>
-                </div>
-                <div class="glass-card stat-card">
-                    <h4>Merchant Trust Score</h4>
-                    <div class="value" id="statTrust">A+</div>
-                </div>
-                <div class="glass-card stat-card">
-                    <h4>Available Credits</h4>
-                    <div class="value" id="statStudioCredits">0</div>
-                </div>
-              </div>
-              
-              <div class="dashboard-split widget-editor" style="grid-template-columns: 1fr 1.2fr; gap: 48px;">
+              <div class="dashboard-split widget-editor" style="grid-template-columns: 1fr 1.2fr; gap: 48px; margin-top: 40px;">
                 <div class="customizer-controls">
                   <div style="margin-bottom:32px">
                     <h4 style="font-size:10px; font-weight:900; color:var(--Accent-Teal); margin-bottom:16px">IDENTITY & THEME</h4>
