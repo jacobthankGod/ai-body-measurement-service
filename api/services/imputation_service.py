@@ -16,6 +16,44 @@ class ImputationService:
                 with open(weight_path, 'r') as f:
                     self.models[gender] = json.load(f)
 
+        # Load validation metadata (Phase 64)
+        norm_path = Path(__file__).parent.parent.parent / "data" / "ansur_processed" / "normalization_meta.json"
+        if norm_path.exists():
+            with open(norm_path, 'r') as f:
+                self.validation_meta = json.load(f)
+        else:
+            self.validation_meta = {}
+
+    def validate_scan(self, gender: str, measurements: dict, confidence: float = 1.0):
+        """
+        Phase 64: Biometric Validation (3 Standard Deviations)
+        Phase 65: Scan Integrity Check (Confidence > 85%)
+        """
+        # 1. Confidence Check (Phase 65)
+        if confidence < 0.85:
+            return False, f"Scan Integrity Failed: Confidence ({confidence:.2f}) < 85%"
+
+        # 2. Biometric Outlier Check (Phase 64)
+        meta = self.validation_meta.get(gender.lower())
+        if not meta: return True, "OK" # Fallback if meta missing
+
+        # Mapping KORRA keys to ANSUR keys used in validation
+        mapping = {
+            'chest_round': 'chestcircumference',
+            'waist_round': 'waistcircumference',
+            'height': 'stature_cm'
+        }
+
+        for korra_key, ansur_key in mapping.items():
+            val = measurements.get(korra_key)
+            if val and ansur_key in meta:
+                stats = meta[ansur_key]
+                z_score = abs(val - stats['mean']) / stats['std']
+                if z_score > 3.0:
+                    return False, f"Biometric Validation Failed: {korra_key} is outside 3-sigma ({z_score:.2f})"
+
+        return True, "OK"
+
     def impute(self, gender: str, inputs: dict):
         """
         Phase 26: Biometric Imputation Hook

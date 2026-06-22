@@ -60,13 +60,18 @@ class AnsurPipeline:
         df_female.to_pickle('./data/ansur_processed/female_shards.pkl')
         print("✅ Phase 5: Gender-specific sharding complete.")
 
-        # 6. Normalization Layer (Min-Max)
+        # 6. Normalization Layer (Min-Max + Mean/Std for Validation)
         norm_meta = {}
         for gender, df in [('male', df_male), ('female', df_female)]:
             meta = {}
             for col in target_features:
                 if col in df.columns:
-                    meta[col] = {'min': float(df[col].min()), 'max': float(df[col].max())}
+                    meta[col] = {
+                        'min': float(df[col].min()),
+                        'max': float(df[col].max()),
+                        'mean': float(df[col].mean()),
+                        'std': float(df[col].std())
+                    }
             norm_meta[gender] = meta
 
         with open('./data/ansur_processed/normalization_meta.json', 'w') as f:

@@ -28,6 +28,20 @@ def extract_measurements_from_dual_photos(front_image, side_image, user_height_c
         if measurements and measurements.get('Chest Round', 0) > 0:
             print("💎 KORRA: High-Precision 1:1 Alignment Active.")
 
+            # PHASE 64/65: STRICT BIOMETRIC VALIDATION
+            # Confidence is simulated here, but would come from HMR/MediaPipe metadata
+            confidence = measurements.get('confidence', 1.0)
+            valid, msg = imputation_service.validate_scan(gender, {
+                'height': user_height_cm,
+                'chest_round': measurements.get('Chest Round', 90),
+                'waist_round': measurements.get('Waist Round', 80)
+            }, confidence)
+
+            if not valid:
+                print(f"⚠️ Phase 65 Reject: {msg}")
+                # Phase 58: Error Recovery - Return fallback if scan is invalid
+                return mp_fallback(front_image, side_image, user_height_cm, gender)
+
             # PHASE 26: ANSUR II REFINEMENT (The Statistical Truth)
             # Map KORRA keys to ANSUR keys for imputation
             inputs = {
