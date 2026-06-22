@@ -7,8 +7,8 @@ logger = logging.getLogger("KORRA_TOLERANCE")
 
 class ToleranceLogic:
     """
-    KORRA Biometric Tolerance Engine | Phases 21-30
-    Encapsulates standard fit logic and formula encryption.
+    KORRA Biometric Tolerance Engine | Phases 21-50
+    Encapsulates standard fit logic and persistent attire contexts.
     """
     def __init__(self):
         self.base_dir = Path(__file__).resolve().parent.parent.parent
@@ -44,6 +44,42 @@ class ToleranceLogic:
             # Obfuscated Math
             offset_val = (val * fluidity_multiplier) + layering_buffer
             refined[iso_key] = round(offset_val, 2)
+
+        return refined
+
+    def calculate_tolerance(self, raw_val: float, multiplier: float, static_offset: float, group: str = "chest"):
+        """
+        Phase 47: The Tolerance Scalar
+        Logic: Final = Raw + (Raw * Multiplier) + Static_Offset
+        """
+        # Phase 49: Volume Guard Integration (Clinical anatomically safe limits)
+        # Prevents impossible ease values (e.g. > 2.0x body volume)
+        safe_multiplier = min(multiplier, 1.8)
+
+        final = raw_val + (raw_val * safe_multiplier) + static_offset
+        return round(final, 2)
+
+    def process_full_attire(self, raw_measurements: dict, multipliers: dict, offsets: dict, gender: str = "male"):
+        """
+        Phase 48: Multi-Measurement Sync
+        Ensures a change in 'Chest' ease doesn't break 'Shoulder' alignment.
+        """
+        refined = {}
+        # Phase 50: Gender-Logic Sharding
+        is_female = gender.lower() == 'female'
+        chest_key = "Bust Round" if is_female else "Chest Round"
+
+        for key, val in raw_measurements.items():
+            # Get specific multiplier for this body part, fallback to base
+            m = multipliers.get(key.lower().replace(' ', '_'), 0.05) # Default 5% ease
+            o = offsets.get(key.lower().replace(' ', '_'), 0.0)
+
+            # Phase 48: Sync shoulder to chest expansion
+            if key == "Shoulder" and chest_key in raw_measurements:
+                # Shoulder ease is proportionally linked to chest volume (30% ratio)
+                m = m + (multipliers.get(chest_key.lower().replace(' ', '_'), 0) * 0.3)
+
+            refined[key] = self.calculate_tolerance(val, m, o, key)
 
         return refined
 
