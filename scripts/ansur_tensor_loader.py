@@ -64,13 +64,64 @@ class AnsurTensorLoader:
         # For Spandex-blend biometrics (-5% to -10%)
         self.constants['negative_ease_multiplier'] = 0.95 # -5%
 
+        # Phase 11: Tribe-Specific Cluster Map
+        # West African gluteal prominence offset (+3.5cm mean difference)
+        self.constants['regional_morphology_offsets'] = {
+            'west_african_gluteal': 3.5,
+            'east_asian_torso_delta': -1.5
+        }
+
+        # Phase 12: Ethnic Preference Scalar
+        # London_Slim (1.0) vs Lagos_Grand (1.25x)
+        self.constants['ethnic_fit_bias'] = {
+            'london_slim': 1.0,
+            'milan_sculpted': 1.05,
+            'lagos_grand': 1.25,
+            'nairobi_fluid': 1.15
+        }
+
+        # Phase 13: Armhole Depth Logic
+        # acromialheight (mm) mapping to Comfort_Drop
+        self.constants['armhole_drop_ratio'] = 0.12 # 12% of torso height
+
+        # Phase 14: Stride Margin Calculator
+        # Crotch-depth safety offsets for Shokoto and Salwar
+        self.constants['stride_margin_static'] = 4.0 # cm
+
+        # Phase 15: Reach Margin Matrix
+        # Scapula stretch offsets for structured Blazers
+        self.constants['reach_margin_offset'] = 2.5 # cm
+
+        # Phase 16: Collar Choke-Point Logic
+        # neckcircumferencebase + breathing margin
+        self.constants['neck_breathing_margin'] = 1.5 # cm
+
+        # Phase 17: Wrist-Watch Offset
+        # Specific offset for luxury formal wear
+        self.constants['left_wrist_offset'] = 2.0 # cm
+
+        # Phase 18: Waistband Expansion Logic
+        # Static expansion for non-elastic bands
+        self.constants['waistband_expansion_static'] = 3.0 # cm
+
+        # Phase 19: Thoracic Volume Sharding
+        # Bust_Round (Female) vs Chest_Round (Male) ease variance
+        self.constants['thoracic_sharding_variance'] = {
+            'male_chest': 4.5,
+            'female_bust': 6.0
+        }
+
+        # Phase 20: Shoulder Slope Balancer
+        # acromion_angle mapping to fabric bunching risk
+        self.constants['shoulder_slope_buffer'] = 0.5 # cm compensation
+
         self._save_constants()
 
     def _save_constants(self):
         os.makedirs('./data/tolerance', exist_ok=True)
         with open('./data/tolerance/expansion_constants.json', 'w') as f:
             json.dump(self.constants, f, indent=4)
-        print("💾 Phase 1-10: Constants persisted to ./data/tolerance/expansion_constants.json")
+        print("💾 Phase 1-20: Constants persisted to ./data/tolerance/expansion_constants.json")
 
 if __name__ == "__main__":
     loader = AnsurTensorLoader()

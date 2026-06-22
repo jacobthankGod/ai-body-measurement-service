@@ -6,5 +6,26 @@
     "kurta_ventilation_constant": 8.0,
     "modesty_drape_taper": 0.0,
     "slim_fit_multiplier": 1.02,
-    "negative_ease_multiplier": 0.95
+    "negative_ease_multiplier": 0.95,
+    "regional_morphology_offsets": {
+        "west_african_gluteal": 3.5,
+        "east_asian_torso_delta": -1.5
+    },
+    "ethnic_fit_bias": {
+        "london_slim": 1.0,
+        "milan_sculpted": 1.05,
+        "lagos_grand": 1.25,
+        "nairobi_fluid": 1.15
+    },
+    "armhole_drop_ratio": 0.12,
+    "stride_margin_static": 4.0,
+    "reach_margin_offset": 2.5,
+    "neck_breathing_margin": 1.5,
+    "left_wrist_offset": 2.0,
+    "waistband_expansion_static": 3.0,
+    "thoracic_sharding_variance": {
+        "male_chest": 4.5,
+        "female_bust": 6.0
+    },
+    "shoulder_slope_buffer": 0.5
 }
