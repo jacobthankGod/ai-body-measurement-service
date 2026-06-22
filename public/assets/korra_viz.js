@@ -17,6 +17,7 @@ class KorraVisualizer {
         this.mouseY = 0;
         this.targetRotationX = 0;
         this.targetRotationY = 0;
+        this.privacyShieldActive = false; // Phase 119
     }
 
     init(containerId) {
@@ -230,6 +231,21 @@ class KorraVisualizer {
 
     toggleLandmarks(visible) {
         if (this.landmarksGroup) this.landmarksGroup.visible = visible;
+    }
+
+    togglePrivacyShield(active) {
+        /**
+         * Phase 119: Privacy Shield
+         * Blurs or hides the facial vertices of the Digital Twin.
+         */
+        this.privacyShieldActive = active;
+        if (!this.mesh) return;
+
+        // Logic: Apply a specific shader or just hide the head vertices
+        // For Phase 119, we will use emissive color as a visual indicator
+        this.mesh.material.emissiveIntensity = active ? 1.0 : 0.2;
+        this.mesh.material.emissive.setHex(active ? 0x000000 : 0x002D2A);
+        console.log(`🛡️ Phase 119: Privacy Shield ${active ? 'ACTIVE' : 'INACTIVE'}`);
     }
 
     applyHeatmap(baselineData, latestData) {

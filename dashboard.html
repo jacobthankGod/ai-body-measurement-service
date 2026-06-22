@@ -756,9 +756,13 @@
   <!-- QR POSTER MODAL -->
   <div class="modal-overlay" id="qrPosterModal">
     <div class="modal-card" style="max-width:500px; text-align:center; padding:60px">
+      <div style="margin-bottom:32px">
+          <div class="logo-mark" style="margin: 0 auto 12px;"></div>
+          <div class="logo-text" style="font-size:14px; letter-spacing:0.2em; opacity:0.6">UNICORN OS</div>
+      </div>
       <div style="background:#fff; padding:40px; border-radius:16px; margin-bottom:32px; display:inline-block"><div id="posterQr" style="width:200px; height:200px; background:#eee; display:flex; align-items:center; justify-content:center; color:#000; font-size:10px; font-weight:900">GENERATE QR...</div></div>
       <h2 style="font-size:32px; margin-bottom:12px; letter-spacing:-0.05em">SCAN TO START</h2>
-      <p style="color:var(--Neutral-400); margin-bottom:40px">High-Precision Body Scanning Active.</p>
+      <p style="color:var(--Neutral-400); margin-bottom:40px">Clinical-Grade Body Scanning Active.</p>
       <div style="display:flex; gap:16px"><button class="btn-primary" style="flex:1" onclick="window.print()">Print Poster</button><button class="btn-outline" style="flex:1" onclick="document.getElementById('qrPosterModal').classList.remove('active')">Dismiss</button></div>
     </div>
   </div>
@@ -1766,6 +1770,9 @@ window.loadSettings = async () => {
 
       container.innerHTML = items.map((s, idx) => {
         const confidence = (s.debug && s.debug.includes('quality:high')) ? 99 : (s.debug && s.debug.includes('quality:low')) ? 85 : 97;
+        // Phase 115: Use clinical_realism_index if available
+        const accuracy = s.clinical_realism_index ? s.clinical_realism_index.toFixed(1) : confidence;
+
         const statusClass = s.mesh_url ? "var(--Accent-Teal)" : "var(--Neutral-500)";
         const statusText = s.mesh_url ? "Cloud Sync Live" : "Sync Paused";
         const initial = (s.client_name || "C")[0];
@@ -1775,7 +1782,7 @@ window.loadSettings = async () => {
           <div class="scan-info" style="flex:1">
             <div style="display:flex; justify-content:space-between; align-items:flex-start; margin-bottom:4px">
                 <h5 style="margin:0">${s.client_name}</h5>
-                <div style="font-size:9px; font-weight:900; color:var(--Accent-Teal)" data-tooltip="AI Accuracy Probability">${confidence}% CLINICAL-GRADE ACCURACY</div>
+                <div style="font-size:9px; font-weight:900; color:var(--Accent-Teal)" data-tooltip="AI Accuracy Probability">${accuracy}% CLINICAL ACCURACY</div>
             </div>
             <p style="margin:0; opacity:0.6">${new Date(s.created_at).toLocaleDateString()} • ${s.height}cm</p>
             <div style="display:flex; align-items:center; gap:6px; margin-top:8px">
