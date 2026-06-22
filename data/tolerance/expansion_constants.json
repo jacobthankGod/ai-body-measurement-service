@@ -1,0 +1,10 @@
+{
+    "chest_expansion_delta": 4.5,
+    "stomach_extension_depth_sitting": 25.47,
+    "gluteal_spread_constant": 5.0,
+    "agbada_volume_scalar": 1.6,
+    "kurta_ventilation_constant": 8.0,
+    "modesty_drape_taper": 0.0,
+    "slim_fit_multiplier": 1.02,
+    "negative_ease_multiplier": 0.95
+}
