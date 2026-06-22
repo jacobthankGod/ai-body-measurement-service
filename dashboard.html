@@ -2329,15 +2329,18 @@ document.getElementById('scanForm').addEventListener('submit', async (e) => {
         }
 
         if (snippet) {
+            // PHASE 140: FULL EMBED CODE SYNCHRONIZATION
             snippet.innerHTML = `&lt;script src="https://korra.work/assets/korra-widget.js"
   data-merchant="${userId}"
   data-primary="${color.replace('#','')}"
-  data-brand="${encodeURIComponent(brandName)}"
+  data-theme="${theme}"
+  data-brand-name="${encodeURIComponent(brandName)}"
   data-brand-color="${brandColor.replace('#','')}"
   data-btn-fitting="${encodeURIComponent(btnFitting)}"
   data-btn-measured="${encodeURIComponent(btnMeasured)}"
   data-btn-color="${btnColor.replace('#','')}"
-  data-theme="${theme}"&gt;&lt;/script&gt;`;
+  data-btn-text-color="${btnTextColor.replace('#','')}"
+  ${logoDataUrl ? `data-logo-url="${logoDataUrl}"` : ''}&gt;&lt;/script&gt;`;
         }
     };
 
