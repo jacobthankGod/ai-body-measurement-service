@@ -27,5 +27,15 @@
         "male_chest": 4.5,
         "female_bust": 6.0
     },
-    "shoulder_slope_buffer": 0.5
+    "shoulder_slope_buffer": 0.5,
+    "layering_offsets": {
+        "undershirt_buffer": 0.5,
+        "overcoat_volume": 8.0
+    },
+    "fit_fluidity_passes": {
+        "gala_compression": 0.005,
+        "daily_fluidity": 0.035
+    },
+    "iso_mapping_active": true,
+    "clinical_mean_locked": true
 }

@@ -115,6 +115,24 @@ class AnsurTensorLoader:
         # acromion_angle mapping to fabric bunching risk
         self.constants['shoulder_slope_buffer'] = 0.5 # cm compensation
 
+        # Phase 21 & 22: Layering Offsets (Internal/External)
+        self.constants['layering_offsets'] = {
+            'undershirt_buffer': 0.5,
+            'overcoat_volume': 8.0
+        }
+
+        # Phase 23 & 24: Gala Compression vs Daily Wear Fluidity
+        self.constants['fit_fluidity_passes'] = {
+            'gala_compression': 0.005, # 0.5% ease
+            'daily_fluidity': 0.035    # 3.5% ease
+        }
+
+        # Phase 25: ISO 8559-1 Mapping Reference
+        self.constants['iso_mapping_active'] = True
+
+        # Phase 27: Golden Average Lock
+        self.constants['clinical_mean_locked'] = True
+
         self._save_constants()
 
     def _save_constants(self):
