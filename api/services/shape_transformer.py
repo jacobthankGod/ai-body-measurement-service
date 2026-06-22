@@ -1,7 +1,11 @@
 import numpy as np
 import json
 import os
+import time
+import logging
 from pathlib import Path
+
+logger = logging.getLogger("KORRA_SHAPE_TRANSFORMER")
 
 class ShapeTransformer:
     """
@@ -9,7 +13,7 @@ class ShapeTransformer:
     Handles the physical deformation of the 3D mesh based on scanned biometrics.
     """
     def __init__(self):
-        self.base_dir = Path(__file__).parent.parent.parent
+        self.base_dir = Path(__file__).resolve().parent.parent.parent
         self.partition_path = self.base_dir / "data" / "mesh_partitions.json"
         self.partitions = self._load_partitions()
 
@@ -22,44 +26,62 @@ class ShapeTransformer:
     def apply_deformation(self, vertices: np.ndarray, measurements: dict, gender: str = "male"):
         """
         Phase 48: Linear Deformation Logic
-        V_new = V_base + M * P
-        For Phase 48-50, we implement the grouping logic that scales specific vertex clusters.
+        Phase 56: Memory Optimization (float32)
         """
-        print(f"🧬 Reshaping 3D Mesh... ({len(vertices)} vertices)")
+        start_time = time.time()
+
+        # Phase 57: OOM Guard - Check if input is valid
+        if vertices is None or len(vertices) == 0:
+            return None
+
+        # Phase 56: Cast to float32 for t3.micro memory limits
+        vertices = vertices.astype(np.float32)
         new_vertices = vertices.copy()
 
-        # Phase 51: Scale Lock (Height only deforms Y-axis)
-        height_cm = measurements.get('height', 175)
-        # Assuming base mesh is 175cm. Scale factor:
-        height_scale = height_cm / 175.0
-        new_vertices[:, 1] *= height_scale # Global Y-scaling (simplistic for Phase 51)
+        try:
+            # Phase 51: Precision Scale Lock (Height only deforms Y-axis)
+            height_cm = measurements.get('height', 175)
+            # Assuming base mesh is 175cm. Scale factor:
+            height_scale = np.float32(height_cm / 175.0)
+            new_vertices[:, 1] *= height_scale
 
-        # Phase 49: Batch Processing (Iterate through vertex groups)
-        # Mapping Parameters to Partitions
-        mapping = {
-            'chestcircumference': 'chest',
-            'waistcircumference': 'waist',
-            'buttockcircumference': 'legs' # Using legs for hip/buttock volume
-        }
+            # Phase 49: Batch Processing (Iterate through vertex groups)
+            mapping = {
+                'chestcircumference': 'chest',
+                'waistcircumference': 'waist',
+                'buttockcircumference': 'legs' # Using legs for hip/buttock volume
+            }
 
-        for param, group_name in mapping.items():
-            if param in measurements and group_name in self.partitions:
-                indices = self.partitions[group_name]
-                # Calculate volume expansion factor based on ANSUR II mean
-                # (Simplistic logic for Phase 48-50 validation)
-                val = measurements[param]
-                # Scale XZ plane for horizontal girth expansion
-                # Phase 52: Volume Guard (preventing < 0.5 or > 2.0 scaling)
-                scale_factor = np.clip(val / 90.0, 0.5, 2.0)
+            for param, group_name in mapping.items():
+                if param in measurements and group_name in self.partitions:
+                    indices = self.partitions[group_name]
+                    val = measurements[param]
 
-                new_vertices[indices, 0] *= scale_factor # X expansion
-                new_vertices[indices, 2] *= scale_factor # Z expansion
+                    # Phase 52: Volume Guard (preventing < 0.7 or > 1.6 scaling)
+                    scale_factor = np.clip(np.float32(val / 90.0), 0.7, 1.6)
 
-        # Phase 50: Coordinate System Sync (Ensure Y-Up for Three.js)
-        # Our internal numpy logic is already Y-up.
+                    new_vertices[indices, 0] *= scale_factor # X expansion
+                    new_vertices[indices, 2] *= scale_factor # Z expansion
 
-        print(f"✅ Phase 48: Linear Deformation Complete.")
-        return new_vertices
+            # Phase 53: Vertex Delta Tracking
+            # Log the exact Euclidean distance moved for every vertex
+            deltas = np.linalg.norm(new_vertices - vertices, axis=1)
+            mean_delta = np.mean(deltas)
+            max_delta = np.max(deltas)
+
+            # Phase 59: Logging System (Reshaping Delta)
+            logger.info(f"💎 KORRA Reshaping Delta: Avg={mean_delta:.4f}m, Max={max_delta:.4f}m")
+
+            # Phase 60: Performance Audit (< 200ms)
+            duration = (time.time() - start_time) * 1000
+            logger.info(f"⏱️ Phase 60 Audit: Reshape Cycle = {duration:.2f}ms")
+
+            return new_vertices
+
+        except Exception as e:
+            # Phase 58: Error Recovery (Fallback to base mesh)
+            logger.error(f"❌ Phase 58 Failure: Reshaping Error {e}. Falling back to base mesh.")
+            return vertices
 
 # Singleton
 shape_transformer = ShapeTransformer()
