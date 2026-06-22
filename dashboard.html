@@ -1669,6 +1669,10 @@ window.loadSettings = async () => {
             } else {
                 window.switchTab('overview');
             }
+
+            // FORCE INITIAL PREVIEW SIZE FOR ALL USERS (Fixes jitter)
+            setTimeout(() => window.setPreviewSize('mobile'), 100);
+
             IS_INITIALIZING = false;
         }
       }
@@ -2350,7 +2354,8 @@ document.getElementById('scanForm').addEventListener('submit', async (e) => {
         const container = document.getElementById('widgetLivePreview');
 
         document.querySelectorAll('.preview-size-btn').forEach(b => b.classList.remove('active'));
-        document.getElementById('btn-size-' + type).classList.add('active');
+        const activeBtn = document.getElementById('btn-size-' + type);
+        if (activeBtn) activeBtn.classList.add('active');
 
         const frameWidth = frame.offsetWidth;
 
@@ -2362,7 +2367,7 @@ document.getElementById('scanForm').addEventListener('submit', async (e) => {
             frame.style.height = "750px";
             frame.style.maxWidth = "400px";
             // Scaling only as a fallback for tiny mobile screens
-            if (frameWidth < 400) {
+            if (frameWidth < 400 && frameWidth > 0) {
                 container.style.transform = `scale(${(frameWidth - 20) / 400})`;
             }
         }
@@ -2370,7 +2375,7 @@ document.getElementById('scanForm').addEventListener('submit', async (e) => {
             card.classList.remove('desktop');
             frame.style.height = "1000px"; /* Bigger view */
             frame.style.maxWidth = "800px";  /* Wider view */
-            if (frameWidth < 800) {
+            if (frameWidth < 800 && frameWidth > 0) {
                 container.style.transform = `scale(${(frameWidth - 40) / 800})`;
             }
         }
@@ -2378,7 +2383,7 @@ document.getElementById('scanForm').addEventListener('submit', async (e) => {
             card.classList.add('desktop');
             frame.style.height = "700px";   /* Landscape Desktop */
             frame.style.maxWidth = "1100px"; /* Full Industrial scale */
-            if (frameWidth < 1100) {
+            if (frameWidth < 1100 && frameWidth > 0) {
                 container.style.transform = `scale(${(frameWidth - 40) / 1100})`;
             }
         }
