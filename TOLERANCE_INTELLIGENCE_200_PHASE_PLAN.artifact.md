@@ -116,21 +116,29 @@
 99. **Sustainability Report:** Calculate "Fabric Waste Reduction" based on mesh accuracy.
 100. **Chapter 3 Sign-off:** Production ready for Global Biometric Fit.
 
-### **Chapter 4: UX Integration & "Digital Mirror" Mode (Phases 101–140)**
-*Focus: Delivering the Tolerance Data Stream to the Merchant and Client UI.*
+### **Chapter 4: UX Integration & "Merchant-Preset" Mode (Phases 101–140)**
+*Focus: Delivering the Tolerance Data Stream with zero-friction for the client.*
 
-101. **"Attire Context" Selector:** Build the dropdown component in the Merchant Dashboard.
-102. **Real-time Tolerance Toggle:** Implement "Switch to [Garment Name]" to see adjusted metrics.
-103. **Visual Difference Heatmap:** Update `korra_viz.js` to show "Skin vs. Fabric" delta visually.
-104. **"Ease Education" Tooltips:** Add interactive tooltips explaining *why* 5cm was added for breathing.
-105. **Comparison Overlay:** Enable side-by-side view of "Raw Scan" vs "Agbada Spec."
-106. **Mobile "Mirror Mode":** Full-screen portrait 3D viewer for client verification.
+101. **"Rules of the House" Preset:** Build the configuration logic in the Widget Studio for merchants to pre-set their default specialty (e.g., Kaftan).
+102. **Merchant Material Rail:** Build a selector in the Merchant Ledger for the tailor to select "Intended Fabric" (Stiff, Stretch, etc.) *after* the scan is received.
+103. **Post-Scan Tolerance Toggle:** Enable the merchant (not the client) to switch between garment types for a specific client to see adjusted metrics.
+104. **Visual Difference Heatmap:** Update `korra_viz.js` to show the merchant "Skin vs. Fabric" delta visually in the client view.
+105. **Client-Facing Simplicity:** Hardened logic to ensure the Widget ONLY asks for: Height, Gender, and Age Group.
+106. **Mobile "Mirror Mode":** Full-screen portrait 3D viewer for client verification with brand-locked context.
 107. **Size Passport QR Handshake:** Generate attire-specific QR links for tailors.
-108. **PDF Specification Generator:** Update `korra_export.js` to include Tolerance Intelligence tables.
+108. **PDF Specification Generator:** Update `korra_export.js` to include the tailor's selected material and attire offsets in the final report.
 109. **Measurement "Lock" Icon:** Visual indicator that a measurement is a "Verified Scan."
-110. **Fabric Selection Rail:** Allow users to choose "Stiff," "Standard," or "Stretch" in the UI.
+110. **Merchant-Controlled Studio:** Allow tailors to choose "Inches" or "CM" globally for all incoming scans.
 111. **Haptic Validation:** Trigger vibration on mobile when a fit is "Clinically Verified."
-112. **Success Screen Refactor:** Lead with "Digital Twin Generated - [Attire] Optimized."
+112. **Success Screen Refactor:** Lead with "Digital Twin Generated - [Merchant Brand] Optimized."
+113. **Regional Style Cards:** High-end visual cards showing the selected cultural attire.
+114. **3D Interactive Tags:** Click body parts on the mesh to see specific attire offsets.
+115. **Merchant Ledger Filter:** Sort clients by "Needs Pattern" (Context missing) or "Fit Optimized" (Context applied).
+116. **Bulk Export (CSV):** Include both Raw and Toleranced metrics in merchant exports.
+117. **Widget "Fitting Room" Mode:** Update the embeddable widget to include attire selection.
+118. **Low-Light UI Pass:** Ensure the viewer is readable in various industrial workshops.
+119. **Privacy Shield Toggle:** Allow blurring of the Digital Twin face in shared views.
+120. **Chapter 4 QA:** Run full browser-use verification on the "Merchant Curation" flow.
 113. **Regional Style Cards:** High-end visual cards showing the selected cultural attire.
 114. **3D Interactive Tags:** Click body parts on the mesh to see specific attire offsets.
 115. **Merchant Ledger Filter:** Sort clients by "Needs Pattern" or "Fit Optimized."

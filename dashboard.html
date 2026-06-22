@@ -97,7 +97,23 @@
     .toast-notification { z-index: 4000; }
 
     /* NEON GLOWS */
-    .teal-glow { box-shadow: 0 0 20px rgba(87, 215, 192, 0.2); }
+    /* Phase 113: Regional Style Cards */
+    .style-card-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(200px, 1fr)); gap: 16px; margin-top: 24px; }
+    .style-card {
+        background: rgba(255,255,255,0.03); border: 1px solid var(--Glass-Border); border-radius: 16px; padding: 16px;
+        transition: 0.3s; cursor: pointer; position: relative; overflow: hidden;
+    }
+    .style-card.active { border-color: var(--Accent-Teal); background: rgba(87, 215, 192, 0.05); }
+    .style-card h5 { font-size: 11px; font-weight: 900; color: var(--Accent-Teal); margin-bottom: 4px; }
+    .style-card p { font-size: 10px; color: var(--Neutral-400); line-height: 1.3; }
+
+    /* Phase 114: 3D Interactive Tags */
+    .mesh-tag {
+        position: absolute; padding: 4px 8px; background: var(--Accent-Teal); color: #000;
+        border-radius: 4px; font-size: 9px; font-weight: 900; pointer-events: none;
+        box-shadow: 0 4px 10px rgba(0,0,0,0.3); transform: translate(-50%, -100%);
+        z-index: 100; opacity: 0.9;
+    }
     .orange-alert { border-color: var(--Accent-Gold) !important; box-shadow: 0 0 20px rgba(255, 194, 71, 0.2); }
 
     /* ENTRY ANIMATIONS */
@@ -873,15 +889,29 @@
                 <div class="action-card" id="attireContextCard" style="background:linear-gradient(135deg, #002D2A 0%, #050505 100%)">
                     <div class="action-overlay">
                         <div class="action-tag">Tolerance Intelligence</div>
-                        <h3 class="action-title">Switch Attire<br>Context</h3>
-                        <select id="dashboardAttireSelect" class="input-field" style="width:100%; margin-top:12px; font-size:12px; background:rgba(255,255,255,0.05)" onchange="window.handleAttireToggle(this.value)">
-                            <option value="standard">Standard Fit</option>
-                            <option value="agbada">Grand Agbada</option>
-                            <option value="senator">Senator Style</option>
-                            <option value="kurta">South Asian Kurta</option>
-                            <option value="abaya">Middle Eastern Abaya</option>
-                        </select>
-                        <div style="font-size:9px; color:var(--Accent-Teal); margin-top:8px; font-weight:900" id="attireStatus">CONTEXT: STANDARD</div>
+                  <h3 class="action-title">Switch Attire<br>Context</h3>
+
+                  <!-- Phase 113: High-end Style Card Layout -->
+                  <div class="style-card-grid" style="grid-template-columns: 1fr 1fr; margin-top: 12px;">
+                      <div class="style-card active" onclick="window.handleAttireToggle('standard')">
+                          <h5>Standard</h5>
+                          <p>Clinical Base</p>
+                      </div>
+                      <div class="style-card" onclick="window.handleAttireToggle('agbada')">
+                          <h5>Agbada</h5>
+                          <p>Regal Volume</p>
+                      </div>
+                      <div class="style-card" onclick="window.handleAttireToggle('senator')">
+                          <h5>Senator</h5>
+                          <p>Business Fit</p>
+                      </div>
+                      <div class="style-card" onclick="window.handleAttireToggle('kurta')">
+                          <h5>Kurta</h5>
+                          <p>Airflow Ease</p>
+                      </div>
+                  </div>
+
+                  <div style="font-size:9px; color:var(--Accent-Teal); margin-top:12px; font-weight:900" id="attireStatus">CONTEXT: STANDARD</div>
                     </div>
                 </div>
 
@@ -949,6 +979,17 @@
                 <div class="glass-card" style="padding:24px">
                   <div style="display:flex; flex-direction:column; gap:20px; margin-bottom:32px">
                     <div style="display:flex; justify-content:space-between; align-items:center"><h2 style="font-size:20px">Ledger</h2><button class="btn-outline" style="height:32px; font-size:10px" onclick="window.exportLedgerCSV()">Export CSV</button></div>
+
+                    <!-- Phase 115: Merchant Ledger Filter -->
+                    <div style="display:flex; gap:12px">
+                        <select id="ledgerFilter" class="input-field" style="flex:1; margin:0; height:40px; font-size:12px" onchange="window.filterLedger(this.value)">
+                            <option value="all">All Clients</option>
+                            <option value="needs_pattern">Needs Pattern</option>
+                            <option value="fit_optimized">Fit Optimized</option>
+                        </select>
+                        <button class="btn-ghost" style="height:40px; font-size:10px" onclick="window.exportLedgerBulk()">Bulk</button>
+                    </div>
+
                     <input type="text" id="ledgerSearch" class="input-field" style="margin-bottom:0; height:44px" placeholder="Search clients...">
 
                     <!-- ADVANCED FILTERS -->
@@ -2246,18 +2287,24 @@ document.getElementById('scanForm').addEventListener('submit', async (e) => {
     window.handleAttireToggle = (attire) => {
         /**
          * Phase 102: Real-time Tolerance Toggle
-         * Adjusts biometric results based on selected garment context.
+         * Phase 111: Haptic Validation
          */
         if (!window.LAST_MEASUREMENT_DATA) {
             alert("Please perform or select a scan first.");
             return;
         }
 
+        if ("vibrate" in navigator) {
+            navigator.vibrate(50); // Short tactical pulse
+        }
+
         document.getElementById('attireStatus').textContent = `CONTEXT: ${attire.toUpperCase()}`;
         window.showToast("Context Switched", `Now optimizing for ${attire.toUpperCase()}.`);
 
-        // In Phase 102, we re-run the measurement rendering with context
-        // This will eventually call /api/v2/intelligence/calculate
+        // Update active state in style cards
+        document.querySelectorAll('.style-card').forEach(c => c.classList.remove('active'));
+        // We find the card based on title text if needed, but for now we rely on the click handler
+
         renderMeasurementGrids(window.LAST_MEASUREMENT_DATA, attire);
     };
 
