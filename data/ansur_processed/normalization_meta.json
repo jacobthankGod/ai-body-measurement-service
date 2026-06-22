@@ -1,0 +1,182 @@
+{
+  "male": {
+    "stature_cm": {
+      "min": 152.8,
+      "max": 199.3
+    },
+    "chestcircumference": {
+      "min": 81.0,
+      "max": 132.7
+    },
+    "waistcircumference": {
+      "min": 65.0,
+      "max": 128.7
+    },
+    "buttockcircumference": {
+      "min": 77.0,
+      "max": 125.6
+    },
+    "biacromialbreadth": {
+      "min": 35.2,
+      "max": 48.2
+    },
+    "shoulderelbowlength": {
+      "min": 30.4,
+      "max": 42.3
+    },
+    "sleevelengthspinewrist": {
+      "min": 76.5,
+      "max": 103.5
+    },
+    "wristcircumference": {
+      "min": 14.8,
+      "max": 20.6
+    },
+    "neckcircumference": {
+      "min": 32.5,
+      "max": 48.6
+    },
+    "thighcircumference": {
+      "min": 45.2,
+      "max": 81.7
+    },
+    "lowerthighcircumference": {
+      "min": 30.2,
+      "max": 51.7
+    },
+    "kneeheightsitting": {
+      "min": 46.5,
+      "max": 64.2
+    },
+    "calfcircumference": {
+      "min": 29.3,
+      "max": 49.0
+    },
+    "anklecircumference": {
+      "min": 18.9,
+      "max": 27.8
+    },
+    "crotchheight": {
+      "min": 70.2,
+      "max": 100.1
+    },
+    "hipbreadth": {
+      "min": 26.4,
+      "max": 42.7
+    },
+    "bicristalbreadth": {
+      "min": 21.9,
+      "max": 33.2
+    },
+    "bideltoidbreadth": {
+      "min": 41.4,
+      "max": 61.5
+    },
+    "waistbreadth": {
+      "min": 23.5,
+      "max": 43.6
+    },
+    "chestbreadth": {
+      "min": 23.2,
+      "max": 35.1
+    },
+    "chestdepth": {
+      "min": 17.6,
+      "max": 34.2
+    },
+    "waistdepth": {
+      "min": 15.1,
+      "max": 35.2
+    }
+  },
+  "female": {
+    "stature_cm": {
+      "min": 143.5,
+      "max": 182.9
+    },
+    "chestcircumference": {
+      "min": 72.6,
+      "max": 122.0
+    },
+    "waistcircumference": {
+      "min": 61.1,
+      "max": 117.4
+    },
+    "buttockcircumference": {
+      "min": 80.1,
+      "max": 127.5
+    },
+    "biacromialbreadth": {
+      "min": 31.1,
+      "max": 42.2
+    },
+    "shoulderelbowlength": {
+      "min": 27.8,
+      "max": 39.4
+    },
+    "sleevelengthspinewrist": {
+      "min": 68.0,
+      "max": 93.0
+    },
+    "wristcircumference": {
+      "min": 13.3,
+      "max": 18.2
+    },
+    "neckcircumference": {
+      "min": 27.5,
+      "max": 39.2
+    },
+    "thighcircumference": {
+      "min": 44.8,
+      "max": 80.3
+    },
+    "lowerthighcircumference": {
+      "min": 31.2,
+      "max": 51.7
+    },
+    "kneeheightsitting": {
+      "min": 42.4,
+      "max": 59.5
+    },
+    "calfcircumference": {
+      "min": 28.8,
+      "max": 46.0
+    },
+    "anklecircumference": {
+      "min": 17.0,
+      "max": 26.7
+    },
+    "crotchheight": {
+      "min": 63.9,
+      "max": 93.4
+    },
+    "hipbreadth": {
+      "min": 27.6,
+      "max": 44.2
+    },
+    "bicristalbreadth": {
+      "min": 20.1,
+      "max": 34.7
+    },
+    "bideltoidbreadth": {
+      "min": 35.7,
+      "max": 54.0
+    },
+    "waistbreadth": {
+      "min": 21.1,
+      "max": 40.5
+    },
+    "chestbreadth": {
+      "min": 21.3,
+      "max": 33.2
+    },
+    "chestdepth": {
+      "min": 17.1,
+      "max": 33.3
+    },
+    "waistdepth": {
+      "min": 13.8,
+      "max": 31.2
+    }
+  }
+}

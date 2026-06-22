@@ -1,0 +1,7 @@
+{
+  "height": "stature_cm",
+  "chest_round": "chestcircumference",
+  "waist_round": "waistcircumference",
+  "hip_round": "buttockcircumference",
+  "shoulder": "biacromialbreadth"
+}
