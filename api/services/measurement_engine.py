@@ -66,6 +66,9 @@ def extract_measurements_from_dual_photos(front_image, side_image, user_height_c
 
                 measurements['clinical_realism_index'] = realism_score
 
+                # PHASE 104: Generate Accuracy Certificate Metadata
+                measurements['accuracy_certificate'] = mesh_validator.generate_accuracy_certificate(realism_score, refined_metrics)
+
             # Merge refined metrics back into the main dict
             measurements.update(refined_metrics)
             return measurements

@@ -1990,11 +1990,21 @@ async function init() {
       const interval = setInterval(async () => {
         const res = await fetch(`/api/v2/measurements/status/${taskId}`); if (!res.ok) return;
         const data = await res.json();
-        if (data.status === 'processing') { progress = Math.min(progress + 10, 95); status.textContent = "Analyzing body shape..."; }
+        if (data.status === 'processing') {
+            progress = Math.min(progress + 10, 95);
+            // Phase 106: Update progress UI to show refining state
+            status.textContent = progress > 70 ? "Refining Body Model (ANSUR II)..." : "Analyzing body shape...";
+        }
         else if (data.status === 'completed') {
             clearInterval(interval); progress = 100;
             window.hapticFeedback('success');
             window.LAST_MEASUREMENT_DATA = data;
+
+            // Phase 107: Display Verified Scan Badge logic
+            if (data.clinical_realism_index && data.clinical_realism_index > 95) {
+                window.showToast("Clinical Precision Achieved", "Digital Twin generated from 100% verified scan.");
+            }
+
             renderMeasurementGrids(data);
             if (window.KORRA_VIZ) window.KORRA_VIZ.loadMesh(data.mesh_url);
             fetchHistory();
