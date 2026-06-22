@@ -2359,25 +2359,25 @@ document.getElementById('scanForm').addEventListener('submit', async (e) => {
             card.classList.remove('desktop');
             card.style.width = "100%";
             card.style.height = "100%";
-            frame.style.height = "1000px";
-            frame.style.maxWidth = "100%"; // Stretch to main card border
+            frame.style.height = "800px"; // Reduced from 1000px to fix "too long" issue
+            frame.style.maxWidth = "800px"; // Constrained for tablet feel
 
             // Scaleless check: only shrink if parent is physically too small for content
             const dashboardWidth = document.querySelector('.main-content')?.clientWidth || 1200;
             if (dashboardWidth < 900) {
-                container.style.transform = "scale(0.8)";
+                container.style.transform = "scale(0.85)";
             }
         }
         else {
             card.classList.add('desktop');
             card.style.width = "100%";
             card.style.height = "100%";
-            frame.style.height = "700px";
-            frame.style.maxWidth = "100%"; // Full stretch to main card border
+            frame.style.height = "600px"; // Reduced from 700px for true desktop viewport ratio
+            frame.style.maxWidth = "1100px"; // Full Industrial scale
 
             const dashboardWidth = document.querySelector('.main-content')?.clientWidth || 1200;
             if (dashboardWidth < 1100) {
-                container.style.transform = "scale(0.7)";
+                container.style.transform = "scale(0.8)";
             }
         }
         window.updateWidgetPreview();
