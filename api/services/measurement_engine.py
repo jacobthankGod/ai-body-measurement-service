@@ -8,6 +8,7 @@ from api.services.extract_measurements import extract_measurements_from_hmr
 from api.services.mediapipe_measurement_engine import extract_measurements_from_dual_photos as mp_fallback
 from api.services.imputation_service import imputation_service
 from api.services.shape_transformer import shape_transformer
+from api.services.mesh_validator import mesh_validator
 
 def extract_measurements_from_dual_photos(front_image, side_image, user_height_cm, gender='male'):
     """
@@ -15,7 +16,8 @@ def extract_measurements_from_dual_photos(front_image, side_image, user_height_c
     1. HMR 3D Vertex Mesh (1:1 Alignment with Research Paper) - PRIMARY ±1cm
     2. ANSUR II Imputation (Phase 26) - REFINEMENT
     3. Shape Transformer (Phase 48) - 3D SYNTHESIS
-    4. MediaPipe Volumetric Analysis (Phase 11) - SECONDARY FALLBACK
+    4. Clinical Parity Check (Phase 91) - VALIDATION
+    5. MediaPipe Volumetric Analysis (Phase 11) - SECONDARY FALLBACK
     """
 
     # 1. ATTEMPT HIGH-PRECISION HMR (Faraz Bhatti Implementation)
@@ -56,9 +58,13 @@ def extract_measurements_from_dual_photos(front_image, side_image, user_height_c
             # PHASE 48: SHAPE TRANSFORMER (Physical Mesh Synthesis)
             if vertices is not None:
                 reshaped_vertices = shape_transformer.apply_deformation(vertices, refined_metrics, gender)
-                # Note: The calling route (measurements.py) will serialize reshaped_vertices
-                # For Phase 41-50, we attach the reshaped vertices to the result tuple if possible
-                # But to keep it non-destructive, we return the refined measurements.
+
+                # PHASE 91-96: CLINICAL PARITY VALIDATION
+                # Re-measure the virtual 3D mesh to ensure it matches physical reality
+                mesh_metrics = mesh_validator.calculate_mesh_measurements(reshaped_vertices, shape_transformer.partitions)
+                realism_score = mesh_validator.calculate_realism_index(refined_metrics, mesh_metrics)
+
+                measurements['clinical_realism_index'] = realism_score
 
             # Merge refined metrics back into the main dict
             measurements.update(refined_metrics)
