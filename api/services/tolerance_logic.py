@@ -60,12 +60,15 @@ class ToleranceLogic:
         """
         # Phase 49: Volume Guard Integration
         safe_multiplier = min(multiplier, 1.8)
-        # Phase 53: Negative ease for compression wear
-        if multiplier < 1.0:
-            safe_multiplier = max(multiplier, 0.8) # Min 20% compression
 
-        # Phase 52: Abaya/Etibo static offsets
-        final = raw_val * safe_multiplier + static_offset
+        # If multiplier is factor-based (e.g. 1.6), apply raw * m
+        # If multiplier is ease-based (e.g. 0.05), apply raw * (1+m)
+        if safe_multiplier > 0.5:
+            calc_m = safe_multiplier
+        else:
+            calc_m = 1.0 + safe_multiplier
+
+        final = (raw_val * calc_m) + static_offset
         return round(final, 2)
 
     def process_full_attire(self, raw_measurements: dict, multipliers: dict, offsets: dict, gender: str = "male"):
@@ -77,16 +80,23 @@ class ToleranceLogic:
         # Phase 50: Gender-Logic Sharding
         is_female = gender.lower() == 'female'
         chest_key = "Bust Round" if is_female else "Chest Round"
+        chest_std_key = chest_key.lower().replace(' ', '_')
+
+        # Fix: Extract raw chest ease for sync BEFORE the loop
+        # The multipliers dict is expected to contain keys like 'chest_round'
+        chest_m = multipliers.get(chest_std_key, 0.0)
 
         for key, val in raw_measurements.items():
-            # Get specific multiplier for this body part, fallback to base
-            m = multipliers.get(key.lower().replace(' ', '_'), 0.05) # Default 5% ease
-            o = offsets.get(key.lower().replace(' ', '_'), 0.0)
+            std_key = key.lower().replace(' ', '_')
+
+            # Get specific multiplier
+            m = multipliers.get(std_key, 0.05)
+            o = offsets.get(std_key, 0.0)
 
             # Phase 48: Sync shoulder to chest expansion
-            if key == "Shoulder" and chest_key in raw_measurements:
+            if std_key == "shoulder":
                 # Shoulder ease is proportionally linked to chest volume (30% ratio)
-                m = m + (multipliers.get(chest_key.lower().replace(' ', '_'), 0) * 0.3)
+                m = m + (chest_m * 0.3)
 
             refined[key] = self.calculate_tolerance(val, m, o, key)
 
