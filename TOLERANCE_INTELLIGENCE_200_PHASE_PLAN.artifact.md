@@ -157,7 +157,7 @@
 144. **Currency Localization:** Implement real-time NGN/KES/GHS conversion for credits.
 145. **Merchant Tier Logic:** Lock "Advanced Tolerance" behind the Professional plan.
 146. **Usage Quota Monitor:** Track how many "Agbada" vs "Suit" scans are performed globally.
-147. **Algorithm Weight Override:** Allow admins to tweak global multipliers for specific seasons.
+147. **[DELETED]:** Dynamic weight override logic removed per project flow realignment.
 148. **Audit Trail:** Log all changes to the `tolerance_matrices` table.
 149. **Global Price Lock:** Freeze pricing for the official Unicorn OS Launch.
 150. **Admin Training Manual:** Document the manual override protocols.

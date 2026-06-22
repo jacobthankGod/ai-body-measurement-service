@@ -33,10 +33,6 @@ class AdminService:
         }
         self.usage_stats = {} # {region: current_count}
 
-        # Phase 147: Algorithm Weight Overrides
-        # Allows real-time tuning of multipliers without code changes
-        self.weight_overrides = {} # {attire_id: {measurement: override_val}}
-
         # Phase 148: Administrative Audit Trail
         self.audit_log = [] # List of dicts with timestamp, admin_id, and change_detail
 
@@ -50,14 +46,6 @@ class AdminService:
         }
         self.audit_log.append(entry)
         logger.info(f"🛡️ Audit: {action} by {admin_id}")
-
-    def apply_weight_override(self, admin_id: str, attire_id: str, measurement: str, value: float):
-        """Phase 147: Dynamic adjustment of fit formulas."""
-        if attire_id not in self.weight_overrides:
-            self.weight_overrides[attire_id] = {}
-
-        self.weight_overrides[attire_id][measurement] = value
-        self.log_audit(admin_id, "WEIGHT_OVERRIDE", {"attire": attire_id, "measure": measurement, "val": value})
 
     def track_scan_usage(self, country_code: str):
         """Phase 146: Monitor regional scan volume."""
