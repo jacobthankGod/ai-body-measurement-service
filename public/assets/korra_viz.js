@@ -248,45 +248,49 @@ class KorraVisualizer {
         console.log(`🛡️ Phase 119: Privacy Shield ${active ? 'ACTIVE' : 'INACTIVE'}`);
     }
 
-    applyHeatmap(baselineData, latestData) {
-        if (!baselineData || !latestData) return;
-        const baselineArr = baselineData.vertices;
-        const latestArr = latestData.vertices;
-        if (baselineArr.length !== latestArr.length) return;
+    applyHeatmap(contextName = "standard") {
+        /**
+         * Phase 103: Visual Difference Heatmap
+         * Transforms the mesh into a dynamic 'Ease Density' diagnostic tool.
+         */
+        if (!this.mesh || !window.KORRA_HEATMAP_SHADER) return;
 
-        const count = baselineArr.length / 3;
-        const colors = new Float32Array(baselineArr.length);
-        for (let i = 0; i < count; i++) {
-            const idx = i * 3;
-            const distB = Math.sqrt(baselineArr[idx]**2 + baselineArr[idx+2]**2);
-            const distL = Math.sqrt(latestArr[idx]**2 + latestArr[idx+2]**2);
-            const diff = distL - distB;
-            if (diff > 0.005) { colors[idx]=1; colors[idx+1]=0.3; colors[idx+2]=0.3; }
-            else if (diff < -0.005) { colors[idx]=0.34; colors[idx+1]=0.84; colors[idx+2]=0.75; }
-            else { colors[idx]=0.8; colors[idx+1]=0.8; colors[idx+2]=0.8; }
+        const multipliers = {
+            "standard": 1.0,
+            "agbada": 2.5,
+            "senator": 1.1,
+            "kurta": 1.5,
+            "abaya": 1.8
+        };
+
+        const activeMult = multipliers[contextName.toLowerCase()] || 1.0;
+
+        const heatmapMaterial = new THREE.ShaderMaterial({
+            uniforms: {
+                uBaseRadius: { value: 0.25 },
+                uActiveMultiplier: { value: activeMult },
+                uOpacity: { value: 0.8 }
+            },
+            vertexShader: window.KORRA_HEATMAP_SHADER.vertexShader,
+            fragmentShader: window.KORRA_HEATMAP_SHADER.fragmentShader,
+            transparent: true,
+            side: THREE.DoubleSide
+        });
+
+        // Store original material if not already stored
+        if (!this.mesh.userData.originalMaterial) {
+            this.mesh.userData.originalMaterial = this.mesh.material;
         }
 
-        const geometry = new THREE.BufferGeometry();
-        geometry.setAttribute('position', new THREE.Float32BufferAttribute(latestArr, 3));
-        geometry.setAttribute('color', new THREE.BufferAttribute(colors, 3));
-        if (latestData.faces) geometry.setIndex(latestData.faces);
-        geometry.computeVertexNormals();
-        geometry.center();
+        this.mesh.material = heatmapMaterial;
+        this.mesh.material.needsUpdate = true;
+        console.log(`🔥 Phase 103: Heatmap LIVE for context: ${contextName}`);
+    }
 
-        const material = new THREE.MeshPhongMaterial({
-            vertexColors: true,
-            wireframe: false,
-            transparent: true,
-            opacity: 0.8,
-            side: THREE.DoubleSide,
-            emissive: 0x222222,
-            emissiveIntensity: 0.2
-        });
-        if (this.mesh) this.scene.remove(this.mesh);
-        this.mesh = new THREE.Mesh(geometry, material);
-        this.mesh.rotation.x = Math.PI; this.mesh.rotation.y = Math.PI;
-        this.mesh.position.set(0, latestData.size.y / 2, 0);
-        this.scene.add(this.mesh);
+    resetHeatmap() {
+        if (this.mesh && this.mesh.userData.originalMaterial) {
+            this.mesh.material = this.mesh.userData.originalMaterial;
+        }
     }
 
     createTechnicalProxy() {

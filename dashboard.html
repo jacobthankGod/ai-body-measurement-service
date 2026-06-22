@@ -1350,6 +1350,7 @@
   <script src="/assets/supabase.min.js"></script>
   <script src="/assets/three.min.js"></script>
   <script src="/assets/korra_viz.js"></script>
+  <script src="/assets/heatmap_shader.js"></script>
   <script src="/assets/korra_export.js"></script>
 
   <script>
@@ -2294,6 +2295,11 @@ document.getElementById('scanForm').addEventListener('submit', async (e) => {
 
         document.getElementById('attireStatus').textContent = `CONTEXT: ${attire.toUpperCase()}`;
         window.showToast("Context Switched", `Now optimizing for ${attire.toUpperCase()}.`);
+
+        // Phase 103: Trigger Visual Difference Heatmap
+        if (window.KORRA_VIZ) {
+            window.KORRA_VIZ.applyHeatmap(attire);
+        }
 
         // Update active state in style cards
         document.querySelectorAll('.style-card').forEach(c => c.classList.remove('active'));
