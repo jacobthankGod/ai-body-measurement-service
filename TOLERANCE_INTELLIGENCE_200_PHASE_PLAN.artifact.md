@@ -161,8 +161,26 @@
 148. **Audit Trail:** Log all changes to the `tolerance_matrices` table.
 149. **Global Price Lock:** Freeze pricing for the official Unicorn OS Launch.
 150. **Admin Training Manual:** Document the manual override protocols.
-
-### **Chapter 6: Global Deployment & Sovereign Scaling (Phases 171–200)**
+151. **Admin Analytics Dashboard:** High-level visualization of global scan costs vs revenue.
+152. **Bulk Credit Allocation API:** Endpoint for admins to inject credits into merchant accounts.
+153. **Price Sensitivity Analysis:** Logic to track scan abandonment based on price overrides.
+154. **Regional Tax Calculation:** Initial logic for local tax handling (VAT in Nigeria, etc.).
+155. **Merchant Subscription Sync:** Linking price overrides to specific plan tiers.
+156. **Admin Audit Export:** CSV/PDF export of all administrative price and weight overrides.
+157. **Automated Quota Alerts:** Notifications when a region exceeds its scan volume threshold.
+158. **Dynamic Pricing Engine:** Automated adjustment of prices based on demand/seasonality.
+159. **Admin Security Hardening:** MFA for administrative override actions.
+160. **Chapter 5 Production Verification:** Automated tests for all economic logic.
+161. **Regional Localization (West):** Fine-tune Agbada and Kente volume.
+162. **Regional Localization (East):** Fine-tune Kanzu and Dirac offsets.
+163. **Regional Localization (North):** Fine-tune Maghreb caftan fits.
+164. **Regional Localization (South):** Fine-tune Shweshwe structural ease.
+165. **Regional Localization (Central):** Fine-tune Toghu velvet volume.
+166. **Regional Localization (Asia):** Fine-tune Sherwani and Qipao precision.
+167. **Regional Localization (Europe):** Fine-tune Italian vs British suit ease.
+168. **Regional Localization (Latin America):** Fine-tune Guayabera ventilation.
+169. **Regional Localization (Andean):** Fine-tune Poncho shoulder-span logic.
+170. **LMIC Device Hardening:** Optimize the tolerance engine for low-bandwidth environments.
 *Focus: Final production hardening and global launch health.*
 
 171. **Docker Regional Sharding:** Orchestrate containers for African regional nodes (Lagos/Nairobi).
