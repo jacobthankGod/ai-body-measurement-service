@@ -17,27 +17,25 @@ RUN apt-get update && apt-get install -y \
 # Set working directory
 WORKDIR /app
 
-# Upgrade pip to ensure the latest dependency resolver is used
+# Upgrade pip and install core build tools
 RUN pip install --no-cache-dir --upgrade pip setuptools wheel
 
-# Pre-install numpy and build chumpy without isolation
+# Pre-install numpy and build chumpy (Crucial for HMR)
 RUN pip install --no-cache-dir numpy==1.26.3
 RUN pip install --no-cache-dir chumpy==0.70 --no-build-isolation
 
-# Copy requirements first for better caching
+# Copy requirements and install all dependencies
 COPY requirements.txt .
 RUN pip install --no-cache-dir -r requirements.txt
 
-# Copy the rest of the application
-COPY . .
-
-# PHASE 134: COLD START OPTIMIZATION (Multi-stage cleanup)
-RUN apt-get purge -y --auto-remove build-essential python3-dev \
-    && rm -rf /root/.cache/pip
+# PHASE 134: COLD START OPTIMIZATION (Purge caches only)
+RUN rm -rf /root/.cache/pip
 
 # PHASE 121: BAKE ANSUR MATRICES
-# Ensure data directories exist and have baked files
 RUN mkdir -p /app/data/ansur_processed /app/api/models/imputation
+
+# Copy the rest of the application
+COPY . .
 
 # Environment variables for Cloud Run
 ENV PORT=8080

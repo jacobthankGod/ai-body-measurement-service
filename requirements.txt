@@ -42,6 +42,12 @@ realtime==1.0.6
 qrcode==7.4.2
 sendgrid==6.11.0
 python-http-client==3.3.7
+sib-api-v3-sdk==7.6.0
+sentry-sdk==1.40.1
+
+# Data Analysis (Biometric Evolution)
+pandas==2.2.0
+scikit-learn==1.4.0
 
 # Utilities
 python-dotenv==1.0.0
