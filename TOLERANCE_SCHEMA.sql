@@ -43,7 +43,12 @@ INSERT INTO public.attire_profiles (name, cultural_context, gender_sharding, bas
 VALUES
 ('Agbada', ARRAY['Tribal', 'Formal'], 'male', 1.6),
 ('Senator', ARRAY['Urban', 'Formal'], 'male', 1.1),
-('Kaftan', ARRAY['Tribal', 'Daily'], 'unisex', 1.2)
+('Kaftan', ARRAY['Tribal', 'Daily'], 'unisex', 1.2),
+('Abaya', ARRAY['Middle Eastern', 'Modesty'], 'female', 1.0, 15.0), -- Phase 52: +15cm static offset
+('Activewear', ARRAY['Industrial', 'Sports'], 'unisex', 0.9), -- Phase 53: -10% negative ease
+('Isi Agu', ARRAY['Tribal', 'Ceremonial'], 'male', 1.15), -- Phase 55: Velvet multiplier
+('Etibo', ARRAY['Tribal', 'Regional'], 'male', 1.1, 5.0), -- Phase 56: +5cm wrapper overlap
+('Toghu', ARRAY['Tribal', 'Regal'], 'unisex', 1.25) -- Phase 60: Embroidery multiplier
 ON CONFLICT (name) DO NOTHING;
 
 -- 5. RLS POLICIES

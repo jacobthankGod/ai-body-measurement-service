@@ -50,13 +50,16 @@ class ToleranceLogic:
     def calculate_tolerance(self, raw_val: float, multiplier: float, static_offset: float, group: str = "chest"):
         """
         Phase 47: The Tolerance Scalar
-        Logic: Final = Raw + (Raw * Multiplier) + Static_Offset
+        Phase 53: Negative Ease (Activewear)
         """
-        # Phase 49: Volume Guard Integration (Clinical anatomically safe limits)
-        # Prevents impossible ease values (e.g. > 2.0x body volume)
+        # Phase 49: Volume Guard Integration
         safe_multiplier = min(multiplier, 1.8)
+        # Phase 53: Negative ease for compression wear
+        if multiplier < 1.0:
+            safe_multiplier = max(multiplier, 0.8) # Min 20% compression
 
-        final = raw_val + (raw_val * safe_multiplier) + static_offset
+        # Phase 52: Abaya/Etibo static offsets
+        final = raw_val * safe_multiplier + static_offset
         return round(final, 2)
 
     def process_full_attire(self, raw_measurements: dict, multipliers: dict, offsets: dict, gender: str = "male"):
