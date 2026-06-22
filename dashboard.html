@@ -885,36 +885,6 @@
                     </div>
                 </div>
 
-                <!-- NEW: ATTIRE CONTEXT SELECTOR (Phase 101) -->
-                <div class="action-card" id="attireContextCard" style="background:linear-gradient(135deg, #002D2A 0%, #050505 100%)">
-                    <div class="action-overlay">
-                        <div class="action-tag">Tolerance Intelligence</div>
-                  <h3 class="action-title">Switch Attire<br>Context</h3>
-
-                  <!-- Phase 113: High-end Style Card Layout -->
-                  <div class="style-card-grid" style="grid-template-columns: 1fr 1fr; margin-top: 12px;">
-                      <div class="style-card active" onclick="window.handleAttireToggle('standard')">
-                          <h5>Standard</h5>
-                          <p>Clinical Base</p>
-                      </div>
-                      <div class="style-card" onclick="window.handleAttireToggle('agbada')">
-                          <h5>Agbada</h5>
-                          <p>Regal Volume</p>
-                      </div>
-                      <div class="style-card" onclick="window.handleAttireToggle('senator')">
-                          <h5>Senator</h5>
-                          <p>Business Fit</p>
-                      </div>
-                      <div class="style-card" onclick="window.handleAttireToggle('kurta')">
-                          <h5>Kurta</h5>
-                          <p>Airflow Ease</p>
-                      </div>
-                  </div>
-
-                  <div style="font-size:9px; color:var(--Accent-Teal); margin-top:12px; font-weight:900" id="attireStatus">CONTEXT: STANDARD</div>
-                    </div>
-                </div>
-
                 <!-- PASSPORT CARD -->
                 <div class="action-card" onclick="window.switchTab('passports')">
                     <img src="/assets/body-capture.png" style="opacity: 0.3; object-fit: contain; padding: 40px">
@@ -950,6 +920,30 @@
                     <label style="font-size:10px; font-weight:900; color:var(--Neutral-500); display:block; margin-bottom:12px">CRAFTSMAN NOTES</label>
                     <textarea id="craftsmanNotes" class="input-field" style="height:120px; padding:16px; resize:none" placeholder="Enter patterns, fabrics, or specific tailoring requirements..."></textarea>
                     <button class="btn-outline" style="width:100%; height:36px; font-size:10px" onclick="window.saveCraftsmanNotes()">Save Notes</button>
+                  </div>
+
+                  <!-- Phase 113: ATTIRE CONTEXT SELECTION (POST-SCAN) -->
+                  <div style="margin-bottom:32px">
+                    <label style="font-size:10px; font-weight:900; color:var(--Neutral-500); display:block; margin-bottom:12px">ATTIRE CONTEXT</label>
+                    <div class="style-card-grid" style="grid-template-columns: 1fr 1fr; margin-top: 12px;">
+                        <div class="style-card active" onclick="window.handleAttireToggle('standard')">
+                            <h5>Standard</h5>
+                            <p>Clinical Base</p>
+                        </div>
+                        <div class="style-card" onclick="window.handleAttireToggle('agbada')">
+                            <h5>Agbada</h5>
+                            <p>Regal Volume</p>
+                        </div>
+                        <div class="style-card" onclick="window.handleAttireToggle('senator')">
+                            <h5>Senator</h5>
+                            <p>Business Fit</p>
+                        </div>
+                        <div class="style-card" onclick="window.handleAttireToggle('kurta')">
+                            <h5>Kurta</h5>
+                            <p>Airflow Ease</p>
+                        </div>
+                    </div>
+                    <div style="font-size:9px; color:var(--Accent-Teal); margin-top:12px; font-weight:900" id="attireStatus">ACTIVE CONTEXT: STANDARD</div>
                   </div>
 
                   <div style="margin-bottom:20px"><h5 style="font-size:11px; font-weight:900; color:#fff; text-transform:uppercase; margin-bottom:12px">Measurements</h5><div id="measurementGridUpper" style="display:grid; grid-template-columns:repeat(3,1fr); gap:8px"></div></div>
