@@ -1632,6 +1632,11 @@ window.loadSettings = async () => {
             if (document.getElementById('widgetBtnTextMeasured')) document.getElementById('widgetBtnTextMeasured').value = wc.btn_text_measured || "Get Measured";
             if (document.getElementById('widgetBtnColor')) document.getElementById('widgetBtnColor').value = wc.btn_color || "#57D7C0";
             if (document.getElementById('widgetBtnTextColor')) document.getElementById('widgetBtnTextColor').value = wc.btn_text_color || "#050505";
+
+            // HYDRATE BRAND LOGO
+            if (profile.brand_logo_url) {
+                logoDataUrl = profile.brand_logo_url;
+            }
         }
         window.updateWidgetPreview();
 
@@ -2382,6 +2387,35 @@ document.getElementById('scanForm').addEventListener('submit', async (e) => {
         if (url) window.showToast("Success", "Webhook Destination Secured.");
     };
 
+    window.handleWidgetLogo = async (input) => {
+        if (input.files && input.files[0]) {
+            const file = input.files[0];
+            const fileExt = file.name.split('.').pop();
+            const fileName = `${userId}/logo_${Date.now()}.${fileExt}`;
+
+            try {
+                window.showToast("Syncing...", "Uploading brand logo to clinical vault.");
+
+                const { data: uploadData, error: uploadError } = await window.KORRA_DB.storage
+                    .from('branding')
+                    .upload(fileName, file, { upsert: true });
+
+                if (uploadError) throw uploadError;
+
+                const { data: { publicUrl } } = window.KORRA_DB.storage
+                    .from('branding')
+                    .getPublicUrl(fileName);
+
+                logoDataUrl = publicUrl;
+                window.updateWidgetPreview();
+                window.showToast("Branding Synchronized", "Logo Preview Updated.");
+            } catch (err) {
+                console.error("Logo upload failed:", err);
+                window.showToast("Upload Failed", err.message);
+            }
+        }
+    };
+
     window.handleProfileImage = async (input) => {
         if (input.files && input.files[0]) {
             const file = input.files[0];
@@ -2450,10 +2484,15 @@ document.getElementById('scanForm').addEventListener('submit', async (e) => {
             logo_size: document.getElementById('widgetLogoSize').value,
             btn_text_fitting: document.getElementById('widgetBtnTextFitting').value,
             btn_text_measured: document.getElementById('widgetBtnTextMeasured').value,
-            btn_color: document.getElementById('widgetBtnColor').value
+            btn_color: document.getElementById('widgetBtnColor').value,
+            btn_text_color: document.getElementById('widgetBtnTextColor').value
         };
         try {
-            const { error } = await window.KORRA_DB.from('profiles').update({ widget_config: config }).eq('id', userId);
+            const { error } = await window.KORRA_DB.from('profiles').update({
+                widget_config: config,
+                brand_logo_url: logoDataUrl
+            }).eq('id', userId);
+
             if (error) throw error;
             window.showToast("Success", "Widget Profile Synchronized.");
         } catch(e) { window.showToast("Error", e.message); }
