@@ -14,6 +14,16 @@ from pathlib import Path
 from api.routes import auth, measurements, health, sharing, qrcode, payments, subscriptions, admin
 from api.config import CORS_ORIGINS, FEATURES
 
+# PHASE 130: SENTRY ERROR REPORTING INTEGRATION
+try:
+    import sentry_sdk
+    from sentry_sdk.integrations.fastapi import SentryAsgiMiddleware
+    if os.environ.get("SENTRY_DSN"):
+        sentry_sdk.init(dsn=os.environ.get("SENTRY_DSN"), traces_sample_rate=1.0)
+        logger.info("🛡️ Phase 130: Sentry reporting LIVE.")
+except ImportError:
+    logger.warning("⚠️ sentry-sdk not found. Error reporting will use local logs.")
+
 # Configure Logging
 logging.basicConfig(
     level=logging.INFO,

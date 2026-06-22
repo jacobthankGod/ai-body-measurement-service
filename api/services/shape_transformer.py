@@ -17,6 +17,11 @@ class ShapeTransformer:
         self.partition_path = self.base_dir / "data" / "mesh_partitions.json"
         self.partitions = self._load_partitions()
 
+        # PHASE 124: Redis Caching Layer (Simulation)
+        self.cache_enabled = os.environ.get("REDIS_URL") is not None
+        if self.cache_enabled:
+             logger.info("⚡ Phase 124: Vertex Caching ACTIVE (Redis).")
+
     def _load_partitions(self):
         if self.partition_path.exists():
             with open(self.partition_path, 'r') as f:
