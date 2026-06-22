@@ -133,6 +133,35 @@ class AnsurTensorLoader:
         # Phase 27: Golden Average Lock
         self.constants['clinical_mean_locked'] = True
 
+        # Phase 32: Soft Tissue Compression (BMI-based)
+        self.constants['soft_tissue_bmi_scalars'] = {
+            'underweight': 0.98, # Tighter fit
+            'normal': 1.0,
+            'overweight': 1.05,  # Add extra ease for soft tissue displacement
+            'obese': 1.12
+        }
+
+        # Phase 33 & 34: Age-Group & Youth-Fit Bias
+        self.constants['demographic_fit_bias'] = {
+            'youth_gen_z': -1.0,   # -1cm tighter preference
+            'senior_55_plus': 2.0  # +2cm stomach expansion buffer
+        }
+
+        # Phase 36: Wash-Day Buffer (Shrinkage logic)
+        self.constants['wash_day_shrinkage_buffer'] = {
+            'natural_fiber': 1.03, # 3% buffer
+            'synthetic': 1.01      # 1% buffer
+        }
+
+        # Phase 37 & 38: Gait & Reach Expansion
+        self.constants['movement_expansion_offsets'] = {
+            'walk_gait_hip': 1.5,
+            'reach_radius_back': 2.0
+        }
+
+        # Phase 39: Confidence Weighting
+        self.constants['low_confidence_ease_reduction'] = 0.85 # Reduce ease if scan < 90%
+
         self._save_constants()
 
     def _save_constants(self):

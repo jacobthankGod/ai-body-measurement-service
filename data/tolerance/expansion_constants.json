@@ -37,5 +37,24 @@
         "daily_fluidity": 0.035
     },
     "iso_mapping_active": true,
-    "clinical_mean_locked": true
+    "clinical_mean_locked": true,
+    "soft_tissue_bmi_scalars": {
+        "underweight": 0.98,
+        "normal": 1.0,
+        "overweight": 1.05,
+        "obese": 1.12
+    },
+    "demographic_fit_bias": {
+        "youth_gen_z": -1.0,
+        "senior_55_plus": 2.0
+    },
+    "wash_day_shrinkage_buffer": {
+        "natural_fiber": 1.03,
+        "synthetic": 1.01
+    },
+    "movement_expansion_offsets": {
+        "walk_gait_hip": 1.5,
+        "reach_radius_back": 2.0
+    },
+    "low_confidence_ease_reduction": 0.85
 }
