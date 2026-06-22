@@ -107,7 +107,7 @@ class KorraVisualizer {
 
         try {
             const controller = new AbortController();
-            const id = setTimeout(() => controller.abort(), 10000); // 10s timeout for mesh load
+            const id = setTimeout(() => controller.abort(), 15000); // Increased for high-res mesh
             const response = await fetch(objUrl, { signal: controller.signal });
             clearTimeout(id);
             if (!response.ok) throw new Error("File Missing");
@@ -118,11 +118,35 @@ class KorraVisualizer {
                 this.renderLandmarks(landmarkData, meshData.size);
             }
 
+            // PHASE 76: Enable high-fidelity vertex buffer updates
+            this.mesh.geometry.attributes.position.usage = THREE.DynamicDrawUsage;
+
             return meshData;
         } catch (e) {
             this.createTechnicalProxy();
             return null;
         }
+    }
+
+    updateVertices(newVertexData) {
+        /**
+         * Phase 76: Real-time Vertex Buffer Update
+         * newVertexData: Float32Array of vertex positions
+         */
+        if (!this.mesh) return;
+        const position = this.mesh.geometry.attributes.position;
+        if (newVertexData.length !== position.count * 3) return;
+
+        position.set(newVertexData);
+        position.needsUpdate = true;
+        this.mesh.geometry.computeVertexNormals();
+
+        // Phase 83: Center camera on new mass
+        this.mesh.geometry.computeBoundingBox();
+        const bbox = this.mesh.geometry.boundingBox;
+        const center = new THREE.Vector3();
+        bbox.getCenter(center);
+        this.mesh.position.set(0, center.y, 0); // Re-center on Y
     }
 
     parseAndRenderOBJ(text) {
@@ -158,7 +182,11 @@ class KorraVisualizer {
             transparent: true,
             opacity: 0.9,
             shininess: 100,
-            side: THREE.DoubleSide
+            side: THREE.DoubleSide,
+            // PHASE 80: Unicorn Glass shader refinements
+            emissive: 0x002D2A,
+            emissiveIntensity: 0.2,
+            flatShading: false
         });
 
         if (this.mesh) this.scene.remove(this.mesh);
