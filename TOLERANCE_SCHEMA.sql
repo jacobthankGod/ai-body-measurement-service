@@ -38,7 +38,7 @@ CREATE TABLE IF NOT EXISTS public.merchant_attire_overrides (
     UNIQUE(merchant_id, attire_id)
 );
 
--- 4. INITIAL DATA SEED (Phases 41-70)
+-- 4. INITIAL DATA SEED (Phases 41-80)
 INSERT INTO public.attire_profiles (name, cultural_context, gender_sharding, base_multiplier, base_static_offset)
 VALUES
 ('Agbada', ARRAY['Tribal', 'Formal'], 'male', 1.6, 0.0),
@@ -49,21 +49,34 @@ VALUES
 ('Isi Agu', ARRAY['Tribal', 'Ceremonial'], 'male', 1.15, 0.0),
 ('Etibo', ARRAY['Tribal', 'Regional'], 'male', 1.1, 5.0),
 ('Toghu', ARRAY['Tribal', 'Regal'], 'unisex', 1.25, 0.0),
-('Hanbok', ARRAY['Asian', 'Traditional'], 'female', 1.1, 10.0), -- Phase 61
-('Ao Dai', ARRAY['Asian', 'Elegant'], 'female', 1.02, 0.0),      -- Phase 62
-('Kimono', ARRAY['Asian', 'Formal'], 'unisex', 1.0, 20.0),       -- Phase 63
-('Yukata', ARRAY['Asian', 'Casual'], 'unisex', 1.05, 5.0),       -- Phase 64
-('Gho', ARRAY['Asian', 'Regal'], 'male', 1.3, 0.0),              -- Phase 65
-('Takshita', ARRAY['North African', 'Formal'], 'female', 1.15, 0.0), -- Phase 66
-('Djellaba', ARRAY['North African', 'Arid'], 'unisex', 1.25, 0.0),  -- Phase 67
-('Karakou', ARRAY['North African', 'Fitted'], 'female', 1.05, 0.0), -- Phase 68
-('Jalabiya', ARRAY['Middle Eastern', 'Arid'], 'unisex', 1.35, 0.0), -- Phase 69
-('Burnous', ARRAY['North African', 'Cloak'], 'male', 1.0, 30.0)      -- Phase 70
+('Hanbok', ARRAY['Asian', 'Traditional'], 'female', 1.1, 10.0),
+('Ao Dai', ARRAY['Asian', 'Elegant'], 'female', 1.02, 0.0),
+('Kimono', ARRAY['Asian', 'Formal'], 'unisex', 1.0, 20.0),
+('Yukata', ARRAY['Asian', 'Casual'], 'unisex', 1.05, 5.0),
+('Gho', ARRAY['Asian', 'Regal'], 'male', 1.3, 0.0),
+('Takshita', ARRAY['North African', 'Formal'], 'female', 1.15, 0.0),
+('Djellaba', ARRAY['North African', 'Arid'], 'unisex', 1.25, 0.0),
+('Karakou', ARRAY['North African', 'Fitted'], 'female', 1.05, 0.0),
+('Jalabiya', ARRAY['Middle Eastern', 'Arid'], 'unisex', 1.35, 0.0),
+('Burnous', ARRAY['North African', 'Cloak'], 'male', 1.0, 30.0),
+('Melhfa', ARRAY['North African', 'Draped'], 'female', 1.0, 40.0),    -- Phase 71
+('Umbhaco', ARRAY['Southern African', 'Braided'], 'female', 1.1, 0.0), -- Phase 72
+('Herero', ARRAY['Southern African', 'Victorian'], 'female', 1.4, 15.0),-- Phase 73
+('Basotho', ARRAY['Southern African', 'Cloak'], 'unisex', 1.0, 35.0),  -- Phase 74
+('Leteise', ARRAY['Southern African', 'Stiff'], 'female', 1.08, 0.0),  -- Phase 75
+('Emahiya', ARRAY['Southern African', 'Wrap'], 'unisex', 1.0, 25.0),   -- Phase 76
+('Isicholo', ARRAY['Southern African', 'Headgear'], 'female', 1.0, 5.0),-- Phase 77
+('Lamba', ARRAY['Southern African', 'Silk'], 'unisex', 1.2, 0.0),     -- Phase 78
+('Liputa', ARRAY['Central African', 'Wax-Print'], 'female', 1.05, 10.0),-- Phase 79
+('Muhuila', ARRAY['Central African', 'Beaded'], 'female', 1.0, 20.0)   -- Phase 80
 ON CONFLICT (name) DO NOTHING;
 
 -- 5. RLS POLICIES
 ALTER TABLE public.attire_profiles ENABLE ROW LEVEL SECURITY;
 ALTER TABLE public.tolerance_matrices ENABLE ROW LEVEL SECURITY;
 
+DROP POLICY IF EXISTS "Public attire viewing" ON public.attire_profiles;
 CREATE POLICY "Public attire viewing" ON public.attire_profiles FOR SELECT USING (true);
+
+DROP POLICY IF EXISTS "Public tolerance viewing" ON public.tolerance_matrices;
 CREATE POLICY "Public tolerance viewing" ON public.tolerance_matrices FOR SELECT USING (true);
