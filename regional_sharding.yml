@@ -1,0 +1,39 @@
+# KORRA | Regional Sharding Configuration (Phase 171)
+# Objective: Orchestrate regional African nodes for < 2s latency.
+
+version: '3.8'
+
+services:
+  korra-api-lagos:
+    image: korra-ai:latest
+    container_name: korra-node-west-africa
+    environment:
+      - REGION=WEST_AFRICA
+      - MASTER_KEY=${KORRA_MASTER_SECRET}
+    ports:
+      - "8081:8080"
+    deploy:
+      resources:
+        limits:
+          memory: 1G
+
+  korra-api-nairobi:
+    image: korra-ai:latest
+    container_name: korra-node-east-africa
+    environment:
+      - REGION=EAST_AFRICA
+      - MASTER_KEY=${KORRA_MASTER_SECRET}
+    ports:
+      - "8082:8080"
+    deploy:
+      resources:
+        limits:
+          memory: 1G
+
+  korra-api-global:
+    image: korra-ai:latest
+    container_name: korra-node-standard
+    environment:
+      - REGION=GLOBAL
+    ports:
+      - "8080:8080"
