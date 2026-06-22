@@ -24,7 +24,7 @@ class ToleranceLogic:
     def calculate_offsets(self, raw_measurements: dict, context: str = "standard", layering: str = "none"):
         """
         Phase 29: Formula Encryption / Obfuscation
-        This method calculates the 'Tolerance Data Stream' without exposing raw constants to the frontend.
+        Phase 81-89: Regional Fine-Tuning
         """
         # Phase 21 & 22: Layering Offsets
         layering_buffer = 0.0
@@ -35,12 +35,18 @@ class ToleranceLogic:
         fluidity_multiplier = 1.035 # Default 3.5% Daily Wear
         if context == "gala": fluidity_multiplier = 1.005 # 0.5% Compression
 
+        # Chapter 3: Specific Archetype Multipliers (Phase 81-89)
+        if "agbada" in context: fluidity_multiplier = 1.45
+        elif "kanzu" in context: fluidity_multiplier = 1.25
+        elif "djellaba" in context: fluidity_multiplier = 1.3
+        elif "qipao" in context: fluidity_multiplier = 1.02 # Minimal ease
+        elif "suit" in context: fluidity_multiplier = 1.1
+
         refined = {}
         for key, val in raw_measurements.items():
             # Phase 25: ISO 8559-1 Mapping (Standardized Labels)
             iso_key = self._map_to_iso(key)
 
-            # Phase 47 Logic: Final = Raw + (Raw * Multiplier) + Static_Offset
             # Obfuscated Math
             offset_val = (val * fluidity_multiplier) + layering_buffer
             refined[iso_key] = round(offset_val, 2)
