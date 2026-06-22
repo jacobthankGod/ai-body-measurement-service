@@ -869,6 +869,22 @@
                     </div>
                 </div>
 
+                <!-- NEW: ATTIRE CONTEXT SELECTOR (Phase 101) -->
+                <div class="action-card" id="attireContextCard" style="background:linear-gradient(135deg, #002D2A 0%, #050505 100%)">
+                    <div class="action-overlay">
+                        <div class="action-tag">Tolerance Intelligence</div>
+                        <h3 class="action-title">Switch Attire<br>Context</h3>
+                        <select id="dashboardAttireSelect" class="input-field" style="width:100%; margin-top:12px; font-size:12px; background:rgba(255,255,255,0.05)" onchange="window.handleAttireToggle(this.value)">
+                            <option value="standard">Standard Fit</option>
+                            <option value="agbada">Grand Agbada</option>
+                            <option value="senator">Senator Style</option>
+                            <option value="kurta">South Asian Kurta</option>
+                            <option value="abaya">Middle Eastern Abaya</option>
+                        </select>
+                        <div style="font-size:9px; color:var(--Accent-Teal); margin-top:8px; font-weight:900" id="attireStatus">CONTEXT: STANDARD</div>
+                    </div>
+                </div>
+
                 <!-- PASSPORT CARD -->
                 <div class="action-card" onclick="window.switchTab('passports')">
                     <img src="/assets/body-capture.png" style="opacity: 0.3; object-fit: contain; padding: 40px">
@@ -1700,11 +1716,22 @@ window.loadSettings = async () => {
         renderMeasurementGrids(window.LAST_MEASUREMENT_DATA);
     };
 
-    function renderMeasurementGrids(data) {
+    function renderMeasurementGrids(data, context = 'standard') {
       const m = data.measurements || {};
       const unit = window.CURRENT_UNIT;
       const factor = unit === 'in' ? 0.393701 : 1;
       const gender = (data.gender || 'male').toLowerCase();
+
+      // PHASE 102: Apply Tolerance Intelligence Multipliers
+      // (Simulation of backend calculate hook for real-time toggle)
+      const getEase = (key) => {
+          if (context === 'standard') return 1.035; // 3.5% ease
+          if (context === 'agbada') return 1.45;
+          if (context === 'senator') return 1.1;
+          if (context === 'kurta') return 1.25;
+          if (context === 'abaya') return 1.15;
+          return 1.035;
+      };
 
       // BRAND MATCHER LOGIC: Technical CM to Consumer Sizes
       const brandMatcher = (val, type) => {
@@ -1746,7 +1773,7 @@ window.loadSettings = async () => {
 
               return `<div style="padding:10px; background:rgba(255,255,255,0.05); border-radius:8px; cursor:help" ${desc}>
                         <div style="font-size:9px; color:var(--Neutral-500)">${k}</div>
-                        <div style="font-size:16px; font-weight:700; color:var(--Mint)">${val}${unit}</div>
+                        <div style="font-size:16px; font-weight:700; color:var(--Mint)">${(val * getEase(k)).toFixed(1)}${unit}</div>
                       </div>`;
             }).join('');
         }
@@ -2214,6 +2241,24 @@ document.getElementById('scanForm').addEventListener('submit', async (e) => {
       document.getElementById('deepLinkDisplay').textContent = url;
       document.getElementById('linkGeneratedArea').style.display = 'block';
       document.getElementById('btnGenerateLink').textContent = 'Update Link';
+    };
+
+    window.handleAttireToggle = (attire) => {
+        /**
+         * Phase 102: Real-time Tolerance Toggle
+         * Adjusts biometric results based on selected garment context.
+         */
+        if (!window.LAST_MEASUREMENT_DATA) {
+            alert("Please perform or select a scan first.");
+            return;
+        }
+
+        document.getElementById('attireStatus').textContent = `CONTEXT: ${attire.toUpperCase()}`;
+        window.showToast("Context Switched", `Now optimizing for ${attire.toUpperCase()}.`);
+
+        // In Phase 102, we re-run the measurement rendering with context
+        // This will eventually call /api/v2/intelligence/calculate
+        renderMeasurementGrids(window.LAST_MEASUREMENT_DATA, attire);
     };
 
     window.dismissCreditError = () => { document.getElementById('creditOverlay').style.display = 'none'; };
