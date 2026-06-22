@@ -36,6 +36,7 @@ from api.services.mediapipe_measurement_engine import extract_measurements_from_
 from api.services.vision_guard import VisionGuard
 from api.services.mesh_exporter import MeshExporter
 from api.services.database_service import DatabaseService
+from api.services.imputation_service import imputation_service
 from middleware.subscription_check import validate_subscription, track_usage
 
 router = APIRouter()
@@ -376,3 +377,15 @@ async def get_extraction_status(task_id: str):
     except Exception as e:
         logger.error(f"Status check failed: {e}")
         return {"status": "processing", "error": "Handshake jitter"}
+
+@router.post("/refinement/impute")
+async def impute_biometrics(gender: str, data: dict):
+    """
+    Phase 26: API Hook for Biometric Imputation
+    """
+    try:
+        refined = imputation_service.impute(gender, data)
+        return {"status": "success", "refined_biometrics": refined}
+    except Exception as e:
+        logger.error(f"Imputation failed: {e}")
+        raise HTTPException(status_code=500, detail=str(e))
