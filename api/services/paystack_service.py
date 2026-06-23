@@ -211,4 +211,5 @@ class PaystackService:
     
     def __del__(self):
         """Cleanup HTTP client"""
-        self.client.close()
+        if hasattr(self, 'client'):
+            self.client.close()
