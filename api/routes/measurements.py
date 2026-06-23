@@ -114,10 +114,11 @@ def update_task(task_id, data):
         logger.error(f"Failed to persist task {task_id} to disk: {e}")
 
 # --- SUBPROCESS RELIABILITY ENGINE ---
-async def run_extraction_subprocess_cli(task_id: str, front_path: str, side_path: str, height: float, gender: str, client_name: str, user_id: str):
+async def run_extraction_subprocess_cli(task_id: str, front_path: str, side_path: str, height: float, gender: str, client_name: str, user_id: str, client_user_id: str = None):
     """
     Isolated Subprocess Worker: Runs AI in a COMPLETELY separate OS process via CLI.
     This is the ultimate protection against TensorFlow memory leaks in the main process.
+    Now supports dual-account persistence via client_user_id.
     """
     import sys # REDUNDANT IMPORT FOR SCOPE PROTECTION
     import numpy as np
@@ -208,12 +209,13 @@ async def run_extraction_subprocess_cli(task_id: str, front_path: str, side_path
             if os.path.exists(front_path): os.remove(front_path)
             if os.path.exists(side_path): os.remove(side_path)
 
-            # 4. ATOMIC PERSISTENCE
+# 4. ATOMIC PERSISTENCE (Dual Account - Unicorn Level)
             from api.services.database_service import DatabaseService
             DatabaseService.save_measurement(
                 user_id=user_id, client_name=client_name, height=height,
                 gender=gender, biometrics=measurements, landmarks=landmarks,
-                mesh_url=mesh_url, body_shape=body_shape, size_rec=size_rec
+                mesh_url=mesh_url, body_shape=body_shape, size_rec=size_rec,
+                client_user_id=client_user_id  # UNICORN: Save to both merchant AND client
             )
 
             return {
@@ -230,9 +232,10 @@ async def run_extraction_subprocess_cli(task_id: str, front_path: str, side_path
             logger.error(f"❌ ORCHESTRATOR CRITICAL FAILURE: {e}")
             return {"status": "failed", "error": str(e)}
 
-async def run_extraction_task(task_id: str, front_bytes: bytes, side_bytes: bytes, height: float, gender: str, client_name: str, user_id: str):
+async def run_extraction_task(task_id: str, front_bytes: bytes, side_bytes: bytes, height: float, gender: str, client_name: str, user_id: str, client_user_id: str = None):
     """
     Reliability Wrapper: Manages the lifecycle of the AI Subprocess.
+    Now with dual-account support for unicorn-level measurement ownership.
     """
     try:
         cleanup_task_queue()
@@ -249,13 +252,72 @@ async def run_extraction_task(task_id: str, front_bytes: bytes, side_bytes: byte
         with open(s_path, 'wb') as f: f.write(side_bytes)
         del side_bytes
 
-        # 2. ISOLATED EXECUTION
-        # We now await the async subprocess function
-        result = await run_extraction_subprocess_cli(task_id, f_path, s_path, height, gender, client_name, user_id)
+# 2. ISOLATED EXECUTION
+        # We now await the async subprocess function (with client_user_id for dual ownership)
+        result = await run_extraction_subprocess_cli(task_id, f_path, s_path, height, gender, client_name, user_id, client_user_id)
 
-        # 3. TASK SYNC
+# 3. TASK SYNC
         update_task(task_id, result)
         logger.info(f"✅ [TASK {task_id}] Process returned control to main server.")
+
+        # 4. UNICORN SYNC NOTIFICATIONS (Phase 4)
+        if result.get("status") == "completed":
+            # Get measurement data for notifications
+            measurement_data = result.get("measurements", {})
+            body_shape = result.get("body_shape", "Standard")
+            size_rec = result.get("size_recommendation", "M")
+            
+            # a) In-app notification to merchant
+            try:
+                from api.services.notification_service import notification_service
+                await notification_service.notify_scan_completed(
+                    merchant_id=user_id,
+                    client_name=client_name,
+                    measurement_id=task_id
+                )
+                logger.info(f"🔔 [TASK {task_id}] Notification sent to merchant")
+            except Exception as e:
+                logger.warning(f"Notification failed: {e}")
+            
+            # b) Email notification to merchant (via Brevo)
+            try:
+                from api.services.email_service import email_service
+                # Get merchant email
+                client = DatabaseService.get_client()
+                if client:
+                    merchant_profile = client.table("profiles").select("email, company_name").eq("id", user_id).single().execute()
+                    if merchant_profile.data:
+                        merchant_email = merchant_profile.data.get("email")
+                        merchant_name = merchant_profile.data.get("company_name") or "Your tailor"
+                        host = os.environ.get("RENDER_EXTERNAL_URL", "https://korra.work")
+                        await email_service.send_scan_completed_email(
+                            to_email=merchant_email,
+                            merchant_name=merchant_name,
+                            client_name=client_name,
+                            measurement_summary=measurement_data,
+                            dashboard_url=f"{host}/dashboard#measurements"
+                        )
+                        logger.info(f"📧 [TASK {task_id}] Email sent to merchant")
+            except Exception as e:
+                logger.warning(f"Email notification failed: {e}")
+            
+            # c) Webhook trigger to merchant
+            try:
+                from api.services.webhook_service import webhook_service
+                await webhook_service.notify_scan_completed(
+                    merchant_id=user_id,
+                    measurement_data={
+                        "id": task_id,
+                        "client_name": client_name,
+                        "biometrics": measurement_data,
+                        "body_shape": body_shape,
+                        "size_recommendation": size_rec,
+                        "mesh_url": result.get("mesh_url")
+                    }
+                )
+                logger.info(f"🪝 [TASK {task_id}] Webhook triggered")
+            except Exception as e:
+                logger.warning(f"Webhook trigger failed: {e}")
 
         if result.get("status") == "failed":
             from middleware.subscription_check import refund_credit
@@ -317,7 +379,8 @@ async def extract_widget(
     gender: str = Form("male"),
     merchant_id: str = Form(...),
     client_name: str = Form("Widget Customer"),
-    payment_reference: Optional[str] = Form(None)
+    payment_reference: Optional[str] = Form(None),
+    client_user_id: Optional[str] = Form(None)
 ):
     try:
         # 1. Payment Verification Gate
@@ -342,8 +405,9 @@ async def extract_widget(
         
         if not front_bytes or not side_bytes: raise HTTPException(status_code=400, detail="Empty image files")
             
-        update_task(task_id, {"status": "queued", "created_at": datetime.utcnow().isoformat(), "height": height, "gender": gender})
-        background_tasks.add_task(run_extraction_task, task_id, front_bytes, side_bytes, height, gender, client_name, merchant_id)
+update_task(task_id, {"status": "queued", "created_at": datetime.utcnow().isoformat(), "height": height, "gender": gender})
+        # Pass client_user_id for dual-account persistence
+        background_tasks.add_task(run_extraction_task, task_id, front_bytes, side_bytes, height, gender, client_name, merchant_id, client_user_id)
         return {"status": "accepted", "task_id": task_id}
     except HTTPException: raise
     except Exception as e:

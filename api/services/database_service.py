@@ -64,33 +64,76 @@ class DatabaseService:
             return invite
         except Exception as e: return None
 
-    @classmethod
-    def save_measurement(cls, user_id: str, client_name: str, height: float, gender: str, biometrics: dict, landmarks: dict = None, mesh_url: str = None, body_shape: str = None, size_rec: str = None):
+@classmethod
+    def save_measurement(cls, user_id: str, client_name: str, height: float, gender: str, biometrics: dict, landmarks: dict = None, mesh_url: str = None, body_shape: str = None, size_rec: str = None, client_user_id: str = None):
+        """
+        Save measurement to database.
+        
+        CRITICAL: Saves to BOTH merchant AND client accounts for dual-ownership.
+        - user_id: The merchant/professional who requested the scan
+        - client_user_id: The client's own account (optional but recommended for ownership)
+        
+        This implements the Unicorn-level dual-account persistence pattern.
+        """
         client = cls.get_client()
         if not client: 
             logger.error("❌ DatabaseService: Supabase client is None - ENV variables missing!")
             return None
+        
+        results = []
+        
+        # 1. Save under merchant's account (for professional's dashboard)
         try:
-            payload = {
-                "user_id": user_id, "client_name": client_name, "height": height,
-                "gender": gender, "biometrics": biometrics, "landmarks_3d": landmarks if landmarks else {},
-                "mesh_url": mesh_url, "body_shape": body_shape, "size_recommendation": size_rec,
+            merchant_payload = {
+                "user_id": user_id,  # Merchant/Professional ID
+                "client_name": client_name,
+                "height": height,
+                "gender": gender,
+                "biometrics": biometrics,
+                "landmarks_3d": landmarks if landmarks else {},
+                "mesh_url": mesh_url,
+                "body_shape": body_shape,
+                "size_recommendation": size_rec,
                 "created_at": datetime.utcnow().isoformat()
             }
-            logger.info(f"💾 DatabaseService: Inserting payload for {client_name}, shape={body_shape}, size={size_rec}")
-            logger.info(f"💾 Payload keys: {list(payload.keys())}")
+            logger.info(f"💾 DatabaseService: Saving to merchant {user_id} for {client_name}")
             
-            response = client.table("measurements").insert(payload).execute()
-            
+            response = client.table("measurements").insert(merchant_payload).execute()
             if response.data:
-                logger.info(f"✅ DatabaseService: Insert successful! ID: {response.data[0].get('id')}")
-                return response.data[0]
+                logger.info(f"✅ Merchant measurement saved! ID: {response.data[0].get('id')}")
+                results.append({"account": "merchant", "id": response.data[0].get('id')})
             else:
-                logger.error("❌ DatabaseService: Insert returned no data")
-                return None
+                logger.error("❌ Merchant measurement insert failed")
         except Exception as e:
-            logger.error(f"❌ DatabaseService.save_measurement FAILED: {e}")
-            return None
+            logger.error(f"❌ Merchant measurement save FAILED: {e}")
+        
+        # 2. UNICORN FEATURE: Save under client's own account (client owns their biometric passport)
+        if client_user_id and client_user_id != user_id:
+            try:
+                client_payload = {
+                    "user_id": client_user_id,  # Client's own ID
+                    "client_name": client_name,
+                    "height": height,
+                    "gender": gender,
+                    "biometrics": biometrics,
+                    "landmarks_3d": landmarks if landmarks else {},
+                    "mesh_url": mesh_url,
+                    "body_shape": body_shape,
+                    "size_recommendation": size_rec,
+                    "created_at": datetime.utcnow().isoformat()
+                }
+                logger.info(f"💾 DatabaseService: Saving to client {client_user_id} (client ownership)")
+                
+                response = client.table("measurements").insert(client_payload).execute()
+                if response.data:
+                    logger.info(f"✅ Client measurement saved! ID: {response.data[0].get('id')}")
+                    results.append({"account": "client", "id": response.data[0].get('id')})
+                else:
+                    logger.error("❌ Client measurement insert failed")
+            except Exception as e:
+                logger.error(f"❌ Client measurement save FAILED: {e}")
+        
+        return results if results else None
 
     @classmethod
     def get_api_key(cls, api_key: str) -> Optional[Dict[str, Any]]:

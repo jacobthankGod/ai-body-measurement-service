@@ -11,7 +11,7 @@ from fastapi.responses import JSONResponse, FileResponse
 from fastapi.staticfiles import StaticFiles
 from pathlib import Path
 
-from api.routes import auth, measurements, health, sharing, qrcode, payments, subscriptions, admin, invoices
+from api.routes import auth, measurements, health, sharing, qrcode, payments, subscriptions, admin, invoices, webhooks, notifications, scan_requests
 from api.config import CORS_ORIGINS, FEATURES
 
 # Configure Logging
@@ -78,6 +78,9 @@ app.include_router(payments.router, prefix="/api/v2", tags=["Payments"])
 app.include_router(subscriptions.router, prefix="/api/v2", tags=["Subscriptions"])
 app.include_router(admin.router, prefix="/api/v2", tags=["Admin"])
 app.include_router(invoices.router, prefix="/api/v2", tags=["Invoices"])
+app.include_router(webhooks.router, prefix="/api/v2", tags=["Webhooks"])
+app.include_router(notifications.router, prefix="/api/v2", tags=["Notifications"])
+app.include_router(scan_requests.router, prefix="/api/v2", tags=["ScanRequests"])
 
 # --- STATIC PAGE SERVING ---
 def get_safe_file(filename: str):

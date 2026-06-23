@@ -804,7 +804,7 @@
         <button class="btn-ghost" style="height:44px; font-size:11px; padding:0 16px; border-radius:12px; background: rgba(87,215,192,0.1); border-color: rgba(87,215,192,0.3); color: var(--Accent-Teal); font-weight:800" onclick="window.handleContactPicker()">Import from Contacts</button>
       </div>
 
-      <div style="display:grid; grid-template-columns: 1fr 1fr; gap:20px; margin-bottom:32px">
+<div style="display:grid; grid-template-columns: 1fr 1fr; gap:20px; margin-bottom:20px">
         <div>
           <label style="font-size:10px; font-weight:900; color:var(--Neutral-500); display:block; margin-bottom:12px; letter-spacing:0.1em">CLIENT NAME</label>
           <input type="text" id="shareName" class="input-field" style="margin-bottom:0; height:56px; background: rgba(255,255,255,0.03); border-color: rgba(255,255,255,0.08);" placeholder="e.g. James" required>
@@ -813,6 +813,10 @@
           <label style="font-size:10px; font-weight:900; color:var(--Neutral-500); display:block; margin-bottom:12px; letter-spacing:0.1em">PHONE (WHATSAPP)</label>
           <input type="text" id="sharePhone" class="input-field" style="margin-bottom:0; height:56px; background: rgba(255,255,255,0.03); border-color: rgba(255,255,255,0.08);" placeholder="e.g. 2348000000000">
         </div>
+      </div>
+      <div style="margin-bottom:32px">
+        <label style="font-size:10px; font-weight:900; color:var(--Neutral-500); display:block; margin-bottom:12px; letter-spacing:0.1em">EMAIL (OPTIONAL)</label>
+        <input type="email" id="shareEmail" class="input-field" style="margin-bottom:0; height:56px; background: rgba(255,255,255,0.03); border-color: rgba(255,255,255,0.08);" placeholder="e.g. james@example.com">
       </div>
 
       <div id="linkGeneratedArea" style="display:none; margin-bottom:32px">
@@ -2683,11 +2687,15 @@ window.applyPromo = () => {
         new QRCode(qrContainer, { text: url, width: 200, height: 200, colorDark: "#000000", colorLight: "#ffffff" });
     };
 
-    window.shareToWhatsApp = () => {
+window.shareToWhatsApp = () => {
         const url = document.getElementById('deepLinkDisplay').textContent;
         const phone = document.getElementById('sharePhone').value.replace(/\D/g, '');
-        // Ensure the entire message and URL are properly encoded for WhatsApp link-parsing
-        const message = `Hi, please use this link to start your KORRA body scan: ${url}`;
+        const email = document.getElementById('shareEmail').value;
+        const name = document.getElementById('shareName').value || 'there';
+        // Include email in the WhatsApp message if provided
+        const message = email 
+            ? `Hi ${name}, please use this link to start your KORRA body scan: ${url}\n\nOr scan via email: ${email}`
+            : `Hi ${name}, please use this link to start your KORRA body scan: ${url}`;
         const waUrl = phone ? `https://wa.me/${phone}?text=${encodeURIComponent(message)}` : `https://wa.me/?text=${encodeURIComponent(message)}`;
         window.open(waUrl, '_blank');
     };
@@ -2730,13 +2738,32 @@ window.applyPromo = () => {
             });
         }
     };
-    window.generateDeepLink = () => {
+window.generateDeepLink = async () => {
       const name = document.getElementById('shareName').value;
+      const phone = document.getElementById('sharePhone').value;
+      const email = document.getElementById('shareEmail').value;
       if (!name) { alert("Please enter a client name."); return; }
-      const url = `${window.location.origin}/share?m=${userId}&c=${encodeURIComponent(name)}`;
+      
+      const url = `${window.location.origin}/share?m=${userId}&c=${encodeURIComponent(name)}${email ? '&e=' + encodeURIComponent(email) : ''}${phone ? '&p=' + encodeURIComponent(phone) : ''}`;
       document.getElementById('deepLinkDisplay').textContent = url;
       document.getElementById('linkGeneratedArea').style.display = 'block';
       document.getElementById('btnGenerateLink').textContent = 'Update Link';
+      
+      // If email provided, also send via SendGrid API
+      if (email) {
+          try {
+              const res = await fetch('/api/v2/send-email', {
+                  method: 'POST',
+                  headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
+                  body: `merchant_id=${userId}&customer_email=${encodeURIComponent(email)}&client_name=${encodeURIComponent(name)}`
+              });
+              if (res.ok) {
+                  window.showToast("Email Sent", `Invitation sent to ${email}`);
+              }
+          } catch(e) {
+              console.warn("Email send failed:", e);
+          }
+      }
     };
 
     window.ACTIVE_CONTEXT = 'standard';

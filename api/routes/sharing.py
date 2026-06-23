@@ -2,17 +2,16 @@
 Sharing API | KORRA Remote Measurement Links
 ===========================================
 Hardened persistence using PostgreSQL 'invitations' table.
+Uses Brevo (formerly Sendinblue) for transactional emails.
 """
 from fastapi import APIRouter, HTTPException, Form
 import os
-from api.services.database_service import DatabaseService
-from sendgrid import SendGridAPIClient
-from sendgrid.helpers.mail import Mail
+import logging
+from api.services.database_service import DatabaseService, DatabaseService as DB
+from api.config import BREVO_API_KEY, BREVO_FROM_EMAIL, BREVO_FROM_NAME
 
 router = APIRouter()
-
-SENDGRID_API_KEY = os.environ.get("SENDGRID_API_KEY")
-FROM_EMAIL = os.environ.get("FROM_EMAIL", "noreply@korra.work")
+logger = logging.getLogger("KORRA_SHARING")
 
 @router.post("/send-email")
 async def send_scan_link(
@@ -20,40 +19,57 @@ async def send_scan_link(
     customer_email: str = Form(...),
     client_name: str = Form(None)
 ):
-    """Sends a public scan link using persistent DB tokens."""
-    if not SENDGRID_API_KEY:
+    """Sends a public scan link using persistent DB tokens via Brevo."""
+    if not BREVO_API_KEY:
         raise HTTPException(status_code=500, detail="Email service not configured.")
 
     # Atomic Create in Database (Permanent even after server restart)
-    token = DatabaseService.create_invitation(merchant_id, client_name)
+    token = DB.create_invitation(merchant_id, client_name)
     if not token:
         raise HTTPException(status_code=500, detail="Internal Persistence Error.")
 
-    host = os.environ.get("RENDER_EXTERNAL_URL", "https://korra-436814609100.us-central1.run.app")
+    host = os.environ.get("RENDER_EXTERNAL_URL", "https://korra.work")
     scan_url = f"{host}/share?token={token}"
 
-    message = Mail(
-        from_email=FROM_EMAIL,
-        to_emails=customer_email,
-        subject='Your Digital Body Scan | KORRA',
-        html_content=f'''
-            <div style="font-family: sans-serif; max-width: 600px; margin: 0 auto; padding: 40px; border: 1px solid #eee; border-radius: 12px;">
-                <h1 style="color: #000; font-size: 24px;">Digital Body Scan Invitation</h1>
-                <p style="color: #666; line-height: 1.6;">Your artisan has invited you to capture your biometric profile.</p>
-                <div style="margin: 40px 0; text-align: center;">
-                    <a href="{scan_url}" style="background-color: #57D7C0; color: #000; padding: 16px 32px; border-radius: 99px; text-decoration: none; font-weight: 800;">START SCAN</a>
-                </div>
-                <p style="font-size: 11px; color: #999;">One-time use. Link expires in 24 hours.</p>
-            </div>
-        '''
-    )
-
+    # Use Brevo for email delivery
     try:
-        sg = SendGridAPIClient(SENDGRID_API_KEY)
-        sg.send(message)
-        return {"success": True, "message": "Invitation sent."}
+        from sib_api_v3_sdk import Configuration, ApiClient, TransactionalEmailsApi, SendSmtpEmail, SendSmtpEmailSender, SendSmtpEmailTo
+        
+        config = Configuration()
+        config.api_key['api-key'] = BREVO_API_KEY
+        api_client = ApiClient(config)
+        email_api = TransactionalEmailsApi(api_client)
+        
+        sender = SendSmtpEmailSender(name=BREVO_FROM_NAME, email=BREVO_FROM_EMAIL)
+        
+        html_content = f'''
+        <div style="font-family: 'Inter', sans-serif; max-width: 600px; margin: 0 auto; padding: 40px; border: 1px solid rgba(255,255,255,0.1); border-radius: 24px; background: #000;">
+            <div style="text-align: center; margin-bottom: 32px;">
+                <div style="width: 40px; height: 40px; background: #57D7C0; border-radius: 8px; display: inline-block; transform: rotate(-8deg);"></div>
+                <h1 style="color: #fff; font-size: 24px; margin-top: 16px;">Digital Body Scan</h1>
+            </div>
+            <p style="color: #A3A3A3; line-height: 1.6; margin-bottom: 32px;">Your artisan has invited you to capture your biometric profile for perfect-fit clothing.</p>
+            <div style="text-align: center; margin: 40px 0;">
+                <a href="{scan_url}" style="background-color: #57D7C0; color: #000; padding: 16px 32px; border-radius: 12px; text-decoration: none; font-weight: 800; display: inline-block;">START SCAN</a>
+            </div>
+            <p style="font-size: 11px; color: #737373; text-align: center;">One-time use. Link expires in 24 hours.</p>
+        </div>
+        '''
+        
+        email = SendSmtpEmail(
+            to=[SendSmtpEmailTo(email=customer_email)],
+            sender=sender,
+            subject='Your Digital Body Scan | KORRA',
+            html_content=html_content
+        )
+        
+        result = email_api.send_transac_email(email)
+        logger.info(f"Brevo email sent to {customer_email}")
+        return {"success": True, "message": "Invitation sent.", "email_id": result.get("message_id")}
+        
     except Exception as e:
-        raise HTTPException(status_code=500, detail="Email delivery failed.")
+        logger.error(f"Brevo email failed: {e}")
+        raise HTTPException(status_code=500, detail=f"Email delivery failed: {str(e)}")
 
 @router.get("/verify/{token}")
 async def verify_share_token(token: str):

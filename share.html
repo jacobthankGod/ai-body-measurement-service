@@ -399,7 +399,8 @@ window.handlePreviewClick = (type) => {
       if (mId) {
         const { data: profile } = await db.from('profiles').select('credits').eq('id', mId).single();
         merchantCredits = profile?.credits || 0;
-        sessionData = { merchant_id: mId, client_name: cName || session.user.user_metadata?.full_name || "Client" };
+// Store both merchant_id AND client_user_id for dual-account persistence
+      sessionData = { merchant_id: mId, client_name: cName || session.user.user_metadata?.full_name || "Client", client_user_id: userId };
       }
     }
 
@@ -450,7 +451,9 @@ window.handlePreviewClick = (type) => {
         const fd = new FormData();
         fd.append('front', document.getElementById('front').files[0]); fd.append('side', document.getElementById('side').files[0]);
         fd.append('height', document.getElementById('height').value); fd.append('gender', document.getElementById('gender').value);
-        fd.append('merchant_id', sessionData?.merchant_id || 'PUBLIC'); if (payRef) fd.append('payment_reference', payRef);
+fd.append('merchant_id', sessionData?.merchant_id || 'PUBLIC');
+        fd.append('client_user_id', sessionData?.client_user_id || '');  // UNICORN: Dual account
+        if (payRef) fd.append('payment_reference', payRef);
         try {
           const res = await fetch('/api/v2/measurements/extract-widget', { method: 'POST', body: fd });
           if (res.ok) { const data = await res.json(); pollTask(data.task_id); }
