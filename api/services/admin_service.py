@@ -14,16 +14,19 @@ class AdminService:
         # Phase 142: Platform Master Key
         self.master_secret = os.environ.get("KORRA_MASTER_SECRET", "korra_platform_sovereign_2025")
 
-        # Phase 143: Regional Price Override Map (Credits per Scan)
+# Phase 143: Global Flat Pricing - $0.50 per scan (constant worldwide)
         self.regional_pricing = {
-            "NG": 1, # Nigeria (1 Credit = ~500 NGN)
+            "NG": 1, # Nigeria
             "GH": 1, # Ghana
             "KE": 1, # Kenya
-            "US": 5, # USA (5 Credits = ~$2.50)
-            "UK": 5, # United Kingdom
-            "FR": 4, # France/EU
-            "DEFAULT": 3
+            "US": 1, # USA
+            "UK": 1, # United Kingdom
+            "FR": 1, # France/EU
+            "DEFAULT": 1  # Global constant $0.50
         }
+
+        # Unified pricing: 1 credit = $0.50 USD worldwide
+        self.UNIFIED_PRICE = 0.50  # $0.50 constant
 
         # Phase 146 & 157: Usage Quota & Monitoring
         self.regional_quotas = {
@@ -36,29 +39,31 @@ class AdminService:
         # Phase 148: Administrative Audit Trail
         self.audit_log = [] # List of dicts with timestamp, admin_id, and change_detail
 
-        # Phase 154: Regional Tax/VAT Map (%)
+# Phase 154: No regional tax - flat $1 everywhere
         self.regional_tax = {
-            "NG": 0.075, # 7.5% VAT Nigeria
-            "GH": 0.15,  # 15% VAT Ghana
-            "UK": 0.20,  # 20% VAT UK
-            "FR": 0.20,  # 20% VAT France
-            "US": 0.0,   # US varies by state, handled at checkout level
-            "DEFAULT": 0.05
+            "NG": 0.0,  # No VAT
+            "GH": 0.0,  # No VAT
+            "UK": 0.0,  # No VAT
+            "FR": 0.0,  # No VAT
+            "US": 0.0,  # No VAT
+            "DEFAULT": 0.0  # Flat $1 worldwide
         }
 
-    def calculate_final_price(self, credit_amount: int, unit_price: float, country_code: str) -> dict:
-        """Phase 154: Regional Tax Calculation"""
-        tax_rate = self.regional_tax.get(country_code.upper(), self.regional_tax["DEFAULT"])
-        subtotal = credit_amount * unit_price
-        tax_amount = subtotal * tax_rate
-        total = subtotal + tax_amount
+    def calculate_final_price(self, credit_amount: int, country_code: str) -> dict:
+        """Phase 154: Flat $1 per scan globally - no regional variations"""
+        # Constant $1 per scan regardless of region
+        subtotal = credit_amount * self.UNIFIED_PRICE
+        tax_amount = 0.0  # No tax
+        total = subtotal  # Total = subtotal
 
         return {
             "subtotal": round(subtotal, 2),
-            "tax_rate": f"{tax_rate * 100}%",
+            "tax_rate": "0%",
             "tax_amount": round(tax_amount, 2),
             "total": round(total, 2),
-            "currency": self.localize_currency_label(country_code)
+            "currency": "USD",  # Always USD
+            "price_per_scan": self.UNIFIED_PRICE,
+            "note": "$1 per scan - Global flat rate"
         }
 
     def log_audit(self, admin_id: str, action: str, details: dict):

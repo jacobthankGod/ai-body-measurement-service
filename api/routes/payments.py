@@ -2,10 +2,12 @@
 Payment Routes - Paystack Integration
 ====================================
 Handles payment initialization, verification, and subscription management.
+Including: localized pricing, VAT calculation, invoice generation.
 """
-from fastapi import APIRouter, HTTPException, Header, Depends, Request
+from fastapi import APIRouter, HTTPException, Header, Depends, Request, Query
 from pydantic import BaseModel
 from datetime import datetime
+from typing import Optional
 import os
 
 from middleware.subscription_check import validate_subscription, get_user_quota
@@ -42,11 +44,16 @@ def get_current_user(x_api_key: str = Header(None)):
     return {'api_key': x_api_key}
 
 
-# Pricing in smallest currency units (kobo for NGN)
+# Global flat pricing: $0.50 per scan (USD) - constant worldwide
+# Using Paystack cents (1/100 of USD)
 TIER_PRICES = {
-    'tailor_pro': 299900,      # ₦2,999
-    'tailor_elite': 749900,    # ₦7,499
+    'tailor_pro': 50,        # $0.50 = 50 cents USD (flat rate)
+    'tailor_elite': 50,      # $0.50 = 50 cents USD (same)
+    'enterprise': 50          # $0.50 = 50 cents USD
 }
+
+# Unified global price constant
+GLOBAL_SCAN_PRICE = 0.50  # $0.50 per scan - same worldwide
 
 
 @router.post("/payments/initialize")
@@ -55,8 +62,7 @@ async def initialize_payment(
     user: dict = Depends(get_current_user)
 ):
     """
-    Initialize a Paystack payment session.
-    
+    Initialize a Paystack payment session - Global flat $1 per scan.
     Returns authorization URL for customer to complete payment.
     """
     if payload.tier not in TIER_PRICES:
@@ -65,16 +71,19 @@ async def initialize_payment(
             detail=f"Invalid tier. Use: {', '.join(TIER_PRICES.keys())}"
         )
     
+    # Use flat $1 rate - same for all tiers and regions
     amount = TIER_PRICES[payload.tier]
     
-    # Initialize payment with Paystack
+    # Initialize payment with Paystack in USD (cents)
     result = paystack_service.initialize_payment(
         email=payload.email,
         amount=amount,
+        currency="USD",  # Always USD - global flat rate
         reference=None,  # Let Paystack generate one
         metadata={
             'tier': payload.tier,
             'api_key': user['api_key'],
+            'price_per_scan': GLOBAL_SCAN_PRICE,
             'timestamp': datetime.now().isoformat()
         }
     )
@@ -250,5 +259,362 @@ async def get_subscription_status(
             "remaining": quota['remaining'],
             "reset_date": quota['reset_date'],
             "api_key": user['api_key'][:8] + "..." # Masked for security
+        }
+    }
+
+
+# ==========================================
+# BILLING 100% IMPLEMENTATION ENDPOINTS
+# ==========================================
+
+class LocalizedPriceRequest(BaseModel):
+    """Request for localized price calculation"""
+    credit_amount: int
+    country_code: str = "NG"
+
+
+@router.post("/payments/calculate-final")
+async def calculate_final_price(
+    payload: LocalizedPriceRequest,
+    user: dict = Depends(get_current_user)
+):
+    """
+    Calculate final price with regional VAT/tax for a country.
+    Returns itemized receipt for transparency.
+    """
+    from api.services.database_service import DatabaseService
+    
+    client = DatabaseService.get_client()
+    country_code = payload.country_code.upper()
+    
+    # Get localized pricing from database
+    result = client.table("localized_pricing").select(
+        "currency, currency_symbol, credits_per_scan, unit_price_smallest, vat_rate"
+    ).eq("country_code", country_code).eq("is_active", True).execute()
+    
+    if not result.data:
+        # Fallback to default pricing
+        result = client.table("localized_pricing").select(
+            "currency, currency_symbol, credits_per_scan, unit_price_smallest, vat_rate"
+        ).eq("country_code", "NG").execute()
+        country_code = "NG"
+    
+    pricing = result.data[0]
+    credit_amount = payload.credit_amount
+    
+    # Calculate amounts
+    subtotal = pricing["unit_price_smallest"] * credit_amount
+    vat_rate = pricing["vat_rate"]
+    tax_amount = int(subtotal * vat_rate)
+    total = subtotal + tax_amount
+    
+    # Build line items
+    line_items = [
+        {
+            "description": f"{credit_amount} Scan Credits",
+            "quantity": credit_amount,
+            "unit_price": pricing["unit_price_smallest"],
+            "credits": credit_amount * pricing["credits_per_scan"],
+            "amount": subtotal
+        }
+    ]
+    
+    if tax_amount > 0:
+        line_items.append({
+            "description": f"VAT ({int(vat_rate * 100)}%)",
+            "amount": tax_amount,
+            "rate": vat_rate
+        })
+    
+    return {
+        "status": True,
+        "data": {
+            "region": country_code,
+            "country_code": country_code,
+            "currency": pricing["currency"],
+            "currency_symbol": pricing["currency_symbol"],
+            "credits_per_scan": pricing["credits_per_scan"],
+            "bundle_size": credit_amount,
+            "total_credits": credit_amount * pricing["credits_per_scan"],
+            "line_items": line_items,
+            "subtotal": subtotal,
+            "vat_rate": f"{vat_rate * 100}%",
+            "tax_amount": tax_amount,
+            "total": total,
+            "vat_included": tax_amount > 0
+        }
+    }
+
+
+@router.get("/payments/localized-price")
+async def get_localized_price(
+    country_code: str = Query("NG", description="2-letter country code"),
+    user: dict = Depends(get_current_user)
+):
+    """
+    Get current pricing for a country (for real-time display updates).
+    """
+    from api.services.database_service import DatabaseService
+    
+    client = DatabaseService.get_client()
+    cc = country_code.upper()
+    
+    result = client.table("localized_pricing").select("*").eq("country_code", cc).execute()
+    
+    if not result.data:
+        raise HTTPException(status_code=404, detail=f"Pricing not found for {country_code}")
+    
+    pricing = result.data[0]
+    
+    return {
+        "status": True,
+        "data": {
+            "country_code": pricing["country_code"],
+            "country_name": pricing["country_name"],
+            "currency": pricing["currency"],
+            "currency_symbol": pricing["currency_symbol"],
+            "credits_per_scan": pricing["credits_per_scan"],
+            "price_per_credit": pricing["unit_price_smallest"],
+            "vat_rate": f"{pricing['vat_rate'] * 100}%",
+            "is_active": pricing["is_active"]
+        }
+    }
+
+
+@router.get("/invoices")
+async def list_invoices(
+    limit: int = 20,
+    offset: int = 0,
+    user: dict = Depends(get_current_user)
+):
+    """
+    List all invoices for the authenticated user with full details.
+    """
+    from api.services.database_service import DatabaseService
+    
+    client = DatabaseService.get_client()
+    user_id = user.get('user_id') or user.get('id')
+    
+    result = client.table("invoices").select(
+        "id, amount_paid, currency, paystack_reference, plan_id, paid_at, "
+        "subtotal, tax_amount, tax_rate, credits_purchased, billing_country"
+    ).eq("user_id", user_id).order("paid_at", {"ascending": False}).limit(limit).offset(offset).execute()
+    
+    return {
+        "status": True,
+        "data": {
+            "invoices": result.data,
+            "count": len(result.data),
+            "has_more": len(result.data) == limit
+        }
+    }
+
+
+@router.get("/invoices/{invoice_id}")
+async def get_invoice(
+    invoice_id: str,
+    user: dict = Depends(get_current_user)
+):
+    """
+    Get detailed invoice with full breakdown.
+    """
+    from api.services.database_service import DatabaseService
+    
+    client = DatabaseService.get_client()
+    user_id = user.get('user_id') or user.get('id')
+    
+    result = client.table("invoices").select("*").eq("id", invoice_id).single().execute()
+    
+    if not result.data:
+        raise HTTPException(status_code=404, detail="Invoice not found")
+    
+    invoice = result.data
+    
+    if invoice["user_id"] != user_id:
+        raise HTTPException(status_code=403, detail="Not authorized")
+    
+    return {
+        "status": True,
+        "data": invoice
+    }
+
+
+@router.get("/invoices/{invoice_id}/download")
+async def download_invoice_pdf(
+    invoice_id: str,
+    user: dict = Depends(get_current_user)
+):
+    """
+    Generate and return a PDF invoice for the user.
+    """
+    from api.services.database_service import DatabaseService
+    from api.services.invoice_generator import generate_invoice_pdf
+    
+    client = DatabaseService.get_client()
+    user_id = user.get('user_id') or user.get('id')
+    
+    # Fetch invoice
+    result = client.table("invoices").select("*").eq("id", invoice_id).single().execute()
+    
+    if not result.data:
+        raise HTTPException(status_code=404, detail="Invoice not found")
+    
+    invoice = result.data
+    
+    if invoice["user_id"] != user_id:
+        raise HTTPException(status_code=403, detail="Not authorized")
+    
+    # Generate PDF
+    pdf_url = await generate_invoice_pdf(invoice, client)
+    
+    return {
+        "status": True,
+        "data": {
+            "invoice_id": invoice_id,
+            "pdf_url": pdf_url
+        }
+    }
+
+
+@router.post("/subscriptions/upgrade")
+async def upgrade_subscription(
+    new_plan_id: str,
+    user: dict = Depends(get_current_user)
+):
+    """
+    Upgrade to a higher subscription plan.
+    """
+    from api.services.database_service import DatabaseService
+    
+    valid_plans = ['basic', 'pro', 'elite', 'enterprise']
+    if new_plan_id not in valid_plans:
+        raise HTTPException(status_code=400, detail=f"Invalid plan. Use: {', '.join(valid_plans)}")
+    
+    client = DatabaseService.get_client()
+    user_id = user.get('user_id') or user.get('id')
+    
+    # Get current subscription
+    current = client.table("subscriptions").select("plan_id").eq("user_id", user_id).single().execute()
+    
+    if not current.data:
+        raise HTTPException(status_code=404, detail="No subscription found")
+    
+    current_plan = current.data["plan_id"]
+    
+    # Check upgrade is valid (can't downgrade this way)
+    plan_order = {'basic': 0, 'pro': 1, 'elite': 2, 'enterprise': 3}
+    if plan_order[new_plan_id] <= plan_order.get(current_plan, 0):
+        raise HTTPException(status_code=400, detail="Use downgrade endpoint to switch to a lower plan")
+    
+    # Update subscription
+    client.table("subscriptions").update({
+        "plan_id": new_plan_id,
+        "status": "active"
+    }).eq("user_id", user_id).execute()
+    
+    return {
+        "status": True,
+        "message": f"Upgraded to {new_plan_id.upper()}",
+        "data": {
+            "previous_plan": current_plan,
+            "new_plan": new_plan_id
+        }
+    }
+
+
+@router.post("/subscriptions/downgrade")
+async def downgrade_subscription(
+    new_plan_id: str,
+    user: dict = Depends(get_current_user)
+):
+    """
+    Downgrade to a lower subscription plan.
+    """
+    from api.services.database_service import DatabaseService
+    
+    valid_plans = ['basic', 'pro', 'elite', 'enterprise']
+    if new_plan_id not in valid_plans:
+        raise HTTPException(status_code=400, detail=f"Invalid plan. Use: {', '.join(valid_plans)}")
+    
+    client = DatabaseService.get_client()
+    user_id = user.get('user_id') or user.get('id')
+    
+    # Get current subscription
+    current = client.table("subscriptions").select("plan_id").eq("user_id", user_id).single().execute()
+    
+    if not current.data:
+        raise HTTPException(status_code=404, detail="No subscription found")
+    
+    current_plan = current.data["plan_id"]
+    
+    # Update subscription (mark for end of period)
+    client.table("subscriptions").update({
+        "previous_plan_id": current_plan,
+        "plan_id": new_plan_id,
+        "cancel_at_period_end": True,
+        "canceled_at": datetime.now().isoformat()
+    }).eq("user_id", user_id).execute()
+    
+    return {
+        "status": True,
+        "message": f"Downgrade scheduled to {new_plan_id.upper()}",
+        "data": {
+            "current_plan": current_plan,
+            "new_plan": new_plan_id,
+            "effective_from": "end_of_current_period"
+        }
+    }
+
+
+@router.post("/subscriptions/cancel")
+async def cancel_subscription(
+    user: dict = Depends(get_current_user)
+):
+    """
+    Cancel subscription (marks for cancellation at period end).
+    """
+    from api.services.database_service import DatabaseService
+    
+    client = DatabaseService.get_client()
+    user_id = user.get('user_id') or user.get('id')
+    
+    client.table("subscriptions").update({
+        "cancel_at_period_end": True,
+        "canceled_at": datetime.now().isoformat(),
+        "status": "canceled"
+    }).eq("user_id", user_id).execute()
+    
+    return {
+        "status": True,
+        "message": "Subscription will be canceled at end of billing period",
+        "data": {
+            "cancels_at": "end_of_current_period"
+        }
+    }
+
+
+@router.get("/subscription-plans")
+async def get_subscription_plans(
+    user: dict = Depends(get_current_user)
+):
+    """
+    Get all available subscription plans with details.
+    """
+    from api.services.database_service import DatabaseService
+    
+    client = DatabaseService.get_client()
+    
+    result = client.table("subscription_plans").select("*").execute()
+    
+    # Get user's current subscription
+    user_id = user.get('user_id') or user.get('id')
+    current = client.table("subscriptions").select("plan_id, status, current_period_end").eq("user_id", user_id).single().execute()
+    
+    return {
+        "status": True,
+        "data": {
+            "plans": result.data,
+            "current_plan": current.data.get("plan_id") if current.data else "basic",
+            "subscription_status": current.data.get("status") if current.data else "active"
         }
     }

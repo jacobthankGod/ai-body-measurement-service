@@ -769,19 +769,19 @@
     </div>
   </div>
 
-  <div class="modal-overlay" id="topUpModal">
+<div class="modal-overlay" id="topUpModal">
     <div class="modal-card">
       <h2 style="font-size:24px; margin-bottom:12px">Purchase Credits</h2>
-      <p style="color:var(--Neutral-400); margin-bottom:32px">Select a bundle to top up your balance.</p>
+<p style="color:var(--Neutral-400); margin-bottom:32px">Global flat rate: <span style="color:var(--Mint)">$0.50 per scan</span> (same worldwide)</p>
       <div style="display:grid; grid-template-columns: 1fr; gap:16px; margin-bottom:32px">
         <div class="glass-card" style="padding:20px; cursor:pointer; border-color:var(--Mint)" onclick="window.selectBundle(this, 50, 25)">
-          <div style="display:flex; justify-content:space-between; align-items:center"><div><div style="font-size:18px; font-weight:900">50 Scan Bundle</div><div style="font-size:12px; color:var(--Neutral-400)">$0.50 per scan</div></div><div style="font-size:20px; font-weight:900; color:var(--Mint)">$25.00</div></div>
+          <div style="display:flex; justify-content:space-between; align-items:center"><div><div style="font-size:18px; font-weight:900">50 Scan Bundle</div><div style="font-size:12px; color:var(--Neutral-400)">$0.50 per scan ( Flat Rate )</div></div><div style="font-size:20px; font-weight:900; color:var(--Mint)">$25.00</div></div>
         </div>
-        <div class="glass-card" style="padding:20px; cursor:pointer" onclick="window.selectBundle(this, 150, 60)">
-          <div style="display:flex; justify-content:space-between; align-items:center"><div><div style="font-size:18px; font-weight:900">150 Scan Bundle</div><div style="font-size:12px; color:var(--Neutral-400)">$0.40 per scan (Save 20%)</div></div><div style="font-size:20px; font-weight:900; color:var(--Mint)">$60.00</div></div>
+        <div class="glass-card" style="padding:20px; cursor:pointer" onclick="window.selectBundle(this, 150, 75)">
+          <div style="display:flex; justify-content:space-between; align-items:center"><div><div style="font-size:18px; font-weight:900">150 Scan Bundle</div><div style="font-size:12px; color:var(--Neutral-400)">$0.50 per scan ( Flat Rate )</div></div><div style="font-size:20px; font-weight:900; color:var(--Mint)">$75.00</div></div>
         </div>
-        <div class="glass-card" style="padding:20px; cursor:pointer" onclick="window.selectBundle(this, 500, 150)">
-          <div style="display:flex; justify-content:space-between; align-items:center"><div><div style="font-size:18px; font-weight:900">500 Scan Bundle</div><div style="font-size:12px; color:var(--Neutral-400)">$0.30 per scan (Save 40%)</div></div><div style="font-size:20px; font-weight:900; color:var(--Mint)">$150.00</div></div>
+        <div class="glass-card" style="padding:20px; cursor:pointer" onclick="window.selectBundle(this, 500, 250)">
+          <div style="display:flex; justify-content:space-between; align-items:center"><div><div style="font-size:18px; font-weight:900">500 Scan Bundle</div><div style="font-size:12px; color:var(--Neutral-400)">$0.50 per scan ( Flat Rate )</div></div><div style="font-size:20px; font-weight:900; color:var(--Mint)">$250.00</div></div>
         </div>
       </div>
       <div style="margin-bottom:32px">
@@ -1320,7 +1320,97 @@
               </div>
             </div>
           </div>
-          <div id="view-billing" class="tab-view"><div class="glass-card"><h2>Billing & Plans</h2><div style="display:grid; grid-template-columns:1.5fr 1fr; gap:32px; margin-top:32px"><div style="padding:24px; background:rgba(87,215,192,0.05); border:1px solid var(--Mint); border-radius:16px"><h4>CURRENT PLAN</h4><div style="font-size:24px; font-weight:900" id="billingPlanName">Loading...</div><button class="btn-primary" style="margin-top:20px; width:100%">Manage</button></div><div style="padding:24px; background:var(--Glass); border:1px solid var(--Glass-Border); border-radius:16px"><h4>AVAILABLE CREDITS</h4><div style="font-size:32px; font-weight:900" id="billingCredits">0</div><button class="btn-outline" style="margin-top:20px; width:100%" onclick="document.getElementById('topUpModal').classList.add('active')">Top Up</button></div></div><div style="margin-top:48px"><h4>Transaction History</h4><div class="table-container"><table><thead><tr><th>DATE</th><th>TYPE</th><th>AMOUNT</th><th>STATUS</th></tr></thead><tbody id="billingHistoryBody"></tbody></table></div></div></div></div>
+<div id="view-billing" class="tab-view">
+  <div class="glass-card">
+    <h2>Billing & Plans</h2>
+    
+<!-- SUBSCRIPTION PLANS GRID (Pro/Elite/Enterprise) - $1 FLAT RATE -->
+    <div style="margin-bottom:40px">
+        <h4 style="font-size:12px; font-weight:900; color:var(--Accent-Teal); margin-bottom:20px; text-transform:uppercase; letter-spacing:0.1em">Available Plans</h4>
+        <p style="font-size:12px; color:var(--Neutral-400); margin-bottom:16px;">Global Flat Rate: <strong style="color:var(--Mint)">$1 per scan</strong> - Same worldwide</p>
+        <div style="display:grid; grid-template-columns:repeat(3, 1fr); gap:16px;">
+            <!-- PRO PLAN -->
+            <div class="glass-card" style="padding:24px; position:relative;">
+                <div style="position:absolute; top:-10px; right:16px; background:var(--Accent-Teal); color:var(--Obsidian); font-size:9px; font-weight:900; padding:4px 12px; border-radius:4px;">PRO</div>
+                <h3 style="font-size:20px; margin-bottom:8px;">Pay Per Scan</h3>
+                <div style="font-size:28px; font-weight:900; color:var(--Accent-Teal); margin-bottom:4px;">$1<span style="font-size:12px; font-weight:500; color:var(--Neutral-400);">/scan</span></div>
+                <p style="font-size:10px; color:var(--Neutral-500); margin-bottom:16px;">Per scan rate</p>
+                <ul style="font-size:11px; color:var(--Neutral-400); margin-bottom:20px; padding-left:16px;">
+                    <li>Advanced Metrics</li>
+                    <li>Priority Support</li>
+                    <li>CSV Export</li>
+                </ul>
+                <button class="btn-primary" style="width:100%; height:40px; font-size:11px;">Current Plan</button>
+            </div>
+
+            <!-- ELITE PLAN -->
+            <div class="glass-card" style="padding:24px; border-color:var(--Accent-Teal); position:relative;">
+                <div style="position:absolute; top:-10px; right:16px; background:var(--Accent-Teal); color:var(--Obsidian); font-size:9px; font-weight:900; padding:4px 12px; border-radius:4px;">ELITE</div>
+                <h3 style="font-size:20px; margin-bottom:8px;">Bulk Credits</h3>
+                <div style="font-size:28px; font-weight:900; color:var(--Accent-Teal); margin-bottom:4px;">$1<span style="font-size:12px; font-weight:500; color:var(--Neutral-400);">/scan</span></div>
+                <p style="font-size:10px; color:var(--Neutral-500); margin-bottom:16px;">Volume discount</p>
+                <ul style="font-size:11px; color:var(--Neutral-400); margin-bottom:20px; padding-left:16px;">
+                    <li>Clinical Accuracy</li>
+                    <li>3D Mesh Export</li>
+                    <li>API Access</li>
+                    <li>Dedicated Support</li>
+                </ul>
+                <button class="btn-outline" style="width:100%; height:40px; font-size:11px;" onclick="window.upgradePlan('elite')">Upgrade</button>
+            </div>
+
+            <!-- ENTERPRISE PLAN -->
+            <div class="glass-card" style="padding:24px; position:relative;">
+                <div style="position:absolute; top:-10px; right:16px; background:var(--Neutral-500); color:#fff; font-size:9px; font-weight:900; padding:4px 12px; border-radius:4px;">ENT</div>
+                <h3 style="font-size:20px; margin-bottom:8px;">Enterprise API</h3>
+                <div style="font-size:28px; font-weight:900; margin-bottom:4px;">$1<span style="font-size:12px; font-weight:500; color:var(--Neutral-400);">/scan</span></div>
+                <p style="font-size:10px; color:var(--Neutral-500); margin-bottom:16px;">Unlimited API</p>
+                <ul style="font-size:11px; color:var(--Neutral-400); margin-bottom:20px; padding-left:16px;">
+                    <li>White Label</li>
+                    <li>Custom Integrations</li>
+                    <li>Account Manager</li>
+                </ul>
+                <button class="btn-outline" style="width:100%; height:40px; font-size:11px;" onclick="window.requestEnterprise()">Contact Sales</button>
+            </div>
+        </div>
+    </div>
+    
+    <!-- CURRENT SUBSCRIPTION & CREDITS -->
+    <div style="display:grid; grid-template-columns:1.5fr 1fr; gap:32px; margin-top:32px">
+        <div style="padding:24px; background:rgba(87,215,192,0.05); border:1px solid var(--Mint); border-radius:16px">
+            <h4>CURRENT PLAN</h4>
+            <div style="font-size:24px; font-weight:900" id="billingPlanName">Loading...</div>
+            <p style="font-size:11px; color:var(--Neutral-500); margin-top:8px;" id="billingPlanFeatures">Loading features...</p>
+            <button class="btn-primary" style="margin-top:20px; width:100%" id="btnManagePlan" onclick="window.managePlan()">Manage Plan</button>
+        </div>
+        <div style="padding:24px; background:var(--Glass); border:1px solid var(--Glass-Border); border-radius:16px">
+            <h4>AVAILABLE CREDITS</h4>
+            <div style="font-size:32px; font-weight:900" id="billingCredits">0</div>
+            <button class="btn-outline" style="margin-top:20px; width:100%" onclick="document.getElementById('topUpModal').classList.add('active')">Top Up Credits</button>
+        </div>
+    </div>
+    
+    <!-- INVOICE HISTORY WITH DOWNLOAD -->
+    <div style="margin-top:48px">
+        <h4 style="font-size:12px; font-weight:900; color:var(--Accent-Teal); margin-bottom:20px; text-transform:uppercase; letter-spacing:0.1em">Invoice History</h4>
+        <div class="table-container">
+            <table>
+                <thead>
+                    <tr>
+                        <th>DATE</th>
+                        <th>INVOICE</th>
+                        <th>CREDITS</th>
+                        <th>AMOUNT</th>
+                        <th>VAT</th>
+                        <th>STATUS</th>
+                        <th>RECEIPT</th>
+                    </tr>
+                </thead>
+                <tbody id="billingHistoryBody"></tbody>
+            </table>
+        </div>
+    </div>
+  </div>
+</div>
           <div id="view-settings" class="tab-view">
              <div class="glass-card">
                <h2>Profile Settings</h2>
@@ -1442,7 +1532,29 @@
   <script>
     // --- ENV & CONFIG ---
     const PAYSTACK_PUBLIC_KEY = window.ENV?.PAYSTACK_PUBLIC_KEY || 'pk_test_placeholder';
-    const CONFIG = { url: 'https://blsettabymllulsxtziw.supabase.co', key: 'sb_publishable_miCOIXHtlxLkfDgpwE0N-g_BA1Q-x8y', paystack: PAYSTACK_PUBLIC_KEY };
+const CONFIG = { url: 'https://blsettabymllulsxtziw.supabase.co', key: 'sb_publishable_miCOIXHtlxLkfDgpwE0N-g_BA1Q-x8y', paystack: PAYSTACK_PUBLIC_KEY };
+
+// --- GLOBAL FLAT BILLING: $1 per scan (constant worldwide) ---
+    window.GLOBAL_PRICE = 1.00; // $1 flat rate - same for all regions
+    window.REGIONAL_TAX = 0.0;  // No tax - flat rate
+
+    // Helper: Get scan cost (always $1)
+    window.getScanCost = (countryCode) => window.GLOBAL_PRICE;
+    
+    // Helper: Calculate final price with tax breakdown
+    window.calculateFinalPrice = (creditAmount) => {
+        const subtotal = creditAmount * window.GLOBAL_PRICE;
+        const taxAmount = subtotal * window.REGIONAL_TAX;
+        const total = subtotal + taxAmount;
+        return {
+            subtotal: subtotal,
+            tax_rate: "0%",
+            tax_amount: taxAmount,
+            total: total,
+            currency: "USD",
+            note: "$1 per scan - Global flat rate"
+        };
+    };
 
 // --- KORRA ENGINE STATE ---
     let sessionData = null, userId = null, masterHistory = [], activeCameraType = null, poseModel = null, cameraInstance = null, isPoseAligned = false, alignmentStartTime = 0, autoSnapTriggered = false, isReviewing = false, capturedDataUrl = null;
@@ -2224,7 +2336,7 @@ document.getElementById('scanForm').addEventListener('submit', async (e) => {
         selectedBundle = { credits, price };
     };
 
-    window.applyPromo = () => {
+window.applyPromo = () => {
         const input = document.getElementById('promoCodeInput').value.toUpperCase();
         const status = document.getElementById('promoStatus');
         status.style.display = 'block';
@@ -2236,6 +2348,165 @@ document.getElementById('scanForm').addEventListener('submit', async (e) => {
             status.textContent = 'INVALID PROMO CODE';
             status.style.color = 'var(--Error)';
         }
+    };
+
+    // --- BILLING MANAGEMENT FUNCTIONS (Phase 160: Economic Hardening) ---
+    
+    // Regional VAT/Tax Configuration (matches admin_service.py)
+    window.REGIONAL_TAX = {
+        "NG": 0.075,  // 7.5% Nigeria VAT
+        "GH": 0.15,  // 15% Ghana VAT  
+        "UK": 0.20,  // 20% UK VAT
+        "FR": 0.20,  // 20% EU VAT
+        "US": 0.0,   // US varies by state
+        "DEFAULT": 0.05
+    };
+    
+    // Localized pricing in credits per scan
+    window.LOCALIZED_PRICING = {
+        "NG": 1,  // Nigeria
+        "GH": 1,  // Ghana
+        "KE": 1,  // Kenya
+        "US": 5,  // USA
+        "UK": 5,  // UK
+        "FR": 4,  // France
+        "DEFAULT": 3
+    };
+    
+    window.getRegionalTax = (countryCode) => {
+        const cc = (countryCode || 'NG').toUpperCase();
+        return window.REGIONAL_TAX[cc] || window.REGIONAL_TAX["DEFAULT"];
+    };
+    
+    window.getScanCost = (countryCode) => {
+        const cc = (countryCode || 'NG').toUpperCase();
+        return window.LOCALIZED_PRICING[cc] || window.LOCALIZED_PRICING["DEFAULT"];
+    };
+    
+    window.calculateFinalPrice = (creditAmount, countryCode) => {
+        const unitPrice = window.getScanCost(countryCode);
+        const taxRate = window.getRegionalTax(countryCode);
+        const subtotal = creditAmount * unitPrice;
+        const taxAmount = subtotal * taxRate;
+        const total = subtotal + taxAmount;
+        
+        return {
+            subtotal: subtotal,
+            taxRate: (taxRate * 100).toFixed(1) + '%',
+            taxAmount: taxAmount,
+            total: total,
+            currency: window.localizeCurrency(countryCode)
+        };
+    };
+    
+    window.localizeCurrency = (countryCode) => {
+        const cc = (countryCode || 'NG').toUpperCase();
+        const mapping = { "NG": "NGN", "GH": "GHS", "KE": "KES", "US": "USD", "UK": "GBP", "FR": "EUR" };
+        return mapping[cc] || "USD";
+    };
+    
+    window.upgradePlan = async (tier) => {
+        const email = document.getElementById('userEmail')?.textContent || '';
+        if (!email) { alert("Please save your profile first."); return; }
+        
+        try {
+            const res = await fetch('/api/v2/payments/initialize', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ tier: tier, email: email })
+            });
+            
+            if (res.ok) {
+                const data = await res.json();
+                if (data.data?.authorization_url) {
+                    window.open(data.data.authorization_url, '_blank');
+                    window.showToast("Payment Portal", "Complete payment to upgrade your plan.");
+                }
+            } else {
+                alert("Unable to initialize upgrade. Please try again.");
+            }
+        } catch (e) {
+            alert("Upgrade error: " + e.message);
+        }
+    };
+    
+    window.managePlan = () => {
+        // Opens subscription management
+        window.showToast("Manage Plan", "Contact support to change your subscription.");
+    };
+    
+    window.requestEnterprise = () => {
+        const email = document.getElementById('userEmail')?.textContent || '';
+        if (!email) { alert("Please save your profile first."); return; }
+        
+        alert(`Enterprise request initiated. Our team will contact you at ${email}.`);
+        
+        // Log interest
+        fetch('/api/v2/interest', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ email: email, context: 'ENTERPRISE_REQUEST' })
+        }).catch(() => {});
+    };
+    
+    window.downloadInvoice = async (invoiceId) => {
+        // Generate and download invoice receipt
+        const btn = event.target;
+        const originalText = btn.textContent;
+        btn.textContent = 'Generating...';
+        btn.disabled = true;
+        
+        try {
+            const res = await fetch(`/api/v2/invoices/${invoiceId}/receipt`);
+            if (res.ok) {
+                const blob = await res.blob();
+                const url = window.URL.createObjectURL(blob);
+                const a = document.createElement('a');
+                a.href = url;
+                a.download = `invoice_${invoiceId}.pdf`;
+                a.click();
+                window.URL.revokeObjectURL(url);
+                window.showToast("Receipt Downloaded", "Invoice saved to your device.");
+            } else {
+                alert("Could not generate receipt. Please try again later.");
+            }
+        } catch (e) {
+            alert("Download error: " + e.message);
+        } finally {
+            btn.textContent = originalText;
+            btn.disabled = false;
+        }
+    };
+    
+    // Enhanced invoice rendering with VAT breakdown
+    window.renderInvoices = (invoices) => {
+        const tbody = document.getElementById('billingHistoryBody');
+        if (!tbody || !invoices) return;
+        
+        tbody.innerHTML = invoices.map(inv => {
+            const date = new Date(inv.created_at || inv.paid_at).toLocaleDateString();
+            const amount = inv.currency || 'NGN';
+            const amountPaid = (inv.amount_paid || inv.amount || 0) / 100;
+            const taxAmount = (inv.tax_amount || 0) / 100;
+            const taxRate = inv.tax_rate ? (inv.tax_rate * 100).toFixed(0) + '%' : '7.5%';
+            const credits = inv.credits_added || inv.credits_added || 0;
+            const hasReceipt = inv.invoice_pdf_url || inv.receipt_url;
+            
+            return `<tr>
+                <td>${date}</td>
+                <td><code style="font-size:10px; color:var(--Accent-Teal)">${String(inv.id).substring(0, 8)}</code></td>
+                <td>+${credits}</td>
+                <td><strong>${amount} ${amountPaid.toFixed(2)}</strong></td>
+                <td>${taxRate} (${amount} ${taxAmount.toFixed(2)})</td>
+                <td><span style="color:var(--Mint)">PAID</span></td>
+                <td>
+                    ${hasReceipt 
+                        ? `<button class="btn-outline" style="height:28px; font-size:9px; padding:0 12px;" onclick="window.downloadInvoice('${inv.id}')">Download</button>`
+                        : `<span style="font-size:10px; color:var(--Neutral-500)">Pending</span>`
+                    }
+                </td>
+            </tr>`;
+        }).join('');
     };
 
     document.getElementById('btnConfirmPurchase').onclick = async () => {
