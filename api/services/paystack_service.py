@@ -33,7 +33,7 @@ class PaystackService:
             }
         )
     
-def initialize_payment(
+    def initialize_payment(
         self,
         email: str,
         amount: int,
