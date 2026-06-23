@@ -997,24 +997,35 @@
                   <div style="margin-bottom:32px">
                     <label style="font-size:10px; font-weight:900; color:var(--Neutral-500); display:block; margin-bottom:12px">ATTIRE CONTEXT</label>
                     <div class="style-card-grid" style="grid-template-columns: 1fr 1fr; margin-top: 12px;">
-                        <div class="style-card active" onclick="window.handleAttireToggle('standard')">
+                        <div class="style-card active" onclick="window.handleAttireToggle('standard', this)">
                             <h5>Standard</h5>
                             <p>Clinical Base</p>
                         </div>
-                        <div class="style-card" onclick="window.handleAttireToggle('agbada')">
+                        <div class="style-card" onclick="window.handleAttireToggle('agbada', this)">
                             <h5>Agbada</h5>
                             <p>Regal Volume</p>
                         </div>
-                        <div class="style-card" onclick="window.handleAttireToggle('senator')">
+                        <div class="style-card" onclick="window.handleAttireToggle('senator', this)">
                             <h5>Senator</h5>
                             <p>Business Fit</p>
                         </div>
-                        <div class="style-card" onclick="window.handleAttireToggle('kurta')">
+                        <div class="style-card" onclick="window.handleAttireToggle('kurta', this)">
                             <h5>Kurta</h5>
                             <p>Airflow Ease</p>
                         </div>
                     </div>
                     <div style="font-size:9px; color:var(--Accent-Teal); margin-top:12px; font-weight:900" id="attireStatus">ACTIVE CONTEXT: STANDARD</div>
+                  </div>
+
+                  <!-- Phase 102: MERCHANT MATERIAL RAIL -->
+                  <div style="margin-bottom:32px">
+                    <label style="font-size:10px; font-weight:900; color:var(--Neutral-500); display:block; margin-bottom:12px">INTENDED FABRIC (MATERIAL RAIL)</label>
+                    <div style="display:flex; gap:8px; overflow-x:auto; padding-bottom:8px">
+                        <button class="btn-outline material-btn active" style="height:32px; font-size:9px; white-space:nowrap; padding:0 12px" onclick="window.handleMaterialToggle('woven', this)">Woven (Linen)</button>
+                        <button class="btn-outline material-btn" style="height:32px; font-size:9px; white-space:nowrap; padding:0 12px" onclick="window.handleMaterialToggle('knit', this)">Knit (Jersey)</button>
+                        <button class="btn-outline material-btn" style="height:32px; font-size:9px; white-space:nowrap; padding:0 12px" onclick="window.handleMaterialToggle('starch_bazin', this)">Starch Bazin</button>
+                        <button class="btn-outline material-btn" style="height:32px; font-size:9px; white-space:nowrap; padding:0 12px" onclick="window.handleMaterialToggle('technical', this)">Technical (Stretch)</button>
+                    </div>
                   </div>
 
                   <div style="margin-bottom:20px"><h5 style="font-size:11px; font-weight:900; color:#fff; text-transform:uppercase; margin-bottom:12px">Measurements</h5><div id="measurementGridUpper" style="display:grid; grid-template-columns:repeat(3,1fr); gap:8px"></div></div>
@@ -1240,6 +1251,19 @@
                         <input type="color" id="widgetColorPrimary" class="input-field" style="width:60px; padding:4px; margin:0; height:44px" value="#57D7C0" oninput="window.updateWidgetPreview()">
                         <input type="text" id="widgetColorText" class="input-field" style="flex:1; margin:0; height:44px" value="#57D7C0" oninput="document.getElementById('widgetColorPrimary').value = this.value; window.updateWidgetPreview()">
                       </div>
+                    </div>
+                    <!-- Phase 101: Rules of the House Preset -->
+                    <div style="margin-bottom:24px">
+                        <label class="form-label">DEFAULT SPECIALTY (RULE OF THE HOUSE)</label>
+                        <select id="widgetDefaultSpecialty" class="input-field" style="appearance:none; cursor:pointer" onchange="window.updateWidgetPreview()">
+                            <option value="standard">Standard (Clinical Base)</option>
+                            <option value="agbada">Agbada (Regal Volume)</option>
+                            <option value="senator">Senator (Business Native)</option>
+                            <option value="kaftan">Kaftan (Traditional Daily)</option>
+                            <option value="abaya">Abaya (Middle Eastern Modesty)</option>
+                            <option value="activewear">Activewear (Negative Ease)</option>
+                        </select>
+                        <div style="font-size:9px; color:var(--Neutral-500); margin-top:4px">Sets the default fit context for your incoming scans.</div>
                     </div>
                     <div style="margin-bottom:20px">
                       <label class="form-label">SURFACE PRESET</label>
@@ -1562,6 +1586,7 @@ const CONFIG = { url: 'https://blsettabymllulsxtziw.supabase.co', key: 'sb_publi
     let currentApiKey = null; // Store user's API key for authenticated API calls
     let IS_INITIALIZING = true; // Flag to prevent redirect loops during startup
     let logoDataUrl = null; // Store uploaded logo to keep it persistent during resize
+    window.MERCHANT_DEFAULT_SPECIALTY = 'standard'; // Phase 101 Default
 
     const NetworkGuard = {
         isOnline: navigator.onLine,
@@ -1866,6 +1891,9 @@ window.loadSettings = async () => {
             if (document.getElementById('widgetBtnTextMeasured')) document.getElementById('widgetBtnTextMeasured').value = wc.btn_text_measured || "Get Measured";
             if (document.getElementById('widgetBtnColor')) document.getElementById('widgetBtnColor').value = wc.btn_color || "#57D7C0";
             if (document.getElementById('widgetBtnTextColor')) document.getElementById('widgetBtnTextColor').value = wc.btn_text_color || "#050505";
+            if (document.getElementById('widgetDefaultSpecialty')) document.getElementById('widgetDefaultSpecialty').value = wc.default_specialty || "standard";
+
+            window.MERCHANT_DEFAULT_SPECIALTY = wc.default_specialty || "standard";
 
             // HYDRATE BRAND LOGO
             if (profile.brand_logo_url) {
@@ -1950,7 +1978,7 @@ window.loadSettings = async () => {
         renderMeasurementGrids(window.LAST_MEASUREMENT_DATA);
     };
 
-    function renderMeasurementGrids(data, context = 'standard') {
+    function renderMeasurementGrids(data, context = window.ACTIVE_CONTEXT || 'standard', material = window.ACTIVE_MATERIAL || 'woven') {
       const m = data.measurements || {};
       const unit = window.CURRENT_UNIT;
       const factor = unit === 'in' ? 0.393701 : 1;
@@ -1959,12 +1987,24 @@ window.loadSettings = async () => {
       // PHASE 102: Apply Tolerance Intelligence Multipliers
       // (Simulation of backend calculate hook for real-time toggle)
       const getEase = (key) => {
-          if (context === 'standard') return 1.035; // 3.5% ease
-          if (context === 'agbada') return 1.45;
-          if (context === 'senator') return 1.1;
-          if (context === 'kurta') return 1.25;
-          if (context === 'abaya') return 1.15;
-          return 1.035;
+          let baseMultiplier = 1.035; // Default 3.5% ease
+          if (context === 'standard') baseMultiplier = 1.035;
+          else if (context === 'agbada') baseMultiplier = 1.45;
+          else if (context === 'senator') baseMultiplier = 1.1;
+          else if (context === 'kurta') baseMultiplier = 1.25;
+          else if (context === 'abaya') baseMultiplier = 1.15;
+          else if (context === 'activewear') baseMultiplier = 0.95;
+
+          // Phase 102: Material Multiplier
+          const materialCoeffs = {
+              'woven': 1.0,
+              'knit': 0.85,
+              'starch_bazin': 1.1,
+              'technical': 0.9
+          };
+          const mCoeff = materialCoeffs[material] || 1.0;
+
+          return baseMultiplier * mCoeff;
       };
 
       // BRAND MATCHER LOGIC: Technical CM to Consumer Sizes
@@ -2090,8 +2130,29 @@ window.loadSettings = async () => {
         const s = masterHistory[idx];
         if(!s) return;
         window.LAST_MEASUREMENT_DATA = s;
+
+        // Phase 101: Apply Rules of the House Preset
+        window.ACTIVE_CONTEXT = window.MERCHANT_DEFAULT_SPECIALTY || 'standard';
+        window.ACTIVE_MATERIAL = 'woven'; // Reset to base material
+
         if(window.KORRA_VIZ) window.KORRA_VIZ.loadMesh(s.mesh_url);
-        renderMeasurementGrids(s);
+
+        // Sync UI for Context Toggle
+        document.getElementById('attireStatus').textContent = `CONTEXT: ${window.ACTIVE_CONTEXT.toUpperCase()}`;
+        document.querySelectorAll('.style-card').forEach(c => {
+            c.classList.remove('active');
+            if (c.querySelector('h5')?.textContent.toLowerCase() === window.ACTIVE_CONTEXT.toLowerCase()) {
+                c.classList.add('active');
+            }
+        });
+
+        // Sync UI for Material Rail
+        document.querySelectorAll('.material-btn').forEach(b => {
+            b.classList.remove('active');
+            if (b.textContent.toLowerCase().includes('woven')) b.classList.add('active');
+        });
+
+        renderMeasurementGrids(s, window.ACTIVE_CONTEXT, window.ACTIVE_MATERIAL);
 
         // Populate Craftsman Notes
         const notesEl = document.getElementById('craftsmanNotes');
@@ -2276,7 +2337,20 @@ async function init() {
                 window.showToast("Clinical Precision Achieved", "Digital Twin generated from 100% verified scan.");
             }
 
-            renderMeasurementGrids(data);
+            // Phase 101/102: Apply defaults
+            window.ACTIVE_CONTEXT = window.MERCHANT_DEFAULT_SPECIALTY || 'standard';
+            window.ACTIVE_MATERIAL = 'woven';
+
+            // Sync UI for Context Toggle
+            document.getElementById('attireStatus').textContent = `CONTEXT: ${window.ACTIVE_CONTEXT.toUpperCase()}`;
+            document.querySelectorAll('.style-card').forEach(c => {
+                c.classList.remove('active');
+                if (c.querySelector('h5')?.textContent.toLowerCase() === window.ACTIVE_CONTEXT.toLowerCase()) {
+                    c.classList.add('active');
+                }
+            });
+
+            renderMeasurementGrids(data, window.ACTIVE_CONTEXT, window.ACTIVE_MATERIAL);
             if (window.KORRA_VIZ) window.KORRA_VIZ.loadMesh(data.mesh_url);
             fetchHistory();
             setTimeout(() => {
@@ -2509,22 +2583,51 @@ window.applyPromo = () => {
         }).join('');
     };
 
-    document.getElementById('btnConfirmPurchase').onclick = async () => {
-        const btn = document.getElementById('btnConfirmPurchase');
-        btn.disabled = true; btn.textContent = 'CONNECTING...';
-        const { data: { user } } = await window.KORRA_DB.auth.getUser();
-        const handler = PaystackPop.setup({
-            key: CONFIG.paystack, email: user.email, amount: selectedBundle.price * 100, currency: "USD",
-            metadata: { user_id: userId, type: 'bundle', credits: selectedBundle.credits },
-            callback: async (response) => {
-                const res = await fetch(`/api/v2/payments/verify/${response.reference}`);
-                if (res.ok) { alert(`Success! ${selectedBundle.credits} credits added.`); document.getElementById('topUpModal').classList.remove('active'); window.loadSettings(); }
-                btn.disabled = false; btn.textContent = 'Purchase Credits';
-            },
-            onClose: () => { btn.disabled = false; btn.textContent = 'Purchase Credits'; }
-        });
-        handler.openIframe();
-    };
+        function onPaystackSuccess(response) {
+            fetch(`/api/v2/payments/verify/${response.reference}`)
+                .then(res => res.json())
+                .then(data => {
+                    if (data.success || data.status === 'success') {
+                        alert(`Success! ${selectedBundle.credits} credits added.`);
+                        document.getElementById('topUpModal').classList.remove('active');
+                        window.loadSettings();
+                    }
+                })
+                .catch(err => {
+                    console.error('Payment verification failed:', err);
+                    alert('Payment verification failed. Please check your dashboard for credits.');
+                })
+                .finally(() => {
+                    const btn = document.getElementById('btnConfirmPurchase');
+                    if (btn) {
+                        btn.disabled = false;
+                        btn.textContent = 'Purchase Credits';
+                    }
+                });
+        }
+
+        window.handlePurchase = async () => {
+            const btn = document.getElementById('btnConfirmPurchase');
+            btn.disabled = true; btn.textContent = 'CONNECTING...';
+            const { data: { user } } = await window.KORRA_DB.auth.getUser();
+
+            const handler = PaystackPop.setup({
+                key: CONFIG.paystack,
+                email: user.email,
+                amount: selectedBundle.price * 100,
+                currency: "USD",
+                metadata: { user_id: userId, type: 'bundle', credits: selectedBundle.credits },
+                callback: onPaystackSuccess,
+                onClose: () => {
+                    btn.disabled = false;
+                    btn.textContent = 'Purchase Credits';
+                }
+            });
+            handler.openIframe();
+        };
+
+        const purchaseBtn = document.getElementById('btnConfirmPurchase');
+        if (purchaseBtn) purchaseBtn.onclick = window.handlePurchase;
 
     document.getElementById('btnSaveSettings').onclick = async () => {
         const payload = {
@@ -2636,7 +2739,10 @@ window.applyPromo = () => {
       document.getElementById('btnGenerateLink').textContent = 'Update Link';
     };
 
-    window.handleAttireToggle = (attire) => {
+    window.ACTIVE_CONTEXT = 'standard';
+    window.ACTIVE_MATERIAL = 'woven';
+
+    window.handleAttireToggle = (attire, el) => {
         /**
          * Phase 102: Real-time Tolerance Toggle
          * Phase 111: Haptic Validation
@@ -2650,6 +2756,7 @@ window.applyPromo = () => {
             navigator.vibrate(50); // Short tactical pulse
         }
 
+        window.ACTIVE_CONTEXT = attire;
         document.getElementById('attireStatus').textContent = `CONTEXT: ${attire.toUpperCase()}`;
         window.showToast("Context Switched", `Now optimizing for ${attire.toUpperCase()}.`);
 
@@ -2660,9 +2767,24 @@ window.applyPromo = () => {
 
         // Update active state in style cards
         document.querySelectorAll('.style-card').forEach(c => c.classList.remove('active'));
-        // We find the card based on title text if needed, but for now we rely on the click handler
+        if (el) el.classList.add('active');
 
-        renderMeasurementGrids(window.LAST_MEASUREMENT_DATA, attire);
+        renderMeasurementGrids(window.LAST_MEASUREMENT_DATA, window.ACTIVE_CONTEXT, window.ACTIVE_MATERIAL);
+    };
+
+    window.handleMaterialToggle = (material, el) => {
+        if (!window.LAST_MEASUREMENT_DATA) {
+            alert("Please perform or select a scan first.");
+            return;
+        }
+        if ("vibrate" in navigator) navigator.vibrate(25);
+        window.ACTIVE_MATERIAL = material;
+
+        document.querySelectorAll('.material-btn').forEach(b => b.classList.remove('active'));
+        if (el) el.classList.add('active');
+
+        window.showToast("Material Updated", `Fabric rigidity set to: ${material.toUpperCase()}`);
+        renderMeasurementGrids(window.LAST_MEASUREMENT_DATA, window.ACTIVE_CONTEXT, window.ACTIVE_MATERIAL);
     };
 
     window.dismissCreditError = () => { document.getElementById('creditOverlay').style.display = 'none'; };
@@ -2717,6 +2839,7 @@ window.applyPromo = () => {
         const brandColor = document.getElementById('widgetBrandColor').value || "#FFFFFF";
         const color = document.getElementById('widgetColorPrimary').value;
         const theme = document.getElementById('widgetTheme').value;
+        const specialty = document.getElementById('widgetDefaultSpecialty').value || "standard";
         const logoSize = document.getElementById('widgetLogoSize').value;
         const btnFitting = document.getElementById('widgetBtnTextFitting').value || "Get body measurements";
         const btnMeasured = document.getElementById('widgetBtnTextMeasured').value || "Get Measured";
@@ -2729,6 +2852,7 @@ window.applyPromo = () => {
             brand_color: document.getElementById('widgetBrandColor').value,
             primary: document.getElementById('widgetColorPrimary').value,
             theme: document.getElementById('widgetTheme').value,
+            default_specialty: specialty,
             logo_size: document.getElementById('widgetLogoSize').value,
             btn_fitting: btnFitting,
             btn_measured: btnMeasured,
@@ -2807,6 +2931,7 @@ window.applyPromo = () => {
   data-merchant="${userId}"
   data-primary="${color.replace('#','')}"
   data-theme="${theme}"
+  data-specialty="${specialty}"
   data-brand-name="${encodeURIComponent(brandName)}"
   data-brand-color="${brandColor.replace('#','')}"
   data-btn-fitting="${encodeURIComponent(btnFitting)}"
@@ -2971,7 +3096,8 @@ window.applyPromo = () => {
             btn_text_fitting: document.getElementById('widgetBtnTextFitting').value,
             btn_text_measured: document.getElementById('widgetBtnTextMeasured').value,
             btn_color: document.getElementById('widgetBtnColor').value,
-            btn_text_color: document.getElementById('widgetBtnTextColor').value
+            btn_text_color: document.getElementById('widgetBtnTextColor').value,
+            default_specialty: document.getElementById('widgetDefaultSpecialty').value
         };
         try {
             const { error } = await window.KORRA_DB.from('profiles').update({
