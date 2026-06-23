@@ -33,21 +33,24 @@ class PaystackService:
             }
         )
     
-    def initialize_payment(
+def initialize_payment(
         self,
         email: str,
         amount: int,
         reference: Optional[str] = None,
-        metadata: Optional[Dict[str, Any]] = None
+        metadata: Optional[Dict[str, Any]] = None,
+        currency: str = "USD"  # Default to USD for global flat rate
     ) -> Dict[str, Any]:
         """
         Initialize a payment transaction with Paystack.
+        Global flat rate: $1 per scan (100 cents USD).
         
         Args:
             email: Customer email
-            amount: Amount in kobo (smallest currency unit)
+            amount: Amount in smallest currency unit (cents for USD, kobo for NGN)
             reference: Optional custom reference (Paystack generates one if None)
             metadata: Optional metadata to attach to transaction
+            currency: Currency code (default USD for global flat rate)
         
         Returns:
             Response from Paystack API
@@ -55,6 +58,7 @@ class PaystackService:
         payload = {
             'email': email,
             'amount': amount,
+            'currency': currency,  # Force USD for global $1 flat rate
         }
         
         if reference:
