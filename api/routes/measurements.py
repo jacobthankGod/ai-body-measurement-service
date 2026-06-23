@@ -403,13 +403,15 @@ async def extract_widget(
         front_bytes = await front.read()
         side_bytes = await side.read()
         
-        if not front_bytes or not side_bytes: raise HTTPException(status_code=400, detail="Empty image files")
-            
-update_task(task_id, {"status": "queued", "created_at": datetime.utcnow().isoformat(), "height": height, "gender": gender})
+        if not front_bytes or not side_bytes:
+            raise HTTPException(status_code=400, detail="Empty image files")
+        
+        update_task(task_id, {"status": "queued", "created_at": datetime.utcnow().isoformat(), "height": height, "gender": gender})
         # Pass client_user_id for dual-account persistence
         background_tasks.add_task(run_extraction_task, task_id, front_bytes, side_bytes, height, gender, client_name, merchant_id, client_user_id)
         return {"status": "accepted", "task_id": task_id}
-    except HTTPException: raise
+    except HTTPException:
+        raise
     except Exception as e:
         logger.error(f"Widget extraction failed: {e}")
         raise HTTPException(status_code=500, detail="Failed to start widget extraction")
