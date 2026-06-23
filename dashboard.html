@@ -326,10 +326,18 @@
 
     /* ULTRA-MODERN CLIENT LEDGER: Mobile Stacked UI */
     @media (max-width: 900px) {
-        .container { padding: 0 12px !important; }
-        .main-content { padding: 12px 12px 120px !important; }
-        .hero-grid { grid-template-columns: 1fr 1fr !important; gap: 12px !important; width: 100% !important; padding: 0 !important; margin: 0 !important; overflow: visible; }
-        .action-card { height: 200px !important; border-radius: 24px !important; width: 100% !important; flex: 1; }
+        .container { padding: 0 12px !important; width: 100% !important; max-width: 100% !important; }
+        .main-content { padding: 12px 12px 120px !important; width: 100% !important; overflow-x: hidden; }
+        .hero-grid {
+            grid-template-columns: 1fr 1fr !important;
+            gap: 12px !important;
+            width: 100% !important;
+            padding: 0 !important;
+            margin: 0 !important;
+            overflow: visible;
+            display: grid !important;
+        }
+        .action-card { height: 200px !important; border-radius: 24px !important; width: 100% !important; flex: none !important; }
         .action-title { font-size: 14px !important; }
         .action-overlay { padding: 16px !important; width: 100% !important; }
         .action-tag { font-size: 7px !important; margin-bottom: 6px !important; }
@@ -434,6 +442,7 @@
     .main-content::-webkit-scrollbar-thumb { background: var(--Glass-Border); border-radius: 10px; }
 
     @media (max-width: 900px) {
+      .grid-dashboard { grid-template-columns: 1fr !important; height: auto; overflow: visible; }
       .sidebar-nav {
         position: fixed;
         bottom: 0;
