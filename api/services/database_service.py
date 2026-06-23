@@ -57,14 +57,16 @@ class DatabaseService:
         client = cls.get_client()
         try:
             res = client.table("invitations").select("*").eq("token", token).execute()
-            if not res.data: return None
+            if not res.data:
+                return None
             invite = res.data[0]
             if datetime.fromisoformat(invite["expires_at"]) < datetime.utcnow():
                 return None
             return invite
-        except Exception as e: return None
+        except Exception as e:
+            return None
 
-@classmethod
+    @classmethod
     def save_measurement(cls, user_id: str, client_name: str, height: float, gender: str, biometrics: dict, landmarks: dict = None, mesh_url: str = None, body_shape: str = None, size_rec: str = None, client_user_id: str = None):
         """
         Save measurement to database.
@@ -76,8 +78,9 @@ class DatabaseService:
         This implements the Unicorn-level dual-account persistence pattern.
         """
         client = cls.get_client()
-        if not client: 
+        if not client:
             logger.error("❌ DatabaseService: Supabase client is None - ENV variables missing!")
+            return None
             return None
         
         results = []
