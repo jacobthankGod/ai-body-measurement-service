@@ -7,7 +7,7 @@ import os
 import logging
 from fastapi import FastAPI, Request, HTTPException
 from fastapi.middleware.cors import CORSMiddleware
-from fastapi.responses import JSONResponse, FileResponse
+from fastapi.responses import JSONResponse, FileResponse, Response
 from fastapi.staticfiles import StaticFiles
 from pathlib import Path
 
@@ -83,15 +83,31 @@ app.include_router(notifications.router, prefix="/api/v2", tags=["Notifications"
 app.include_router(scan_requests.router, prefix="/api/v2", tags=["ScanRequests"])
 
 # --- STATIC PAGE SERVING ---
+# PHASE 502 FIX: Enhanced static file serving with explicit route logging
 def get_safe_file(filename: str):
-    target = BASE_DIR / filename
-    if target.exists() and target.is_file():
-        return FileResponse(str(target))
+    """Serve static HTML files with robust error handling for 502 prevention."""
+    try:
+        target = BASE_DIR / filename
+        if target.exists() and target.is_file():
+            logger.info(f"📄 Serving static file: {filename}")
+            return FileResponse(str(target))
+    except Exception as e:
+        logger.error(f"Error serving {filename}: {e}")
+    
     # Fallback to index.html for SPA-like behavior or missing files
+    logger.warning(f"📄 Fallback to index.html for: {filename}")
     return FileResponse(str(BASE_DIR / "index.html"))
 
 @app.get("/")
-async def serve_root(): return get_safe_file("index.html")
+async def serve_root(): 
+    logger.info("🌐 Root route accessed")
+    return get_safe_file("index.html")
+
+# PHASE 502 FIX: Health check endpoint for load balancer verification
+@app.get("/health")
+async def health_check():
+    """Health check endpoint - critical for 502 prevention."""
+    return {"status": "ok", "service": "korra-ai", "version": "1.0.0"}
 
 @app.get("/signin")
 async def serve_signin(): return get_safe_file("signin.html")
@@ -103,10 +119,18 @@ async def serve_signup(): return get_safe_file("signup.html")
 async def serve_onboarding(): return get_safe_file("onboarding.html")
 
 @app.get("/dashboard")
-async def serve_dashboard(): return get_safe_file("dashboard.html")
+async def serve_dashboard(): 
+    logger.info("🏠 Dashboard route accessed")
+    return get_safe_file("dashboard.html")
 
 @app.get("/verify")
 async def serve_verify(): return get_safe_file("verify.html")
+
+# PHASE 502 FIX: Explicit favicon route to prevent 404 errors
+@app.get("/favicon.ico")
+async def serve_favicon():
+    """Serve favicon to prevent 502 errors."""
+    return FileResponse(str(BASE_DIR / "favicon.ico")) if (BASE_DIR / "favicon.ico").exists() else Response(status_code=204)
 
 @app.get("/about")
 async def serve_about(): return get_safe_file("about.html")
@@ -138,6 +162,9 @@ if ASSETS_DIR.exists():
 # Catch-all for other static files in root or nested
 @app.get("/{full_path:path}")
 async def catch_all(full_path: str):
+    # PHASE 502 FIX: Graceful error handling for unmatched routes
+    logger.info(f"🔄 Catch-all route accessed: {full_path}")
+    
     # Skip API routes
     if full_path.startswith("api/"):
         raise HTTPException(status_code=404, detail="API Endpoint Not Found")

@@ -49,6 +49,9 @@ sentry-sdk==1.40.1
 pandas==2.2.0
 scikit-learn==1.4.0
 
+# Async HTTP (Webhooks)
+aiohttp==3.9.1
+
 # Utilities
 python-dotenv==1.0.0
 python-dateutil==2.9.0.post0
