@@ -777,13 +777,19 @@
 <p style="color:var(--Neutral-400); margin-bottom:32px"><span id="bundleRateLabel">₦300</span> <span style="color:var(--Neutral-500)">per scan</span></p>
       <div style="display:grid; grid-template-columns: 1fr; gap:16px; margin-bottom:32px">
         <div class="glass-card" style="padding:20px; cursor:pointer; border-color:var(--Mint)" data-bundle="50">
-          <div style="display:flex; justify-content:space-between; align-items:center"><div><div style="font-size:18px; font-weight:900">50 Scan Bundle</div><div style="font-size:12px; color:var(--Neutral-400)" id="bundlePerScan50"><span class="bundleCurr">₦</span>300 / scan</div></div><div style="font-size:20px; font-weight:900; color:var(--Mint)" id="bundleTotal50"><span class="bundleCurr">₦</span>15,000</div></div>
+          <div style="display:flex; justify-content:space-between; align-items:center"><div><div style="font-size:18px; font-weight:900">50 Scan Bundle</div><div style="font-size:12px; color:var(--Neutral-400)" id="bundlePerScan50"><span class="bundleCurr">₦</span>300 / scan</div></div><div style="text-align:right"><div style="font-size:20px; font-weight:900; color:var(--Mint)" id="bundleTotal50"><span class="bundleCurr">₦</span>15,000</div><div style="font-size:10px; color:var(--Neutral-500); margin-top:2px" id="bundleDiscount50"></div></div></div>
         </div>
         <div class="glass-card" style="padding:20px; cursor:pointer" data-bundle="150">
-          <div style="display:flex; justify-content:space-between; align-items:center"><div><div style="font-size:18px; font-weight:900">150 Scan Bundle</div><div style="font-size:12px; color:var(--Neutral-400)" id="bundlePerScan150"><span class="bundleCurr">₦</span>250 / scan</div></div><div style="font-size:20px; font-weight:900; color:var(--Mint)" id="bundleTotal150"><span class="bundleCurr">₦</span>37,500</div></div>
+          <div style="display:flex; justify-content:space-between; align-items:center"><div><div style="font-size:18px; font-weight:900">150 Scan Bundle</div><div style="font-size:12px; color:var(--Neutral-400)" id="bundlePerScan150"><span class="bundleCurr">₦</span>250 / scan</div></div><div style="text-align:right"><div style="font-size:20px; font-weight:900; color:var(--Mint)" id="bundleTotal150"><span class="bundleCurr">₦</span>37,500</div><div style="font-size:10px; color:var(--Mint); margin-top:2px" id="bundleDiscount150">10% off</div></div></div>
         </div>
         <div class="glass-card" style="padding:20px; cursor:pointer" data-bundle="500">
-          <div style="display:flex; justify-content:space-between; align-items:center"><div><div style="font-size:18px; font-weight:900">500 Scan Bundle</div><div style="font-size:12px; color:var(--Neutral-400)" id="bundlePerScan500"><span class="bundleCurr">₦</span>200 / scan</div></div><div style="font-size:20px; font-weight:900; color:var(--Mint)" id="bundleTotal500"><span class="bundleCurr">₦</span>100,000</div></div>
+          <div style="display:flex; justify-content:space-between; align-items:center"><div><div style="font-size:18px; font-weight:900">500 Scan Bundle</div><div style="font-size:12px; color:var(--Neutral-400)" id="bundlePerScan500"><span class="bundleCurr">₦</span>200 / scan</div></div><div style="text-align:right"><div style="font-size:20px; font-weight:900; color:var(--Mint)" id="bundleTotal500"><span class="bundleCurr">₦</span>100,000</div><div style="font-size:10px; color:var(--Mint); margin-top:2px" id="bundleDiscount500">15% off</div></div></div>
+        </div>
+        <div class="glass-card" style="padding:20px; cursor:pointer; border:1px solid rgba(87,215,192,0.2);" data-bundle="custom">
+          <div style="display:flex; justify-content:space-between; align-items:center"><div><div style="font-size:18px; font-weight:900; color:var(--Mint);">High Volume <span style="font-size:9px; font-weight:700; color:var(--Neutral-500); letter-spacing:0.05em; background:rgba(87,215,192,0.1); padding:2px 8px; border-radius:4px; margin-left:8px;">UP TO 25% OFF</span></div><div style="font-size:12px; color:var(--Neutral-400)"><span class="bundle-per-scan bundleCurr">₦</span><span class="bundle-per-scan">685</span> / scan</div></div><div style="text-align:right"><div style="font-size:20px; font-weight:900; color:var(--Mint)" class="bundle-total"><span class="bundleCurr">₦</span><span>—</span></div><div style="font-size:10px; color:var(--Mint); margin-top:2px" class="bundle-discount">Enter quantity</div></div></div>
+          <div class="custom-bundle-input" style="margin-top:12px; display:none;">
+            <input type="number" class="custom-bundle-qty input-field" min="501" placeholder="Enter quantity (501+)..." style="margin-bottom:0;" oninput="window.updateCustomBundle(this)">
+          </div>
         </div>
       </div>
       <div style="margin-bottom:32px">
@@ -2525,20 +2531,61 @@ document.getElementById('scanForm').addEventListener('submit', async (e) => {
 
     window.signOut = async () => { await window.KORRA_DB.auth.signOut(); window.location.href = '/signin'; };
 
+    window.getBundleDiscount = (credits) => {
+        if (credits >= 2000) return 0.25;
+        if (credits > 500) return 0.20;
+        if (credits === 500) return 0.15;
+        if (credits >= 150) return 0.10;
+        return 0.0;
+    };
+
     window.getBundlePrice = (credits) => {
         const price = (window.ENV && window.ENV.scan_price) || 300;
-        if (credits === 50) return { per: price, total: price * 50 };
-        if (credits === 150) return { per: Math.round(price * 0.83), total: Math.round(price * 0.83 * 150) };
-        if (credits === 500) return { per: Math.round(price * 0.67), total: Math.round(price * 0.67 * 500) };
-        return { per: price, total: price * credits };
+        const disc = window.getBundleDiscount(credits);
+        const per = Math.round(price * (1 - disc));
+        return { per, total: per * credits, discount: disc };
     };
 
     window.selectBundle = (el) => {
-        document.querySelectorAll('#topUpModal .glass-card').forEach(c => c.style.borderColor = 'var(--Glass-Border)');
+        document.querySelectorAll('#topUpModal .glass-card').forEach(c => {
+            c.style.borderColor = 'var(--Glass-Border)';
+            c.querySelector('.custom-bundle-input')?.style.display === 'block' && (c.querySelector('.custom-bundle-input').style.display = 'none');
+        });
         el.style.borderColor = 'var(--Mint)';
-        const credits = parseInt(el.dataset.bundle);
-        const bp = window.getBundlePrice(credits);
-        selectedBundle = { credits, price: bp.total };
+        const raw = el.dataset.bundle;
+        if (raw === 'custom') {
+            const inputWrap = el.querySelector('.custom-bundle-input');
+            inputWrap.style.display = 'block';
+            const input = inputWrap.querySelector('.custom-bundle-qty');
+            input.focus();
+            window.updateCustomBundle(input);
+        } else {
+            const credits = parseInt(raw);
+            const bp = window.getBundlePrice(credits);
+            selectedBundle = { credits, price: bp.total, discount: bp.discount };
+        }
+    };
+
+    window.updateCustomBundle = (input) => {
+        const qty = parseInt(input.value) || 0;
+        const card = input.closest('.glass-card');
+        const perEl = card.querySelector('.bundle-per-scan');
+        const totalEl = card.querySelector('.bundle-total');
+        const discEl = card.querySelector('.bundle-discount');
+        const price = (window.ENV && window.ENV.scan_price) || 300;
+        if (qty < 501) {
+            perEl.textContent = '— / scan';
+            totalEl.textContent = '—';
+            discEl.textContent = 'Enter 501+';
+            return;
+        }
+        const disc = window.getBundleDiscount(qty);
+        const per = Math.round(price * (1 - disc));
+        const total = per * qty;
+        perEl.textContent = `${window.BUNDLE_SYM || '₦'}${per.toLocaleString()} / scan`;
+        totalEl.textContent = `${window.BUNDLE_SYM || '₦'}${total.toLocaleString()}`;
+        discEl.textContent = disc > 0 ? `${Math.round(disc*100)}% off` : '';
+        selectedBundle = { credits: qty, price: total, discount: disc };
     };
 
     window.getDefaultBundle = () => {
@@ -2553,6 +2600,7 @@ document.getElementById('scanForm').addEventListener('submit', async (e) => {
         const price = env.scan_price || 300;
         const sym = curr === 'NGN' ? '₦' : '$';
         const fmt = (n) => curr === 'NGN' ? n.toLocaleString() : n.toFixed(2);
+        window.BUNDLE_SYM = sym;
 
         document.getElementById('billingRateValue').textContent = fmt(price);
         document.querySelectorAll('.bundleCurr').forEach(el => el.textContent = sym);
@@ -2560,16 +2608,17 @@ document.getElementById('scanForm').addEventListener('submit', async (e) => {
         document.getElementById('billingPricePro').textContent = `${sym}${fmt(price)}`;
         document.getElementById('bundleRateLabel').textContent = `${sym}${fmt(price)}`;
 
-        const elitePrice = Math.round(price * 0.83);
+        const elitePrice = Math.round(price * (1 - 0.15));
         document.getElementById('billingPriceElite').textContent = `${sym}${fmt(elitePrice)}`;
 
         const bundles = [50, 150, 500].map(c => ({ credits: c, ...window.getBundlePrice(c) }));
         bundles.forEach(b => {
             document.getElementById(`bundlePerScan${b.credits}`).textContent = `${sym}${fmt(b.per)} / scan`;
+            const discEl = document.getElementById(`bundleDiscount${b.credits}`);
+            if (discEl) discEl.textContent = b.discount > 0 ? `${Math.round(b.discount*100)}% off` : '';
             document.getElementById(`bundleTotal${b.credits}`).textContent = `${sym}${fmt(b.total)}`;
         });
 
-        // click default 50-scan bundle
         const defaultCard = document.querySelector('#topUpModal .glass-card[data-bundle="50"]');
         if (defaultCard) window.selectBundle(defaultCard);
     };
@@ -2783,12 +2832,13 @@ window.applyPromo = () => {
             const { data: { user } } = await window.KORRA_DB.auth.getUser();
             const currency = (window.ENV && window.ENV.currency) || 'NGN';
 
+            const discount = selectedBundle.discount || 0;
             const handler = PaystackPop.setup({
                 key: CONFIG.paystack,
                 email: user.email,
                 amount: selectedBundle.price * 100,
                 currency: currency,
-                metadata: { user_id: userId, type: 'bundle', credits: selectedBundle.credits },
+                metadata: { user_id: userId, type: 'bundle', credits: selectedBundle.credits, discount: discount },
                 callback: onPaystackSuccess,
                 onClose: () => {
                     btn.disabled = false;

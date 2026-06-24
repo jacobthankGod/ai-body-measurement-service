@@ -27,9 +27,10 @@ paystack_service = PaystackService(
 
 class InitializePaymentRequest(BaseModel):
     """Request to initialize a Paystack payment"""
-    tier: str  # tailor_pro, tailor_elite, enterprise
+    tier: str  # pro, elite, custom
     email: str
     currency: str = "NGN"  # Default to Nigerian Naira
+    quantity: int = 50  # number of scans (used for custom/elite tiers)
 
 
 class PaymentResponse(BaseModel):
@@ -91,13 +92,26 @@ def get_scan_price() -> tuple:
         label = str(price)
     return price, curr, label
 
+def get_discount_rate(quantity: int) -> float:
+    if quantity >= 2000:
+        return 0.25
+    elif quantity > 500:
+        return 0.20
+    elif quantity == 500:
+        return 0.15
+    elif quantity >= 150:
+        return 0.10
+    else:
+        return 0.0
+
 def get_tier_prices() -> dict:
-    """Return tier prices in minor currency units (kobo/cents)."""
+    """Return tier prices per scan in local currency."""
     price, _, _ = get_scan_price()
     return {
-        'tailor_pro': int(price * 100),
-        'tailor_elite': int(price * 100),
-        'enterprise': int(price * 100)
+        'pro': price,
+        'elite': price,
+        'enterprise': price,
+        'custom': price
     }
 
 
@@ -107,18 +121,28 @@ async def initialize_payment(
     user: dict = Depends(get_current_user)
 ):
     """
-    Initialize a Paystack payment session - Global flat $1 per scan.
+    Initialize a Paystack payment session.
     Returns authorization URL for customer to complete payment.
     """
-    tier_prices = get_tier_prices()
-    if payload.tier not in tier_prices:
-        raise HTTPException(
-            status_code=400,
-            detail=f"Invalid tier. Use: {', '.join(tier_prices.keys())}"
-        )
-    
     price, curr, _ = get_scan_price()
-    amount = tier_prices[payload.tier]
+    
+    # Determine quantity and discount
+    qty = payload.quantity
+    if payload.tier == 'elite':
+        qty = 500
+        discount = 0.15
+    elif payload.tier == 'custom':
+        if qty < 501:
+            raise HTTPException(status_code=400, detail="Custom tier requires quantity >= 501")
+        discount = get_discount_rate(qty)
+    elif payload.tier == 'pro':
+        qty = max(qty, 1)
+        discount = 0.0
+    else:
+        raise HTTPException(status_code=400, detail=f"Invalid tier. Use: pro, elite, custom")
+    
+    total_price = int(price * qty * (1 - discount))  # in NGN
+    amount = total_price * 100  # in kobo
     
     # Initialize payment with Paystack
     callback_url = os.getenv('PAYSTACK_CALLBACK_URL')
@@ -130,6 +154,8 @@ async def initialize_payment(
         callback_url=callback_url,
         metadata={
             'tier': payload.tier,
+            'quantity': qty,
+            'discount': discount,
             'api_key': user['api_key'],
             'price_per_scan': price,
             'timestamp': datetime.now().isoformat()
