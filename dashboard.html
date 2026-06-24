@@ -2287,7 +2287,7 @@ window.loadSettings = async () => {
 async function init() {
       // FETCH PUBLIC CONFIG (PAYSTACK KEY) FROM SERVER
       try {
-          const configRes = await fetch('/api/v2/payments/config');
+          const configRes = await fetch('/api/v2/config');
           if (configRes.ok) {
               const configData = await configRes.json();
               if (configData.status && configData.data.paystack_public_key) {
@@ -2307,7 +2307,7 @@ async function init() {
       
       // Fetch public config (includes Paystack key from environment variables)
       try {
-          const configRes = await fetch('/api/v2/payments/config');
+          const configRes = await fetch('/api/v2/config');
           if (configRes.ok) {
               const configData = await configRes.json();
               if (configData.status && configData.data.paystack_public_key) {
