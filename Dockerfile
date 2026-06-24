@@ -37,11 +37,11 @@ RUN mkdir -p /app/data/ansur_processed /app/api/models/imputation
 # Copy the rest of the application
 COPY . .
 
-# Environment variables for Cloud Run
+# Environment variables for AWS EC2 / Docker
 ENV PORT=8080
 ENV PYTHONUNBUFFERED=1
 ENV ENVIRONMENT=production
 
 # Command to run the application
-# We use the dynamic PORT variable provided by Cloud Run
+# Uses PORT env var (set by Docker or EC2 systemd service)
 CMD ["sh", "-c", "uvicorn api.main:app --host 0.0.0.0 --port ${PORT} --workers 1"]

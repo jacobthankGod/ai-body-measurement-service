@@ -45,12 +45,12 @@ class RunModel(object):
             config = tf.ConfigProto()
             config.gpu_options.allow_growth = True
 
-            # KORRA CLOUD HARDENING: CPU & Memory Throttling for Render 512MB
+            # KORRA CLOUD HARDENING: CPU & Memory Throttling for EC2 t3.micro
             # Limit parallelism to prevent starving the FastAPI event loop
             config.intra_op_parallelism_threads = 1
             config.inter_op_parallelism_threads = 1
 
-            # Limit memory usage for Render tiers
+            # Limit memory usage for EC2 tiers
             config.gpu_options.per_process_gpu_memory_fraction = 0.2
 
             self.sess = tf.Session(config=config)

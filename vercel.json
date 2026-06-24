@@ -1,4 +1,5 @@
 {
+  "_deprecated": "AWS EC2 (Docker) is the primary deployment target. This config is preserved for reference only.",
   "build": {
     "pre": "rm -rf __pycache__ api/__pycache__ api/services/__pycache__",
     "env": {

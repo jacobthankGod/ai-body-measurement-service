@@ -102,7 +102,7 @@ if __name__ == "__main__":
     gender = sys.argv[4]
     mesh_out = sys.argv[5] if len(sys.argv) > 5 else None
 
-    # Force single threaded to save memory on Render
+    # Force single threaded to save memory on EC2 t3.micro
     os.environ["OMP_NUM_THREADS"] = "1"
     os.environ["TF_CPP_MIN_LOG_LEVEL"] = "3"
 

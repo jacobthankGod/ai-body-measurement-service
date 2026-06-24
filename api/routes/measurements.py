@@ -22,7 +22,7 @@ from typing import Dict, Optional
 from pathlib import Path
 from fastapi import APIRouter, UploadFile, File, Form, Header, HTTPException, Depends, BackgroundTasks
 
-# Global Concurrency Throttle: Only 1 AI process at a time on 512MB RAM
+# Global Concurrency Throttle: Only 1 AI process at a time on t3.micro 1GiB RAM
 _AI_SEMAPHORES = {}
 
 def get_ai_semaphore():
@@ -32,7 +32,6 @@ def get_ai_semaphore():
         _AI_SEMAPHORES[loop] = asyncio.Semaphore(1)
     return _AI_SEMAPHORES[loop]
 
-from api.services.mediapipe_measurement_engine import extract_measurements_from_dual_photos as fallback_extract
 from api.services.vision_guard import VisionGuard
 from api.services.mesh_exporter import MeshExporter
 from api.services.database_service import DatabaseService
@@ -168,15 +167,7 @@ async def run_extraction_subprocess_cli(task_id: str, front_path: str, side_path
             if returncode != 0:
                 err_msg = stderr.decode() if stderr else "Unknown exit"
                 logger.error(f"❌ AI PROCESS CRASHED: {err_msg}")
-                # Fallback to MediaPipe (which doesn't use TF)
-                from api.services.mediapipe_measurement_engine import extract_measurements_from_dual_photos as fallback_extract
-                with open(front_path, 'rb') as f: front_arr = np.array(Image.open(f))
-                with open(side_path, 'rb') as f: side_arr = np.array(Image.open(f))
-                measurements, landmarks = fallback_extract(front_arr, side_arr, height, gender)
-                body_shape = "Standard"
-                size_rec = "M"
-                hmr_error = f"AI Subprocess Crashed (RC {returncode}): {err_msg[:200]}"
-                mesh_url = None
+                return {"status": "failed", "error": f"AI Subprocess Crashed (RC {returncode}): {err_msg[:200]}"}
             else:
                 try:
                     # Find JSON in stdout (in case there's other output)
@@ -195,15 +186,7 @@ async def run_extraction_subprocess_cli(task_id: str, front_path: str, side_path
                         raise Exception(data.get("error", "Unknown error in subprocess"))
                 except Exception as e:
                     logger.error(f"❌ FAILED TO PARSE AI OUTPUT: {e}")
-                    # Fallback
-                    from api.services.mediapipe_measurement_engine import extract_measurements_from_dual_photos as fallback_extract
-                    with open(front_path, 'rb') as f: front_arr = np.array(Image.open(f))
-                    with open(side_path, 'rb') as f: side_arr = np.array(Image.open(f))
-                    measurements, landmarks = fallback_extract(front_arr, side_arr, height, gender)
-                    body_shape = "Standard"
-                    size_rec = "M"
-                    hmr_error = f"Parse Error: {str(e)}"
-                    mesh_url = None
+                    return {"status": "failed", "error": f"Parse Error: {str(e)}"}
 
             # 3. CLEANUP TEMP FILES
             if os.path.exists(front_path): os.remove(front_path)
@@ -241,7 +224,7 @@ async def run_extraction_task(task_id: str, front_bytes: bytes, side_bytes: byte
         cleanup_task_queue()
         update_task(task_id, {"status": "processing"})
 
-        # 1. DISK-BASED IPC (Render 512MB RAM protection)
+        # 1. DISK-BASED IPC (EC2 t3.micro 1GiB RAM protection)
         tmp_dir = BASE_DIR / "data" / "tmp"
         tmp_dir.mkdir(exist_ok=True)
         f_path = str(tmp_dir / f"f_{task_id}.png")
@@ -289,7 +272,7 @@ async def run_extraction_task(task_id: str, front_bytes: bytes, side_bytes: byte
                     if merchant_profile.data:
                         merchant_email = merchant_profile.data.get("email")
                         merchant_name = merchant_profile.data.get("company_name") or "Your tailor"
-                        host = os.environ.get("RENDER_EXTERNAL_URL", "https://korra.work")
+                        host = os.environ.get("EXTERNAL_URL", "https://korra.work")
                         await email_service.send_scan_completed_email(
                             to_email=merchant_email,
                             merchant_name=merchant_name,

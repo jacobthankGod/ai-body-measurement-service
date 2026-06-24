@@ -1,7 +1,8 @@
-# AI Body Scan SaaS - Vercel Optimized Dependencies
+# AI Body Scan SaaS - AWS EC2 Optimized Dependencies (Alternative)
 # ============================================
-# Lean dependencies for Vercel serverless deployment
-# Removed heavy ML libraries that cause crashes
+# Lean dependencies for containerized deployment
+# NOTE: For full ML engine, use requirements.txt instead
+# This file is kept for reference/migration purposes only
 
 # Web Framework (FastAPI) - Core only
 fastapi==0.109.0
@@ -13,25 +14,11 @@ httpx==0.26.0
 pydantic==2.5.3
 pydantic-settings==2.1.0
 
-# Database & Deployment
+# Database
 supabase==2.3.7
 postgrest==0.16.2
 
 # Basic utilities
 python-dotenv==1.0.0
 
-# Payment Processing (optional - can be lazy loaded)
-# paystack-python==0.2.3
-
-# NOTE: For AI body scanning, use client-side MediaPipe or 
-# separate ML service. DO NOT include these in serverless:
-# - mediapipe (very heavy, causes crashes)
-# - tensorflow (too large for serverless)
-# - opencv-python-headless (can cause issues)
-# - numpy (works but heavy)
-
-# For local development, use full requirements.txt
-# For production AI features, consider:
-# 1. Using a separate ML API endpoint
-# 2. Using Vercel ML (Beta)
-# 3. Using a dedicated backend (Render, Railway, etc.)
+# For production, use requirements.txt with full ML support on EC2 Docker

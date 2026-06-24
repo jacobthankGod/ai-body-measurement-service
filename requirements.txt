@@ -1,4 +1,4 @@
-# AI Body Scan SaaS - Full ML Engine (Google Cloud Optimized)
+# AI Body Scan SaaS - Full ML Engine (AWS EC2 Optimized)
 # ==========================================================
 # Strict version pinning to prevent pip backtracking loops
 

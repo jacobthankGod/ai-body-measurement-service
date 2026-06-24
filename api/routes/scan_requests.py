@@ -74,7 +74,7 @@ async def create_scan_request(
             raise HTTPException(status_code=500, detail="Failed to create scan request")
         
         # Send email to client
-        host = os.environ.get("RENDER_EXTERNAL_URL", "https://korra.work")
+        host = os.environ.get("EXTERNAL_URL", "https://korra.work")
         scan_url = f"{host}/share?request={token}"
         
         try:

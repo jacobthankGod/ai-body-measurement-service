@@ -28,7 +28,7 @@ async def send_scan_link(
     if not token:
         raise HTTPException(status_code=500, detail="Internal Persistence Error.")
 
-    host = os.environ.get("RENDER_EXTERNAL_URL", "https://korra.work")
+    host = os.environ.get("EXTERNAL_URL", "https://korra.work")
     scan_url = f"{host}/share?token={token}"
 
     # Use Brevo for email delivery

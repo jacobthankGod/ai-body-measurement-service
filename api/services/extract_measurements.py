@@ -17,7 +17,7 @@ from typing import Dict, Optional, Tuple, List
 # --- KORRA DIAGNOSTICS ---
 logger = logging.getLogger("KORRA_HMR_EXTRACTION")
 
-# Hardened Package Resolution for Render/Vercel
+# Hardened Package Resolution for AWS EC2 / Docker
 SRC_PATH = Path(__file__).parent.resolve() / "src"
 if str(SRC_PATH) not in sys.path: sys.path.insert(0, str(SRC_PATH))
 if str(SRC_PATH.parent) not in sys.path: sys.path.insert(0, str(SRC_PATH.parent))
