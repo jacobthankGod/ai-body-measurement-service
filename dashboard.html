@@ -786,9 +786,9 @@
           <div style="display:flex; justify-content:space-between; align-items:center"><div><div style="font-size:18px; font-weight:900">500 Scan Bundle</div><div style="font-size:12px; color:var(--Neutral-400)" id="bundlePerScan500"><span class="bundleCurr">₦</span>200 / scan</div></div><div style="text-align:right"><div style="font-size:20px; font-weight:900; color:var(--Mint)" id="bundleTotal500"><span class="bundleCurr">₦</span>100,000</div><div style="font-size:10px; color:var(--Mint); margin-top:2px" id="bundleDiscount500">15% off</div></div></div>
         </div>
         <div class="glass-card" style="padding:20px; cursor:pointer; border:1px solid rgba(87,215,192,0.2);" data-bundle="custom" onclick="window.selectBundle(this)">
-          <div style="display:flex; justify-content:space-between; align-items:center"><div><div style="font-size:18px; font-weight:900; color:var(--Mint);">High Volume <span style="font-size:9px; font-weight:700; color:var(--Neutral-500); letter-spacing:0.05em; background:rgba(87,215,192,0.1); padding:2px 8px; border-radius:4px; margin-left:8px;">UP TO 25% OFF</span></div><div style="font-size:12px; color:var(--Neutral-400)"><span class="bundle-per-scan bundleCurr">₦</span><span class="bundle-per-scan">685</span> / scan</div></div><div style="text-align:right"><div style="font-size:20px; font-weight:900; color:var(--Mint)" class="bundle-total"><span class="bundleCurr">₦</span><span>—</span></div><div style="font-size:10px; color:var(--Mint); margin-top:2px" class="bundle-discount">Enter quantity</div></div></div>
+          <div style="display:flex; justify-content:space-between; align-items:center"><div><div style="font-size:18px; font-weight:900; color:var(--Mint);">Custom Credits <span style="font-size:9px; font-weight:700; color:var(--Neutral-500); letter-spacing:0.05em; background:rgba(87,215,192,0.1); padding:2px 4px 2px 8px; border-radius:4px; margin-left:8px;">Any qty <span style="color:var(--Mint);">up to 25% off</span></span></div><div style="font-size:12px; color:var(--Neutral-400)"><span class="bundle-per-scan bundleCurr">₦</span><span class="bundle-per-scan">685</span> / scan</div></div><div style="text-align:right"><div style="font-size:20px; font-weight:900; color:var(--Mint)" class="bundle-total"><span class="bundleCurr">₦</span><span>—</span></div><div style="font-size:10px; color:var(--Neutral-500); margin-top:2px" class="bundle-discount">Enter quantity</div></div></div>
           <div class="custom-bundle-input" style="margin-top:12px; display:none;">
-            <input type="number" class="custom-bundle-qty input-field" min="501" placeholder="Enter quantity (501+)..." style="margin-bottom:0;" oninput="window.updateCustomBundle(this)" onclick="event.stopPropagation()">
+            <input type="number" class="custom-bundle-qty input-field" min="1" placeholder="Enter any quantity..." style="margin-bottom:0;" oninput="window.updateCustomBundle(this)" onclick="event.stopPropagation()">
           </div>
         </div>
       </div>
@@ -2574,18 +2574,19 @@ document.getElementById('scanForm').addEventListener('submit', async (e) => {
         const totalEl = card.querySelector('.bundle-total');
         const discEl = card.querySelector('.bundle-discount');
         const price = (window.ENV && window.ENV.scan_price) || 300;
-        if (qty < 501) {
+        if (qty < 1) {
             perEl.textContent = '— / scan';
             totalEl.textContent = '—';
-            discEl.textContent = 'Enter 501+';
+            discEl.textContent = 'Enter quantity';
             return;
         }
         const disc = window.getBundleDiscount(qty);
         const per = Math.round(price * (1 - disc));
         const total = per * qty;
-        perEl.textContent = `${window.BUNDLE_SYM || '₦'}${per.toLocaleString()} / scan`;
-        totalEl.textContent = `${window.BUNDLE_SYM || '₦'}${total.toLocaleString()}`;
+        perEl.innerHTML = `${window.BUNDLE_SYM || '₦'}${per.toLocaleString()} / scan`;
+        totalEl.innerHTML = `${window.BUNDLE_SYM || '₦'}${total.toLocaleString()}`;
         discEl.textContent = disc > 0 ? `${Math.round(disc*100)}% off` : '';
+        discEl.style.color = disc > 0 ? 'var(--Mint)' : 'var(--Neutral-500)';
         selectedBundle = { credits: qty, price: total, discount: disc };
     };
 
