@@ -75,11 +75,13 @@ async def initialize_payment(
     amount = TIER_PRICES[payload.tier]
     
     # Initialize payment with Paystack in USD (cents)
+    callback_url = os.getenv('PAYSTACK_CALLBACK_URL')
     result = paystack_service.initialize_payment(
         email=payload.email,
         amount=amount,
         currency="USD",  # Always USD - global flat rate
         reference=None,  # Let Paystack generate one
+        callback_url=callback_url,
         metadata={
             'tier': payload.tier,
             'api_key': user['api_key'],
@@ -259,6 +261,27 @@ async def get_subscription_status(
             "remaining": quota['remaining'],
             "reset_date": quota['reset_date'],
             "api_key": user['api_key'][:8] + "..." # Masked for security
+        }
+    }
+
+
+# ==========================================
+# PUBLIC CONFIG ENDPOINT
+# ==========================================
+
+@router.get("/config")
+async def get_public_config():
+    """
+    Return public configuration for frontend - includes Paystack public key.
+    This endpoint is intentionally public (no auth required) as it only exposes safe config.
+    """
+    return {
+        "status": True,
+        "data": {
+            "paystack_public_key": os.getenv('PAYSTACK_PUBLIC_KEY', ''),
+            "environment": os.getenv('ENVIRONMENT', 'production'),
+            "flat_rate_usd": GLOBAL_SCAN_PRICE,
+            "currency": "USD"
         }
     }
 

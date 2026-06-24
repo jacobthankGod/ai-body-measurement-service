@@ -19,7 +19,7 @@ class AdminService:
             "NG": 1, # Nigeria
             "GH": 1, # Ghana
             "KE": 1, # Kenya
-            "US": 1, # USA
+            "US": 5, # USA
             "UK": 1, # United Kingdom
             "FR": 1, # France/EU
             "DEFAULT": 1  # Global constant $0.50

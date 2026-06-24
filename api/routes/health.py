@@ -10,6 +10,7 @@ import urllib.request
 import tarfile
 import logging
 from pathlib import Path
+from datetime import datetime
 
 router = APIRouter()
 logger = logging.getLogger("KORRA_HEALTH")
@@ -43,9 +44,10 @@ async def health_check():
     except: pass
 
     return {
-        "status": "active",
+        "status": "healthy",
+        "timestamp": datetime.utcnow().isoformat(),
         "version": "2.1.15",
-        "environment": os.environ.get("RENDER_EXTERNAL_URL", "production"),
+        "environment": os.environ.get("EXTERNAL_URL", "production"),
         "platform": platform.system(),
         "acceleration": "GPU-Enabled" if gpu_active else "CPU-Stable (Optimized)",
         "gpu_details": gpu_details,

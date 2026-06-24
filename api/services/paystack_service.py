@@ -39,7 +39,8 @@ class PaystackService:
         amount: int,
         reference: Optional[str] = None,
         metadata: Optional[Dict[str, Any]] = None,
-        currency: str = "USD"
+        currency: str = "USD",
+        callback_url: Optional[str] = None
     ) -> Dict[str, Any]:
         """
         Initialize a payment transaction with Paystack.
@@ -50,6 +51,7 @@ class PaystackService:
             reference: Optional custom reference
             metadata: Optional metadata
             currency: Currency code
+            callback_url: URL to redirect after payment
         
         Returns:
             Response from Paystack API
@@ -62,6 +64,9 @@ class PaystackService:
         
         if reference:
             payload['reference'] = reference
+        
+        if callback_url:
+            payload['callback_url'] = callback_url
         
         if metadata:
             payload['metadata'] = metadata

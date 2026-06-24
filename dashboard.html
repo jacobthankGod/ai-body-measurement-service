@@ -840,8 +840,7 @@
   <div class="modal-overlay" id="qrPosterModal">
     <div class="modal-card" style="max-width:500px; text-align:center; padding:60px">
       <div style="margin-bottom:32px">
-          <div class="logo-mark" style="margin: 0 auto 12px;"></div>
-          <div class="logo-text" style="font-size:14px; letter-spacing:0.2em; opacity:0.6">UNICORN OS</div>
+          <img src="/assets/Korra_logo_final.png" alt="KORRA" style="height:24px; width:auto; display:block; margin:0 auto 12px;">
       </div>
       <div style="background:#fff; padding:40px; border-radius:16px; margin-bottom:32px; display:inline-block"><div id="posterQr" style="width:200px; height:200px; background:#eee; display:flex; align-items:center; justify-content:center; color:#000; font-size:10px; font-weight:900">GENERATE QR...</div></div>
       <h2 style="font-size:32px; margin-bottom:12px; letter-spacing:-0.05em">SCAN TO START</h2>
@@ -852,9 +851,8 @@
 
   <header>
     <div class="container">
-      <a class="logo" href="/">
-        <div class="logo-mark"></div>
-        <div class="logo-text">KORRA</div>
+<a class="logo" href="/">
+        <img src="/assets/Korra_logo_final.png" alt="KORRA" style="height:32px; width:auto;">
       </a>
       <div class="header-actions">
         <div class="credit-badge" id="headerCreditMonitor"><span>CREDITS:</span> <b id="headerCredits">0</b></div>
@@ -1558,9 +1556,9 @@
   <script src="/assets/korra_export.js"></script>
 
   <script>
-    // --- ENV & CONFIG ---
-    const PAYSTACK_PUBLIC_KEY = window.ENV?.PAYSTACK_PUBLIC_KEY || 'pk_test_placeholder';
-const CONFIG = { url: 'https://blsettabymllulsxtziw.supabase.co', key: 'sb_publishable_miCOIXHtlxLkfDgpwE0N-g_BA1Q-x8y', paystack: PAYSTACK_PUBLIC_KEY };
+// --- ENV & CONFIG ---
+    // Placeholder - will be fetched in init() after auth
+    const CONFIG = { url: 'https://blsettabymllulsxtziw.supabase.co', key: 'sb_publishable_miCOIXHtlxLkfDgpwE0N-g_BA1Q-x8y', paystack: '' };
 
 // --- GLOBAL FLAT BILLING: $1 per scan (constant worldwide) ---
     window.GLOBAL_PRICE = 1.00; // $1 flat rate - same for all regions
@@ -2287,7 +2285,40 @@ window.loadSettings = async () => {
     };
 
 async function init() {
+      // FETCH PUBLIC CONFIG (PAYSTACK KEY) FROM SERVER
+      try {
+          const configRes = await fetch('/api/v2/payments/config');
+          if (configRes.ok) {
+              const configData = await configRes.json();
+              if (configData.status && configData.data.paystack_public_key) {
+                  // Set global ENV for frontend use
+                  window.ENV = {
+                      PAYSTACK_PUBLIC_KEY: configData.data.paystack_public_key,
+                      environment: configData.data.environment
+                  };
+                  console.log('🔑 Paystack Key Loaded:', configData.data.paystack_public_key.substring(0, 12) + '...');
+              }
+          }
+      } catch (e) {
+          console.warn('⚠️ Could not fetch Paystack config, using fallback');
+      }
+      
       NetworkGuard.init();
+      
+      // Fetch public config (includes Paystack key from environment variables)
+      try {
+          const configRes = await fetch('/api/v2/payments/config');
+          if (configRes.ok) {
+              const configData = await configRes.json();
+              if (configData.status && configData.data.paystack_public_key) {
+                  CONFIG.paystack = configData.data.paystack_public_key;
+                  console.log('🔑 Paystack key loaded from API:', CONFIG.paystack.substring(0, 12) + '...');
+              }
+          }
+      } catch (e) {
+          console.warn('⚠️ Could not fetch Paystack config, using fallback');
+      }
+      
       if (typeof window.supabase === 'undefined') { setTimeout(init, 500); return; }
 
       const resilientFetch = async (url, options = {}) => {

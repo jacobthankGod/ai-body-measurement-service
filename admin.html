@@ -330,7 +330,7 @@
               <div style="margin-bottom:32px">
                 <h4 style="font-size:10px; font-weight:900; color:var(--Mint); margin-bottom:12px">STANDARD EMBED</h4>
                 <div style="background:#000; padding:20px; border:1px solid var(--Glass-Border); border-radius:12px;">
-<code style="color:var(--Mint); font-size:12px; word-break:break-all">&lt;script src="https://korra-436814609100.us-central1.run.app/assets/korra-widget.js"&gt;&lt;/script&gt;</code>
+<code style="color:var(--Mint); font-size:12px; word-break:break-all">&lt;script src="https://korra.work/assets/korra-widget.js"&gt;&lt;/script&gt;</code>
                 </div>
               </div>
 
@@ -729,6 +729,14 @@ console.warn(`🔄 Sync failure (${err.message}). Retrying ${attempt+1}/12 in ${
         const { data: { session }, error: sErr } = await NetworkGuard.retry(() => window.KORRA_DB.auth.getSession());
         if (sErr || !session) { window.location.href = '/signin'; return; }
 
+        // Verify admin role via API (industry standard - no hardcoded keys)
+        try {
+          const adminCheck = await fetch('/api/v2/admin/check-admin', {
+            headers: { 'Authorization': `Bearer ${session.access_token}` }
+          });
+          if (!adminCheck.ok) { window.location.href = '/signin'; return; }
+        } catch { window.location.href = '/signin'; return; }
+
         const loading = document.getElementById('loadingOverlay');
         if (loading) loading.style.display = 'none';
 
@@ -798,7 +806,7 @@ console.warn(`🔄 Sync failure (${err.message}). Retrying ${attempt+1}/12 in ${
                 try {
                     const res = await fetch('/api/v2/measurements/extract', {
                         method: 'POST',
-                        headers: { 'X-API-Key': 'korra_admin_auth_01J0PK82X92K4' },
+                        headers: { 'Authorization': `Bearer ${session.access_token}` },
                         body: fd
                     });
                     if (res.ok) { const d = await res.json(); pollTask(d.task_id); }

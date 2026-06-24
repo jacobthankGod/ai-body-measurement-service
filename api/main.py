@@ -1,5 +1,5 @@
 """
-KORRA AI - Main FastAPI Entry Point (Cloud Run Optimized)
+KORRA AI - Main FastAPI Entry Point (AWS EC2 Optimized)
 ========================================================
 Mounts all routes, handles global middleware, and serves static frontend pages.
 """
@@ -11,7 +11,7 @@ from fastapi.responses import JSONResponse, FileResponse, Response
 from fastapi.staticfiles import StaticFiles
 from pathlib import Path
 
-from api.routes import auth, measurements, health, sharing, qrcode, payments, subscriptions, admin, invoices, webhooks, notifications, scan_requests
+from api.routes import auth, measurements, health, sharing, qrcode, payments, subscriptions, admin, admin_auth, invoices, webhooks, notifications, scan_requests
 from api.config import CORS_ORIGINS, FEATURES
 
 # Configure Logging
@@ -81,6 +81,7 @@ app.include_router(invoices.router, prefix="/api/v2", tags=["Invoices"])
 app.include_router(webhooks.router, prefix="/api/v2", tags=["Webhooks"])
 app.include_router(notifications.router, prefix="/api/v2", tags=["Notifications"])
 app.include_router(scan_requests.router, prefix="/api/v2", tags=["ScanRequests"])
+app.include_router(admin_auth.router, prefix="/api/v2", tags=["Admin"])
 
 # --- STATIC PAGE SERVING ---
 # PHASE 502 FIX: Enhanced static file serving with explicit route logging
@@ -197,6 +198,6 @@ async def global_exception_handler(request: Request, exc: Exception):
 
 if __name__ == "__main__":
     import uvicorn
-    # Use environment variable for port (required for Cloud Run)
+    # Use environment variable for port (required for Docker/EC2)
     port = int(os.environ.get("PORT", 8080))
     uvicorn.run(app, host="0.0.0.0", port=port)
