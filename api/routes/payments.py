@@ -6,9 +6,14 @@ Including: localized pricing, VAT calculation, invoice generation.
 """
 from fastapi import APIRouter, HTTPException, Header, Depends, Request, Query
 from pydantic import BaseModel
-from datetime import datetime
+from datetime import datetime, timedelta
 from typing import Optional
 import os
+import asyncio
+import httpx
+import logging
+
+logger = logging.getLogger(__name__)
 
 from middleware.subscription_check import validate_subscription, get_user_quota
 from api.services.paystack_service import PaystackService
@@ -44,22 +49,56 @@ def get_current_user(x_api_key: str = Header(None)):
     return {'api_key': x_api_key}
 
 
-# Currency setting (NGN = always supported by Paystack; USD requires enabling in dashboard)
-PAYMENT_CURRENCY = os.getenv('PAYMENT_CURRENCY', 'NGN')
+# --- Real-time exchange rate ---
+# Base price: $0.50 USD per scan (constant)
+USD_BASE_PRICE = 0.50
 
-# Per-scan price in the configured currency's major unit (e.g. USD or NGN)
-# For NGN: 300 means ₦300/scan; for USD: 0.50 means $0.50/scan
-SCAN_PRICE = float(os.getenv('SCAN_PRICE', '300'))
+# Cached rate state
+USDNGN_RATE = float(os.getenv('FALLBACK_USDNGN_RATE', '1500'))
+last_rate_fetch = datetime.min
+RATE_CACHE_TTL = timedelta(hours=1)
 
-# Paystack amounts in minor units (cents for USD, kobo for NGN)
-TIER_PRICES = {
-    'tailor_pro': int(SCAN_PRICE * 100),        # X kobo/cents per scan
-    'tailor_elite': int(SCAN_PRICE * 100),
-    'enterprise': int(SCAN_PRICE * 100)
-}
+async def fetch_usd_ngn_rate() -> float:
+    """Fetch live USD/NGN rate from open.er-api.com. Cached for 1 hour."""
+    global USDNGN_RATE, last_rate_fetch
+    now = datetime.now()
+    if now - last_rate_fetch < RATE_CACHE_TTL:
+        return USDNGN_RATE
+    try:
+        async with httpx.AsyncClient(timeout=10) as client:
+            resp = await client.get('https://open.er-api.com/v6/latest/USD')
+            resp.raise_for_status()
+            data = resp.json()
+            rate = data.get('rates', {}).get('NGN')
+            if rate and isinstance(rate, (int, float)):
+                USDNGN_RATE = float(rate)
+                last_rate_fetch = now
+                logger.info(f"💰 Live USD/NGN rate fetched: {USDNGN_RATE}")
+            else:
+                logger.warning(f"⚠️ NGN rate not found in response, using fallback {USDNGN_RATE}")
+    except Exception as e:
+        logger.warning(f"⚠️ Failed to fetch exchange rate: {e}, using fallback {USDNGN_RATE}")
+    return USDNGN_RATE
 
-# Display label for price
-SCAN_PRICE_LABEL = f"{SCAN_PRICE:.0f}" if SCAN_PRICE == int(SCAN_PRICE) else f"{SCAN_PRICE:.2f}"
+def get_scan_price() -> tuple:
+    """Return (scan_price_in_local, currency, label) based on current rate."""
+    curr = os.getenv('PAYMENT_CURRENCY', 'NGN')
+    if curr == 'USD':
+        price = USD_BASE_PRICE
+        label = f"{price:.2f}"
+    else:
+        price = round(USD_BASE_PRICE * USDNGN_RATE)
+        label = str(price)
+    return price, curr, label
+
+def get_tier_prices() -> dict:
+    """Return tier prices in minor currency units (kobo/cents)."""
+    price, _, _ = get_scan_price()
+    return {
+        'tailor_pro': int(price * 100),
+        'tailor_elite': int(price * 100),
+        'enterprise': int(price * 100)
+    }
 
 
 @router.post("/payments/initialize")
@@ -71,27 +110,28 @@ async def initialize_payment(
     Initialize a Paystack payment session - Global flat $1 per scan.
     Returns authorization URL for customer to complete payment.
     """
-    if payload.tier not in TIER_PRICES:
+    tier_prices = get_tier_prices()
+    if payload.tier not in tier_prices:
         raise HTTPException(
             status_code=400,
-            detail=f"Invalid tier. Use: {', '.join(TIER_PRICES.keys())}"
+            detail=f"Invalid tier. Use: {', '.join(tier_prices.keys())}"
         )
     
-    # Use flat $1 rate - same for all tiers and regions
-    amount = TIER_PRICES[payload.tier]
+    price, curr, _ = get_scan_price()
+    amount = tier_prices[payload.tier]
     
     # Initialize payment with Paystack
     callback_url = os.getenv('PAYSTACK_CALLBACK_URL')
     result = paystack_service.initialize_payment(
         email=payload.email,
         amount=amount,
-        currency=PAYMENT_CURRENCY,
+        currency=curr,
         reference=None,  # Let Paystack generate one
         callback_url=callback_url,
         metadata={
             'tier': payload.tier,
             'api_key': user['api_key'],
-            'price_per_scan': SCAN_PRICE,
+            'price_per_scan': price,
             'timestamp': datetime.now().isoformat()
         }
     )
@@ -281,15 +321,19 @@ async def get_public_config():
     Return public configuration for frontend - includes Paystack public key.
     This endpoint is intentionally public (no auth required) as it only exposes safe config.
     """
+    await fetch_usd_ngn_rate()  # refresh if stale
+    price, curr, label = get_scan_price()
     return {
         "status": True,
         "data": {
             "paystack_public_key": os.getenv('PAYSTACK_PUBLIC_KEY', ''),
             "environment": os.getenv('ENVIRONMENT', 'production'),
-            "flat_rate_usd": SCAN_PRICE if PAYMENT_CURRENCY == 'USD' else 0.50,
-            "currency": PAYMENT_CURRENCY,
-            "scan_price": SCAN_PRICE,
-            "scan_price_label": SCAN_PRICE_LABEL
+            "flat_rate_usd": USD_BASE_PRICE,
+            "currency": curr,
+            "scan_price": price,
+            "scan_price_label": label,
+            "exchange_rate": USDNGN_RATE,
+            "usd_base_price": USD_BASE_PRICE
         }
     }
 
