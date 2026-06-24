@@ -286,7 +286,7 @@ async def get_public_config():
         "data": {
             "paystack_public_key": os.getenv('PAYSTACK_PUBLIC_KEY', ''),
             "environment": os.getenv('ENVIRONMENT', 'production'),
-            "flat_rate_usd": SCAN_PRICE if PAYMENT_CURRENCY == 'USD' else SCAN_PRICE,
+            "flat_rate_usd": SCAN_PRICE if PAYMENT_CURRENCY == 'USD' else 0.50,
             "currency": PAYMENT_CURRENCY,
             "scan_price": SCAN_PRICE,
             "scan_price_label": SCAN_PRICE_LABEL
