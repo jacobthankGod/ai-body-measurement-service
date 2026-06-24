@@ -44,16 +44,22 @@ def get_current_user(x_api_key: str = Header(None)):
     return {'api_key': x_api_key}
 
 
-# Global flat pricing: $0.50 per scan (USD) - constant worldwide
-# Using Paystack cents (1/100 of USD)
+# Currency setting (NGN = always supported by Paystack; USD requires enabling in dashboard)
+PAYMENT_CURRENCY = os.getenv('PAYMENT_CURRENCY', 'NGN')
+
+# Per-scan price in the configured currency's major unit (e.g. USD or NGN)
+# For NGN: 300 means ₦300/scan; for USD: 0.50 means $0.50/scan
+SCAN_PRICE = float(os.getenv('SCAN_PRICE', '300'))
+
+# Paystack amounts in minor units (cents for USD, kobo for NGN)
 TIER_PRICES = {
-    'tailor_pro': 50,        # $0.50 = 50 cents USD (flat rate)
-    'tailor_elite': 50,      # $0.50 = 50 cents USD (same)
-    'enterprise': 50          # $0.50 = 50 cents USD
+    'tailor_pro': int(SCAN_PRICE * 100),        # X kobo/cents per scan
+    'tailor_elite': int(SCAN_PRICE * 100),
+    'enterprise': int(SCAN_PRICE * 100)
 }
 
-# Unified global price constant
-GLOBAL_SCAN_PRICE = 0.50  # $0.50 per scan - same worldwide
+# Display label for price
+SCAN_PRICE_LABEL = f"{SCAN_PRICE:.0f}" if SCAN_PRICE == int(SCAN_PRICE) else f"{SCAN_PRICE:.2f}"
 
 
 @router.post("/payments/initialize")
@@ -74,18 +80,18 @@ async def initialize_payment(
     # Use flat $1 rate - same for all tiers and regions
     amount = TIER_PRICES[payload.tier]
     
-    # Initialize payment with Paystack in USD (cents)
+    # Initialize payment with Paystack
     callback_url = os.getenv('PAYSTACK_CALLBACK_URL')
     result = paystack_service.initialize_payment(
         email=payload.email,
         amount=amount,
-        currency="USD",  # Always USD - global flat rate
+        currency=PAYMENT_CURRENCY,
         reference=None,  # Let Paystack generate one
         callback_url=callback_url,
         metadata={
             'tier': payload.tier,
             'api_key': user['api_key'],
-            'price_per_scan': GLOBAL_SCAN_PRICE,
+            'price_per_scan': SCAN_PRICE,
             'timestamp': datetime.now().isoformat()
         }
     )
@@ -280,8 +286,10 @@ async def get_public_config():
         "data": {
             "paystack_public_key": os.getenv('PAYSTACK_PUBLIC_KEY', ''),
             "environment": os.getenv('ENVIRONMENT', 'production'),
-            "flat_rate_usd": GLOBAL_SCAN_PRICE,
-            "currency": "USD"
+            "flat_rate_usd": SCAN_PRICE if PAYMENT_CURRENCY == 'USD' else SCAN_PRICE,
+            "currency": PAYMENT_CURRENCY,
+            "scan_price": SCAN_PRICE,
+            "scan_price_label": SCAN_PRICE_LABEL
         }
     }
 
