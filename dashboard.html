@@ -442,6 +442,8 @@
     .main-content::-webkit-scrollbar-thumb { background: var(--Glass-Border); border-radius: 10px; }
 
     @media (max-width: 900px) {
+      header { padding: 0 16px; }
+      header .container { padding: 0; }
       .grid-dashboard { grid-template-columns: 1fr !important; height: auto; overflow: visible; }
       .sidebar-nav {
         position: fixed;
@@ -774,13 +776,13 @@
       <h2 style="font-size:24px; margin-bottom:12px">Purchase Credits</h2>
 <p style="color:var(--Neutral-400); margin-bottom:32px"><span id="bundleRateLabel">₦300</span> <span style="color:var(--Neutral-500)">per scan</span></p>
       <div style="display:grid; grid-template-columns: 1fr; gap:16px; margin-bottom:32px">
-        <div class="glass-card" style="padding:20px; cursor:pointer; border-color:var(--Mint)" onclick="window.selectBundle(this, 50, 15000)">
+        <div class="glass-card" style="padding:20px; cursor:pointer; border-color:var(--Mint)" data-bundle="50">
           <div style="display:flex; justify-content:space-between; align-items:center"><div><div style="font-size:18px; font-weight:900">50 Scan Bundle</div><div style="font-size:12px; color:var(--Neutral-400)" id="bundlePerScan50"><span class="bundleCurr">₦</span>300 / scan</div></div><div style="font-size:20px; font-weight:900; color:var(--Mint)" id="bundleTotal50"><span class="bundleCurr">₦</span>15,000</div></div>
         </div>
-        <div class="glass-card" style="padding:20px; cursor:pointer" onclick="window.selectBundle(this, 150, 37500)">
+        <div class="glass-card" style="padding:20px; cursor:pointer" data-bundle="150">
           <div style="display:flex; justify-content:space-between; align-items:center"><div><div style="font-size:18px; font-weight:900">150 Scan Bundle</div><div style="font-size:12px; color:var(--Neutral-400)" id="bundlePerScan150"><span class="bundleCurr">₦</span>250 / scan</div></div><div style="font-size:20px; font-weight:900; color:var(--Mint)" id="bundleTotal150"><span class="bundleCurr">₦</span>37,500</div></div>
         </div>
-        <div class="glass-card" style="padding:20px; cursor:pointer" onclick="window.selectBundle(this, 500, 100000)">
+        <div class="glass-card" style="padding:20px; cursor:pointer" data-bundle="500">
           <div style="display:flex; justify-content:space-between; align-items:center"><div><div style="font-size:18px; font-weight:900">500 Scan Bundle</div><div style="font-size:12px; color:var(--Neutral-400)" id="bundlePerScan500"><span class="bundleCurr">₦</span>200 / scan</div></div><div style="font-size:20px; font-weight:900; color:var(--Mint)" id="bundleTotal500"><span class="bundleCurr">₦</span>100,000</div></div>
         </div>
       </div>
@@ -836,13 +838,29 @@
     </div>
   </div>
 
+  <!-- CUSTOM MODAL SYSTEM -->
+  <div class="modal-overlay" id="customModal" style="display:none; z-index:99999;">
+    <div class="modal-card" style="max-width:420px; text-align:center; padding:40px 32px;">
+      <div id="customModalIcon" style="font-size:32px; margin-bottom:16px;"></div>
+      <h3 id="customModalTitle" style="font-size:18px; margin-bottom:8px; letter-spacing:-0.03em;"></h3>
+      <p id="customModalMsg" style="font-size:14px; color:var(--Neutral-400); margin-bottom:24px; line-height:1.5;"></p>
+      <div id="customModalInputWrap" style="display:none; margin-bottom:20px;">
+        <input type="text" id="customModalInput" class="input-field" placeholder="Enter value..." style="margin-bottom:0;">
+      </div>
+      <div style="display:flex; gap:12px;">
+        <button id="customModalCancel" class="btn-outline" style="flex:1; display:none;">Cancel</button>
+        <button id="customModalOk" class="btn-primary" style="flex:1;">OK</button>
+      </div>
+    </div>
+  </div>
+
   <!-- QR POSTER MODAL -->
   <div class="modal-overlay" id="qrPosterModal">
     <div class="modal-card" style="max-width:500px; text-align:center; padding:60px">
       <div style="margin-bottom:32px">
           <div style="display:flex; align-items:center; justify-content:center; gap:8px; margin:0 auto 12px;">
             <img src="/assets/Korra_logo_final.png" alt="Korra" style="height:28px; width:auto;">
-            <span style="font-size:16px; font-weight:900; letter-spacing:-0.03em;">Korra</span>
+            <span style="font-size:16px; font-weight:900; letter-spacing:-0.03em; color:var(--Mint);">Korra</span>
           </div>
       </div>
       <div style="background:#fff; padding:40px; border-radius:16px; margin-bottom:32px; display:inline-block"><div id="posterQr" style="width:200px; height:200px; background:#eee; display:flex; align-items:center; justify-content:center; color:#000; font-size:10px; font-weight:900">GENERATE QR...</div></div>
@@ -856,7 +874,7 @@
     <div class="container">
 <a class="logo" href="/">
         <img src="/assets/Korra_logo_final.png" alt="Korra" style="height:40px; width:auto;">
-        <span style="font-size:22px; font-weight:900; letter-spacing:-0.03em;">Korra</span>
+        <span style="font-size:22px; font-weight:900; letter-spacing:-0.03em; color:var(--Mint);">Korra</span>
       </a>
       <div class="header-actions">
         <div class="credit-badge" id="headerCreditMonitor"><span>CREDITS:</span> <b id="headerCredits">0</b></div>
@@ -1706,7 +1724,7 @@ msg.textContent = feedback; msg.style.background = aligned ? "var(--Mint)" : "rg
     window.openCamera = async (type) => {
       // ORIENTATION GUARD: Force portrait for scan
       if (window.innerHeight < window.innerWidth && window.innerWidth < 900) {
-          alert("Please rotate your device to Portrait mode for the best scan accuracy.");
+          window.showAlert("Please rotate your device to Portrait mode for the best scan accuracy.");
       }
 
       activeCameraType = type; alignmentStartTime = 0; autoSnapTriggered = false; isReviewing = false;
@@ -2186,7 +2204,7 @@ window.loadSettings = async () => {
             if (error) throw error;
             window.LAST_MEASUREMENT_DATA.notes = notes;
             window.showToast("Craftsman notes secured.");
-        } catch(e) { alert("Save failed: " + e.message); }
+        } catch(e) { window.showAlert("Save failed: " + e.message); }
         finally { btn.disabled = false; btn.textContent = "Save Notes"; }
     };
 
@@ -2212,7 +2230,7 @@ window.loadSettings = async () => {
     let vBaseline = null, vLatest = null, baselineData = null, latestData = null;
     window.openComparison = (name) => {
         const scans = masterHistory.filter(h => h.client_name === name);
-        if(scans.length < 2) { alert("2 scans required for comparison."); return; }
+        if(scans.length < 2) { window.showAlert("2 scans required for comparison."); return; }
         const latest = scans[0], baseline = scans[scans.length-1];
         document.getElementById('baselineDate').textContent = new Date(baseline.created_at).toLocaleDateString();
         document.getElementById('latestDate').textContent = new Date(latest.created_at).toLocaleDateString();
@@ -2267,7 +2285,7 @@ window.loadSettings = async () => {
                     count++;
                 }
             }
-            alert(`INDUSTRIAL SYNC: ${count} subjects successfully enrolled.`);
+            window.showAlert(`INDUSTRIAL SYNC: ${count} subjects successfully enrolled.`);
             fetchHistory();
         };
         reader.readAsText(input.files[0]);
@@ -2275,7 +2293,7 @@ window.loadSettings = async () => {
 
     window.requestIndustrialDemo = async () => {
         const email = document.getElementById('userEmail').textContent;
-        alert(`DEMO REQUESTED: Our industrial team will contact you at ${email} within 24 hours.`);
+        window.showAlert(`DEMO REQUESTED: Our industrial team will contact you at ${email} within 24 hours.`);
         try {
             await window.KORRA_DB.from('interest_leads').insert({
                 email: email,
@@ -2294,6 +2312,68 @@ window.loadSettings = async () => {
       sidebar.classList.toggle('collapsed');
       const isCollapsed = sidebar.classList.contains('collapsed');
       localStorage.setItem('korra_sidebar_collapsed', isCollapsed);
+    };
+
+    // ---- CUSTOM MODAL SYSTEM (replaces alert/confirm/prompt) ----
+    window.showModal = ({ icon = '', title = '', message = '', showInput = false, inputValue = '', okText = 'OK', cancelText = 'Cancel', showCancel = false, onOk, onCancel }) => {
+      return new Promise((resolve) => {
+        const overlay = document.getElementById('customModal');
+        document.getElementById('customModalIcon').textContent = icon;
+        document.getElementById('customModalTitle').textContent = title;
+        document.getElementById('customModalMsg').textContent = message;
+        const inputWrap = document.getElementById('customModalInputWrap');
+        const input = document.getElementById('customModalInput');
+        if (showInput) {
+          inputWrap.style.display = 'block';
+          input.value = inputValue;
+        } else {
+          inputWrap.style.display = 'none';
+        }
+        const cancelBtn = document.getElementById('customModalCancel');
+        const okBtn = document.getElementById('customModalOk');
+        okBtn.textContent = okText;
+        if (showCancel) {
+          cancelBtn.style.display = 'block';
+          cancelBtn.textContent = cancelText;
+        } else {
+          cancelBtn.style.display = 'none';
+        }
+        const close = (result) => {
+          overlay.style.display = 'none';
+          resolve(result);
+        };
+        cancelBtn.onclick = () => { if (onCancel) onCancel(); close(false); };
+        okBtn.onclick = () => {
+          const val = showInput ? input.value : true;
+          if (onOk) onOk(val);
+          close(val);
+        };
+        overlay.style.display = 'flex';
+        if (showInput) setTimeout(() => input.focus(), 100);
+      });
+    };
+
+    window.showAlert = async (msg) => {
+      const iconMap = {
+        'error': '✕',
+        'success': '✓',
+        'warning': '⚠',
+        'info': 'ℹ'
+      };
+      const lower = msg.toLowerCase();
+      let icon = 'ℹ';
+      if (lower.includes('error') || lower.includes('fail') || lower.includes('save failed')) icon = '✕';
+      else if (lower.includes('success')) icon = '✓';
+      else if (lower.includes('warn') || lower.includes('insufficient')) icon = '⚠';
+      await window.showModal({ icon, title: icon === '✕' ? 'Error' : icon === '✓' ? 'Success' : icon === '⚠' ? 'Warning' : 'Notice', message: msg, showCancel: false, okText: 'OK' });
+    };
+
+    window.showConfirm = async (msg) => {
+      return window.showModal({ icon: '⚠', title: 'Confirm', message: msg, showCancel: true, okText: 'Continue', cancelText: 'Cancel' });
+    };
+
+    window.showPrompt = async (msg, defaultValue = '') => {
+      return window.showModal({ icon: '✏', title: 'Input Required', message: msg, showInput: true, inputValue: defaultValue, showCancel: true, okText: 'Submit', cancelText: 'Cancel' });
     };
 
 async function init() {
@@ -2401,7 +2481,7 @@ async function init() {
                 document.getElementById('measurementResultsCard').style.display='block';
             }, 1000);
         }
-        else if (data.status === 'failed') { clearInterval(interval); alert("Error"); overlay.style.display = 'none'; btn.disabled = false; }
+        else if (data.status === 'failed') { clearInterval(interval); window.showAlert("Error"); overlay.style.display = 'none'; btn.disabled = false; }
         fill.style.width = progress + '%';
       }, 2000);
     }
@@ -2423,13 +2503,13 @@ document.getElementById('scanForm').addEventListener('submit', async (e) => {
               pollTask(d.task_id);
           } else {
               btn.disabled = false;
-              if (res.status === 402) alert("Insufficient credits. Please top up.");
-              else if (res.status === 401 || res.status === 403) alert("Authentication failed. Please sign in again.");
-              else alert("Error starting scan. Please try again.");
+              if (res.status === 402) window.showAlert("Insufficient credits. Please top up.");
+              else if (res.status === 401 || res.status === 403) window.showAlert("Authentication failed. Please sign in again.");
+              else window.showAlert("Error starting scan. Please try again.");
           }
       } catch (err) {
           btn.disabled = false;
-          alert("Network error. Please check your connection.");
+          window.showAlert("Network error. Please check your connection.");
       }
     });
 
@@ -2445,15 +2525,25 @@ document.getElementById('scanForm').addEventListener('submit', async (e) => {
 
     window.signOut = async () => { await window.KORRA_DB.auth.signOut(); window.location.href = '/signin'; };
 
-    window.selectBundle = (el, credits, priceNGN) => {
+    window.getBundlePrice = (credits) => {
+        const price = (window.ENV && window.ENV.scan_price) || 300;
+        if (credits === 50) return { per: price, total: price * 50 };
+        if (credits === 150) return { per: Math.round(price * 0.83), total: Math.round(price * 0.83 * 150) };
+        if (credits === 500) return { per: Math.round(price * 0.67), total: Math.round(price * 0.67 * 500) };
+        return { per: price, total: price * credits };
+    };
+
+    window.selectBundle = (el) => {
         document.querySelectorAll('#topUpModal .glass-card').forEach(c => c.style.borderColor = 'var(--Glass-Border)');
         el.style.borderColor = 'var(--Mint)';
-        selectedBundle = { credits, price: priceNGN };
+        const credits = parseInt(el.dataset.bundle);
+        const bp = window.getBundlePrice(credits);
+        selectedBundle = { credits, price: bp.total };
     };
 
     window.getDefaultBundle = () => {
-        const price = (window.ENV && window.ENV.scan_price) || 300;
-        return { credits: 50, price: price * 50 };
+        const bp = window.getBundlePrice(50);
+        return { credits: 50, price: bp.total };
     };
 
     window.applyBillingConfig = () => {
@@ -2467,27 +2557,21 @@ document.getElementById('scanForm').addEventListener('submit', async (e) => {
         document.getElementById('billingRateValue').textContent = fmt(price);
         document.querySelectorAll('.bundleCurr').forEach(el => el.textContent = sym);
 
-        // PRO = pay-per-scan at full rate
         document.getElementById('billingPricePro').textContent = `${sym}${fmt(price)}`;
         document.getElementById('bundleRateLabel').textContent = `${sym}${fmt(price)}`;
 
-        // ELITE = bulk credits starting at 50-scan bundle (~17% off)
         const elitePrice = Math.round(price * 0.83);
         document.getElementById('billingPriceElite').textContent = `${sym}${fmt(elitePrice)}`;
 
-        // Update bundles (50/150/500 scans with bulk discounts)
-        const bundles = [
-            { el: 'bundlePerScan50', total: 'bundleTotal50', credits: 50, per: price, total: price * 50 },
-            { el: 'bundlePerScan150', total: 'bundleTotal150', credits: 150, per: Math.round(price * 0.83), total: Math.round(price * 0.83 * 150) },
-            { el: 'bundlePerScan500', total: 'bundleTotal500', credits: 500, per: Math.round(price * 0.67), total: Math.round(price * 0.67 * 500) },
-        ];
+        const bundles = [50, 150, 500].map(c => ({ credits: c, ...window.getBundlePrice(c) }));
         bundles.forEach(b => {
-            document.getElementById(b.el).textContent = `${sym}${fmt(b.per)} / scan`;
-            document.getElementById(b.total).textContent = `${sym}${fmt(b.total)}`;
+            document.getElementById(`bundlePerScan${b.credits}`).textContent = `${sym}${fmt(b.per)} / scan`;
+            document.getElementById(`bundleTotal${b.credits}`).textContent = `${sym}${fmt(b.total)}`;
         });
 
-        // Update default selected bundle
-        selectedBundle = { credits: 50, price: curr === 'NGN' ? bundles[0].total : Math.round(bundles[0].total / 600) };
+        // click default 50-scan bundle
+        const defaultCard = document.querySelector('#topUpModal .glass-card[data-bundle="50"]');
+        if (defaultCard) window.selectBundle(defaultCard);
     };
 
 window.applyPromo = () => {
@@ -2561,7 +2645,7 @@ window.applyPromo = () => {
     
     window.upgradePlan = async (tier) => {
         const email = document.getElementById('userEmail')?.textContent || '';
-        if (!email) { alert("Please save your profile first."); return; }
+        if (!email) { window.showAlert("Please save your profile first."); return; }
         
         try {
             const res = await fetch('/api/v2/payments/initialize', {
@@ -2577,10 +2661,10 @@ window.applyPromo = () => {
                     window.showToast("Payment Portal", "Complete payment to upgrade your plan.");
                 }
             } else {
-                alert("Unable to initialize upgrade. Please try again.");
+                window.showAlert("Unable to initialize upgrade. Please try again.");
             }
         } catch (e) {
-            alert("Upgrade error: " + e.message);
+            window.showAlert("Upgrade error: " + e.message);
         }
     };
     
@@ -2591,9 +2675,9 @@ window.applyPromo = () => {
     
     window.requestEnterprise = () => {
         const email = document.getElementById('userEmail')?.textContent || '';
-        if (!email) { alert("Please save your profile first."); return; }
+        if (!email) { window.showAlert("Please save your profile first."); return; }
         
-        alert(`Enterprise request initiated. Our team will contact you at ${email}.`);
+        window.showAlert(`Enterprise request initiated. Our team will contact you at ${email}.`);
         
         // Log interest
         fetch('/api/v2/interest', {
@@ -2622,10 +2706,10 @@ window.applyPromo = () => {
                 window.URL.revokeObjectURL(url);
                 window.showToast("Receipt Downloaded", "Invoice saved to your device.");
             } else {
-                alert("Could not generate receipt. Please try again later.");
+                window.showAlert("Could not generate receipt. Please try again later.");
             }
         } catch (e) {
-            alert("Download error: " + e.message);
+            window.showAlert("Download error: " + e.message);
         } finally {
             btn.textContent = originalText;
             btn.disabled = false;
@@ -2675,14 +2759,14 @@ window.applyPromo = () => {
                 .then(res => res.json())
                 .then(data => {
                     if (data.success || data.status === 'success') {
-                        alert(`Success! ${selectedBundle.credits} credits added.`);
+                        window.showAlert(`Success! ${selectedBundle.credits} credits added.`);
                         document.getElementById('topUpModal').classList.remove('active');
                         window.loadSettings();
                     }
                 })
                 .catch(err => {
                     console.error('Payment verification failed:', err);
-                    alert('Payment verification failed. Please check your dashboard for credits.');
+                    window.showAlert('Payment verification failed. Please check your dashboard for credits.');
                 })
                 .finally(() => {
                     const btn = document.getElementById('btnConfirmPurchase');
@@ -2739,7 +2823,7 @@ window.applyPromo = () => {
             const { error } = await window.KORRA_DB.from('profiles').update(payload).eq('id', userId);
             if (error) throw error;
             window.showToast("Precision profile updated.");
-        } catch (e) { alert("Save failed: " + e.message); }
+        } catch (e) { window.showAlert("Save failed: " + e.message); }
         finally { btn.disabled = false; btn.textContent = 'Save Precision Profile'; }
     };
 
@@ -2757,10 +2841,10 @@ window.applyPromo = () => {
     };
 
     document.getElementById('btnRegenKey').onclick = async () => {
-        if (!confirm("Regenerating your API key will break existing integrations. Continue?")) return;
+        if (!(await window.showConfirm("Regenerating your API key will break existing integrations. Continue?"))) return;
         const newKey = 'korra_live_' + Math.random().toString(36).substring(2, 15) + Math.random().toString(36).substring(2, 15);
         const { error } = await window.KORRA_DB.from('profiles').update({ api_key: newKey }).eq('id', userId);
-        if (!error) { document.getElementById('apiKeyDisplay').textContent = newKey; alert("New API key generated."); }
+        if (!error) { document.getElementById('apiKeyDisplay').textContent = newKey; window.showAlert("New API key generated."); }
     };
 
     window.openQRPoster = () => {
@@ -2791,7 +2875,7 @@ window.shareToWhatsApp = () => {
 
     window.copyApiKey = () => {
         const text = document.getElementById('apiKeyDisplay').textContent;
-        if (text.includes('***')) { alert("Please save profile first or regenerate key."); return; }
+        if (text.includes('***')) { window.showAlert("Please save profile first or regenerate key."); return; }
         window.KORRA_UTILS.copyToClipboard(text, "API Key");
     };
 
@@ -2810,15 +2894,15 @@ window.shareToWhatsApp = () => {
                 textarea.select();
                 try {
                     document.execCommand("copy");
-                    alert(`${label} copied to clipboard (fallback)`);
+                    window.showAlert(`${label} copied to clipboard (fallback)`);
                 } catch (err) {
-                    alert(`Copy failed. Please copy manually.`);
+                    window.showAlert(`Copy failed. Please copy manually.`);
                 }
                 document.body.removeChild(textarea);
                 return;
             }
-            navigator.clipboard.writeText(text).then(() => alert(`${label} copied to clipboard`)).catch(err => {
-                alert(`Copy failed. Please copy manually.`);
+            navigator.clipboard.writeText(text).then(() => window.showAlert(`${label} copied to clipboard`)).catch(err => {
+                window.showAlert(`Copy failed. Please copy manually.`);
             });
         }
     };
@@ -2826,7 +2910,7 @@ window.generateDeepLink = async () => {
       const name = document.getElementById('shareName').value;
       const phone = document.getElementById('sharePhone').value;
       const email = document.getElementById('shareEmail').value;
-      if (!name) { alert("Please enter a client name."); return; }
+      if (!name) { window.showAlert("Please enter a client name."); return; }
       
       const url = `${window.location.origin}/share?m=${userId}&c=${encodeURIComponent(name)}${email ? '&e=' + encodeURIComponent(email) : ''}${phone ? '&p=' + encodeURIComponent(phone) : ''}`;
       document.getElementById('deepLinkDisplay').textContent = url;
@@ -2859,7 +2943,7 @@ window.generateDeepLink = async () => {
          * Phase 111: Haptic Validation
          */
         if (!window.LAST_MEASUREMENT_DATA) {
-            alert("Please perform or select a scan first.");
+            window.showAlert("Please perform or select a scan first.");
             return;
         }
 
@@ -2885,7 +2969,7 @@ window.generateDeepLink = async () => {
 
     window.handleMaterialToggle = (material, el) => {
         if (!window.LAST_MEASUREMENT_DATA) {
-            alert("Please perform or select a scan first.");
+            window.showAlert("Please perform or select a scan first.");
             return;
         }
         if ("vibrate" in navigator) navigator.vibrate(25);
@@ -2918,7 +3002,7 @@ window.generateDeepLink = async () => {
         const opts = { multiple: false };
 
         if (!('contacts' in navigator && 'ContactsManager' in window)) {
-            alert("Contact picking is only supported on mobile Chrome/Android. Please enter details manually.");
+            window.showAlert("Contact picking is only supported on mobile Chrome/Android. Please enter details manually.");
             return;
         }
 
@@ -2938,7 +3022,7 @@ window.generateDeepLink = async () => {
     window.exportToPDF = () => { if (window.LAST_MEASUREMENT_DATA) window.KORRA_EXPORT.pdf(window.LAST_MEASUREMENT_DATA.client_name, window.LAST_MEASUREMENT_DATA.measurements, window.LAST_MEASUREMENT_DATA.gender, window.LAST_MEASUREMENT_DATA.height); };
 
     window.downloadMesh = () => {
-        if (!window.LAST_MEASUREMENT_DATA || !window.LAST_MEASUREMENT_DATA.mesh_url) return alert("Mesh file not ready.");
+        if (!window.LAST_MEASUREMENT_DATA || !window.LAST_MEASUREMENT_DATA.mesh_url) return window.showAlert("Mesh file not ready.");
         const link = document.createElement('a');
         link.href = window.LAST_MEASUREMENT_DATA.mesh_url;
         link.download = `KORRA_${window.LAST_MEASUREMENT_DATA.client_name}_3D.obj`;
@@ -3104,8 +3188,8 @@ window.generateDeepLink = async () => {
         window.updateWidgetPreview();
     };
 
-    window.addWebhook = () => {
-        const url = prompt("Enter the destination URL for measurement events:");
+    window.addWebhook = async () => {
+        const url = await window.showPrompt("Enter the destination URL for measurement events:");
         if (url) window.showToast("Success", "Webhook Destination Secured.");
     };
 
@@ -3226,7 +3310,7 @@ window.generateDeepLink = async () => {
             window.KorraWidget.config.merchantId = userId;
             window.KorraWidget.open();
         } else {
-            alert("Widget Loader Offline.");
+            window.showAlert("Widget Loader Offline.");
         }
     };
 
