@@ -45,7 +45,7 @@
     *   **File**: `[NEW] public/assets/korra_viz.js`
     *   **Logic**: Create `window.KORRA_VIZ` namespace for 3D rendering.
 13. **Phase 13: The "Electric Mint" Shader**
-    *   **Logic**: Implement `THREE.WireframeGeometry` with color `#57D7C0` and 0.5 opacity.
+    *   **Logic**: Implement `THREE.WireframeGeometry` with color `#C6FF00` and 0.5 opacity.
 14. **Phase 14: OrbitControl Implementation**
     *   **Action**: Allow users to rotate, zoom, and pan the 3D body.
 15. **Phase 15: Cross-Page Component Injection**

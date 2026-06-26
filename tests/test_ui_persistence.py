@@ -5,7 +5,7 @@ def test_widget_studio_config_integrity():
     """Verify that the Widget Studio generates valid JSONB configurations."""
     # Simulate a merchant's custom branding choice
     config = {
-        "primary": "#57D7C0",
+        "primary": "#C6FF00",
         "theme": "glass",
         "brand_name": "KORRA LUXE",
         "logo_size": "32",

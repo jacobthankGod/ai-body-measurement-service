@@ -35,7 +35,7 @@
                 position: fixed;
                 bottom: 24px;
                 right: 24px;
-                background: #57D7C0;
+                background: #C6FF00;
                 color: #000;
                 border: none;
                 padding: 14px 24px;
@@ -44,7 +44,7 @@
                 font-weight: 800;
                 font-size: 13px;
                 cursor: pointer;
-                box-shadow: 0 10px 30px rgba(87,215,192,0.3);
+                box-shadow: 0 10px 30px rgba(198,255,0,0.3);
                 z-index: 999999;
                 transition: 0.3s cubic-bezier(0.2, 1, 0.3, 1);
             `;

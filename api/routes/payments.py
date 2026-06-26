@@ -220,10 +220,12 @@ async def verify_payment(
         print(f"⚠️ Ledger Sync Warning: {e}")
 
     # 2. Update Credits if applicable
+    new_balance = 0
     if tx_type == 'bundle' and credits_to_add > 0:
         res = client.table("profiles").select("credits").eq("id", user_id).single().execute()
         current = res.data.get('credits', 0) if res.data else 0
-        client.table("profiles").update({"credits": current + credits_to_add}).eq("id", user_id).execute()
+        new_balance = current + credits_to_add
+        client.table("profiles").update({"credits": new_balance}).eq("id", user_id).execute()
 
     return {
         "status": True,
@@ -231,6 +233,7 @@ async def verify_payment(
         "data": {
             "type": tx_type,
             "credits_added": credits_to_add,
+            "new_balance": new_balance,
             "reference": reference
         }
     }

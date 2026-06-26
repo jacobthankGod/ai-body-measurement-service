@@ -36,12 +36,12 @@ class EmailService:
                 body {{ font-family: 'Inter', -apple-system, BlinkMacSystemFont, sans-serif; background-color: #000000; color: #FFFFFF; margin: 0; padding: 0; }}
                 .container {{ max-width: 600px; margin: 0 auto; padding: 40px 20px; }}
                 .header {{ text-align: center; margin-bottom: 40px; }}
-                .logo-mark {{ width: 40px; height: 40px; background-color: #57D7C0; border-radius: 8px; display: inline-block; transform: rotate(-8deg); }}
+                .logo-mark {{ width: 40px; height: 40px; background-color: #C6FF00; border-radius: 8px; display: inline-block; transform: rotate(-8deg); }}
                 .logo-text {{ font-size: 24px; font-weight: 900; color: #FFFFFF; display: inline-block; vertical-align: middle; margin-left: 12px; letter-spacing: -0.05em; }}
                 .content {{ background: rgba(255, 255, 255, 0.04); border: 1px solid rgba(255, 255, 255, 0.1); border-radius: 24px; padding: 40px; text-align: center; }}
                 h1 {{ font-size: 28px; font-weight: 800; margin-bottom: 16px; letter-spacing: -0.03em; }}
                 p {{ color: #A3A3A3; font-size: 16px; line-height: 1.6; margin-bottom: 32px; }}
-                .btn {{ background-color: #57D7C0; color: #000000; padding: 16px 32px; border-radius: 12px; font-weight: 800; text-decoration: none; display: inline-block; text-transform: uppercase; font-size: 14px; letter-spacing: 0.1em; }}
+                .btn {{ background-color: #C6FF00; color: #000000; padding: 16px 32px; border-radius: 12px; font-weight: 800; text-decoration: none; display: inline-block; text-transform: uppercase; font-size: 14px; letter-spacing: 0.1em; }}
                 .footer {{ text-align: center; margin-top: 40px; color: #737373; font-size: 12px; }}
             </style>
         </head>
@@ -127,7 +127,7 @@ class EmailService:
             summary_html += f"""
             <div style="display: flex; justify-content: space-between; padding: 8px 0; border-bottom: 1px solid rgba(255,255,255,0.1);">
                 <span style="color: #A3A3A3;">{key}</span>
-                <span style="color: #57D7C0; font-weight: 600;">{value}cm</span>
+                <span style="color: #C6FF00; font-weight: 600;">{value}cm</span>
             </div>
             """
 
@@ -186,7 +186,7 @@ class EmailService:
             <p><strong>{merchant_name}</strong> has requested a new body scan.</p>
             {message_html}
             <p style="color: #A3A3A3; font-size: 14px; line-height: 1.6;">
-                Category: <span style="color: #57D7C0;">{specialty_display}</span>
+                Category: <span style="color: #C6FF00;">{specialty_display}</span>
             </p>
             
             <a href="{scan_url}" class="btn">Start Scan</a>
@@ -221,7 +221,7 @@ class EmailService:
             summary_html += f"""
             <div style="display: flex; justify-content: space-between; padding: 8px 0;">
                 <span style="color: #A3A3A3;">{key}</span>
-                <span style="color: #57D7C0; font-weight: 600;">{value}cm</span>
+                <span style="color: #C6FF00; font-weight: 600;">{value}cm</span>
             </div>
             """
 

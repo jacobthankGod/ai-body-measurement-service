@@ -1,0 +1,573 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Pricing | KORRA AI Body Scan</title>
+  <meta name="description" content="Simple, transparent credit-based pricing for KORRA AI Body Scan. Choose from pre-built bundles or custom quantities. Pay per scan with volume discounts." />
+  <meta name="robots" content="index, follow" />
+
+  <meta property="og:type" content="website" />
+  <meta property="og:url" content="https://korra.work/pricing.html" />
+  <meta property="og:title" content="Pricing | KORRA AI Body Scan" />
+  <meta property="og:description" content="Simple, transparent credit-based pricing. Pay per scan with volume discounts." />
+
+  <link rel="icon" type="image/png" href="/assets/body-capture.png">
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800;900&display=swap" rel="stylesheet" />
+
+  <style>
+    header {
+      width: 100%; height: 80px; display: flex; align-items: center; position: relative; z-index: 999999;
+      background: #000; border-bottom: 1px solid var(--Glass-Border);
+    }
+    header.scrolled { height: 64px; background: rgba(0, 0, 0, 0.95); }
+    header .container { display: flex; align-items: center; justify-content: space-between; padding: 0; position: relative; }
+
+    .logo { display: flex; align-items: center; gap: 16px; cursor: pointer; text-decoration: none; color: inherit; z-index: 1000001; }
+    .logo-mark { width: 32px; height: 32px; border-radius: 8px; background: var(--Mint); transform: rotate(-8deg); }
+    .logo-text { font-size: 20px; font-weight: 900; letter-spacing: -0.05em; }
+
+    nav.main-nav { display: flex; gap: 20px; position: absolute; left: 50%; transform: translateX(-50%); }
+    nav.main-nav a { font-size: 12px; font-weight: 600; color: var(--White); text-decoration: none; text-transform: uppercase; letter-spacing: 0.08em; opacity: 0.6; transition: 0.2s; }
+    nav.main-nav a:hover, nav.main-nav a.active { opacity: 1; color: var(--Mint); }
+
+    .header-auth { display: flex; align-items: center; gap: var(--S-16); z-index: 1000001; }
+
+    .hamburger {
+      display: none; width: 44px; height: 44px; background: var(--Glass); border: 1px solid var(--Glass-Border);
+      border-radius: 12px; cursor: pointer; flex-direction: column; align-items: center; justify-content: center; gap: 5px;
+      z-index: 1000001; transition: 0.2s; position: relative;
+    }
+    .hamburger:hover { border-color: var(--Mint); background: rgba(255,255,255,0.08); }
+    .hamburger span { width: 22px; height: 2px; background: var(--Mint); border-radius: 2px; transition: 0.4s cubic-bezier(0.4, 0, 0.2, 1); }
+    .hamburger.active span:nth-child(1) { transform: translateY(7px) rotate(45deg); width: 24px; }
+    .hamburger.active span:nth-child(2) { opacity: 0; transform: translateX(-10px); }
+    .hamburger.active span:nth-child(3) { transform: translateY(-7px) rotate(-45deg); width: 24px; }
+
+    .mobile-menu {
+      position: fixed; inset: 0; background: rgba(0,0,0,0.98); backdrop-filter: blur(40px);
+      z-index: 1000000; display: flex; flex-direction: column; align-items: center; justify-content: center;
+      gap: 32px; padding: 40px; transform: translateY(-100%); transition: 0.6s cubic-bezier(0.4, 0, 0.2, 1); opacity: 0; pointer-events: none;
+    }
+    .mobile-menu.active { transform: translateY(0); opacity: 1; pointer-events: auto; }
+    .mobile-menu a { font-size: 28px; font-weight: 900; color: #fff; text-decoration: none; text-transform: uppercase; letter-spacing: -0.02em; transition: 0.3s; }
+    .mobile-menu a:hover { color: var(--Mint); transform: scale(1.05); }
+    .mobile-close-btn {
+      position: absolute; top: 20px; right: 24px; width: 44px; height: 44px;
+      background: var(--Glass); border: 1px solid var(--Glass-Border); border-radius: 12px;
+      color: var(--Mint); font-size: 32px; display: flex; align-items: center; justify-content: center;
+      cursor: pointer; z-index: 1000002;
+    }
+    .mobile-close-btn:hover { border-color: var(--Mint); background: rgba(255,255,255,0.08); }
+    .mobile-close-hint { position: absolute; bottom: 40px; font-size: 10px; font-weight: 800; color: var(--Neutral-500); text-transform: uppercase; letter-spacing: 0.2em; }
+
+    :root {
+      --Obsidian-Deep: #050505;
+      --Obsidian-Layer: #0B0B0C;
+      --Accent-Teal: #C6FF00;
+      --Accent-Gold: #FFC247;
+      --Surface-Soft: #171717;
+      --Glass-Border: rgba(255, 255, 255, 0.08);
+      --Elev-1: 0 4px 20px rgba(0,0,0,0.4);
+      --Elev-2: 0 12px 40px rgba(0,0,0,0.6);
+      --Elev-3: 0 24px 80px rgba(0,0,0,0.8);
+      --Obsidian: var(--Obsidian-Deep);
+      --Mint: var(--Accent-Teal);
+      --Teal-900: #002D2A;
+      --Glass: rgba(255, 255, 255, 0.04);
+      --Neutral-400: #A3A3A3;
+      --Neutral-500: #737373;
+      --White: #FFFFFF;
+      --Error: #D63031;
+      --S-8: 8px; --S-12: 12px; --S-16: 16px; --S-24: 24px; --S-32: 32px; --S-48: 48px; --S-64: 64px; --S-80: 80px; --S-120: 120px; --S-160: 160px; --S-200: 200px;
+      --Radius-M: 12px;
+      --Radius-L: 20px;
+      --Radius-XL: 999px;
+    }
+
+    * { box-sizing: border-box; -webkit-font-smoothing: antialiased; margin: 0; padding: 0; }
+    html, body { background: var(--Obsidian); color: var(--White); font-family: 'Inter', sans-serif; overflow-x: hidden; }
+    .container { width: 100%; max-width: 1150px; margin: 0 auto; padding: 0 48px; }
+
+    .btn {
+      display: inline-flex; align-items: center; justify-content: center; gap: var(--S-12);
+      height: 48px; padding: 0 var(--S-24); border-radius: var(--Radius-M); font-weight: 800;
+      font-size: 13px; text-transform: uppercase; letter-spacing: 0.05em;
+      text-decoration: none; cursor: pointer; transition: 0.2s; border: none;
+    }
+    .btn-primary { background: var(--Mint); color: var(--Obsidian); }
+    .btn-primary:hover { transform: translateY(-2px); box-shadow: 0 10px 30px rgba(198,255,0,0.3); }
+    .btn-outline { background: transparent; border: 1px solid var(--Glass-Border); color: var(--White); }
+    .btn-outline:hover { background: rgba(255,255,255,0.05); border-color: var(--Mint); }
+    .btn-large { height: 64px; padding: 0 var(--S-48); font-size: 16px; }
+
+    .section-eyebrow {
+      font-size: 11px; font-weight: 900; color: var(--Mint); text-transform: uppercase;
+      letter-spacing: 0.2em; margin-bottom: var(--S-16);
+    }
+
+    .pricing-hero {
+      padding: var(--S-120) 0 var(--S-64);
+      text-align: center;
+    }
+    .pricing-hero h1 {
+      font-size: clamp(40px, 6vw, 64px); font-weight: 900; letter-spacing: -0.04em;
+      margin-bottom: var(--S-24);
+    }
+    .pricing-hero p {
+      font-size: 18px; color: var(--Neutral-400); max-width: 600px; margin: 0 auto; line-height: 1.6;
+    }
+
+    .pricing-grid {
+      display: grid; grid-template-columns: repeat(4, 1fr); gap: var(--S-16);
+      max-width: 1100px; margin: 0 auto;
+    }
+    .pricing-card {
+      background: var(--Glass); border: 1px solid var(--Glass-Border); border-radius: var(--Radius-L);
+      padding: var(--S-32) var(--S-24); text-align: center; transition: 0.3s; position: relative;
+      display: flex; flex-direction: column;
+    }
+    .pricing-card:hover { border-color: var(--Mint); transform: translateY(-4px); box-shadow: 0 20px 60px rgba(0,0,0,0.5); }
+    .pricing-card.popular { border-color: var(--Mint); }
+    .pricing-card .badge {
+      position: absolute; top: -12px; left: 50%; transform: translateX(-50%);
+      background: var(--Mint); color: var(--Obsidian); font-size: 9px; font-weight: 900;
+      padding: 4px 14px; border-radius: 99px; text-transform: uppercase; letter-spacing: 0.1em;
+    }
+    .pricing-card .card-icon {
+      width: 44px; height: 44px; border-radius: 12px; display: flex; align-items: center; justify-content: center;
+      margin: 0 auto var(--S-16); background: rgba(198,255,0,0.1);
+    }
+    .pricing-card .card-name { font-size: 14px; font-weight: 700; color: var(--Neutral-400); text-transform: uppercase; letter-spacing: 0.08em; margin-bottom: var(--S-4); }
+    .pricing-card .scan-count { font-size: 36px; font-weight: 900; line-height: 1.1; }
+    .pricing-card .scan-label { font-size: 12px; color: var(--Neutral-500); margin-bottom: var(--S-16); }
+    .pricing-card .price-row { display: flex; align-items: baseline; justify-content: center; gap: 6px; margin-bottom: var(--S-4); }
+    .pricing-card .price-row .curr { font-size: 18px; font-weight: 700; color: var(--Neutral-400); }
+    .pricing-card .price-row .total { font-size: 28px; font-weight: 900; }
+    .pricing-card .per-scan { font-size: 12px; color: var(--Neutral-500); margin-bottom: var(--S-4); }
+    .pricing-card .per-scan strong { color: var(--Mint); }
+    .pricing-card .features { list-style: none; width: 100%; margin-bottom: var(--S-24); text-align: left; }
+    .pricing-card .features li {
+      padding: 8px 0; font-size: 13px; color: var(--Neutral-400);
+      border-bottom: 1px solid var(--Glass-Border); display: flex; align-items: center; gap: var(--S-8);
+    }
+    .pricing-card .features li:last-child { border-bottom: none; }
+    .pricing-card .features li .check { color: var(--Mint); font-weight: 900; flex-shrink: 0; }
+    .pricing-card .btn { width: 100%; margin-top: auto; }
+
+    .discount-tier {
+      font-size: 11px; color: var(--Neutral-500); padding: 6px 12px; border-radius: 8px;
+      background: var(--Glass); margin-bottom: var(--S-16); width: 100%;
+    }
+    .discount-tier strong { color: var(--Neutral-400); }
+    .discount-tier.active {
+      background: rgba(198,255,0,0.08); border: 1px solid rgba(198,255,0,0.15);
+      color: var(--Mint);
+    }
+    .discount-tier.active strong { color: var(--Mint); }
+
+    .custom-card-full {
+      max-width: 1100px; margin: var(--S-24) auto 0;
+      background: var(--Glass); border: 1px solid var(--Glass-Border); border-radius: var(--Radius-L);
+      padding: var(--S-32) var(--S-32); transition: 0.3s;
+    }
+    .custom-card-full:hover { border-color: var(--Mint); }
+    .custom-card-full .header-row {
+      display: flex; align-items: flex-start; gap: var(--S-16); margin-bottom: var(--S-24);
+    }
+    .custom-card-full .header-row .icon {
+      width: 44px; height: 44px; border-radius: 12px; background: rgba(198,255,0,0.1);
+      display: flex; align-items: center; justify-content: center; flex-shrink: 0;
+    }
+    .custom-card-full .header-row .icon svg { stroke: var(--Mint); }
+    .custom-card-full .header-row .text { flex: 1; }
+    .custom-card-full .header-row .text h3 { font-size: 16px; font-weight: 800; margin-bottom: 2px; }
+    .custom-card-full .header-row .text p { font-size: 13px; color: var(--Neutral-400); margin: 0; }
+    .custom-card-full .header-row .discount-badge {
+      font-size: 10px; font-weight: 700; white-space: nowrap; padding: 3px 12px; border-radius: 99px;
+      background: rgba(198,255,0,0.1); border: 1px solid rgba(198,255,0,0.2); color: var(--Neutral-500);
+    }
+    .custom-discount-tiers { display: flex; gap: 6px; margin-top: 10px; flex-wrap: wrap; }
+    .custom-discount-tiers span {
+      font-size: 10px; font-weight: 700; padding: 2px 10px; border-radius: 99px;
+      background: var(--Surface-Soft); color: var(--Neutral-500); border: 1px solid var(--Glass-Border);
+    }
+    .custom-discount-tiers span.active { background: rgba(198,255,0,0.12); color: var(--Mint); border-color: var(--Mint); }
+    .custom-card-full .input-row {
+      display: flex; align-items: center; gap: var(--S-16); flex-wrap: wrap;
+    }
+    .custom-qty {
+      height: 48px; padding: 0 16px; border-radius: var(--Radius-M); border: 1.5px solid var(--Mint);
+      background: var(--Obsidian-Deep); color: var(--White); font-size: 16px; font-weight: 700;
+      font-family: 'Inter', sans-serif; outline: none; transition: 0.2s; width: 140px; flex-shrink: 0;
+      box-shadow: 0 0 12px rgba(198,255,0,0.12);
+    }
+    .custom-qty:focus { border-color: var(--Mint); box-shadow: 0 0 20px rgba(198,255,0,0.25); }
+    .custom-price-preview {
+      display: flex; align-items: center; gap: 16px; flex-wrap: wrap;
+      background: var(--Surface-Soft); padding: 12px 20px; border-radius: var(--Radius-M); flex: 1; min-width: 240px;
+    }
+    .custom-total { font-size: 28px; font-weight: 900; color: var(--Mint); letter-spacing: -0.02em; }
+    .custom-per { font-size: 14px; color: var(--Neutral-400); font-weight: 600; }
+    .custom-discount { font-size: 11px; font-weight: 800; color: var(--Obsidian); background: var(--Mint); padding: 4px 14px; border-radius: 99px; white-space: nowrap; }
+    .custom-card-full .btn { height: 48px; padding: 0 var(--S-24); flex-shrink: 0; }
+
+    .steps-section { padding: var(--S-80) 0; }
+    .steps-section h2 { text-align: center; font-size: clamp(28px, 4vw, 40px); font-weight: 800; margin-bottom: var(--S-64); }
+    .steps-grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: var(--S-32); max-width: 800px; margin: 0 auto; }
+    .step-card { text-align: center; }
+    .step-card .step-num { width: 44px; height: 44px; border-radius: 50%; background: var(--Mint); color: var(--Obsidian); font-weight: 900; font-size: 18px; display: flex; align-items: center; justify-content: center; margin: 0 auto var(--S-16); }
+    .step-card h4 { font-size: 16px; font-weight: 800; margin-bottom: var(--S-8); }
+    .step-card p { font-size: 14px; color: var(--Neutral-400); line-height: 1.6; }
+
+    .faq-section { padding: var(--S-80) 0; max-width: 720px; margin: 0 auto; }
+    .faq-section h2 { text-align: center; font-size: clamp(28px, 4vw, 40px); font-weight: 800; margin-bottom: var(--S-48); }
+    .faq-item { border-bottom: 1px solid var(--Glass-Border); padding: var(--S-24) 0; }
+    .faq-item summary { font-size: 15px; font-weight: 700; list-style: none; display: flex; justify-content: space-between; align-items: center; cursor: pointer; }
+    .faq-item summary::-webkit-details-marker { display: none; }
+    .faq-item summary::after { content: '+'; font-size: 22px; color: var(--Mint); font-weight: 300; transition: 0.2s; }
+    .faq-item[open] summary::after { content: '−'; }
+    .faq-item p { margin-top: var(--S-16); font-size: 14px; color: var(--Neutral-400); line-height: 1.7; padding-right: 40px; }
+
+    .cta-banner { padding: var(--S-80) 0 var(--S-120); text-align: center; }
+    .cta-banner h2 { font-size: clamp(32px, 4vw, 48px); font-weight: 900; margin-bottom: var(--S-16); }
+    .cta-banner p { color: var(--Neutral-400); font-size: 16px; margin-bottom: var(--S-32); }
+
+    footer { padding: var(--S-80) 0; border-top: 1px solid var(--Glass-Border); margin-top: var(--S-80); }
+    .footer-links { display: grid; grid-template-columns: repeat(4, 1fr); gap: var(--S-48); margin-bottom: var(--S-48); }
+    .footer-col h4 { font-size: 11px; font-weight: 900; color: var(--Neutral-500); text-transform: uppercase; letter-spacing: 0.15em; margin-bottom: var(--S-16); }
+    .footer-col a { display: block; font-size: 14px; color: var(--Neutral-400); text-decoration: none; padding: 6px 0; transition: 0.2s; }
+    .footer-col a:hover { color: var(--Mint); }
+
+    @media (max-width: 1000px) {
+      .pricing-grid { grid-template-columns: repeat(2, 1fr); max-width: 600px; }
+    }
+    @media (max-width: 900px) {
+      nav.main-nav { display: none; }
+      .hamburger { display: flex; }
+      .container { padding: 0 24px; }
+      .pricing-hero { padding: var(--S-80) 0 var(--S-48); }
+      .footer-links { grid-template-columns: repeat(2, 1fr); gap: var(--S-32); }
+      .custom-card-full { padding: var(--S-24); }
+      .custom-card-full .header-row { flex-wrap: wrap; }
+      .custom-card-full .input-row { flex-direction: column; align-items: stretch; }
+      .custom-price-preview { min-width: unset; }
+      .custom-qty { width: 100%; }
+    }
+    @media (max-width: 600px) {
+      .pricing-grid { grid-template-columns: 1fr; max-width: 400px; }
+      .steps-grid { grid-template-columns: 1fr; max-width: 360px; }
+      .footer-links { grid-template-columns: 1fr; }
+    }
+  </style>
+</head>
+<body>
+  <header id="mainHeader">
+    <div class="container">
+      <a class="logo" href="/">
+        <img src="/assets/Korra_logo_final.png" alt="Korra" style="height:40px; width:auto;">
+        <span style="font-size:22px; font-weight:900; letter-spacing:-0.03em; color:var(--Mint);">Korra</span>
+      </a>
+      <nav class="main-nav">
+        <a href="/">How it works</a>
+        <a href="/casestudies.html">Success Stories</a>
+        <a href="/about.html">About</a>
+        <a href="/impact.html">Our Mission</a>
+        <a href="/pricing.html" class="active">Pricing</a>
+      </nav>
+      <div class="header-auth">
+        <div style="display:flex; gap:var(--S-12)">
+          <a class="btn btn-outline" style="height:40px; border:none; opacity:0.6; padding:0 12px" href="/signin.html">Sign In</a>
+          <a class="btn btn-primary" style="height:40px; padding:0 20px" href="/signup.html">Sign Up</a>
+        </div>
+        <div class="hamburger" id="btnHamburger">
+          <span></span><span></span><span></span>
+        </div>
+      </div>
+    </div>
+  </header>
+
+  <div class="mobile-menu" id="mobileMenu">
+    <button class="mobile-close-btn" onclick="toggleMenu()">×</button>
+    <a href="/" onclick="toggleMenu()">How it works</a>
+    <a href="/casestudies.html" onclick="toggleMenu()">Success Stories</a>
+    <a href="/about.html" onclick="toggleMenu()">About KORRA</a>
+    <a href="/impact.html" onclick="toggleMenu()">Our Mission</a>
+    <a href="/pricing.html" class="active" onclick="toggleMenu()">Pricing</a>
+    <a href="/signin.html" onclick="toggleMenu()">Merchant Portal</a>
+    <div style="width:100%; height:1px; background:var(--Glass-Border); margin:16px 0"></div>
+    <a href="/signup.html" class="btn btn-primary" style="width:100%; height:64px; font-size:16px">Sign Up Now</a>
+    <div class="mobile-close-hint">Tap Hamburger to Close</div>
+  </div>
+
+  <section class="pricing-hero">
+    <div class="container">
+      <div class="section-eyebrow">Transparent Pricing</div>
+      <h1>Buy credits.<br>Scan when you need.</h1>
+      <p>Pre-built bundles for every scale. Bigger bundles = bigger savings. No subscriptions, no surprises.</p>
+    </div>
+  </section>
+
+  <section style="padding-bottom:var(--S-80)">
+    <div class="container">
+      <div class="pricing-grid">
+        <div class="pricing-card">
+          <div class="card-icon">
+            <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="var(--Mint)" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><polygon points="13 2 3 14 12 14 11 22 21 10 12 10 13 2"/></svg>
+          </div>
+          <div class="card-name">Starter</div>
+          <div class="scan-count">25</div>
+          <div class="scan-label">scan credits</div>
+          <div class="price-row">
+            <span class="curr">₦</span><span class="total">17,125</span>
+          </div>
+          <div class="per-scan"><strong>₦685</strong> / scan</div>
+          <ul class="features">
+            <li><span class="check">✓</span> Dual photo capture</li>
+            <li><span class="check">✓</span> All body measurements</li>
+            <li><span class="check">✓</span> 3D body model</li>
+            <li><span class="check">✓</span> Standard support</li>
+          </ul>
+          <a class="btn btn-outline" href="/signup.html">Buy 25 Credits</a>
+        </div>
+
+        <div class="pricing-card popular">
+          <div class="badge">Popular</div>
+          <div class="card-icon" style="background:var(--Mint)">
+            <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="#000" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2"/></svg>
+          </div>
+          <div class="card-name">Popular</div>
+          <div class="scan-count">50</div>
+          <div class="scan-label">scan credits</div>
+          <div class="price-row">
+            <span class="curr">₦</span><span class="total">34,250</span>
+          </div>
+          <div class="per-scan"><strong>₦685</strong> / scan</div>
+          <ul class="features">
+            <li><span class="check">✓</span> Everything in Starter</li>
+            <li><span class="check">✓</span> Priority GPU processing</li>
+            <li><span class="check">✓</span> Priority support</li>
+            <li><span class="check">✓</span> Bulk management</li>
+          </ul>
+          <a class="btn btn-primary" href="/signup.html">Buy 50 Credits</a>
+        </div>
+
+        <div class="pricing-card">
+          <div class="card-icon">
+            <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="var(--Mint)" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><path d="M12 19V5M5 12l7-7 7 7"/></svg>
+          </div>
+          <div class="badge" style="background:rgba(198,255,0,0.12);color:var(--Mint);border:1px solid rgba(198,255,0,0.25);">Best Value</div>
+          <div class="card-name">Best Value</div>
+          <div class="scan-count">150</div>
+          <div class="scan-label">scan credits</div>
+          <div class="price-row">
+            <span class="curr">₦</span><span class="total">92,475</span>
+          </div>
+          <div class="per-scan"><strong>₦617</strong> / scan</div>
+          <div class="discount-tier active">Save <strong>10%</strong> — <strong>₦10,275</strong> on this bundle</div>
+          <ul class="features">
+            <li><span class="check">✓</span> Everything in Popular</li>
+            <li><span class="check">✓</span> Analytics dashboard</li>
+            <li><span class="check">✓</span> API access</li>
+            <li><span class="check">✓</span> Team seats (3)</li>
+          </ul>
+          <a class="btn btn-outline" href="/signup.html">Buy 150 Credits</a>
+        </div>
+
+        <div class="pricing-card">
+          <div class="card-icon">
+            <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="#B388FF" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><path d="M12 2L2 7l10 5 10-5-10-5z"/><path d="M2 17l10 5 10-5"/><path d="M2 12l10 5 10-5"/></svg>
+          </div>
+          <div class="badge" style="background:rgba(198,255,0,0.12);color:var(--Mint);border:1px solid rgba(198,255,0,0.25);">Pro</div>
+          <div class="card-name">Pro</div>
+          <div class="scan-count">500</div>
+          <div class="scan-label">scan credits</div>
+          <div class="price-row">
+            <span class="curr">₦</span><span class="total">291,000</span>
+          </div>
+          <div class="per-scan"><strong>₦582</strong> / scan</div>
+          <div class="discount-tier active">Save <strong>15%</strong> — <strong>₦51,500</strong> on this bundle</div>
+          <ul class="features">
+            <li><span class="check">✓</span> Everything in Best Value</li>
+            <li><span class="check">✓</span> Webhooks & integrations</li>
+            <li><span class="check">✓</span> White-label option</li>
+            <li><span class="check">✓</span> Dedicated account mgr</li>
+          </ul>
+          <a class="btn btn-outline" href="/signup.html">Buy 500 Credits</a>
+        </div>
+      </div>
+
+      <div class="custom-card-full">
+        <div class="header-row">
+          <div class="icon">
+            <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"/><path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z"/></svg>
+          </div>
+          <div class="text">
+            <h3>Custom quantity</h3>
+            <p>Pick your exact number of credits.</p>
+            <div class="custom-discount-tiers">
+              <span class="active">0%</span>
+              <span>10%</span>
+              <span>15%</span>
+              <span>20%</span>
+              <span>25%</span>
+            </div>
+          </div>
+          <span class="discount-badge">up to 25% off</span>
+        </div>
+        <div class="input-row">
+          <input type="number" class="custom-qty" min="1" value="150" placeholder="Quantity" id="customQty" oninput="updateCustomPricing()">
+          <div class="custom-price-preview" id="customPreview">
+            <span class="custom-total">₦92,550</span>
+            <span class="custom-per">₦617 / scan</span>
+            <span class="custom-discount" id="customDiscountLabel">Save ₦10,200 (10%)</span>
+          </div>
+          <a class="btn btn-primary" href="/signup.html" id="customBuyBtn">Buy Credits</a>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <section class="steps-section">
+    <div class="container">
+      <h2>How it works</h2>
+      <div class="steps-grid">
+        <div class="step-card">
+          <div class="step-num">1</div>
+          <h4>Choose a bundle</h4>
+          <p>Select a pre-built credit pack or enter a custom quantity. No subscription required.</p>
+        </div>
+        <div class="step-card">
+          <div class="step-num">2</div>
+          <h4>Pay once, scan anytime</h4>
+          <p>Credits never expire. Use them at your own pace — one scan today, a hundred next month.</p>
+        </div>
+        <div class="step-card">
+          <div class="step-num">3</div>
+          <h4>Capture & share</h4>
+          <p>Each scan uses one credit. Get 80+ measurements, a 3D model, and a shareable size passport.</p>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <section class="faq-section">
+    <div class="container">
+      <h2>Frequently asked questions</h2>
+      <details class="faq-item">
+        <summary>What is a scan credit?</summary>
+        <p>A scan credit is one unit of measurement. One credit = one full body scan (front and side photos), generating 80+ body measurements and a 3D model.</p>
+      </details>
+      <details class="faq-item">
+        <summary>Do credits expire?</summary>
+        <p>No. Credits never expire. Use them at your own pace — whether that is one scan per week or a hundred in a day.</p>
+      </details>
+      <details class="faq-item">
+        <summary>Can I get a refund?</summary>
+        <p>Yes. If you have not used any credits, we offer a full refund within 14 days of purchase. Used credits are non-refundable.</p>
+      </details>
+      <details class="faq-item">
+        <summary>How do volume discounts work?</summary>
+        <p>Discounts apply automatically when you cross a threshold. For custom quantities above 150 credits, the discounted rate is calculated in real time.</p>
+      </details>
+      <details class="faq-item">
+        <summary>What payment methods do you accept?</summary>
+        <p>We accept cards, bank transfers, and mobile money. All transactions are processed securely via our payment gateway.</p>
+      </details>
+    </div>
+  </section>
+
+  <section class="cta-banner">
+    <div class="container">
+      <h2>Ready to start scanning?</h2>
+      <p>Create your account and get started in minutes.</p>
+      <div style="display:flex; gap:var(--S-16); justify-content:center; flex-wrap:wrap">
+        <a class="btn btn-primary btn-large" href="/signup.html">Sign Up Free</a>
+        <a class="btn btn-outline btn-large" href="/">How it works</a>
+      </div>
+    </div>
+  </section>
+
+  <footer>
+    <div class="container">
+      <div class="footer-links">
+        <div class="footer-col"><h4>Product</h4><a href="/">Pattern Accuracy</a><a href="/dashboard">Developer API</a><a href="/sizepassport.html">Size Profile</a><a href="/pricing.html">Pricing</a></div>
+        <div class="footer-col"><h4>Company</h4><a href="/about.html">About KORRA</a><a href="/casestudies.html">Case Studies</a></div>
+        <div class="footer-col"><h4>Impact</h4><a href="/impact.html">Our Mission</a></div>
+        <div class="footer-col"><h4>Legal</h4><a href="/legal.html">Data Privacy</a><a href="/legal.html">Terms of Service</a></div>
+      </div>
+      <div style="margin-top:80px; padding-top:40px; border-top:1px solid var(--Glass-Border); display:flex; justify-content:space-between; align-items:center; font-size:13px; opacity:0.3">
+        <span>© 2026 KORRA AI. Scaling artisan infrastructure worldwide.</span>
+        <div style="display:flex; gap:32px"><span>Twitter</span><span>LinkedIn</span></div>
+      </div>
+    </div>
+  </footer>
+
+  <script>
+    (function() {
+      const hamburger = document.getElementById('btnHamburger');
+      const mobileMenu = document.getElementById('mobileMenu');
+      window.toggleMenu = function() {
+        if (!hamburger || !mobileMenu) return;
+        hamburger.classList.toggle('active');
+        mobileMenu.classList.toggle('active');
+        document.body.style.overflow = mobileMenu.classList.contains('active') ? 'hidden' : '';
+      };
+      if (hamburger) hamburger.addEventListener('click', toggleMenu);
+      window.addEventListener('scroll', () => {
+        const header = document.getElementById('mainHeader');
+        if (header) {
+          if (window.scrollY > 40) header.classList.add('scrolled');
+          else header.classList.remove('scrolled');
+        }
+      });
+
+      const BASE_PRICE = 685;
+
+      window.getBundleDiscount = function(credits) {
+        if (credits >= 2000) return 0.25;
+        if (credits > 500) return 0.20;
+        if (credits === 500) return 0.15;
+        if (credits >= 150) return 0.10;
+        return 0.0;
+      };
+
+      window.getBundlePrice = function(credits) {
+        const disc = window.getBundleDiscount(credits);
+        const per = Math.round(BASE_PRICE * (1 - disc));
+        return { per, total: per * credits, discount: disc };
+      };
+
+      window.updateCustomPricing = function() {
+        const input = document.getElementById('customQty');
+        const discountLabel = document.getElementById('customDiscountLabel');
+        const buyBtn = document.getElementById('customBuyBtn');
+        let qty = parseInt(input.value) || 0;
+        if (qty < 1) qty = 1;
+        const p = window.getBundlePrice(qty);
+        const baseTotal = BASE_PRICE * qty;
+        const saved = baseTotal - p.total;
+        const fmt = (n) => '₦' + n.toLocaleString();
+        document.querySelector('.custom-total').textContent = fmt(p.total);
+        document.querySelector('.custom-per').textContent = fmt(p.per) + ' / scan';
+        if (p.discount > 0) {
+          discountLabel.textContent = 'Save ' + fmt(Math.round(saved)) + ' (' + (p.discount * 100) + '%)';
+          discountLabel.style.display = 'inline';
+        } else {
+          discountLabel.style.display = 'none';
+        }
+
+        const tiers = [0, 10, 15, 20, 25];
+        const pct = p.discount * 100;
+        document.querySelectorAll('.custom-discount-tiers span').forEach((el, i) => {
+          el.classList.toggle('active', tiers[i] === pct);
+        });
+      };
+
+      window.updateCustomPricing();
+    })();
+  </script>
+</body>
+</html>

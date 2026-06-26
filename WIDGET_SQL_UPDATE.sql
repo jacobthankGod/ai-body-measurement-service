@@ -4,14 +4,14 @@
 -- 1. Extend Profiles Table with comprehensive widget configuration
 ALTER TABLE profiles
 ADD COLUMN IF NOT EXISTS widget_config JSONB DEFAULT '{
-  "primary": "#57D7C0",
+  "primary": "#C6FF00",
   "theme": "dark",
   "brand_name": "KORRA",
   "brand_color": "#FFFFFF",
   "logo_size": 24,
   "btn_text_fitting": "Get body measurements",
   "btn_text_measured": "Get Measured",
-  "btn_color": "#57D7C0",
+  "btn_color": "#C6FF00",
   "btn_text_color": "#050505"
 }'::jsonb;
 

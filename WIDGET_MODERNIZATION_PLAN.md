@@ -25,7 +25,7 @@
 ### 5. Widget Customization Colors (widget.html CSS)
 Only colors defined in CSS :root:
 ```
---Mint: #57D7C0
+--Mint: #C6FF00
 --Obsidian: #000000
 --Glass: rgba(255, 255, 255, 0.04)
 ```

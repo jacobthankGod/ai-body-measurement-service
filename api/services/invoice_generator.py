@@ -185,7 +185,7 @@ async def _generate_pdf_html(invoice: Dict[str, Any]) -> str:
         <style>
             body {{ font-family: Helvetica, Arial, sans-serif; padding: 40px; }}
             .header {{ margin-bottom: 40px; }}
-            .title {{ font-size: 32px; font-weight: bold; color: #57D7C0; }}
+            .title {{ font-size: 32px; font-weight: bold; color: #C6FF00; }}
             .subtitle {{ font-size: 14px; color: #666; }}
             .details {{ margin: 20px 0; }}
             .row {{ display: flex; justify-content: space-between; margin: 8px 0; }}

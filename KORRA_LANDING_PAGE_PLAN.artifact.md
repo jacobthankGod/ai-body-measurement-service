@@ -45,7 +45,7 @@ We will replace generic `[X]` placeholders with **Validated Impact Metrics** der
 ---
 
 ## 3. Visual Polish Rules (FOR KORRA)
-1.  **NO COLOR CHANGES**: Strictly maintain **#0A0A0A** and **#57D7C0**.
+1.  **NO COLOR CHANGES**: Strictly maintain **#0A0A0A** and **#C6FF00**.
 2.  **IMAGE DOMINANCE**: Scale all visuals to the **1.5fr grid**—pictures must be larger than the text blocks.
 3.  **TYPOGRAPHY**: Use **Bold 900 Inter** for headers and **Bold 600** for sub-headers.
 4.  **RECTANGULAR BANNER**: The Final CTA must be the horizontal rectangular banner (Double your output).

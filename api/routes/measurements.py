@@ -20,7 +20,10 @@ from typing import Dict, Optional
 # from PIL import Image # MOVED TO LATE IMPORT
 # import numpy as np # MOVED TO LATE IMPORT
 from pathlib import Path
+import httpx
 from fastapi import APIRouter, UploadFile, File, Form, Header, HTTPException, Depends, BackgroundTasks
+
+SUPABASE_URL = os.environ.get("SUPABASE_URL")
 
 # Global Concurrency Throttle: Only 1 AI process at a time on t3.micro 1GiB RAM
 _AI_SEMAPHORES = {}
@@ -151,7 +154,8 @@ async def run_extraction_subprocess_cli(task_id: str, front_path: str, side_path
             proc = await asyncio.create_subprocess_exec(
                 *cmd,
                 stdout=subprocess.PIPE,
-                stderr=subprocess.PIPE
+                stderr=subprocess.PIPE,
+                env={**os.environ, "PYTHONPATH": "/app"}
             )
 
             try:
@@ -163,9 +167,17 @@ async def run_extraction_subprocess_cli(task_id: str, front_path: str, side_path
                 returncode = -1
                 logger.error(f"❌ [TASK {task_id}] AI Process timed out.")
 
+            # Log subprocess output for debugging
+            stdout_str = stdout.decode().strip() if stdout else ""
+            stderr_str = stderr.decode().strip() if stderr else ""
+            if stdout_str:
+                logger.info(f"📤 [TASK {task_id}] Subprocess stdout: {stdout_str[-500:]}")
+            if stderr_str:
+                logger.info(f"📤 [TASK {task_id}] Subprocess stderr: {stderr_str[-500:]}")
+
             # 2. PARSE RESULTS
             if returncode != 0:
-                err_msg = stderr.decode() if stderr else "Unknown exit"
+                err_msg = stderr_str if stderr_str else "Unknown exit"
                 logger.error(f"❌ AI PROCESS CRASHED: {err_msg}")
                 return {"status": "failed", "error": f"AI Subprocess Crashed (RC {returncode}): {err_msg[:200]}"}
             else:
@@ -180,26 +192,35 @@ async def run_extraction_subprocess_cli(task_id: str, front_path: str, side_path
                         landmarks = data["landmarks"]
                         body_shape = data.get("body_shape", "Standard")
                         size_rec = data.get("size_recommendation", "M")
+                        clinical_realism_index = data.get("clinical_realism_index")
                         hmr_error = None
                         mesh_url = f"/meshes/{mesh_filename}" if mesh_path.exists() else None
                     else:
                         raise Exception(data.get("error", "Unknown error in subprocess"))
                 except Exception as e:
                     logger.error(f"❌ FAILED TO PARSE AI OUTPUT: {e}")
+                    logger.error(f"    Raw stdout was: {stdout_str[-200:] if stdout_str else 'N/A'}")
                     return {"status": "failed", "error": f"Parse Error: {str(e)}"}
 
             # 3. CLEANUP TEMP FILES
             if os.path.exists(front_path): os.remove(front_path)
             if os.path.exists(side_path): os.remove(side_path)
 
-# 4. ATOMIC PERSISTENCE (Dual Account - Unicorn Level)
-            from api.services.database_service import DatabaseService
-            DatabaseService.save_measurement(
-                user_id=user_id, client_name=client_name, height=height,
-                gender=gender, biometrics=measurements, landmarks=landmarks,
-                mesh_url=mesh_url, body_shape=body_shape, size_rec=size_rec,
-                client_user_id=client_user_id  # UNICORN: Save to both merchant AND client
-            )
+    # 4. ATOMIC PERSISTENCE (Dual Account - Unicorn Level)
+            if user_id:
+                from api.services.database_service import DatabaseService
+                save_result = DatabaseService.save_measurement(
+                    user_id=user_id, client_name=client_name, height=height,
+                    gender=gender, biometrics=measurements, landmarks=landmarks,
+                    mesh_url=mesh_url, body_shape=body_shape, size_rec=size_rec,
+                    client_user_id=client_user_id,
+                    clinical_realism_index=clinical_realism_index
+                )
+                if not save_result:
+                    logger.error(f"❌ Database save failed for task {task_id}")
+                    return {"status": "failed", "error": "Database save failed"}
+            else:
+                logger.warning(f"⚠️ [TASK {task_id}] No user_id — measurement not persisted (admin/bypass key)")
 
             return {
                 "status": "completed",
@@ -208,6 +229,7 @@ async def run_extraction_subprocess_cli(task_id: str, front_path: str, side_path
                 "landmarks": landmarks,
                 "body_shape": body_shape,
                 "size_recommendation": size_rec,
+                "clinical_realism_index": clinical_realism_index,
                 "debug": hmr_error
             }
 
@@ -244,7 +266,7 @@ async def run_extraction_task(task_id: str, front_bytes: bytes, side_bytes: byte
         logger.info(f"✅ [TASK {task_id}] Process returned control to main server.")
 
         # 4. UNICORN SYNC NOTIFICATIONS (Phase 4)
-        if result.get("status") == "completed":
+        if result.get("status") == "completed" and user_id:
             # Get measurement data for notifications
             measurement_data = result.get("measurements", {})
             body_shape = result.get("body_shape", "Standard")
@@ -265,22 +287,31 @@ async def run_extraction_task(task_id: str, front_bytes: bytes, side_bytes: byte
             # b) Email notification to merchant (via Brevo)
             try:
                 from api.services.email_service import email_service
-                # Get merchant email
-                client = DatabaseService.get_client()
-                if client:
-                    merchant_profile = client.table("profiles").select("email, company_name").eq("id", user_id).single().execute()
-                    if merchant_profile.data:
-                        merchant_email = merchant_profile.data.get("email")
-                        merchant_name = merchant_profile.data.get("company_name") or "Your tailor"
-                        host = os.environ.get("EXTERNAL_URL", "https://korra.work")
-                        await email_service.send_scan_completed_email(
-                            to_email=merchant_email,
-                            merchant_name=merchant_name,
-                            client_name=client_name,
-                            measurement_summary=measurement_data,
-                            dashboard_url=f"{host}/dashboard#measurements"
+                email_client = DatabaseService.get_client()
+                if email_client:
+                    merchant_profile = email_client.table("profiles").select("id, company_name").eq("id", user_id).single().execute()
+                    merchant_name = merchant_profile.data.get("company_name") if merchant_profile.data else "Your tailor"
+                    # Look up email from auth.users via Admin API
+                    supabase_url = os.environ.get("SUPABASE_URL")
+                    service_key = os.environ.get("SUPABASE_SERVICE_ROLE_KEY")
+                    if supabase_url and service_key:
+                        import httpx
+                        auth_resp = httpx.get(
+                            f"{supabase_url}/auth/v1/admin/users/{user_id}",
+                            headers={"Authorization": f"Bearer {service_key}", "apikey": service_key}
                         )
-                        logger.info(f"📧 [TASK {task_id}] Email sent to merchant")
+                        if auth_resp.status_code == 200:
+                            merchant_email = auth_resp.json().get("email")
+                            if merchant_email:
+                                host = os.environ.get("EXTERNAL_URL", "https://korra.work")
+                                await email_service.send_scan_completed_email(
+                                    to_email=merchant_email,
+                                    merchant_name=merchant_name,
+                                    client_name=client_name,
+                                    measurement_summary=measurement_data,
+                                    dashboard_url=f"{host}/dashboard#measurements"
+                                )
+                                logger.info(f"📧 [TASK {task_id}] Email sent to {merchant_email}")
             except Exception as e:
                 logger.warning(f"Email notification failed: {e}")
             
@@ -302,7 +333,7 @@ async def run_extraction_task(task_id: str, front_bytes: bytes, side_bytes: byte
             except Exception as e:
                 logger.warning(f"Webhook trigger failed: {e}")
 
-        if result.get("status") == "failed":
+        if result.get("status") == "failed" and user_id:
             from middleware.subscription_check import refund_credit
             await refund_credit(user_id)
             logger.info(f"♻️ [TASK {task_id}] Credit refunded due to AI core rejection.")
@@ -313,8 +344,9 @@ async def run_extraction_task(task_id: str, front_bytes: bytes, side_bytes: byte
         update_task(task_id, { "status": "failed", "error": error_msg })
 
         # PHASE 20: REFUND PROTOCOL
-        from middleware.subscription_check import refund_credit
-        await refund_credit(user_id)
+        if user_id:
+            from middleware.subscription_check import refund_credit
+            await refund_credit(user_id)
 
 @router.post("/measurements/extract")
 async def start_extraction(
@@ -426,6 +458,98 @@ async def get_extraction_status(task_id: str):
     except Exception as e:
         logger.error(f"Status check failed: {e}")
         return {"status": "processing", "error": "Handshake jitter"}
+
+@router.post("/keys/provision")
+async def provision_api_key(
+    authorization: str = Header(None),
+    regenerate: bool = False
+):
+    """
+    Auto-provision an API key for the authenticated user.
+    Verifies the user's Supabase JWT, checks for an existing api_keys entry,
+    creates one if missing, and returns the key.
+    Pass regenerate=true to rotate the key (deletes old, creates new).
+    """
+    if not authorization or not authorization.startswith("Bearer "):
+        raise HTTPException(status_code=401, detail="Missing or invalid authorization header")
+    token = authorization.split(" ", 1)[1]
+
+    supabase_anon = os.environ.get("SUPABASE_ANON_KEY") or "sb_publishable_miCOIXHtlxLkfDgpwE0N-g_BA1Q-x8y"
+    supabase_url = os.environ.get("SUPABASE_URL")
+    if not supabase_url:
+        raise HTTPException(status_code=500, detail="Server configuration error")
+
+    try:
+        async with httpx.AsyncClient() as client:
+            auth_resp = await client.get(
+                f"{supabase_url}/auth/v1/user",
+                headers={
+                    "Authorization": f"Bearer {token}",
+                    "apikey": supabase_anon
+                }
+            )
+            if auth_resp.status_code != 200:
+                raise HTTPException(status_code=401, detail="Invalid or expired token")
+            user_id = auth_resp.json().get("id")
+            if not user_id:
+                raise HTTPException(status_code=401, detail="Could not identify user from token")
+    except HTTPException:
+        raise
+    except Exception as e:
+        logger.error(f"❌ JWT verification failed: {e}")
+        raise HTTPException(status_code=500, detail="Authentication service unavailable")
+
+    db_client = DatabaseService.get_client()
+    if not db_client:
+        raise HTTPException(status_code=500, detail="Database unavailable")
+
+    PLAN_TIER_MAP = {
+        "starter": "tailor_pro",
+        "tailor_basic": "tailor_pro",
+        "pro": "tailor_pro",
+        "tailor_pro": "tailor_pro",
+        "elite": "tailor_elite",
+        "tailor_elite": "tailor_elite",
+        "enterprise": "enterprise",
+    }
+    DEFAULT_TIER = "tailor_pro"
+
+    try:
+        if regenerate:
+            db_client.table("api_keys").update({"is_active": False}).eq("user_id", user_id).execute()
+            logger.info(f"🔑 Deactivated old keys for user {user_id[:8]}...")
+
+        existing = db_client.table("api_keys").select("*").eq("user_id", user_id).eq("is_active", True).execute()
+        if existing.data and not regenerate:
+            key_data = existing.data[0]
+            logger.info(f"🔑 Existing key found for user {user_id[:8]}...")
+            return {
+                "key": key_data["key"],
+                "tier": key_data.get("tier", DEFAULT_TIER),
+                "created": False
+            }
+
+        # Look up user's plan from profiles to assign correct tier
+        try:
+            profile_resp = db_client.table("profiles").select("selected_plan").eq("id", user_id).single().execute()
+            plan = profile_resp.data.get("selected_plan", "") if profile_resp.data else ""
+            tier = PLAN_TIER_MAP.get(plan, DEFAULT_TIER)
+        except Exception:
+            tier = DEFAULT_TIER
+
+        new_key = "korra_live_" + str(uuid.uuid4())
+        db_client.table("api_keys").insert({
+            "key": new_key,
+            "user_id": user_id,
+            "tier": tier,
+            "is_active": True
+        }).execute()
+        logger.info(f"🔑 New API key provisioned for user {user_id[:8]}... tier={tier}")
+        return {"key": new_key, "tier": tier, "created": True}
+    except Exception as e:
+        logger.error(f"❌ API key provisioning failed: {e}")
+        raise HTTPException(status_code=500, detail="Failed to provision API key")
+
 
 @router.post("/refinement/impute")
 async def impute_biometrics(gender: str, data: dict):

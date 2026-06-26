@@ -50,5 +50,5 @@
 All four roles share the **Glassmorphism Design System**:
 1.  **Surfaces:** Semi-transparent #171717 panels with `backdrop-filter: blur(20px)`.
 2.  **Typography:** Inter (Bold) for data points, Inter (Light) for secondary labels.
-3.  **Accents:** #57D7C0 (Teal) for success/action, #FFC247 (Orange) for "Low Credits" or "Scan Error."
+3.  **Accents:** #C6FF00 (Teal) for success/action, #FFC247 (Orange) for "Low Credits" or "Scan Error."
 4.  **Navigation:** Bottom-tab navigation for Mobile (Home, Clients, Scan, Settings).

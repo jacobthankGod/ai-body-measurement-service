@@ -6,7 +6,7 @@
 ### Phase 1: Foundation & Global Logic (Steps 1–10)
 1.  **Template Inventory:** Map all current `dashboard.html` HTML snippets (e.g., `#view-overview`, `#view-vault`) to reusable JavaScript components to eliminate clutter.
 2.  **Theme Engine:** Initialize `KORRA_THEME_ENGINE` in `dashboard.html` script block to auto-detect `account_type` from Supabase on login and trigger role-specific UI.
-3.  **Global Token CSS:** Define CSS variables for `--Mint: #57D7C0`, `--Glass: rgba(255, 255, 255, 0.04)`, and `--Obsidian: #0C0C0C` in `dashboard.html` `:root`.
+3.  **Global Token CSS:** Define CSS variables for `--Mint: #C6FF00`, `--Glass: rgba(255, 255, 255, 0.04)`, and `--Obsidian: #0C0C0C` in `dashboard.html` `:root`.
 4.  **Profile Refactor:** Update the central profile fetch logic in `dashboard.html` (`init()` function) to retrieve role-specific metadata like `widget_config` and `brand_mapping`.
 5.  **Layout Manager:** Build a logic layer in `dashboard.html` to toggle `.sidebar-nav` (Desktop) vs. Fixed Bottom-Nav (Mobile) based on screen width (Mobile standard 4-tab).
 6.  **Jargon Dictionary:** Create a lookup table in JS to map technical terms to friendly terms (e.g., "Webhooks" -> "Auto-Sync", "Avg Precision" -> "Scan Confidence").

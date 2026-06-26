@@ -2,7 +2,7 @@
 -- Run this in Supabase SQL Editor
 
 ALTER TABLE public.profiles 
-ADD COLUMN IF NOT EXISTS widget_config JSONB DEFAULT '{"primary": "#57D7C0", "theme": "dark"}'::jsonb;
+ADD COLUMN IF NOT EXISTS widget_config JSONB DEFAULT '{"primary": "#C6FF00", "theme": "dark"}'::jsonb;
 
 -- Verify the column was added
 SELECT column_name, data_type 

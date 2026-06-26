@@ -17,30 +17,34 @@ SUBSCRIPTION_QUOTAS = {
 }
 
 def validate_subscription(api_key):
-    """Asynchronously validate subscription."""
+    """
+    Unified API key validation.
+    ALL keys (merchant, admin, publishable) are looked up in the api_keys table.
+    Admin bypass (korra_admin_* / PRECISIONFIT_MASTER_KEY) still works for
+    development but returns no user_id, so persistence is skipped.
+    """
     if not api_key:
         return {'valid': False, 'error': 'API key required'}
 
-    # --- ADMIN OVERDRIVE BYPASS (Phase 3) ---
-    # Any key starting with 'korra_admin_' or matching the MASTER_KEY has infinite credits.
     master_key = os.environ.get("PRECISIONFIT_MASTER_KEY")
-    if (master_key and api_key == master_key) or api_key.startswith("korra_admin_"):
-        return {'valid': True, 'tier': 'enterprise', 'is_admin': True}
+    is_admin = (master_key and api_key == master_key) or api_key.startswith("korra_admin_")
 
-    # Query database for standard merchant keys
+    # All keys go through api_keys table — single source of truth
     key_data = DatabaseService.get_api_key(api_key)
-    
+
     if not key_data:
+        if is_admin:
+            return {'valid': True, 'tier': 'enterprise', 'is_admin': True}
         return {'valid': False, 'error': 'Invalid API key'}
-    
+
+    user_id = key_data.get('user_id')
     tier = key_data.get('tier', 'tailor_basic')
     quota = SUBSCRIPTION_QUOTAS.get(tier, 0)
 
-    # Note: In Phase 8, this will check 'usage_logs' table against 'quota'
-    if quota == 0:
+    if quota == 0 and not is_admin:
         return {'valid': False, 'error': f'AI Body Scan not included in {tier} plan'}
 
-    return {'valid': True, 'tier': tier}
+    return {'valid': True, 'tier': tier, 'is_admin': is_admin, 'user_id': user_id}
 
 def track_usage(api_key):
     """Asynchronously track API usage."""

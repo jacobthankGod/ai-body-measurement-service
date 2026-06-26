@@ -67,7 +67,7 @@ class DatabaseService:
             return None
 
     @classmethod
-    def save_measurement(cls, user_id: str, client_name: str, height: float, gender: str, biometrics: dict, landmarks: dict = None, mesh_url: str = None, body_shape: str = None, size_rec: str = None, client_user_id: str = None):
+    def save_measurement(cls, user_id: str, client_name: str, height: float, gender: str, biometrics: dict, landmarks: dict = None, mesh_url: str = None, body_shape: str = None, size_rec: str = None, client_user_id: str = None, clinical_realism_index: float = None):
         """
         Save measurement to database.
         
@@ -81,14 +81,17 @@ class DatabaseService:
         if not client:
             logger.error("❌ DatabaseService: Supabase client is None - ENV variables missing!")
             return None
+
+        if not user_id:
+            logger.error("❌ DatabaseService: user_id is None — cannot persist measurement")
             return None
-        
+
         results = []
-        
+
         # 1. Save under merchant's account (for professional's dashboard)
         try:
             merchant_payload = {
-                "user_id": user_id,  # Merchant/Professional ID
+                "user_id": user_id,
                 "client_name": client_name,
                 "height": height,
                 "gender": gender,
@@ -97,24 +100,26 @@ class DatabaseService:
                 "mesh_url": mesh_url,
                 "body_shape": body_shape,
                 "size_recommendation": size_rec,
+                "clinical_realism_index": clinical_realism_index,
+                "source_of_truth": True,
                 "created_at": datetime.utcnow().isoformat()
             }
             logger.info(f"💾 DatabaseService: Saving to merchant {user_id} for {client_name}")
-            
+
             response = client.table("measurements").insert(merchant_payload).execute()
             if response.data:
                 logger.info(f"✅ Merchant measurement saved! ID: {response.data[0].get('id')}")
                 results.append({"account": "merchant", "id": response.data[0].get('id')})
             else:
-                logger.error("❌ Merchant measurement insert failed")
+                logger.error("❌ Merchant measurement insert failed — no data returned")
         except Exception as e:
             logger.error(f"❌ Merchant measurement save FAILED: {e}")
-        
-        # 2. UNICORN FEATURE: Save under client's own account (client owns their biometric passport)
+
+        # 2. Save under client's own account (client ownership, if different from merchant)
         if client_user_id and client_user_id != user_id:
             try:
                 client_payload = {
-                    "user_id": client_user_id,  # Client's own ID
+                    "user_id": client_user_id,
                     "client_name": client_name,
                     "height": height,
                     "gender": gender,
@@ -123,19 +128,21 @@ class DatabaseService:
                     "mesh_url": mesh_url,
                     "body_shape": body_shape,
                     "size_recommendation": size_rec,
+                    "clinical_realism_index": clinical_realism_index,
+                    "source_of_truth": True,
                     "created_at": datetime.utcnow().isoformat()
                 }
-                logger.info(f"💾 DatabaseService: Saving to client {client_user_id} (client ownership)")
-                
+                logger.info(f"💾 DatabaseService: Saving to client {client_user_id}")
+
                 response = client.table("measurements").insert(client_payload).execute()
                 if response.data:
                     logger.info(f"✅ Client measurement saved! ID: {response.data[0].get('id')}")
                     results.append({"account": "client", "id": response.data[0].get('id')})
                 else:
-                    logger.error("❌ Client measurement insert failed")
+                    logger.error("❌ Client measurement insert failed — no data returned")
             except Exception as e:
                 logger.error(f"❌ Client measurement save FAILED: {e}")
-        
+
         return results if results else None
 
     @classmethod

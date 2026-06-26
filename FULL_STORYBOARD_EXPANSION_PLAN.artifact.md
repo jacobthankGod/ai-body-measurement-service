@@ -34,7 +34,7 @@
 *   **Container**: 1150px (Nops-Style) for post-hero sections.
 *   **Grid**: 1fr 1.5fr (Visuals dominate text).
 *   **Typo**: Bold 800-900 Weight. Compact headers.
-*   **Colors**: #0A0A0A base with #57D7C0 accents.
+*   **Colors**: #0A0A0A base with #C6FF00 accents.
 
 ---
 

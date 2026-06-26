@@ -26,7 +26,7 @@ class KorraVisualizer {
         if (!container) return;
 
         this.scene = new THREE.Scene();
-        this.scene.background = new THREE.Color(0x000000);
+        this.scene.background = new THREE.Color(0xD4D4D4);
 
         const aspect = container.clientWidth / container.clientHeight;
         this.camera = new THREE.PerspectiveCamera(45, aspect, 0.1, 1000);
@@ -39,17 +39,21 @@ class KorraVisualizer {
         container.innerHTML = '';
         container.appendChild(this.renderer.domElement);
 
-        this.grid = new THREE.GridHelper(10, 20, 0x57D7C0, 0x222222);
-        this.grid.material.opacity = 0.2;
+        this.grid = new THREE.GridHelper(10, 20, 0x666666, 0xAAAAAA);
+        this.grid.material.opacity = 0.6;
         this.grid.material.transparent = true;
         this.scene.add(this.grid);
 
-        const ambient = new THREE.AmbientLight(0xffffff, 0.5);
+        const ambient = new THREE.AmbientLight(0xffffff, 0.8);
         this.scene.add(ambient);
 
-        const mainLight = new THREE.DirectionalLight(0x57D7C0, 2.0);
+        const mainLight = new THREE.DirectionalLight(0xffffff, 1.5);
         mainLight.position.set(5, 10, 7.5);
         this.scene.add(mainLight);
+
+        const fillLight = new THREE.DirectionalLight(0xffffff, 0.4);
+        fillLight.position.set(-3, 1, -2);
+        this.scene.add(fillLight);
 
         const animate = () => {
             if (!this.renderer) return;
@@ -101,6 +105,15 @@ class KorraVisualizer {
     }
 
     async loadMesh(objUrl, landmarkData = null) {
+        if (!this.scene) {
+            const container = document.getElementById('dashboard-3d-viewport');
+            if (container) {
+                this.init('dashboard-3d-viewport');
+            } else {
+                console.warn('🟡 3D viewport container not found, skipping mesh load');
+                return null;
+            }
+        }
         if (!objUrl || objUrl === 'null') {
             this.createTechnicalProxy();
             return null;
@@ -178,19 +191,19 @@ class KorraVisualizer {
         geometry.center();
 
         const material = new THREE.MeshPhongMaterial({
-            color: 0x57D7C0,
+            color: 0x2C3E50,
             wireframe: true,
             transparent: true,
             opacity: 0.9,
             shininess: 100,
             side: THREE.DoubleSide,
             // PHASE 80: Unicorn Glass shader refinements
-            emissive: 0x002D2A,
-            emissiveIntensity: 0.2,
+            emissive: 0x888888,
+            emissiveIntensity: 0.1,
             flatShading: false
         });
 
-        if (this.mesh) this.scene.remove(this.mesh);
+        if (this.mesh && this.scene) this.scene.remove(this.mesh);
         this.mesh = new THREE.Mesh(geometry, material);
         this.mesh.rotation.x = Math.PI;
         this.mesh.rotation.y = Math.PI;
@@ -212,7 +225,7 @@ class KorraVisualizer {
     }
 
     renderLandmarks(landmarks, modelSize) {
-        if (this.landmarksGroup) this.scene.remove(this.landmarksGroup);
+        if (this.landmarksGroup && this.scene) this.scene.remove(this.landmarksGroup);
         this.landmarksGroup = new THREE.Group();
         const dotGeo = new THREE.SphereGeometry(0.02, 16, 16);
         const dotMat = new THREE.MeshBasicMaterial({ color: 0xFFFFFF });
@@ -243,8 +256,8 @@ class KorraVisualizer {
 
         // Logic: Apply a specific shader or just hide the head vertices
         // For Phase 119, we will use emissive color as a visual indicator
-        this.mesh.material.emissiveIntensity = active ? 1.0 : 0.2;
-        this.mesh.material.emissive.setHex(active ? 0x000000 : 0x002D2A);
+        this.mesh.material.emissiveIntensity = active ? 1.0 : 0.1;
+        this.mesh.material.emissive.setHex(active ? 0x000000 : 0x888888);
         console.log(`🛡️ Phase 119: Privacy Shield ${active ? 'ACTIVE' : 'INACTIVE'}`);
     }
 
@@ -294,14 +307,23 @@ class KorraVisualizer {
     }
 
     createTechnicalProxy() {
-        if (this.mesh) this.scene.remove(this.mesh);
+        if (this.mesh) {
+            if (this.scene) this.scene.remove(this.mesh);
+            if (this.mesh.geometry) this.mesh.geometry.dispose();
+            if (this.mesh.material) {
+                if (Array.isArray(this.mesh.material))
+                    this.mesh.material.forEach(m => m.dispose());
+                else
+                    this.mesh.material.dispose();
+            }
+        }
         const group = new THREE.Group();
-        const mat = new THREE.MeshPhongMaterial({ color: 0x57D7C0, wireframe: true, transparent: true, opacity: 0.1 });
+        const mat = new THREE.MeshPhongMaterial({ color: 0x2C3E50, wireframe: true, transparent: true, opacity: 0.2 });
         const torso = new THREE.Mesh(new THREE.CylinderGeometry(0.3, 0.25, 0.8, 16), mat);
         torso.position.y = 1.0;
         group.add(torso);
         this.mesh = group;
-        this.scene.add(this.mesh);
+        if (this.scene) this.scene.add(this.mesh);
     }
 }
 

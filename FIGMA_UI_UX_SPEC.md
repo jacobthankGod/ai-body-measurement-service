@@ -4,7 +4,7 @@ This document defines the high-contrast, immersive design system for the Precisi
 
 ## 1. Visual Identity (The "Obsidian & Mint" Palette)
 - **Primary Base**: `#0A0A0A` (Obsidian Black)
-- **Accent High-Light**: `#57D7C0` (Electric Mint)
+- **Accent High-Light**: `#C6FF00` (Electric Mint)
 - **Secondary Surface**: `rgba(255, 255, 255, 0.03)` (Frosted Glass)
 - **Typography**: Inter (Variable), 900 weight for headlines.
 - **Atmosphere**: Deep shadows, subtle glows, and ultra-crisp borders.

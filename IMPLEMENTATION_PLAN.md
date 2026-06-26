@@ -6,7 +6,7 @@ After fetching latest GitHub code, here's what's in place:
 
 ### Frontend (share.html):
 ✅ Already implemented:
-- Vibrant Mint (#57D7C0) for accurate pose
+- Vibrant Mint (#C6FF00) for accurate pose
 - Pure White (#FFFFFF) for inaccurate pose  
 - 6px/4px lineWidth (sleeker lines)
 - No glow (shadowBlur: 0)

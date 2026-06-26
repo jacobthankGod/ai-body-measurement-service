@@ -45,12 +45,12 @@ async def send_scan_link(
         html_content = f'''
         <div style="font-family: 'Inter', sans-serif; max-width: 600px; margin: 0 auto; padding: 40px; border: 1px solid rgba(255,255,255,0.1); border-radius: 24px; background: #000;">
             <div style="text-align: center; margin-bottom: 32px;">
-                <div style="width: 40px; height: 40px; background: #57D7C0; border-radius: 8px; display: inline-block; transform: rotate(-8deg);"></div>
+                <div style="width: 40px; height: 40px; background: #C6FF00; border-radius: 8px; display: inline-block; transform: rotate(-8deg);"></div>
                 <h1 style="color: #fff; font-size: 24px; margin-top: 16px;">Digital Body Scan</h1>
             </div>
             <p style="color: #A3A3A3; line-height: 1.6; margin-bottom: 32px;">Your artisan has invited you to capture your biometric profile for perfect-fit clothing.</p>
             <div style="text-align: center; margin: 40px 0;">
-                <a href="{scan_url}" style="background-color: #57D7C0; color: #000; padding: 16px 32px; border-radius: 12px; text-decoration: none; font-weight: 800; display: inline-block;">START SCAN</a>
+                <a href="{scan_url}" style="background-color: #C6FF00; color: #000; padding: 16px 32px; border-radius: 12px; text-decoration: none; font-weight: 800; display: inline-block;">START SCAN</a>
             </div>
             <p style="font-size: 11px; color: #737373; text-align: center;">One-time use. Link expires in 24 hours.</p>
         </div>

@@ -21,13 +21,13 @@ window.KORRA_ANALYTICS = {
                     {
                         label: 'GLOBAL SCANS',
                         data: scanData,
-                        borderColor: '#57D7C0',
+                        borderColor: '#C6FF00',
                         backgroundColor: 'rgba(87, 215, 192, 0.1)',
                         borderWidth: 3,
                         tension: 0.4,
                         fill: true,
                         pointRadius: 4,
-                        pointBackgroundColor: '#57D7C0'
+                        pointBackgroundColor: '#C6FF00'
                     },
                     {
                         label: 'NEW MERCHANTS',
@@ -78,7 +78,7 @@ window.KORRA_ANALYTICS = {
                 datasets: [{
                     data: data,
                     backgroundColor: [
-                        '#57D7C0',
+                        '#C6FF00',
                         'rgba(87, 215, 192, 0.6)',
                         'rgba(87, 215, 192, 0.3)',
                         '#111111'

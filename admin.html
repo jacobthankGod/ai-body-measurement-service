@@ -10,7 +10,7 @@
   <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800;900&display=swap" rel="stylesheet" />
   <style>
     :root {
-      --Obsidian: #000000; --Mint: #57D7C0; --Teal-900: #002D2A; --Glass: rgba(255, 255, 255, 0.04);
+      --Obsidian: #000000; --Mint: #C6FF00; --Teal-900: #002D2A; --Glass: rgba(255, 255, 255, 0.04);
       --Glass-Border: rgba(255, 255, 255, 0.1); --Neutral-400: #A3A3A3; --Neutral-500: #737373; --White: #FFFFFF; --Error: #D63031;
     }
     * { box-sizing: border-box; -webkit-font-smoothing: antialiased; margin: 0; padding: 0; }
@@ -55,7 +55,7 @@
     .guide-tag { position: absolute; top: 12px; left: 12px; background: var(--Mint); color: var(--Obsidian); font-size: 8px; font-weight: 900; padding: 4px 8px; border-radius: 4px; letter-spacing: 0.05em; }
 
     .preview-box { width: 100%; height: 80px; border-radius: 12px; border: 1px dashed var(--Glass-Border); display: flex; flex-direction: column; align-items: center; justify-content: center; overflow: hidden; position: relative; cursor: pointer; background: rgba(255,255,255,0.02); transition: 0.2s; }
-    .preview-box:hover { border-color: var(--Mint); background: rgba(87,215,192,0.02); }
+    .preview-box:hover { border-color: var(--Mint); background: rgba(198,255,0,0.02); }
     .preview-box span { font-size: 10px; font-weight: 900; color: var(--White); text-transform: uppercase; z-index: 2; }
     .preview-box .tap-hint { font-size: 8px; color: var(--Mint); margin-top: 4px; font-weight: 700; z-index: 2; }
     .preview-img { position: absolute; inset: 0; width: 100%; height: 100%; object-fit: cover; z-index: 5; display: none; }
@@ -65,11 +65,11 @@
     .health-item { display: flex; align-items: center; justify-content: space-between; padding: 16px; border-radius: 12px; background: rgba(255,255,255,0.02); margin-bottom: 12px; border: 1px solid var(--Glass-Border); }
     .health-label { font-size: 12px; font-weight: 700; }
     .health-status { font-size: 10px; font-weight: 900; text-transform: uppercase; padding: 4px 8px; border-radius: 4px; }
-    .status-ok { color: var(--Mint); background: rgba(87,215,192,0.1); }
+    .status-ok { color: var(--Mint); background: rgba(198,255,0,0.1); }
     .status-err { color: var(--Error); background: rgba(214,48,49,0.1); }
     .qr-container { display: none; text-align: center; margin-top: 32px; padding: 24px; border-radius: 16px; background: #fff; border: 1px solid #eee; }
     .qr-container img { width: 200px; height: 200px; margin-bottom: 16px; }
-    .polling-overlay { display: none; flex-direction: column; align-items: center; justify-content: center; margin-top: 24px; padding: 24px; background: rgba(87,215,192,0.05); border-radius: 16px; border: 1px solid var(--Mint); }
+    .polling-overlay { display: none; flex-direction: column; align-items: center; justify-content: center; margin-top: 24px; padding: 24px; background: rgba(198,255,0,0.05); border-radius: 16px; border: 1px solid var(--Mint); }
     .polling-bar { width: 100%; height: 4px; background: rgba(255,255,255,0.1); border-radius: 99px; margin-top: 16px; overflow: hidden; }
     .polling-fill { width: 0%; height: 100%; background: var(--Mint); transition: 0.5s cubic-bezier(0.1, 0, 0.2, 1); }
     #networkStatus { display: flex; align-items: center; gap: 8px; font-size: 10px; font-weight: 800; text-transform: uppercase; letter-spacing: 0.05em; color: var(--Mint); transition: 0.3s; }
@@ -78,7 +78,7 @@
     #networkStatus.offline .status-dot { background: var(--Error); box-shadow: 0 0 10px var(--Error); animation: none; }
     #offlineOverlay { position: fixed; inset: 0; background: rgba(0,0,0,0.85); backdrop-filter: blur(10px); z-index: 99999999; display: none; align-items: center; justify-content: center; text-align: center; }
     .offline-card { background: var(--Glass); border: 1px solid var(--Glass-Border); padding: 40px; border-radius: 24px; max-width: 320px; }
-    .pro-tips-card { background: rgba(87, 215, 192, 0.05); border: 1px solid rgba(87, 215, 192, 0.2); border-radius: 20px; padding: 20px; margin-top: 24px; text-align: left; }
+    .pro-tips-card { background: rgba(198, 255, 0, 0.05); border: 1px solid rgba(198, 255, 0, 0.2); border-radius: 20px; padding: 20px; margin-top: 24px; text-align: left; }
     .pro-tips-card h4 { font-size: 11px; font-weight: 900; color: var(--Mint); text-transform: uppercase; margin-bottom: 12px; display: flex; align-items: center; gap: 8px; }
     .tip-row { display: flex; gap: 12px; margin-bottom: 10px; font-size: 11px; color: var(--Neutral-400); line-height: 1.4; }
     .tip-bullet { color: var(--Mint); font-weight: 900; }
@@ -88,7 +88,7 @@
     #camera-video { width: 100%; height: 100%; object-fit: cover; transform: scaleX(-1); }
     #camera-canvas { position: absolute; inset: 0; width: 100%; height: 100%; z-index: 10; transform: scaleX(-1); }
     .camera-overlay { position: absolute; inset: 0; z-index: 20; pointer-events: none; display: flex; flex-direction: column; align-items: center; justify-content: space-between; padding: 60px 24px; }
-    .camera-guidance { background: rgba(0,0,0,0.8); backdrop-filter: blur(12px); padding: 16px 32px; border-radius: 99px; border: 2px solid var(--Mint); color: var(--White); font-size: 16px; font-weight: 900; text-align: center; text-transform: uppercase; letter-spacing: 0.05em; box-shadow: 0 0 30px rgba(87, 215, 192, 0.3); }
+    .camera-guidance { background: rgba(0,0,0,0.8); backdrop-filter: blur(12px); padding: 16px 32px; border-radius: 99px; border: 2px solid var(--Mint); color: var(--White); font-size: 16px; font-weight: 900; text-align: center; text-transform: uppercase; letter-spacing: 0.05em; box-shadow: 0 0 30px rgba(198, 255, 0, 0.3); }
     .camera-controls { position: absolute; bottom: 40px; left: 0; right: 0; display: flex; justify-content: center; align-items: center; gap: 32px; z-index: 30; }
     .camera-review-controls { position: absolute; bottom: 40px; left: 0; right: 0; display: none; justify-content: center; align-items: center; gap: 24px; z-index: 50; padding: 0 24px; }
     .btn-review { height: 56px; border-radius: 12px; font-weight: 800; cursor: pointer; flex: 1; text-transform: uppercase; font-size: 14px; border: none; }
@@ -245,12 +245,12 @@
               </div>
 
               <div id="korra-3d-viewport"></div>
-              <div id="measurementResultsCard" class="glass-card" style="display:none; margin-top:24px; background:linear-gradient(135deg, rgba(87,215,192,0.05) 0%, rgba(0,0,0,0.4) 100%)">
+              <div id="measurementResultsCard" class="glass-card" style="display:none; margin-top:24px; background:linear-gradient(135deg, rgba(198,255,0,0.05) 0%, rgba(0,0,0,0.4) 100%)">
                 <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:24px"><h4 style="font-size:16px; font-weight:900; color:var(--Mint); margin:0">MEASUREMENT RESULTS</h4><div class="unit-toggle" style="background:rgba(255,255,255,0.1); border-radius:20px; padding:2px; display:flex; cursor:pointer" onclick="window.toggleUnits()"><div id="unit-cm" style="padding:4px 12px; border-radius:18px; font-size:10px; font-weight:900; background:var(--Mint); color:var(--Teal-900)">CM</div><div id="unit-in" style="padding:4px 12px; border-radius:18px; font-size:10px; font-weight:900; color:var(--Neutral-400)">IN</div></div></div>
                 <div id="measurementGridUpper" style="display:grid; grid-template-columns:repeat(4,1fr); gap:8px; margin-bottom:20px"></div>
                 <div id="measurementGridMiddle" style="display:grid; grid-template-columns:repeat(4,1fr); gap:8px; margin-bottom:20px"></div>
                 <div id="measurementGridLower" style="display:grid; grid-template-columns:repeat(4,1fr); gap:8px; margin-bottom:20px"></div>
-                <div style="padding:16px; background:rgba(87,215,192,0.1); border-radius:12px; border:1px solid var(--Mint); display:flex; justify-content:space-around; text-align:center">
+                <div style="padding:16px; background:rgba(198,255,0,0.1); border-radius:12px; border:1px solid var(--Mint); display:flex; justify-content:space-around; text-align:center">
                     <div><div style="font-size:10px; color:var(--Neutral-500)">HEIGHT</div><div style="font-size:20px; font-weight:900; color:var(--Mint)" id="measurementHeight"></div></div>
                     <div><div style="font-size:10px; color:var(--Neutral-500)">GENDER</div><div style="font-size:20px; font-weight:900; color:var(--Mint)" id="measurementGender"></div></div>
                 </div>
@@ -357,7 +357,7 @@
                 </div>
               </div>
 
-              <div style="margin-top:48px; padding:32px; background:rgba(87,215,192,0.05); border:1px solid var(--Mint); border-radius:16px">
+              <div style="margin-top:48px; padding:32px; background:rgba(198,255,0,0.05); border:1px solid var(--Mint); border-radius:16px">
                 <h4 style="font-size:10px; font-weight:900; color:var(--Mint); margin-bottom:12px">WIDGET TESTING LAB</h4>
                 <p style="font-size:11px; color:var(--Neutral-400); margin-bottom:20px">Simulate a merchant integration and verify the end-to-end scanning flow.</p>
                 <button class="btn-primary" onclick="window.launchWidgetTest()">Launch Widget Test</button>
@@ -482,7 +482,7 @@ console.warn(`🔄 Syncing retry ${i+1}/${retries} in ${Math.round(wait)}ms...`)
 
     window.drawSilhouette = (ctx, w, h, type) => {
       ctx.beginPath();
-      ctx.strokeStyle = isPoseAligned ? "rgba(87,215,192,0.3)" : "rgba(255,255,255,0.1)";
+      ctx.strokeStyle = isPoseAligned ? "rgba(198,255,0,0.3)" : "rgba(255,255,255,0.1)";
       ctx.setLineDash([10, 5]); ctx.lineWidth = 2;
       const cx = w/2, cy = h/2;
       ctx.moveTo(cx, cy - h*0.4); ctx.lineTo(cx - w*0.1, cy - h*0.2); ctx.lineTo(cx - w*0.2, cy + h*0.1);
@@ -524,7 +524,7 @@ console.warn(`🔄 Syncing retry ${i+1}/${retries} in ${Math.round(wait)}ms...`)
       } else { alignmentStartTime = 0; window.speak(feedback); }
       msg.textContent = feedback; msg.style.background = aligned ? "var(--Mint)" : "rgba(0,0,0,0.8)"; msg.style.color = aligned ? "var(--Obsidian)" : "#fff";
       isPoseAligned = aligned;
-      ctx.strokeStyle = aligned ? "#57D7C0" : "#FFFFFF"; ctx.lineWidth = aligned ? 12 : 8; ctx.lineCap = "round";
+      ctx.strokeStyle = aligned ? "#C6FF00" : "#FFFFFF"; ctx.lineWidth = aligned ? 12 : 8; ctx.lineCap = "round";
       const conns = [ [11, 12], [11, 13], [13, 15], [12, 14], [14, 16], [11, 23], [12, 24], [23, 24], [23, 25], [25, 27], [24, 26], [26, 28] ];
       conns.forEach(([i, j]) => {
         const p1 = l[i], p2 = l[j]; if (p1.visibility > 0.5 && p2.visibility > 0.5) { ctx.beginPath(); ctx.moveTo(p1.x * canvas.width, p1.y * canvas.height); ctx.lineTo(p2.x * canvas.width, p2.y * canvas.height); ctx.stroke(); }
@@ -886,11 +886,11 @@ console.warn(`🔄 Sync failure (${err.message}). Retrying ${attempt+1}/12 in ${
         // 1. Velocity Trend (Last 7 Days)
         const days = {}; for(let i=6; i>=0; i--) { const d = new Date(); d.setDate(d.getDate()-i); days[d.toLocaleDateString()] = 0; }
         scans.forEach(s => { const ds = new Date(s.created_at).toLocaleDateString(); if(days[ds] !== undefined) days[ds]++; });
-        trendChart = new Chart(trendCtx, { type: 'line', data: { labels: Object.keys(days), datasets: [{ label: 'Scans', data: Object.values(days), borderColor: '#57D7C0', tension: 0.4, fill: true, backgroundColor: 'rgba(87,215,192,0.1)' }] }, options: { responsive: true, maintainAspectRatio: false, plugins: { legend: { display: false } }, scales: { y: { beginAtZero: true, grid: { color: 'rgba(255,255,255,0.05)' } }, x: { grid: { display: false } } } } });
+        trendChart = new Chart(trendCtx, { type: 'line', data: { labels: Object.keys(days), datasets: [{ label: 'Scans', data: Object.values(days), borderColor: '#C6FF00', tension: 0.4, fill: true, backgroundColor: 'rgba(198,255,0,0.1)' }] }, options: { responsive: true, maintainAspectRatio: false, plugins: { legend: { display: false } }, scales: { y: { beginAtZero: true, grid: { color: 'rgba(255,255,255,0.05)' } }, x: { grid: { display: false } } } } });
 
         // 2. Industry Mix
         const industries = {}; profiles.forEach(p => { const i = p.industry || 'Other'; industries[i] = (industries[i] || 0) + 1; });
-        industryChart = new Chart(indCtx, { type: 'doughnut', data: { labels: Object.keys(industries), datasets: [{ data: Object.values(industries), backgroundColor: ['#57D7C0', '#002D2A', '#25D366', '#ff4d4d', '#737373'], borderWidth: 0 }] }, options: { responsive: true, maintainAspectRatio: false, plugins: { legend: { position: 'bottom', labels: { color: '#737373', boxWidth: 10, font: { size: 10 } } } } } });
+        industryChart = new Chart(indCtx, { type: 'doughnut', data: { labels: Object.keys(industries), datasets: [{ data: Object.values(industries), backgroundColor: ['#C6FF00', '#002D2A', '#25D366', '#ff4d4d', '#737373'], borderWidth: 0 }] }, options: { responsive: true, maintainAspectRatio: false, plugins: { legend: { position: 'bottom', labels: { color: '#737373', boxWidth: 10, font: { size: 10 } } } } } });
     };
 
     window.monitorEndpoints = async () => {

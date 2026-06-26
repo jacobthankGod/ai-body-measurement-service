@@ -1,6 +1,6 @@
 # KORRA: Gap-Closure Master Plan (Production Hardening)
 **Objective**: Transition from Prototype to a functional "Digital Artisan Infrastructure."
-**Design System**: Strict Obsidian & Mint (#000000 base, #57D7C0 accent, 1150px grid).
+**Design System**: Strict Obsidian & Mint (#000000 base, #C6FF00 accent, 1150px grid).
 
 ---
 
