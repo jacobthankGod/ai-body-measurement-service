@@ -10,14 +10,6 @@ import math
 from pathlib import Path
 from typing import Dict, Optional, Tuple
 
-# Check for OpenCV availability
-HAS_CV2 = False
-# try:
-#     import cv2
-#     HAS_CV2 = True
-# except ImportError:
-#     HAS_CV2 = False
-
 # Check for MediaPipe availability
 HAS_MEDIAPIPE = False
 pose_landmarker = None
@@ -59,7 +51,6 @@ def initialize_pose_detector():
             base_options=base_options,
             running_mode=vision.RunningMode.IMAGE,
             num_poses=1,
-            model_complexity=2,  # PHASE 15 UPGRADE: Full clinical precision (0=light,1=medium,2=full)
             min_pose_detection_confidence=0.6,
             min_tracking_confidence=0.6,
             output_segmentation_masks=False
@@ -71,20 +62,13 @@ def initialize_pose_detector():
         return None
 
 def detect_pose_landmarks(image: np.ndarray) -> Optional[Dict[str, Tuple[float, float]]]:
-    global pose_landmarker, HAS_CV2
-    try:
-        import cv2
-        HAS_CV2 = True
-    except:
-        HAS_CV2 = False
+    global pose_landmarker
 
     if pose_landmarker is None:
         if not initialize_pose_detector(): return None
-    if not HAS_CV2: return None
-    
+
     try:
-        rgb_image = cv2.cvtColor(image, cv2.COLOR_BGR2RGB)
-        mp_image = Image(image_format=ImageFormat.SRGB, data=rgb_image)
+        mp_image = Image(image_format=ImageFormat.SRGB, data=image)
         result = pose_landmarker.detect(mp_image)
 
         if not result or not result.pose_landmarks: return None

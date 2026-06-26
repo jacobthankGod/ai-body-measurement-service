@@ -1,8 +1,8 @@
 """
-Isolated HMR Subprocess | Memory-Safe AI Extraction
-===================================================
-Standalone script to perform HMR inference and exit immediately.
-Accepts: image_path, height_cm, gender, output_mesh_path
+Isolated Fusion Subprocess | Memory-Safe AI Extraction
+======================================================
+Standalone script to perform HMR + MediaPipe + ANSUR fusion inference.
+Accepts: front_path side_path height_cm gender [output_mesh_path] [--hmr-only]
 Outputs: JSON to stdout
 """
 import os
@@ -16,7 +16,9 @@ from PIL import Image
 
 # Setup paths
 SRC_PATH = Path(__file__).parent.resolve() / "src"
-if str(SRC_PATH) not in sys.path: sys.path.insert(0, str(SRC_PATH))
+ROOT_PATH = Path(__file__).parent.parent.parent.resolve()
+for p in (ROOT_PATH, SRC_PATH):
+    if str(p) not in sys.path: sys.path.insert(0, str(p))
 
 # Configure minimal logging to stderr to keep stdout clean for JSON
 logging.basicConfig(level=logging.INFO, stream=sys.stderr)
@@ -31,6 +33,9 @@ def run_hmr(front_path, side_path, height_cm, gender, mesh_path=None):
         import tensorflow.compat.v1 as tf1
         tf1.disable_v2_behavior()
 
+        logger.info(f"TF version: {tf.__version__}")
+        logger.info(f"TF GPU available: {len(tf.config.list_physical_devices('GPU')) > 0}")
+
         # Patching for compatibility
         import types
         import inspect
@@ -42,8 +47,11 @@ def run_hmr(front_path, side_path, height_cm, gender, mesh_path=None):
         img_s = np.array(Image.open(side_path)) if side_path and os.path.exists(side_path) else None
 
         # Import extraction engine components
+        logger.info(f"Loading HMR model...")
         from api.services.extract_measurements import HMRMasterEngine
         engine = HMRMasterEngine()
+        logger.info("HMR engine loaded successfully")
+        logger.info(f"Images loaded: front={img_f.shape}, side={img_s.shape if img_s is not None else None}")
 
         # Perform extraction
         extraction_result = engine.extract(img_f, height_cm, gender, side_image=img_s)
@@ -74,6 +82,63 @@ def run_hmr(front_path, side_path, height_cm, gender, mesh_path=None):
             MeshExporter.save_to_obj(vertices, mesh_path)
             mesh_url = mesh_path # Caller will convert to relative URL
 
+        # Compute clinical realism index from measurement consistency
+        clinical_realism_index = 97.0
+        if measurements:
+            chest = measurements.get('Chest Round') or measurements.get('Bust Round', 0)
+            waist = measurements.get('Waist Round', 0)
+            m_height = measurements.get('Height', height_cm)
+            if chest > 0 and waist > 0 and chest <= waist:
+                clinical_realism_index -= 5.0
+            if m_height < 100 or m_height > 250:
+                clinical_realism_index -= 10.0
+            if 0 < waist < 50:
+                clinical_realism_index -= 5.0
+            clinical_realism_index = max(70.0, min(100.0, round(clinical_realism_index, 1)))
+
+        # Try MediaPipe fusion for complementary measurements
+        fusion_used = False
+        try:
+            from api.services.mediapipe_measurement_engine import (
+                extract_measurements_from_dual_photos as mp_extract
+            )
+            front_rgb = np.array(Image.open(front_path))
+            side_rgb = np.array(Image.open(side_path)) if side_path and os.path.exists(side_path) else None
+            mp_result, _ = mp_extract(front_rgb, side_rgb or front_rgb, height_cm, gender)
+
+            if mp_result and mp_result.get('Shoulder', 0) > 0:
+                # Supplement HMR with MP measurements not yet in HMR output
+                mp_only = {'Across Back', 'Across Chest', 'Knee Round', 'Calf Round',
+                           'Trouser Waist', 'Bust Round', 'High Bust', 'Under Bust',
+                           'Armhole Round', 'Sleeve Length', 'Bicep Round', 'Elbow Round'}
+                for k, v in mp_result.items():
+                    if k in mp_only and v > 0:
+                        measurements[k] = v
+                logger.info(f"MediaPipe fusion applied: +{len(mp_only & set(mp_result.keys()))} measurements")
+                fusion_used = True
+
+            del front_rgb, side_rgb
+        except ImportError:
+            logger.info("MediaPipe not available — HMR-only mode")
+        except Exception as e:
+            logger.warning(f"MediaPipe fusion skipped: {e}")
+
+        # Try ANSUR imputation for shape-context refinement
+        try:
+            from api.services.imputation_service import imputation_service
+            refined = imputation_service.fuse_measurements(gender, hmr_measurements=measurements,
+                                                           mp_measurements=None,
+                                                           user_height_cm=height_cm,
+                                                           hmr_confidence=0.85, mp_confidence=0.0)
+            if refined:
+                # Merge refined values (prefer refined for torso measurements)
+                for k in ('Chest Round', 'Waist Round', 'Hip Round', 'Neck Round', 'Shoulder'):
+                    if refined.get(k, 0) > 0:
+                        measurements[k] = refined[k]
+                logger.info(f"ANSUR imputation applied")
+        except Exception as e:
+            logger.warning(f"ANSUR imputation skipped: {e}")
+
         # FINAL CLEANUP
         del vertices
         gc.collect()
@@ -84,6 +149,8 @@ def run_hmr(front_path, side_path, height_cm, gender, mesh_path=None):
             "landmarks": landmarks,
             "body_shape": body_shape,
             "size_recommendation": size_rec,
+            "clinical_realism_index": clinical_realism_index,
+            "fusion_used": fusion_used,
             "mesh_path": str(mesh_path) if mesh_path else None
         }
 
@@ -101,6 +168,8 @@ if __name__ == "__main__":
     height = float(sys.argv[3])
     gender = sys.argv[4]
     mesh_out = sys.argv[5] if len(sys.argv) > 5 else None
+
+    logger.info(f"Subprocess started: front={f_path}, side={s_path}, height={height}, gender={gender}")
 
     # Force single threaded to save memory on EC2 t3.micro
     os.environ["OMP_NUM_THREADS"] = "1"

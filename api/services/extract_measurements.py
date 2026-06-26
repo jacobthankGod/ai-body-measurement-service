@@ -13,6 +13,7 @@ import logging
 import traceback
 from pathlib import Path
 from typing import Dict, Optional, Tuple, List
+from scipy.spatial import ConvexHull
 
 # --- KORRA DIAGNOSTICS ---
 logger = logging.getLogger("KORRA_HMR_EXTRACTION")
@@ -129,14 +130,48 @@ FEMALE_RATIOS = {
 class HMRMasterEngine:
     def __init__(self):
         self.base_dir = Path(__file__).parent.resolve() # api/services
+        self.project_root = self.base_dir.parent.parent
         self.vertex_map = {}
+        self.smpl_faces = None
+        self._v_template = None
+        self._shapedirs = None
         self.last_error = None
         self._load_vertex_map()
+        self._load_smpl_faces()
+        self._load_smpl_template()
 
     def _load_vertex_map(self):
         root = self.base_dir.parent.parent
         vertex_path = root / "data" / "customBodyPoints.txt"
         self.vertex_map = self._parse_vertex_indices(vertex_path)
+
+    def _load_smpl_faces(self):
+        faces_path = self.base_dir / "src" / "tf_smpl" / "smpl_faces.npy"
+        try:
+            self.smpl_faces = np.load(str(faces_path)).astype(np.int32)
+        except Exception as e:
+            logger.warning(f"Could not load SMPL faces: {e}")
+            self.smpl_faces = None
+
+    def _load_smpl_template(self):
+        """Load SMPL template + shapedirs for T-pose measurement extraction."""
+        import pickle
+        pkl_path = self.project_root / "models" / "neutral_smpl_with_cocoplus_reg.pkl"
+        try:
+            with open(str(pkl_path), 'rb') as f:
+                dd = pickle.load(f, encoding='latin-1')
+            t = dd['v_template']
+            if hasattr(t, 'r'):
+                t = np.array(t)
+            self._v_template = np.array(t).reshape(6890, 3)
+            sd = dd['shapedirs']
+            if hasattr(sd, 'r'):
+                sd = np.array(sd)
+            self._shapedirs = np.array(sd).reshape(6890 * 3, 10)
+        except Exception as e:
+            logger.warning(f"Could not load SMPL template: {e}")
+            self._v_template = None
+            self._shapedirs = None
 
     def extract(self, image: np.ndarray, height_cm: float, gender: str = 'male', side_image: Optional[np.ndarray] = None) -> Tuple[Dict[str, float], Optional[np.ndarray], Optional[dict], str, str, Optional[str]]:
         """
@@ -238,7 +273,20 @@ class HMRMasterEngine:
                         'Nose': (norm_hmr(joints[14][0]), norm_hmr(joints[14][1]))
                     }
 
-                    measurements_3d = self._calculate_from_indices(vertices, height_cm, gender)
+                    # Measurements from T-pose mesh (shape-only, no pose deformation)
+                    # This avoids vertex-group drift caused by pose (e.g., belly verts
+                    # moving to a different Y level in a non-T-pose pose).
+                    v_measure = vertices
+                    if self._v_template is not None and self._shapedirs is not None:
+                        try:
+                            theta_full = results['theta'][0]
+                            shapes = np.array(theta_full[75:85], dtype=np.float64).reshape(10)
+                            v_shaped = self._v_template + (self._shapedirs @ shapes).reshape(-1, 3)
+                            v_measure = v_shaped
+                        except Exception as e:
+                            logger.warning(f"T-pose measurement failed, falling back to posed mesh: {e}")
+
+                    measurements_3d = self._calculate_from_indices(v_measure, height_cm, gender)
                     final_measurements = {key: measurements_3d.get(key, 0.0) for key in (MALE_KEYS if gender == 'male' else FEMALE_KEYS)}
 
                     v_min, v_max = np.min(vertices[:, 1]), np.max(vertices[:, 1])
@@ -250,7 +298,7 @@ class HMRMasterEngine:
                     # Simple heuristic for body shape if side view helped
                     if side_results:
                         # compare chest/waist ratios from 3D model
-                        m_tmp = self._calculate_from_indices(vertices, height_cm, gender)
+                        m_tmp = self._calculate_from_indices(v_measure, height_cm, gender)
                         c_w = m_tmp.get('Chest Round', 0) / (m_tmp.get('Waist Round', 1) or 1)
                         if gender == 'female':
                             if c_w > 1.2: body_shape = "Hourglass"
@@ -280,15 +328,81 @@ class HMRMasterEngine:
             if 'graph' in locals(): del graph
             gc.collect()
 
+    def _mesh_plane_intersection(self, vertices: np.ndarray, faces: np.ndarray,
+                                  plane_origin: np.ndarray, plane_normal: np.ndarray) -> np.ndarray:
+        """
+        Compute the intersection of a mesh with a cutting plane.
+        Returns (N, 3) array of intersection points forming the cross-section curve.
+        """
+        v_shifted = vertices - plane_origin
+        signed_dist = np.dot(v_shifted, plane_normal)
+        f_dist = signed_dist[faces]
+
+        all_points = []
+        for e0, e1 in [(0, 1), (1, 2), (2, 0)]:
+            d0 = f_dist[:, e0]
+            d1 = f_dist[:, e1]
+            crossing = (d0 * d1) < 0
+            if np.any(crossing):
+                t = d0[crossing] / (d0[crossing] - d1[crossing])
+                v0 = vertices[faces[crossing, e0]]
+                v1 = vertices[faces[crossing, e1]]
+                pts = v0 + t[:, np.newaxis] * (v1 - v0)
+                all_points.append(pts)
+
+        if not all_points:
+            return np.array([])
+        return np.vstack(all_points)
+
+    def _calc_circ_from_mesh_slice(self, vertices: np.ndarray, faces: np.ndarray,
+                                    group_indices: List[int], scale: float,
+                                    normal=(0, 1, 0)) -> float:
+        """
+        Calculate circumference by slicing the mesh with a cutting plane,
+        then computing the convex hull perimeter of the intersection.
+        """
+        if not group_indices or faces is None:
+            return 0.0
+
+        normal = np.asarray(normal, dtype=np.float64)
+        origin = np.mean(vertices[group_indices], axis=0)
+        points = self._mesh_plane_intersection(vertices, faces, origin, normal)
+
+        if len(points) < 3:
+            return 0.0
+
+        # Deduplicate within rounding tolerance
+        points = np.round(points, decimals=6)
+        points = np.unique(points, axis=0)
+        if len(points) < 3:
+            return 0.0
+
+        # Project to 2D for convex hull
+        if abs(normal[1]) > 0.9:
+            pts_2d = points[:, [0, 2]]
+        else:
+            u = np.array([1, 0, 0]) if abs(normal[0]) < 0.9 else np.array([0, 1, 0])
+            u = u - np.dot(u, normal) * normal
+            u /= np.linalg.norm(u)
+            v = np.cross(normal, u)
+            pts_2d = np.column_stack([np.dot(points, u), np.dot(points, v)])
+
+        hull = ConvexHull(pts_2d)
+        return round(hull.area * 100 * scale, 1)
+
     def _calculate_from_indices(self, vertices: np.ndarray, user_height_cm: float, gender: str) -> Dict[str, float]:
         # Calculated scaled vertices to real-world CM
         v_min, v_max = np.min(vertices[:, 1]), np.max(vertices[:, 1])
         v_height = v_max - v_min
         scale = user_height_cm / (v_height * 100) # scale factor for CM
 
-        # Helper to calculate circumference of a vertex group
-        def calc_circ(group_indices):
+        # Helper to calculate circumference using plane-mesh intersection (torso only)
+        torso_groups = {'chest', 'waist', 'hips', 'neck', 'belly'}
+        def calc_circ(group_indices, group_name=''):
             if not group_indices: return 0.0
+            if self.smpl_faces is not None and group_name in torso_groups:
+                return self._calc_circ_from_mesh_slice(vertices, self.smpl_faces, group_indices, scale)
+            # Default/fallback: bounding-box ellipse
             group_verts = vertices[group_indices]
             w = (np.max(group_verts[:, 0]) - np.min(group_verts[:, 0])) * 100 * scale
             d = (np.max(group_verts[:, 2]) - np.min(group_verts[:, 2])) * 100 * scale
@@ -308,21 +422,42 @@ class HMRMasterEngine:
         results = {}
 
         # 1. Direct Circumferences from Vertex Map
-        results['Chest Round'] = calc_circ(self.vertex_map.get('chest', []))
+        results['Chest Round'] = calc_circ(self.vertex_map.get('chest', []), 'chest')
         if gender == 'female': results['Bust Round'] = results['Chest Round']
 
-        results['Waist Round'] = calc_circ(self.vertex_map.get('waist', []))
-        results['Hip Round'] = calc_circ(self.vertex_map.get('hips', []))
-        results['Neck Round'] = calc_circ(self.vertex_map.get('neck', []))
-        results['Stomach Round'] = calc_circ(self.vertex_map.get('belly', []))
+        results['Waist Round'] = calc_circ(self.vertex_map.get('waist', []), 'waist')
+        results['Hip Round'] = calc_circ(self.vertex_map.get('hips', []), 'hips')
+        results['Neck Round'] = calc_circ(self.vertex_map.get('neck', []), 'neck')
+        results['Stomach Round'] = calc_circ(self.vertex_map.get('belly', []), 'belly')
         results['Thigh Round'] = calc_circ(self.vertex_map.get('thigh', []))
         results['Ankle Round'] = calc_circ(self.vertex_map.get('ankle', []))
         results['Wrist Round'] = calc_circ(self.vertex_map.get('wrist', []))
 
-        # 2. Widths
-        sh_indices = self.vertex_map.get('shoulder width', [])
-        if sh_indices:
-            results['Shoulder'] = round((np.max(vertices[sh_indices, 0]) - np.min(vertices[sh_indices, 0])) * 100 * scale, 1)
+        # 2. Shoulder Width (Dynamic from mesh)
+        chest_pts = self.vertex_map.get('chest', [])
+        if chest_pts:
+            chest_y = np.mean(vertices[chest_pts, 1])
+            sh_y = chest_y + 0.015
+            band = 0.012
+            sh_mask = np.abs(vertices[:, 1] - sh_y) < band
+            if np.sum(sh_mask) >= 5:
+                sh_width = (vertices[sh_mask, 0].max() - vertices[sh_mask, 0].min()) * 100 * scale
+                # Sanity check: shoulder width should be 25-65cm for any human
+                if 25 < sh_width < 65:
+                    results['Shoulder'] = round(sh_width, 1)
+                else:
+                    # Fallback to static vertex group
+                    sh_indices = self.vertex_map.get('shoulder width', [])
+                    if sh_indices:
+                        results['Shoulder'] = round((np.max(vertices[sh_indices, 0]) - np.min(vertices[sh_indices, 0])) * 100 * scale, 1)
+            else:
+                sh_indices = self.vertex_map.get('shoulder width', [])
+                if sh_indices:
+                    results['Shoulder'] = round((np.max(vertices[sh_indices, 0]) - np.min(vertices[sh_indices, 0])) * 100 * scale, 1)
+        else:
+            sh_indices = self.vertex_map.get('shoulder width', [])
+            if sh_indices:
+                results['Shoulder'] = round((np.max(vertices[sh_indices, 0]) - np.min(vertices[sh_indices, 0])) * 100 * scale, 1)
 
         # 3. Geometric Derivations (Strictly 3D)
         # Lengths derived from vertical distances between mapped landmarks
