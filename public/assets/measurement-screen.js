@@ -299,7 +299,7 @@ window.KORRA_MS = {
     const d = this.data || {};
     const summaryBar = `<div class="ms-summary-bar">
       <div class="ms-summary-item"><div class="ms-summary-label">HEIGHT</div><div class="ms-summary-value">${d.height ? d.height + ' cm' : '—'}</div></div>
-      <div class="ms-summary-item"><div class="ms-summary-label">SHAPE</div><div class="ms-summary-value white">${d.body_shape || 'Standard'}</div></div>
+      <div class="ms-summary-item"><div class="ms-summary-label">SHAPE</div><div class="ms-summary-value">${d.body_shape || 'Standard'}</div></div>
       <div class="ms-summary-item"><div class="ms-summary-label">SIZE REC</div><div class="ms-summary-value">${d.size_recommendation || 'M'}</div></div>
     </div>`;
     let content;

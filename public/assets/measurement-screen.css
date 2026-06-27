@@ -364,8 +364,8 @@
 .ms-shape-card {
   padding: 24px;
   border-radius: 16px;
-  background: rgba(198, 255, 0, 0.05);
-  border: 1px solid rgba(198, 255, 0, 0.2);
+  background: rgba(255, 255, 255, 0.03);
+  border: 1px solid var(--Glass-Border);
   text-align: center;
 }
 .ms-shape-icon {
@@ -373,7 +373,7 @@
   height: 64px;
   margin: 0 auto 16px;
   border-radius: 50%;
-  background: rgba(198, 255, 0, 0.1);
+  background: rgba(255, 255, 255, 0.04);
   display: flex;
   align-items: center;
   justify-content: center;
@@ -381,7 +381,7 @@
 .ms-shape-name {
   font-size: 20px;
   font-weight: 900;
-  color: var(--Mint);
+  color: #fff;
   margin-bottom: 8px;
 }
 .ms-shape-desc {
@@ -729,8 +729,8 @@
   text-align: center;
   padding: 16px;
   margin: 0 0 20px;
-  background: rgba(198, 255, 0, 0.1);
-  border: 1px solid var(--Mint);
+  background: rgba(255, 255, 255, 0.02);
+  border: 1px solid var(--Glass-Border);
   border-radius: 12px;
 }
 .ms-summary-item { text-align: center; }
@@ -742,10 +742,9 @@
 .ms-summary-value {
   font-size: 18px;
   font-weight: 900;
-  color: var(--Mint);
+  color: #fff;
   margin-top: 4px;
 }
-.ms-summary-value.white { color: #fff; }
 
 /* ── 3-COLUMN METRICS GRID ── */
 .ms-metrics-section { margin-bottom: 16px; }
@@ -772,8 +771,8 @@
   border: 1px solid transparent;
   transition: all 0.15s;
 }
-.ms-metric-cell:hover { border-color: rgba(198, 255, 0, 0.3); }
-.ms-metric-cell.active { border-color: var(--Mint); background: rgba(198, 255, 0, 0.08); }
+.ms-metric-cell:hover { border-color: rgba(255, 255, 255, 0.12); }
+.ms-metric-cell.active { border-color: var(--Mint); background: rgba(255, 255, 255, 0.04); }
 .ms-metric-cell.empty { opacity: 0.4; cursor: default; }
 .ms-metric-name {
   font-size: 9px;
@@ -785,13 +784,13 @@
 .ms-metric-val {
   font-size: 16px;
   font-weight: 700;
-  color: var(--Mint);
+  color: #fff;
   margin-top: 2px;
   font-variant-numeric: tabular-nums;
 }
 .ms-metric-ease {
   font-size: 8px;
-  color: var(--Accent-Teal);
+  color: var(--Neutral-500);
   margin-top: 2px;
 }
 
@@ -836,13 +835,13 @@
 }
 .ms-attire-card:hover { border-color: rgba(198, 255, 0, 0.3); }
 .ms-attire-card.active {
-  border-color: var(--Accent-Teal);
-  background: rgba(198, 255, 0, 0.05);
+  border-color: var(--Mint);
+  background: rgba(255, 255, 255, 0.04);
 }
 .ms-attire-name {
   font-size: 11px;
   font-weight: 900;
-  color: var(--Accent-Teal);
+  color: #fff;
 }
 .ms-attire-desc {
   font-size: 9px;
@@ -850,7 +849,7 @@
 }
 .ms-attire-status {
   font-size: 9px;
-  color: var(--Accent-Teal);
+  color: var(--Neutral-400);
   font-weight: 900;
   margin-top: 8px;
 }
@@ -883,11 +882,11 @@
   cursor: pointer;
   transition: all 0.15s;
 }
-.ms-material-btn:hover { border-color: rgba(198, 255, 0, 0.3); }
+.ms-material-btn:hover { border-color: rgba(255, 255, 255, 0.12); }
 .ms-material-btn.active {
   border-color: var(--Mint);
-  color: var(--Mint);
-  background: rgba(198, 255, 0, 0.08);
+  color: #fff;
+  background: transparent;
 }
 
 /* ── FIT DIAGNOSTICS ── */
@@ -952,13 +951,13 @@
   border-radius: 8px;
   background: transparent;
   border: 1px solid var(--Glass-Border);
-  color: var(--Mint);
+  color: var(--Neutral-400);
   font-size: 10px;
   font-weight: 700;
   cursor: pointer;
   transition: all 0.15s;
 }
-.ms-notes-save:hover { border-color: var(--Mint); background: rgba(198, 255, 0, 0.08); }
+.ms-notes-save:hover { border-color: var(--Mint); background: transparent; }
 
 /* ── COMPARE DROPDOWN ── */
 .ms-compare-select {
@@ -992,16 +991,16 @@
 .ms-compare-heatmap-btn {
   padding: 8px 16px;
   border-radius: 8px;
-  border: 1px solid var(--Mint);
+  border: 1px solid var(--Glass-Border);
   background: transparent;
-  color: var(--Mint);
+  color: #fff;
   font-size: 10px;
   font-weight: 700;
   cursor: pointer;
   transition: all 0.15s;
 }
 .ms-compare-heatmap-btn:hover {
-  background: rgba(198, 255, 0, 0.08);
+  background: rgba(255, 255, 255, 0.06);
 }
 .ms-compare-legend {
   display: flex;
