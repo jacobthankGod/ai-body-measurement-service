@@ -1,0 +1,66 @@
+{
+  "male": {
+    "Calf Round": [
+      0.96,
+      0.0
+    ],
+    "Chest Round": [
+      1.0211,
+      -1.7948
+    ],
+    "Hip Round": [
+      1.1125,
+      -8.378
+    ],
+    "Neck Round": [
+      0.95,
+      0.0
+    ],
+    "Shoulder": [
+      0.96,
+      0.0
+    ],
+    "Thigh Round": [
+      0.95,
+      0.0
+    ],
+    "Waist Round": [
+      1.0187,
+      -2.5793
+    ]
+  },
+  "female": {
+    "Bust Round": [
+      0.9148,
+      0.3259
+    ],
+    "Calf Round": [
+      0.95,
+      0.0
+    ],
+    "Chest Round": [
+      0.9148,
+      0.3259
+    ],
+    "Hip Round": [
+      1.171,
+      -7.7895
+    ],
+    "Neck Round": [
+      0.93,
+      0.1
+    ],
+    "Shoulder": [
+      0.93,
+      0.2
+    ],
+    "Thigh Round": [
+      0.95,
+      0.0
+    ],
+    "Waist Round": [
+      0.8864,
+      -4.6712
+    ]
+  }
+}

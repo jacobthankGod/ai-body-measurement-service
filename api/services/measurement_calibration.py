@@ -22,26 +22,37 @@ from typing import Dict, Optional
 
 def _default_factors() -> Dict[str, Dict[str, list]]:
     """
-    Default calibration factors computed from UniData validation (6 subjects).
-    Ridge regression (alpha=1.0) to prevent overfitting on small sample.
+    Default calibration factors. First tries calibration_factors.json (if file
+    exists alongside this module), otherwise uses inline defaults trained from
+    ModelAgency (130 models) + UniData (6 subjects) via ridge regression.
     Format: {gender: {measurement_key: [alpha, beta]}}
     Where: real = alpha * smpl + beta
     """
+    # Try loading from companion JSON file first
+    import os
+    _json_path = os.path.join(os.path.dirname(__file__), "calibration_factors.json")
+    if os.path.exists(_json_path):
+        try:
+            with open(_json_path) as _f:
+                return json.load(_f)
+        except Exception:
+            pass
+    # Inline defaults (trained on ModelAgency 130 + UniData 6)
     return {
         "male": {
-            "Waist Round": [0.87, -0.9],
-            "Hip Round": [0.90, -0.6],
-            "Chest Round": [0.84, -0.5],
+            "Chest Round": [1.0211, -1.7948],
+            "Waist Round": [1.0187, -2.5793],
+            "Hip Round": [1.1125, -8.378],
             "Shoulder": [0.96, 0.0],
             "Neck Round": [0.95, 0.0],
             "Thigh Round": [0.95, 0.0],
             "Calf Round": [0.96, 0.0],
         },
         "female": {
-            "Waist Round": [0.85, -0.0],
-            "Hip Round": [0.88, 0.5],
-            "Bust Round": [0.89, 0.9],
-            "Chest Round": [0.89, 0.9],
+            "Chest Round": [0.9148, 0.3259],
+            "Bust Round": [0.9148, 0.3259],
+            "Waist Round": [0.8864, -4.6712],
+            "Hip Round": [1.171, -7.7895],
             "Shoulder": [0.93, 0.2],
             "Neck Round": [0.93, 0.1],
             "Thigh Round": [0.95, 0.0],
