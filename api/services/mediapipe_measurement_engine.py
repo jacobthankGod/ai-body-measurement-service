@@ -174,6 +174,7 @@ def _extract_proportional_measurements(user_height_cm: float, gender: str = 'mal
             'Across Chest': 0.259, 'Hip Round': 0.559, 'Thigh Round': 0.324, 'Knee Round': 0.224,
             'Calf Round': 0.212, 'Ankle Round': 0.153, 'Trouser Waist': 0.482, 'Trouser Length': 0.588,
             'Inseam': 0.459, 'Crotch Depth': 0.165,
+            'Sleeve Length': 0.333, 'Bicep Round': 0.180, 'Elbow Round': 0.150, 'Wrist Round': 0.120,
         }
     else:
         ratios = {

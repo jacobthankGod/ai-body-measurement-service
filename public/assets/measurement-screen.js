@@ -117,8 +117,13 @@ window.KORRA_MS = {
     this.sheetExpanded = false;
     this.aiOpen = false;
     this._viewerInitialized = false;
+    this.sideBySide = localStorage.getItem('korra_ms_layout') === 'side' && window.innerWidth > 900;
     this._previousTab = document.querySelector('.tab-view.active')?.id?.replace('view-', '') || 'vault';
     this.render();
+    if (this.sideBySide) {
+      const root = document.querySelector('#view-scanresult .ms-root');
+      if (root) root.classList.add('ms-side-by-side');
+    }
     this.initViewer();
     this.bindSheetDrag();
     window.switchTab('scanresult');
@@ -156,6 +161,9 @@ window.KORRA_MS = {
             </div>
             <button class="ms-header-btn ${this.overlaysVisible ? 'active' : ''}" onclick="KORRA_MS.toggleOverlays()" title="Toggle measurement lines">
               <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"/><circle cx="12" cy="12" r="3"/></svg>
+            </button>
+            <button class="ms-header-btn ms-layout-toggle" onclick="KORRA_MS.toggleLayout()" title="Toggle side-by-side view">
+              <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="3" width="18" height="18" rx="2" ry="2"/><line x1="12" y1="3" x2="12" y2="21"/></svg>
             </button>
             <button class="ms-header-btn" onclick="KORRA_MS.resetView()" title="Reset view">
               <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="23 4 23 10 17 10"/><path d="M20.49 15a9 9 0 1 1-2.12-9.36L23 10"/></svg>
@@ -422,6 +430,24 @@ window.KORRA_MS = {
         this.viewerInstance.clearMeasurementRings();
       }
     }
+  },
+
+  // ═══ LAYOUT ═══
+  toggleLayout() {
+    if (window.innerWidth <= 900) return;
+    const root = document.querySelector('#view-scanresult .ms-root');
+    if (!root) return;
+    this.sideBySide = !this.sideBySide;
+    root.classList.toggle('ms-side-by-side', this.sideBySide);
+    const btn = document.querySelector('#view-scanresult .ms-header-btn[onclick*="toggleLayout"]');
+    if (btn) btn.classList.toggle('active', this.sideBySide);
+    if (this.viewerInstance) {
+      this.viewerInstance.renderer?.setSize(
+        this.viewerInstance.renderer.domElement.parentElement.clientWidth,
+        this.viewerInstance.renderer.domElement.parentElement.clientHeight
+      );
+    }
+    localStorage.setItem('korra_ms_layout', this.sideBySide ? 'side' : 'stacked');
   },
 
   resetView() {

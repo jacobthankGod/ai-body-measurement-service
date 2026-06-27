@@ -95,7 +95,8 @@ MALE_KEYS = [
     'Shoulder', 'Neck Round', 'Chest Round', 'Stomach Round', 'Waist Round',
     'Half Length', 'Full Top Length', 'Across Back', 'Across Chest', 'Hip Round',
     'Thigh Round', 'Knee Round', 'Calf Round', 'Ankle Round', 'Trouser Waist',
-    'Trouser Length', 'Inseam', 'Crotch Depth'
+    'Trouser Length', 'Inseam', 'Crotch Depth',
+    'Sleeve Length', 'Bicep Round', 'Elbow Round', 'Wrist Round'
 ]
 
 FEMALE_KEYS = [
@@ -128,6 +129,7 @@ CIRCUMFERENCE_TO_BODYPARTS = {
     # Wrist excluded: T-pose forearm cross-section at wrist Y is artificially
     # thick (muscle belly of forearm). Falls back to bounding-box ellipse.
     'bicep': ['leftArm', 'rightArm'],
+    'elbow': ['leftArm', 'rightArm'],
     'calf': ['leftLeg', 'rightLeg'],
     'knee': ['leftLeg', 'rightLeg'],
 }
@@ -138,6 +140,7 @@ MALE_RATIOS = {
     'Across Chest': 0.259, 'Hip Round': 0.559, 'Thigh Round': 0.324, 'Knee Round': 0.224,
     'Calf Round': 0.212, 'Ankle Round': 0.153, 'Trouser Waist': 0.482, 'Trouser Length': 0.588,
     'Inseam': 0.459, 'Crotch Depth': 0.165,
+    'Sleeve Length': 0.333, 'Bicep Round': 0.180, 'Elbow Round': 0.150, 'Wrist Round': 0.120,
 }
 
 FEMALE_RATIOS = {
@@ -624,6 +627,9 @@ class HMRMasterEngine:
             results['Knee Round'] = round(results.get('Thigh Round', 0) * 0.68, 1)
             results['Calf Round'] = round(results.get('Thigh Round', 0) * 0.65, 1)
             results['Trouser Waist'] = results.get('Waist Round', 0)
+            results['Bicep Round'] = calc_circ(self.vertex_map.get('bicep', []), 'bicep')
+            results['Elbow Round'] = calc_circ(self.vertex_map.get('elbow', []), 'elbow')
+            results['Sleeve Length'] = calc_vert_dist(sh_indices, self.vertex_map.get('wrist', []))
 
         # Female Specific
         else:

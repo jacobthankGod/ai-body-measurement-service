@@ -656,6 +656,63 @@
   to { transform: scale(1); opacity: 1; }
 }
 
+/* ── SIDE-BY-SIDE LAYOUT (Desktop) ── */
+.ms-side-by-side {
+  flex-direction: row !important;
+  flex-wrap: wrap;
+}
+.ms-side-by-side .ms-header {
+  width: 100%;
+}
+.ms-side-by-side .ms-viewer {
+  flex: 1 1 50%;
+  min-width: 0;
+  height: calc(100vh - 80px);
+  order: 1;
+}
+.ms-side-by-side .ms-tabs {
+  order: 3;
+  width: 50%;
+  border-top: none;
+  border-left: 1px solid var(--Glass-Border);
+  flex-direction: column;
+  height: auto;
+  padding: 8px 0;
+}
+.ms-side-by-side .ms-tab {
+  width: 100%;
+  justify-content: flex-start;
+  padding: 10px 20px;
+  border-radius: 0;
+}
+.ms-side-by-side .ms-sheet {
+  order: 2;
+  flex: 1 1 50%;
+  height: calc(100vh - 80px) !important;
+  min-height: 0;
+  border-radius: 0;
+  border-top: none;
+  border-left: 1px solid var(--Glass-Border);
+}
+.ms-side-by-side .ms-sheet.expanded {
+  height: calc(100vh - 80px) !important;
+}
+.ms-side-by-side .ms-sheet-handle {
+  display: none;
+}
+.ms-side-by-side .ms-ai-fab {
+  bottom: 24px;
+  right: 24px;
+}
+.ms-layout-toggle {
+  display: none;
+}
+@media (min-width: 901px) {
+  .ms-layout-toggle {
+    display: flex;
+  }
+}
+
 /* ── RESPONSIVE ── */
 @media (max-width: 900px) {
   .ms-root {

@@ -110,7 +110,8 @@ def run_hmr(front_path, side_path, height_cm, gender, mesh_path=None):
                 # Supplement HMR with MP measurements not yet in HMR output
                 mp_only = {'Across Back', 'Across Chest', 'Knee Round', 'Calf Round',
                            'Trouser Waist', 'Bust Round', 'High Bust', 'Under Bust',
-                           'Armhole Round', 'Sleeve Length', 'Bicep Round', 'Elbow Round'}
+                           'Armhole Round', 'Sleeve Length', 'Bicep Round', 'Elbow Round',
+                           'Wrist Round'}
                 for k, v in mp_result.items():
                     if k in mp_only and v > 0:
                         measurements[k] = v
