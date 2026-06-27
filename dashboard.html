@@ -8,6 +8,7 @@
   <link rel="preconnect" href="https://fonts.googleapis.com" />
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
   <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800;900&display=swap" rel="stylesheet" />
+  <link rel="stylesheet" href="/assets/measurement-screen.css" />
   <style>
     :root {
       /* UNICORN LUXURY PALETTE */
@@ -2101,6 +2102,13 @@
   <div id="mobile-3d-viewport"></div>
 </div>
 
+<!-- ═══════════════════════════════════════════════════════
+     MEASUREMENT SCREEN (Scan Result Tab View)
+     ═══════════════════════════════════════════════════════ -->
+<div id="view-scanresult" class="tab-view" style="padding:0; overflow:hidden;">
+  <div id="ms-mount"></div>
+</div>
+
 <div id="view-billing" class="tab-view">
   <div class="glass-card">
     <div style="display:flex; align-items:center; justify-content:space-between; margin-bottom:32px;">
@@ -2303,6 +2311,7 @@
   <script src="/assets/three.min.js"></script>
   <script src="/assets/korra_viz.js"></script>
   <script src="/assets/heatmap_shader.js" defer></script>
+  <script src="/assets/measurement-screen.js"></script>
   <script src="/assets/jspdf.min.js"></script>
   <script src="/assets/korra_export.js"></script>
 
@@ -3008,42 +3017,17 @@ window.loadSettings = async () => {
     window.viewScan = (idx) => {
         const s = masterHistory[idx];
         if(!s) return;
-        if (s.biometrics && !s.measurements) s.measurements = s.biometrics;
-        if (s.landmarks_3d && !s.landmarks) s.landmarks = s.landmarks_3d;
         window.LAST_MEASUREMENT_DATA = s;
-
-        // Phase 101: Apply Rules of the House Preset
-        window.ACTIVE_CONTEXT = window.MERCHANT_DEFAULT_SPECIALTY || 'standard';
-        window.ACTIVE_MATERIAL = 'woven'; // Reset to base material
-
-        if(window.KORRA_VIZ) {
-          const lm = s.landmarks || s.landmarks_3d;
-          const lm3d = lm ? Object.fromEntries(Object.entries(lm).map(([k,v]) => [k, {x: v[0], y: v[1], z: 0}])) : null;
-          window.KORRA_VIZ.loadMesh(s.mesh_url, lm3d).catch(e => console.warn('🟡 Mesh unavailable:', e?.message));
+        if (window.KORRA_MS) {
+          window.KORRA_MS.open(s);
+        } else {
+          if (s.biometrics && !s.measurements) s.measurements = s.biometrics;
+          if (s.landmarks_3d && !s.landmarks) s.landmarks = s.landmarks_3d;
+          window.ACTIVE_CONTEXT = window.MERCHANT_DEFAULT_SPECIALTY || 'standard';
+          window.ACTIVE_MATERIAL = 'woven';
+          renderMeasurementGrids(s, window.ACTIVE_CONTEXT, window.ACTIVE_MATERIAL);
+          document.getElementById('measurementResultsCard').style.display = 'block';
         }
-
-        // Sync UI for Context Toggle
-        document.getElementById('attireStatus').textContent = `CONTEXT: ${window.ACTIVE_CONTEXT.toUpperCase()}`;
-        document.querySelectorAll('.style-card').forEach(c => {
-            c.classList.remove('active');
-            if (c.querySelector('h5')?.textContent.toLowerCase() === window.ACTIVE_CONTEXT.toLowerCase()) {
-                c.classList.add('active');
-            }
-        });
-
-        // Sync UI for Material Rail
-        document.querySelectorAll('.material-btn').forEach(b => {
-            b.classList.remove('active');
-            if (b.textContent.toLowerCase().includes('woven')) b.classList.add('active');
-        });
-
-        renderMeasurementGrids(s, window.ACTIVE_CONTEXT, window.ACTIVE_MATERIAL);
-
-        // Populate Craftsman Notes
-        const notesEl = document.getElementById('craftsmanNotes');
-        if (notesEl) notesEl.value = s.notes || "";
-
-        document.getElementById('measurementResultsCard').style.display = 'block';
     };
 
     window.saveCraftsmanNotes = async () => {
@@ -3105,7 +3089,7 @@ window.loadSettings = async () => {
         const viewIdx = masterHistory.indexOf(latest);
         const escName = name.replace(/'/g, "\\'");
 
-        return `<div class="glass-card" style="padding:24px; cursor:pointer" onclick="event.stopPropagation(); window.switchTab('overview'); requestAnimationFrame(() => window.viewScan(${viewIdx}))">
+        return `<div class="glass-card" style="padding:24px; cursor:pointer" onclick="event.stopPropagation(); window.KORRA_MS ? window.KORRA_MS.open(masterHistory[${viewIdx}]) : window.viewScan(${viewIdx})">
           <div style="display:flex; align-items:flex-start; gap:16px; margin-bottom:16px">
             <div style="width:44px; height:44px; min-width:44px; background:var(--Mint); border-radius:50%; display:flex; align-items:center; justify-content:center; color:var(--Obsidian); font-weight:900; font-size:18px">${initial}</div>
             <div style="flex:1; min-width:0">
@@ -3135,7 +3119,7 @@ window.loadSettings = async () => {
             </div>
           </div>
           <div style="display:flex; gap:8px">
-            <button class="btn-primary" style="flex:1; height:32px; font-size:9px" onclick="event.stopPropagation(); window.switchTab('overview'); requestAnimationFrame(() => window.viewScan(${viewIdx}))">${hasMeasData ? 'View Measurements' : 'Awaiting Scan Data'}</button>
+            <button class="btn-primary" style="flex:1; height:32px; font-size:9px" onclick="event.stopPropagation(); window.KORRA_MS ? window.KORRA_MS.open(masterHistory[${viewIdx}]) : window.viewScan(${viewIdx})">${hasMeasData ? 'View Measurements' : 'Awaiting Scan Data'}</button>
             <button class="btn-outline" style="flex:1; height:32px; font-size:9px" onclick="event.stopPropagation(); window.exportPassport('${escName}')">Export PDF</button>
             ${gCount >= 2 ? `<button class="btn-outline" style="flex:0; height:32px; font-size:9px; padding:0 12px" onclick="event.stopPropagation(); window.openComparison('${escName}')" title="Compare scans side-by-side">Compare</button>` : '<span style="flex:0; height:32px; font-size:9px; padding:0 12px; display:inline-flex; align-items:center; color:var(--Neutral-500); opacity:0.5">Needs 2+ scans</span>'}
           </div>
@@ -3433,27 +3417,16 @@ async function init() {
             clearInterval(interval); progress = 100;
             window.hapticFeedback('success');
             window.LAST_MEASUREMENT_DATA = data;
-            window.ACTIVE_CONTEXT = window.MERCHANT_DEFAULT_SPECIALTY || 'standard';
-            window.ACTIVE_MATERIAL = 'woven';
-            document.getElementById('attireStatus').textContent = `CONTEXT: ${window.ACTIVE_CONTEXT.toUpperCase()}`;
-            document.querySelectorAll('.style-card').forEach(c => {
-                c.classList.remove('active');
-                if (c.querySelector('h5')?.textContent.toLowerCase() === window.ACTIVE_CONTEXT.toLowerCase()) {
-                    c.classList.add('active');
-                }
-            });
-            renderMeasurementGrids(data, window.ACTIVE_CONTEXT, window.ACTIVE_MATERIAL);
-            if (window.KORRA_VIZ) {
-              const lm = data.landmarks;
-              const lm3d = lm ? Object.fromEntries(Object.entries(lm).map(([k,v]) => [k, {x: v[0], y: v[1], z: 0}])) : null;
-              window.KORRA_VIZ.loadMesh(data.mesh_url, lm3d).catch(e => console.warn('🟡 Mesh unavailable:', e?.message));
-            }
             fetchHistory();
             setTimeout(() => {
                 overlay.style.display = 'none';
                 btn.disabled = false;
                 document.getElementById('scanModal').classList.remove('active');
-                document.getElementById('measurementResultsCard').style.display='block';
+                if (window.KORRA_MS) {
+                  window.KORRA_MS.open(data);
+                } else {
+                  document.getElementById('measurementResultsCard').style.display='block';
+                }
             }, 1000);
         }
         else if (data.status === 'failed') {

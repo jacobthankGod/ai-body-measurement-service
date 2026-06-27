@@ -325,6 +325,72 @@ class KorraVisualizer {
         this.mesh = group;
         if (this.scene) this.scene.add(this.mesh);
     }
+
+    showMeasurementRing(yPercent, color = '#C6FF00') {
+        if (!this.mesh || !this.scene) return;
+        this.clearMeasurementRings();
+
+        const targetMesh = this.mesh.isGroup ? this.mesh.children[0] : this.mesh;
+        if (!targetMesh || !targetMesh.geometry) return;
+
+        targetMesh.geometry.computeBoundingBox();
+        const bbox = targetMesh.geometry.boundingBox;
+        const meshHeight = bbox.max.y - bbox.min.y;
+        const meshY = bbox.min.y + meshHeight * yPercent;
+
+        const torusGeo = new THREE.TorusGeometry(0.35, 0.008, 8, 64);
+        const torusMat = new THREE.MeshBasicMaterial({
+            color: new THREE.Color(color),
+            transparent: true,
+            opacity: 0.9,
+            side: THREE.DoubleSide
+        });
+        const torus = new THREE.Mesh(torusGeo, torusMat);
+        torus.position.y = meshY;
+        torus.rotation.x = Math.PI / 2;
+
+        const glowGeo = new THREE.TorusGeometry(0.36, 0.02, 8, 64);
+        const glowMat = new THREE.MeshBasicMaterial({
+            color: new THREE.Color(color),
+            transparent: true,
+            opacity: 0.25,
+            side: THREE.DoubleSide
+        });
+        const glow = new THREE.Mesh(glowGeo, glowMat);
+        glow.position.y = meshY;
+        glow.rotation.x = Math.PI / 2;
+
+        if (!this._measurementRings) this._measurementRings = new THREE.Group();
+        this._measurementRings.add(torus);
+        this._measurementRings.add(glow);
+        this.scene.add(this._measurementRings);
+    }
+
+    clearMeasurementRings() {
+        if (this._measurementRings && this.scene) {
+            this.scene.remove(this._measurementRings);
+            this._measurementRings.traverse(child => {
+                if (child.geometry) child.geometry.dispose();
+                if (child.material) child.material.dispose();
+            });
+            this._measurementRings = null;
+        }
+    }
+
+    resetCamera() {
+        this.camera.position.set(0, 1.0, 3.0);
+        this.camera.lookAt(0, 1, 0);
+        this.targetRotationX = 0;
+        this.targetRotationY = 0;
+        if (this.mesh) {
+            this.mesh.rotation.x = 0;
+            this.mesh.rotation.y = 0;
+        }
+        if (this.landmarksGroup) {
+            this.landmarksGroup.rotation.x = 0;
+            this.landmarksGroup.rotation.y = 0;
+        }
+    }
 }
 
 window.KORRA_VIZ = new KorraVisualizer();
