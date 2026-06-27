@@ -50,6 +50,9 @@ class ImputationService:
         """
         Phase 26: Biometric Imputation Hook
         Inputs: {height, chest_round, waist_round, hip_round, shoulder}
+        Returns: inputs plus ANSUR-predicted derived measurements.
+        Core circumferences are not modified here — calibration is
+        handled by MeasurementCalibrator (see measurement_engine.py).
         """
         model = self.models.get(gender.lower())
         if not model:

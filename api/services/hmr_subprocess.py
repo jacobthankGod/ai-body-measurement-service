@@ -139,6 +139,14 @@ def run_hmr(front_path, side_path, height_cm, gender, mesh_path=None):
         except Exception as e:
             logger.warning(f"ANSUR imputation skipped: {e}")
 
+        # Apply SMPL-to-real-world calibration for core measurements
+        try:
+            from api.services.measurement_calibration import calibrator
+            calibrator.calibrate(measurements, gender)
+            logger.info("Measurement calibration applied")
+        except Exception as e:
+            logger.warning(f"Measurement calibration skipped: {e}")
+
         # FINAL CLEANUP
         del vertices
         gc.collect()

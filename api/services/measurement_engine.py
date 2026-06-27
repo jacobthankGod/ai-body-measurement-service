@@ -10,6 +10,7 @@ from api.services.mediapipe_measurement_engine import extract_measurements_from_
 from api.services.imputation_service import imputation_service
 from api.services.shape_transformer import shape_transformer
 from api.services.mesh_validator import mesh_validator
+from api.services.measurement_calibration import calibrator as measurement_calibrator
 
 def extract_measurements_from_dual_photos(front_image, side_image, user_height_cm, gender='male'):
     """
@@ -91,6 +92,9 @@ def extract_measurements_from_dual_photos(front_image, side_image, user_height_c
     if mp_measurements:
         fused_metrics.update((k, v) for k, v in mp_measurements.items()
                             if k not in fused_metrics)
+
+    # Apply SMPL-to-real-world calibration for core measurements
+    measurement_calibrator.calibrate(fused_metrics, gender)
 
     fused_metrics['fusion_sources'] = {
         'hmr': hmr_measurements is not None,

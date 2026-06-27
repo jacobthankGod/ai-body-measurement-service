@@ -82,17 +82,39 @@ def scan_pairs(input_dir: Path) -> List[Tuple[str, Path, Path]]:
     return pairs
 
 
+def scan_singles(input_dir: Path, gt_subjects: set) -> List[Tuple[str, Path]]:
+    """Scan for single images (no front/side pair naming).
+    Matches filename stem (without extension) to subject_id in GT.
+    """
+    singles = []
+    for f in input_dir.iterdir():
+        if f.suffix.lower() not in IMAGE_EXTS:
+            continue
+        subject_id = f.stem
+        if subject_id in gt_subjects:
+            singles.append((subject_id, f))
+    return singles
+
+
 def parse_ground_truth(csv_path: str) -> Dict[str, dict]:
     subjects = {}
     with open(csv_path, 'r') as f:
         reader = csv.DictReader(f)
         for row in reader:
             sid = row['subject_id']
-            subjects[sid] = {
-                k: (float(v) if v.strip() else None)
-                for k, v in row.items()
-                if k != 'subject_id'
-            }
+            parsed = {}
+            for k, v in row.items():
+                if k == 'subject_id':
+                    continue
+                v = v.strip()
+                if not v:
+                    parsed[k] = None
+                else:
+                    try:
+                        parsed[k] = float(v)
+                    except ValueError:
+                        parsed[k] = v
+            subjects[sid] = parsed
     return subjects
 
 
@@ -118,7 +140,7 @@ def run_measurement_pipeline(
                 side_rgb = cv2.cvtColor(side, cv2.COLOR_BGR2RGB)
 
         start = time.time()
-        measurements, vertices, landmarks, body_shape, size_rec, error = \
+        measurements, vertices, landmarks, body_shape, size_rec, error, _ = \
             extract_measurements_from_hmr(front_rgb, height_cm, gender, side_image=side_rgb)
         elapsed = time.time() - start
 
@@ -203,7 +225,7 @@ def main():
     parser = argparse.ArgumentParser(
         description='Batch evaluate HMR pipeline on front/side photo pairs')
     parser.add_argument('--input-dir', required=True,
-                        help='Directory containing {id}_front.jpg + {id}_side.jpg pairs')
+                        help='Directory containing images')
     parser.add_argument('--gt', default=None,
                         help='CSV with subject_id,height_cm,gender,chest_cm,...')
     parser.add_argument('--output', default=None,
@@ -216,6 +238,8 @@ def main():
                         help='Default gender')
     parser.add_argument('--max-subjects', type=int, default=None,
                         help='Max subjects to process')
+    parser.add_argument('--single', action='store_true',
+                        help='Single image mode: match filename stem to subject_id (no front/side pairs)')
     args = parser.parse_args()
 
     input_dir = Path(args.input_dir)
@@ -228,30 +252,41 @@ def main():
         ground_truth = parse_ground_truth(args.gt)
         print(f"Loaded {len(ground_truth)} ground truth entries from {args.gt}")
 
-    pairs = scan_pairs(input_dir)
-    if not pairs:
-        print("No front/side pairs found. Expected naming: {id}_front.jpg + {id}_side.jpg")
-        sys.exit(1)
-
-    if args.max_subjects:
-        pairs = pairs[:args.max_subjects]
-
-    print(f"Found {len(pairs)} subject(s) in {input_dir}")
+    if args.single:
+        gt_subjects = set(ground_truth.keys()) if ground_truth else set()
+        singles = scan_singles(input_dir, gt_subjects)
+        if not singles:
+            print("No matching images found. Filename stems must match subject_id in ground truth CSV.")
+            sys.exit(1)
+        if args.max_subjects:
+            singles = singles[:args.max_subjects]
+        print(f"Found {len(singles)} subject(s) in {input_dir}")
+        items = [(sid, front, None) for sid, front in singles]
+    else:
+        pairs = scan_pairs(input_dir)
+        if not pairs:
+            print("No front/side pairs found. Try --single mode.")
+            sys.exit(1)
+        if args.max_subjects:
+            pairs = pairs[:args.max_subjects]
+        print(f"Found {len(pairs)} subject(s) in {input_dir}")
+        items = pairs
     print()
 
     results = {}
     errors = []
-    for i, (sid, front_path, side_path) in enumerate(pairs):
+    total_items = len(items)
+    for i, (sid, front_path, side_path) in enumerate(items):
         gt_entry = ground_truth.get(sid, {})
         height = gt_entry.get('height_cm', args.height)
         gender = gt_entry.get('gender', args.gender)
 
         if not height:
             errors.append((sid, "No height specified"))
-            print(f"[{i+1}/{len(pairs)}] {sid}: SKIP (no height)")
+            print(f"[{i+1}/{total_items}] {sid}: SKIP (no height)")
             continue
 
-        print(f"[{i+1}/{len(pairs)}] {sid} (height={height}cm, {gender})")
+        print(f"[{i+1}/{total_items}] {sid} (height={height}cm, {gender})")
 
         m, err = run_measurement_pipeline(str(front_path), str(side_path), height, gender)
         if err:
@@ -263,7 +298,7 @@ def main():
 
     # Summary
     print(f"\n{'=' * 60}")
-    print(f"Processed: {len(results)}/{len(pairs)} subjects")
+    print(f"Processed: {len(results)}/{total_items} subjects")
     if errors:
         print(f"Errors ({len(errors)}):")
         for sid, err in errors:

@@ -99,7 +99,7 @@ MALE_KEYS = [
 ]
 
 FEMALE_KEYS = [
-    'Shoulder', 'Neck Round', 'Bust Round', 'High Bust', 'Under Bust',
+    'Shoulder', 'Neck Round', 'Chest Round', 'Bust Round', 'High Bust', 'Under Bust',
     'Bust Point', 'Shoulder to Bust Point', 'Shoulder to Under Bust',
     'Shoulder to Waist', 'Front Waist Length', 'Back Waist Length',
     'Across Chest', 'Across Back', 'Armhole Round', 'Sleeve Length',
@@ -107,6 +107,30 @@ FEMALE_KEYS = [
     'Half Length', 'Waist to Hip', 'Upper Hip', 'Hip Round',
     'Thigh Round', 'Knee Round', 'Calf Round', 'Ankle Round'
 ]
+
+# ============================================================================
+# BODY-PART FACE SEGMENTATION (ported from SMPL-Anthropometry)
+# Maps body-part names from Meshcapade segmentation to their SMPL face indices.
+# File: src/tf_smpl/smpl_body_parts_2_faces.json
+# ============================================================================
+
+# Maps our measurement group names to Meshcapade body-part face groups.
+# Limbs use filtered face sets so plane-mesh intersection only captures
+# the target body region (avoids spurious torso/arm cross-section).
+CIRCUMFERENCE_TO_BODYPARTS = {
+    'chest': ['spine1', 'spine2'],
+    'waist': ['hips', 'spine'],
+    'hips': ['hips'],
+    'neck': ['neck'],
+    'belly': ['spine', 'spine1'],
+    'thigh': ['leftUpLeg', 'rightUpLeg'],
+    'ankle': ['leftLeg', 'rightLeg', 'leftFoot', 'rightFoot'],
+    # Wrist excluded: T-pose forearm cross-section at wrist Y is artificially
+    # thick (muscle belly of forearm). Falls back to bounding-box ellipse.
+    'bicep': ['leftArm', 'rightArm'],
+    'calf': ['leftLeg', 'rightLeg'],
+    'knee': ['leftLeg', 'rightLeg'],
+}
 
 MALE_RATIOS = {
     'Shoulder': 0.265, 'Neck Round': 0.224, 'Chest Round': 0.588, 'Stomach Round': 0.500,
@@ -135,9 +159,11 @@ class HMRMasterEngine:
         self.smpl_faces = None
         self._v_template = None
         self._shapedirs = None
+        self._face_segmentation = None  # body-part → face indices from Meshcapade
         self.last_error = None
         self._load_vertex_map()
         self._load_smpl_faces()
+        self._load_face_segmentation()
         self._load_smpl_template()
 
     def _load_vertex_map(self):
@@ -153,8 +179,77 @@ class HMRMasterEngine:
             logger.warning(f"Could not load SMPL faces: {e}")
             self.smpl_faces = None
 
+    def _load_face_segmentation(self):
+        """Load Meshcapade body-part face segmentation.
+        Maps each body part (e.g. 'leftUpLeg', 'rightArm') to a list of
+        face indices belonging to that body region.
+        """
+        seg_path = self.base_dir / "src" / "tf_smpl" / "smpl_body_parts_2_faces.json"
+        try:
+            import json
+            with open(str(seg_path)) as f:
+                self._face_segmentation = json.load(f)
+        except Exception as e:
+            logger.warning(f"Could not load face segmentation: {e}")
+            self._face_segmentation = None
+
+    def _get_body_part_faces(self, group_name: str,
+                              vertices: Optional[np.ndarray] = None,
+                              group_indices: Optional[List[int]] = None) -> Optional[np.ndarray]:
+        """Get boolean mask of faces belonging to a given measurement group's body parts.
+        If the vertex group is off-center (mean |X| > 0.01), only body parts
+        whose faces are on the same side are used — preventing the opposite
+        arm/leg from being intersected at the same Y height.
+
+        Returns None if no filtering is needed or segmentation unavailable.
+        """
+        if self._face_segmentation is None or self.smpl_faces is None:
+            return None
+        body_parts = CIRCUMFERENCE_TO_BODYPARTS.get(group_name)
+        if body_parts is None:
+            return None
+
+        face_indices = set()
+        for bp in body_parts:
+            face_indices.update(self._face_segmentation.get(bp, []))
+
+        if not face_indices:
+            return None
+
+        # For limb measurements (off-center vertex group), keep only faces
+        # whose center X has the same sign as the vertex group mean X.
+        # This handles the case where left/right labels in the segmentation
+        # may not align with the actual X sign of our vertex groups.
+        if vertices is not None and group_indices and len(group_indices) > 0:
+            vg_mean_x = np.mean(vertices[group_indices, 0])
+            if abs(vg_mean_x) > 0.01:
+                face_list = np.array(list(face_indices), dtype=np.int32)
+                face_verts = self.smpl_faces[face_list]
+                face_mean_x = vertices[face_verts].mean(axis=1)[:, 0]
+                same_side = np.sign(face_mean_x) == np.sign(vg_mean_x)
+                mask = np.zeros(len(self.smpl_faces), dtype=bool)
+                mask[face_list[same_side]] = True
+                return mask
+
+        mask = np.zeros(len(self.smpl_faces), dtype=bool)
+        mask[list(face_indices)] = True
+        return mask
+
     def _load_smpl_template(self):
-        """Load SMPL template + shapedirs for T-pose measurement extraction."""
+        """Load SMPL template + shapedirs for T-pose measurement extraction.
+        Tries pre-extracted .npy files first, then falls back to pickle.
+        """
+        v_path = self.project_root / "models" / "v_template.npy"
+        sd_path = self.project_root / "models" / "shapedirs.npy"
+        if v_path.exists() and sd_path.exists():
+            try:
+                self._v_template = np.load(str(v_path))
+                self._shapedirs = np.load(str(sd_path))
+                logger.info(f"Loaded SMPL template from .npy files: {self._v_template.shape}, {self._shapedirs.shape}")
+                return
+            except Exception as e:
+                logger.warning(f"Could not load SMPL template from .npy: {e}")
+
         import pickle
         pkl_path = self.project_root / "models" / "neutral_smpl_with_cocoplus_reg.pkl"
         try:
@@ -173,7 +268,7 @@ class HMRMasterEngine:
             self._v_template = None
             self._shapedirs = None
 
-    def extract(self, image: np.ndarray, height_cm: float, gender: str = 'male', side_image: Optional[np.ndarray] = None) -> Tuple[Dict[str, float], Optional[np.ndarray], Optional[dict], str, str, Optional[str]]:
+    def extract(self, image: np.ndarray, height_cm: float, gender: str = 'male', side_image: Optional[np.ndarray] = None) -> Tuple[Dict[str, float], Optional[np.ndarray], Optional[dict], str, str, Optional[str], Optional[np.ndarray]]:
         """
         High-Precision Extraction with ABSOLUTE MEMORY ISOLATION.
         Uses a dedicated TF Graph and Session per request to prevent leaks.
@@ -314,12 +409,12 @@ class HMRMasterEngine:
                     # Clear session before exit
                     sess.close()
 
-                    return final_measurements, vertices_scaled, landmark_2d, body_shape, size_rec, None
+                    return final_measurements, vertices_scaled, landmark_2d, body_shape, size_rec, None, v_measure
 
         except Exception as e:
             logger.error(f"❌ HMR ISOLATED CRASH: {e}")
             traceback.print_exc()
-            return self._fallback_ratios(height_cm, gender), None, None, "Standard", "M", str(e)
+            return self._fallback_ratios(height_cm, gender), None, None, "Standard", "M", str(e), None
         finally:
             # 8. NUCLEAR MEMORY PURGE
             logger.info("♻️ HMR: Purging isolated brain and cleaning RAM...")
@@ -356,13 +451,26 @@ class HMRMasterEngine:
 
     def _calc_circ_from_mesh_slice(self, vertices: np.ndarray, faces: np.ndarray,
                                     group_indices: List[int], scale: float,
-                                    normal=(0, 1, 0)) -> float:
+                                    normal=(0, 1, 0),
+                                    face_mask: Optional[np.ndarray] = None) -> float:
         """
         Calculate circumference by slicing the mesh with a cutting plane,
         then computing the convex hull perimeter of the intersection.
+        If face_mask is provided (bool array), only those faces are used,
+        enabling body-part-specific limb measurements.
+
+        For bilateral body parts (e.g. arms, legs), if the intersection
+        points form two separate clusters (left and right), it computes
+        perimeters independently and sums them — avoiding an inflated
+        hull that wraps around both clusters.
         """
         if not group_indices or faces is None:
             return 0.0
+
+        if face_mask is not None:
+            faces = faces[face_mask]
+            if len(faces) == 0:
+                return 0.0
 
         normal = np.asarray(normal, dtype=np.float64)
         origin = np.mean(vertices[group_indices], axis=0)
@@ -377,7 +485,37 @@ class HMRMasterEngine:
         if len(points) < 3:
             return 0.0
 
-        # Project to 2D for convex hull
+        # Check for bilateral clusters (left + right body parts at same Y).
+        # If points are widely separated in X, split at the largest gap.
+        xs = points[:, 0]
+        x_range = xs.max() - xs.min()
+        if x_range > 0.15 and len(points) >= 6:
+            sorted_xs = np.sort(xs)
+            gaps = sorted_xs[1:] - sorted_xs[:-1]
+            max_gap = np.max(gaps)
+            if max_gap > 0.08:  # gap > 8cm in SMPL units = likely bilateral
+                gap_idx = np.argmax(gaps)
+                split_x = (sorted_xs[gap_idx] + sorted_xs[gap_idx + 1]) / 2
+                left_pts = points[xs < split_x]
+                right_pts = points[xs >= split_x]
+
+                def _hull_perimeter(pts):
+                    if len(pts) < 3:
+                        return 0.0
+                    if abs(normal[1]) > 0.9:
+                        p2d = pts[:, [0, 2]]
+                    else:
+                        u = np.array([1, 0, 0]) if abs(normal[0]) < 0.9 else np.array([0, 1, 0])
+                        u = u - np.dot(u, normal) * normal
+                        u /= np.linalg.norm(u)
+                        v = np.cross(normal, u)
+                        p2d = np.column_stack([np.dot(pts, u), np.dot(pts, v)])
+                    return ConvexHull(p2d).area * 100 * scale
+
+                total = _hull_perimeter(left_pts) + _hull_perimeter(right_pts)
+                return round(total, 1)
+
+        # Single cluster: project to 2D and compute convex hull
         if abs(normal[1]) > 0.9:
             pts_2d = points[:, [0, 2]]
         else:
@@ -396,12 +534,17 @@ class HMRMasterEngine:
         v_height = v_max - v_min
         scale = user_height_cm / (v_height * 100) # scale factor for CM
 
-        # Helper to calculate circumference using plane-mesh intersection (torso only)
-        torso_groups = {'chest', 'waist', 'hips', 'neck', 'belly'}
+        # Helper to calculate circumference using plane-mesh intersection
+        # with body-part face filtering. Falls back to bounding-box ellipse
+        # when no body-part-specific face filter is available (e.g. wrist).
         def calc_circ(group_indices, group_name=''):
             if not group_indices: return 0.0
-            if self.smpl_faces is not None and group_name in torso_groups:
-                return self._calc_circ_from_mesh_slice(vertices, self.smpl_faces, group_indices, scale)
+            if self.smpl_faces is not None:
+                face_mask = self._get_body_part_faces(group_name, vertices, group_indices)
+                if face_mask is not None:
+                    return self._calc_circ_from_mesh_slice(
+                        vertices, self.smpl_faces, group_indices, scale,
+                        face_mask=face_mask)
             # Default/fallback: bounding-box ellipse
             group_verts = vertices[group_indices]
             w = (np.max(group_verts[:, 0]) - np.min(group_verts[:, 0])) * 100 * scale
@@ -429,11 +572,12 @@ class HMRMasterEngine:
         results['Hip Round'] = calc_circ(self.vertex_map.get('hips', []), 'hips')
         results['Neck Round'] = calc_circ(self.vertex_map.get('neck', []), 'neck')
         results['Stomach Round'] = calc_circ(self.vertex_map.get('belly', []), 'belly')
-        results['Thigh Round'] = calc_circ(self.vertex_map.get('thigh', []))
-        results['Ankle Round'] = calc_circ(self.vertex_map.get('ankle', []))
-        results['Wrist Round'] = calc_circ(self.vertex_map.get('wrist', []))
+        results['Thigh Round'] = calc_circ(self.vertex_map.get('thigh', []), 'thigh')
+        results['Ankle Round'] = calc_circ(self.vertex_map.get('ankle', []), 'ankle')
+        results['Wrist Round'] = calc_circ(self.vertex_map.get('wrist', []), 'wrist')
 
         # 2. Shoulder Width (Dynamic from mesh)
+        sh_indices = self.vertex_map.get('shoulder width', [])
         chest_pts = self.vertex_map.get('chest', [])
         if chest_pts:
             chest_y = np.mean(vertices[chest_pts, 1])
@@ -521,6 +665,9 @@ ENGINE = HMRMasterEngine()
 HMR_ACTIVE = True
 
 def extract_measurements_from_hmr(image, height, gender='male', side_image=None):
+    """Returns (measurements, vertices, landmarks, body_shape, size_rec, error, mesh_tpose).
+    mesh_tpose is the T-pose predicted mesh (6890x3) for PVE analysis, or None on failure.
+    """
     return ENGINE.extract(image, height, gender, side_image=side_image)
 
 def get_brain_integrity():
