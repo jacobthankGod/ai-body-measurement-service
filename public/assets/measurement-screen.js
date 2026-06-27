@@ -96,6 +96,15 @@ window.KORRA_MS = {
   viewerInstance: null,
   _previousTab: 'vault',
   _viewerInitialized: false,
+  activeContext: 'standard',
+  activeMaterial: 'woven',
+  heatmapActive: false,
+  compareHistory: [],
+  compareBaselineIdx: 0,
+  vBaseline: null,
+  vLatest: null,
+  baselineData: null,
+  latestData: null,
 
   // ═══ ENTRY POINT ═══
   open(data) {
@@ -119,14 +128,34 @@ window.KORRA_MS = {
     this._viewerInitialized = false;
     this.sideBySide = localStorage.getItem('korra_ms_layout') === 'side' && window.innerWidth > 900;
     this._previousTab = document.querySelector('.tab-view.active')?.id?.replace('view-', '') || 'vault';
+    this.activeContext = 'standard';
+    this.activeMaterial = 'woven';
+    this.heatmapActive = false;
+    this.compareBaselineIdx = 0;
+    this.vBaseline = null;
+    this.vLatest = null;
+    this.baselineData = null;
+    this.latestData = null;
+    this.compareHistory = (window.masterHistory || []).filter(s => s.client_name === data.client_name);
     this.render();
     if (this.sideBySide) {
       const root = document.querySelector('#view-scanresult .ms-root');
-      if (root) root.classList.add('ms-side-by-side');
+      if (root) {
+        root.classList.add('ms-side-by-side');
+        this._wrapRightCol();
+      }
     }
     this.initViewer();
     this.bindSheetDrag();
     window.switchTab('scanresult');
+    setTimeout(() => {
+      const hEl = document.querySelector('.ms-summary-value');
+      if (hEl) {
+        hEl.style.transition = 'transform 0.15s ease';
+        hEl.style.transform = 'scale(1.05)';
+        requestAnimationFrame(() => { hEl.style.transform = 'scale(1)'; });
+      }
+    }, 100);
   },
 
   // ═══ RENDER ═══
@@ -159,6 +188,12 @@ window.KORRA_MS = {
               <button class="ms-unit-btn ${this.unit === 'cm' ? 'active' : ''}" onclick="KORRA_MS.setUnit('cm')">CM</button>
               <button class="ms-unit-btn ${this.unit === 'in' ? 'active' : ''}" onclick="KORRA_MS.setUnit('in')">IN</button>
             </div>
+            <button class="ms-header-btn" onclick="KORRA_MS.exportPDF()" title="Export PDF">
+              <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/><line x1="16" y1="13" x2="8" y2="13"/><line x1="16" y1="17" x2="8" y2="17"/><polyline points="10 9 9 9 8 9"/></svg>
+            </button>
+            <button class="ms-header-btn" onclick="KORRA_MS.downloadOBJ()" title="Download OBJ">
+              <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" y1="15" x2="12" y2="3"/></svg>
+            </button>
             <button class="ms-header-btn ${this.overlaysVisible ? 'active' : ''}" onclick="KORRA_MS.toggleOverlays()" title="Toggle measurement lines">
               <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"/><circle cx="12" cy="12" r="3"/></svg>
             </button>
@@ -221,6 +256,11 @@ window.KORRA_MS = {
               <button class="ms-ai-prompt-btn" onclick="KORRA_MS.askAI('Give me a body summary')">Body summary</button>
               <button class="ms-ai-prompt-btn" onclick="KORRA_MS.askAI('What measurements changed since last scan?')">Progress insights</button>
             </div>
+            <div class="ms-notes-section">
+              <div class="ms-notes-label">CRAFTSMAN NOTES</div>
+              <textarea class="ms-notes-input" id="ms-notes-input" placeholder="Patterns, fabrics, or tailoring requirements..." oninput="this.style.height='auto';this.style.height=Math.min(this.scrollHeight,200)+'px'">${d.notes || ''}</textarea>
+              <button class="ms-notes-save" onclick="KORRA_MS.saveNotes()">Save Notes</button>
+            </div>
           </div>
           <div class="ms-ai-input-bar">
             <input class="ms-ai-input" id="ms-ai-input" placeholder="Ask about your measurements..." onkeydown="if(event.key==='Enter')KORRA_MS.askAI(this.value)">
@@ -256,33 +296,59 @@ window.KORRA_MS = {
 
   // ═══ SHEET CONTENT ═══
   buildSheetContent() {
+    const d = this.data || {};
+    const summaryBar = `<div class="ms-summary-bar">
+      <div class="ms-summary-item"><div class="ms-summary-label">HEIGHT</div><div class="ms-summary-value">${d.height ? d.height + ' cm' : '—'}</div></div>
+      <div class="ms-summary-item"><div class="ms-summary-label">SHAPE</div><div class="ms-summary-value">${d.body_shape || 'Standard'}</div></div>
+      <div class="ms-summary-item"><div class="ms-summary-label">SIZE REC</div><div class="ms-summary-value">${d.size_recommendation || 'M'}</div></div>
+    </div>`;
+    let content;
     switch (this.viewMode) {
-      case 'avatar': case 'metrics': return this.buildMetricsList();
-      case 'sizes': return this.buildSizesGrid();
-      case 'shape': return this.buildShapeCard();
-      case 'compare': return this.buildCompareView();
-      default: return this.buildMetricsList();
+      case 'avatar': case 'metrics': content = this.buildMetricsGrid(); break;
+      case 'sizes': content = this.buildSizesGrid(); break;
+      case 'shape': content = this.buildShapeCard(); break;
+      case 'compare': content = this.buildCompareView(); break;
+      default: content = this.buildMetricsGrid();
     }
+    return summaryBar + content;
   },
 
-  buildMetricsList() {
+  buildMetricsGrid() {
     const m = this.data?.measurements || {};
     const gender = (this.data?.gender || 'male').toLowerCase();
     const factor = this.unit === 'in' ? 0.393701 : 1;
-    const keys = gender === 'female' ? FEMALE_KEYS : MALE_KEYS;
-    return '<div class="ms-meas-list">' + keys.map(k => {
-      const val = m[k];
-      const dv = val != null ? (val * factor).toFixed(1) : '—';
-      const color = MEASUREMENT_COLORS[k] || '#C6FF00';
-      const active = k === this.selectedMeasurement ? ' active' : '';
-      return `<div class="ms-meas-item${active}" onclick="KORRA_MS.selectMeasurement('${k}')">
-        <div class="ms-meas-item-left">
-          <div class="ms-meas-dot" style="background:${color}"></div>
-          <div class="ms-meas-name">${k}</div>
+
+    const sections = gender === 'female' ? {
+      'UPPER': ['Shoulder', 'Neck Round', 'Bust Round', 'High Bust', 'Under Bust', 'Bust Point', 'Shoulder to Bust Point', 'Shoulder to Under Bust', 'Across Chest', 'Across Back', 'Armhole Round'],
+      'MID': ['Shoulder to Waist', 'Front Waist Length', 'Back Waist Length', 'Waist Round', 'Half Length', 'Waist to Hip', 'Sleeve Length', 'Bicep Round', 'Elbow Round', 'Wrist Round'],
+      'LOWER': ['Upper Hip', 'Hip Round', 'Thigh Round', 'Knee Round', 'Calf Round', 'Ankle Round']
+    } : {
+      'UPPER': ['Shoulder', 'Neck Round', 'Chest Round', 'Across Chest', 'Across Back'],
+      'MID': ['Stomach Round', 'Waist Round', 'Half Length', 'Full Top Length'],
+      'LOWER': ['Hip Round', 'Thigh Round', 'Knee Round', 'Calf Round', 'Ankle Round', 'Inseam', 'Trouser Length', 'Trouser Waist', 'Crotch Depth'],
+      'ARMS': ['Sleeve Length', 'Bicep Round', 'Elbow Round', 'Wrist Round']
+    };
+
+    return Object.entries(sections).map(([label, keys]) => `
+      <div class="ms-metrics-section">
+        <div class="ms-metrics-section-header">${label}</div>
+        <div class="ms-metrics-grid">
+          ${keys.map(k => {
+            const raw = m[k];
+            if (raw == null) return `<div class="ms-metric-cell empty"><div class="ms-metric-name">${k}</div><div class="ms-metric-val">&mdash;</div></div>`;
+            const ease = this.getEase(k);
+            const val = (raw * factor * ease).toFixed(1);
+            const active = k === this.selectedMeasurement ? ' active' : '';
+            const easeLabel = ease !== 1 ? (Math.round((ease - 1) * 1000) / 10) + '% ease' : '';
+            return `<div class="ms-metric-cell${active}" onclick="KORRA_MS.selectMeasurement('${k}')">
+              <div class="ms-metric-name">${k}</div>
+              <div class="ms-metric-val">${val}${factor === 1 ? 'cm' : 'in'}</div>
+              ${easeLabel ? `<div class="ms-metric-ease">${easeLabel}</div>` : ''}
+            </div>`;
+          }).join('')}
         </div>
-        <div class="ms-meas-value">${dv}${val != null ? this.unit : ''}</div>
-      </div>`;
-    }).join('') + '</div>';
+      </div>
+    `).join('');
   },
 
   buildSizesGrid() {
@@ -303,13 +369,38 @@ window.KORRA_MS = {
       'Thigh Round': getSize(m['Thigh Round'], 'thigh'),
       'Overall': sizeRec,
     };
-    return '<div class="ms-size-grid">' + Object.entries(items).map(([label, size]) =>
+    const sizeHTML = '<div class="ms-size-grid">' + Object.entries(items).map(([label, size]) =>
       `<div class="ms-size-card">
         <div class="ms-size-label">${label}</div>
         <div class="ms-size-value">${size}</div>
         ${m[label] ? `<div class="ms-size-cm">${(m[label] * factor).toFixed(1)} ${this.unit}</div>` : ''}
       </div>`
     ).join('') + '</div>';
+
+    const attireCtx = this.activeContext;
+    const mat = this.activeMaterial;
+    return `
+      <div class="ms-attire-section">
+        <div class="ms-attire-label">ATTIRE CONTEXT</div>
+        <div class="ms-attire-grid">
+          <button class="ms-attire-card ${attireCtx === 'standard' ? 'active' : ''}" onclick="KORRA_MS.setContext('standard')"><div class="ms-attire-name">Standard</div><div class="ms-attire-desc">Clinical Base</div></button>
+          <button class="ms-attire-card ${attireCtx === 'agbada' ? 'active' : ''}" onclick="KORRA_MS.setContext('agbada')"><div class="ms-attire-name">Agbada</div><div class="ms-attire-desc">Regal Volume</div></button>
+          <button class="ms-attire-card ${attireCtx === 'senator' ? 'active' : ''}" onclick="KORRA_MS.setContext('senator')"><div class="ms-attire-name">Senator</div><div class="ms-attire-desc">Business Fit</div></button>
+          <button class="ms-attire-card ${attireCtx === 'kurta' ? 'active' : ''}" onclick="KORRA_MS.setContext('kurta')"><div class="ms-attire-name">Kurta</div><div class="ms-attire-desc">Airflow Ease</div></button>
+        </div>
+        <div class="ms-attire-status">ACTIVE: ${attireCtx.toUpperCase()}</div>
+      </div>
+      <div class="ms-material-section">
+        <div class="ms-material-label">FABRIC</div>
+        <div class="ms-material-rail">
+          <button class="ms-material-btn ${mat === 'woven' ? 'active' : ''}" onclick="KORRA_MS.setMaterial('woven')">Woven</button>
+          <button class="ms-material-btn ${mat === 'knit' ? 'active' : ''}" onclick="KORRA_MS.setMaterial('knit')">Knit</button>
+          <button class="ms-material-btn ${mat === 'starch_bazin' ? 'active' : ''}" onclick="KORRA_MS.setMaterial('starch_bazin')">Starch Bazin</button>
+          <button class="ms-material-btn ${mat === 'technical' ? 'active' : ''}" onclick="KORRA_MS.setMaterial('technical')">Technical</button>
+        </div>
+      </div>
+      ${sizeHTML}
+    `;
   },
 
   buildShapeCard() {
@@ -319,6 +410,7 @@ window.KORRA_MS = {
     const chest = m['Chest Round'] || 0;
     const waist = m['Waist Round'] || 1;
     const ratio = waist > 0 ? (chest / waist).toFixed(2) : '—';
+    const diag = this.computeDiagnostics();
     return `<div class="ms-shape-card">
       <div class="ms-shape-icon" style="font-size:28px">${info.icon}</div>
       <div class="ms-shape-name">${shape}</div>
@@ -328,12 +420,25 @@ window.KORRA_MS = {
         <div class="ms-ratio-label">Chest / Waist Ratio</div>
         <div class="ms-ratio-value">${ratio}</div>
       </div>
+    </div>
+    <div class="ms-diagnostics">
+      <div class="ms-diag-title">FIT DIAGNOSTICS</div>
+      <div class="ms-diag-grid">
+        <div class="ms-diag-item">
+          <div class="ms-diag-label">ASYMMETRY</div>
+          <div class="ms-diag-value ${diag.asymmetry === 'SYMMETRICAL' || diag.asymmetry === 'No data' ? 'ok' : 'warn'}">${diag.asymmetry}</div>
+        </div>
+        <div class="ms-diag-item">
+          <div class="ms-diag-label">POSTURE</div>
+          <div class="ms-diag-value ${diag.posture === 'OPTIMAL' || diag.posture === 'No data' ? 'ok' : 'warn'}">${diag.posture}</div>
+        </div>
+      </div>
     </div>`;
   },
 
   buildCompareView() {
     const clientName = this.data?.client_name;
-    const scans = (window.masterHistory || []).filter(s => s.client_name === clientName && s !== this.data);
+    const scans = this.compareHistory.filter(s => s !== this.data);
     if (scans.length === 0) {
       return `<div class="ms-empty">
         <div class="ms-empty-icon">📊</div>
@@ -341,13 +446,31 @@ window.KORRA_MS = {
         <div class="ms-empty-desc">Take another scan to see changes over time.</div>
       </div>`;
     }
-    const baseline = scans[scans.length - 1];
+    if (this.compareBaselineIdx >= scans.length) this.compareBaselineIdx = 0;
+    const baseline = scans[this.compareBaselineIdx];
     const m1 = baseline.measurements || baseline.biometrics || {};
     const m2 = this.data?.measurements || {};
     const factor = this.unit === 'in' ? 0.393701 : 1;
-    const allKeys = [...new Set([...Object.keys(m1), ...Object.keys(m2)])];
+
+    const dropdownHTML = `<div class="ms-compare-select">
+      <label class="ms-compare-select-label">COMPARE WITH:</label>
+      <select class="ms-compare-dropdown" id="ms-compare-baseline" onchange="KORRA_MS.setCompareBaseline(this.value)">
+        ${scans.map((h, i) => `<option value="${i}" ${i === this.compareBaselineIdx ? 'selected' : ''}>${new Date(h.created_at).toLocaleDateString()} — ${h.client_name}</option>`).join('')}
+      </select>
+    </div>`;
+
+    const heatmapHTML = `<div class="ms-compare-header">
+      <button class="ms-compare-heatmap-btn" onclick="KORRA_MS.toggleHeatmap()">${this.heatmapActive ? 'Deactivate Heatmap' : 'Activate Heatmap Overlay'}</button>
+    </div>
+    <div class="ms-compare-legend" style="display:${this.heatmapActive ? 'flex' : 'none'}">
+      <div class="ms-legend-item"><div class="ms-legend-dot" style="background:#ff4d4d"></div> GROWTH</div>
+      <div class="ms-legend-item"><div class="ms-legend-dot" style="background:#C6FF00"></div> REDUCTION</div>
+      <div class="ms-legend-item"><div class="ms-legend-dot" style="background:#888"></div> NO CHANGE</div>
+    </div>`;
+
+    const showKeys = ['Shoulder', 'Neck Round', 'Chest Round', 'Waist Round', 'Hip Round', 'Thigh Round', 'Calf Round', 'Inseam', 'Sleeve Length'];
     let deltaHTML = '';
-    for (const key of allKeys) {
+    for (const key of showKeys) {
       const v1 = m1[key], v2 = m2[key];
       if (v1 == null && v2 == null) continue;
       const delta = ((v2 || 0) - (v1 || 0)) * factor;
@@ -358,7 +481,7 @@ window.KORRA_MS = {
         <div class="ms-delta-change ${cls}">${sign}${delta.toFixed(1)}${this.unit}</div>
       </div>`;
     }
-    return `<div class="ms-compare-grid">
+    return `${dropdownHTML}${heatmapHTML}<div class="ms-compare-grid">
       <div class="ms-compare-col">
         <div class="ms-compare-label">Baseline</div>
         <div class="ms-compare-viz" id="ms-compare-baseline"></div>
@@ -398,9 +521,10 @@ window.KORRA_MS = {
       const color = MEASUREMENT_COLORS[key] || '#C6FF00';
       this.viewerInstance.showMeasurementRing(yPct, color);
     }
-    document.querySelectorAll('#view-scanresult .ms-meas-item').forEach(el => el.classList.remove('active'));
-    const items = document.querySelectorAll('#view-scanresult .ms-meas-item');
-    items.forEach(el => { if (el.querySelector('.ms-meas-name')?.textContent === key) el.classList.add('active'); });
+    document.querySelectorAll('#view-scanresult .ms-metric-cell').forEach(el => el.classList.remove('active'));
+    document.querySelectorAll('#view-scanresult .ms-metric-cell').forEach(el => {
+      if (el.querySelector('.ms-metric-name')?.textContent === key) el.classList.add('active');
+    });
     if (window.innerWidth <= 900) this.collapseSheet();
   },
 
@@ -441,6 +565,11 @@ window.KORRA_MS = {
     root.classList.toggle('ms-side-by-side', this.sideBySide);
     const btn = document.querySelector('#view-scanresult .ms-header-btn[onclick*="toggleLayout"]');
     if (btn) btn.classList.toggle('active', this.sideBySide);
+    if (this.sideBySide) {
+      this._wrapRightCol();
+    } else {
+      this._unwrapRightCol();
+    }
     if (this.viewerInstance) {
       this.viewerInstance.renderer?.setSize(
         this.viewerInstance.renderer.domElement.parentElement.clientWidth,
@@ -448,6 +577,31 @@ window.KORRA_MS = {
       );
     }
     localStorage.setItem('korra_ms_layout', this.sideBySide ? 'side' : 'stacked');
+  },
+
+  _wrapRightCol() {
+    const root = document.querySelector('#view-scanresult .ms-root');
+    if (!root || root.querySelector('.ms-right-col')) return;
+    const tabs = root.querySelector('.ms-tabs');
+    const sheet = root.querySelector('.ms-sheet');
+    if (!tabs || !sheet) return;
+    const rc = document.createElement('div');
+    rc.className = 'ms-right-col';
+    root.insertBefore(rc, sheet);
+    rc.appendChild(tabs);
+    rc.appendChild(sheet);
+  },
+
+  _unwrapRightCol() {
+    const root = document.querySelector('#view-scanresult .ms-root');
+    if (!root) return;
+    const rc = root.querySelector('.ms-right-col');
+    if (!rc) return;
+    const tabs = rc.querySelector('.ms-tabs');
+    const sheet = rc.querySelector('.ms-sheet');
+    if (tabs) root.insertBefore(tabs, sheet);
+    if (sheet) root.insertBefore(sheet, root.querySelector('.ms-ai-fab'));
+    rc.remove();
   },
 
   resetView() {
@@ -540,20 +694,23 @@ window.KORRA_MS = {
   },
 
   initCompareViewers() {
-    const baselineViz = window.createKorraVisualizer?.();
-    const currentViz = window.createKorraVisualizer?.();
-    if (baselineViz) baselineViz.init('ms-compare-baseline');
-    if (currentViz) currentViz.init('ms-compare-current');
-    const clientName = this.data?.client_name;
-    const scans = (window.masterHistory || []).filter(s => s.client_name === clientName && s !== this.data);
-    if (scans.length > 0) {
-      const baseline = scans[scans.length - 1];
-      if (baseline.mesh_url && baselineViz) {
-        fetch(baseline.mesh_url).then(r => r.ok ? r.text() : null).then(t => { if (t) baselineViz.parseAndRenderOBJ(t); }).catch(() => {});
-      }
-      if (this.data?.mesh_url && currentViz) {
-        fetch(this.data.mesh_url).then(r => r.ok ? r.text() : null).then(t => { if (t) currentViz.parseAndRenderOBJ(t); }).catch(() => {});
-      }
+    this.vBaseline = window.createKorraVisualizer?.();
+    this.vLatest = window.createKorraVisualizer?.();
+    if (this.vBaseline) this.vBaseline.init('ms-compare-baseline');
+    if (this.vLatest) this.vLatest.init('ms-compare-current');
+    this.loadCompareViewers();
+  },
+
+  loadCompareViewers() {
+    const scans = this.compareHistory.filter(s => s !== this.data);
+    if (scans.length === 0) return;
+    if (this.compareBaselineIdx >= scans.length) this.compareBaselineIdx = 0;
+    const baseline = scans[this.compareBaselineIdx];
+    if (baseline.mesh_url && this.vBaseline) {
+      fetch(baseline.mesh_url).then(r => r.ok ? r.text() : null).then(t => { if (t) this.vBaseline.parseAndRenderOBJ(t); }).catch(() => {});
+    }
+    if (this.data?.mesh_url && this.vLatest) {
+      fetch(this.data.mesh_url).then(r => r.ok ? r.text() : null).then(t => { if (t) { this.latestData = this.vLatest.parseAndRenderOBJ(t); } }).catch(() => {});
     }
   },
 
@@ -597,6 +754,110 @@ window.KORRA_MS = {
       body.insertAdjacentHTML('beforeend', `<div class="ms-ai-message assistant">AI assistant unavailable. Please try again later.</div>`);
     }
     body.scrollTop = body.scrollHeight;
+  },
+
+  // ═══ EASE MULTIPLIERS ═══
+  getEase(key) {
+    const contextMultipliers = {
+      standard: 1.035, agbada: 1.45, senator: 1.1,
+      kurta: 1.25, abaya: 1.15, activewear: 0.95
+    };
+    const materialCoeffs = {
+      woven: 1.0, knit: 0.85, starch_bazin: 1.1, technical: 0.9
+    };
+    const base = contextMultipliers[this.activeContext] || 1.035;
+    const mat = materialCoeffs[this.activeMaterial] || 1.0;
+    return base * mat;
+  },
+
+  setContext(ctx) {
+    this.activeContext = ctx;
+    if ("vibrate" in navigator) navigator.vibrate(50);
+    if (window.KORRA_VIZ) window.KORRA_VIZ.applyHeatmap(ctx);
+    const body = document.getElementById('ms-sheet-body');
+    if (body) body.innerHTML = this.buildSheetContent();
+  },
+
+  setMaterial(mat) {
+    this.activeMaterial = mat;
+    if ("vibrate" in navigator) navigator.vibrate(25);
+    const body = document.getElementById('ms-sheet-body');
+    if (body) body.innerHTML = this.buildSheetContent();
+  },
+
+  // ═══ FIT DIAGNOSTICS ═══
+  computeDiagnostics() {
+    const lm = this.data?.landmarks;
+    if (!lm || !lm.Shoulder_L) return { asymmetry: 'No data', posture: 'No data' };
+    const sl = lm.Shoulder_L, sr = lm.Shoulder_R;
+    const hl = lm.Hip_L, hr = lm.Hip_R;
+    const nose = lm.Nose;
+    let asymmetry = 'SYMMETRICAL';
+    const shoulderYDiff = Math.abs(sl[1] - sr[1]);
+    if (shoulderYDiff > 0.04) asymmetry = 'SHOULDER DROP DETECTED';
+    else if (shoulderYDiff > 0.02) asymmetry = 'MINOR ASYMMETRY';
+    const hipYDiff = Math.abs(hl[1] - hr[1]);
+    if (hipYDiff > 0.03) asymmetry = 'HIP TILT DETECTED';
+    const shoulderMidX = (sl[0] + sr[0]) / 2;
+    const noseOffset = Math.abs(nose[0] - shoulderMidX);
+    let posture = noseOffset > 0.08 ? 'FORWARD HEAD POSTURE' : 'OPTIMAL';
+    const hipMidX = (hl[0] + hr[0]) / 2;
+    if (Math.abs(shoulderMidX - hipMidX) > 0.04 && posture === 'OPTIMAL') posture = 'LEANING DETECTED';
+    return { asymmetry, posture };
+  },
+
+  // ═══ CRAFTSMAN NOTES ═══
+  async saveNotes() {
+    const notes = document.getElementById('ms-notes-input')?.value;
+    if (notes == null) return;
+    const btn = document.querySelector('.ms-notes-save');
+    if (btn) { btn.disabled = true; btn.textContent = 'SAVING...'; }
+    try {
+      const { error } = await window.KORRA_DB.from('measurements').update({ notes }).eq('id', this.data.id);
+      if (error) throw error;
+      this.data.notes = notes;
+      if (btn) { btn.textContent = 'SAVED'; setTimeout(() => { btn.textContent = 'Save Notes'; }, 1500); }
+    } catch(e) {
+      if (btn) { btn.textContent = 'FAILED'; setTimeout(() => { btn.textContent = 'Save Notes'; }, 1500); }
+    } finally { if (btn) btn.disabled = false; }
+  },
+
+  // ═══ EXPORT ═══
+  exportPDF() {
+    if (window.KORRA_EXPORT && window.KORRA_EXPORT.pdf) {
+      window.KORRA_EXPORT.pdf(this.data.client_name, this.data.measurements, this.data.gender, this.data.height);
+    }
+  },
+  async downloadOBJ() {
+    if (!this.data?.mesh_url) return;
+    try {
+      const head = await fetch(this.data.mesh_url, { method: 'HEAD' });
+      if (!head.ok) throw new Error('File not found');
+      const link = document.createElement('a');
+      link.href = this.data.mesh_url;
+      link.download = `KORRA_${this.data.client_name}_3D.obj`;
+      link.click();
+    } catch(e) { /* silent */ }
+  },
+
+  // ═══ HEATMAP ═══
+  toggleHeatmap() {
+    this.heatmapActive = !this.heatmapActive;
+    if (this.heatmapActive) {
+      this.vLatest?.applyHeatmap('standard');
+    } else {
+      this.vLatest?.resetHeatmap();
+    }
+    const body = document.getElementById('ms-sheet-body');
+    if (body) body.innerHTML = this.buildSheetContent();
+  },
+
+  setCompareBaseline(idx) {
+    this.compareBaselineIdx = parseInt(idx);
+    this.heatmapActive = false;
+    this.loadCompareViewers();
+    const body = document.getElementById('ms-sheet-body');
+    if (body) body.innerHTML = this.buildSheetContent();
   },
 
   // ═══ NAVIGATION ═══

@@ -670,32 +670,41 @@
   height: calc(100vh - 80px);
   order: 1;
 }
-.ms-side-by-side .ms-tabs {
-  order: 3;
-  width: 50%;
-  border-top: none;
-  border-left: 1px solid var(--Glass-Border);
-  flex-direction: column;
-  height: auto;
-  padding: 8px 0;
-}
-.ms-side-by-side .ms-tab {
-  width: 100%;
-  justify-content: flex-start;
-  padding: 10px 20px;
-  border-radius: 0;
-}
-.ms-side-by-side .ms-sheet {
+.ms-side-by-side .ms-right-col {
   order: 2;
   flex: 1 1 50%;
-  height: calc(100vh - 80px) !important;
+  display: flex;
+  flex-direction: column;
+  height: calc(100vh - 80px);
+  min-width: 0;
+  border-left: 1px solid var(--Glass-Border);
+  overflow: hidden;
+}
+.ms-side-by-side .ms-tabs {
+  order: 0;
+  width: 100%;
+  flex-direction: row;
+  height: auto;
+  border-top: none;
+  border-left: none;
+  padding: 0 12px;
+  flex-shrink: 0;
+}
+.ms-side-by-side .ms-tab {
+  padding: 0 12px;
+  font-size: 10px;
+}
+.ms-side-by-side .ms-sheet {
+  order: 1;
+  flex: 1 1 auto;
+  height: auto !important;
   min-height: 0;
   border-radius: 0;
   border-top: none;
-  border-left: 1px solid var(--Glass-Border);
+  border-left: none;
 }
 .ms-side-by-side .ms-sheet.expanded {
-  height: calc(100vh - 80px) !important;
+  height: auto !important;
 }
 .ms-side-by-side .ms-sheet-handle {
   display: none;
@@ -711,6 +720,305 @@
   .ms-layout-toggle {
     display: flex;
   }
+}
+
+/* ── SUMMARY BAR ── */
+.ms-summary-bar {
+  display: flex;
+  justify-content: space-around;
+  text-align: center;
+  padding: 16px;
+  margin: 0 0 16px;
+  background: rgba(198, 255, 0, 0.1);
+  border: 1px solid rgba(198, 255, 0, 0.3);
+  border-radius: 12px;
+}
+.ms-summary-item { text-align: center; }
+.ms-summary-label {
+  font-size: 10px;
+  color: var(--Neutral-500);
+  font-weight: 700;
+}
+.ms-summary-value {
+  font-size: 18px;
+  font-weight: 900;
+  color: var(--Mint);
+  margin-top: 4px;
+}
+
+/* ── 3-COLUMN METRICS GRID ── */
+.ms-metrics-section { margin-bottom: 16px; }
+.ms-metrics-section-header {
+  font-size: 10px;
+  font-weight: 900;
+  color: var(--Mint);
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+  padding: 4px 0;
+  margin-bottom: 8px;
+  border-bottom: 1px solid rgba(198, 255, 0, 0.15);
+}
+.ms-metrics-grid {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 8px;
+}
+.ms-metric-cell {
+  padding: 10px;
+  background: rgba(255, 255, 255, 0.05);
+  border-radius: 8px;
+  cursor: pointer;
+  border: 1px solid transparent;
+  transition: all 0.15s;
+}
+.ms-metric-cell:hover { border-color: rgba(198, 255, 0, 0.3); }
+.ms-metric-cell.active { border-color: var(--Mint); background: rgba(198, 255, 0, 0.08); }
+.ms-metric-cell.empty { opacity: 0.4; cursor: default; }
+.ms-metric-name {
+  font-size: 9px;
+  color: var(--Neutral-500);
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+.ms-metric-val {
+  font-size: 15px;
+  font-weight: 700;
+  color: var(--Mint);
+  margin-top: 2px;
+  font-variant-numeric: tabular-nums;
+}
+.ms-metric-ease {
+  font-size: 8px;
+  color: var(--Accent-Teal);
+  margin-top: 2px;
+}
+
+/* ── SKELETON LOADING ── */
+.ms-skeleton-cell {
+  padding: 10px;
+  background: rgba(255, 255, 255, 0.03);
+  border-radius: 8px;
+}
+.ms-sk-line {
+  height: 8px;
+  border-radius: 4px;
+  background: rgba(255, 255, 255, 0.06);
+  animation: msPulse 1.5s ease-in-out infinite;
+}
+.ms-sk-line.short { width: 60%; margin-bottom: 6px; }
+.ms-sk-line.long { width: 80%; }
+
+/* ── ATTIRE CONTEXT ── */
+.ms-attire-section { margin-bottom: 16px; }
+.ms-attire-label {
+  font-size: 10px;
+  font-weight: 900;
+  color: var(--Neutral-500);
+  margin-bottom: 8px;
+}
+.ms-attire-grid {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 8px;
+}
+.ms-attire-card {
+  padding: 10px 12px;
+  border-radius: 10px;
+  border: 1px solid var(--Glass-Border);
+  background: rgba(255, 255, 255, 0.03);
+  cursor: pointer;
+  text-align: left;
+  transition: all 0.15s;
+}
+.ms-attire-card:hover { border-color: rgba(198, 255, 0, 0.3); }
+.ms-attire-card.active {
+  border-color: var(--Mint);
+  background: rgba(198, 255, 0, 0.08);
+}
+.ms-attire-name {
+  font-size: 12px;
+  font-weight: 700;
+  color: #fff;
+}
+.ms-attire-desc {
+  font-size: 9px;
+  color: var(--Neutral-500);
+}
+.ms-attire-status {
+  font-size: 9px;
+  color: var(--Accent-Teal);
+  font-weight: 900;
+  margin-top: 8px;
+}
+
+/* ── MATERIAL RAIL ── */
+.ms-material-section { margin-bottom: 16px; }
+.ms-material-label {
+  font-size: 10px;
+  font-weight: 900;
+  color: var(--Neutral-500);
+  margin-bottom: 8px;
+}
+.ms-material-rail {
+  display: flex;
+  gap: 8px;
+  overflow-x: auto;
+  padding-bottom: 4px;
+  scrollbar-width: none;
+}
+.ms-material-rail::-webkit-scrollbar { display: none; }
+.ms-material-btn {
+  padding: 6px 14px;
+  border-radius: 16px;
+  border: 1px solid var(--Glass-Border);
+  background: transparent;
+  color: var(--Neutral-400);
+  font-size: 10px;
+  font-weight: 700;
+  white-space: nowrap;
+  cursor: pointer;
+  transition: all 0.15s;
+}
+.ms-material-btn:hover { border-color: rgba(198, 255, 0, 0.3); }
+.ms-material-btn.active {
+  border-color: var(--Mint);
+  color: var(--Mint);
+  background: rgba(198, 255, 0, 0.08);
+}
+
+/* ── FIT DIAGNOSTICS ── */
+.ms-diagnostics {
+  padding: 16px;
+  margin: 0 0 16px;
+  background: rgba(255, 255, 255, 0.02);
+  border: 1px solid var(--Glass-Border);
+  border-radius: 12px;
+}
+.ms-diag-title {
+  font-size: 11px;
+  font-weight: 900;
+  color: #fff;
+  text-transform: uppercase;
+  margin-bottom: 12px;
+}
+.ms-diag-grid {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 16px;
+}
+.ms-diag-label { font-size: 9px; color: var(--Neutral-500); }
+.ms-diag-value {
+  font-size: 13px;
+  font-weight: 700;
+  color: #fff;
+  margin-top: 4px;
+}
+.ms-diag-value.ok { color: var(--Mint); }
+.ms-diag-value.warn { color: var(--Error, #ff4d4d); }
+
+/* ── CRAFTSMAN NOTES ── */
+.ms-notes-section {
+  padding: 16px 0;
+  border-top: 1px solid var(--Glass-Border);
+}
+.ms-notes-label {
+  font-size: 10px;
+  font-weight: 900;
+  color: var(--Neutral-500);
+  margin-bottom: 8px;
+}
+.ms-notes-input {
+  width: 100%;
+  min-height: 80px;
+  padding: 12px;
+  border-radius: 8px;
+  resize: none;
+  background: rgba(255, 255, 255, 0.03);
+  border: 1px solid var(--Glass-Border);
+  color: #fff;
+  font-size: 12px;
+  font-family: 'Inter', sans-serif;
+  outline: none;
+  transition: border-color 0.2s;
+}
+.ms-notes-input:focus { border-color: var(--Mint); }
+.ms-notes-save {
+  width: 100%;
+  height: 32px;
+  margin-top: 8px;
+  border-radius: 8px;
+  background: transparent;
+  border: 1px solid var(--Glass-Border);
+  color: var(--Mint);
+  font-size: 10px;
+  font-weight: 700;
+  cursor: pointer;
+  transition: all 0.15s;
+}
+.ms-notes-save:hover { border-color: var(--Mint); background: rgba(198, 255, 0, 0.08); }
+
+/* ── COMPARE DROPDOWN ── */
+.ms-compare-select {
+  padding: 0 0 12px;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+.ms-compare-select-label {
+  font-size: 10px;
+  font-weight: 900;
+  color: var(--Neutral-500);
+  white-space: nowrap;
+}
+.ms-compare-dropdown {
+  flex: 1;
+  padding: 6px 10px;
+  border-radius: 8px;
+  border: 1px solid var(--Glass-Border);
+  background: rgba(255, 255, 255, 0.05);
+  color: #fff;
+  font-size: 11px;
+  font-family: 'Inter', sans-serif;
+  outline: none;
+}
+.ms-compare-dropdown:focus { border-color: var(--Mint); }
+.ms-compare-dropdown option { background: #1a1a2e; color: #fff; }
+
+/* ── HEATMAP TOGGLE + LEGEND ── */
+.ms-compare-header { padding: 0 0 8px; }
+.ms-compare-heatmap-btn {
+  padding: 8px 16px;
+  border-radius: 8px;
+  border: 1px solid var(--Mint);
+  background: transparent;
+  color: var(--Mint);
+  font-size: 10px;
+  font-weight: 700;
+  cursor: pointer;
+  transition: all 0.15s;
+}
+.ms-compare-heatmap-btn:hover {
+  background: rgba(198, 255, 0, 0.08);
+}
+.ms-compare-legend {
+  display: flex;
+  justify-content: center;
+  gap: 24px;
+  padding: 8px 0;
+}
+.ms-legend-item {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  font-size: 10px;
+  font-weight: 700;
+  color: #fff;
+}
+.ms-legend-dot {
+  width: 10px;
+  height: 10px;
+  border-radius: 50%;
 }
 
 /* ── RESPONSIVE ── */
