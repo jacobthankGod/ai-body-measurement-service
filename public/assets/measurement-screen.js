@@ -299,7 +299,7 @@ window.KORRA_MS = {
     const d = this.data || {};
     const summaryBar = `<div class="ms-summary-bar">
       <div class="ms-summary-item"><div class="ms-summary-label">HEIGHT</div><div class="ms-summary-value">${d.height ? d.height + ' cm' : '—'}</div></div>
-      <div class="ms-summary-item"><div class="ms-summary-label">SHAPE</div><div class="ms-summary-value">${d.body_shape || 'Standard'}</div></div>
+      <div class="ms-summary-item"><div class="ms-summary-label">SHAPE</div><div class="ms-summary-value white">${d.body_shape || 'Standard'}</div></div>
       <div class="ms-summary-item"><div class="ms-summary-label">SIZE REC</div><div class="ms-summary-value">${d.size_recommendation || 'M'}</div></div>
     </div>`;
     let content;
@@ -599,9 +599,10 @@ window.KORRA_MS = {
     if (!rc) return;
     const tabs = rc.querySelector('.ms-tabs');
     const sheet = rc.querySelector('.ms-sheet');
-    if (tabs) root.insertBefore(tabs, sheet);
-    if (sheet) root.insertBefore(sheet, root.querySelector('.ms-ai-fab'));
     rc.remove();
+    const anchor = root.querySelector('.ms-ai-fab');
+    if (sheet) root.insertBefore(sheet, anchor);
+    if (tabs) root.insertBefore(tabs, sheet);
   },
 
   resetView() {

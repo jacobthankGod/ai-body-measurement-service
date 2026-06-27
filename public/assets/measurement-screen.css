@@ -728,9 +728,9 @@
   justify-content: space-around;
   text-align: center;
   padding: 16px;
-  margin: 0 0 16px;
+  margin: 0 0 20px;
   background: rgba(198, 255, 0, 0.1);
-  border: 1px solid rgba(198, 255, 0, 0.3);
+  border: 1px solid var(--Mint);
   border-radius: 12px;
 }
 .ms-summary-item { text-align: center; }
@@ -745,18 +745,19 @@
   color: var(--Mint);
   margin-top: 4px;
 }
+.ms-summary-value.white { color: #fff; }
 
 /* ── 3-COLUMN METRICS GRID ── */
 .ms-metrics-section { margin-bottom: 16px; }
 .ms-metrics-section-header {
-  font-size: 10px;
+  font-size: 11px;
   font-weight: 900;
-  color: var(--Mint);
+  color: #fff;
   text-transform: uppercase;
   letter-spacing: 0.5px;
   padding: 4px 0;
-  margin-bottom: 8px;
-  border-bottom: 1px solid rgba(198, 255, 0, 0.15);
+  margin-bottom: 12px;
+  border-bottom: none;
 }
 .ms-metrics-grid {
   display: grid;
@@ -782,7 +783,7 @@
   text-overflow: ellipsis;
 }
 .ms-metric-val {
-  font-size: 15px;
+  font-size: 16px;
   font-weight: 700;
   color: var(--Mint);
   margin-top: 2px;
@@ -823,23 +824,25 @@
   gap: 8px;
 }
 .ms-attire-card {
-  padding: 10px 12px;
-  border-radius: 10px;
+  padding: 16px;
+  border-radius: 16px;
   border: 1px solid var(--Glass-Border);
   background: rgba(255, 255, 255, 0.03);
   cursor: pointer;
   text-align: left;
-  transition: all 0.15s;
+  transition: 0.3s;
+  position: relative;
+  overflow: hidden;
 }
 .ms-attire-card:hover { border-color: rgba(198, 255, 0, 0.3); }
 .ms-attire-card.active {
-  border-color: var(--Mint);
-  background: rgba(198, 255, 0, 0.08);
+  border-color: var(--Accent-Teal);
+  background: rgba(198, 255, 0, 0.05);
 }
 .ms-attire-name {
-  font-size: 12px;
-  font-weight: 700;
-  color: #fff;
+  font-size: 11px;
+  font-weight: 900;
+  color: var(--Accent-Teal);
 }
 .ms-attire-desc {
   font-size: 9px;
@@ -914,7 +917,6 @@
   color: #fff;
   margin-top: 4px;
 }
-.ms-diag-value.ok { color: var(--Mint); }
 .ms-diag-value.warn { color: var(--Error, #ff4d4d); }
 
 /* ── CRAFTSMAN NOTES ── */
