@@ -3387,7 +3387,9 @@ async function init() {
       if (!session) { window.location.href = '/signin'; return; }
       userId = session.user.id;
       fetchHistory(); await window.loadSettings(); document.getElementById('loadingOverlay').style.display = 'none';
-      if (window.KORRA_VIZ && window.innerWidth > 900) window.KORRA_VIZ.init('dashboard-3d-viewport');
+      if (window.KORRA_VIZ && window.innerWidth > 900 && !document.getElementById('view-scanresult')?.classList.contains('active')) {
+        window.KORRA_VIZ.init('dashboard-3d-viewport');
+      }
     }
 
     async function pollTask(taskId) {

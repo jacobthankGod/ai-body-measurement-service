@@ -158,7 +158,10 @@ window.KORRA_MS = {
             </button>
           </div>
         </div>
-        <div class="ms-viewer" id="ms-viewer">${this.buildBadge()}</div>
+        <div class="ms-viewer" id="ms-viewer">
+          <div class="ms-viewer-canvas" id="ms-viewer-canvas"></div>
+          <div class="ms-viewer-badge" id="ms-viewer-badge">${this.buildBadge()}</div>
+        </div>
         <div class="ms-tabs">
           <button class="ms-tab ${this.viewMode === 'avatar' ? 'active' : ''}" onclick="KORRA_MS.switchView('avatar')">
             <svg class="ms-tab-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"/><circle cx="12" cy="7" r="4"/></svg>
@@ -231,11 +234,9 @@ window.KORRA_MS = {
   },
 
   updateBadge() {
-    const viewer = document.getElementById('ms-viewer');
-    if (!viewer) return;
-    const old = viewer.querySelector('.ms-badge');
-    if (old) old.remove();
-    viewer.insertAdjacentHTML('beforeend', this.buildBadge());
+    const badge = document.getElementById('ms-viewer-badge');
+    if (!badge) return;
+    badge.innerHTML = this.buildBadge();
   },
 
   // ═══ SHEET CONTENT ═══
@@ -463,27 +464,46 @@ window.KORRA_MS = {
 
   // ═══ 3D VIEWER ═══
   initViewer() {
-    const viewerEl = document.getElementById('ms-viewer');
-    if (!viewerEl || !window.KORRA_VIZ) return;
+    const canvasEl = document.getElementById('ms-viewer-canvas');
+    if (!canvasEl || !window.KORRA_VIZ) return;
     if (window.createKorraVisualizer) {
       this.viewerInstance = window.createKorraVisualizer();
     } else {
       this.viewerInstance = window.KORRA_VIZ;
     }
-    this.viewerInstance.init('ms-viewer');
+    this.viewerInstance.init('ms-viewer-canvas');
     const meshUrl = this.data?.mesh_url;
     if (meshUrl) {
       const lm = this.data?.landmarks;
       const lm3d = lm ? Object.fromEntries(Object.entries(lm).map(([k, v]) => [k, { x: v[0], y: v[1], z: 0 }])) : null;
-      this.viewerInstance.loadMesh(meshUrl, lm3d).catch(e => console.warn('🟡 Mesh unavailable:', e?.message));
+      const controller = new AbortController();
+      const timeout = setTimeout(() => controller.abort(), 15000);
+      fetch(meshUrl, { signal: controller.signal })
+        .then(r => { clearTimeout(timeout); if (!r.ok) throw new Error('Missing'); return r.text(); })
+        .then(text => {
+          const meshData = this.viewerInstance.parseAndRenderOBJ(text);
+          if (meshData && lm3d) this.viewerInstance.renderLandmarks(lm3d, meshData.size);
+          if (meshData) {
+            this.viewerInstance.mesh.geometry.attributes.position.usage = THREE.DynamicDrawUsage;
+            setTimeout(() => {
+              if (this.overlaysVisible && this.viewerInstance) {
+                const yPct = MEASUREMENT_Y[this.selectedMeasurement] || 0.5;
+                const color = MEASUREMENT_COLORS[this.selectedMeasurement] || '#C6FF00';
+                this.viewerInstance.showMeasurementRing(yPct, color);
+              }
+            }, 300);
+          }
+        })
+        .catch(() => {});
+    } else {
+      setTimeout(() => {
+        if (this.overlaysVisible && this.viewerInstance) {
+          const yPct = MEASUREMENT_Y[this.selectedMeasurement] || 0.5;
+          const color = MEASUREMENT_COLORS[this.selectedMeasurement] || '#C6FF00';
+          this.viewerInstance.showMeasurementRing(yPct, color);
+        }
+      }, 600);
     }
-    setTimeout(() => {
-      if (this.overlaysVisible && this.viewerInstance) {
-        const yPct = MEASUREMENT_Y[this.selectedMeasurement] || 0.5;
-        const color = MEASUREMENT_COLORS[this.selectedMeasurement] || '#C6FF00';
-        this.viewerInstance.showMeasurementRing(yPct, color);
-      }
-    }, 600);
   },
 
   initCompareViewers() {
@@ -495,8 +515,12 @@ window.KORRA_MS = {
     const scans = (window.masterHistory || []).filter(s => s.client_name === clientName && s !== this.data);
     if (scans.length > 0) {
       const baseline = scans[scans.length - 1];
-      if (baseline.mesh_url && baselineViz) baselineViz.loadMesh(baseline.mesh_url);
-      if (this.data?.mesh_url && currentViz) currentViz.loadMesh(this.data.mesh_url);
+      if (baseline.mesh_url && baselineViz) {
+        fetch(baseline.mesh_url).then(r => r.ok ? r.text() : null).then(t => { if (t) baselineViz.parseAndRenderOBJ(t); }).catch(() => {});
+      }
+      if (this.data?.mesh_url && currentViz) {
+        fetch(this.data.mesh_url).then(r => r.ok ? r.text() : null).then(t => { if (t) currentViz.parseAndRenderOBJ(t); }).catch(() => {});
+      }
     }
   },
 
