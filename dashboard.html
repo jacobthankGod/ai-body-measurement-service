@@ -2635,7 +2635,8 @@ msg.textContent = feedback; msg.style.background = aligned ? "var(--Mint)" : "rg
 
       // Update URL hash without causing a page jump
       if (!IS_INITIALIZING) {
-          history.replaceState(null, null, '#' + id);
+          const scanId = (id === 'scanresult' && window.KORRA_MS?.data?.id) ? '/' + window.KORRA_MS.data.id : '';
+          history.replaceState(null, null, '#' + id + scanId);
       }
 
       // UI Polish: Scroll content to top on tab switch
@@ -2773,7 +2774,20 @@ window.loadSettings = async () => {
         // INITIAL ROUTING (Only runs once on load)
         if (IS_INITIALIZING) {
             const hash = window.location.hash.replace('#', '');
-            if (hash && document.getElementById('view-' + hash)) {
+            if (hash.startsWith('scanresult/')) {
+                const scanId = hash.split('/')[1];
+                if (scanId && window.KORRA_MS) {
+                    window.KORRA_DB.from('measurements').select('*').eq('id', scanId).single().then(({ data, error }) => {
+                        if (data && !error) {
+                            window.KORRA_MS.open(data);
+                        } else {
+                            window.switchTab('overview');
+                        }
+                    });
+                } else {
+                    window.switchTab('overview');
+                }
+            } else if (hash && document.getElementById('view-' + hash)) {
                 window.switchTab(hash);
             } else {
                 window.switchTab('overview');

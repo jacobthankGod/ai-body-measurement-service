@@ -99,6 +99,13 @@ window.KORRA_MS = {
 
   // ═══ ENTRY POINT ═══
   open(data) {
+    if (typeof data === 'string') {
+      if (!window.KORRA_DB) return;
+      window.KORRA_DB.from('measurements').select('*').eq('id', data).single().then(({ data: row, error }) => {
+        if (row && !error) this.open(row);
+      });
+      return;
+    }
     if (data.biometrics && !data.measurements) data.measurements = data.biometrics;
     if (data.landmarks_3d && !data.landmarks) data.landmarks = data.landmarks_3d;
     this.data = data;
