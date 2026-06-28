@@ -1303,6 +1303,41 @@
   color: rgba(255,255,255,0.2);
 }
 
+.ss-input-wrap {
+  position: relative;
+  display: flex;
+  align-items: center;
+}
+.ss-input-wrap .ss-input {
+  padding-right: 120px;
+}
+.ss-input-btn {
+  position: absolute;
+  right: 6px;
+  height: 44px;
+  padding: 0 12px;
+  border-radius: 10px;
+  border: none;
+  background: rgba(198,255,0,0.1);
+  color: var(--Accent-Teal, #C6FF00);
+  font-size: 10px;
+  font-weight: 800;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  gap: 4px;
+  white-space: nowrap;
+  transition: background 0.15s;
+}
+.ss-input-btn:hover {
+  background: rgba(198,255,0,0.2);
+}
+.ss-input-btn svg {
+  width: 14px;
+  height: 14px;
+  flex-shrink: 0;
+}
+
 .ss-link-area {
   display: none;
   margin-bottom: 32px;

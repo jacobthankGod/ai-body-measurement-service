@@ -1417,7 +1417,6 @@
               <h2 class="ss-title">Invite Client</h2>
               <p class="ss-desc">Send a deep link for biometric enrollment.</p>
             </div>
-            <button class="btn-ghost" style="height:40px; font-size:10px; padding:0 12px; border-radius:10px; background: rgba(198,255,0,0.1); border-color: rgba(198,255,0,0.3); color: var(--Accent-Teal); font-weight:800; flex-shrink:0; margin-left:16px;" onclick="window.handleContactPicker()">Import from Contacts</button>
           </div>
 
           <div class="ss-field">
@@ -1427,7 +1426,13 @@
 
           <div class="ss-field">
             <label class="ss-label">PHONE (WHATSAPP)</label>
-            <input type="text" id="sharePhone" class="ss-input" placeholder="e.g. 2348000000000">
+            <div class="ss-input-wrap">
+              <input type="text" id="sharePhone" class="ss-input" placeholder="e.g. 2348000000000">
+              <button class="ss-input-btn" onclick="window.handleContactPicker()">
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"/><circle cx="12" cy="7" r="4"/></svg>
+                Import
+              </button>
+            </div>
           </div>
 
           <div class="ss-field">
