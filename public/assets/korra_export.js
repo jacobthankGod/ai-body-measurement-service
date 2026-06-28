@@ -43,7 +43,7 @@ window.KORRA_EXPORT = {
             }
         });
 
-        doc.save(`korra_passport_${clientName.replace(/\s+/g, '_')}.pdf`);
+        doc.save(`korra_profile_${clientName.replace(/\s+/g, '_')}.pdf`);
     },
 
     /**

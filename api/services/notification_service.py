@@ -208,7 +208,7 @@ class NotificationService:
             title=f"Measurement shared with {merchant_name}",
             message=f"Your measurements are now accessible by {merchant_name}.",
             data={"measurement_id": measurement_id, "merchant_name": merchant_name},
-            link_url="/sizepassport"
+            link_url="/profile"
         )
 
 

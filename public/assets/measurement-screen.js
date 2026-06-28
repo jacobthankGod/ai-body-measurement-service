@@ -142,8 +142,9 @@ window.KORRA_MS = {
     this.latestData = null;
     this.compareHistory = (window.masterHistory || []).filter(s => s.client_name === data.client_name);
     // Preload mesh IMMEDIATELY — starts fetch while HTML renders
-    if (data.mesh_url && window.KORRA_VIZ) {
-      window.KORRA_VIZ.preloadMesh(data.mesh_url);
+    const meshUrl = data.mesh_storage_url || data.mesh_url;
+    if (meshUrl && window.KORRA_VIZ) {
+      window.KORRA_VIZ.preloadMesh(meshUrl);
     }
     this.render();
     if (this.sideBySide) {
@@ -673,7 +674,7 @@ window.KORRA_MS = {
       this.viewerInstance = window.KORRA_VIZ;
     }
     this.viewerInstance.init('ms-viewer-canvas');
-    const meshUrl = this.data?.mesh_url;
+    const meshUrl = this.data?.mesh_storage_url || this.data?.mesh_url;
     if (meshUrl) {
       const lm = this.data?.landmarks;
       const lm3d = lm ? Object.fromEntries(Object.entries(lm).map(([k, v]) => [k, { x: v[0], y: v[1], z: 0 }])) : null;
@@ -874,10 +875,13 @@ window.KORRA_MS = {
   openShareScan() {
     if (!this.data?.id) return;
     document.getElementById('shareScanName').value = this.data.client_name || '';
+    document.getElementById('shareScanPhone').value = '';
+    document.getElementById('shareScanEmail').value = '';
     document.getElementById('shareScanLink').textContent = window.location.origin + '/dashboard#scanresult/...';
     document.getElementById('shareScanLinkArea').style.display = 'none';
     const btn = document.getElementById('btnGenerateScanLink');
     if (btn) btn.textContent = 'Generate Link';
+    window._currentScanId = this.data.id;
     if (window.openModal) window.openModal('shareScanModal');
   },
 

@@ -29,7 +29,7 @@ SECTION_CONTENT = {
     'luxury-mtm.html': {
         'Digital Savile Row': 'Leverage computer vision to capture 50+ body measurements in under 60 seconds. Each scan produces a precision-fitted digital twin that retains measurements for future reference, enabling pattern adjustments without re-measuring. Our proprietary algorithm calibrates automatically to account for posture, lighting conditions, and camera angle variations, ensuring consistent accuracy across all capture environments.',
         'Zero-Error Patterns': 'Our AI-driven regression model achieves ±0.5cm accuracy across all body types. Combined with your craftsmanship, this eliminates the guesswork that leads to costly returns and fabric waste. The system learns from your specific client base and adjusts pattern drafting recommendations based on historical fit feedback, creating a continuously improving fit prediction engine.',
-        'Global Bespoke': 'Share digital measurements instantly via chat or email. Clients receive a downloadable size passport they can use anywhere. Expand your clientele beyond geographic boundaries. Measurement packages include 3D mesh exports compatible with major CAD systems including CLO, Browzwear, and OptiTex for seamless pattern integration.',
+        'Global Bespoke': 'Share digital measurements instantly via chat or email. Clients receive a downloadable size profile they can use anywhere. Expand your clientele beyond geographic boundaries. Measurement packages include 3D mesh exports compatible with major CAD systems including CLO, Browzwear, and OptiTex for seamless pattern integration.',
         'Consistent Standards': 'Every scan uses the same calibrated algorithm. Maintain your brand\'s reputation for precision regardless of which team member conducts the measurement session. Eliminates inter-measurer variance that typically accounts for 2-3cm discrepancies between different fittings.',
     },
     'manufacturing.html': {
@@ -42,7 +42,7 @@ SECTION_CONTENT = {
         'Reduce Returns': 'Help customers find their perfect fit with accurate measurements. Reduce return rates by providing size guidance based on actual body data rather than generic size charts. Integration with Shopify, Magento, and custom e-commerce platforms displays personalized size recommendations at checkout.',
         'Size Confidence': 'Build customer trust with personalized size recommendations. AI-powered suggestions consider body measurements, style preferences, and fabric stretch. Machine learning models continuously improve recommendations based on actual return data, learning which fit preferences correlate with lower return rates.',
         'Inventory Analytics': 'Aggregate anonymized size data to identify trends. Make smarter purchasing decisions based on actual customer body type distribution. Dashboard visualizations reveal size demand patterns by region, season, and style, enabling data-driven inventory planning.',
-        'Seamless Integration': 'Connect with your existing POS and e-commerce systems. Enable barcode scanning and size lookup for faster checkout experiences. Works with Square, Shopify POS, and major retail systems to display customer size passports instantly at point of sale.',
+        'Seamless Integration': 'Connect with your existing POS and e-commerce systems. Enable barcode scanning and size lookup for faster checkout experiences. Works with Square, Shopify POS, and major retail systems to display customer size profiles instantly at point of sale.',
     },
     # bridal.html sections - 4 section titles: Reduce Rework, Global Bridal, Stress-Free Sync, Party Coordination
     'bridal.html': {
@@ -56,7 +56,7 @@ SECTION_CONTENT = {
         'Fit-First Design': 'Validate custom designs against customer body data before production. Reduce expensive misalignments. Virtual try-on technology displays proposed garment proportions on customer digital twin, enabling design adjustments before fabric is cut.',
         'Artisan Velocity': 'Speed up the custom measurement process. Capture measurements in minutes, not hours. Guided capture interface walks customers through self-measurement process with real-time feedback, reducing appointment duration while improving accuracy.',
         'Digital Pattern Sync': 'Save patterns linked to customer measurements. Enable quick modifications for repeat orders. Pattern versioning system maintains complete measurement history alongside corresponding pattern adjustments, enabling precise reproduction of previous commissions.',
-        'Serve Anyone, Anywhere': 'Work with customers globally. Measurements travel with the customer, not just the order. Size passport technology enables recurring customers to share their measurement profile with any connected tailor, eliminating re-measuring for every commission.',
+        'Serve Anyone, Anywhere': 'Work with customers globally. Measurements travel with the customer, not just the order. Our profile system enables recurring customers to share their measurement profile with any connected tailor, eliminating re-measuring for every commission.',
     },
     # uniforms.html sections - 4 section titles: Mass Enrollment, Deployment Logistics, Reduced Exchange Costs, Persistent Sizing
     'uniforms.html': {

@@ -1447,6 +1447,7 @@
             <div class="ss-link-actions">
               <button class="ss-btn-outline" onclick="window.copyDeepLink()">Copy Link</button>
               <button class="ss-btn-whatsapp" onclick="window.shareToWhatsApp()">WhatsApp</button>
+              <button class="ss-btn-outline" onclick="window.shareToEmail()">Email</button>
             </div>
           </div>
 
@@ -1480,16 +1481,33 @@
 
           <div class="ss-field">
             <label class="ss-label">CLIENT NAME</label>
-            <input type="text" id="shareScanName" class="ss-input" placeholder="Client name" readonly>
+            <input type="text" id="shareScanName" class="ss-input" placeholder="e.g. James">
           </div>
 
-          <div id="shareScanLinkArea" class="ss-link-area">
+          <div class="ss-field">
+            <label class="ss-label">PHONE (WHATSAPP)</label>
+            <div class="ss-input-wrap">
+              <input type="text" id="shareScanPhone" class="ss-input" placeholder="e.g. 2348000000000">
+              <button class="ss-input-btn" onclick="window.handleContactPicker('shareScanName', 'shareScanPhone')">
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"/><circle cx="12" cy="7" r="4"/></svg>
+                Import
+              </button>
+            </div>
+          </div>
+
+          <div class="ss-field">
+            <label class="ss-label">EMAIL (OPTIONAL)</label>
+            <input type="email" id="shareScanEmail" class="ss-input" placeholder="e.g. james@example.com">
+          </div>
+
+          <div id="shareScanLinkArea" class="ss-link-area" style="display:none;">
             <div class="ss-link-box">
               <code id="shareScanLink" class="ss-link-text">https://...</code>
             </div>
             <div class="ss-link-actions">
               <button class="ss-btn-outline" onclick="window.copyScanLink()">Copy Link</button>
               <button class="ss-btn-whatsapp" onclick="window.shareScanWhatsApp()">WhatsApp</button>
+              <button class="ss-btn-outline" onclick="window.shareScanEmail()">Email</button>
             </div>
           </div>
 
@@ -2945,7 +2963,7 @@ window.loadSettings = async () => {
             </div>
             <p style="margin:0; opacity:0.6">${new Date(s.created_at).toLocaleDateString()} • ${s.height}cm</p>
             <div style="display:flex; align-items:center; gap:6px; margin-top:8px">
-                <span style="font-size:8px; color:var(--Neutral-500); letter-spacing:0.05em">${s.mesh_url ? '3D Model Available' : 'Processing'}</span>
+                <span style="font-size:8px; color:var(--Neutral-500); letter-spacing:0.05em">${(s.mesh_storage_url || s.mesh_url) ? '3D Model Available' : 'Processing'}</span>
             </div>
           </div>
           <button class="btn-ghost" style="height:32px; font-size:10px; margin-left:16px" onclick="window.viewScan(${idx})">View</button>
@@ -3889,17 +3907,26 @@ window.applyPromo = () => {
         new QRCode(qrContainer, { text: url, width: 200, height: 200, colorDark: "#000000", colorLight: "#ffffff" });
     };
 
-window.shareToWhatsApp = () => {
+    window.shareToWhatsApp = () => {
         const url = document.getElementById('deepLinkDisplay').textContent;
         const phone = document.getElementById('sharePhone').value.replace(/\D/g, '');
         const email = document.getElementById('shareEmail').value;
         const name = document.getElementById('shareName').value || 'there';
-        // Include email in the WhatsApp message if provided
         const message = email 
-            ? `Hi ${name}, please use this link to start your KORRA body scan: ${url}\n\nOr scan via email: ${email}`
+            ? `Hi ${name}, please use this link to start your KORRA body scan: ${url}\n\nOr check your email: ${email}`
             : `Hi ${name}, please use this link to start your KORRA body scan: ${url}`;
         const waUrl = phone ? `https://wa.me/${phone}?text=${encodeURIComponent(message)}` : `https://wa.me/?text=${encodeURIComponent(message)}`;
         window.open(waUrl, '_blank');
+    };
+
+    window.shareToEmail = () => {
+        const url = document.getElementById('deepLinkDisplay').textContent;
+        const name = document.getElementById('shareName').value || 'there';
+        const email = document.getElementById('shareEmail').value;
+        const subject = encodeURIComponent('KORRA Body Scan Invitation');
+        const body = encodeURIComponent(`Hi ${name},\n\nPlease use this link to start your KORRA body scan:\n${url}`);
+        const mailto = email ? `mailto:${email}?subject=${subject}&body=${body}` : `mailto:?subject=${subject}&body=${body}`;
+        window.open(mailto, '_blank');
     };
 
     window.copyDeepLink = () => {
@@ -3914,16 +3941,36 @@ window.shareToWhatsApp = () => {
 
     window.shareScanWhatsApp = () => {
         const url = document.getElementById('shareScanLink').textContent;
+        const phone = document.getElementById('shareScanPhone').value.replace(/\D/g, '');
+        const email = document.getElementById('shareScanEmail').value;
         const name = document.getElementById('shareScanName').value || 'there';
-        const message = `Hi ${name}, view your body scan results here: ${url}`;
-        const waUrl = `https://wa.me/?text=${encodeURIComponent(message)}`;
+        const message = email
+            ? `Hi ${name}, view your body scan results here: ${url}\n\nOr check your email: ${email}`
+            : `Hi ${name}, view your body scan results here: ${url}`;
+        const waUrl = phone ? `https://wa.me/${phone}?text=${encodeURIComponent(message)}` : `https://wa.me/?text=${encodeURIComponent(message)}`;
         window.open(waUrl, '_blank');
+    };
+
+    window.shareScanEmail = () => {
+        const url = document.getElementById('shareScanLink').textContent;
+        const name = document.getElementById('shareScanName').value || 'there';
+        const email = document.getElementById('shareScanEmail').value;
+        const subject = encodeURIComponent('Your KORRA Body Scan Results');
+        const body = encodeURIComponent(`Hi ${name},\n\nView your body scan results here:\n${url}`);
+        const mailto = email ? `mailto:${email}?subject=${subject}&body=${body}` : `mailto:?subject=${subject}&body=${body}`;
+        window.open(mailto, '_blank');
     };
 
     window.generateScanLink = () => {
         const name = document.getElementById('shareScanName').value;
+        const phone = document.getElementById('shareScanPhone').value;
+        const email = document.getElementById('shareScanEmail').value;
         if (!name) { window.showAlert("Client name is required."); return; }
-        const url = `${window.location.origin}/dashboard#scanresult/${window._currentScanId || ''}`;
+        const params = [];
+        if (phone) params.push('p=' + encodeURIComponent(phone));
+        if (email) params.push('e=' + encodeURIComponent(email));
+        const qs = params.length ? '?' + params.join('&') : '';
+        const url = `${window.location.origin}/dashboard${qs}#scanresult/${window._currentScanId || ''}`;
         document.getElementById('shareScanLink').textContent = url;
         document.getElementById('shareScanLinkArea').style.display = 'block';
     };
@@ -3971,22 +4018,6 @@ window.generateDeepLink = async () => {
       document.getElementById('deepLinkDisplay').textContent = url;
       document.getElementById('linkGeneratedArea').style.display = 'block';
       document.getElementById('btnGenerateLink').textContent = 'Update Link';
-      
-      // If email provided, also send via SendGrid API
-      if (email) {
-          try {
-              const res = await fetch('/api/v2/send-email', {
-                  method: 'POST',
-                  headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
-                  body: `merchant_id=${userId}&customer_email=${encodeURIComponent(email)}&client_name=${encodeURIComponent(name)}`
-              });
-              if (res.ok) {
-                  window.showToast("Email Sent", `Invitation sent to ${email}`);
-              }
-          } catch(e) {
-              console.warn("Email send failed:", e);
-          }
-      }
     };
 
     window.ACTIVE_CONTEXT = 'standard';
@@ -4050,7 +4081,7 @@ window.generateDeepLink = async () => {
         }
     };
 
-    window.handleContactPicker = async () => {
+    window.handleContactPicker = async (nameFieldId = 'shareName', phoneFieldId = 'sharePhone') => {
         /**
          * Phase 125: Contact Picker API Integration
          * Allows merchants to import client data from mobile contacts.
@@ -4067,8 +4098,8 @@ window.generateDeepLink = async () => {
             const contacts = await navigator.contacts.select(props, opts);
             if (contacts.length > 0) {
                 const c = contacts[0];
-                if (c.name && c.name.length > 0) document.getElementById('shareName').value = c.name[0];
-                if (c.tel && c.tel.length > 0) document.getElementById('sharePhone').value = c.tel[0].replace(/\s+/g, '');
+                if (c.name && c.name.length > 0) document.getElementById(nameFieldId).value = c.name[0];
+                if (c.tel && c.tel.length > 0) document.getElementById(phoneFieldId).value = c.tel[0].replace(/\s+/g, '');
                 window.showToast("Success", "Contact data imported.");
             }
         } catch (ex) {

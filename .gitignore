@@ -61,6 +61,21 @@ build/
 dist/
 *.egg-info/
 
+# Local datasets (too large, downloaded per-machine)
+data/bodym/
+data/hbw/
+data/mendeley/
+data/modelagency/
+data/ssp3d/
+data/unidata/
+data/*_results.csv
+
+# Plan docs (not source code)
+MESH_STORAGE_RESILIENCE_30_PHASE_PLAN.md
+
+# OpenCode config
+.opencode/
+
 # Miscellaneous
 *.bak
 *.tmp

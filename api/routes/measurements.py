@@ -195,16 +195,16 @@ async def run_extraction_subprocess_cli(task_id: str, front_path: str, side_path
                         clinical_realism_index = data.get("clinical_realism_index")
                         hmr_error = None
                         mesh_url = f"/meshes/{mesh_filename}" if mesh_path.exists() else None
+                        mesh_storage_url = None
+                        # Upload mesh to Supabase Storage for persistence across rebuilds
+                        if mesh_path.exists():
+                            mesh_storage_url = DatabaseService.upload_mesh_to_storage(mesh_path, task_id)
                     else:
                         raise Exception(data.get("error", "Unknown error in subprocess"))
                 except Exception as e:
                     logger.error(f"❌ FAILED TO PARSE AI OUTPUT: {e}")
                     logger.error(f"    Raw stdout was: {stdout_str[-200:] if stdout_str else 'N/A'}")
                     return {"status": "failed", "error": f"Parse Error: {str(e)}"}
-
-            # 3. CLEANUP TEMP FILES
-            if os.path.exists(front_path): os.remove(front_path)
-            if os.path.exists(side_path): os.remove(side_path)
 
     # 4. ATOMIC PERSISTENCE (Dual Account - Unicorn Level)
             if user_id:
@@ -214,7 +214,8 @@ async def run_extraction_subprocess_cli(task_id: str, front_path: str, side_path
                     gender=gender, biometrics=measurements, landmarks=landmarks,
                     mesh_url=mesh_url, body_shape=body_shape, size_rec=size_rec,
                     client_user_id=client_user_id,
-                    clinical_realism_index=clinical_realism_index
+                    clinical_realism_index=clinical_realism_index,
+                    mesh_storage_url=mesh_storage_url
                 )
                 if not save_result:
                     logger.error(f"❌ Database save failed for task {task_id}")
@@ -222,10 +223,15 @@ async def run_extraction_subprocess_cli(task_id: str, front_path: str, side_path
             else:
                 logger.warning(f"⚠️ [TASK {task_id}] No user_id — measurement not persisted (admin/bypass key)")
 
+            # 3. CLEANUP TEMP FILES (only after successful persistence)
+            if os.path.exists(front_path): os.remove(front_path)
+            if os.path.exists(side_path): os.remove(side_path)
+
             return {
                 "status": "completed",
                 "measurements": measurements,
                 "mesh_url": mesh_url,
+                "mesh_storage_url": mesh_storage_url,
                 "landmarks": landmarks,
                 "body_shape": body_shape,
                 "size_recommendation": size_rec,
@@ -241,6 +247,7 @@ async def run_extraction_task(task_id: str, front_bytes: bytes, side_bytes: byte
     """
     Reliability Wrapper: Manages the lifecycle of the AI Subprocess.
     Now with dual-account support for unicorn-level measurement ownership.
+    Uploads original photos to Supabase Storage for future re-generation.
     """
     try:
         cleanup_task_queue()
@@ -256,6 +263,18 @@ async def run_extraction_task(task_id: str, front_bytes: bytes, side_bytes: byte
         del front_bytes
         with open(s_path, 'wb') as f: f.write(side_bytes)
         del side_bytes
+
+        # 1b. Upload original photos to Supabase Storage for resilience
+        photo_front_url = None
+        photo_side_url = None
+        if user_id:
+            from api.services.database_service import DatabaseService
+            with open(f_path, 'rb') as f: fb = f.read()
+            photo_front_url = DatabaseService.upload_photo_to_storage(fb, user_id, task_id, 'front')
+            with open(s_path, 'rb') as f: sb = f.read()
+            photo_side_url = DatabaseService.upload_photo_to_storage(sb, user_id, task_id, 'side')
+
+        update_task(task_id, {"photo_front_url": photo_front_url, "photo_side_url": photo_side_url})
 
 # 2. ISOLATED EXECUTION
         # We now await the async subprocess function (with client_user_id for dual ownership)
@@ -326,7 +345,8 @@ async def run_extraction_task(task_id: str, front_bytes: bytes, side_bytes: byte
                         "biometrics": measurement_data,
                         "body_shape": body_shape,
                         "size_recommendation": size_rec,
-                        "mesh_url": result.get("mesh_url")
+                        "mesh_url": result.get("mesh_url"),
+                        "mesh_storage_url": result.get("mesh_storage_url")
                     }
                 )
                 logger.info(f"🪝 [TASK {task_id}] Webhook triggered")

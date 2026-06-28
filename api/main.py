@@ -7,7 +7,7 @@ import os
 import logging
 from fastapi import FastAPI, Request, HTTPException
 from fastapi.middleware.cors import CORSMiddleware
-from fastapi.responses import JSONResponse, FileResponse, Response
+from fastapi.responses import JSONResponse, FileResponse, Response, RedirectResponse
 from fastapi.staticfiles import StaticFiles
 from pathlib import Path
 
@@ -144,7 +144,10 @@ async def serve_impact(): return get_safe_file("impact.html")
 async def serve_casestudies(): return get_safe_file("casestudies.html")
 
 @app.get("/sizepassport")
-async def serve_sizepassport(): return get_safe_file("sizepassport.html")
+async def serve_sizepassport(): return RedirectResponse(url="/profile")
+
+@app.get("/profile")
+async def serve_profile(): return get_safe_file("profile.html")
 
 @app.get("/developers")
 async def serve_developers(): return get_safe_file("api.html")
@@ -174,11 +177,15 @@ async def catch_all(full_path: str):
     # Check if it's a specific file in the root
     target = BASE_DIR / full_path
     if target.exists() and target.is_file():
+        if full_path.endswith('.obj'):
+            return FileResponse(str(target), headers={"Cache-Control": "public, max-age=86400"})
         return FileResponse(str(target))
 
     # Check in public folder
     public_target = PUBLIC_DIR / full_path
     if public_target.exists() and public_target.is_file():
+        if full_path.endswith('.obj'):
+            return FileResponse(str(public_target), headers={"Cache-Control": "public, max-age=86400"})
         return FileResponse(str(public_target))
 
     # Default fallback for clean URLs

@@ -2,12 +2,15 @@
 Supabase Database Service | UNICORN-GRADE PERSISTENCE
 =====================================================
 Handles atomic persistence for API keys, usage, 3D Biometrics, and Invitations.
+Now with Supabase Storage integration for mesh files and photos.
 """
 import os
 import json
 import logging
 import uuid
+import time
 from datetime import datetime, timedelta
+from pathlib import Path
 from typing import Dict, Optional, Any
 # from supabase import create_client, Client # MOVED TO LATE IMPORT
 
@@ -67,7 +70,73 @@ class DatabaseService:
             return None
 
     @classmethod
-    def save_measurement(cls, user_id: str, client_name: str, height: float, gender: str, biometrics: dict, landmarks: dict = None, mesh_url: str = None, body_shape: str = None, size_rec: str = None, client_user_id: str = None, clinical_realism_index: float = None):
+    def upload_mesh_to_storage(cls, file_path: Path, task_id: str) -> Optional[str]:
+        """Upload .obj mesh file to Supabase Storage 'meshes' bucket.
+        Returns public URL on success, None on failure.
+        """
+        client = cls.get_client()
+        if not client:
+            logger.error("❌ [STORAGE] No Supabase client — cannot upload mesh")
+            return None
+        if not file_path or not file_path.exists():
+            logger.error(f"❌ [STORAGE] Mesh file not found: {file_path}")
+            return None
+
+        try:
+            file_name = f"meshes/{file_path.name}"
+            file_bytes = file_path.read_bytes()
+            file_size = len(file_bytes)
+
+            logger.info(f"📤 [STORAGE] Uploading mesh {file_path.name} ({file_size} bytes) to 'meshes' bucket")
+
+            client.storage.from_('meshes').upload(
+                file_name,
+                file_bytes,
+                {"content-type": "model/obj", "upsert": True}
+            )
+
+            public_url = client.storage.from_('meshes').get_public_url(file_name)
+            logger.info(f"✅ [STORAGE] Mesh uploaded: {public_url}")
+            return public_url
+        except Exception as e:
+            logger.error(f"❌ [STORAGE] Mesh upload failed: {e}")
+            return None
+
+    @classmethod
+    def upload_photo_to_storage(cls, photo_bytes: bytes, user_id: str, task_id: str, side: str) -> Optional[str]:
+        """Upload a photo to Supabase Storage 'scan_photos' bucket.
+        side: 'front' or 'side'
+        Returns public URL on success, None on failure.
+        """
+        client = cls.get_client()
+        if not client:
+            logger.error("❌ [STORAGE] No Supabase client — cannot upload photo")
+            return None
+        if not photo_bytes:
+            logger.error(f"❌ [STORAGE] Empty photo bytes for {side}")
+            return None
+
+        try:
+            file_name = f"{user_id}/{task_id}/{side}.png"
+            file_size = len(photo_bytes)
+
+            logger.info(f"📤 [STORAGE] Uploading {side} photo ({file_size} bytes) to 'scan_photos' bucket")
+
+            client.storage.from_('scan_photos').upload(
+                file_name,
+                photo_bytes,
+                {"content-type": "image/png", "upsert": True}
+            )
+
+            public_url = client.storage.from_('scan_photos').get_public_url(file_name)
+            logger.info(f"✅ [STORAGE] {side} photo uploaded: {public_url}")
+            return public_url
+        except Exception as e:
+            logger.error(f"❌ [STORAGE] {side} photo upload failed: {e}")
+            return None
+
+    @classmethod
+    def save_measurement(cls, user_id: str, client_name: str, height: float, gender: str, biometrics: dict, landmarks: dict = None, mesh_url: str = None, body_shape: str = None, size_rec: str = None, client_user_id: str = None, clinical_realism_index: float = None, mesh_storage_url: str = None, photo_front_url: str = None, photo_side_url: str = None):
         """
         Save measurement to database.
         
@@ -75,7 +144,7 @@ class DatabaseService:
         - user_id: The merchant/professional who requested the scan
         - client_user_id: The client's own account (optional but recommended for ownership)
         
-        This implements the Unicorn-level dual-account persistence pattern.
+        Now persists mesh_storage_url and photo URLs for cloud-resilient storage.
         """
         client = cls.get_client()
         if not client:
@@ -98,6 +167,9 @@ class DatabaseService:
                 "biometrics": biometrics,
                 "landmarks_3d": landmarks if landmarks else {},
                 "mesh_url": mesh_url,
+                "mesh_storage_url": mesh_storage_url,
+                "photo_front_url": photo_front_url,
+                "photo_side_url": photo_side_url,
                 "body_shape": body_shape,
                 "size_recommendation": size_rec,
                 "clinical_realism_index": clinical_realism_index,
@@ -126,6 +198,9 @@ class DatabaseService:
                     "biometrics": biometrics,
                     "landmarks_3d": landmarks if landmarks else {},
                     "mesh_url": mesh_url,
+                    "mesh_storage_url": mesh_storage_url,
+                    "photo_front_url": photo_front_url,
+                    "photo_side_url": photo_side_url,
                     "body_shape": body_shape,
                     "size_recommendation": size_rec,
                     "clinical_realism_index": clinical_realism_index,

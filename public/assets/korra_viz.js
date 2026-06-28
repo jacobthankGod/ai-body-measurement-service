@@ -18,6 +18,9 @@ class KorraVisualizer {
         this.targetRotationX = 0;
         this.targetRotationY = 0;
         this.privacyShieldActive = false; // Phase 119
+        this._meshCache = new Map();    // url -> { text, parsed }
+        this.wireframeMode = false;     // solid mesh by default
+        this._fetchCache = new Map();   // url -> Promise<string>
     }
 
     init(containerId) {
@@ -120,26 +123,48 @@ class KorraVisualizer {
         }
 
         try {
-            const controller = new AbortController();
-            const id = setTimeout(() => controller.abort(), 15000); // Increased for high-res mesh
-            const response = await fetch(objUrl, { signal: controller.signal });
-            clearTimeout(id);
-            if (!response.ok) throw new Error("File Missing");
-            const text = await response.text();
+            let text = this._meshCache.get(objUrl);
+            if (!text) {
+                const controller = new AbortController();
+                const id = setTimeout(() => controller.abort(), 15000);
+                const response = await fetch(objUrl, { signal: controller.signal });
+                clearTimeout(id);
+                if (!response.ok) throw new Error("File Missing");
+                text = await response.text();
+                this._meshCache.set(objUrl, text);
+            }
             const meshData = this.parseAndRenderOBJ(text);
 
             if (landmarkData) {
                 this.renderLandmarks(landmarkData, meshData.size);
             }
 
-            // PHASE 76: Enable high-fidelity vertex buffer updates
-            this.mesh.geometry.attributes.position.usage = THREE.DynamicDrawUsage;
+            if (this.mesh && this.mesh.geometry && this.mesh.geometry.attributes.position) {
+                this.mesh.geometry.attributes.position.usage = THREE.DynamicDrawUsage;
+            }
 
             return meshData;
         } catch (e) {
             this.createTechnicalProxy();
             return null;
         }
+    }
+
+    preloadMesh(objUrl) {
+        if (!objUrl || objUrl === 'null' || this._meshCache.has(objUrl)) return;
+        if (this._fetchCache.has(objUrl)) return;
+        const promise = fetch(objUrl).then(r => {
+            if (!r.ok) throw new Error('Missing');
+            return r.text();
+        }).then(text => {
+            this._meshCache.set(objUrl, text);
+            return text;
+        }).catch(() => {});
+        this._fetchCache.set(objUrl, promise);
+    }
+
+    getCachedMesh(objUrl) {
+        return this._meshCache.get(objUrl) || null;
     }
 
     updateVertices(newVertexData) {
@@ -190,20 +215,33 @@ class KorraVisualizer {
         geometry.computeVertexNormals();
         geometry.center();
 
-        const material = new THREE.MeshPhongMaterial({
+        this._wireframeMat = new THREE.MeshPhongMaterial({
             color: 0x2C3E50,
             wireframe: true,
             transparent: true,
             opacity: 0.9,
             shininess: 100,
             side: THREE.DoubleSide,
-            // PHASE 80: Unicorn Glass shader refinements
             emissive: 0x888888,
             emissiveIntensity: 0.1,
             flatShading: false
         });
 
+        this._solidMat = new THREE.MeshPhongMaterial({
+            color: 0x4A6FA5,
+            wireframe: false,
+            transparent: true,
+            opacity: 0.85,
+            shininess: 60,
+            side: THREE.DoubleSide,
+            emissive: 0x1A2A4A,
+            emissiveIntensity: 0.05,
+            flatShading: false,
+            specular: 0x222222
+        });
+
         if (this.mesh && this.scene) this.scene.remove(this.mesh);
+        const material = this.wireframeMode ? this._wireframeMat : this._solidMat;
         this.mesh = new THREE.Mesh(geometry, material);
         this.mesh.rotation.x = Math.PI;
         this.mesh.rotation.y = Math.PI;
@@ -222,6 +260,15 @@ class KorraVisualizer {
 
         this.scene.add(this.mesh);
         return { vertices, faces, size };
+    }
+
+    toggleWireframe() {
+        this.wireframeMode = !this.wireframeMode;
+        if (this.mesh) {
+            this.mesh.material = this.wireframeMode ? this._wireframeMat : this._solidMat;
+            this.mesh.material.needsUpdate = true;
+        }
+        return this.wireframeMode;
     }
 
     renderLandmarks(landmarks, modelSize) {
@@ -363,6 +410,70 @@ class KorraVisualizer {
         if (!this._measurementRings) this._measurementRings = new THREE.Group();
         this._measurementRings.add(torus);
         this._measurementRings.add(glow);
+        this.scene.add(this._measurementRings);
+    }
+
+    showMeasurementRings(data, colors, yMap) {
+        if (!this.mesh || !this.scene || !data) return;
+        this.clearMeasurementRings();
+
+        const targetMesh = this.mesh.isGroup ? this.mesh.children[0] : this.mesh;
+        if (!targetMesh || !targetMesh.geometry) return;
+
+        targetMesh.geometry.computeBoundingBox();
+        const bbox = targetMesh.geometry.boundingBox;
+        const meshHeight = bbox.max.y - bbox.min.y;
+        const positions = targetMesh.geometry.attributes.position;
+
+        this._measurementRings = new THREE.Group();
+
+        for (const [key, color] of Object.entries(colors)) {
+            if (!data.measurements || data.measurements[key] == null) continue;
+            const yPct = yMap[key];
+            if (yPct == null) continue;
+
+            const meshY = bbox.min.y + meshHeight * yPct;
+            const bandMin = bbox.min.y + meshHeight * (yPct - 0.02);
+            const bandMax = bbox.min.y + meshHeight * (yPct + 0.02);
+
+            let maxRadius = 0;
+            for (let i = 0; i < positions.count; i++) {
+                const vy = positions.getY(i);
+                if (vy >= bandMin && vy <= bandMax) {
+                    const vx = positions.getX(i);
+                    const vz = positions.getZ(i);
+                    const r = Math.sqrt(vx * vx + vz * vz);
+                    if (r > maxRadius) maxRadius = r;
+                }
+            }
+            if (maxRadius < 0.05) maxRadius = 0.35;
+
+            const torusGeo = new THREE.TorusGeometry(maxRadius, 0.008, 8, 64);
+            const torusMat = new THREE.MeshBasicMaterial({
+                color: new THREE.Color(color),
+                transparent: true,
+                opacity: 0.9,
+                side: THREE.DoubleSide
+            });
+            const torus = new THREE.Mesh(torusGeo, torusMat);
+            torus.position.y = meshY;
+            torus.rotation.x = Math.PI / 2;
+
+            const glowGeo = new THREE.TorusGeometry(maxRadius + 0.01, 0.02, 8, 64);
+            const glowMat = new THREE.MeshBasicMaterial({
+                color: new THREE.Color(color),
+                transparent: true,
+                opacity: 0.25,
+                side: THREE.DoubleSide
+            });
+            const glow = new THREE.Mesh(glowGeo, glowMat);
+            glow.position.y = meshY;
+            glow.rotation.x = Math.PI / 2;
+
+            this._measurementRings.add(torus);
+            this._measurementRings.add(glow);
+        }
+
         this.scene.add(this._measurementRings);
     }
 
