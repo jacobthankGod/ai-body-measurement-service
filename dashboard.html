@@ -3966,6 +3966,7 @@ window.applyPromo = () => {
         const phone = document.getElementById('shareScanPhone').value;
         const email = document.getElementById('shareScanEmail').value;
         if (!name) { window.showAlert("Client name is required."); return; }
+        if (!phone && !email) { window.showAlert("Please enter a phone number or email."); return; }
         const params = [];
         if (phone) params.push('p=' + encodeURIComponent(phone));
         if (email) params.push('e=' + encodeURIComponent(email));
@@ -4013,6 +4014,7 @@ window.generateDeepLink = async () => {
       const phone = document.getElementById('sharePhone').value;
       const email = document.getElementById('shareEmail').value;
       if (!name) { window.showAlert("Please enter a client name."); return; }
+      if (!phone && !email) { window.showAlert("Please enter a phone number or email."); return; }
       
       const url = `${window.location.origin}/share?m=${userId}&c=${encodeURIComponent(name)}${email ? '&e=' + encodeURIComponent(email) : ''}${phone ? '&p=' + encodeURIComponent(phone) : ''}`;
       document.getElementById('deepLinkDisplay').textContent = url;
