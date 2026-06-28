@@ -69,6 +69,10 @@
 - `Chest Round` missing from `FEMALE_KEYS` — FIXED (added to output list)
 - **Calibration**: Single calibration factor over-corrects large subjects; needs per-quantile or multi-factor calibration with more GT data
 
+### UI Modals (as of 2026-06-28)
+- **Share Scan Modal** (`#shareScanModal`): Split-screen layout with `Share-screen-image-new.png` on left, form on right. Used to share individual scan results via link.
+- **Invite Modal** (`#shareModal`): Split-screen layout with `Invite-screen-image.png` on left, form on right. Used to generate deep links for biometric enrollment. Includes Import from Contacts button, WhatsApp-specific phone field. Both use `.ss-*` CSS classes in `measurement-screen.css`.
+
 ### Files to Know
 | File | Purpose |
 |---|---|
