@@ -1131,7 +1131,7 @@
 
   <div id="offlineOverlay"><div class="offline-card"><div style="font-size:32px; margin-bottom:24px">📡</div><h2 style="font-size:18px; font-weight:800; margin-bottom:12px">Sync Interrupted</h2><p style="font-size:12px; color:var(--Neutral-400)">Your internet connection is unstable. KORRA has paused updates.</p></div></div>
 
-  <div id="creditOverlay"><div class="credit-card"><div style="font-size:48px; margin-bottom:32px">💎</div><h2 style="font-size:24px; font-weight:900; margin-bottom:16px">Credits Depleted</h2><p style="font-size:14px; color:var(--Neutral-400); margin-bottom:40px">Your balance has reached 0 credits. Please top up to continue.</p><button class="btn-primary" style="width:100%; height:56px" onclick="window.dismissCreditError(); window.switchTab('billing'); document.getElementById('topUpModal').classList.add('active');">Top Up Now</button><button class="btn-outline" style="width:100%; border:none; margin-top:16px; color:var(--Neutral-500)" onclick="window.dismissCreditError()">Later</button></div></div>
+  <div id="creditOverlay"><div class="credit-card"><div style="font-size:48px; margin-bottom:32px">💎</div><h2 style="font-size:24px; font-weight:900; margin-bottom:16px">Credits Depleted</h2><p style="font-size:14px; color:var(--Neutral-400); margin-bottom:40px">Your balance has reached 0 credits. Please top up to continue.</p><button class="btn-primary" style="width:100%; height:56px" onclick="window.dismissCreditError(); window.switchTab('billing'); window.openModal('topUpModal')">Top Up Now</button><button class="btn-outline" style="width:100%; border:none; margin-top:16px; color:var(--Neutral-500)" onclick="window.dismissCreditError()">Later</button></div></div>
 
   <!-- PURCHASE SUCCESS CELEBRATION OVERLAY -->
   <div id="purchaseSuccess">
@@ -1204,7 +1204,7 @@
 
   <div class="scan-overlay" id="scanModal">
     <div class="scan-header">
-      <button class="btn-ghost" style="display:flex;align-items:center;gap:8px;font-size:13px;font-weight:600;color:var(--Neutral-400);padding:8px 16px;border-radius:12px;" onclick="if(document.getElementById('frontPhoto').files[0] || document.getElementById('sidePhoto').files[0] || document.getElementById('scanClientName').value) { if(!confirm('Discard current scan data?')) return; } document.getElementById('scanModal').classList.remove('active')"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M19 12H5"/><path d="M12 19l-7-7 7-7"/></svg> Back</button>
+      <button class="btn-ghost" style="display:flex;align-items:center;gap:8px;font-size:13px;font-weight:600;color:var(--Neutral-400);padding:8px 16px;border-radius:12px;" onclick="if(document.getElementById('frontPhoto').files[0] || document.getElementById('sidePhoto').files[0] || document.getElementById('scanClientName').value) { if(!confirm('Discard current scan data?')) return; } window.closeModal('scanModal')"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M19 12H5"/><path d="M12 19l-7-7 7-7"/></svg> Back</button>
       <h2 style="margin:0;font-size:15px;font-weight:900;letter-spacing:0.05em;color:var(--Accent-Teal)">DIGITAL FITTING ROOM</h2>
       <span style="font-size:10px;font-weight:700;color:var(--Neutral-500);background:var(--Glass);padding:4px 12px;border-radius:99px;border:1px solid var(--Glass-Border);display:flex;align-items:center;gap:6px;"><span style="width:6px;height:6px;border-radius:50%;background:var(--Mint);display:inline-block;"></span> Step 1 / 3</span>
     </div>
@@ -1271,7 +1271,7 @@
             <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M5 12h14"/><path d="M12 5l7 7-7 7"/></svg>
             Get Measurements
           </button>
-          <button type="button" class="btn-dismiss" onclick="if(document.getElementById('frontPhoto').files[0] || document.getElementById('sidePhoto').files[0] || document.getElementById('scanClientName').value) { if(!confirm('Discard current scan data?')) return; } document.getElementById('scanModal').classList.remove('active')">Cancel</button>
+          <button type="button" class="btn-dismiss" onclick="if(document.getElementById('frontPhoto').files[0] || document.getElementById('sidePhoto').files[0] || document.getElementById('scanClientName').value) { if(!confirm('Discard current scan data?')) return; } window.closeModal('scanModal')">Cancel</button>
         </form>
       </div>
     </div>
@@ -1280,7 +1280,7 @@
 <div class="purchase-overlay" id="topUpModal">
   <div class="purchase-header">
     <div style="display:flex; align-items:center; gap:12px;">
-      <button class="btn-ghost" style="display:flex;align-items:center;gap:8px;font-size:13px;font-weight:600;color:var(--Neutral-400);padding:8px 16px;border-radius:12px;" onclick="document.getElementById('topUpModal').classList.remove('active')"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M19 12H5"/><path d="M12 19l-7-7 7-7"/></svg>Back</button>
+      <button class="btn-ghost" style="display:flex;align-items:center;gap:8px;font-size:13px;font-weight:600;color:var(--Neutral-400);padding:8px 16px;border-radius:12px;" onclick="window.closeModal('topUpModal')"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M19 12H5"/><path d="M12 19l-7-7 7-7"/></svg>Back</button>
       <h2 style="margin:0; font-size:18px;">Purchase Credits</h2>
     </div>
     <span style="font-size:11px;font-weight:700;color:var(--Neutral-400);background:var(--Glass);padding:6px 16px;border-radius:99px;border:1px solid var(--Glass-Border);"><span id="bundleRateLabel">₦685</span> <span style="font-weight:400">/ scan</span></span>
@@ -1392,7 +1392,7 @@
         <div id="promoStatus" style="font-size:10px;margin-bottom:12px;display:none;"></div>
         <div style="font-size:9px;color:var(--Neutral-500);text-align:center;margin-bottom:12px;line-height:1.4;">Test: 4084 0840 8408 4081 | any future date | any 3-digit CVV</div>
         <button class="btn-primary" id="btnConfirmPurchase" style="width:100%;height:52px;font-size:13px;" onclick="window.handlePurchase()">Purchase Credits</button>
-        <button class="btn-ghost" style="width:100%;height:40px;font-size:11px;color:var(--Neutral-500);margin-top:8px;" onclick="document.getElementById('topUpModal').classList.remove('active')">Cancel</button>
+        <button class="btn-ghost" style="width:100%;height:40px;font-size:11px;color:var(--Neutral-500);margin-top:8px;" onclick="window.closeModal('topUpModal')">Cancel</button>
       </div>
     </div>
   </div>
@@ -1410,7 +1410,7 @@
         </div>
       </div>
       <div class="ss-right">
-        <button class="ss-close" onclick="document.getElementById('shareModal').classList.remove('active')">✕</button>
+        <button class="ss-close" onclick="window.closeModal('shareModal')">✕</button>
         <div class="ss-right-inner">
           <div class="ss-header" style="display:flex; justify-content:space-between; align-items:flex-start;">
             <div>
@@ -1452,7 +1452,7 @@
 
           <div class="ss-actions">
             <button type="button" class="ss-btn-primary" id="btnGenerateLink" onclick="window.generateDeepLink()">Generate Link</button>
-            <button type="button" class="ss-btn-ghost" onclick="document.getElementById('shareModal').classList.remove('active')">Cancel</button>
+            <button type="button" class="ss-btn-ghost" onclick="window.closeModal('shareModal')">Cancel</button>
           </div>
         </div>
       </div>
@@ -1471,7 +1471,7 @@
         </div>
       </div>
       <div class="ss-right">
-        <button class="ss-close" onclick="document.getElementById('shareScanModal').classList.remove('active')">✕</button>
+        <button class="ss-close" onclick="window.closeModal('shareScanModal')">✕</button>
         <div class="ss-right-inner">
           <div class="ss-header">
             <h2 class="ss-title">Share Scan</h2>
@@ -1495,7 +1495,7 @@
 
           <div class="ss-actions">
             <button type="button" class="ss-btn-primary" id="btnGenerateScanLink" onclick="window.generateScanLink()">Generate Link</button>
-            <button type="button" class="ss-btn-ghost" onclick="document.getElementById('shareScanModal').classList.remove('active')">Cancel</button>
+            <button type="button" class="ss-btn-ghost" onclick="window.closeModal('shareScanModal')">Cancel</button>
           </div>
         </div>
       </div>
@@ -1530,7 +1530,7 @@
       <div style="background:#fff; padding:40px; border-radius:16px; margin-bottom:32px; display:inline-block"><div id="posterQr" style="width:200px; height:200px; background:#eee; display:flex; align-items:center; justify-content:center; color:#000; font-size:10px; font-weight:900">GENERATE QR...</div></div>
       <h2 style="font-size:32px; margin-bottom:12px; letter-spacing:-0.05em">SCAN TO START</h2>
       <p style="color:var(--Neutral-400); margin-bottom:40px">Clinical-Grade Body Scanning Active.</p>
-      <div style="display:flex; gap:16px"><button class="btn-primary" style="flex:1" onclick="window.print()">Print Poster</button><button class="btn-outline" style="flex:1" onclick="document.getElementById('qrPosterModal').classList.remove('active')">Dismiss</button></div>
+      <div style="display:flex; gap:16px"><button class="btn-primary" style="flex:1" onclick="window.print()">Print Poster</button><button class="btn-outline" style="flex:1" onclick="window.closeModal('qrPosterModal')">Dismiss</button></div>
     </div>
   </div>
 
@@ -1589,7 +1589,7 @@
             <svg class="korra-icon" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="3" width="18" height="18" rx="2" ry="2"/><line x1="3" y1="9" x2="21" y2="9"/><line x1="9" y1="21" x2="9" y2="9"/></svg>
             <span class="nav-text">Clients</span>
           </a>
-          <div class="nav-center" onclick="document.getElementById('scanModal').classList.add('active')">
+          <div class="nav-center" onclick="window.openModal('scanModal')">
             <div class="nav-center-icon">
               <svg class="nav-center-svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
                 <path d="M3 8V5a2 2 0 0 1 2-2h3"/>
@@ -1641,7 +1641,7 @@
 
             <div class="hero-grid">
                 <!-- SCAN CARD -->
-                <div class="action-card" onclick="window.switchTab('vault'); document.getElementById('scanModal').classList.add('active');">
+                <div class="action-card" onclick="window.switchTab('vault'); window.openModal('scanModal');">
                     <img src="/assets/get_measurement.png" class="card-img-zoom">
                     <div class="action-overlay">
                         <div class="action-tag">Acuracy First</div>
@@ -1671,7 +1671,7 @@
                 </div>
 
                 <!-- NEW: INVITE CLIENT CARD -->
-                <div class="action-card" onclick="document.getElementById('shareModal').classList.add('active');">
+                <div class="action-card" onclick="window.openModal('shareModal')">
                     <img src="/assets/invite-icon.webp" style="padding:48px">
                     <div class="action-overlay">
                         <div class="action-tag">Enrollment</div>
@@ -1789,7 +1789,7 @@
                         <input type="date" id="filterDateEnd" class="input-field" style="height:36px; font-size:10px; margin-bottom:0; appearance:none">
                     </div>
 
-                    <div style="display:grid; grid-template-columns: 1fr 1fr; gap:12px"><button class="btn-outline" onclick="document.getElementById('scanModal').classList.add('active')">+ Start Scan</button><button class="btn-primary" onclick="document.getElementById('shareModal').classList.add('active')">+ Invite</button></div>
+                    <div style="display:grid; grid-template-columns: 1fr 1fr; gap:12px"><button class="btn-outline" onclick="window.openModal('scanModal')">+ Start Scan</button><button class="btn-primary" onclick="window.openModal('shareModal')">+ Invite</button></div>
 
                   <!-- Phase 119: Privacy Controls -->
                   <div style="margin-top:20px; padding:12px; background:rgba(255,255,255,0.02); border-radius:12px; border:1px solid var(--Glass-Border)">
@@ -2064,7 +2064,7 @@
         <h4 style="font-size:10px; font-weight:900; color:var(--Neutral-400); text-transform:uppercase; letter-spacing:0.1em; margin-bottom:12px;">Available Credits</h4>
         <div style="font-size:36px; font-weight:900; letter-spacing:-0.03em;" id="billingCredits">0</div>
         <p style="font-size:11px; color:var(--Neutral-500); margin-top:4px; margin-bottom:20px;">Scan credits remaining</p>
-        <button class="btn-outline" style="width:100%; height:44px; font-size:12px; font-weight:800;" onclick="document.getElementById('topUpModal').classList.add('active')">Top Up Credits</button>
+        <button class="btn-outline" style="width:100%; height:44px; font-size:12px; font-weight:800;" onclick="window.openModal('topUpModal')">Top Up Credits</button>
       </div>
     </div>
 
@@ -2550,10 +2550,10 @@ msg.textContent = feedback; msg.style.background = aligned ? "var(--Mint)" : "rg
     };
 
     window.switchTab = (id) => {
-      document.getElementById('topUpModal')?.classList.remove('active');
+      window.closeModal('topUpModal');
       document.getElementById('purchaseSuccess')?.classList.remove('active');
       document.getElementById('receiptOverlay')?.classList.remove('active');
-      document.getElementById('scanModal')?.classList.remove('active');
+      window.closeModal('scanModal');
       // PERSIST WIDGET STATE ON NAVIGATION
       const widgetTab = document.getElementById('view-widget');
       if (widgetTab && widgetTab.classList.contains('active')) {
@@ -2713,24 +2713,36 @@ window.loadSettings = async () => {
 
         // INITIAL ROUTING (Only runs once on load)
         if (IS_INITIALIZING) {
-            const hash = window.location.hash.replace('#', '');
+            const fullHash = window.location.hash.replace('#', '');
+            const modalParam = new URLSearchParams(fullHash.split('?')[1] || '').get('modal');
+            const hash = fullHash.split('?')[0];
+
+            const restoreModal = () => {
+                if (modalParam && document.getElementById(modalParam)) {
+                    document.getElementById(modalParam).classList.add('active');
+                }
+            };
+
             if (hash.startsWith('scanresult/')) {
                 const scanId = hash.split('/')[1];
                 if (scanId && window.KORRA_MS) {
                     window.KORRA_DB.from('measurements').select('*').eq('id', scanId).single().then(({ data, error }) => {
                         if (data && !error) {
                             window.KORRA_MS.open(data);
+                            setTimeout(restoreModal, 50);
                         } else {
-                            window.switchTab('overview');
+                            window.switchTab('overview'); restoreModal();
                         }
                     });
                 } else {
-                    window.switchTab('overview');
+                    window.switchTab('overview'); restoreModal();
                 }
             } else if (hash && document.getElementById('view-' + hash)) {
                 window.switchTab(hash);
+                restoreModal();
             } else {
                 window.switchTab('overview');
+                restoreModal();
             }
 
             // FORCE INITIAL PREVIEW SIZE FOR ALL USERS (Fixes jitter)
@@ -3134,7 +3146,7 @@ window.loadSettings = async () => {
         const latest = scans[0], baseline = scans[scans.length-1];
         document.getElementById('baselineDate').textContent = new Date(baseline.created_at).toLocaleDateString();
         document.getElementById('latestDate').textContent = new Date(latest.created_at).toLocaleDateString();
-        document.getElementById('compareModal').classList.add('active');
+        window.openModal('compareModal');
         vBaseline = window.createKorraVisualizer ? window.createKorraVisualizer() : window.KORRA_VIZ;
         vLatest = window.createKorraVisualizer ? window.createKorraVisualizer() : window.KORRA_VIZ;
         vBaseline.init('compare-baseline-viz'); vLatest.init('compare-latest-viz');
@@ -3277,7 +3289,27 @@ window.loadSettings = async () => {
       return window.showModal({ icon: '✏', title: 'Input Required', message: msg, showInput: true, inputValue: defaultValue, showCancel: true, okText: 'Submit', cancelText: 'Cancel' });
     };
 
-async function init() {
+    // ═══ MODAL PERSISTENCE (survives page reload) ═══
+    window.openModal = (modalId) => {
+      const el = document.getElementById(modalId);
+      if (!el) return;
+      el.classList.add('active');
+      if (IS_INITIALIZING) return;
+      const hash = window.location.hash.replace('#', '');
+      const base = hash.split('?')[0];
+      history.replaceState(null, null, '#' + base + '?modal=' + modalId);
+    };
+
+    window.closeModal = (modalId) => {
+      const el = document.getElementById(modalId);
+      if (el) el.classList.remove('active');
+      if (IS_INITIALIZING) return;
+      const hash = window.location.hash.replace('#', '');
+      const base = hash.split('?')[0];
+      history.replaceState(null, null, base ? '#' + base : window.location.pathname);
+    };
+
+    async function init() {
       const savedCollapsed = localStorage.getItem('korra_sidebar_collapsed');
       if (savedCollapsed === 'true') {
         document.getElementById('sidebar')?.classList.add('collapsed');
@@ -3377,7 +3409,7 @@ async function init() {
             setTimeout(() => {
                 overlay.style.display = 'none';
                 btn.disabled = false;
-                document.getElementById('scanModal').classList.remove('active');
+                window.closeModal('scanModal');
                 if (window.KORRA_MS) {
                   window.KORRA_MS.open(data);
                 } else {
@@ -3725,7 +3757,7 @@ window.applyPromo = () => {
                         const credits = data.data?.credits_added || selectedBundle.credits;
                         const newBalance = data.data?.new_balance || 0;
                         const ref = data.data?.reference || response.reference;
-                        document.getElementById('topUpModal').classList.remove('active');
+                        window.closeModal('topUpModal');
                         window.updateCreditsInstant(newBalance);
                         window.loadSettings();
                         window.showPurchaseSuccess(credits, newBalance, ref);
@@ -3850,7 +3882,7 @@ window.applyPromo = () => {
     };
 
     window.openQRPoster = () => {
-        document.getElementById('qrPosterModal').classList.add('active');
+        window.openModal('qrPosterModal');
         const qrContainer = document.getElementById('posterQr');
         qrContainer.innerHTML = "";
         const url = `${window.location.origin}/share?m=${userId}`;

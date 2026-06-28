@@ -99,6 +99,7 @@ window.KORRA_MS = {
   activeContext: 'standard',
   activeMaterial: 'woven',
   heatmapActive: false,
+  showEased: true,
   compareHistory: [],
   compareBaselineIdx: 0,
   vBaseline: null,
@@ -118,6 +119,8 @@ window.KORRA_MS = {
     if (data.biometrics && !data.measurements) data.measurements = data.biometrics;
     if (data.landmarks_3d && !data.landmarks) data.landmarks = data.landmarks_3d;
     this.data = data;
+    window._currentScanId = data.id;
+    window._currentScanName = data.client_name || '';
     this.active = true;
     this.viewMode = 'avatar';
     this.selectedMeasurement = 'Chest Round';
@@ -130,6 +133,7 @@ window.KORRA_MS = {
     this._previousTab = document.querySelector('.tab-view.active')?.id?.replace('view-', '') || 'vault';
     this.activeContext = 'standard';
     this.activeMaterial = 'woven';
+    this.showEased = localStorage.getItem('korra_showEased') !== 'false';
     this.heatmapActive = false;
     this.compareBaselineIdx = 0;
     this.vBaseline = null;
@@ -137,6 +141,10 @@ window.KORRA_MS = {
     this.baselineData = null;
     this.latestData = null;
     this.compareHistory = (window.masterHistory || []).filter(s => s.client_name === data.client_name);
+    // Preload mesh IMMEDIATELY — starts fetch while HTML renders
+    if (data.mesh_url && window.KORRA_VIZ) {
+      window.KORRA_VIZ.preloadMesh(data.mesh_url);
+    }
     this.render();
     if (this.sideBySide) {
       const root = document.querySelector('#view-scanresult .ms-root');
@@ -145,9 +153,10 @@ window.KORRA_MS = {
         this._wrapRightCol();
       }
     }
+    // Switch tab FIRST so canvas has dimensions before initViewer
+    window.switchTab('scanresult');
     this.initViewer();
     this.bindSheetDrag();
-    window.switchTab('scanresult');
     setTimeout(() => {
       const hEl = document.querySelector('.ms-summary-value');
       if (hEl) {
@@ -188,6 +197,11 @@ window.KORRA_MS = {
               <button class="ms-unit-btn ${this.unit === 'cm' ? 'active' : ''}" onclick="KORRA_MS.setUnit('cm')">CM</button>
               <button class="ms-unit-btn ${this.unit === 'in' ? 'active' : ''}" onclick="KORRA_MS.setUnit('in')">IN</button>
             </div>
+            <button class="ms-ease-btn ${this.showEased ? 'active' : ''}" onclick="KORRA_MS.toggleEase()" title="${this.showEased ? 'Showing eased values' : 'Showing raw values'}">${this.showEased ? 'Eased' : 'Raw'}</button>
+            <button class="ms-share-btn" onclick="KORRA_MS.openShareScan()" title="Share scan">
+              <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="18" cy="5" r="3"/><circle cx="6" cy="12" r="3"/><circle cx="18" cy="19" r="3"/><line x1="8.59" y1="13.51" x2="15.42" y2="17.49"/><line x1="15.41" y1="6.51" x2="8.59" y2="10.49"/></svg>
+              Share
+            </button>
             <button class="ms-header-btn" onclick="KORRA_MS.exportPDF()" title="Export PDF">
               <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/><line x1="16" y1="13" x2="8" y2="13"/><line x1="16" y1="17" x2="8" y2="17"/><polyline points="10 9 9 9 8 9"/></svg>
             </button>
@@ -277,7 +291,8 @@ window.KORRA_MS = {
     const m = this.data?.measurements || {};
     const val = m[this.selectedMeasurement];
     const factor = this.unit === 'in' ? 0.393701 : 1;
-    const displayVal = val != null ? (val * factor).toFixed(1) : '—';
+    const ease = this.showEased ? this.getEase(this.selectedMeasurement) : 1;
+    const displayVal = val != null ? (val * factor * ease).toFixed(1) : '—';
     const desc = MEASUREMENT_DESCRIPTIONS[this.selectedMeasurement] || '';
     const color = MEASUREMENT_COLORS[this.selectedMeasurement] || '#C6FF00';
     return `
@@ -336,10 +351,10 @@ window.KORRA_MS = {
           ${keys.map(k => {
             const raw = m[k];
             if (raw == null) return `<div class="ms-metric-cell empty"><div class="ms-metric-name">${k}</div><div class="ms-metric-val">&mdash;</div></div>`;
-            const ease = this.getEase(k);
+            const ease = this.showEased ? this.getEase(k) : 1;
             const val = (raw * factor * ease).toFixed(1);
             const active = k === this.selectedMeasurement ? ' active' : '';
-            const easeLabel = ease !== 1 ? (Math.round((ease - 1) * 1000) / 10) + '% ease' : '';
+            const easeLabel = this.showEased && ease !== 1 ? (Math.round((ease - 1) * 1000) / 10) + '% ease' : '';
             return `<div class="ms-metric-cell${active}" onclick="KORRA_MS.selectMeasurement('${k}')">
               <div class="ms-metric-name">${k}</div>
               <div class="ms-metric-val">${val}${factor === 1 ? 'cm' : 'in'}</div>
@@ -547,9 +562,7 @@ window.KORRA_MS = {
     if (btn) btn.classList.toggle('active', this.overlaysVisible);
     if (this.viewerInstance) {
       if (this.overlaysVisible) {
-        const yPct = MEASUREMENT_Y[this.selectedMeasurement] || 0.5;
-        const color = MEASUREMENT_COLORS[this.selectedMeasurement] || '#C6FF00';
-        this.viewerInstance.showMeasurementRing(yPct, color);
+        this.viewerInstance.showMeasurementRings(this.data, MEASUREMENT_COLORS, MEASUREMENT_Y);
       } else {
         this.viewerInstance.clearMeasurementRings();
       }
@@ -664,33 +677,35 @@ window.KORRA_MS = {
     if (meshUrl) {
       const lm = this.data?.landmarks;
       const lm3d = lm ? Object.fromEntries(Object.entries(lm).map(([k, v]) => [k, { x: v[0], y: v[1], z: 0 }])) : null;
-      const controller = new AbortController();
-      const timeout = setTimeout(() => controller.abort(), 15000);
-      fetch(meshUrl, { signal: controller.signal })
-        .then(r => { clearTimeout(timeout); if (!r.ok) throw new Error('Missing'); return r.text(); })
-        .then(text => {
-          const meshData = this.viewerInstance.parseAndRenderOBJ(text);
-          if (meshData && lm3d) this.viewerInstance.renderLandmarks(lm3d, meshData.size);
-          if (meshData) {
-            this.viewerInstance.mesh.geometry.attributes.position.usage = THREE.DynamicDrawUsage;
-            setTimeout(() => {
-              if (this.overlaysVisible && this.viewerInstance) {
-                const yPct = MEASUREMENT_Y[this.selectedMeasurement] || 0.5;
-                const color = MEASUREMENT_COLORS[this.selectedMeasurement] || '#C6FF00';
-                this.viewerInstance.showMeasurementRing(yPct, color);
-              }
-            }, 300);
-          }
-        })
-        .catch(() => {});
-    } else {
-      setTimeout(() => {
-        if (this.overlaysVisible && this.viewerInstance) {
-          const yPct = MEASUREMENT_Y[this.selectedMeasurement] || 0.5;
-          const color = MEASUREMENT_COLORS[this.selectedMeasurement] || '#C6FF00';
-          this.viewerInstance.showMeasurementRing(yPct, color);
+      // Use cached text if preloaded, otherwise fetch
+      const tryLoad = (text) => {
+        const meshData = this.viewerInstance.parseAndRenderOBJ(text);
+        if (meshData && lm3d) this.viewerInstance.renderLandmarks(lm3d, meshData.size);
+        if (meshData && this.viewerInstance.mesh && this.viewerInstance.mesh.geometry && this.viewerInstance.mesh.geometry.attributes.position) {
+          this.viewerInstance.mesh.geometry.attributes.position.usage = THREE.DynamicDrawUsage;
         }
-      }, 600);
+        if (this.overlaysVisible && this.viewerInstance) {
+          this.viewerInstance.showMeasurementRings(this.data, MEASUREMENT_COLORS, MEASUREMENT_Y);
+        }
+      };
+      const cached = this.viewerInstance.getCachedMesh(meshUrl);
+      if (cached) {
+        requestAnimationFrame(() => tryLoad(cached));
+      } else {
+        const controller = new AbortController();
+        const timeout = setTimeout(() => controller.abort(), 15000);
+        fetch(meshUrl, { signal: controller.signal })
+          .then(r => { clearTimeout(timeout); if (!r.ok) throw new Error('Missing'); return r.text(); })
+          .then(text => {
+            this.viewerInstance._meshCache.set(meshUrl, text);
+            tryLoad(text);
+          })
+          .catch(() => {});
+      }
+    } else {
+      if (this.overlaysVisible && this.viewerInstance) {
+        this.viewerInstance.showMeasurementRings(this.data, MEASUREMENT_COLORS, MEASUREMENT_Y);
+      }
     }
   },
 
@@ -708,10 +723,10 @@ window.KORRA_MS = {
     if (this.compareBaselineIdx >= scans.length) this.compareBaselineIdx = 0;
     const baseline = scans[this.compareBaselineIdx];
     if (baseline.mesh_url && this.vBaseline) {
-      fetch(baseline.mesh_url).then(r => r.ok ? r.text() : null).then(t => { if (t) this.vBaseline.parseAndRenderOBJ(t); }).catch(() => {});
+      this.vBaseline.loadMesh(baseline.mesh_url).then(d => { this.baselineData = d; }).catch(() => {});
     }
     if (this.data?.mesh_url && this.vLatest) {
-      fetch(this.data.mesh_url).then(r => r.ok ? r.text() : null).then(t => { if (t) { this.latestData = this.vLatest.parseAndRenderOBJ(t); } }).catch(() => {});
+      this.vLatest.loadMesh(this.data.mesh_url).then(d => { this.latestData = d; }).catch(() => {});
     }
   },
 
@@ -786,6 +801,20 @@ window.KORRA_MS = {
     if (body) body.innerHTML = this.buildSheetContent();
   },
 
+  toggleEase() {
+    this.showEased = !this.showEased;
+    localStorage.setItem('korra_showEased', this.showEased);
+    this.updateBadge();
+    const body = document.getElementById('ms-sheet-body');
+    if (body) body.innerHTML = this.buildSheetContent();
+    const btn = document.querySelector('#view-scanresult .ms-ease-btn');
+    if (btn) {
+      btn.textContent = this.showEased ? 'Eased' : 'Raw';
+      btn.title = this.showEased ? 'Showing eased values' : 'Showing raw values';
+      btn.classList.toggle('active', this.showEased);
+    }
+  },
+
   // ═══ FIT DIAGNOSTICS ═══
   computeDiagnostics() {
     const lm = this.data?.landmarks;
@@ -839,6 +868,17 @@ window.KORRA_MS = {
       link.download = `KORRA_${this.data.client_name}_3D.obj`;
       link.click();
     } catch(e) { /* silent */ }
+  },
+
+  // ═══ SHARE ═══
+  openShareScan() {
+    if (!this.data?.id) return;
+    document.getElementById('shareScanName').value = this.data.client_name || '';
+    document.getElementById('shareScanLink').textContent = window.location.origin + '/dashboard#scanresult/...';
+    document.getElementById('shareScanLinkArea').style.display = 'none';
+    const btn = document.getElementById('btnGenerateScanLink');
+    if (btn) btn.textContent = 'Generate Link';
+    if (window.openModal) window.openModal('shareScanModal');
   },
 
   // ═══ HEATMAP ═══
