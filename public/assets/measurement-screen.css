@@ -7,10 +7,25 @@
 .ms-root {
   display: flex;
   flex-direction: column;
-  height: calc(100vh - 80px);
+  flex: 1;
+  height: auto;
+  min-height: 0;
   overflow: hidden;
   position: relative;
   background: var(--Obsidian-Deep);
+}
+
+#view-scanresult.active {
+  height: 100%;
+  display: flex;
+  flex-direction: column;
+  min-height: 0;
+}
+#ms-mount {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  min-height: 0;
 }
 
 /* ── HEADER BAR ── */
@@ -1010,7 +1025,9 @@
 /* ── RESPONSIVE ── */
 @media (max-width: 900px) {
   .ms-root {
-    height: calc(100vh - 80px - 72px);
+    flex: 1;
+    height: auto;
+    min-height: 0;
   }
   .ms-header {
     padding: 0 16px;
