@@ -559,12 +559,12 @@
   display: flex;
   align-items: center;
   gap: 6px;
-  padding: 6px 10px;
-  border-radius: 8px;
+  padding: 10px 16px;
+  border-radius: 10px;
   border: none;
   background: var(--Mint);
   color: #000;
-  font-size: 11px;
+  font-size: 13px;
   font-weight: 900;
   cursor: pointer;
   transition: all 0.2s;
@@ -630,8 +630,12 @@
   flex-shrink: 0;
   display: flex;
   gap: 8px;
-  padding: 0;
-  border-top: 1px solid var(--Glass-Border);
+  align-items: flex-end;
+  padding: 12px;
+  margin-top: 4px;
+  background: rgba(255, 255, 255, 0.04);
+  border: 1px solid var(--Glass-Border);
+  border-radius: 24px;
 }
 /* ── CANCEL BUTTON ── */
 .ms-ai-cancel {
@@ -664,25 +668,25 @@
 .ms-ai-input {
   flex: 1;
   padding: 12px 16px;
-  border-radius: 12px;
+  border-radius: 20px;
   background: rgba(255, 255, 255, 0.06);
-  border: 1px solid var(--Glass-Border);
+  border: none;
   color: var(--White);
-  font-size: 13px;
+  font-size: 14px;
   font-family: 'Inter', sans-serif;
   outline: none;
-  transition: border-color 0.2s;
+  transition: background 0.2s;
 }
 .ms-ai-input:focus {
-  border-color: var(--Mint);
+  background: rgba(255, 255, 255, 0.1);
 }
 .ms-ai-input::placeholder {
   color: var(--Neutral-500);
 }
 .ms-ai-send {
-  width: 44px;
-  height: 44px;
-  border-radius: 12px;
+  width: 40px;
+  height: 40px;
+  border-radius: 50%;
   background: var(--Mint);
   color: var(--Teal-900);
   border: none;
