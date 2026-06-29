@@ -196,7 +196,7 @@ window.KORRA_MS = {
       <div class="ms-root">
         <div class="ms-header">
           <div class="ms-header-left">
-            <button class="ms-back-btn" onclick="KORRA_MS.goBack()">
+            <button class="ms-back-btn" onclick="KORRA_MS.handleBack()">
               <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="15 18 9 12 15 6"/></svg>
             </button>
             <div class="ms-scan-info">
@@ -233,7 +233,7 @@ window.KORRA_MS = {
             <button class="ms-header-btn" onclick="KORRA_MS.resetView()" title="Reset view">
               <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="23 4 23 10 17 10"/><path d="M20.49 15a9 9 0 1 1-2.12-9.36L23 10"/></svg>
             </button>
-            <button class="ms-header-btn" onclick="KORRA_MS.goBack()" title="Close">
+            <button class="ms-header-btn" onclick="KORRA_MS.handleBack()" title="Close">
               <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg>
             </button>
           </div>
@@ -265,29 +265,9 @@ window.KORRA_MS = {
           <div class="ms-sheet-handle" id="ms-sheet-handle"></div>
           <div class="ms-sheet-body" id="ms-sheet-body">${this.buildSheetContent()}</div>
         </div>
-        <button class="ms-ai-fab" onclick="KORRA_MS.openAI()" title="Ask AI">
+        <button class="ms-ai-fab" onclick="KORRA_MS.switchView('ai')" title="Ask AI">
           <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polygon points="13 2 3 14 12 14 11 22 21 10 12 10 13 2"/></svg>
         </button>
-        <div class="ms-ai-drawer" id="ms-ai-drawer">
-          <div class="ms-ai-header">
-            <div class="ms-ai-title">AI Assistant</div>
-            <button class="ms-ai-newchat" onclick="KORRA_MS.newChat()" title="New conversation">+</button>
-            <button class="ms-ai-close" onclick="KORRA_MS.closeAI()">✕</button>
-          </div>
-          <div class="ms-ai-prompt-bar">
-            <button class="ms-ai-prompt-btn" onclick="KORRA_MS.askAI('Explain my body measurements')">Explain this scan</button>
-            <button class="ms-ai-prompt-btn" onclick="KORRA_MS.askAI('Recommend clothing fit for my body')">Clothing fit</button>
-            <button class="ms-ai-prompt-btn" onclick="KORRA_MS.askAI('Give me a body summary')">Body summary</button>
-            <button class="ms-ai-prompt-btn" onclick="KORRA_MS.askAI('What measurements changed since last scan?')">Progress insights</button>
-          </div>
-          <div class="ms-ai-body" id="ms-ai-body"></div>
-          <div class="ms-ai-input-bar">
-            <input class="ms-ai-input" id="ms-ai-input" placeholder="Ask about your measurements..." onkeydown="if(event.key==='Enter'&&!this.disabled)KORRA_MS.askAI(this.value)">
-            <button class="ms-ai-send" id="ms-ai-send" onclick="KORRA_MS.askAI(document.getElementById('ms-ai-input').value)">
-              <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="22" y1="2" x2="11" y2="13"/><polygon points="22 2 15 22 11 13 2 9 22 2"/></svg>
-            </button>
-          </div>
-        </div>
       </div>`;
   },
 
@@ -328,9 +308,30 @@ window.KORRA_MS = {
       case 'sizes': content = this.buildSizesGrid(); break;
       case 'shape': content = this.buildShapeCard(); break;
       case 'compare': content = this.buildCompareView(); break;
+      case 'ai': content = this.buildAIView(); break;
       default: content = this.buildMetricsGrid();
     }
+    if (this.viewMode === 'ai') return content;
     return summaryBar + content + this.buildNotesHTML();
+  },
+
+  buildAIView() {
+    return `<div class="ms-ai-view">
+      <div class="ms-ai-prompt-bar">
+        <button class="ms-ai-prompt-btn" onclick="KORRA_MS.askAI('Explain my body measurements')">Explain this scan</button>
+        <button class="ms-ai-prompt-btn" onclick="KORRA_MS.askAI('Recommend clothing fit for my body')">Clothing fit</button>
+        <button class="ms-ai-prompt-btn" onclick="KORRA_MS.askAI('Give me a body summary')">Body summary</button>
+        <button class="ms-ai-prompt-btn" onclick="KORRA_MS.askAI('What measurements changed since last scan?')">Progress insights</button>
+        <button class="ms-ai-newchat" onclick="KORRA_MS.newChat()" title="New conversation">+</button>
+      </div>
+      <div class="ms-ai-body" id="ms-ai-body"></div>
+      <div class="ms-ai-input-bar">
+        <input class="ms-ai-input" id="ms-ai-input" placeholder="Ask about your measurements..." onkeydown="if(event.key==='Enter'&&!this.disabled)KORRA_MS.askAI(this.value)">
+        <button class="ms-ai-send" id="ms-ai-send" onclick="KORRA_MS.askAI(document.getElementById('ms-ai-input').value)">
+          <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="22" y1="2" x2="11" y2="13"/><polygon points="22 2 15 22 11 13 2 9 22 2"/></svg>
+        </button>
+      </div>
+    </div>`;
   },
 
   buildNotesHTML() {
@@ -541,11 +542,25 @@ window.KORRA_MS = {
 
   // ═══ VIEW MODE ═══
   switchView(mode) {
+    if (mode === 'ai' && this.viewMode !== 'ai') this._previousView = this.viewMode;
     this.viewMode = mode;
     document.querySelectorAll('#view-scanresult .ms-tab').forEach(t => t.classList.remove('active'));
     document.querySelector(`#view-scanresult .ms-tab[onclick*="${mode}"]`)?.classList.add('active');
     const body = document.getElementById('ms-sheet-body');
-    if (body) body.innerHTML = this.buildSheetContent();
+    if (body) {
+      if (mode === 'ai') {
+        body.style.overflow = 'hidden';
+        body.style.display = 'flex';
+        body.style.flexDirection = 'column';
+      } else {
+        body.style.overflow = '';
+        body.style.display = '';
+        body.style.flexDirection = '';
+      }
+      body.innerHTML = this.buildSheetContent();
+    }
+    const fab = document.querySelector('#view-scanresult .ms-ai-fab');
+    if (fab) fab.style.display = mode === 'ai' ? 'none' : '';
     if (mode === 'compare') this.initCompareViewers();
   },
 
@@ -721,12 +736,10 @@ window.KORRA_MS = {
 
   // ═══ AI ═══
   openAI() {
-    this.aiOpen = true;
-    document.getElementById('ms-ai-drawer')?.classList.add('open');
+    this.switchView('ai');
   },
   closeAI() {
-    this.aiOpen = false;
-    document.getElementById('ms-ai-drawer')?.classList.remove('open');
+    this.switchView(this._previousView || 'avatar');
     if (this._aiLoading) this.cancelAI();
   },
   async askAI(prompt) {
@@ -931,6 +944,13 @@ window.KORRA_MS = {
   },
 
   // ═══ NAVIGATION ═══
+  handleBack() {
+    if (this.viewMode === 'ai') {
+      this.closeAI();
+    } else {
+      this.goBack();
+    }
+  },
   goBack() {
     this.cleanup();
     window.switchTab(this._previousTab || 'vault');
@@ -944,9 +964,6 @@ window.KORRA_MS = {
       this.viewerInstance.clearMeasurementRings?.();
     }
     this.viewerInstance = null;
-    const aiDrawer = document.getElementById('ms-ai-drawer');
-    if (aiDrawer) aiDrawer.classList.remove('open');
-    this.aiOpen = false;
     this.sheetExpanded = false;
     this._aiLoading = false;
     if (this._aiAbort) { this._aiAbort.abort(); this._aiAbort = null; }
