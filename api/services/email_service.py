@@ -167,13 +167,39 @@ class EmailService:
         message: str = None
     ):
         """Send re-scan request to client"""
-        specialty_display = {
-            'standard': 'Standard Measurement',
-            'agbada': 'Agbada/Igbo Traditional',
-            'senator': 'Senator Wear',
-            'kurta': 'Kurta/Pakistani',
-            'abaya': 'Abaya/Arabian'
-        }.get(specialty, specialty.title())
+        # Master attire display names — sync with window.ATTIRE_REGISTRY
+        _ATTIRE_DISPLAY = {
+            'standard': 'Standard (Clinical Base)',
+            'agbada': 'Agbada (Regal Volume)',
+            'senator': 'Senator (Business Fit)',
+            'kurta': 'Kurta (Airflow Ease)',
+            'kaftan': 'Kaftan (Traditional Daily)',
+            'abaya': 'Abaya (Middle Eastern Modesty)',
+            'activewear': 'Activewear (Negative Ease)',
+            'isi_agu': 'Isi Agu (Tribal Ceremonial)',
+            'etibo': 'Etibo (Tribal Regional)',
+            'dashiki': 'Dashiki (West African Print)',
+            'kente': 'Kente (Ghanaian Royal)',
+            'grand_boubou': 'Grand Boubou (Regal Flowing)',
+            'kanzu': 'Kanzu (Swahili Robe)',
+            'djellaba': 'Djellaba (Hooded Robe)',
+            'jalabiya': 'Jalabiya (Arid Tunic)',
+            'toghu': 'Toghu (Cameroonian Regal)',
+            'hanbok': 'Hanbok (Korean Traditional)',
+            'ao_dai': 'Ao Dai (Vietnamese Elegant)',
+            'kimono': 'Kimono (Japanese Formal)',
+            'cheongsam': 'Cheongsam/Qipao (Chinese)',
+            'shervani': 'Shervani (Indian Sherwani)',
+            'sari': 'Sari (Indian Drape)',
+            'thobe_kandura': 'Thobe/Kandura (Arabian)',
+            'bespoke_suit': 'Bespoke Suit (Italian Tailored)',
+            'savile_row': 'Savile Row (British Bespoke)',
+            'kilt': 'Kilt (Scottish)',
+            'guayabera': 'Guayabera (Cuban Airflow)',
+            'gala': 'Gala (Formal Compression)',
+            'suit': 'Suit (Structured Ease)',
+        }
+        specialty_display = _ATTIRE_DISPLAY.get(specialty, specialty.title())
 
         message_html = f"""
             <p style="color: #A3A3A3; font-size: 14px; line-height: 1.6; margin: 24px 0;">

@@ -395,16 +395,19 @@ window.KORRA_MS = {
 
     const attireCtx = this.activeContext;
     const mat = this.activeMaterial;
+    const reg = window.ATTIRE_REGISTRY || [];
+    const quickIds = ['standard','agbada','senator','kurta','kaftan','abaya','activewear'];
+    const activeEntry = reg.find(a => a.id === attireCtx) || reg[0] || { name:'Standard', subtitle:'Clinical Base' };
     return `
       <div class="ms-attire-section">
         <div class="ms-attire-label">ATTIRE CONTEXT</div>
         <div class="ms-attire-grid">
-          <button class="ms-attire-card ${attireCtx === 'standard' ? 'active' : ''}" onclick="KORRA_MS.setContext('standard')"><div class="ms-attire-name">Standard</div><div class="ms-attire-desc">Clinical Base</div></button>
-          <button class="ms-attire-card ${attireCtx === 'agbada' ? 'active' : ''}" onclick="KORRA_MS.setContext('agbada')"><div class="ms-attire-name">Agbada</div><div class="ms-attire-desc">Regal Volume</div></button>
-          <button class="ms-attire-card ${attireCtx === 'senator' ? 'active' : ''}" onclick="KORRA_MS.setContext('senator')"><div class="ms-attire-name">Senator</div><div class="ms-attire-desc">Business Fit</div></button>
-          <button class="ms-attire-card ${attireCtx === 'kurta' ? 'active' : ''}" onclick="KORRA_MS.setContext('kurta')"><div class="ms-attire-name">Kurta</div><div class="ms-attire-desc">Airflow Ease</div></button>
+          ${quickIds.map(id => {
+            const a = reg.find(r => r.id === id) || { id, name:id, subtitle:'' };
+            return `<button class="ms-attire-card ${attireCtx === id ? 'active' : ''}" onclick="KORRA_MS.setContext('${id}')"><div class="ms-attire-name">${a.name}</div><div class="ms-attire-desc">${a.subtitle}</div></button>`;
+          }).join('')}
         </div>
-        <div class="ms-attire-status">ACTIVE: ${attireCtx.toUpperCase()}</div>
+        <div class="ms-attire-status">ACTIVE: ${activeEntry.name.toUpperCase()} — ${activeEntry.subtitle.toUpperCase()}</div>
       </div>
       <div class="ms-material-section">
         <div class="ms-material-label">FABRIC</div>
@@ -775,14 +778,12 @@ window.KORRA_MS = {
 
   // ═══ EASE MULTIPLIERS ═══
   getEase(key) {
-    const contextMultipliers = {
-      standard: 1.035, agbada: 1.45, senator: 1.1,
-      kurta: 1.25, abaya: 1.15, activewear: 0.95
-    };
+    const reg = window.ATTIRE_REGISTRY || [];
+    const entry = reg.find(a => a.id === this.activeContext);
+    const base = entry ? entry.mult : 1.035;
     const materialCoeffs = {
       woven: 1.0, knit: 0.85, starch_bazin: 1.1, technical: 0.9
     };
-    const base = contextMultipliers[this.activeContext] || 1.035;
     const mat = materialCoeffs[this.activeMaterial] || 1.0;
     return base * mat;
   },

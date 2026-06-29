@@ -41,6 +41,11 @@ class ToleranceLogic:
         elif "djellaba" in context: fluidity_multiplier = 1.3
         elif "qipao" in context: fluidity_multiplier = 1.02 # Minimal ease
         elif "suit" in context: fluidity_multiplier = 1.1
+        elif "kurta" in context: fluidity_multiplier = 1.25
+        elif "kaftan" in context: fluidity_multiplier = 1.2
+        elif "senator" in context: fluidity_multiplier = 1.1
+        elif "abaya" in context: fluidity_multiplier = 1.0
+        elif "activewear" in context: fluidity_multiplier = 0.95
 
         refined = {}
         for key, val in raw_measurements.items():

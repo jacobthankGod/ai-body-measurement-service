@@ -315,15 +315,9 @@ class KorraVisualizer {
          */
         if (!this.mesh || !window.KORRA_HEATMAP_SHADER) return;
 
-        const multipliers = {
-            "standard": 1.0,
-            "agbada": 2.5,
-            "senator": 1.1,
-            "kurta": 1.5,
-            "abaya": 1.8
-        };
-
-        const activeMult = multipliers[contextName.toLowerCase()] || 1.0;
+        const reg = window.ATTIRE_REGISTRY || [];
+        const entry = reg.find(a => a.id === contextName.toLowerCase());
+        const activeMult = entry ? entry.heat : 1.0;
 
         const heatmapMaterial = new THREE.ShaderMaterial({
             uniforms: {

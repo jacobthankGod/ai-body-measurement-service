@@ -109,6 +109,66 @@
     .style-card h5 { font-size: 11px; font-weight: 900; color: var(--Accent-Teal); margin-bottom: 4px; }
     .style-card p { font-size: 10px; color: var(--Neutral-400); line-height: 1.3; }
 
+    /* ── ATTIRE COMBOBOX ── */
+    .at-wrapper { position:relative; width:100%; }
+    .at-trigger {
+      display:flex; align-items:center; gap:12px; width:100%;
+      background:rgba(255,255,255,0.03); border:1px solid var(--Glass-Border);
+      border-radius:16px; padding:14px 16px; cursor:pointer;
+      transition:0.3s; user-select:none;
+    }
+    .at-trigger:hover { border-color:rgba(198,255,0,0.3); }
+    .at-trigger.open { border-color:var(--Accent-Teal); border-radius:16px 16px 0 0; }
+    .at-trigger-icon { font-size:16px; flex-shrink:0; }
+    .at-trigger-info { flex:1; min-width:0; }
+    .at-trigger-name { font-size:12px; font-weight:900; color:#fff; }
+    .at-trigger-sub { font-size:9px; color:var(--Neutral-500); }
+    .at-trigger-mult { font-size:9px; color:var(--Accent-Teal); font-weight:700; flex-shrink:0; padding:2px 8px; background:rgba(198,255,0,0.1); border-radius:8px; }
+    .at-trigger-arrow { font-size:10px; color:var(--Neutral-500); transition:0.3s; flex-shrink:0; }
+    .at-trigger.open .at-trigger-arrow { transform:rotate(180deg); }
+    .at-dropdown {
+      display:none; position:absolute; top:100%; left:0; right:0;
+      background:var(--Obsidian-Deep); border:1px solid var(--Glass-Border);
+      border-top:none; border-radius:0 0 16px 16px;
+      max-height:360px; overflow-y:auto; z-index:500;
+      box-shadow:0 20px 60px rgba(0,0,0,0.5);
+    }
+    .at-dropdown.open { display:block; }
+    .at-search-wrap { position:sticky; top:0; z-index:1; padding:12px; background:var(--Obsidian-Deep); border-bottom:1px solid var(--Glass-Border); }
+    .at-search {
+      width:100%; padding:10px 14px 10px 36px;
+      background:rgba(255,255,255,0.05); border:1px solid var(--Glass-Border);
+      border-radius:10px; color:#fff; font-size:12px; outline:none;
+    }
+    .at-search:focus { border-color:var(--Accent-Teal); }
+    .at-search-icon { position:absolute; left:24px; top:50%; transform:translateY(-50%); font-size:14px; color:var(--Neutral-500); pointer-events:none; }
+    .at-group-label { padding:8px 16px 4px; font-size:9px; font-weight:900; color:var(--Neutral-500); text-transform:uppercase; letter-spacing:0.5px; }
+    .at-option {
+      display:flex; align-items:center; gap:10px; padding:10px 16px;
+      cursor:pointer; transition:0.15s;
+    }
+    .at-option:hover { background:rgba(198,255,0,0.05); }
+    .at-option.selected { background:rgba(198,255,0,0.08); }
+    .at-option-indicator { width:4px; height:4px; border-radius:50%; background:transparent; flex-shrink:0; }
+    .at-option.selected .at-option-indicator { background:var(--Accent-Teal); box-shadow:0 0 8px var(--Accent-Teal); }
+    .at-option-name { font-size:11px; font-weight:700; color:#fff; flex:1; }
+    .at-option-sub { font-size:9px; color:var(--Neutral-500); flex-shrink:0; margin-right:8px; }
+    .at-option-mult { font-size:9px; color:var(--Accent-Teal); font-weight:700; flex-shrink:0; }
+    .at-no-results { padding:24px 16px; text-align:center; font-size:11px; color:var(--Neutral-500); }
+    .at-chips { display:flex; gap:6px; flex-wrap:wrap; margin-top:10px; }
+    .at-chip {
+      padding:4px 12px; border-radius:12px; border:1px solid var(--Glass-Border);
+      background:transparent; color:var(--Neutral-400); font-size:9px; font-weight:700;
+      cursor:pointer; transition:0.2s;
+    }
+    .at-chip:hover { border-color:var(--Accent-Teal); color:var(--Accent-Teal); }
+    .at-chip.active { background:rgba(198,255,0,0.1); border-color:var(--Accent-Teal); color:var(--Accent-Teal); }
+    .at-status { font-size:9px; color:var(--Neutral-400); font-weight:900; margin-top:10px; }
+    /* Scrollbar */
+    .at-dropdown::-webkit-scrollbar { width:4px; }
+    .at-dropdown::-webkit-scrollbar-track { background:transparent; }
+    .at-dropdown::-webkit-scrollbar-thumb { background:var(--Glass-Border); border-radius:2px; }
+
     /* Phase 114: 3D Interactive Tags */
     .mesh-tag {
         position: absolute; padding: 4px 8px; background: var(--Accent-Teal); color: #000;
@@ -1725,25 +1785,7 @@
                   <!-- Phase 113: ATTIRE CONTEXT SELECTION (POST-SCAN) -->
                   <div style="margin-bottom:32px">
                     <label style="font-size:10px; font-weight:900; color:var(--Neutral-500); display:block; margin-bottom:12px">ATTIRE CONTEXT</label>
-                    <div class="style-card-grid" style="grid-template-columns: 1fr 1fr; margin-top: 12px;">
-                        <div class="style-card active" onclick="window.handleAttireToggle('standard', this)">
-                            <h5>Standard</h5>
-                            <p>Clinical Base</p>
-                        </div>
-                        <div class="style-card" onclick="window.handleAttireToggle('agbada', this)">
-                            <h5>Agbada</h5>
-                            <p>Regal Volume</p>
-                        </div>
-                        <div class="style-card" onclick="window.handleAttireToggle('senator', this)">
-                            <h5>Senator</h5>
-                            <p>Business Fit</p>
-                        </div>
-                        <div class="style-card" onclick="window.handleAttireToggle('kurta', this)">
-                            <h5>Kurta</h5>
-                            <p>Airflow Ease</p>
-                        </div>
-                    </div>
-                    <div style="font-size:9px; color:var(--Accent-Teal); margin-top:12px; font-weight:900" id="attireStatus">ACTIVE CONTEXT: STANDARD</div>
+                    <div id="attireSelector"></div>
                   </div>
 
                   <!-- Phase 102: MERCHANT MATERIAL RAIL -->
@@ -1963,14 +2005,7 @@
                     <!-- Phase 101: Rules of the House Preset -->
                     <div style="margin-bottom:24px">
                         <label class="form-label">DEFAULT SPECIALTY (RULE OF THE HOUSE)</label>
-                        <select id="widgetDefaultSpecialty" class="input-field" style="appearance:none; cursor:pointer" onchange="window.updateWidgetPreview()">
-                            <option value="standard">Standard (Clinical Base)</option>
-                            <option value="agbada">Agbada (Regal Volume)</option>
-                            <option value="senator">Senator (Business Native)</option>
-                            <option value="kaftan">Kaftan (Traditional Daily)</option>
-                            <option value="abaya">Abaya (Middle Eastern Modesty)</option>
-                            <option value="activewear">Activewear (Negative Ease)</option>
-                        </select>
+                        <div id="widgetAttireSelector"></div>
                         <div style="font-size:9px; color:var(--Neutral-500); margin-top:4px">Sets the default fit context for your incoming scans.</div>
                     </div>
                     <div style="margin-bottom:20px">
@@ -2271,6 +2306,81 @@
   <script src="/assets/three.min.js"></script>
   <script src="/assets/korra_viz.js"></script>
   <script src="/assets/heatmap_shader.js" defer></script>
+  <script>
+// ─── MASTER ATTIRE REGISTRY ───
+window.ATTIRE_REGISTRY = [
+  { id:'standard',    name:'Standard',    subtitle:'Clinical Base',            region:'Common',         gender:'unisex', mult:1.035, off:0,   heat:1.0,  tags:['Daily','Standard','Basic'], desc:'Standard daily wear with 3.5% ease' },
+  { id:'agbada',      name:'Agbada',      subtitle:'Regal Volume',            region:'W. Africa',      gender:'male',   mult:1.45,  off:0,   heat:2.0,  tags:['Tribal','Formal','Nigeria'], desc:'Nigerian agbada with full regal volume' },
+  { id:'senator',     name:'Senator',     subtitle:'Business Fit',            region:'Common',         gender:'male',   mult:1.1,   off:0,   heat:1.1,  tags:['Urban','Formal','Nigeria'], desc:'Sharp-cut two-piece business native' },
+  { id:'kurta',       name:'Kurta',       subtitle:'Airflow Ease',            region:'Asia',           gender:'unisex', mult:1.25,  off:0,   heat:1.5,  tags:['Daily','Ventilated','Pakistan'], desc:'Kurta with ventilation buffer for tropical airflow' },
+  { id:'kaftan',      name:'Kaftan',      subtitle:'Traditional Daily',       region:'W. Africa',      gender:'unisex', mult:1.2,   off:0,   heat:1.4,  tags:['Tribal','Daily','West Africa'], desc:'Loose-fitting traditional daily kaftan' },
+  { id:'abaya',       name:'Abaya',       subtitle:'Middle Eastern Modesty',  region:'Middle East',    gender:'female', mult:1.0,   off:15,  heat:1.8,  tags:['Modesty','Middle East','Daily'], desc:'Modest drape with zero-contour fit and static ease' },
+  { id:'activewear',  name:'Activewear',  subtitle:'Negative Ease',           region:'Special',        gender:'unisex', mult:0.95,  off:0,   heat:0.8,  tags:['Sports','Compression','Stretch'], desc:'Compression-fit activewear with -5% negative ease' },
+  // Africa - West
+  { id:'isi_agu',     name:'Isi Agu',     subtitle:'Tribal Ceremonial',       region:'W. Africa',      gender:'male',   mult:1.15,  off:0,   heat:1.3,  tags:['Tribal','Ceremonial','Nigeria'], desc:'Nigerian ceremonial Isi Agu with structured volume' },
+  { id:'etibo',       name:'Etibo',       subtitle:'Tribal Regional',         region:'W. Africa',      gender:'male',   mult:1.1,   off:5,   heat:1.2,  tags:['Tribal','Regional','Nigeria'], desc:'Nigerian regional Etibo with moderate ease' },
+  { id:'dashiki',     name:'Dashiki',     subtitle:'West African Print',      region:'W. Africa',      gender:'unisex', mult:1.3,   off:0,   heat:1.6,  tags:['Tribal','Print','West Africa'], desc:'Colorful West African dashiki with relaxed volume' },
+  { id:'kente',       name:'Kente',       subtitle:'Ghanaian Royal',          region:'W. Africa',      gender:'unisex', mult:1.25,  off:0,   heat:1.5,  tags:['Tribal','Royal','Ghana'], desc:'Handwoven Ghanaian kente with regal ease' },
+  { id:'grand_boubou',name:'Grand Boubou',subtitle:'Regal Flowing',           region:'W. Africa',      gender:'male',   mult:1.4,   off:0,   heat:1.8,  tags:['Tribal','Formal','West Africa'], desc:'Flowing grand boubou with full volume drape' },
+  { id:'fugu_smock',  name:'Fugu / Smock',subtitle:'Northern Warrior',       region:'W. Africa',      gender:'male',   mult:1.2,   off:0,   heat:1.4,  tags:['Tribal','Warrior','Ghana'], desc:'Northern Ghanaian smock with traditional ease' },
+  { id:'buba_iro',    name:'Buba & Iro',  subtitle:"Women's Two-Piece",       region:'W. Africa',      gender:'female', mult:1.15,  off:0,   heat:1.3,  tags:['Women','Two-Piece','Nigeria'], desc:'Nigerian women\'s blouse and wrapper set' },
+  // Africa - East
+  { id:'kanzu',       name:'Kanzu',       subtitle:'Swahili Robe',            region:'E. Africa',      gender:'male',   mult:1.25,  off:0,   heat:1.5,  tags:['Swahili','Formal','E. Africa'], desc:'East African ankle-length white robe with fluid drape' },
+  { id:'habesha_kemis',name:'Habesha Kemis',subtitle:'Ethiopian Festive',    region:'E. Africa',      gender:'female', mult:1.2,   off:0,   heat:1.4,  tags:['Festive','Ethiopia','Handwoven'], desc:'Ethiopian festive dress with handwoven fabric ease' },
+  { id:'gomesi',      name:'Gomesi',      subtitle:'Ugandan Busuti',          region:'E. Africa',      gender:'female', mult:1.15,  off:0,   heat:1.3,  tags:['Traditional','Uganda','Sash'], desc:'Ugandan floor-length dress with sash' },
+  { id:'maasai_shuka',name:'Maasai Shuka',subtitle:'Maasai Blanket',          region:'E. Africa',      gender:'unisex', mult:1.3,   off:0,   heat:1.6,  tags:['Blanket','Maasai','Kenya'], desc:'Maasai shuka blanket wrap with full drape ease' },
+  { id:'dirac',       name:'Dirac',       subtitle:'Horn of Africa',          region:'E. Africa',      gender:'female', mult:1.1,   off:0,   heat:1.2,  tags:['Women','Somalia','Long'], desc:'Horn of Africa long dress with moderate ease' },
+  { id:'kanga',       name:'Kanga',       subtitle:'East African Wrap',       region:'E. Africa',      gender:'female', mult:1.1,   off:0,   heat:1.2,  tags:['Wrap','Daily','E. Africa'], desc:'East African cotton wrap with light ease' },
+  // Africa - North
+  { id:'djellaba',    name:'Djellaba',    subtitle:'Hooded Robe',             region:'N. Africa',      gender:'unisex', mult:1.25,  off:0,   heat:1.5,  tags:['Hooded','Arid','Morocco'], desc:'North African hooded djellaba with arid climate ease' },
+  { id:'takshita',    name:'Takshita',    subtitle:'Moroccan Caftan',         region:'N. Africa',      gender:'female', mult:1.15,  off:0,   heat:1.3,  tags:['Formal','Morocco','Caftan'], desc:'Moroccan formal takshita with elegant drape' },
+  { id:'karakou',     name:'Karakou',     subtitle:'Algerian Fitted',         region:'N. Africa',      gender:'female', mult:1.05,  off:0,   heat:1.1,  tags:['Fitted','Algeria','Velvet'], desc:'Algerian fitted karakou jacket with minimal ease' },
+  { id:'jalabiya',    name:'Jalabiya',    subtitle:'Arid Tunic',              region:'N. Africa',      gender:'unisex', mult:1.35,  off:0,   heat:1.7,  tags:['Tunic','Arid','Sudan'], desc:'Sudanese arid jalabiya with generous ventilation ease' },
+  { id:'burnous',     name:'Burnous',     subtitle:'Hooded Cloak',            region:'N. Africa',      gender:'male',   mult:1.0,   off:30,  heat:1.8,  tags:['Cloak','Berber','Ceremonial'], desc:'Berber hooded cloak with 30cm static overflow' },
+  { id:'melhfa',      name:'Melhfa',      subtitle:'Saharan Drape',           region:'N. Africa',      gender:'female', mult:1.0,   off:40,  heat:1.8,  tags:['Drape','Saharan','Mauritania'], desc:'Saharan women\'s drape with 40cm static wrap allowance' },
+  // Africa - Southern
+  { id:'umbhaco',     name:'Umbhaco',     subtitle:'Xhosa Braided',           region:'S. Africa',      gender:'female', mult:1.1,   off:0,   heat:1.2,  tags:['Braided','Xhosa','S. Africa'], desc:'Xhosa Umbhaco with decorative braided ease' },
+  { id:'herero',      name:'Herero',      subtitle:'Victorian Dress',         region:'S. Africa',      gender:'female', mult:1.4,   off:15,  heat:1.9,  tags:['Victorian','Herero','Namibia'], desc:'Herero women\'s Victorian-inspired dress with volume' },
+  { id:'basotho',     name:'Basotho',     subtitle:'Basotho Blanket',         region:'S. Africa',      gender:'unisex', mult:1.0,   off:35,  heat:1.8,  tags:['Blanket','Lesotho','Cloak'], desc:'Basotho blanket with 35cm static overflow' },
+  { id:'leteise',     name:'Leteise',     subtitle:'Shweshwe Stiff',          region:'S. Africa',      gender:'female', mult:1.08,  off:0,   heat:1.15, tags:['Stiff','Shweshwe','S. Africa'], desc:'Leteise with stiff shweshwe fabric ease' },
+  { id:'emahiya',     name:'Emahiya',     subtitle:'Swazi Wrap',              region:'S. Africa',      gender:'unisex', mult:1.0,   off:25,  heat:1.7,  tags:['Wrap','Swazi','Eswatini'], desc:'Swazi emahiya wrap with 25cm drape allowance' },
+  { id:'isicholo',    name:'Isicholo',    subtitle:'Zulu Headgear',           region:'S. Africa',      gender:'female', mult:1.0,   off:5,   heat:1.0,  tags:['Headgear','Zulu','S. Africa'], desc:'Zulu isicholo headpiece with minimal ease' },
+  { id:'lamba',       name:'Lamba',       subtitle:'Zambian Silk',            region:'S. Africa',      gender:'unisex', mult:1.2,   off:0,   heat:1.4,  tags:['Silk','Zambia','Wrap'], desc:'Zambian silk lamba wrap with flowing ease' },
+  // Africa - Central
+  { id:'toghu',       name:'Toghu',       subtitle:'Cameroonian Regal',       region:'C. Africa',      gender:'unisex', mult:1.25,  off:0,   heat:1.5,  tags:['Regal','Cameroon','Embroidery'], desc:'Cameroonian toghu with embroidered regal ease' },
+  { id:'liputa',      name:'Liputa',      subtitle:'Congo Wax-Print',         region:'C. Africa',      gender:'female', mult:1.05,  off:10,  heat:1.2,  tags:['Wax-Print','Congo','Women'], desc:'Congo liputa with wax-print fabric and static ease' },
+  { id:'muhuila',     name:'Muhuila',     subtitle:'Angolan Beaded',          region:'C. Africa',      gender:'female', mult:1.0,   off:20,  heat:1.6,  tags:['Beaded','Angola','Ceremonial'], desc:'Angolan muhuila with beaded ceremonial drape' },
+  // Asia
+  { id:'hanbok',      name:'Hanbok',      subtitle:'Korean Traditional',      region:'Asia',           gender:'female', mult:1.1,   off:10,  heat:1.3,  tags:['Traditional','Korea','Silk'], desc:'Korean hanbok with traditional silk volume' },
+  { id:'ao_dai',      name:'Ao Dai',      subtitle:'Vietnamese Elegant',      region:'Asia',           gender:'female', mult:1.02,  off:0,   heat:1.0,  tags:['Elegant','Vietnam','Fitted'], desc:'Vietnamese ao dai with minimal ease for fitted silhouette' },
+  { id:'kimono',      name:'Kimono',      subtitle:'Japanese Formal',         region:'Asia',           gender:'unisex', mult:1.0,   off:20,  heat:1.6,  tags:['Formal','Japan','Wrapped'], desc:'Japanese kimono with 20cm static wrap allowance' },
+  { id:'yukata',      name:'Yukata',      subtitle:'Japanese Casual',         region:'Asia',           gender:'unisex', mult:1.05,  off:5,   heat:1.2,  tags:['Casual','Japan','Cotton'], desc:'Japanese cotton yukata with light ease' },
+  { id:'gho',         name:'Gho',         subtitle:'Bhutanese Regal',         region:'Asia',           gender:'male',   mult:1.3,   off:0,   heat:1.6,  tags:['Regal','Bhutan','Knee-Length'], desc:'Bhutanese gho with regal knee-length volume' },
+  { id:'cheongsam',   name:'Cheongsam',   subtitle:'Chinese Qipao',           region:'Asia',           gender:'female', mult:1.02,  off:0,   heat:1.0,  tags:['Fitted','China','Silk'], desc:'Chinese qipao/cheongsam with minimal fitted ease' },
+  { id:'shervani',    name:'Shervani',    subtitle:'Indian Sherwani',         region:'Asia',           gender:'male',   mult:1.15,  off:0,   heat:1.3,  tags:['Formal','India','Coat'], desc:'Indian shervani with structured formal ease' },
+  { id:'sari',        name:'Sari',        subtitle:'Indian Drape',            region:'Asia',           gender:'female', mult:1.05,  off:0,   heat:1.1,  tags:['Drape','India','Silk'], desc:'Indian sari drape with lightweight ease' },
+  { id:'shalwar_kameez',name:'Shalwar Kameez',subtitle:'South Asian Tunic',  region:'Asia',           gender:'unisex', mult:1.15,  off:0,   heat:1.3,  tags:['Tunic','Pakistan','Daily'], desc:'South Asian shalwar kameez with comfortable ease' },
+  { id:'batik_kebaya',name:'Batik Kebaya',subtitle:'Indonesian Batik',       region:'Asia',           gender:'female', mult:1.1,   off:0,   heat:1.2,  tags:['Batik','Indonesia','Lace'], desc:'Indonesian kebaya with batik fabric ease' },
+  // Europe
+  { id:'bespoke_suit',name:'Bespoke Suit',subtitle:'Italian Tailored',       region:'Europe',         gender:'male',   mult:1.08,  off:0,   heat:1.1,  tags:['Tailored','Italy','Formal'], desc:'Italian bespoke suit with structured ease' },
+  { id:'savile_row',  name:'Savile Row',  subtitle:'British Bespoke',         region:'Europe',         gender:'male',   mult:1.08,  off:0,   heat:1.1,  tags:['Bespoke','Britain','Formal'], desc:'British Savile Row bespoke with classic ease' },
+  { id:'haute_couture',name:'Haute Couture',subtitle:'French Fashion',        region:'Europe',         gender:'female', mult:1.05,  off:0,   heat:1.1,  tags:['Fashion','France','High-End'], desc:'French haute couture with sculpted ease' },
+  { id:'kilt',        name:'Kilt',        subtitle:'Scottish Kilt',           region:'Europe',         gender:'male',   mult:1.1,   off:0,   heat:1.2,  tags:['Scotland','Formal','Pleated'], desc:'Scottish kilt with pleated structured ease' },
+  // Middle East
+  { id:'thobe_kandura',name:'Thobe / Kandura',subtitle:'Arabian Tunic',      region:'Middle East',    gender:'male',   mult:1.1,   off:0,   heat:1.2,  tags:['Tunic','UAE','Daily'], desc:'Arabian thobe/kandura with daily wear ease' },
+  // Latin America
+  { id:'guayabera',   name:'Guayabera',   subtitle:'Cuban Airflow',           region:'L. America',     gender:'male',   mult:1.12,  off:0,   heat:1.25, tags:['Airflow','Cuba','Casual'], desc:'Cuban guayabera shirt with ventilation ease' },
+  { id:'bombachas',   name:'Bombachas',   subtitle:'Gaucho Pants',            region:'L. America',     gender:'male',   mult:1.1,   off:0,   heat:1.2,  tags:['Pants','Gaucho','Argentina'], desc:'Argentine gaucho bombachas with riding ease' },
+  // Special / Occasion
+  { id:'gala',        name:'Gala',        subtitle:'Formal Compression',      region:'Special',        gender:'unisex', mult:1.005, off:0,   heat:0.5,  tags:['Formal','Compression','Event'], desc:'Gala/event wear with 0.5% minimal compression' },
+  { id:'suit',        name:'Suit',        subtitle:'Structured Ease',         region:'Common',         gender:'male',   mult:1.1,   off:0,   heat:1.15, tags:['Formal','Business','Structured'], desc:'Structured suit with balanced ease' }
+];
+window.getAttire = (id) => window.ATTIRE_REGISTRY.find(a => a.id === id) || window.ATTIRE_REGISTRY[0];
+window.getAttireMult = (id) => window.getAttire(id).mult;
+window.getAttireHeat = (id) => window.getAttire(id).heat;
+window.getAttireName = (id) => window.getAttire(id).name;
+window.getAttireSub = (id) => window.getAttire(id).subtitle;
+  </script>
   <script src="/assets/measurement-screen.js"></script>
   <script src="/assets/jspdf.min.js"></script>
   <script src="/assets/korra_export.js"></script>
@@ -2701,7 +2811,7 @@ window.loadSettings = async () => {
             if (document.getElementById('widgetBtnTextMeasured')) document.getElementById('widgetBtnTextMeasured').value = wc.btn_text_measured || "Get Measured";
             if (document.getElementById('widgetBtnColor')) document.getElementById('widgetBtnColor').value = wc.btn_color || "#C6FF00";
             if (document.getElementById('widgetBtnTextColor')) document.getElementById('widgetBtnTextColor').value = wc.btn_text_color || "#050505";
-            if (document.getElementById('widgetDefaultSpecialty')) document.getElementById('widgetDefaultSpecialty').value = wc.default_specialty || "standard";
+            if (window._widgetAttireSelector) window._widgetAttireSelector.select(wc.default_specialty || "standard");
 
             window.MERCHANT_DEFAULT_SPECIALTY = wc.default_specialty || "standard";
 
@@ -2860,13 +2970,7 @@ window.loadSettings = async () => {
       // PHASE 102: Apply Tolerance Intelligence Multipliers
       // (Simulation of backend calculate hook for real-time toggle)
       const getEase = (key) => {
-          let baseMultiplier = 1.035; // Default 3.5% ease
-          if (context === 'standard') baseMultiplier = 1.035;
-          else if (context === 'agbada') baseMultiplier = 1.45;
-          else if (context === 'senator') baseMultiplier = 1.1;
-          else if (context === 'kurta') baseMultiplier = 1.25;
-          else if (context === 'abaya') baseMultiplier = 1.15;
-          else if (context === 'activewear') baseMultiplier = 0.95;
+          const baseMultiplier = window.getAttireMult(context);
 
           // Phase 102: Material Multiplier
           const materialCoeffs = {
@@ -3486,6 +3590,17 @@ window.loadSettings = async () => {
         if (modalParam === 'shareScanModal' && window.KORRA_MS?.data) {
           document.getElementById('shareScanName').value = window.KORRA_MS.data.client_name || '';
         }
+      }
+
+      // Initialize attire selectors
+      if (document.getElementById('attireSelector')) {
+        window.createAttireSelector('attireSelector');
+      }
+      if (document.getElementById('widgetAttireSelector')) {
+        window._widgetAttireSelector = window.createAttireSelector('widgetAttireSelector', {
+          value: window.MERCHANT_DEFAULT_SPECIALTY || 'standard',
+          onChange: (id) => { window.updateWidgetPreview(); }
+        });
       }
     }
 
@@ -4150,34 +4265,185 @@ window.generateDeepLink = async () => {
     window.ACTIVE_CONTEXT = 'standard';
     window.ACTIVE_MATERIAL = 'woven';
 
-    window.handleAttireToggle = (attire, el) => {
-        /**
-         * Phase 102: Real-time Tolerance Toggle
-         * Phase 111: Haptic Validation
-         */
+    /**
+     * ─── ATTIRE COMBOBOX COMPONENT ───
+     * Renders a searchable, grouped attire selector with quick-select chips.
+     * Usage: window.createAttireSelector('containerId', { value: 'standard', onChange: (id) => {} })
+     */
+    window._attireSelectorOpen = null;
+    window.createAttireSelector = (containerId, opts = {}) => {
+      const container = document.getElementById(containerId);
+      if (!container) return;
+      const onChange = opts.onChange || (() => {});
+      const initial = opts.value || window.ACTIVE_CONTEXT || 'standard';
+      let currentId = initial;
+      let searchTerm = '';
+      const REG = window.ATTIRE_REGISTRY;
+      const QUICK = ['standard','agbada','senator','kurta','kaftan','abaya','activewear'];
+
+      const render = () => {
+        const a = window.getAttire(currentId);
+        container.innerHTML = `
+          <div class="at-wrapper">
+            <div class="at-trigger" id="at-trigger-${containerId}" tabindex="0" role="combobox" aria-expanded="false">
+              <span class="at-trigger-icon">👔</span>
+              <div class="at-trigger-info">
+                <div class="at-trigger-name">${a.name}</div>
+                <div class="at-trigger-sub">${a.subtitle} · ${a.region}</div>
+              </div>
+              <span class="at-trigger-mult">${(a.mult * 100 - 100).toFixed(1)}%</span>
+              <span class="at-trigger-arrow">▼</span>
+            </div>
+            <div class="at-chips" id="at-chips-${containerId}">
+              ${QUICK.map(id => {
+                const q = window.getAttire(id);
+                return `<button class="at-chip ${id === currentId ? 'active' : ''}" data-id="${id}">${q.name}</button>`;
+              }).join('')}
+            </div>
+            <div class="at-status" id="at-status-${containerId}">ACTIVE: ${a.name.toUpperCase()} — ${a.subtitle.toUpperCase()}</div>
+            <div class="at-dropdown" id="at-dropdown-${containerId}">
+              <div class="at-search-wrap">
+                <span class="at-search-icon">🔍</span>
+                <input class="at-search" id="at-search-${containerId}" type="text" placeholder="Search attire..." autocomplete="off" value="${searchTerm}">
+              </div>
+              <div class="at-options" id="at-options-${containerId}"></div>
+            </div>
+          </div>`;
+        renderOptions();
+        attachEvents();
+      };
+
+      const renderOptions = () => {
+        const el = document.getElementById(`at-options-${containerId}`);
+        if (!el) return;
+        const term = searchTerm.toLowerCase().trim();
+        let filtered = REG;
+        if (term) {
+          filtered = REG.filter(a =>
+            a.name.toLowerCase().includes(term) ||
+            a.subtitle.toLowerCase().includes(term) ||
+            a.region.toLowerCase().includes(term) ||
+            a.tags.some(t => t.toLowerCase().includes(term))
+          );
+        }
+        if (!filtered.length) {
+          el.innerHTML = '<div class="at-no-results">No attire matches "' + searchTerm + '"</div>';
+          return;
+        }
+        const groups = {};
+        filtered.forEach(a => {
+          if (!groups[a.region]) groups[a.region] = [];
+          groups[a.region].push(a);
+        });
+        el.innerHTML = Object.entries(groups).map(([region, items]) =>
+          '<div class="at-group-label">' + region + '</div>' +
+          items.map(a =>
+            '<div class="at-option' + (a.id === currentId ? ' selected' : '') + '" data-id="' + a.id + '">' +
+              '<span class="at-option-indicator"></span>' +
+              '<span class="at-option-name">' + a.name + '</span>' +
+              '<span class="at-option-sub">' + a.subtitle + '</span>' +
+              '<span class="at-option-mult">' + (a.mult * 100 - 100).toFixed(1) + '%</span>' +
+            '</div>'
+          ).join('')
+        ).join('');
+      };
+
+      const attachEvents = () => {
+        const trigger = document.getElementById(`at-trigger-${containerId}`);
+        const dropdown = document.getElementById(`at-dropdown-${containerId}`);
+        const search = document.getElementById(`at-search-${containerId}`);
+        const chips = document.getElementById(`at-chips-${containerId}`);
+
+        trigger.onclick = (e) => {
+          e.stopPropagation();
+          const isOpen = dropdown.classList.contains('open');
+          closeAllSelectors();
+          if (!isOpen) {
+            dropdown.classList.add('open');
+            trigger.classList.add('open');
+            trigger.setAttribute('aria-expanded', 'true');
+            window._attireSelectorOpen = containerId;
+          }
+        };
+
+        chips.onclick = (e) => {
+          const chip = e.target.closest('.at-chip');
+          if (!chip) return;
+          const id = chip.dataset.id;
+          selectAttire(id);
+          closeAllSelectors();
+        };
+
+        dropdown.onclick = (e) => {
+          const opt = e.target.closest('.at-option');
+          if (!opt) return;
+          const id = opt.dataset.id;
+          selectAttire(id);
+          closeAllSelectors();
+        };
+
+        search.oninput = (e) => {
+          searchTerm = e.target.value;
+          renderOptions();
+        };
+
+        search.onkeydown = (e) => {
+          if (e.key === 'Escape') { closeAllSelectors(); search.blur(); }
+          if (e.key === 'Enter') {
+            const first = dropdown.querySelector('.at-option');
+            if (first) { selectAttire(first.dataset.id); closeAllSelectors(); }
+          }
+          if (e.key === 'ArrowDown') {
+            e.preventDefault();
+            const opts = dropdown.querySelectorAll('.at-option');
+            if (opts.length) opts[0].focus ? opts[0].focus() : opts[0].scrollIntoView({ block: 'nearest' });
+          }
+        };
+      };
+
+      const selectAttire = (id) => {
+        if (id === currentId) return;
+        currentId = id;
+        window.ACTIVE_CONTEXT = id;
+        const a = window.getAttire(id);
+        const status = document.getElementById(`at-status-${containerId}`);
+        if (status) status.textContent = 'ACTIVE: ' + a.name.toUpperCase() + ' — ' + a.subtitle.toUpperCase();
+        const chips = document.getElementById(`at-chips-${containerId}`);
+        if (chips) chips.querySelectorAll('.at-chip').forEach(c => c.classList.toggle('active', c.dataset.id === id));
+        if (window.KORRA_VIZ) window.KORRA_VIZ.applyHeatmap(id);
+        window.showToast('Garment context updated', a.name + ' (' + a.subtitle + ')');
+        if (window.LAST_MEASUREMENT_DATA) {
+          renderMeasurementGrids(window.LAST_MEASUREMENT_DATA, window.ACTIVE_CONTEXT, window.ACTIVE_MATERIAL);
+        }
+        onChange(id);
+      };
+
+      const closeAllSelectors = () => {
+        document.querySelectorAll('.at-dropdown').forEach(d => d.classList.remove('open'));
+        document.querySelectorAll('.at-trigger').forEach(t => t.classList.remove('open'));
+        window._attireSelectorOpen = null;
+      };
+
+      document.addEventListener('click', (e) => {
+        if (window._attireSelectorOpen && !e.target.closest('.at-wrapper')) {
+          closeAllSelectors();
+        }
+      });
+
+      render();
+      return { select: selectAttire, getValue: () => currentId };
+    };
+
+    window.handleAttireToggle = (attire) => {
         if (!window.LAST_MEASUREMENT_DATA) {
             window.showAlert("Please perform or select a scan first.");
             return;
         }
-
-        if ("vibrate" in navigator) {
-            navigator.vibrate(50); // Short tactical pulse
-        }
-
+        if ("vibrate" in navigator) navigator.vibrate(50);
         window.ACTIVE_CONTEXT = attire;
-        document.getElementById('attireStatus').textContent = `CONTEXT: ${attire.toUpperCase()}`;
-        const attireLabels = { 'standard': 'Standard Fit', 'agbada': 'Agbada (Regal Volume)', 'senator': 'Senator (Business Fit)', 'kurta': 'Kurta (Airflow Ease)', 'abaya': 'Abaya (Modest Fit)' };
-        window.showToast('Garment context updated', attireLabels[attire] || attire);
-
-        // Phase 103: Trigger Visual Difference Heatmap
-        if (window.KORRA_VIZ) {
-            window.KORRA_VIZ.applyHeatmap(attire);
-        }
-
-        // Update active state in style cards
-        document.querySelectorAll('.style-card').forEach(c => c.classList.remove('active'));
-        if (el) el.classList.add('active');
-
+        const a = window.getAttire(attire);
+        window.showToast('Garment context updated', a.name + ' (' + a.subtitle + ')');
+        if (window.KORRA_VIZ) window.KORRA_VIZ.applyHeatmap(attire);
         renderMeasurementGrids(window.LAST_MEASUREMENT_DATA, window.ACTIVE_CONTEXT, window.ACTIVE_MATERIAL);
     };
 
@@ -4257,7 +4523,7 @@ window.generateDeepLink = async () => {
         const brandColor = document.getElementById('widgetBrandColor').value || "#FFFFFF";
         const color = document.getElementById('widgetColorPrimary').value;
         const theme = document.getElementById('widgetTheme').value;
-        const specialty = document.getElementById('widgetDefaultSpecialty').value || "standard";
+        const specialty = window._widgetAttireSelector ? window._widgetAttireSelector.getValue() : "standard";
         const logoSize = document.getElementById('widgetLogoSize').value;
         const btnFitting = document.getElementById('widgetBtnTextFitting').value || "Get body measurements";
         const btnMeasured = document.getElementById('widgetBtnTextMeasured').value || "Get Measured";
@@ -4515,7 +4781,7 @@ window.generateDeepLink = async () => {
             btn_text_measured: document.getElementById('widgetBtnTextMeasured').value,
             btn_color: document.getElementById('widgetBtnColor').value,
             btn_text_color: document.getElementById('widgetBtnTextColor').value,
-            default_specialty: document.getElementById('widgetDefaultSpecialty').value
+            default_specialty: window._widgetAttireSelector ? window._widgetAttireSelector.getValue() : "standard"
         };
         try {
             const { error } = await window.KORRA_DB.from('profiles').update({
