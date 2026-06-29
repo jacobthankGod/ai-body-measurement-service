@@ -752,7 +752,7 @@
   display: flex;
   justify-content: space-around;
   text-align: center;
-  padding: 4px;
+  padding: 8px 12px;
   margin: 8px 0 12px;
   background: var(--Mint);
   border: none;
