@@ -546,6 +546,33 @@
   flex: 1;
   min-height: 0;
 }
+.ms-ai-view .ms-ai-topbar {
+  flex-shrink: 0;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 0 0 8px;
+  border-bottom: 1px solid var(--Glass-Border);
+  margin-bottom: 12px;
+}
+.ms-ai-view .ms-ai-back {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  padding: 6px 10px;
+  border-radius: 8px;
+  border: 1px solid var(--Glass-Border);
+  background: var(--Glass);
+  color: var(--Neutral-400);
+  font-size: 11px;
+  font-weight: 700;
+  cursor: pointer;
+  transition: all 0.2s;
+}
+.ms-ai-view .ms-ai-back:hover {
+  color: var(--Mint);
+  border-color: var(--Mint);
+}
 .ms-ai-view .ms-ai-newchat {
   width: 28px;
   height: 28px;
@@ -768,14 +795,14 @@
 .ms-side-by-side .ms-sheet {
   order: 1;
   flex: 1 1 auto;
-  height: 100% !important;
+  height: auto !important;
   min-height: 0;
   border-radius: 0;
   border-top: none;
   border-left: none;
 }
 .ms-side-by-side .ms-sheet.expanded {
-  height: 100% !important;
+  height: auto !important;
 }
 .ms-side-by-side .ms-sheet-handle {
   display: none;
@@ -1125,12 +1152,12 @@
     border-left: none;
   }
   .ms-side-by-side .ms-sheet {
-    height: 100% !important;
+    height: auto !important;
     flex: 1 1 auto;
     min-height: 160px;
   }
   .ms-side-by-side .ms-sheet.expanded {
-    height: 100% !important;
+    height: auto !important;
     flex: 2 1 auto;
   }
 }
