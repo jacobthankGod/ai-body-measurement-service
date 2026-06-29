@@ -265,7 +265,10 @@ window.KORRA_MS = {
           <div class="ms-sheet-handle" id="ms-sheet-handle"></div>
           <div class="ms-sheet-body" id="ms-sheet-body">${this.buildSheetContent()}</div>
         </div>
-        <button class="ms-ai-fab" onclick="KORRA_MS.switchView('ai')">Ask AI</button>
+        <button class="ms-ai-fab" onclick="KORRA_MS.switchView('ai')">
+          <svg class="ms-ai-fab-icon" width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"/></svg>
+          <span class="ms-ai-fab-label">Ask AI</span>
+        </button>
       </div>`;
   },
 
