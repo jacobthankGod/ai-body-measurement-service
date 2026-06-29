@@ -1,9 +1,9 @@
 """
 KORRA AI - AI Assistant Route
 ==============================
-Groq free-tier LLM for measurement insights (llama-3.3-70b-versatile).
+Multi-provider LLM fallback chain for measurement insights.
+Priority: Groq -> OpenRouter -> Google Gemini -> FreeTheAi -> Static fallback.
 Full dashboard context: measurements, scan history, attire, chat history.
-Static fallback when no GROQ_API_KEY configured.
 """
 import os
 import logging
@@ -15,9 +15,47 @@ import httpx
 router = APIRouter()
 logger = logging.getLogger("KORRA_AI")
 
+# ═══ PROVIDER CONFIG ═══
+# Set API keys as environment variables. Only Groq is required; others are optional fallbacks.
 GROQ_API_KEY = os.environ.get("GROQ_API_KEY", "")
-GROQ_MODEL = "llama-3.3-70b-versatile"
-GROQ_URL = "https://api.groq.com/openai/v1/chat/completions"
+OPENROUTER_API_KEY = os.environ.get("OPENROUTER_API_KEY", "")
+GEMINI_API_KEY = os.environ.get("GEMINI_API_KEY", "")
+FREETHEAI_API_KEY = os.environ.get("FREETHEAI_API_KEY", "")
+
+PROVIDERS = [
+    {
+        "name": "groq",
+        "url": "https://api.groq.com/openai/v1/chat/completions",
+        "model": "llama-3.3-70b-versatile",
+        "api_key": GROQ_API_KEY,
+        "timeout": 15.0,
+    },
+    {
+        "name": "openrouter",
+        "url": "https://openrouter.ai/api/v1/chat/completions",
+        "model": "deepseek/deepseek-r1:free",
+        "api_key": OPENROUTER_API_KEY,
+        "timeout": 20.0,
+        "extra_headers": {
+            "HTTP-Referer": "https://korra.work",
+            "X-Title": "KORRA AI",
+        },
+    },
+    {
+        "name": "gemini",
+        "url": "https://generativelanguage.googleapis.com/v1beta/openai/chat/completions",
+        "model": "gemini-2.5-flash",
+        "api_key": GEMINI_API_KEY,
+        "timeout": 20.0,
+    },
+    {
+        "name": "freetheai",
+        "url": "https://api.freetheai.xyz/v1/chat/completions",
+        "model": "wsf/kimi-k2.6",
+        "api_key": FREETHEAI_API_KEY,
+        "timeout": 25.0,
+    },
+]
 
 
 class ChatMessage(BaseModel):
@@ -171,21 +209,56 @@ STATIC_RESPONSES = {
 }
 
 
+def _build_static_response(prompt_lower: str) -> str:
+    if any(w in prompt_lower for w in ["explain", "summary", "what"]):
+        return STATIC_RESPONSES["explain"]
+    elif any(w in prompt_lower for w in ["clothing", "fit", "wear", "dress", "shirt"]):
+        return STATIC_RESPONSES["clothing"]
+    return STATIC_RESPONSES["summary"]
+
+
+async def _call_provider(provider: dict, messages: list) -> Optional[str]:
+    """Call a single provider. Returns response content or None on failure."""
+    if not provider["api_key"]:
+        return None
+
+    headers = {"Authorization": f"Bearer {provider['api_key']}"}
+    headers.update(provider.get("extra_headers", {}))
+
+    try:
+        async with httpx.AsyncClient(timeout=provider["timeout"]) as client:
+            res = await client.post(
+                provider["url"],
+                headers=headers,
+                json={
+                    "model": provider["model"],
+                    "messages": messages,
+                    "max_tokens": 600,
+                    "temperature": 0.7,
+                },
+            )
+            if res.status_code == 200:
+                data = res.json()
+                content = data.get("choices", [{}])[0].get("message", {}).get("content")
+                if content:
+                    logger.info("AI provider '%s' succeeded", provider["name"])
+                    return content
+                logger.warning("AI provider '%s' returned empty content", provider["name"])
+                return None
+            else:
+                logger.warning("AI provider '%s' error %d: %s", provider["name"], res.status_code, res.text[:200])
+                return None
+    except Exception as e:
+        logger.warning("AI provider '%s' exception: %s", provider["name"], str(e)[:200])
+        return None
+
+
 @router.post("/ai/assist")
 async def assist(req: AssistRequest):
     if not req.prompt or not req.prompt.strip():
         raise HTTPException(status_code=400, detail="Prompt is required")
 
     prompt_lower = req.prompt.lower()
-
-    if not GROQ_API_KEY:
-        if any(w in prompt_lower for w in ["explain", "summary", "what"]):
-            response = STATIC_RESPONSES["explain"]
-        elif any(w in prompt_lower for w in ["clothing", "fit", "wear", "dress", "shirt"]):
-            response = STATIC_RESPONSES["clothing"]
-        else:
-            response = STATIC_RESPONSES["summary"]
-        return {"response": response, "model": "static-fallback"}
 
     context = _build_context(req)
     system = _build_system_prompt()
@@ -200,24 +273,12 @@ async def assist(req: AssistRequest):
 
     messages.append({"role": "user", "content": user_msg})
 
-    try:
-        async with httpx.AsyncClient(timeout=15.0) as client:
-            res = await client.post(
-                GROQ_URL,
-                headers={"Authorization": f"Bearer {GROQ_API_KEY}"},
-                json={
-                    "model": GROQ_MODEL,
-                    "messages": messages,
-                    "max_tokens": 600,
-                    "temperature": 0.7,
-                },
-            )
-            if res.status_code != 200:
-                logger.warning("Groq API error %d: %s", res.status_code, res.text[:200])
-                return {"response": STATIC_RESPONSES["summary"], "model": "static-fallback"}
-            data = res.json()
-            content = data["choices"][0]["message"]["content"]
-            return {"response": content, "model": GROQ_MODEL}
-    except Exception as e:
-        logger.error("AI assist error: %s", e)
-        return {"response": STATIC_RESPONSES["summary"], "model": "static-fallback"}
+    for provider in PROVIDERS:
+        if not provider["api_key"]:
+            continue
+        result = await _call_provider(provider, messages)
+        if result:
+            return {"response": result, "model": provider["name"]}
+
+    logger.warning("All AI providers failed, returning static fallback")
+    return {"response": _build_static_response(prompt_lower), "model": "static-fallback"}
