@@ -138,7 +138,9 @@ def _build_system_prompt() -> str:
         "- If garment mode is on (show_eased), explain that values include ease for the selected attire\n"
         "- Use centimeters as default unless the user prefers inches\n\n"
         "Be concise, professional, and specific. "
-        "Format responses with clear structure: bullet points for lists, short paragraphs for analysis. "
+        "Never use markdown formatting, asterisks, bold markers, or bullet symbols. "
+        "Use plain text with line breaks and dashes for structure. "
+        "Write measurement names and values on separate lines when listing. "
         "Keep responses under 200 words unless the user asks for detail."
     )
 
