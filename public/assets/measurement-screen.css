@@ -828,50 +828,16 @@
 .ms-sk-line.short { width: 60%; margin-bottom: 6px; }
 .ms-sk-line.long { width: 80%; }
 
-/* ── ATTIRE CONTEXT ── */
-.ms-attire-section { margin-bottom: 16px; }
-.ms-attire-label {
-  font-size: 10px;
-  font-weight: 900;
-  color: var(--Neutral-500);
-  margin-bottom: 8px;
+/* ── FIXED ATTIRE SELECTOR CONTAINER ── */
+.ms-attire-selector-container {
+  padding: 12px 20px 8px;
+  border-bottom: 1px solid var(--Glass-Border);
+  background: var(--Obsidian-Layer);
+  z-index: 10;
 }
-.ms-attire-grid {
-  display: grid;
-  grid-template-columns: repeat(auto-fill, minmax(130px, 1fr));
-  gap: 8px;
-}
-.ms-attire-card {
-  padding: 16px;
-  border-radius: 16px;
-  border: 1px solid var(--Glass-Border);
-  background: rgba(255, 255, 255, 0.03);
-  cursor: pointer;
-  text-align: left;
-  transition: 0.3s;
-  position: relative;
-  overflow: hidden;
-}
-.ms-attire-card:hover { border-color: rgba(198, 255, 0, 0.3); }
-.ms-attire-card.active {
-  border-color: var(--Mint);
-  background: rgba(255, 255, 255, 0.04);
-}
-.ms-attire-name {
-  font-size: 11px;
-  font-weight: 900;
-  color: #fff;
-}
-.ms-attire-desc {
-  font-size: 9px;
-  color: var(--Neutral-500);
-}
-.ms-attire-status {
-  font-size: 9px;
-  color: var(--Neutral-400);
-  font-weight: 900;
-  margin-top: 8px;
-}
+
+/* ── ATTIRE CONTEXT (legacy - removed) ── */
+/* The combobox from dashboard.html handles this now */
 
 /* ── MATERIAL RAIL ── */
 .ms-material-section { margin-bottom: 16px; }

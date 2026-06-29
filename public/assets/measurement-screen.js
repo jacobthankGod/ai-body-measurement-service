@@ -158,6 +158,13 @@ window.KORRA_MS = {
     window.switchTab('scanresult');
     this.initViewer();
     this.bindSheetDrag();
+    // Initialize attire combobox (uses dashboard's createAttireSelector)
+    if (window.createAttireSelector) {
+      this._attireSelector = window.createAttireSelector('ms-attire-selector', {
+        value: this.activeContext,
+        onChange: (id) => this.setContext(id)
+      });
+    }
     setTimeout(() => {
       const hEl = document.querySelector('.ms-summary-value');
       if (hEl) {
@@ -223,6 +230,7 @@ window.KORRA_MS = {
             </button>
           </div>
         </div>
+        <div class="ms-attire-selector-container" id="ms-attire-selector"></div>
         <div class="ms-viewer" id="ms-viewer">
           <div class="ms-viewer-canvas" id="ms-viewer-canvas"></div>
           <div class="ms-viewer-badge" id="ms-viewer-badge">${this.buildBadge()}</div>
@@ -393,22 +401,8 @@ window.KORRA_MS = {
       </div>`
     ).join('') + '</div>';
 
-    const attireCtx = this.activeContext;
     const mat = this.activeMaterial;
-    const reg = window.ATTIRE_REGISTRY || [];
-    const quickIds = ['standard','agbada','senator','kurta','kaftan','abaya','activewear'];
-    const activeEntry = reg.find(a => a.id === attireCtx) || reg[0] || { name:'Standard', subtitle:'Clinical Base' };
     return `
-      <div class="ms-attire-section">
-        <div class="ms-attire-label">ATTIRE CONTEXT</div>
-        <div class="ms-attire-grid">
-          ${quickIds.map(id => {
-            const a = reg.find(r => r.id === id) || { id, name:id, subtitle:'' };
-            return `<button class="ms-attire-card ${attireCtx === id ? 'active' : ''}" onclick="KORRA_MS.setContext('${id}')"><div class="ms-attire-name">${a.name}</div><div class="ms-attire-desc">${a.subtitle}</div></button>`;
-          }).join('')}
-        </div>
-        <div class="ms-attire-status">ACTIVE: ${activeEntry.name.toUpperCase()} — ${activeEntry.subtitle.toUpperCase()}</div>
-      </div>
       <div class="ms-material-section">
         <div class="ms-material-label">FABRIC</div>
         <div class="ms-material-rail">
@@ -513,6 +507,33 @@ window.KORRA_MS = {
       </div>
     </div>
     <div class="ms-delta-table">${deltaHTML}</div>`;
+  },
+
+  // ═══ PARTIAL RENDER: measurements only (keeps attire selector alive) ═══
+  renderMeasurements() {
+    const body = document.getElementById('ms-sheet-body');
+    const title = document.getElementById('ms-sheet-title');
+    if (!body) return;
+    const summaryBar = `<div class="ms-summary-bar">
+      <div class="ms-summary-item"><div class="ms-summary-label">HEIGHT</div><div class="ms-summary-value">${this.data?.height ? this.data.height + ' cm' : '—'}</div></div>
+      <div class="ms-summary-item"><div class="ms-summary-label">SHAPE</div><div class="ms-summary-value">${this.data?.body_shape || 'Standard'}</div></div>
+      <div class="ms-summary-item"><div class="ms-summary-label">SIZE REC</div><div class="ms-summary-value">${this.data?.size_recommendation || 'M'}</div></div>
+    </div>`;
+    let content;
+    switch (this.viewMode) {
+      case 'avatar': case 'metrics': content = this.buildMetricsGrid(); break;
+      case 'sizes': content = this.buildSizesGrid(); break;
+      case 'shape': content = this.buildShapeCard(); break;
+      case 'compare': content = this.buildCompareView(); break;
+      default: content = this.buildMetricsGrid();
+    }
+    body.innerHTML = summaryBar + content;
+    if (title) {
+      const titles = { avatar: 'Measurements', sizes: 'Size Chart', metrics: 'All Metrics', shape: 'Body Shape', compare: 'Compare Scans' };
+      title.textContent = titles[this.viewMode] || 'Measurements';
+    }
+    if (this.viewMode === 'compare') this.initCompareViewers();
+    this.updateBadge();
   },
 
   // ═══ VIEW MODE ═══
@@ -792,23 +813,27 @@ window.KORRA_MS = {
     this.activeContext = ctx;
     if ("vibrate" in navigator) navigator.vibrate(50);
     if (window.KORRA_VIZ) window.KORRA_VIZ.applyHeatmap(ctx);
-    const body = document.getElementById('ms-sheet-body');
-    if (body) body.innerHTML = this.buildSheetContent();
+    // Update combobox if exists
+    if (this._attireSelector) this._attireSelector.select(ctx);
+    this.renderMeasurements();
   },
 
   setMaterial(mat) {
     this.activeMaterial = mat;
     if ("vibrate" in navigator) navigator.vibrate(25);
-    const body = document.getElementById('ms-sheet-body');
-    if (body) body.innerHTML = this.buildSheetContent();
+    // Update material rail active state
+    document.querySelectorAll('.ms-material-btn').forEach(b => {
+      const btnText = b.textContent.toLowerCase();
+      b.classList.toggle('active', btnText.includes(mat));
+    });
+    this.renderMeasurements();
   },
 
   toggleEase() {
     this.showEased = !this.showEased;
     localStorage.setItem('korra_showEased', this.showEased);
     this.updateBadge();
-    const body = document.getElementById('ms-sheet-body');
-    if (body) body.innerHTML = this.buildSheetContent();
+    this.renderMeasurements();
     const btn = document.querySelector('#view-scanresult .ms-ease-btn');
     if (btn) {
       btn.textContent = this.showEased ? 'Eased' : 'Raw';
