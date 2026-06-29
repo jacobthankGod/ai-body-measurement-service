@@ -768,14 +768,14 @@
 .ms-side-by-side .ms-sheet {
   order: 1;
   flex: 1 1 auto;
-  height: auto !important;
+  height: 100% !important;
   min-height: 0;
   border-radius: 0;
   border-top: none;
   border-left: none;
 }
 .ms-side-by-side .ms-sheet.expanded {
-  height: auto !important;
+  height: 100% !important;
 }
 .ms-side-by-side .ms-sheet-handle {
   display: none;
@@ -1125,12 +1125,12 @@
     border-left: none;
   }
   .ms-side-by-side .ms-sheet {
-    height: auto !important;
+    height: 100% !important;
     flex: 1 1 auto;
     min-height: 160px;
   }
   .ms-side-by-side .ms-sheet.expanded {
-    height: auto !important;
+    height: 100% !important;
     flex: 2 1 auto;
   }
 }

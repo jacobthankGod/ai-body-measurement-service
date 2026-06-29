@@ -552,10 +552,38 @@ window.KORRA_MS = {
         body.style.overflow = 'hidden';
         body.style.display = 'flex';
         body.style.flexDirection = 'column';
+        body.style.padding = '0 20px';
+
+        const title = document.querySelector('.ms-scan-title');
+        const subtitle = document.querySelector('.ms-scan-subtitle');
+        if (title) title.textContent = 'AI Assistant';
+        if (subtitle) subtitle.textContent = 'Ask anything about your measurements';
+
+        const unitToggle = document.querySelector('.ms-unit-toggle');
+        const easeToggle = document.querySelector('.ms-ease-toggle');
+        if (unitToggle) unitToggle.style.display = 'none';
+        if (easeToggle) easeToggle.style.display = 'none';
       } else {
         body.style.overflow = '';
         body.style.display = '';
         body.style.flexDirection = '';
+        body.style.padding = '';
+
+        const title = document.querySelector('.ms-scan-title');
+        const subtitle = document.querySelector('.ms-scan-subtitle');
+        if (title && this.data?.client_name) title.textContent = this.data.client_name;
+        if (subtitle && this.data) {
+          const d = this.data;
+          const date = d.created_at ? new Date(d.created_at).toLocaleDateString() : 'Today';
+          const h = d.height ? `${d.height} cm` : '';
+          const g = (d.gender || 'male').charAt(0).toUpperCase() + (d.gender || 'male').slice(1);
+          subtitle.textContent = `${date} · ${h} · ${g}`;
+        }
+
+        const unitToggle = document.querySelector('.ms-unit-toggle');
+        const easeToggle = document.querySelector('.ms-ease-toggle');
+        if (unitToggle) unitToggle.style.display = '';
+        if (easeToggle) easeToggle.style.display = '';
       }
       body.innerHTML = this.buildSheetContent();
     }
