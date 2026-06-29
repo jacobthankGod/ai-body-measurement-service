@@ -551,9 +551,11 @@
     .sidebar-nav.collapsed .collapse-toggle svg { transform: rotate(180deg); }
 
     .main-content {
-      padding: 40px;
-      height: 100%;
+      padding: 0 40px;
+      min-height: 100%;
       margin-left: var(--sidebar-width, 260px);
+      display: flex;
+      flex-direction: column;
     }
 
     @media (max-width: 900px) {

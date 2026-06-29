@@ -16,7 +16,7 @@
 }
 
 #view-scanresult.active {
-  height: 100%;
+  flex: 1;
   display: flex;
   flex-direction: column;
   min-height: 0;
@@ -151,9 +151,9 @@
 
 /* ── 3D VIEWER AREA ── */
 .ms-viewer {
-  flex: 1;
+  flex: 0 0 200px;
   position: relative;
-  min-height: 0;
+  min-height: 120px;
   background: #D4D4D4;
   overflow: hidden;
 }
@@ -268,9 +268,9 @@
 
 /* ── BOTTOM SHEET ── */
 .ms-sheet {
-  height: 38vh;
+  height: auto;
+  flex: 1 1 auto;
   min-height: 200px;
-  flex-shrink: 0;
   background: var(--Obsidian-Layer);
   border-top: 1px solid var(--Glass-Border);
   border-radius: 20px 20px 0 0;
@@ -761,8 +761,8 @@
   display: flex;
   justify-content: space-around;
   text-align: center;
-  padding: 16px;
-  margin: 0 0 20px;
+  padding: 8px;
+  margin: 0 0 12px;
   background: rgba(255, 255, 255, 0.02);
   border: 1px solid var(--Glass-Border);
   border-radius: 12px;
@@ -781,24 +781,24 @@
 }
 
 /* ── 3-COLUMN METRICS GRID ── */
-.ms-metrics-section { margin-bottom: 16px; }
+.ms-metrics-section { margin-bottom: 10px; }
 .ms-metrics-section-header {
-  font-size: 11px;
+  font-size: 10px;
   font-weight: 900;
   color: #fff;
   text-transform: uppercase;
   letter-spacing: 0.5px;
-  padding: 4px 0;
-  margin-bottom: 12px;
+  padding: 2px 0;
+  margin-bottom: 6px;
   border-bottom: none;
 }
 .ms-metrics-grid {
   display: grid;
   grid-template-columns: repeat(3, 1fr);
-  gap: 8px;
+  gap: 4px;
 }
 .ms-metric-cell {
-  padding: 10px;
+  padding: 6px;
   background: rgba(255, 255, 255, 0.05);
   border-radius: 8px;
   cursor: pointer;
@@ -816,10 +816,10 @@
   text-overflow: ellipsis;
 }
 .ms-metric-val {
-  font-size: 16px;
+  font-size: 13px;
   font-weight: 700;
   color: #fff;
-  margin-top: 2px;
+  margin-top: 1px;
   font-variant-numeric: tabular-nums;
 }
 .ms-metric-ease {
@@ -1040,11 +1040,13 @@
     font-size: 9px;
   }
   .ms-sheet {
-    height: 45vh;
+    height: auto;
+    flex: 1 1 auto;
     min-height: 160px;
   }
   .ms-sheet.expanded {
-    height: 75vh;
+    height: auto;
+    flex: 2 1 auto;
   }
   .ms-sheet-body {
     padding: 0 16px 16px;
