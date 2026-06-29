@@ -128,6 +128,8 @@ window.KORRA_MS = {
     this.overlaysVisible = true;
     this.sheetExpanded = false;
     this.aiOpen = false;
+    this._aiLoading = false;
+    this._aiAbort = null;
     this._viewerInitialized = false;
     this.sideBySide = true;
     this._previousTab = document.querySelector('.tab-view.active')?.id?.replace('view-', '') || 'vault';
@@ -269,24 +271,19 @@ window.KORRA_MS = {
         <div class="ms-ai-drawer" id="ms-ai-drawer">
           <div class="ms-ai-header">
             <div class="ms-ai-title">AI Assistant</div>
+            <button class="ms-ai-newchat" onclick="KORRA_MS.newChat()" title="New conversation">+</button>
             <button class="ms-ai-close" onclick="KORRA_MS.closeAI()">✕</button>
           </div>
-          <div class="ms-ai-body" id="ms-ai-body">
-            <div class="ms-ai-prompt">
-              <button class="ms-ai-prompt-btn" onclick="KORRA_MS.askAI('Explain my body measurements')">Explain this scan</button>
-              <button class="ms-ai-prompt-btn" onclick="KORRA_MS.askAI('Recommend clothing fit for my body')">Clothing fit</button>
-              <button class="ms-ai-prompt-btn" onclick="KORRA_MS.askAI('Give me a body summary')">Body summary</button>
-              <button class="ms-ai-prompt-btn" onclick="KORRA_MS.askAI('What measurements changed since last scan?')">Progress insights</button>
-            </div>
-            <div class="ms-notes-section">
-              <div class="ms-notes-label">CRAFTSMAN NOTES</div>
-              <textarea class="ms-notes-input" id="ms-notes-input" placeholder="Patterns, fabrics, or tailoring requirements..." oninput="this.style.height='auto';this.style.height=Math.min(this.scrollHeight,200)+'px'">${d.notes || ''}</textarea>
-              <button class="ms-notes-save" onclick="KORRA_MS.saveNotes()">Save Notes</button>
-            </div>
+          <div class="ms-ai-prompt-bar">
+            <button class="ms-ai-prompt-btn" onclick="KORRA_MS.askAI('Explain my body measurements')">Explain this scan</button>
+            <button class="ms-ai-prompt-btn" onclick="KORRA_MS.askAI('Recommend clothing fit for my body')">Clothing fit</button>
+            <button class="ms-ai-prompt-btn" onclick="KORRA_MS.askAI('Give me a body summary')">Body summary</button>
+            <button class="ms-ai-prompt-btn" onclick="KORRA_MS.askAI('What measurements changed since last scan?')">Progress insights</button>
           </div>
+          <div class="ms-ai-body" id="ms-ai-body"></div>
           <div class="ms-ai-input-bar">
-            <input class="ms-ai-input" id="ms-ai-input" placeholder="Ask about your measurements..." onkeydown="if(event.key==='Enter')KORRA_MS.askAI(this.value)">
-            <button class="ms-ai-send" onclick="KORRA_MS.askAI(document.getElementById('ms-ai-input').value)">
+            <input class="ms-ai-input" id="ms-ai-input" placeholder="Ask about your measurements..." onkeydown="if(event.key==='Enter'&&!this.disabled)KORRA_MS.askAI(this.value)">
+            <button class="ms-ai-send" id="ms-ai-send" onclick="KORRA_MS.askAI(document.getElementById('ms-ai-input').value)">
               <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="22" y1="2" x2="11" y2="13"/><polygon points="22 2 15 22 11 13 2 9 22 2"/></svg>
             </button>
           </div>
@@ -333,7 +330,16 @@ window.KORRA_MS = {
       case 'compare': content = this.buildCompareView(); break;
       default: content = this.buildMetricsGrid();
     }
-    return summaryBar + content;
+    return summaryBar + content + this.buildNotesHTML();
+  },
+
+  buildNotesHTML() {
+    const d = this.data || {};
+    return `<div class="ms-notes-section">
+      <div class="ms-notes-label">CRAFTSMAN NOTES</div>
+      <textarea class="ms-notes-input" id="ms-notes-input" placeholder="Patterns, fabrics, or tailoring requirements..." oninput="this.style.height='auto';this.style.height=Math.min(this.scrollHeight,200)+'px'">${d.notes || ''}</textarea>
+      <button class="ms-notes-save" onclick="KORRA_MS.saveNotes()">Save Notes</button>
+    </div>`;
   },
 
   buildMetricsGrid() {
@@ -720,20 +726,26 @@ window.KORRA_MS = {
   closeAI() {
     this.aiOpen = false;
     document.getElementById('ms-ai-drawer')?.classList.remove('open');
+    if (this._aiLoading) this.cancelAI();
   },
   async askAI(prompt) {
-    if (!prompt?.trim()) return;
+    if (!prompt?.trim() || this._aiLoading) return;
     const body = document.getElementById('ms-ai-body');
     const input = document.getElementById('ms-ai-input');
+    const sendBtn = document.getElementById('ms-ai-send');
     if (!body) return;
     body.insertAdjacentHTML('beforeend', `<div class="ms-ai-message user">${prompt}</div>`);
-    if (input) input.value = '';
+    if (input) { input.value = ''; input.disabled = true; }
+    if (sendBtn) sendBtn.disabled = true;
     body.scrollTop = body.scrollHeight;
-    body.insertAdjacentHTML('beforeend', `<div class="ms-ai-message assistant" id="ms-ai-loading" style="animation:msPulse 1s infinite">Thinking...</div>`);
+    this._aiLoading = true;
+    this._aiAbort = new AbortController();
+    body.insertAdjacentHTML('beforeend', `<div class="ms-ai-message assistant" id="ms-ai-loading" style="animation:msPulse 1s infinite">Thinking... <button class="ms-ai-cancel" onclick="KORRA_MS.cancelAI()">Cancel</button></div>`);
     body.scrollTop = body.scrollHeight;
     try {
       const res = await fetch('/api/v2/ai/assist', {
         method: 'POST',
+        signal: this._aiAbort.signal,
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
           prompt,
@@ -748,10 +760,30 @@ window.KORRA_MS = {
       document.getElementById('ms-ai-loading')?.remove();
       body.insertAdjacentHTML('beforeend', `<div class="ms-ai-message assistant">${data.response || 'No response available.'}</div>`);
     } catch (e) {
+      if (e.name === 'AbortError') return;
       document.getElementById('ms-ai-loading')?.remove();
       body.insertAdjacentHTML('beforeend', `<div class="ms-ai-message assistant">AI assistant unavailable. Please try again later.</div>`);
     }
     body.scrollTop = body.scrollHeight;
+    if (input) input.disabled = false;
+    if (sendBtn) sendBtn.disabled = false;
+    this._aiLoading = false;
+    this._aiAbort = null;
+  },
+  cancelAI() {
+    if (this._aiAbort) this._aiAbort.abort();
+    document.getElementById('ms-ai-loading')?.remove();
+    const input = document.getElementById('ms-ai-input');
+    const sendBtn = document.getElementById('ms-ai-send');
+    if (input) input.disabled = false;
+    if (sendBtn) sendBtn.disabled = false;
+    this._aiLoading = false;
+    this._aiAbort = null;
+  },
+  newChat() {
+    const body = document.getElementById('ms-ai-body');
+    if (body) body.innerHTML = '';
+    document.getElementById('ms-ai-input')?.focus();
   },
 
   // ═══ EASE MULTIPLIERS ═══
@@ -915,5 +947,7 @@ window.KORRA_MS = {
     if (aiDrawer) aiDrawer.classList.remove('open');
     this.aiOpen = false;
     this.sheetExpanded = false;
+    this._aiLoading = false;
+    if (this._aiAbort) { this._aiAbort.abort(); this._aiAbort = null; }
   }
 };
