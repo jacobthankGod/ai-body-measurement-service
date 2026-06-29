@@ -574,6 +574,9 @@ window.KORRA_MS = {
         const tabs = document.querySelector('.ms-tabs');
         if (attire) attire.style.display = 'none';
         if (tabs) tabs.style.display = 'none';
+
+        const sheet = document.querySelector('.ms-sheet');
+        if (sheet) sheet.classList.add('ai-active');
       } else {
         body.style.overflow = '';
         body.style.display = '';
@@ -600,6 +603,9 @@ window.KORRA_MS = {
         const tabs = document.querySelector('.ms-tabs');
         if (attire) attire.style.display = '';
         if (tabs) tabs.style.display = '';
+
+        const sheet = document.querySelector('.ms-sheet');
+        if (sheet) sheet.classList.remove('ai-active');
       }
       const rightCol = document.querySelector('.ms-right-col');
       if (rightCol) rightCol.style.overflow = mode === 'ai' ? 'visible' : '';

@@ -803,6 +803,9 @@
 .ms-side-by-side .ms-sheet.expanded {
   height: auto !important;
 }
+.ms-side-by-side .ms-sheet.ai-active {
+  height: 100% !important;
+}
 .ms-side-by-side .ms-sheet-handle {
   display: none;
 }
