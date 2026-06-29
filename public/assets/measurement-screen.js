@@ -107,6 +107,24 @@ window.KORRA_MS = {
   baselineData: null,
   latestData: null,
 
+  // ═══ FAB INTELLIGENCE STATE ═══
+  _fabIntel: {
+    activityScore: 0.5,
+    lastInteraction: 0,
+    interactions: [],
+    heatmap: {},
+    lastReveal: 0,
+    sessionReveals: 0,
+    maxReveals: 4,
+    cooldownMs: 20000,
+    idleThresholdMs: 4000,
+    revealDurationMs: 5000,
+    _interval: null,
+    _revealTimeout: null,
+    _pulseTimeout: null,
+    _listeners: [],
+  },
+
   // ═══ ENTRY POINT ═══
   open(data) {
     if (typeof data === 'string') {
@@ -613,8 +631,12 @@ window.KORRA_MS = {
       body.innerHTML = this.buildSheetContent();
     }
     const fab = document.querySelector('#view-scanresult .ms-ai-fab');
-    if (fab) fab.style.display = mode === 'ai' ? 'none' : '';
+    if (fab) {
+      fab.style.display = mode === 'ai' ? 'none' : '';
+      if (mode === 'ai') fab.classList.remove('revealed', 'pulse');
+    }
     if (mode === 'compare') this.initCompareViewers();
+    if (mode !== 'ai') this._notifyPostAction();
   },
 
   // ═══ MEASUREMENT SELECTION ═══
@@ -632,6 +654,7 @@ window.KORRA_MS = {
       if (el.querySelector('.ms-metric-name')?.textContent === key) el.classList.add('active');
     });
     if (window.innerWidth <= 900) this.collapseSheet();
+    this._notifyPostAction();
   },
 
   // ═══ UNIT ═══
@@ -764,6 +787,8 @@ window.KORRA_MS = {
         this.viewerInstance.showMeasurementRings(this.data, MEASUREMENT_COLORS, MEASUREMENT_Y);
       }
     }
+    this._fabIntel._sessionStart = Date.now();
+    this._initFabIntelligence();
   },
 
   initCompareViewers() {
@@ -1010,6 +1035,7 @@ window.KORRA_MS = {
   },
 
   cleanup() {
+    this._destroyFabIntelligence();
     document.querySelector('main').style.overflow = '';
     this.active = false;
     this.data = null;
@@ -1020,5 +1046,188 @@ window.KORRA_MS = {
     this.sheetExpanded = false;
     this._aiLoading = false;
     if (this._aiAbort) { this._aiAbort.abort(); this._aiAbort = null; }
-  }
+  },
+
+  // ═══ FAB INTELLIGENCE ═══
+  _initFabIntelligence() {
+    const fi = this._fabIntel;
+    fi.activityScore = 0.5;
+    fi.lastInteraction = Date.now();
+    fi.interactions = [];
+    fi.heatmap = {};
+    fi.lastReveal = 0;
+    fi.sessionReveals = 0;
+
+    const throttle = (fn, ms) => {
+      let last = 0;
+      return (e) => {
+        const now = Date.now();
+        if (now - last < ms) return;
+        last = now;
+        fn(e);
+      };
+    };
+
+    const onInteract = (type) => (e) => {
+      this._trackInteraction(type, e);
+    };
+
+    const listeners = [
+      ['mousemove', throttle(onInteract('mouse'), 200)],
+      ['click', onInteract('click')],
+      ['scroll', onInteract('scroll')],
+      ['keydown', onInteract('key')],
+      ['touchstart', onInteract('touch')],
+    ];
+
+    listeners.forEach(([evt, fn]) => {
+      document.addEventListener(evt, fn, { passive: true });
+      fi._listeners.push([evt, fn]);
+    });
+
+    fi._interval = setInterval(() => {
+      this._evaluateFabState();
+    }, 1000);
+  },
+
+  _destroyFabIntelligence() {
+    const fi = this._fabIntel;
+    fi._listeners.forEach(([evt, fn]) => document.removeEventListener(evt, fn));
+    fi._listeners = [];
+    if (fi._interval) { clearInterval(fi._interval); fi._interval = null; }
+    if (fi._revealTimeout) { clearTimeout(fi._revealTimeout); fi._revealTimeout = null; }
+    if (fi._pulseTimeout) { clearTimeout(fi._pulseTimeout); fi._pulseTimeout = null; }
+    const fab = document.querySelector('#view-scanresult .ms-ai-fab');
+    if (fab) {
+      fab.classList.remove('revealed', 'pulse');
+    }
+  },
+
+  _trackInteraction(type, e) {
+    const fi = this._fabIntel;
+    const now = Date.now();
+    fi.lastInteraction = now;
+
+    const entry = { type, t: now };
+    if (e && e.target) {
+      entry.target = this._getElementSelector(e.target);
+      if (entry.target) {
+        fi.heatmap[entry.target] = (fi.heatmap[entry.target] || 0) + 1;
+      }
+    }
+    fi.interactions.push(entry);
+    if (fi.interactions.length > 50) fi.interactions.shift();
+
+    const isHighImpact = type === 'click' || type === 'key' || type === 'touch';
+    const delta = isHighImpact ? 0.5 : type === 'scroll' ? 0.3 : 0.1;
+    fi.activityScore = Math.min(1.0, fi.activityScore + delta);
+
+    if (type === 'click' && entry.target) {
+      const recent = fi.interactions.filter(i => i.type === 'click' && i.target === entry.target);
+      if (recent.length >= 2) {
+        const gap = recent[recent.length - 1].t - recent[recent.length - 2].t;
+        if (gap < 2000) this._notifyStuck();
+      }
+    }
+  },
+
+  _getElementSelector(el) {
+    if (!el || !el.tagName) return null;
+    if (el.classList.length > 0) {
+      const cls = Array.from(el.classList).find(c =>
+        c.startsWith('ms-') || c.startsWith('tab') || c === 'active'
+      );
+      if (cls) return el.tagName.toLowerCase() + '.' + cls;
+    }
+    if (el.id) return '#' + el.id;
+    return el.tagName.toLowerCase();
+  },
+
+  _evaluateFabState() {
+    if (this.viewMode === 'ai' || this.aiOpen) return;
+
+    const fi = this._fabIntel;
+    const now = Date.now();
+
+    fi.activityScore *= 0.7;
+    fi.activityScore = Math.max(0, fi.activityScore);
+
+    const fab = document.querySelector('#view-scanresult .ms-ai-fab');
+    if (!fab || fab.style.display === 'none') return;
+
+    if (fab.classList.contains('revealed')) {
+      return;
+    }
+
+    if (fi.sessionReveals >= fi.maxReveals) return;
+    if (now - fi.lastReveal < fi.cooldownMs) return;
+
+    const idle = now - fi.lastInteraction;
+    const isTyping = document.activeElement &&
+      (document.activeElement.tagName === 'INPUT' || document.activeElement.tagName === 'TEXTAREA');
+    const isDragging = document.querySelector('#ms-sheet-handle.dragging');
+
+    if (isTyping || isDragging) return;
+
+    const explorationDepth = Object.keys(fi.heatmap).length;
+    const postActionReveal = fi._pendingPostAction && now - fi._pendingPostAction > 2500;
+    const stuckReveal = fi._pendingStuck && now - fi._pendingStuck > 3000;
+    const idleReveal = idle > fi.idleThresholdMs && fi.activityScore < 0.3;
+    const milestoneReveal = !fi._everRevealed && now - (fi._sessionStart || now) > 20000;
+
+    if (postActionReveal) {
+      fi._pendingPostAction = null;
+      this._revealFab('post-action');
+    } else if (stuckReveal) {
+      fi._pendingStuck = null;
+      this._revealFab('stuck');
+    } else if (idleReveal) {
+      this._revealFab('idle');
+    } else if (milestoneReveal) {
+      this._revealFab('milestone');
+    }
+  },
+
+  _notifyPostAction() {
+    const fi = this._fabIntel;
+    if (fi.sessionReveals >= fi.maxReveals) return;
+    fi._pendingPostAction = Date.now();
+  },
+
+  _notifyStuck() {
+    const fi = this._fabIntel;
+    if (fi.sessionReveals >= fi.maxReveals) return;
+    fi._pendingStuck = Date.now();
+  },
+
+  _revealFab(source) {
+    const fi = this._fabIntel;
+    const now = Date.now();
+    fi.lastReveal = now;
+    fi.sessionReveals++;
+    fi._everRevealed = true;
+
+    const fab = document.querySelector('#view-scanresult .ms-ai-fab');
+    if (!fab) return;
+
+    fab.classList.add('pulse');
+    fi._pulseTimeout = setTimeout(() => fab.classList.remove('pulse'), 600);
+
+    setTimeout(() => {
+      if (Date.now() - fi.lastReveal > fi.cooldownMs - (fi.cooldownMs - fi.revealDurationMs)) return;
+      fab.classList.add('revealed');
+    }, 300);
+
+    fi._revealTimeout = setTimeout(() => {
+      this._hideFab();
+    }, fi.revealDurationMs + 300);
+  },
+
+  _hideFab() {
+    const fi = this._fabIntel;
+    const fab = document.querySelector('#view-scanresult .ms-ai-fab');
+    if (!fab) return;
+    fab.classList.remove('revealed');
+    if (fi._revealTimeout) { clearTimeout(fi._revealTimeout); fi._revealTimeout = null; }
+  },
 };

@@ -572,6 +572,38 @@
   opacity: 1;
 }
 
+/* ── INTELLIGENT REVEAL ── */
+.ms-ai-fab.revealed {
+  width: 140px;
+  padding: 0 18px 0 14px;
+  border-radius: 26px;
+  box-shadow: 0 6px 32px rgba(198, 255, 0, 0.45), 0 0 0 4px rgba(198, 255, 0, 0.1);
+  transform: translateY(-2px);
+}
+.ms-ai-fab.revealed .ms-ai-fab-label {
+  max-width: 80px;
+  opacity: 1;
+}
+.ms-ai-fab.pulse {
+  animation: fab-pulse 0.6s ease;
+}
+@keyframes fab-pulse {
+  0%, 100% { transform: scale(1); }
+  40% { transform: scale(1.1); }
+  60% { transform: scale(0.95); }
+  80% { transform: scale(1.04); }
+}
+.ms-ai-fab.revealed.pulse {
+  animation: fab-pulse-reveal 0.8s ease;
+}
+@keyframes fab-pulse-reveal {
+  0% { transform: scale(1); }
+  30% { transform: scale(1.12); }
+  50% { transform: scale(0.96) translateY(-2px); }
+  70% { transform: scale(1.05) translateY(-2px); }
+  100% { transform: translateY(-2px); }
+}
+
 /* ── AI VIEW (in-sheet) ── */
 .ms-ai-view {
   display: flex;
@@ -1149,6 +1181,10 @@
     height: 46px;
   }
   .ms-ai-fab:hover {
+    width: 120px;
+    padding: 0 14px 0 12px;
+  }
+  .ms-ai-fab.revealed {
     width: 120px;
     padding: 0 14px 0 12px;
   }
