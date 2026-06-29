@@ -46,8 +46,8 @@
   gap: 12px;
 }
 .ms-back-btn {
-  width: 36px;
-  height: 36px;
+  width: 28px;
+  height: 28px;
   border-radius: 10px;
   border: 1px solid var(--Glass-Border);
   background: var(--Glass);
@@ -83,8 +83,8 @@
   gap: 8px;
 }
 .ms-header-btn {
-  width: 36px;
-  height: 36px;
+  width: 28px;
+  height: 28px;
   border-radius: 10px;
   border: 1px solid var(--Glass-Border);
   background: var(--Glass);
@@ -747,15 +747,6 @@
   bottom: 24px;
   right: 24px;
 }
-.ms-layout-toggle {
-  display: none;
-}
-@media (min-width: 901px) {
-  .ms-layout-toggle {
-    display: flex;
-  }
-}
-
 /* ── SUMMARY BAR ── */
 .ms-summary-bar {
   display: flex;
@@ -763,20 +754,20 @@
   text-align: center;
   padding: 4px;
   margin: 0 0 6px;
-  background: rgba(255, 255, 255, 0.02);
-  border: 1px solid var(--Glass-Border);
+  background: var(--Mint);
+  border: none;
   border-radius: 12px;
 }
 .ms-summary-item { text-align: center; }
 .ms-summary-label {
   font-size: 10px;
-  color: var(--Neutral-500);
+  color: #000;
   font-weight: 700;
 }
 .ms-summary-value {
-  font-size: 14px;
+  font-size: 12px;
   font-weight: 900;
-  color: #fff;
+  color: #000;
   margin-top: 2px;
 }
 
@@ -1088,13 +1079,13 @@
 
 /* ── SHARE BUTTON (HEADER) ── */
 .ms-share-btn {
-  height: 36px;
-  padding: 0 16px;
+  height: 28px;
+  padding: 0 10px;
   border-radius: 10px;
   background: var(--Mint);
   color: var(--Teal-900);
   border: none;
-  font-size: 11px;
+  font-size: 10px;
   font-weight: 900;
   display: flex;
   align-items: center;

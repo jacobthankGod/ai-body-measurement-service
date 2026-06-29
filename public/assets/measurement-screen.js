@@ -129,7 +129,7 @@ window.KORRA_MS = {
     this.sheetExpanded = false;
     this.aiOpen = false;
     this._viewerInitialized = false;
-    this.sideBySide = localStorage.getItem('korra_ms_layout') === 'side' && window.innerWidth > 900;
+    this.sideBySide = window.innerWidth > 900;
     this._previousTab = document.querySelector('.tab-view.active')?.id?.replace('view-', '') || 'vault';
     this.activeContext = 'standard';
     this.activeMaterial = 'woven';
@@ -195,7 +195,7 @@ window.KORRA_MS = {
         <div class="ms-header">
           <div class="ms-header-left">
             <button class="ms-back-btn" onclick="KORRA_MS.goBack()">
-              <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="15 18 9 12 15 6"/></svg>
+              <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="15 18 9 12 15 6"/></svg>
             </button>
             <div class="ms-scan-info">
               <div class="ms-scan-title">${name}</div>
@@ -209,26 +209,24 @@ window.KORRA_MS = {
             </div>
             <button class="ms-ease-btn ${this.showEased ? 'active' : ''}" onclick="KORRA_MS.toggleEase()" title="${this.showEased ? 'Showing eased values' : 'Showing raw values'}">${this.showEased ? 'Eased' : 'Raw'}</button>
             <button class="ms-share-btn" onclick="KORRA_MS.openShareScan()" title="Share scan">
-              <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="18" cy="5" r="3"/><circle cx="6" cy="12" r="3"/><circle cx="18" cy="19" r="3"/><line x1="8.59" y1="13.51" x2="15.42" y2="17.49"/><line x1="15.41" y1="6.51" x2="8.59" y2="10.49"/></svg>
+              <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="18" cy="5" r="3"/><circle cx="6" cy="12" r="3"/><circle cx="18" cy="19" r="3"/><line x1="8.59" y1="13.51" x2="15.42" y2="17.49"/><line x1="15.41" y1="6.51" x2="8.59" y2="10.49"/></svg>
               Share
             </button>
             <button class="ms-header-btn" onclick="KORRA_MS.exportPDF()" title="Export PDF">
-              <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/><line x1="16" y1="13" x2="8" y2="13"/><line x1="16" y1="17" x2="8" y2="17"/><polyline points="10 9 9 9 8 9"/></svg>
+              <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/><line x1="16" y1="13" x2="8" y2="13"/><line x1="16" y1="17" x2="8" y2="17"/><polyline points="10 9 9 9 8 9"/></svg>
             </button>
             <button class="ms-header-btn" onclick="KORRA_MS.downloadOBJ()" title="Download OBJ">
-              <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" y1="15" x2="12" y2="3"/></svg>
+              <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" y1="15" x2="12" y2="3"/></svg>
             </button>
             <button class="ms-header-btn ${this.overlaysVisible ? 'active' : ''}" onclick="KORRA_MS.toggleOverlays()" title="Toggle measurement lines">
-              <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"/><circle cx="12" cy="12" r="3"/></svg>
+              <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"/><circle cx="12" cy="12" r="3"/></svg>
             </button>
-            <button class="ms-header-btn ms-layout-toggle" onclick="KORRA_MS.toggleLayout()" title="Toggle side-by-side view">
-              <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="3" width="18" height="18" rx="2" ry="2"/><line x1="12" y1="3" x2="12" y2="21"/></svg>
-            </button>
+
             <button class="ms-header-btn" onclick="KORRA_MS.resetView()" title="Reset view">
-              <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="23 4 23 10 17 10"/><path d="M20.49 15a9 9 0 1 1-2.12-9.36L23 10"/></svg>
+              <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="23 4 23 10 17 10"/><path d="M20.49 15a9 9 0 1 1-2.12-9.36L23 10"/></svg>
             </button>
             <button class="ms-header-btn" onclick="KORRA_MS.goBack()" title="Close">
-              <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg>
+              <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg>
             </button>
           </div>
         </div>
@@ -240,15 +238,11 @@ window.KORRA_MS = {
         <div class="ms-tabs">
           <button class="ms-tab ${this.viewMode === 'avatar' ? 'active' : ''}" onclick="KORRA_MS.switchView('avatar')">
             <svg class="ms-tab-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"/><circle cx="12" cy="7" r="4"/></svg>
-            Avatar
+            Measurements
           </button>
           <button class="ms-tab ${this.viewMode === 'sizes' ? 'active' : ''}" onclick="KORRA_MS.switchView('sizes')">
             <svg class="ms-tab-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M20.59 13.41l-7.17 7.17a2 2 0 0 1-2.83 0L2 12V2h10l8.59 8.59a2 2 0 0 1 0 2.82z"/><line x1="7" y1="7" x2="7.01" y2="7"/></svg>
             Sizes
-          </button>
-          <button class="ms-tab ${this.viewMode === 'metrics' ? 'active' : ''}" onclick="KORRA_MS.switchView('metrics')">
-            <svg class="ms-tab-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M3 3v18h18"/><path d="M18.7 8l-5.1 5.2-2.8-2.7L7 14.3"/></svg>
-            Metrics
           </button>
           <button class="ms-tab ${this.viewMode === 'shape' ? 'active' : ''}" onclick="KORRA_MS.switchView('shape')">
             <svg class="ms-tab-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"/><path d="M8 14s1.5 2 4 2 4-2 4-2"/><line x1="9" y1="9" x2="9.01" y2="9"/><line x1="15" y1="9" x2="15.01" y2="9"/></svg>
@@ -261,9 +255,6 @@ window.KORRA_MS = {
         </div>
         <div class="ms-sheet" id="ms-sheet">
           <div class="ms-sheet-handle" id="ms-sheet-handle"></div>
-          <div class="ms-sheet-header">
-            <div class="ms-sheet-title" id="ms-sheet-title">Measurements</div>
-          </div>
           <div class="ms-sheet-body" id="ms-sheet-body">${this.buildSheetContent()}</div>
         </div>
         <button class="ms-ai-fab" onclick="KORRA_MS.openAI()" title="Ask AI">
@@ -330,7 +321,7 @@ window.KORRA_MS = {
     </div>`;
     let content;
     switch (this.viewMode) {
-      case 'avatar': case 'metrics': content = this.buildMetricsGrid(); break;
+      case 'avatar': content = this.buildMetricsGrid(); break;
       case 'sizes': content = this.buildSizesGrid(); break;
       case 'shape': content = this.buildShapeCard(); break;
       case 'compare': content = this.buildCompareView(); break;
@@ -514,7 +505,6 @@ window.KORRA_MS = {
   // ═══ PARTIAL RENDER: measurements only (keeps attire selector alive) ═══
   renderMeasurements() {
     const body = document.getElementById('ms-sheet-body');
-    const title = document.getElementById('ms-sheet-title');
     if (!body) return;
     const summaryBar = `<div class="ms-summary-bar">
       <div class="ms-summary-item"><div class="ms-summary-label">HEIGHT</div><div class="ms-summary-value">${this.data?.height ? this.data.height + ' cm' : '—'}</div></div>
@@ -523,17 +513,13 @@ window.KORRA_MS = {
     </div>`;
     let content;
     switch (this.viewMode) {
-      case 'avatar': case 'metrics': content = this.buildMetricsGrid(); break;
+      case 'avatar': content = this.buildMetricsGrid(); break;
       case 'sizes': content = this.buildSizesGrid(); break;
       case 'shape': content = this.buildShapeCard(); break;
       case 'compare': content = this.buildCompareView(); break;
       default: content = this.buildMetricsGrid();
     }
     body.innerHTML = summaryBar + content;
-    if (title) {
-      const titles = { avatar: 'Measurements', sizes: 'Size Chart', metrics: 'All Metrics', shape: 'Body Shape', compare: 'Compare Scans' };
-      title.textContent = titles[this.viewMode] || 'Measurements';
-    }
     if (this.viewMode === 'compare') this.initCompareViewers();
     this.updateBadge();
   },
@@ -544,12 +530,7 @@ window.KORRA_MS = {
     document.querySelectorAll('#view-scanresult .ms-tab').forEach(t => t.classList.remove('active'));
     document.querySelector(`#view-scanresult .ms-tab[onclick*="${mode}"]`)?.classList.add('active');
     const body = document.getElementById('ms-sheet-body');
-    const title = document.getElementById('ms-sheet-title');
     if (body) body.innerHTML = this.buildSheetContent();
-    if (title) {
-      const titles = { avatar: 'Measurements', sizes: 'Size Chart', metrics: 'All Metrics', shape: 'Body Shape', compare: 'Compare Scans' };
-      title.textContent = titles[mode] || 'Measurements';
-    }
     if (mode === 'compare') this.initCompareViewers();
   },
 
@@ -596,29 +577,6 @@ window.KORRA_MS = {
     }
   },
 
-  // ═══ LAYOUT ═══
-  toggleLayout() {
-    if (window.innerWidth <= 900) return;
-    const root = document.querySelector('#view-scanresult .ms-root');
-    if (!root) return;
-    this.sideBySide = !this.sideBySide;
-    root.classList.toggle('ms-side-by-side', this.sideBySide);
-    const btn = document.querySelector('#view-scanresult .ms-header-btn[onclick*="toggleLayout"]');
-    if (btn) btn.classList.toggle('active', this.sideBySide);
-    if (this.sideBySide) {
-      this._wrapRightCol();
-    } else {
-      this._unwrapRightCol();
-    }
-    if (this.viewerInstance) {
-      this.viewerInstance.renderer?.setSize(
-        this.viewerInstance.renderer.domElement.parentElement.clientWidth,
-        this.viewerInstance.renderer.domElement.parentElement.clientHeight
-      );
-    }
-    localStorage.setItem('korra_ms_layout', this.sideBySide ? 'side' : 'stacked');
-  },
-
   _wrapRightCol() {
     const root = document.querySelector('#view-scanresult .ms-root');
     if (!root || root.querySelector('.ms-right-col')) return;
@@ -632,21 +590,6 @@ window.KORRA_MS = {
     if (attire) rc.appendChild(attire);
     rc.appendChild(tabs);
     rc.appendChild(sheet);
-  },
-
-  _unwrapRightCol() {
-    const root = document.querySelector('#view-scanresult .ms-root');
-    if (!root) return;
-    const rc = root.querySelector('.ms-right-col');
-    if (!rc) return;
-    const tabs = rc.querySelector('.ms-tabs');
-    const sheet = rc.querySelector('.ms-sheet');
-    const attire = rc.querySelector('#ms-attire-selector');
-    rc.remove();
-    const anchor = root.querySelector('.ms-ai-fab');
-    if (attire) root.insertBefore(attire, anchor);
-    if (sheet) root.insertBefore(sheet, anchor);
-    if (tabs) root.insertBefore(tabs, sheet);
   },
 
   resetView() {
