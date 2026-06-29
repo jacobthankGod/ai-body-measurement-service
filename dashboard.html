@@ -4466,7 +4466,8 @@ window.generateDeepLink = async () => {
       };
 
       const selectAttire = (id) => {
-        if (id === currentId) return;
+        if (id === currentId) { console.log(`▶ selectAttire("${id}") SKIP (already current)`); return; }
+        console.log(`▶ selectAttire("${id}") currentId was="${currentId}"`);
         currentId = id;
         window.ACTIVE_CONTEXT = id;
         const a = window.getAttire(id);
@@ -4477,9 +4478,15 @@ window.generateDeepLink = async () => {
         if (window.KORRA_VIZ) window.KORRA_VIZ.applyHeatmap(id);
         window.showToast('Garment context updated', a.name + ' (' + a.subtitle + ')');
         if (window.LAST_MEASUREMENT_DATA) {
-          renderMeasurementGrids(window.LAST_MEASUREMENT_DATA, window.ACTIVE_CONTEXT, window.ACTIVE_MATERIAL);
+          console.log('  calling renderMeasurementGrids...');
+          try {
+            renderMeasurementGrids(window.LAST_MEASUREMENT_DATA, window.ACTIVE_CONTEXT, window.ACTIVE_MATERIAL);
+            console.log('  renderMeasurementGrids OK');
+          } catch(e) { console.warn('  renderMeasurementGrids ERROR:', e); }
         }
+        console.log('  calling onChange...');
         onChange(id);
+        console.log('  selectAttire done');
       };
 
       const closeAllSelectors = () => {

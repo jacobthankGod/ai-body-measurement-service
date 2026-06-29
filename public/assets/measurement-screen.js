@@ -331,6 +331,7 @@ window.KORRA_MS = {
   },
 
   buildMetricsGrid() {
+    console.log(`  buildMetricsGrid() gender=${this.data?.gender} unit=${this.unit}`);
     const m = this.data?.measurements || {};
     const gender = (this.data?.gender || 'male').toLowerCase();
     const factor = this.unit === 'in' ? 0.393701 : 1;
@@ -504,8 +505,9 @@ window.KORRA_MS = {
 
   // ═══ PARTIAL RENDER: measurements only (keeps attire selector alive) ═══
   renderMeasurements() {
+    console.log(`▶ renderMeasurements() viewMode=${this.viewMode}`);
     const body = document.getElementById('ms-sheet-body');
-    if (!body) return;
+    if (!body) { console.warn('  renderMeasurements: #ms-sheet-body NOT FOUND'); return; }
     const summaryBar = `<div class="ms-summary-bar">
       <div class="ms-summary-item"><div class="ms-summary-label">HEIGHT</div><div class="ms-summary-value">${this.data?.height ? this.data.height + ' cm' : '—'}</div></div>
       <div class="ms-summary-item"><div class="ms-summary-label">SHAPE</div><div class="ms-summary-value">${this.data?.body_shape || 'Standard'}</div></div>
@@ -755,16 +757,19 @@ window.KORRA_MS = {
       woven: 1.0, knit: 0.85, starch_bazin: 1.1, technical: 0.9
     };
     const mat = materialCoeffs[this.activeMaterial] || 1.0;
-    return base * mat;
+    const result = base * mat;
+    console.log(`  getEase("${key}") → ctx="${this.activeContext}" entry=${!!entry} base=${base} mat=${mat} result=${result}`);
+    return result;
   },
 
   setContext(ctx) {
+    console.log(`▶ setContext("${ctx}")`);
     this.activeContext = ctx;
     if ("vibrate" in navigator) navigator.vibrate(50);
     if (window.KORRA_VIZ) window.KORRA_VIZ.applyHeatmap(ctx);
-    // Update combobox if exists
     if (this._attireSelector) this._attireSelector.select(ctx);
     this.renderMeasurements();
+    console.log('  setContext done');
   },
 
   setMaterial(mat) {
