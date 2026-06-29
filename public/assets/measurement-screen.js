@@ -599,6 +599,9 @@ window.KORRA_MS = {
 
         const sheet = document.querySelector('.ms-sheet');
         if (sheet) sheet.classList.add('ai-active');
+
+        const bottomNav = document.querySelector('.sidebar-nav');
+        if (bottomNav) bottomNav.style.display = 'none';
       } else {
         body.style.overflow = '';
         body.style.display = '';
@@ -628,6 +631,9 @@ window.KORRA_MS = {
 
         const sheet = document.querySelector('.ms-sheet');
         if (sheet) sheet.classList.remove('ai-active');
+
+        const bottomNav = document.querySelector('.sidebar-nav');
+        if (bottomNav) bottomNav.style.display = '';
       }
       const rightCol = document.querySelector('.ms-right-col');
       if (rightCol) rightCol.style.overflow = mode === 'ai' ? 'visible' : '';
@@ -1060,6 +1066,8 @@ window.KORRA_MS = {
 
   cleanup() {
     this._destroyFabIntelligence();
+    const bottomNav = document.querySelector('.sidebar-nav');
+    if (bottomNav) bottomNav.style.display = '';
     document.querySelector('main').style.overflow = '';
     this.active = false;
     this.data = null;

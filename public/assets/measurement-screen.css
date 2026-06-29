@@ -1239,6 +1239,57 @@
     height: auto !important;
     flex: 2 1 auto;
   }
+  /* ── AI VIEW FULL-SCREEN ON MOBILE ── */
+  .ms-ai-view {
+    position: fixed;
+    top: 0;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    z-index: 999;
+    background: #0A0A0A;
+    padding: 12px 16px;
+    padding-top: max(12px, env(safe-area-inset-top));
+  }
+  .ms-ai-view .ms-ai-topbar {
+    padding-top: 8px;
+    margin-bottom: 8px;
+  }
+  .ms-ai-view .ms-ai-back {
+    font-size: 12px;
+    padding: 8px 14px;
+  }
+  .ms-ai-view .ms-ai-prompt-bar {
+    padding: 0 0 8px;
+    gap: 6px;
+  }
+  .ms-ai-view .ms-ai-prompt-btn {
+    font-size: 10px;
+    padding: 5px 10px;
+  }
+  .ms-ai-view .ms-ai-body {
+    padding: 8px 0 4px;
+    gap: 12px;
+  }
+  .ms-ai-view .ms-ai-input-bar {
+    position: sticky;
+    bottom: 0;
+    padding: 10px 12px;
+    margin-bottom: max(0px, env(safe-area-inset-bottom));
+    border-radius: 20px;
+  }
+  .ms-ai-view .ms-ai-input {
+    font-size: 14px;
+    padding: 10px 14px;
+  }
+  .ms-ai-view .ms-ai-send {
+    width: 36px;
+    height: 36px;
+  }
+  .ms-ai-view .ms-ai-message {
+    font-size: 13px;
+    padding: 10px 14px;
+  }
 }
 
 /* ── SHARE BUTTON (HEADER) ── */
