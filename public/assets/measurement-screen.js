@@ -154,6 +154,8 @@ window.KORRA_MS = {
         this._wrapRightCol();
       }
     }
+    // Suppress page scroll — only sheet body scrolls
+    document.querySelector('main').style.overflow = 'hidden';
     // Switch tab FIRST so canvas has dimensions before initViewer
     window.switchTab('scanresult');
     this.initViewer();
@@ -942,6 +944,7 @@ window.KORRA_MS = {
   },
 
   cleanup() {
+    document.querySelector('main').style.overflow = '';
     this.active = false;
     this.data = null;
     if (this.viewerInstance && this.viewerInstance !== window.KORRA_VIZ) {
