@@ -109,3 +109,9 @@
 5. **PVE-T-SC validation done (2.16cm mean error)** — measurement error is from T-pose mismatch, not shape prediction
 6. Add trimesh as optional dependency for better plane-mesh intersection
 7. **Calibration integrated (Fusion MAE 7.2cm)** — Waist -39%, Chest -38%, Hip -34% improvement; needs per-quantile factors with more GT data
+
+### Research Completed (2026-06-29)
+- Deep tolerance research completed for all ~30 remaining attires (20+ web sources: tailor shops, size charts, pattern reviews, cultural garment guides)
+- **5 corrections applied across frontend + backend**: Hawaiian Shirt 1.08→1.1, Abaya off 15→18, Vyshyvanka 1.08→1.15, Flamenco Dress 1.3→1.05, Anarkali 1.2→1.12
+- All 104 entries cross-validated against research; 99 confirmed within acceptable ranges
+- Key findings: Vyshyvanka size charts show 18-20% ease; Flamenco bodice has "practically no ease"; Anarkali tailors add 2-3" ease (8-12%); Pollera 4-8 varas fabric = 30%+ volume; Gho bloused at waist = 30%+ volume
