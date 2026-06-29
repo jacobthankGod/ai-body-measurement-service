@@ -622,10 +622,12 @@ window.KORRA_MS = {
     if (!root || root.querySelector('.ms-right-col')) return;
     const tabs = root.querySelector('.ms-tabs');
     const sheet = root.querySelector('.ms-sheet');
+    const attire = root.querySelector('#ms-attire-selector');
     if (!tabs || !sheet) return;
     const rc = document.createElement('div');
     rc.className = 'ms-right-col';
     root.insertBefore(rc, sheet);
+    if (attire) rc.appendChild(attire);
     rc.appendChild(tabs);
     rc.appendChild(sheet);
   },
@@ -637,8 +639,10 @@ window.KORRA_MS = {
     if (!rc) return;
     const tabs = rc.querySelector('.ms-tabs');
     const sheet = rc.querySelector('.ms-sheet');
+    const attire = rc.querySelector('#ms-attire-selector');
     rc.remove();
     const anchor = root.querySelector('.ms-ai-fab');
+    if (attire) root.insertBefore(attire, anchor);
     if (sheet) root.insertBefore(sheet, anchor);
     if (tabs) root.insertBefore(tabs, sheet);
   },

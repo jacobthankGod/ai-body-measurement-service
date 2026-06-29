@@ -697,7 +697,7 @@
   height: calc(100vh - 80px);
   min-width: 0;
   border-left: 1px solid var(--Glass-Border);
-  overflow: hidden;
+  overflow: visible;
 }
 .ms-side-by-side .ms-tabs {
   order: 0;
