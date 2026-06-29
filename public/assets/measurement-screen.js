@@ -125,6 +125,9 @@ window.KORRA_MS = {
     _listeners: [],
   },
 
+  // ═══ AI CHAT HISTORY ═══
+  _aiChatHistory: [],
+
   // ═══ ENTRY POINT ═══
   open(data) {
     if (typeof data === 'string') {
@@ -845,12 +848,32 @@ window.KORRA_MS = {
           body_shape: this.data?.body_shape || 'Standard',
           size_recommendation: this.data?.size_recommendation || 'M',
           height: this.data?.height,
-          gender: this.data?.gender
+          gender: this.data?.gender,
+          client_name: this.data?.client_name || null,
+          scan_date: this.data?.created_at || null,
+          active_attire: this.activeContext,
+          active_material: this.activeMaterial,
+          show_eased: this.showEased,
+          selected_measurement: this.selectedMeasurement,
+          unit_preference: this.unit,
+          notes: this.data?.notes || null,
+          scan_history: (this.compareHistory || [])
+            .filter(s => s !== this.data)
+            .slice(0, 5)
+            .map(s => ({
+              date: s.created_at,
+              measurements: s.measurements,
+              body_shape: s.body_shape,
+              size: s.size_recommendation,
+            })),
+          chat_history: (this._aiChatHistory || []).slice(-10),
         })
       });
       const data = await res.json();
       document.getElementById('ms-ai-loading')?.remove();
       body.insertAdjacentHTML('beforeend', `<div class="ms-ai-message assistant">${data.response || 'No response available.'}</div>`);
+      this._aiChatHistory.push({ role: 'user', content: prompt });
+      this._aiChatHistory.push({ role: 'assistant', content: data.response || '' });
     } catch (e) {
       if (e.name === 'AbortError') return;
       document.getElementById('ms-ai-loading')?.remove();
@@ -875,6 +898,7 @@ window.KORRA_MS = {
   newChat() {
     const body = document.getElementById('ms-ai-body');
     if (body) body.innerHTML = '';
+    this._aiChatHistory = [];
     document.getElementById('ms-ai-input')?.focus();
   },
 
