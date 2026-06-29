@@ -2594,8 +2594,11 @@ msg.textContent = feedback; msg.style.background = aligned ? "var(--Mint)" : "rg
 
       // Update URL hash without causing a page jump
       if (!IS_INITIALIZING) {
+          const currentHash = window.location.hash.replace('#', '');
+          const existingModal = new URLSearchParams(currentHash.split('?')[1] || '').get('modal');
           const scanId = (id === 'scanresult' && window.KORRA_MS?.data?.id) ? '/' + window.KORRA_MS.data.id : '';
-          history.replaceState(null, null, '#' + id + scanId);
+          const modalSuffix = existingModal ? '?modal=' + existingModal : '';
+          history.replaceState(null, null, '#' + id + scanId + modalSuffix);
       }
 
       // UI Polish: Scroll content to top on tab switch
@@ -2606,7 +2609,7 @@ msg.textContent = feedback; msg.style.background = aligned ? "var(--Mint)" : "rg
         const resultsCard = document.getElementById('measurementResultsCard');
         if (resultsCard) resultsCard.style.display = 'none';
       }
-      if (id === 'settings' || id === 'billing' || id === 'overview') window.loadSettings();
+      if (!IS_INITIALIZING && (id === 'settings' || id === 'billing' || id === 'overview')) window.loadSettings();
       if (id === 'passports') window.renderPassports();
       if (id === 'enterprise') window.renderEnterpriseInsights();
 
@@ -2626,6 +2629,7 @@ msg.textContent = feedback; msg.style.background = aligned ? "var(--Mint)" : "rg
     };
 
 window.loadSettings = async () => {
+      try {
       const { data: profile } = await window.KORRA_DB.from('profiles').select('*').eq('id', userId).single();
       if (profile) {
         // Auto-provision API key via backend (creates api_keys entry if missing)
@@ -2728,55 +2732,67 @@ window.loadSettings = async () => {
             const dropdownEnt = document.getElementById('dropdownEnterprise');
             if (dropdownEnt) dropdownEnt.style.display = 'flex';
         }
+      }
 
-        // INITIAL ROUTING (Only runs once on load)
-        if (IS_INITIALIZING) {
-            const fullHash = window.location.hash.replace('#', '');
-            const modalParam = new URLSearchParams(fullHash.split('?')[1] || '').get('modal');
-            const hash = fullHash.split('?')[0];
+      // INITIAL ROUTING (Only runs once on load) — runs regardless of profile success
+      if (IS_INITIALIZING) {
+          const fullHash = window.location.hash.replace('#', '');
+          const modalParam = new URLSearchParams(fullHash.split('?')[1] || '').get('modal');
+          const hash = fullHash.split('?')[0];
 
-            const restoreModal = () => {
-                if (modalParam && document.getElementById(modalParam)) {
-                    document.getElementById(modalParam).classList.add('active');
-                    if (modalParam === 'shareScanModal' && window.KORRA_MS?.data) {
-                        document.getElementById('shareScanName').value = window.KORRA_MS.data.client_name || '';
-                    }
-                }
-            };
+          const restoreModal = () => {
+              if (modalParam && document.getElementById(modalParam)) {
+                  document.getElementById(modalParam).classList.add('active');
+                  if (modalParam === 'shareScanModal' && window.KORRA_MS?.data) {
+                      document.getElementById('shareScanName').value = window.KORRA_MS.data.client_name || '';
+                  }
+              }
+          };
 
-            if (hash.startsWith('scanresult/')) {
-                const scanId = hash.split('/')[1];
-                if (scanId && window.KORRA_MS) {
-                    window.KORRA_DB.from('measurements').select('*').eq('id', scanId).single().then(({ data, error }) => {
-                        if (data && !error) {
-                            window.KORRA_MS.open(data);
-                            setTimeout(restoreModal, 50);
-                        } else {
-                            window.switchTab('overview'); restoreModal();
-                        }
-                    });
-                } else {
-                    window.switchTab('overview'); restoreModal();
-                }
-            } else if (hash && document.getElementById('view-' + hash)) {
-                window.switchTab(hash);
-                restoreModal();
-            } else {
-                window.switchTab('overview');
-                restoreModal();
-            }
+          if (hash.startsWith('scanresult/')) {
+              const scanId = hash.split('/')[1];
+              if (scanId && window.KORRA_MS) {
+                  window.KORRA_DB.from('measurements').select('*').eq('id', scanId).single().then(({ data, error }) => {
+                      if (data && !error) {
+                          window.KORRA_MS.open(data);
+                          setTimeout(restoreModal, 50);
+                      } else {
+                          window.switchTab('overview'); restoreModal();
+                      }
+                  });
+              } else {
+                  window.switchTab('overview'); restoreModal();
+              }
+          } else if (hash && document.getElementById('view-' + hash)) {
+              window.switchTab(hash);
+              restoreModal();
+          } else {
+              window.switchTab('overview');
+              restoreModal();
+          }
 
-            // FORCE INITIAL PREVIEW SIZE FOR ALL USERS (Fixes jitter)
-            setTimeout(() => window.setPreviewSize('mobile'), 100);
+          // FORCE INITIAL PREVIEW SIZE FOR ALL USERS (Fixes jitter)
+          setTimeout(() => window.setPreviewSize('mobile'), 100);
 
-            IS_INITIALIZING = false;
-        }
+          IS_INITIALIZING = false;
       }
 
       const { data: txs } = await window.KORRA_DB.from('transactions').select('*').eq('user_id', userId).order('created_at', { ascending: false });
       if (txs && document.getElementById('billingHistoryBody')) {
           window.renderInvoices(txs);
       }
+    } catch (e) {
+      console.error('[PERSISTENCE] loadSettings error:', e);
+      if (IS_INITIALIZING) {
+        const fullHash = window.location.hash.replace('#', '');
+        const modalParam = new URLSearchParams(fullHash.split('?')[1] || '').get('modal');
+        window.switchTab('overview');
+        if (modalParam && document.getElementById(modalParam)) {
+          document.getElementById(modalParam).classList.add('active');
+        }
+        IS_INITIALIZING = false;
+      }
+    }
     };
 
     async function fetchHistory() {
@@ -3396,6 +3412,61 @@ window.loadSettings = async () => {
       fetchHistory(); await window.loadSettings(); document.getElementById('loadingOverlay').style.display = 'none';
       if (window.KORRA_VIZ && window.innerWidth > 900 && !document.getElementById('view-scanresult')?.classList.contains('active')) {
         window.KORRA_VIZ.init('dashboard-3d-viewport');
+      }
+
+      // Silent promise rejection listener for debugging persistence issues
+      window.addEventListener('unhandledrejection', (e) => {
+        console.warn('[PERSISTENCE] Unhandled promise rejection:', e.reason?.message || e.reason);
+      });
+
+      // Hashchange listener — survives page reload in all cases
+      window.addEventListener('hashchange', () => {
+        const fullHash = window.location.hash.replace('#', '');
+        const modalParam = new URLSearchParams(fullHash.split('?')[1] || '').get('modal');
+        const hash = fullHash.split('?')[0];
+
+        const restoreModal = () => {
+          if (modalParam && document.getElementById(modalParam)) {
+            document.getElementById(modalParam).classList.add('active');
+            if (modalParam === 'shareScanModal' && window.KORRA_MS?.data) {
+              document.getElementById('shareScanName').value = window.KORRA_MS.data.client_name || '';
+            }
+          }
+        };
+
+        if (hash.startsWith('scanresult/')) {
+          const scanId = hash.split('/')[1];
+          if (scanId && window.KORRA_MS) {
+            window.KORRA_DB.from('measurements').select('*').eq('id', scanId).single().then(({ data, error }) => {
+              if (data && !error) {
+                window.KORRA_MS.open(data);
+                setTimeout(restoreModal, 50);
+              } else {
+                window.switchTab('overview');
+                restoreModal();
+              }
+            });
+          } else {
+            window.switchTab('overview');
+            restoreModal();
+          }
+        } else if (hash && document.getElementById('view-' + hash)) {
+          window.switchTab(hash);
+          restoreModal();
+        } else {
+          window.switchTab('overview');
+          restoreModal();
+        }
+      });
+
+      // Safety net: restore modal from URL hash after full init
+      const fullHash = window.location.hash.replace('#', '');
+      const modalParam = new URLSearchParams(fullHash.split('?')[1] || '').get('modal');
+      if (modalParam && document.getElementById(modalParam) && !document.getElementById(modalParam).classList.contains('active')) {
+        document.getElementById(modalParam).classList.add('active');
+        if (modalParam === 'shareScanModal' && window.KORRA_MS?.data) {
+          document.getElementById('shareScanName').value = window.KORRA_MS.data.client_name || '';
+        }
       }
     }
 
