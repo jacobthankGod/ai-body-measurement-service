@@ -207,7 +207,13 @@ window.KORRA_MS = {
               <button class="ms-unit-btn ${this.unit === 'cm' ? 'active' : ''}" onclick="KORRA_MS.setUnit('cm')">CM</button>
               <button class="ms-unit-btn ${this.unit === 'in' ? 'active' : ''}" onclick="KORRA_MS.setUnit('in')">IN</button>
             </div>
-            <button class="ms-ease-btn ${this.showEased ? 'active' : ''}" onclick="KORRA_MS.toggleEase()" title="${this.showEased ? 'Showing eased values' : 'Showing raw values'}">${this.showEased ? 'Eased' : 'Raw'}</button>
+            <div class="ms-ease-toggle" onclick="KORRA_MS.toggleEase()" title="Toggle between raw and eased values">
+              <span class="ms-ease-label ${!this.showEased ? 'active' : ''}">Raw</span>
+              <div class="ms-ease-track ${this.showEased ? 'active' : ''}">
+                <div class="ms-ease-thumb ${this.showEased ? 'right' : ''}"></div>
+              </div>
+              <span class="ms-ease-label ${this.showEased ? 'active' : ''}">Eased</span>
+            </div>
             <button class="ms-share-btn" onclick="KORRA_MS.openShareScan()" title="Share scan">
               <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="18" cy="5" r="3"/><circle cx="6" cy="12" r="3"/><circle cx="18" cy="19" r="3"/><line x1="8.59" y1="13.51" x2="15.42" y2="17.49"/><line x1="15.41" y1="6.51" x2="8.59" y2="10.49"/></svg>
               Share
@@ -788,11 +794,17 @@ window.KORRA_MS = {
     localStorage.setItem('korra_showEased', this.showEased);
     this.updateBadge();
     this.renderMeasurements();
-    const btn = document.querySelector('#view-scanresult .ms-ease-btn');
-    if (btn) {
-      btn.textContent = this.showEased ? 'Eased' : 'Raw';
-      btn.title = this.showEased ? 'Showing eased values' : 'Showing raw values';
-      btn.classList.toggle('active', this.showEased);
+    const toggle = document.querySelector('#view-scanresult .ms-ease-toggle');
+    if (toggle) {
+      const labels = toggle.querySelectorAll('.ms-ease-label');
+      const track = toggle.querySelector('.ms-ease-track');
+      const thumb = toggle.querySelector('.ms-ease-thumb');
+      if (labels.length >= 2) {
+        labels[0].classList.toggle('active', !this.showEased);
+        labels[1].classList.toggle('active', this.showEased);
+      }
+      if (track) track.classList.toggle('active', this.showEased);
+      if (thumb) thumb.classList.toggle('right', this.showEased);
     }
   },
 
