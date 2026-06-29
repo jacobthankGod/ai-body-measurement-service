@@ -151,7 +151,7 @@
 
 /* ── 3D VIEWER AREA ── */
 .ms-viewer {
-  flex: 0 0 180px;
+  flex: 0 0 120px;
   position: relative;
   min-height: 120px;
   background: #D4D4D4;
@@ -223,7 +223,7 @@
   display: flex;
   gap: 4px;
   padding: 0 16px;
-  height: 44px;
+  height: 36px;
   flex-shrink: 0;
   background: var(--Obsidian-Layer);
   border-top: 1px solid var(--Glass-Border);
@@ -762,7 +762,7 @@
   justify-content: space-around;
   text-align: center;
   padding: 8px;
-  margin: 0 0 12px;
+  margin: 0 0 6px;
   background: rgba(255, 255, 255, 0.02);
   border: 1px solid var(--Glass-Border);
   border-radius: 12px;
@@ -781,7 +781,7 @@
 }
 
 /* ── 3-COLUMN METRICS GRID ── */
-.ms-metrics-section { margin-bottom: 10px; }
+.ms-metrics-section { margin-bottom: 6px; }
 .ms-metrics-section-header {
   font-size: 10px;
   font-weight: 900;
@@ -845,7 +845,7 @@
 
 /* ── FIXED ATTIRE SELECTOR CONTAINER ── */
 .ms-attire-selector-container {
-  padding: 12px 20px 8px;
+  padding: 8px 20px 4px;
   border-bottom: 1px solid var(--Glass-Border);
   background: var(--Obsidian-Layer);
   z-index: 10;
