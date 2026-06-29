@@ -179,6 +179,8 @@ window.KORRA_MS = {
     }
     // Suppress page scroll — only sheet body scrolls
     document.querySelector('main').style.overflow = 'hidden';
+    const bottomNav = document.querySelector('.sidebar-nav');
+    if (bottomNav) bottomNav.style.display = 'none';
     // Switch tab FIRST so canvas has dimensions before initViewer
     window.switchTab('scanresult');
     this.initViewer();
@@ -344,6 +346,10 @@ window.KORRA_MS = {
           <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="15 18 9 12 15 6"/></svg>
           Back to Measurements
         </button>
+      </div>
+      <div class="ms-ai-header">
+        <div class="ms-ai-title">AI Assistant</div>
+        <div class="ms-ai-subtitle">Ask anything about your measurements</div>
       </div>
       <div class="ms-ai-prompt-bar">
         <button class="ms-ai-prompt-btn" onclick="KORRA_MS.askAI('Explain my body measurements')">Explain this scan</button>
@@ -582,11 +588,6 @@ window.KORRA_MS = {
         body.style.flexDirection = 'column';
         body.style.padding = '0 20px';
 
-        const title = document.querySelector('.ms-scan-title');
-        const subtitle = document.querySelector('.ms-scan-subtitle');
-        if (title) title.textContent = 'AI Assistant';
-        if (subtitle) subtitle.textContent = 'Ask anything about your measurements';
-
         const unitToggle = document.querySelector('.ms-unit-toggle');
         const easeToggle = document.querySelector('.ms-ease-toggle');
         if (unitToggle) unitToggle.style.display = 'none';
@@ -602,6 +603,12 @@ window.KORRA_MS = {
 
         const bottomNav = document.querySelector('.sidebar-nav');
         if (bottomNav) bottomNav.style.display = 'none';
+
+        document.querySelectorAll('#view-scanresult .ms-header-btn, #view-scanresult .ms-share-btn').forEach(btn => {
+          btn.style.display = 'none';
+        });
+
+        document.body.classList.add('ai-mode');
       } else {
         body.style.overflow = '';
         body.style.display = '';
@@ -634,6 +641,12 @@ window.KORRA_MS = {
 
         const bottomNav = document.querySelector('.sidebar-nav');
         if (bottomNav) bottomNav.style.display = '';
+
+        document.querySelectorAll('#view-scanresult .ms-header-btn, #view-scanresult .ms-share-btn').forEach(btn => {
+          btn.style.display = '';
+        });
+
+        document.body.classList.remove('ai-mode');
       }
       const rightCol = document.querySelector('.ms-right-col');
       if (rightCol) rightCol.style.overflow = mode === 'ai' ? 'visible' : '';
@@ -662,8 +675,103 @@ window.KORRA_MS = {
     document.querySelectorAll('#view-scanresult .ms-metric-cell').forEach(el => {
       if (el.querySelector('.ms-metric-name')?.textContent === key) el.classList.add('active');
     });
-    if (window.innerWidth <= 900) this.collapseSheet();
+    if (window.innerWidth <= 900) {
+      this.openSideMenu(key);
+      return;
+    }
     this._notifyPostAction();
+  },
+
+  // ═══ SIDE MENU (mobile) ═══
+  _sideMenuMeasurement: null,
+  openSideMenu(key) {
+    this._sideMenuMeasurement = key;
+    const m = this.data?.measurements || {};
+    const val = m[key];
+    const factor = this.unit === 'in' ? 0.393701 : 1;
+    const ease = this.showEased ? this.getEase(key) : 1;
+    const displayVal = val != null ? (val * factor * ease).toFixed(1) : '—';
+    const color = MEASUREMENT_COLORS[key] || '#C6FF00';
+    const desc = MEASUREMENT_DESCRIPTIONS[key] || '';
+    const size = this._getSizeForMeasurement(key);
+    const historyHtml = this._buildHistoryHtml(key);
+
+    let backdrop = document.getElementById('ms-side-menu-backdrop');
+    if (!backdrop) { backdrop = document.createElement('div'); backdrop.id = 'ms-side-menu-backdrop'; backdrop.className = 'ms-side-menu-backdrop'; backdrop.onclick = () => this.closeSideMenu(); document.body.appendChild(backdrop); }
+    let menu = document.getElementById('ms-side-menu');
+    if (!menu) { menu = document.createElement('div'); menu.id = 'ms-side-menu'; menu.className = 'ms-side-menu'; document.body.appendChild(menu); }
+
+    menu.innerHTML = `
+      <div class="ms-side-menu-header">
+        <button class="ms-side-menu-back" onclick="KORRA_MS.closeSideMenu()">
+          <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="15 18 9 12 15 6"/></svg>
+        </button>
+        <div class="ms-side-menu-title">${key}</div>
+      </div>
+      <div class="ms-side-menu-body">
+        <div class="ms-side-menu-value" style="color:${color}">${displayVal}<span class="ms-side-menu-unit">${this.unit}</span></div>
+        <div class="ms-side-menu-desc">${desc}</div>
+        ${size ? `
+        <div class="ms-side-menu-section">
+          <div class="ms-side-menu-section-title">Size Recommendation</div>
+          <div class="ms-side-menu-fit-card">
+            <div class="ms-side-menu-fit-row"><span class="ms-side-menu-fit-label">Size</span><span class="ms-side-menu-fit-value" style="color:var(--Mint)">${size.label}</span></div>
+            <div class="ms-side-menu-fit-row"><span class="ms-side-menu-fit-label">Ease</span><span class="ms-side-menu-fit-value">${size.ease || '—'}</span></div>
+          </div>
+        </div>` : ''}
+        ${historyHtml ? `
+        <div class="ms-side-menu-section">
+          <div class="ms-side-menu-section-title">Scan History</div>
+          <div class="ms-side-menu-fit-card">${historyHtml}</div>
+        </div>` : ''}
+        <button class="ms-side-menu-ai-btn" onclick="KORRA_MS.closeSideMenu(); KORRA_MS.askAI('Tell me about my ${key.toLowerCase()} measurement')">Ask AI about this</button>
+      </div>`;
+    requestAnimationFrame(() => { backdrop.classList.add('open'); menu.classList.add('open'); });
+  },
+
+  closeSideMenu() {
+    const backdrop = document.getElementById('ms-side-menu-backdrop');
+    const menu = document.getElementById('ms-side-menu');
+    if (menu) menu.classList.remove('open');
+    if (backdrop) backdrop.classList.remove('open');
+    this._sideMenuMeasurement = null;
+  },
+
+  _getSizeForMeasurement(key) {
+    const m = this.data?.measurements || {};
+    const val = m[key];
+    if (val == null) return null;
+    const sizeMap = {
+      'Chest Round': { xs: 32, s: 36, m: 40, l: 44, xl: 48, xxl: 52 },
+      'Waist Round': { xs: 26, s: 30, m: 34, l: 38, xl: 42, xxl: 46 },
+      'Hip Round': { xs: 34, s: 38, m: 42, l: 46, xl: 50, xxl: 54 },
+      'Shoulder': { xs: 16, s: 17, m: 18, l: 19, xl: 20, xxl: 21 },
+    };
+    const inches = val * 0.393701;
+    const thresholds = sizeMap[key];
+    if (!thresholds) return null;
+    let label = 'XS', ease = '3-5%';
+    if (inches >= thresholds.xxl) { label = 'XXL'; ease = '2-4%'; }
+    else if (inches >= thresholds.xl) { label = 'XL'; ease = '2-4%'; }
+    else if (inches >= thresholds.l) { label = 'L'; ease = '3-5%'; }
+    else if (inches >= thresholds.m) { label = 'M'; ease = '3-5%'; }
+    else if (inches >= thresholds.s) { label = 'S'; ease = '4-6%'; }
+    return { label, ease };
+  },
+
+  _buildHistoryHtml(key) {
+    const history = this.data?.scan_history;
+    if (!history || history.length < 2) return '';
+    const factor = this.unit === 'in' ? 0.393701 : 1;
+    return history.slice(0, 4).map((scan, i) => {
+      const val = scan.measurements?.[key];
+      if (val == null) return '';
+      const display = (val * factor).toFixed(1);
+      const prev = history[i + 1]?.measurements?.[key];
+      const delta = prev != null ? ((val - prev) * factor).toFixed(1) : null;
+      const date = scan.created_at ? new Date(scan.created_at).toLocaleDateString('en-US', { month: 'short', day: 'numeric' }) : '';
+      return `<div class="ms-side-menu-fit-row"><span class="ms-side-menu-fit-label">${date}</span><span class="ms-side-menu-fit-value">${display}${this.unit}${delta ? ` <span style="color:${parseFloat(delta) > 0 ? '#ef4444' : '#22c55e'}">(${parseFloat(delta) > 0 ? '+' : ''}${delta})</span>` : ''}</span></div>`;
+    }).join('');
   },
 
   // ═══ UNIT ═══
@@ -702,6 +810,17 @@ window.KORRA_MS = {
     const rc = document.createElement('div');
     rc.className = 'ms-right-col';
     root.insertBefore(rc, sheet);
+    // Prepend a drag handle with chevron as first child
+    const handle = document.createElement('div');
+    handle.className = 'ms-right-col-handle';
+    handle.id = 'ms-right-col-handle';
+    handle.innerHTML = `
+      <div style="flex:1"></div>
+      <div class="ms-right-col-handle-bar"></div>
+      <button class="ms-right-col-handle-chevron" id="ms-right-col-chevron" title="Collapse">
+        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="18 15 12 9 6 15"/></svg>
+      </button>`;
+    rc.appendChild(handle);
     if (attire) rc.appendChild(attire);
     rc.appendChild(tabs);
     rc.appendChild(sheet);
@@ -715,30 +834,65 @@ window.KORRA_MS = {
   },
 
   // ═══ SHEET DRAG ═══
+  _sheetSnap: 'half',
   expandSheet() {
     this.sheetExpanded = true;
     document.getElementById('ms-sheet')?.classList.add('expanded');
+    const rc = document.querySelector('.ms-side-by-side .ms-right-col');
+    if (rc) { rc.classList.remove('sheet-collapsed', 'sheet-half'); rc.classList.add('sheet-full'); rc.style.overflow = 'visible'; this._sheetSnap = 'full'; this._updateChevron(); }
   },
   collapseSheet() {
     this.sheetExpanded = false;
     document.getElementById('ms-sheet')?.classList.remove('expanded');
+    const rc = document.querySelector('.ms-side-by-side .ms-right-col');
+    if (rc) { rc.classList.remove('sheet-full', 'sheet-half'); rc.classList.add('sheet-collapsed'); rc.style.overflow = 'hidden'; this._sheetSnap = 'collapsed'; this._updateChevron(); }
+  },
+  _halfSheet() {
+    const rc = document.querySelector('.ms-side-by-side .ms-right-col');
+    if (rc) { rc.classList.remove('sheet-collapsed', 'sheet-full'); rc.classList.add('sheet-half'); rc.style.overflow = 'visible'; this._sheetSnap = 'half'; this._updateChevron(); }
+  },
+  _updateChevron() {
+    const chevron = document.getElementById('ms-right-col-chevron');
+    if (!chevron) return;
+    chevron.className = 'ms-right-col-handle-chevron' + (this._sheetSnap === 'collapsed' ? ' collapsed' : '');
+    chevron.title = this._sheetSnap === 'collapsed' ? 'Expand' : 'Collapse';
+  },
+  _toggleSheet() {
+    if (this._sheetSnap === 'collapsed') this._halfSheet();
+    else if (this._sheetSnap === 'half') this.expandSheet();
+    else this.collapseSheet();
+  },
+  _snapSheet() {
+    const rc = document.querySelector('.ms-side-by-side .ms-right-col');
+    if (!rc) return;
+    const vh = window.innerHeight;
+    const ratio = rc.offsetHeight / vh;
+    if (ratio > 0.7) this.expandSheet();
+    else if (ratio > 0.25) this._halfSheet();
+    else this.collapseSheet();
   },
   bindSheetDrag() {
-    const handle = document.getElementById('ms-sheet-handle');
+    const handle = document.getElementById('ms-right-col-handle');
     if (!handle) return;
-    let startY = 0, startH = 0;
-    const onStart = (y) => { startY = y; startH = document.getElementById('ms-sheet')?.offsetHeight || 0; };
+    let startY = 0;
+    const rc = document.querySelector('.ms-side-by-side .ms-right-col');
+    const onStart = (y) => { startY = y; if (rc) { rc.style.transition = 'none'; rc.style.overflow = 'visible'; } };
     const onMove = (y) => {
+      if (!rc) return;
       const delta = startY - y;
-      const h = Math.max(150, Math.min(window.innerHeight * 0.8, startH + delta));
-      const s = document.getElementById('ms-sheet');
-      if (s) s.style.height = h + 'px';
+      const curH = rc.offsetHeight;
+      const maxH = window.innerHeight * 0.88;
+      const newH = Math.max(48, Math.min(maxH, curH + delta));
+      rc.style.height = newH + 'px';
     };
     const onEnd = () => {
-      const s = document.getElementById('ms-sheet');
-      if (!s) return;
-      if (s.offsetHeight > window.innerHeight * 0.5) this.expandSheet(); else this.collapseSheet();
-      s.style.height = '';
+      if (!rc) return;
+      rc.style.transition = '';
+      if (window.innerWidth <= 900) {
+        this._snapSheet();
+      } else {
+        if (rc.offsetHeight > window.innerHeight * 0.5) this.expandSheet(); else this.collapseSheet();
+      }
     };
     handle.addEventListener('touchstart', (e) => onStart(e.touches[0].clientY), { passive: true });
     handle.addEventListener('touchmove', (e) => onMove(e.touches[0].clientY), { passive: true });
@@ -750,6 +904,17 @@ window.KORRA_MS = {
       window.addEventListener('mousemove', mv);
       window.addEventListener('mouseup', up);
     });
+    // Chevron toggle
+    const chevron = document.getElementById('ms-right-col-chevron');
+    if (chevron) chevron.addEventListener('click', (e) => { e.stopPropagation(); this._toggleSheet(); });
+    // Set initial snap state on mobile
+    if (window.innerWidth <= 900) {
+      if (rc && !rc.classList.contains('sheet-collapsed') && !rc.classList.contains('sheet-full')) {
+        rc.classList.add('sheet-half');
+        this._sheetSnap = 'half';
+      }
+    }
+    this._updateChevron();
   },
 
   // ═══ 3D VIEWER ═══
@@ -762,6 +927,10 @@ window.KORRA_MS = {
       this.viewerInstance = window.KORRA_VIZ;
     }
     this.viewerInstance.init('ms-viewer-canvas');
+    const badge = document.getElementById('ms-viewer-badge');
+    this.viewerInstance.onInteract = (active) => {
+      if (badge) badge.style.opacity = active ? '0.3' : '1';
+    };
     const meshUrl = this.data?.mesh_storage_url || this.data?.mesh_url;
     if (meshUrl) {
       const lm = this.data?.landmarks;
@@ -1066,8 +1235,13 @@ window.KORRA_MS = {
 
   cleanup() {
     this._destroyFabIntelligence();
+    this.closeSideMenu();
     const bottomNav = document.querySelector('.sidebar-nav');
     if (bottomNav) bottomNav.style.display = '';
+    document.querySelectorAll('#view-scanresult .ms-header-btn, #view-scanresult .ms-share-btn').forEach(btn => {
+      btn.style.display = '';
+    });
+    document.body.classList.remove('ai-mode');
     document.querySelector('main').style.overflow = '';
     this.active = false;
     this.data = null;

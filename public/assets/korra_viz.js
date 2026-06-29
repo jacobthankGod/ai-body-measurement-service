@@ -21,6 +21,7 @@ class KorraVisualizer {
         this._meshCache = new Map();    // url -> { text, parsed }
         this.wireframeMode = false;     // solid mesh by default
         this._fetchCache = new Map();   // url -> Promise<string>
+        this.onInteract = null;         // callback(isInteracting: boolean)
     }
 
     init(containerId) {
@@ -82,6 +83,7 @@ class KorraVisualizer {
             this.isInteracting = true;
             this.mouseX = e.clientX;
             this.mouseY = e.clientY;
+            if (this.onInteract) this.onInteract(true);
         });
 
         window.addEventListener('mousemove', (e) => {
@@ -97,7 +99,78 @@ class KorraVisualizer {
 
         window.addEventListener('mouseup', () => {
             this.isInteracting = false;
+            if (this.onInteract) this.onInteract(false);
         });
+
+        // ── TOUCH CONTROLS (mobile) ──
+        this._touchState = { fingers: 0, startX: 0, startY: 0, lastPinchDist: 0, lastTap: 0 };
+        container.addEventListener('touchstart', (e) => {
+            if (!this.mesh) return;
+            const touches = e.touches;
+            this._touchState.fingers = touches.length;
+            if (touches.length === 1) {
+                this.isInteracting = true;
+                if (this.onInteract) this.onInteract(true);
+                this._touchState.startX = touches[0].clientX;
+                this._touchState.startY = touches[0].clientY;
+                this.mouseX = touches[0].clientX;
+                this.mouseY = touches[0].clientY;
+                // Double-tap detection
+                const now = Date.now();
+                if (now - this._touchState.lastTap < 300) {
+                    this.resetCamera();
+                    this._touchState.lastTap = 0;
+                } else {
+                    this._touchState.lastTap = now;
+                }
+            } else if (touches.length === 2) {
+                this._touchState.lastPinchDist = Math.hypot(
+                    touches[1].clientX - touches[0].clientX,
+                    touches[1].clientY - touches[0].clientY
+                );
+            }
+        }, { passive: true });
+
+        container.addEventListener('touchmove', (e) => {
+            if (!this.mesh) return;
+            const touches = e.touches;
+            if (touches.length === 1 && this._touchState.fingers === 1) {
+                e.preventDefault();
+                const deltaX = touches[0].clientX - this.mouseX;
+                const deltaY = touches[0].clientY - this.mouseY;
+                this.mouseX = touches[0].clientX;
+                this.mouseY = touches[0].clientY;
+                this.targetRotationY += deltaX * 0.01;
+                this.targetRotationX += deltaY * 0.01;
+            } else if (touches.length === 2) {
+                e.preventDefault();
+                const dist = Math.hypot(
+                    touches[1].clientX - touches[0].clientX,
+                    touches[1].clientY - touches[0].clientY
+                );
+                if (this._touchState.lastPinchDist > 0) {
+                    const scale = dist / this._touchState.lastPinchDist;
+                    const dir = new THREE.Vector3();
+                    dir.subVectors(this.camera.position, new THREE.Vector3(0, 1, 0)).normalize();
+                    const currentDist = this.camera.position.distanceTo(new THREE.Vector3(0, 1, 0));
+                    const newDist = Math.max(1.5, Math.min(6, currentDist / scale));
+                    this.camera.position.copy(new THREE.Vector3(0, 1, 0).add(dir.multiplyScalar(newDist)));
+                }
+                this._touchState.lastPinchDist = dist;
+            }
+        }, { passive: false });
+
+        container.addEventListener('touchend', (e) => {
+            this._touchState.fingers = e.touches.length;
+            if (e.touches.length === 0) {
+                this.isInteracting = false;
+                if (this.onInteract) this.onInteract(false);
+                this._touchState.lastPinchDist = 0;
+            } else if (e.touches.length === 1) {
+                this.mouseX = e.touches[0].clientX;
+                this.mouseY = e.touches[0].clientY;
+            }
+        }, { passive: true });
 
         window.addEventListener('resize', () => {
             if(!container.clientWidth) return;
