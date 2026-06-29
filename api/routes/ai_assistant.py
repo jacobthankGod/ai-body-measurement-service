@@ -2,7 +2,7 @@
 KORRA AI - AI Assistant Route
 ==============================
 Multi-provider LLM fallback chain for measurement insights.
-Priority: Groq -> OpenRouter -> Google Gemini -> FreeTheAi -> Static fallback.
+Priority: Groq -> OpenRouter -> Google Gemini -> Cerebras -> Static fallback.
 Full dashboard context: measurements, scan history, attire, chat history.
 """
 import os
@@ -20,7 +20,7 @@ logger = logging.getLogger("KORRA_AI")
 GROQ_API_KEY = os.environ.get("GROQ_API_KEY", "")
 OPENROUTER_API_KEY = os.environ.get("OPENROUTER_API_KEY", "")
 GEMINI_API_KEY = os.environ.get("GEMINI_API_KEY", "")
-FREETHEAI_API_KEY = os.environ.get("FREETHEAI_API_KEY", "")
+CEREBRAS_API_KEY = os.environ.get("CEREBRAS_API_KEY", "")
 
 PROVIDERS = [
     {
@@ -49,11 +49,11 @@ PROVIDERS = [
         "timeout": 20.0,
     },
     {
-        "name": "freetheai",
-        "url": "https://api.freetheai.xyz/v1/chat/completions",
-        "model": "wsf/kimi-k2.6",
-        "api_key": FREETHEAI_API_KEY,
-        "timeout": 25.0,
+        "name": "cerebras",
+        "url": "https://api.cerebras.ai/v1/chat/completions",
+        "model": "llama-3.3-70b",
+        "api_key": CEREBRAS_API_KEY,
+        "timeout": 20.0,
     },
 ]
 
