@@ -2738,6 +2738,9 @@ window.loadSettings = async () => {
             const restoreModal = () => {
                 if (modalParam && document.getElementById(modalParam)) {
                     document.getElementById(modalParam).classList.add('active');
+                    if (modalParam === 'shareScanModal' && window.KORRA_MS?.data) {
+                        document.getElementById('shareScanName').value = window.KORRA_MS.data.client_name || '';
+                    }
                 }
             };
 
