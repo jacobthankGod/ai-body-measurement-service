@@ -1427,7 +1427,7 @@
           <div class="ss-field">
             <label class="ss-label">PHONE (WHATSAPP)</label>
             <div class="ss-input-wrap">
-              <input type="text" id="sharePhone" class="ss-input" placeholder="e.g. 2348000000000">
+              <input type="text" id="sharePhone" class="ss-input" placeholder="e.g. 2348000000000" oninput="window.updateDeepLinkSilent()">
               <button class="ss-input-btn" onclick="window.handleContactPicker()">
                 <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"/><circle cx="12" cy="7" r="4"/></svg>
                 Import
@@ -1437,7 +1437,7 @@
 
           <div class="ss-field">
             <label class="ss-label">EMAIL (OPTIONAL)</label>
-            <input type="email" id="shareEmail" class="ss-input" placeholder="e.g. james@example.com">
+            <input type="email" id="shareEmail" class="ss-input" placeholder="e.g. james@example.com" oninput="window.updateDeepLinkSilent()">
           </div>
 
           <div id="linkGeneratedArea" class="ss-link-area" style="display:none;">
@@ -1487,7 +1487,7 @@
           <div class="ss-field">
             <label class="ss-label">PHONE (WHATSAPP)</label>
             <div class="ss-input-wrap">
-              <input type="text" id="shareScanPhone" class="ss-input" placeholder="e.g. 2348000000000">
+              <input type="text" id="shareScanPhone" class="ss-input" placeholder="e.g. 2348000000000" oninput="window.updateScanLinkSilent()">
               <button class="ss-input-btn" onclick="window.handleContactPicker('shareScanName', 'shareScanPhone')">
                 <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"/><circle cx="12" cy="7" r="4"/></svg>
                 Import
@@ -1497,7 +1497,7 @@
 
           <div class="ss-field">
             <label class="ss-label">EMAIL (OPTIONAL)</label>
-            <input type="email" id="shareScanEmail" class="ss-input" placeholder="e.g. james@example.com">
+            <input type="email" id="shareScanEmail" class="ss-input" placeholder="e.g. james@example.com" oninput="window.updateScanLinkSilent()">
           </div>
 
           <div id="shareScanLinkArea" class="ss-link-area" style="display:none;">
@@ -3976,6 +3976,24 @@ window.applyPromo = () => {
         document.getElementById('shareScanLinkArea').style.display = 'block';
     };
 
+    window.updateScanLinkSilent = () => {
+        const area = document.getElementById('shareScanLinkArea');
+        if (area.style.display === 'none') return;
+        const name = document.getElementById('shareScanName').value;
+        const phone = document.getElementById('shareScanPhone').value;
+        const email = document.getElementById('shareScanEmail').value;
+        if (!name || (!phone && !email)) {
+            document.getElementById('shareScanLink').textContent = '...';
+            return;
+        }
+        const params = [];
+        if (phone) params.push('p=' + encodeURIComponent(phone));
+        if (email) params.push('e=' + encodeURIComponent(email));
+        const qs = params.length ? '?' + params.join('&') : '';
+        const url = `${window.location.origin}/dashboard${qs}#scanresult/${window._currentScanId || ''}`;
+        document.getElementById('shareScanLink').textContent = url;
+    };
+
     window.copyApiKey = () => {
         const text = document.getElementById('apiKeyDisplay').textContent;
         if (text.includes('***')) { window.showAlert("Please save profile first or regenerate key."); return; }
@@ -4020,6 +4038,20 @@ window.generateDeepLink = async () => {
       document.getElementById('deepLinkDisplay').textContent = url;
       document.getElementById('linkGeneratedArea').style.display = 'block';
       document.getElementById('btnGenerateLink').textContent = 'Update Link';
+    };
+
+    window.updateDeepLinkSilent = () => {
+        const area = document.getElementById('linkGeneratedArea');
+        if (area.style.display === 'none') return;
+        const name = document.getElementById('shareName').value;
+        const phone = document.getElementById('sharePhone').value;
+        const email = document.getElementById('shareEmail').value;
+        if (!name || (!phone && !email)) {
+            document.getElementById('deepLinkDisplay').textContent = '...';
+            return;
+        }
+        const url = `${window.location.origin}/share?m=${userId}&c=${encodeURIComponent(name)}${email ? '&e=' + encodeURIComponent(email) : ''}${phone ? '&p=' + encodeURIComponent(phone) : ''}`;
+        document.getElementById('deepLinkDisplay').textContent = url;
     };
 
     window.ACTIVE_CONTEXT = 'standard';
@@ -4102,6 +4134,8 @@ window.generateDeepLink = async () => {
                 const c = contacts[0];
                 if (c.name && c.name.length > 0) document.getElementById(nameFieldId).value = c.name[0];
                 if (c.tel && c.tel.length > 0) document.getElementById(phoneFieldId).value = c.tel[0].replace(/\s+/g, '');
+                if (nameFieldId === 'shareName') window.updateDeepLinkSilent();
+                else window.updateScanLinkSilent();
                 window.showToast("Success", "Contact data imported.");
             }
         } catch (ex) {
