@@ -1075,6 +1075,30 @@
   .ms-size-grid {
     grid-template-columns: 1fr 1fr;
   }
+  /* ── SIDE-BY-SIDE → STACKED ON MOBILE ── */
+  .ms-side-by-side {
+    flex-direction: column !important;
+  }
+  .ms-side-by-side .ms-viewer {
+    flex: 0 0 90px;
+    min-height: 120px;
+    height: auto;
+    max-height: 200px;
+  }
+  .ms-side-by-side .ms-right-col {
+    flex: 1;
+    height: auto;
+    border-left: none;
+  }
+  .ms-side-by-side .ms-sheet {
+    height: auto !important;
+    flex: 1 1 auto;
+    min-height: 160px;
+  }
+  .ms-side-by-side .ms-sheet.expanded {
+    height: auto !important;
+    flex: 2 1 auto;
+  }
 }
 
 /* ── SHARE BUTTON (HEADER) ── */
