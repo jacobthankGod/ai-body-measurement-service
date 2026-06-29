@@ -551,7 +551,7 @@
   display: flex;
   align-items: center;
   gap: 8px;
-  padding: 0 0 8px;
+  padding: 8px 0 8px;
   border-bottom: 1px solid var(--Glass-Border);
   margin-bottom: 12px;
 }
@@ -561,17 +561,16 @@
   gap: 6px;
   padding: 6px 10px;
   border-radius: 8px;
-  border: 1px solid var(--Glass-Border);
-  background: var(--Glass);
-  color: var(--Neutral-400);
+  border: none;
+  background: var(--Mint);
+  color: #000;
   font-size: 11px;
-  font-weight: 700;
+  font-weight: 900;
   cursor: pointer;
   transition: all 0.2s;
 }
 .ms-ai-view .ms-ai-back:hover {
-  color: var(--Mint);
-  border-color: var(--Mint);
+  opacity: 0.85;
 }
 .ms-ai-view .ms-ai-newchat {
   width: 28px;
@@ -631,7 +630,7 @@
   flex-shrink: 0;
   display: flex;
   gap: 8px;
-  padding: 12px 0 0;
+  padding: 8px 0 0;
   border-top: 1px solid var(--Glass-Border);
 }
 /* ── CANCEL BUTTON ── */
