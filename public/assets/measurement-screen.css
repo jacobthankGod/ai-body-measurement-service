@@ -621,7 +621,7 @@
   flex: 1;
   overflow-y: auto;
   min-height: 0;
-  padding: 16px 0;
+  padding: 16px 0 4px;
   display: flex;
   flex-direction: column;
   gap: 16px;
@@ -630,7 +630,7 @@
   flex-shrink: 0;
   display: flex;
   gap: 8px;
-  padding: 4px 0 0;
+  padding: 0;
   border-top: 1px solid var(--Glass-Border);
 }
 /* ── CANCEL BUTTON ── */
