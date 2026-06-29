@@ -569,6 +569,11 @@ window.KORRA_MS = {
         const easeToggle = document.querySelector('.ms-ease-toggle');
         if (unitToggle) unitToggle.style.display = 'none';
         if (easeToggle) easeToggle.style.display = 'none';
+
+        const attire = document.querySelector('.ms-attire-selector-container');
+        const tabs = document.querySelector('.ms-tabs');
+        if (attire) attire.style.display = 'none';
+        if (tabs) tabs.style.display = 'none';
       } else {
         body.style.overflow = '';
         body.style.display = '';
@@ -590,6 +595,11 @@ window.KORRA_MS = {
         const easeToggle = document.querySelector('.ms-ease-toggle');
         if (unitToggle) unitToggle.style.display = '';
         if (easeToggle) easeToggle.style.display = '';
+
+        const attire = document.querySelector('.ms-attire-selector-container');
+        const tabs = document.querySelector('.ms-tabs');
+        if (attire) attire.style.display = '';
+        if (tabs) tabs.style.display = '';
       }
       const rightCol = document.querySelector('.ms-right-col');
       if (rightCol) rightCol.style.overflow = mode === 'ai' ? 'visible' : '';
