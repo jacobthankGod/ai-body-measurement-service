@@ -33,7 +33,7 @@ PROVIDERS = [
     {
         "name": "openrouter",
         "url": "https://openrouter.ai/api/v1/chat/completions",
-        "model": "deepseek/deepseek-r1:free",
+        "model": "google/gemma-4-31b-it:free",
         "api_key": OPENROUTER_API_KEY,
         "timeout": 20.0,
         "extra_headers": {
