@@ -232,7 +232,7 @@
 /* ── FLOATING MEASUREMENT BADGE ── */
 .ms-badge {
   position: absolute;
-  top: 28px;
+  top: 44px;
   left: 16px;
   background: rgba(0, 0, 0, 0.75);
   backdrop-filter: blur(12px);
