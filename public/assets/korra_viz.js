@@ -28,6 +28,11 @@ class KorraVisualizer {
         this._lightWidget = null;
         this._outline = null;
         this.controls = null;
+        this._isOrtho = false;
+        this._orthoCamera = null;
+        this._orbitTarget = new THREE.Vector3(0, 1, 0);
+        this._orbitSpherical = new THREE.Spherical(3.0, Math.PI / 2, 0);
+        this._orbitState = { active: false, type: null, startX: 0, startY: 0, startSpherical: null, startTarget: null };
     }
 
     init(containerId) {
@@ -95,33 +100,97 @@ class KorraVisualizer {
                     this._outline.position.copy(this.mesh.position);
                 }
             }
-            if (this.controls) this.controls.update();
             this.renderer.render(this.scene, this.camera);
         };
         animate();
 
+        // ── ORBIT + MESH DRAG CONTROLS ──
+        this._orbitTarget.set(0, 1, 0);
+        this._orbitSpherical.setFromVector3(
+            new THREE.Vector3().subVectors(this.camera.position, this._orbitTarget)
+        );
+
         container.addEventListener('mousedown', (e) => {
-            this.isInteracting = true;
-            this.mouseX = e.clientX;
-            this.mouseY = e.clientY;
-            if (this.onInteract) this.onInteract(true);
+            if (e.button === 0) {
+                // Left-click → mesh rotation
+                this.isInteracting = true;
+                this.mouseX = e.clientX;
+                this.mouseY = e.clientY;
+                if (this.onInteract) this.onInteract(true);
+            } else if (e.button === 2) {
+                // Right-click → camera orbit
+                this._orbitState.active = true;
+                this._orbitState.type = 'rotate';
+                this._orbitState.startX = e.clientX;
+                this._orbitState.startY = e.clientY;
+                this._orbitState.startSpherical = this._orbitSpherical.clone();
+                this.isInteracting = true;
+                if (this.onInteract) this.onInteract(true);
+            } else if (e.button === 1) {
+                // Middle-click → pan
+                this._orbitState.active = true;
+                this._orbitState.type = 'pan';
+                this._orbitState.startX = e.clientX;
+                this._orbitState.startY = e.clientY;
+                this._orbitState.startTarget = this._orbitTarget.clone();
+                this.isInteracting = true;
+                if (this.onInteract) this.onInteract(true);
+            }
         });
 
         window.addEventListener('mousemove', (e) => {
-            if (!this.isInteracting || !this.mesh) return;
-            const deltaX = e.clientX - this.mouseX;
-            const deltaY = e.clientY - this.mouseY;
-            this.mouseX = e.clientX;
-            this.mouseY = e.clientY;
-
-            this.targetRotationY += deltaX * 0.01;
-            this.targetRotationX += deltaY * 0.01;
+            if (!this.isInteracting) return;
+            if (this._orbitState.active && this._orbitState.type === 'rotate') {
+                const deltaX = e.clientX - this._orbitState.startX;
+                const deltaY = e.clientY - this._orbitState.startY;
+                this._orbitSpherical.theta = this._orbitState.startSpherical.theta - deltaX * 0.01;
+                this._orbitSpherical.phi = Math.max(0.1, Math.min(Math.PI - 0.1,
+                    this._orbitState.startSpherical.phi - deltaY * 0.01));
+                this._applyOrbit();
+            } else if (this._orbitState.active && this._orbitState.type === 'pan') {
+                const deltaX = e.clientX - this._orbitState.startX;
+                const deltaY = e.clientY - this._orbitState.startY;
+                const fovFactor = this._orbitSpherical.radius * 0.002;
+                const right = new THREE.Vector3();
+                const up = new THREE.Vector3(0, 1, 0);
+                this.camera.getWorldDirection(right);
+                right.cross(up).normalize();
+                const panDelta = new THREE.Vector3()
+                    .addScaledVector(right, -deltaX * fovFactor)
+                    .addScaledVector(up, deltaY * fovFactor);
+                this._orbitTarget.add(panDelta);
+                this._applyOrbit();
+                this._orbitState.startX = e.clientX;
+                this._orbitState.startY = e.clientY;
+                this._orbitState.startTarget = this._orbitTarget.clone();
+            } else if (this.mesh) {
+                // Left-click mesh rotation
+                const deltaX = e.clientX - this.mouseX;
+                const deltaY = e.clientY - this.mouseY;
+                this.mouseX = e.clientX;
+                this.mouseY = e.clientY;
+                this.targetRotationY += deltaX * 0.01;
+                this.targetRotationX += deltaY * 0.01;
+            }
         });
 
         window.addEventListener('mouseup', () => {
+            this._orbitState.active = false;
+            this._orbitState.type = null;
             this.isInteracting = false;
             if (this.onInteract) this.onInteract(false);
         });
+
+        // Scroll zoom
+        container.addEventListener('wheel', (e) => {
+            e.preventDefault();
+            const delta = e.deltaY > 0 ? 1.1 : 0.9;
+            this._orbitSpherical.radius = Math.max(0.5, Math.min(20, this._orbitSpherical.radius * delta));
+            this._applyOrbit();
+        }, { passive: false });
+
+        // Prevent context menu on right-click
+        container.addEventListener('contextmenu', (e) => e.preventDefault());
 
         // ── TOUCH CONTROLS (mobile) ──
         this._touchState = { fingers: 0, startX: 0, startY: 0, lastPinchDist: 0, lastTap: 0 };
@@ -369,16 +438,17 @@ class KorraVisualizer {
         this._outline.rotation.copy(this.mesh.rotation);
         this.scene.add(this._outline);
 
-        if (this.controls) {
-            this.controls.target.set(0, size.y / 2, 0);
-            this.controls.update();
-        }
+        this.updateOrbitTarget(new THREE.Vector3(0, size.y / 2, 0));
 
         return { vertices, faces, size };
     }
 
-    toggleWireframe() {
-        this.wireframeMode = !this.wireframeMode;
+    toggleWireframe(force) {
+        if (force !== undefined) {
+            this.wireframeMode = !!force;
+        } else {
+            this.wireframeMode = !this.wireframeMode;
+        }
         if (this.mesh) {
             this.mesh.material = this.wireframeMode ? this._wireframeMat : this._solidMat;
             this.mesh.material.needsUpdate = true;
@@ -598,10 +668,17 @@ class KorraVisualizer {
     }
 
     resetCamera() {
+        this._isOrtho = false;
+        const aspect = this.camera.aspect;
+        this.camera = new THREE.PerspectiveCamera(45, aspect, 0.1, 1000);
         this.camera.position.set(0, 1.0, 3.0);
         this.camera.lookAt(0, 1, 0);
         this.targetRotationX = 0;
         this.targetRotationY = 0;
+        const meshY = this.mesh ? this.mesh.position.y : 1;
+        this._orbitTarget.set(0, meshY, 0);
+        this._orbitSpherical.set(3.0, Math.PI / 2, 0);
+        this._applyOrbit();
         if (this.mesh) {
             this.mesh.rotation.x = 0;
             this.mesh.rotation.y = 0;
@@ -609,10 +686,6 @@ class KorraVisualizer {
         if (this.landmarksGroup) {
             this.landmarksGroup.rotation.x = 0;
             this.landmarksGroup.rotation.y = 0;
-        }
-        if (this.controls) {
-            this.controls.target.set(0, this.mesh ? this.mesh.position.y : 1, 0);
-            this.controls.update();
         }
     }
 
@@ -771,6 +844,48 @@ class KorraVisualizer {
 
     toggleLightWidget(visible) {
         if (this._lightWidget) this._lightWidget.visible = visible;
+    }
+
+    // ── ORBIT CONTROLS ──
+    _applyOrbit() {
+        const pos = new THREE.Vector3().setFromSpherical(this._orbitSpherical).add(this._orbitTarget);
+        this.camera.position.copy(pos);
+        this.camera.lookAt(this._orbitTarget);
+    }
+
+    updateOrbitTarget(newTarget) {
+        if (newTarget) this._orbitTarget.copy(newTarget);
+        this._orbitSpherical.setFromVector3(
+            new THREE.Vector3().subVectors(this.camera.position, this._orbitTarget)
+        );
+    }
+
+    // ── PROJECTION TOGGLE ──
+    toggleProjection() {
+        this._isOrtho = !this._isOrtho;
+        const aspect = this.camera.aspect;
+        const pos = this.camera.position.clone();
+        const target = this._orbitTarget.clone();
+
+        if (this._isOrtho) {
+            const dist = pos.distanceTo(target);
+            const fov = 45 * Math.PI / 180;
+            const height = dist * 2 * Math.tan(fov / 2);
+            const width = height * aspect;
+            this._orthoCamera = new THREE.OrthographicCamera(
+                -width / 2, width / 2, height / 2, -height / 2, 0.1, 1000
+            );
+            this._orthoCamera.position.copy(pos);
+            this._orthoCamera.lookAt(target);
+            this._orthoCamera.up.copy(this.camera.up);
+            this.camera = this._orthoCamera;
+        } else {
+            this.camera = new THREE.PerspectiveCamera(45, aspect, 0.1, 1000);
+            this.camera.position.copy(pos);
+            this.camera.lookAt(target);
+            this.camera.up.set(0, 1, 0);
+        }
+        return this._isOrtho;
     }
 }
 

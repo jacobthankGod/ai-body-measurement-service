@@ -273,11 +273,37 @@ window.KORRA_MS = {
         <div class="ms-viewer" id="ms-viewer">
           <div class="ms-viewer-canvas" id="ms-viewer-canvas"></div>
           <div class="ms-viewer-badge" id="ms-viewer-badge">${this.buildBadge()}</div>
+          <div class="ms-viewer-info">
+            <div class="ms-viewer-info-title">User Perspective</div>
+            <div class="ms-viewer-info-sub">(1) Collection | Scan</div>
+          </div>
           <button class="ms-bg-toggle" id="ms-bg-toggle" onclick="KORRA_MS.toggleViewportBg()" title="Toggle background">
             <svg class="ms-bg-toggle-icon" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
               <path d="M21 12.79A9 9 0 1 1 11.21 3 7 7 0 0 0 21 12.79z"/>
             </svg>
           </button>
+          <div class="ms-viewer-toolbar">
+            <button class="ms-tool-btn" onclick="KORRA_MS.zoomViewport('in')" title="Zoom in">
+              <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/><line x1="11" y1="8" x2="11" y2="14"/><line x1="8" y1="11" x2="14" y2="11"/></svg>
+            </button>
+            <button class="ms-tool-btn" onclick="KORRA_MS.zoomViewport('out')" title="Zoom out">
+              <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/><line x1="8" y1="11" x2="14" y2="11"/></svg>
+            </button>
+            <button class="ms-tool-btn" onclick="KORRA_MS.toggleViewportProjection()" title="Toggle projection">
+              <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="2" y="4" width="20" height="16" rx="2"/><line x1="8" y1="4" x2="8" y2="20"/><line x1="16" y1="4" x2="16" y2="20"/></svg>
+            </button>
+            <button class="ms-tool-btn" onclick="KORRA_MS.resetViewport()" title="Reset view">
+              <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="23 4 23 10 17 10"/><path d="M20.49 15a9 9 0 1 1-2.12-9.36L23 10"/></svg>
+            </button>
+          </div>
+          <div class="ms-options-wrapper">
+            <button class="ms-options-btn" id="ms-options-btn" onclick="KORRA_MS.toggleOptionsMenu()">Options ⌄</button>
+            <div class="ms-options-dropdown" id="ms-options-dropdown">
+              <div class="ms-options-item" data-mode="wireframe" onclick="KORRA_MS.setViewportMode('wireframe')">Wireframe</div>
+              <div class="ms-options-item active" data-mode="solid" onclick="KORRA_MS.setViewportMode('solid')">Solid</div>
+              <div class="ms-options-item" data-mode="rendered" onclick="KORRA_MS.setViewportMode('rendered')">Rendered</div>
+            </div>
+          </div>
         </div>
         <div class="ms-tabs">
           <button class="ms-tab ${this.viewMode === 'avatar' ? 'active' : ''}" onclick="KORRA_MS.switchView('avatar')">
@@ -1059,6 +1085,57 @@ window.KORRA_MS = {
         ? `<svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 12.79A9 9 0 1 1 11.21 3 7 7 0 0 0 21 12.79z"/></svg>`
         : `<svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="5"/><line x1="12" y1="1" x2="12" y2="3"/><line x1="12" y1="21" x2="12" y2="23"/><line x1="4.22" y1="4.22" x2="5.64" y2="5.64"/><line x1="18.36" y1="18.36" x2="19.78" y2="19.78"/><line x1="1" y1="12" x2="3" y2="12"/><line x1="21" y1="12" x2="23" y2="12"/><line x1="4.22" y1="19.78" x2="5.64" y2="18.36"/><line x1="18.36" y1="5.64" x2="19.78" y2="4.22"/></svg>`;
     }
+  },
+
+  zoomViewport(dir) {
+    if (!this.viewerInstance) return;
+    const factor = dir === 'in' ? 0.85 : 1.176;
+    const spherical = this.viewerInstance._orbitSpherical;
+    if (spherical) {
+      spherical.radius = Math.max(0.5, Math.min(20, spherical.radius * factor));
+      this.viewerInstance._applyOrbit();
+    }
+  },
+
+  toggleViewportProjection() {
+    if (!this.viewerInstance) return;
+    const isOrtho = this.viewerInstance.toggleProjection();
+    const btn = document.querySelector('.ms-tool-btn[onclick*="toggleViewportProjection"]');
+    if (btn) btn.style.opacity = isOrtho ? '0.5' : '1';
+  },
+
+  resetViewport() {
+    if (this.viewerInstance) this.viewerInstance.resetCamera();
+  },
+
+  _optionsMenuOpen: false,
+  toggleOptionsMenu() {
+    this._optionsMenuOpen = !this._optionsMenuOpen;
+    const dd = document.getElementById('ms-options-dropdown');
+    if (dd) dd.style.display = this._optionsMenuOpen ? 'block' : 'none';
+  },
+
+  setViewportMode(mode) {
+    if (!this.viewerInstance) return;
+    if (mode === 'wireframe') {
+      this.viewerInstance.toggleWireframe(true);
+    } else if (mode === 'solid') {
+      this.viewerInstance.toggleWireframe(false);
+    } else if (mode === 'rendered') {
+      this.viewerInstance.wireframeMode = false;
+      if (this.viewerInstance.mesh) {
+        this.viewerInstance.mesh.material = this.viewerInstance._solidMat;
+        this.viewerInstance.mesh.material.needsUpdate = true;
+        if (this.viewerInstance.mesh.material.emissive !== undefined) {
+          this.viewerInstance.mesh.material.emissiveIntensity = 0.3;
+        }
+      }
+    }
+    document.querySelectorAll('.ms-options-item').forEach(el => el.classList.remove('active'));
+    const item = document.querySelector(`.ms-options-item[data-mode="${mode}"]`);
+    if (item) item.classList.add('active');
+    document.getElementById('ms-options-dropdown').style.display = 'none';
+    this._optionsMenuOpen = false;
   },
 
   initCompareViewers() {
