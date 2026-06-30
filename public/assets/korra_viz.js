@@ -30,7 +30,7 @@ class KorraVisualizer {
         this.controls = null;
         this._isOrtho = false;
         this._orthoCamera = null;
-        this._orbitTarget = new THREE.Vector3(0, 0.3, 0);
+        this._orbitTarget = new THREE.Vector3(0, 0.35, 0);
         this._orbitSpherical = new THREE.Spherical(3.0, Math.PI / 2, 0);
         this._orbitState = { active: false, type: null, startX: 0, startY: 0, startSpherical: null, startTarget: null };
         this._meshSize = 0;
@@ -46,8 +46,8 @@ class KorraVisualizer {
 
         const aspect = container.clientWidth / container.clientHeight;
         this.camera = new THREE.PerspectiveCamera(45, aspect, 0.1, 1000);
-        this.camera.position.set(0, 0.3, 3.0);
-        this.camera.lookAt(0, 0.3, 0);
+        this.camera.position.set(0, 0.35, 3.0);
+        this.camera.lookAt(0, 0.35, 0);
 
         this.renderer = new THREE.WebGLRenderer({ antialias: true, alpha: true, preserveDrawingBuffer: true });
         this.renderer.setSize(container.clientWidth, container.clientHeight);
@@ -106,7 +106,7 @@ class KorraVisualizer {
         animate();
 
         // ── ORBIT + MESH DRAG CONTROLS ──
-        this._orbitTarget.set(0, 0.3, 0);
+        this._orbitTarget.set(0, 0.35, 0);
         this._orbitSpherical.setFromVector3(
             new THREE.Vector3().subVectors(this.camera.position, this._orbitTarget)
         );
@@ -419,8 +419,8 @@ class KorraVisualizer {
 
         this.mesh.position.set(0, size.y / 2, 0);
         this._meshSize = size.y;
-        this.camera.lookAt(0, size.y * 0.3, 0);
-        this.camera.position.y = size.y * 0.3;
+        this.camera.lookAt(0, size.y * 0.35, 0);
+        this.camera.position.y = size.y * 0.35;
         this.camera.position.z = Math.max(3.0, size.y * 2.0);
 
         this.scene.add(this.mesh);
@@ -440,7 +440,7 @@ class KorraVisualizer {
         this._outline.rotation.copy(this.mesh.rotation);
         this.scene.add(this._outline);
 
-        this.updateOrbitTarget(new THREE.Vector3(0, size.y * 0.3, 0));
+        this.updateOrbitTarget(new THREE.Vector3(0, size.y * 0.35, 0));
 
         return { vertices, faces, size };
     }
