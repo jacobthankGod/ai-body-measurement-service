@@ -219,11 +219,10 @@ window.KORRA_MS = {
     const gender = (d.gender || 'male').charAt(0).toUpperCase() + (d.gender || 'male').slice(1);
     return `
       <div class="ms-root">
-        <div class="ms-header">
-          <button class="ms-back-btn" onclick="KORRA_MS.handleBack()">
-            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="15 18 9 12 15 6"/></svg>
-          </button>
-        </div>
+        <button class="ms-back-btn" onclick="KORRA_MS.handleBack()">
+          <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="15 18 9 12 15 6"/></svg>
+          back
+        </button>
         <div class="ms-sheet-controls" id="ms-sheet-controls">
           <div class="ms-controls-top">
             <div class="ms-scan-info">
@@ -844,11 +843,8 @@ window.KORRA_MS = {
       handle.className = 'ms-right-col-handle';
       handle.id = 'ms-right-col-handle';
       handle.innerHTML = `
-      <div style="flex:1"></div>
-      <div class="ms-right-col-handle-bar"></div>
-      <button class="ms-right-col-handle-chevron" id="ms-right-col-chevron" title="Collapse">
-        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="18 15 12 9 6 15"/></svg>
-      </button>`;
+      <div class="ms-right-col-handle-bar" id="ms-right-col-handle-bar"></div>
+      <button class="ms-view3d-btn" id="ms-view3d-btn">View 3D Model</button>`;
       rc.appendChild(handle);
     }
     if (controls) rc.appendChild(controls);
@@ -873,7 +869,7 @@ window.KORRA_MS = {
       const rc = document.querySelector('.ms-side-by-side .ms-right-col');
       if (rc) { rc.classList.remove('sheet-collapsed', 'sheet-half'); rc.classList.add('sheet-full'); rc.style.overflow = 'visible'; }
       this._sheetSnap = 'full';
-      this._updateChevron();
+      this._updateViewBtn();
     }
   },
   collapseSheet() {
@@ -883,7 +879,7 @@ window.KORRA_MS = {
       const rc = document.querySelector('.ms-side-by-side .ms-right-col');
       if (rc) { rc.classList.remove('sheet-full', 'sheet-half'); rc.classList.add('sheet-collapsed'); rc.style.overflow = 'hidden'; }
       this._sheetSnap = 'collapsed';
-      this._updateChevron();
+      this._updateViewBtn();
     }
   },
   _halfSheet() {
@@ -891,14 +887,13 @@ window.KORRA_MS = {
     const rc = document.querySelector('.ms-side-by-side .ms-right-col');
     if (rc) { rc.classList.remove('sheet-collapsed', 'sheet-full'); rc.classList.add('sheet-half'); rc.style.overflow = 'visible'; }
     this._sheetSnap = 'half';
-    this._updateChevron();
+    this._updateViewBtn();
   },
-  _updateChevron() {
+  _updateViewBtn() {
     if (window.innerWidth > 900) return;
-    const chevron = document.getElementById('ms-right-col-chevron');
-    if (!chevron) return;
-    chevron.className = 'ms-right-col-handle-chevron' + (this._sheetSnap === 'collapsed' ? ' collapsed' : '');
-    chevron.title = this._sheetSnap === 'collapsed' ? 'Expand' : 'Collapse';
+    const btn = document.getElementById('ms-view3d-btn');
+    if (!btn) return;
+    btn.textContent = this._sheetSnap === 'collapsed' ? 'View Measurements' : 'View 3D Model';
   },
   _toggleSheet() {
     if (window.innerWidth > 900) return;
@@ -918,10 +913,8 @@ window.KORRA_MS = {
   },
   bindSheetDrag() {
     if (window.innerWidth <= 900) {
-      const handle = document.getElementById('ms-right-col-handle');
-      if (!handle) return;
-      let startY = 0;
       const rc = document.querySelector('.ms-side-by-side .ms-right-col');
+      let startY = 0;
       const onStart = (y) => { startY = y; if (rc) { rc.style.transition = 'none'; rc.style.overflow = 'visible'; } };
       const onMove = (y) => {
         if (!rc) return;
@@ -936,22 +929,32 @@ window.KORRA_MS = {
         rc.style.transition = '';
         this._snapSheet();
       };
-      handle.addEventListener('touchstart', (e) => onStart(e.touches[0].clientY), { passive: true });
-      handle.addEventListener('touchmove', (e) => onMove(e.touches[0].clientY), { passive: true });
-      handle.addEventListener('touchend', () => onEnd());
-      handle.addEventListener('mousedown', (e) => {
-        onStart(e.clientY);
-        const mv = (e) => onMove(e.clientY);
-        const up = () => { window.removeEventListener('mousemove', mv); window.removeEventListener('mouseup', up); onEnd(); };
-        window.addEventListener('mousemove', mv);
-        window.addEventListener('mouseup', up);
-      });
-      const chevron = document.getElementById('ms-right-col-chevron');
-      if (chevron) chevron.addEventListener('click', (e) => { e.stopPropagation(); this._toggleSheet(); });
+      const bindDrag = (el) => {
+        if (!el) return;
+        el.addEventListener('touchstart', (e) => onStart(e.touches[0].clientY), { passive: true });
+        el.addEventListener('touchmove', (e) => onMove(e.touches[0].clientY), { passive: true });
+        el.addEventListener('touchend', () => onEnd());
+        el.addEventListener('mousedown', (e) => {
+          onStart(e.clientY);
+          const mv = (e) => onMove(e.clientY);
+          const up = () => { window.removeEventListener('mousemove', mv); window.removeEventListener('mouseup', up); onEnd(); };
+          window.addEventListener('mousemove', mv);
+          window.addEventListener('mouseup', up);
+        });
+      };
+      bindDrag(document.getElementById('ms-right-col-handle'));
+      bindDrag(document.getElementById('ms-sheet-controls'));
+
+      const bar = document.getElementById('ms-right-col-handle-bar');
+      if (bar) bar.addEventListener('click', () => this._toggleSheet());
+
+      const viewBtn = document.getElementById('ms-view3d-btn');
+      if (viewBtn) viewBtn.addEventListener('click', (e) => { e.stopPropagation(); if (this._sheetSnap === 'collapsed') this._halfSheet(); else this.collapseSheet(); });
+
       if (rc && !rc.classList.contains('sheet-collapsed') && !rc.classList.contains('sheet-full')) {
         rc.classList.add('sheet-half');
       }
-      this._updateChevron();
+      this._updateViewBtn();
       return;
     }
     // Desktop: original sheet-handle drag

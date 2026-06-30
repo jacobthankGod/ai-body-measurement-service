@@ -29,32 +29,33 @@
 }
 
 /* ── HEADER BAR ── */
-.ms-header {
-  display: flex;
-  align-items: center;
-  padding: 0 16px;
-  height: 40px;
-  flex-shrink: 0;
-  background: var(--Obsidian-Layer);
-  border-bottom: 1px solid var(--Glass-Border);
-  z-index: 10;
-}
 .ms-back-btn {
-  width: 28px;
-  height: 28px;
-  border-radius: 10px;
-  border: 1px solid var(--Glass-Border);
-  background: var(--Glass);
-  color: var(--Neutral-400);
+  position: absolute;
+  top: 12px;
+  left: 12px;
+  z-index: 15;
   display: flex;
   align-items: center;
-  justify-content: center;
+  gap: 4px;
+  padding: 6px 12px;
+  border-radius: 8px;
+  border: none;
+  background: rgba(0, 0, 0, 0.5);
+  color: #fff;
+  font-size: 12px;
+  font-weight: 700;
   cursor: pointer;
+  backdrop-filter: blur(4px);
+  -webkit-backdrop-filter: blur(4px);
   transition: all 0.2s;
 }
 .ms-back-btn:hover {
-  color: var(--Mint);
-  border-color: var(--Mint);
+  background: rgba(0, 0, 0, 0.7);
+}
+.ms-back-btn svg {
+  width: 14px;
+  height: 14px;
+  flex-shrink: 0;
 }
 .ms-sheet-controls {
   padding: 10px 20px 8px;
@@ -861,13 +862,10 @@
   flex-direction: row !important;
   flex-wrap: wrap;
 }
-.ms-side-by-side .ms-header {
-  width: 100%;
-}
 .ms-side-by-side .ms-viewer {
   flex: 1 1 50%;
   min-width: 0;
-  height: calc(100vh - 40px);
+  height: calc(100vh);
   order: 1;
 }
 .ms-side-by-side .ms-right-col {
@@ -875,7 +873,7 @@
   flex: 1 1 50%;
   display: flex;
   flex-direction: column;
-  height: calc(100vh - 40px);
+  height: calc(100vh);
   min-width: 0;
   border-left: 1px solid var(--Glass-Border);
   overflow: visible;
@@ -1190,10 +1188,6 @@
     height: auto;
     min-height: 0;
   }
-  .ms-header {
-    padding: 0 12px;
-    height: 40px;
-  }
   .ms-sheet-controls {
     padding: 8px 16px 6px;
   }
@@ -1307,12 +1301,13 @@
   }
   .ms-side-by-side .ms-right-col.sheet-collapsed { height: 48px !important; }
   .ms-side-by-side .ms-right-col.sheet-half { height: 60vh !important; }
-  .ms-side-by-side .ms-right-col.sheet-full { height: calc(100vh - 40px) !important; }
+  .ms-side-by-side .ms-right-col.sheet-full { height: calc(100vh) !important; }
   .ms-right-col-handle {
     flex-shrink: 0;
     display: flex;
     align-items: center;
-    justify-content: space-between;
+    justify-content: center;
+    gap: 8px;
     padding: 8px 16px 4px;
     cursor: grab;
     user-select: none;
@@ -1324,27 +1319,25 @@
     height: 4px;
     border-radius: 2px;
     background: var(--Neutral-500);
-    margin: 0 auto;
+    cursor: pointer;
   }
-  .ms-right-col-handle-chevron {
-    width: 28px;
-    height: 28px;
-    border-radius: 50%;
-    border: none;
-    background: var(--Glass);
-    color: var(--Neutral-400);
+  .ms-view3d-btn {
     display: flex;
     align-items: center;
-    justify-content: center;
+    padding: 4px 10px;
+    border-radius: 8px;
+    border: 1px solid var(--Glass-Border);
+    background: var(--Glass);
+    color: var(--Neutral-400);
+    font-size: 9px;
+    font-weight: 700;
     cursor: pointer;
+    transition: all 0.2s;
     flex-shrink: 0;
-    transition: transform 0.3s;
   }
-  .ms-right-col-handle-chevron svg {
-    transition: transform 0.3s;
-  }
-  .ms-right-col-handle-chevron.collapsed svg {
-    transform: rotate(180deg);
+  .ms-view3d-btn:hover {
+    color: var(--Mint);
+    border-color: var(--Mint);
   }
   .ms-side-by-side .ms-sheet-controls {
     flex-shrink: 0;
@@ -1356,6 +1349,12 @@
   }
   .at-chips { display: none !important; }
   .at-status { display: none !important; }
+  .at-trigger {
+    border-color: rgba(255,255,255,0.25) !important;
+  }
+  .at-trigger.open {
+    border-color: var(--Accent-Teal) !important;
+  }
   .ms-side-by-side .ms-tabs {
     order: 2;
     width: 100%;
@@ -1405,7 +1404,6 @@
     padding-top: max(12px, env(safe-area-inset-top));
   }
   body.ai-mode header { display: none !important; }
-  body.ai-mode .ms-header { display: none !important; }
   body.ai-mode .ms-sheet-controls { display: none !important; }
   .ms-ai-view .ms-ai-topbar {
     padding-top: 8px;
