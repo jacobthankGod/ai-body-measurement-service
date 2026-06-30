@@ -748,35 +748,6 @@ window.KORRA_MS = {
       setTimeout(() => {
         backdrop.classList.add('open');
         menu.classList.add('open');
-
-        if (window.innerWidth > 900) {
-          let lastDisplay = getComputedStyle(menu).display;
-          const watchInterval = setInterval(() => {
-            const d = getComputedStyle(menu).display;
-            if (d !== lastDisplay) {
-              console.error(`[SIDEMENU] display changed: "${lastDisplay}" → "${d}"`, new Error().stack);
-              lastDisplay = d;
-              if (d === 'none' && !document.body.contains(menu)) {
-                console.error('[SIDEMENU] menu was removed from DOM!');
-              }
-            }
-          }, 50);
-          setTimeout(() => clearInterval(watchInterval), 5000);
-
-          const obs = new MutationObserver(mutations => {
-            for (const m of mutations) {
-              if (m.type === 'attributes' && m.attributeName === 'style') {
-                console.error('[SIDEMENU] style attr changed:', menu.style.cssText, new Error().stack);
-              }
-              if (m.type === 'attributes' && m.attributeName === 'class') {
-                console.error('[SIDEMENU] class attr changed:', menu.className, new Error().stack);
-              }
-            }
-          });
-          obs.observe(menu, { attributes: true, attributeFilter: ['style', 'class'] });
-          obs.observe(backdrop, { attributes: true, attributeFilter: ['style', 'class'] });
-          setTimeout(() => obs.disconnect(), 5000);
-        }
       }, 0);
 
     } catch (e) {
@@ -787,11 +758,12 @@ window.KORRA_MS = {
   closeSideMenu() {
     const backdrop = document.getElementById('ms-side-menu-backdrop');
     const menu = document.getElementById('ms-side-menu');
-    if (window.innerWidth <= 900) {
-      if (menu) { menu.classList.remove('open'); menu.style.removeProperty('display'); }
-      if (backdrop) { backdrop.classList.remove('open'); backdrop.style.removeProperty('display'); }
-    }
+    if (menu) { menu.classList.remove('open'); menu.style.removeProperty('display'); }
+    if (backdrop) { backdrop.classList.remove('open'); backdrop.style.removeProperty('display'); }
     this._sideMenuMeasurement = null;
+    if (window.innerWidth > 900 && menu) {
+      menu.classList.add('open');
+    }
   },
 
   _getSizeForMeasurement(key) {
