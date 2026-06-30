@@ -192,6 +192,8 @@ window.KORRA_MS = {
         onChange: (id) => this.setContext(id)
       });
     }
+    const attireContainer = document.querySelector('.ms-attire-selector-container');
+    if (attireContainer) attireContainer.style.display = this.showEased ? '' : 'none';
     setTimeout(() => {
       const hEl = document.querySelector('.ms-summary-value');
       if (hEl) {
@@ -320,12 +322,6 @@ window.KORRA_MS = {
 
   // ═══ SHEET CONTENT ═══
   buildSheetContent() {
-    const d = this.data || {};
-    const summaryBar = `<div class="ms-summary-bar">
-      <div class="ms-summary-item"><div class="ms-summary-label">HEIGHT</div><div class="ms-summary-value">${d.height ? d.height + ' cm' : '—'}</div></div>
-      <div class="ms-summary-item"><div class="ms-summary-label">SHAPE</div><div class="ms-summary-value">${d.body_shape || 'Standard'}</div></div>
-      <div class="ms-summary-item"><div class="ms-summary-label">SIZE REC</div><div class="ms-summary-value">${d.size_recommendation || 'M'}</div></div>
-    </div>`;
     let content;
     switch (this.viewMode) {
       case 'avatar': content = this.buildMetricsGrid(); break;
@@ -336,7 +332,7 @@ window.KORRA_MS = {
       default: content = this.buildMetricsGrid();
     }
     if (this.viewMode === 'ai') return content;
-    return summaryBar + content + this.buildNotesHTML();
+    return content + this.buildNotesHTML();
   },
 
   buildAIView() {
@@ -421,6 +417,11 @@ window.KORRA_MS = {
     const m = this.data?.measurements || {};
     const sizeRec = this.data?.size_recommendation || 'M';
     const factor = this.unit === 'in' ? 0.393701 : 1;
+    const summaryBar = `<div class="ms-summary-bar">
+      <div class="ms-summary-item"><div class="ms-summary-label">HEIGHT</div><div class="ms-summary-value">${this.data?.height ? this.data.height + ' cm' : '—'}</div></div>
+      <div class="ms-summary-item"><div class="ms-summary-label">SHAPE</div><div class="ms-summary-value">${this.data?.body_shape || 'Standard'}</div></div>
+      <div class="ms-summary-item"><div class="ms-summary-label">SIZE REC</div><div class="ms-summary-value">${this.data?.size_recommendation || 'M'}</div></div>
+    </div>`;
     const getSize = (v, r) => {
       if (!v) return '—';
       const s = { chest: [[80,'XS'],[88,'S'],[96,'M'],[104,'L'],[112,'XL'],[120,'XXL']], waist: [[68,'XS'],[76,'S'],[84,'M'],[92,'L'],[100,'XL'],[108,'XXL']], hip: [[84,'XS'],[92,'S'],[100,'M'],[108,'L'],[116,'XL'],[124,'XXL']], shoulder: [[40,'XS'],[43,'S'],[46,'M'],[49,'L'],[52,'XL'],[55,'XXL']], thigh: [[48,'XS'],[52,'S'],[56,'M'],[60,'L'],[64,'XL'],[68,'XXL']] };
@@ -445,6 +446,7 @@ window.KORRA_MS = {
 
     const mat = this.activeMaterial;
     return `
+      ${summaryBar}
       <div class="ms-material-section">
         <div class="ms-material-label">FABRIC</div>
         <div class="ms-material-rail">
@@ -556,11 +558,6 @@ window.KORRA_MS = {
     console.log(`▶ renderMeasurements() viewMode=${this.viewMode}`);
     const body = document.getElementById('ms-sheet-body');
     if (!body) { console.warn('  renderMeasurements: #ms-sheet-body NOT FOUND'); return; }
-    const summaryBar = `<div class="ms-summary-bar">
-      <div class="ms-summary-item"><div class="ms-summary-label">HEIGHT</div><div class="ms-summary-value">${this.data?.height ? this.data.height + ' cm' : '—'}</div></div>
-      <div class="ms-summary-item"><div class="ms-summary-label">SHAPE</div><div class="ms-summary-value">${this.data?.body_shape || 'Standard'}</div></div>
-      <div class="ms-summary-item"><div class="ms-summary-label">SIZE REC</div><div class="ms-summary-value">${this.data?.size_recommendation || 'M'}</div></div>
-    </div>`;
     let content;
     switch (this.viewMode) {
       case 'avatar': content = this.buildMetricsGrid(); break;
@@ -569,7 +566,7 @@ window.KORRA_MS = {
       case 'compare': content = this.buildCompareView(); break;
       default: content = this.buildMetricsGrid();
     }
-    body.innerHTML = summaryBar + content;
+    body.innerHTML = content;
     if (this.viewMode === 'compare') this.initCompareViewers();
     this.updateBadge();
   },
@@ -1187,6 +1184,8 @@ window.KORRA_MS = {
       if (track) track.classList.toggle('active', this.showEased);
       if (thumb) thumb.classList.toggle('right', this.showEased);
     }
+    const attireContainer = document.querySelector('.ms-attire-selector-container');
+    if (attireContainer) attireContainer.style.display = this.showEased ? '' : 'none';
   },
 
   // ═══ FIT DIAGNOSTICS ═══

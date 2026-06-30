@@ -1314,6 +1314,8 @@
   .ms-side-by-side .ms-attire-selector-container {
     flex-shrink: 0;
   }
+  .at-chips { display: none !important; }
+  .at-status { display: none !important; }
   .ms-side-by-side .ms-tabs {
     order: 0;
     width: 100%;
