@@ -43,9 +43,8 @@ class KorraVisualizer {
         container.innerHTML = '';
         container.appendChild(this.renderer.domElement);
 
-        this.grid = new THREE.GridHelper(10, 20, 0x666666, 0xAAAAAA);
-        this.grid.material.opacity = 0.6;
-        this.grid.material.transparent = true;
+        this.grid = new THREE.GridHelper(10, 20, 0xFFFFFF, 0x444444);
+        this.grid.material.opacity = 1.0;
         this.scene.add(this.grid);
 
         const ambient = new THREE.AmbientLight(0xffffff, 0.8);
