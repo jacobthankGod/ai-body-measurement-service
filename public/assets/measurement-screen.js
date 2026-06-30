@@ -639,8 +639,10 @@ window.KORRA_MS = {
         const sheet = document.querySelector('.ms-sheet');
         if (sheet) sheet.classList.remove('ai-active');
 
-        const bottomNav = document.querySelector('.sidebar-nav');
-        if (bottomNav) bottomNav.style.display = '';
+        if (!this.active) {
+          const bottomNav = document.querySelector('.sidebar-nav');
+          if (bottomNav) bottomNav.style.display = '';
+        }
 
         document.querySelectorAll('#view-scanresult .ms-header-btn, #view-scanresult .ms-share-btn').forEach(btn => {
           btn.style.display = '';
