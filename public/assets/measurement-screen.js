@@ -679,6 +679,7 @@ window.KORRA_MS = {
       this.openSideMenu(key);
       return;
     }
+    this.openSideMenu(key);
     this._notifyPostAction();
   },
 

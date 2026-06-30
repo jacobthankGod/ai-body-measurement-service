@@ -1350,138 +1350,6 @@
   .ms-side-by-side .ms-sheet-handle {
     display: none;
   }
-  /* ── MEASUREMENT SIDE MENU ── */
-  .ms-side-menu {
-    position: fixed;
-    top: 0;
-    right: 0;
-    bottom: 0;
-    width: 85vw;
-    max-width: 360px;
-    background: var(--Obsidian-Layer);
-    z-index: 20;
-    transform: translateX(100%);
-    transition: transform 0.3s cubic-bezier(0.4, 0, 0.2, 1);
-    display: flex;
-    flex-direction: column;
-    border-left: 1px solid var(--Glass-Border);
-  }
-  .ms-side-menu.open {
-    transform: translateX(0);
-  }
-  .ms-side-menu-backdrop {
-    position: fixed;
-    inset: 0;
-    background: rgba(0, 0, 0, 0.5);
-    z-index: 19;
-    opacity: 0;
-    pointer-events: none;
-    transition: opacity 0.3s;
-  }
-  .ms-side-menu-backdrop.open {
-    opacity: 1;
-    pointer-events: auto;
-  }
-  .ms-side-menu-header {
-    display: flex;
-    align-items: center;
-    gap: 12px;
-    padding: 16px;
-    border-bottom: 1px solid var(--Glass-Border);
-    flex-shrink: 0;
-  }
-  .ms-side-menu-back {
-    width: 32px;
-    height: 32px;
-    border-radius: 8px;
-    border: none;
-    background: var(--Glass);
-    color: var(--Neutral-400);
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    cursor: pointer;
-    flex-shrink: 0;
-  }
-  .ms-side-menu-title {
-    font-size: 16px;
-    font-weight: 800;
-    color: var(--White);
-  }
-  .ms-side-menu-body {
-    flex: 1;
-    overflow-y: auto;
-    padding: 16px;
-    -webkit-overflow-scrolling: touch;
-  }
-  .ms-side-menu-value {
-    font-size: 36px;
-    font-weight: 900;
-    margin-bottom: 4px;
-  }
-  .ms-side-menu-unit {
-    font-size: 14px;
-    font-weight: 600;
-    color: var(--Neutral-400);
-    margin-left: 4px;
-  }
-  .ms-side-menu-desc {
-    font-size: 13px;
-    color: var(--Neutral-500);
-    line-height: 1.5;
-    margin-bottom: 20px;
-  }
-  .ms-side-menu-section {
-    margin-bottom: 20px;
-  }
-  .ms-side-menu-section-title {
-    font-size: 10px;
-    font-weight: 900;
-    color: var(--Mint);
-    text-transform: uppercase;
-    letter-spacing: 0.5px;
-    margin-bottom: 8px;
-  }
-  .ms-side-menu-fit-card {
-    background: rgba(255, 255, 255, 0.05);
-    border-radius: 10px;
-    padding: 12px;
-  }
-  .ms-side-menu-fit-row {
-    display: flex;
-    justify-content: space-between;
-    align-items: center;
-    padding: 6px 0;
-    border-bottom: 1px solid var(--Glass-Border);
-  }
-  .ms-side-menu-fit-row:last-child {
-    border-bottom: none;
-  }
-  .ms-side-menu-fit-label {
-    font-size: 12px;
-    color: var(--Neutral-400);
-  }
-  .ms-side-menu-fit-value {
-    font-size: 12px;
-    font-weight: 700;
-    color: var(--White);
-  }
-  .ms-side-menu-ai-btn {
-    width: 100%;
-    padding: 12px;
-    border-radius: 10px;
-    border: 1px solid rgba(198, 255, 0, 0.3);
-    background: rgba(198, 255, 0, 0.08);
-    color: var(--Mint);
-    font-size: 13px;
-    font-weight: 700;
-    cursor: pointer;
-    transition: all 0.2s;
-    margin-top: 8px;
-  }
-  .ms-side-menu-ai-btn:hover {
-    background: rgba(198, 255, 0, 0.15);
-  }
   /* ── AI VIEW FULL-SCREEN ON MOBILE ── */
   .ms-ai-view {
     position: fixed;
@@ -1547,6 +1415,139 @@
 }
 
 body.ai-mode .sidebar-nav { display: none !important; }
+
+/* ── MEASUREMENT SIDE MENU ── */
+.ms-side-menu {
+  position: fixed;
+  top: 0;
+  right: 0;
+  bottom: 0;
+  width: 85vw;
+  max-width: 360px;
+  background: var(--Obsidian-Layer);
+  z-index: 2200;
+  transform: translateX(100%);
+  transition: transform 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+  display: flex;
+  flex-direction: column;
+  border-left: 1px solid var(--Glass-Border);
+}
+.ms-side-menu.open {
+  transform: translateX(0);
+}
+.ms-side-menu-backdrop {
+  position: fixed;
+  inset: 0;
+  background: rgba(0, 0, 0, 0.5);
+  z-index: 2199;
+  opacity: 0;
+  pointer-events: none;
+  transition: opacity 0.3s;
+}
+.ms-side-menu-backdrop.open {
+  opacity: 1;
+  pointer-events: auto;
+}
+.ms-side-menu-header {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  padding: 16px;
+  border-bottom: 1px solid var(--Glass-Border);
+  flex-shrink: 0;
+}
+.ms-side-menu-back {
+  width: 32px;
+  height: 32px;
+  border-radius: 8px;
+  border: none;
+  background: var(--Glass);
+  color: var(--Neutral-400);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+  flex-shrink: 0;
+}
+.ms-side-menu-title {
+  font-size: 16px;
+  font-weight: 800;
+  color: var(--White);
+}
+.ms-side-menu-body {
+  flex: 1;
+  overflow-y: auto;
+  padding: 16px;
+  -webkit-overflow-scrolling: touch;
+}
+.ms-side-menu-value {
+  font-size: 36px;
+  font-weight: 900;
+  margin-bottom: 4px;
+}
+.ms-side-menu-unit {
+  font-size: 14px;
+  font-weight: 600;
+  color: var(--Neutral-400);
+  margin-left: 4px;
+}
+.ms-side-menu-desc {
+  font-size: 13px;
+  color: var(--Neutral-500);
+  line-height: 1.5;
+  margin-bottom: 20px;
+}
+.ms-side-menu-section {
+  margin-bottom: 20px;
+}
+.ms-side-menu-section-title {
+  font-size: 10px;
+  font-weight: 900;
+  color: var(--Mint);
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+  margin-bottom: 8px;
+}
+.ms-side-menu-fit-card {
+  background: rgba(255, 255, 255, 0.05);
+  border-radius: 10px;
+  padding: 12px;
+}
+.ms-side-menu-fit-row {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 6px 0;
+  border-bottom: 1px solid var(--Glass-Border);
+}
+.ms-side-menu-fit-row:last-child {
+  border-bottom: none;
+}
+.ms-side-menu-fit-label {
+  font-size: 12px;
+  color: var(--Neutral-400);
+}
+.ms-side-menu-fit-value {
+  font-size: 12px;
+  font-weight: 700;
+  color: var(--White);
+}
+.ms-side-menu-ai-btn {
+  width: 100%;
+  padding: 12px;
+  border-radius: 10px;
+  border: 1px solid rgba(198, 255, 0, 0.3);
+  background: rgba(198, 255, 0, 0.08);
+  color: var(--Mint);
+  font-size: 13px;
+  font-weight: 700;
+  cursor: pointer;
+  transition: all 0.2s;
+  margin-top: 8px;
+}
+.ms-side-menu-ai-btn:hover {
+  background: rgba(198, 255, 0, 0.15);
+}
 
 /* ── SHARE BUTTON (HEADER) ── */
 .ms-share-btn {
