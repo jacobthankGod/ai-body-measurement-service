@@ -719,7 +719,7 @@ class KorraVisualizer {
             if (this.grid.geometry) this.grid.geometry.dispose();
             if (this.grid.material) this.grid.material.dispose();
         }
-        this.grid = new THREE.GridHelper(10, 20, centerColor, gridColor);
+        this.grid = new THREE.GridHelper(40, 80, centerColor, gridColor);
         this.grid.material.opacity = opacity;
         this.grid.material.transparent = opacity < 1;
         this.scene.add(this.grid);
@@ -735,7 +735,7 @@ class KorraVisualizer {
             });
         }
         this._axisGroup = new THREE.Group();
-        const ext = 6.5;
+        const ext = 20;
         const makeLine = (from, to, color) => {
             const geo = new THREE.BufferGeometry();
             geo.setAttribute('position', new THREE.BufferAttribute(
@@ -853,6 +853,7 @@ class KorraVisualizer {
     _applyOrbit() {
         const pos = new THREE.Vector3().setFromSpherical(this._orbitSpherical).add(this._orbitTarget);
         this.camera.position.copy(pos);
+        this.camera.up.set(0, 1, 0);
         this.camera.lookAt(this._orbitTarget);
     }
 
