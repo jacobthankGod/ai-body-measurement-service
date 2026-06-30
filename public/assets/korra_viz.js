@@ -41,7 +41,7 @@ class KorraVisualizer {
         if (!container) return;
 
         this.scene = new THREE.Scene();
-        this._applyBgMode('dark');
+        this.scene.background = new THREE.Color(0x2B2B2B);
 
         const aspect = container.clientWidth / container.clientHeight;
         this.camera = new THREE.PerspectiveCamera(45, aspect, 0.1, 1000);
@@ -749,13 +749,13 @@ class KorraVisualizer {
             });
             return new THREE.Line(geo, mat);
         };
-        // X-axis (red)
+        // X-axis (red, left-right)
         this._axisGroup.add(makeLine(
             new THREE.Vector3(-ext, 0, 0), new THREE.Vector3(ext, 0, 0), 0xFF0000
         ));
-        // Y-axis (green)
+        // Z-axis (green in Blender convention, depth in grid plane)
         this._axisGroup.add(makeLine(
-            new THREE.Vector3(0, -ext, 0), new THREE.Vector3(0, ext, 0), 0x00FF00
+            new THREE.Vector3(0, 0, -ext), new THREE.Vector3(0, 0, ext), 0x00FF00
         ));
         this.scene.add(this._axisGroup);
     }
