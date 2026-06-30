@@ -663,6 +663,7 @@ window.KORRA_MS = {
 
   // ═══ MEASUREMENT SELECTION ═══
   selectMeasurement(key) {
+    console.log(`[SIDEMENU-DBG] selectMeasurement("${key}") called, innerWidth=${window.innerWidth}`);
     this.selectedMeasurement = key;
     this.updateBadge();
     if (this.viewerInstance) {
@@ -676,9 +677,11 @@ window.KORRA_MS = {
       if (el.querySelector('.ms-metric-name')?.textContent === key) el.classList.add('active');
     });
     if (window.innerWidth <= 900) {
+      console.log(`[SIDEMENU-DBG] mobile path → openSideMenu`);
       this.openSideMenu(key);
       return;
     }
+    console.log(`[SIDEMENU-DBG] desktop path → openSideMenu + _notifyPostAction`);
     this.openSideMenu(key);
     this._notifyPostAction();
   },
@@ -686,48 +689,64 @@ window.KORRA_MS = {
   // ═══ SIDE MENU (mobile) ═══
   _sideMenuMeasurement: null,
   openSideMenu(key) {
+    console.log(`[SIDEMENU-DBG] openSideMenu("${key}") entry`);
     this._sideMenuMeasurement = key;
-    const m = this.data?.measurements || {};
-    const val = m[key];
-    const factor = this.unit === 'in' ? 0.393701 : 1;
-    const ease = this.showEased ? this.getEase(key) : 1;
-    const displayVal = val != null ? (val * factor * ease).toFixed(1) : '—';
-    const color = MEASUREMENT_COLORS[key] || '#C6FF00';
-    const desc = MEASUREMENT_DESCRIPTIONS[key] || '';
-    const size = this._getSizeForMeasurement(key);
-    const historyHtml = this._buildHistoryHtml(key);
+    try {
+      const m = this.data?.measurements || {};
+      const val = m[key];
+      const factor = this.unit === 'in' ? 0.393701 : 1;
+      const ease = this.showEased ? this.getEase(key) : 1;
+      const displayVal = val != null ? (val * factor * ease).toFixed(1) : '—';
+      const color = MEASUREMENT_COLORS[key] || '#C6FF00';
+      const desc = MEASUREMENT_DESCRIPTIONS[key] || '';
+      console.log(`[SIDEMENU-DBG] computed: val=${val}, ease=${ease}, displayVal=${displayVal}`);
+      const size = this._getSizeForMeasurement(key);
+      const historyHtml = this._buildHistoryHtml(key);
+      console.log(`[SIDEMENU-DBG] size=${JSON.stringify(size)}, historyLen=${historyHtml?.length || 0}`);
 
-    let backdrop = document.getElementById('ms-side-menu-backdrop');
-    if (!backdrop) { backdrop = document.createElement('div'); backdrop.id = 'ms-side-menu-backdrop'; backdrop.className = 'ms-side-menu-backdrop'; backdrop.onclick = () => this.closeSideMenu(); document.body.appendChild(backdrop); }
-    let menu = document.getElementById('ms-side-menu');
-    if (!menu) { menu = document.createElement('div'); menu.id = 'ms-side-menu'; menu.className = 'ms-side-menu'; document.body.appendChild(menu); }
+      let backdrop = document.getElementById('ms-side-menu-backdrop');
+      if (!backdrop) { backdrop = document.createElement('div'); backdrop.id = 'ms-side-menu-backdrop'; backdrop.className = 'ms-side-menu-backdrop'; backdrop.onclick = () => this.closeSideMenu(); document.body.appendChild(backdrop); console.log(`[SIDEMENU-DBG] created backdrop`); }
+      let menu = document.getElementById('ms-side-menu');
+      if (!menu) { menu = document.createElement('div'); menu.id = 'ms-side-menu'; menu.className = 'ms-side-menu'; document.body.appendChild(menu); console.log(`[SIDEMENU-DBG] created menu`); }
 
-    menu.innerHTML = `
-      <div class="ms-side-menu-header">
-        <button class="ms-side-menu-back" onclick="KORRA_MS.closeSideMenu()">
-          <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="15 18 9 12 15 6"/></svg>
-        </button>
-        <div class="ms-side-menu-title">${key}</div>
-      </div>
-      <div class="ms-side-menu-body">
-        <div class="ms-side-menu-value" style="color:${color}">${displayVal}<span class="ms-side-menu-unit">${this.unit}</span></div>
-        <div class="ms-side-menu-desc">${desc}</div>
-        ${size ? `
-        <div class="ms-side-menu-section">
-          <div class="ms-side-menu-section-title">Size Recommendation</div>
-          <div class="ms-side-menu-fit-card">
-            <div class="ms-side-menu-fit-row"><span class="ms-side-menu-fit-label">Size</span><span class="ms-side-menu-fit-value" style="color:var(--Mint)">${size.label}</span></div>
-            <div class="ms-side-menu-fit-row"><span class="ms-side-menu-fit-label">Ease</span><span class="ms-side-menu-fit-value">${size.ease || '—'}</span></div>
-          </div>
-        </div>` : ''}
-        ${historyHtml ? `
-        <div class="ms-side-menu-section">
-          <div class="ms-side-menu-section-title">Scan History</div>
-          <div class="ms-side-menu-fit-card">${historyHtml}</div>
-        </div>` : ''}
-        <button class="ms-side-menu-ai-btn" onclick="KORRA_MS.closeSideMenu(); KORRA_MS.askAI('Tell me about my ${key.toLowerCase()} measurement')">Ask AI about this</button>
-      </div>`;
-    requestAnimationFrame(() => { backdrop.classList.add('open'); menu.classList.add('open'); });
+      menu.innerHTML = `
+        <div class="ms-side-menu-header">
+          <button class="ms-side-menu-back" onclick="KORRA_MS.closeSideMenu()">
+            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="15 18 9 12 15 6"/></svg>
+          </button>
+          <div class="ms-side-menu-title">${key}</div>
+        </div>
+        <div class="ms-side-menu-body">
+          <div class="ms-side-menu-value" style="color:${color}">${displayVal}<span class="ms-side-menu-unit">${this.unit}</span></div>
+          <div class="ms-side-menu-desc">${desc}</div>
+          ${size ? `
+          <div class="ms-side-menu-section">
+            <div class="ms-side-menu-section-title">Size Recommendation</div>
+            <div class="ms-side-menu-fit-card">
+              <div class="ms-side-menu-fit-row"><span class="ms-side-menu-fit-label">Size</span><span class="ms-side-menu-fit-value" style="color:var(--Mint)">${size.label}</span></div>
+              <div class="ms-side-menu-fit-row"><span class="ms-side-menu-fit-label">Ease</span><span class="ms-side-menu-fit-value">${size.ease || '—'}</span></div>
+            </div>
+          </div>` : ''}
+          ${historyHtml ? `
+          <div class="ms-side-menu-section">
+            <div class="ms-side-menu-section-title">Scan History</div>
+            <div class="ms-side-menu-fit-card">${historyHtml}</div>
+          </div>` : ''}
+          <button class="ms-side-menu-ai-btn" onclick="KORRA_MS.closeSideMenu(); KORRA_MS.askAI('Tell me about my ${key.toLowerCase()} measurement')">Ask AI about this</button>
+        </div>`;
+      console.log(`[SIDEMENU-DBG] innerHTML set, calling requestAnimationFrame`);
+      requestAnimationFrame(() => {
+        backdrop.classList.add('open');
+        menu.classList.add('open');
+        console.log(`[SIDEMENU-DBG] requestAnimationFrame fired, added .open class`);
+        const cs = getComputedStyle(menu);
+        console.log(`[SIDEMENU-DBG] computed: display=${cs.display}, visibility=${cs.visibility}, transform=${cs.transform}, zIndex=${cs.zIndex}, position=${cs.position}`);
+        console.log(`[SIDEMENU-DBG] backdrop computed: display=${getComputedStyle(backdrop).display}, opacity=${getComputedStyle(backdrop).opacity}, zIndex=${getComputedStyle(backdrop).zIndex}`);
+        console.log(`[SIDEMENU-DBG] menu parent: ${menu.parentElement?.tagName}#${menu.parentElement?.id || menu.parentElement?.className}`);
+      });
+    } catch (e) {
+      console.error(`[SIDEMENU-DBG] ERROR in openSideMenu:`, e);
+    }
   },
 
   closeSideMenu() {
