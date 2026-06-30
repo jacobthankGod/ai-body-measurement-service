@@ -1507,6 +1507,10 @@ body.ai-mode .sidebar-nav { display: none !important; }
 .ms-side-menu-backdrop.open {
   display: block;
 }
+@media (min-width: 901px) {
+  .ms-side-menu { display: flex !important; }
+  .ms-side-menu-backdrop { display: none !important; }
+}
 .ms-side-menu-header {
   display: flex;
   align-items: center;

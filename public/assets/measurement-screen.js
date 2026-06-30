@@ -702,7 +702,6 @@ window.KORRA_MS = {
   // ═══ SIDE MENU ═══
   _sideMenuMeasurement: null,
   openSideMenu(key) {
-    console.log(`[SIDEMENU-DBG] openSideMenu("${key}") entry`);
     this._sideMenuMeasurement = key;
     try {
       const m = this.data?.measurements || {};
@@ -712,16 +711,13 @@ window.KORRA_MS = {
       const displayVal = val != null ? (val * factor * ease).toFixed(1) : '—';
       const color = MEASUREMENT_COLORS[key] || '#C6FF00';
       const desc = MEASUREMENT_DESCRIPTIONS[key] || '';
-      console.log(`[SIDEMENU-DBG] computed: val=${val}, ease=${ease}, displayVal=${displayVal}`);
       const size = this._getSizeForMeasurement(key);
       const historyHtml = this._buildHistoryHtml(key);
-      console.log(`[SIDEMENU-DBG] size=${JSON.stringify(size)}, historyLen=${historyHtml?.length || 0}`);
 
       let backdrop = document.getElementById('ms-side-menu-backdrop');
-      if (!backdrop) { backdrop = document.createElement('div'); backdrop.id = 'ms-side-menu-backdrop'; backdrop.className = 'ms-side-menu-backdrop'; backdrop.onclick = () => this.closeSideMenu(); document.body.appendChild(backdrop); console.log(`[SIDEMENU-DBG] created backdrop`); }
+      if (!backdrop) { backdrop = document.createElement('div'); backdrop.id = 'ms-side-menu-backdrop'; backdrop.className = 'ms-side-menu-backdrop'; backdrop.onclick = () => this.closeSideMenu(); document.body.appendChild(backdrop); }
       let menu = document.getElementById('ms-side-menu');
-      if (!menu) { menu = document.createElement('div'); menu.id = 'ms-side-menu'; menu.className = 'ms-side-menu'; document.body.appendChild(menu); console.log(`[SIDEMENU-DBG] created menu`); }
-      console.log(`[SIDEMENU-DBG] menu exists=${!!menu}, backdrop exists=${!!backdrop}, parent=${menu.parentElement?.tagName}#${menu.parentElement?.id}`);
+      if (!menu) { menu = document.createElement('div'); menu.id = 'ms-side-menu'; menu.className = 'ms-side-menu'; document.body.appendChild(menu); }
 
       menu.innerHTML = `
         <div class="ms-side-menu-header">
@@ -748,47 +744,24 @@ window.KORRA_MS = {
           </div>` : ''}
           <button class="ms-side-menu-ai-btn" onclick="KORRA_MS.closeSideMenu(); KORRA_MS.askAI('Tell me about my ${key.toLowerCase()} measurement')">Ask AI about this</button>
         </div>`;
-      console.log(`[SIDEMENU-DBG] innerHTML set, menu children=${menu.children.length}`);
-
-      const csBefore = getComputedStyle(menu);
-      console.log(`[SIDEMENU-DBG] BEFORE .open: display=${csBefore.display}, visibility=${csBefore.visibility}, opacity=${csBefore.opacity}, position=${csBefore.position}, zIndex=${csBefore.zIndex}, width=${csBefore.width}, right=${csBefore.right}, pointerEvents=${csBefore.pointerEvents}`);
-      console.log(`[SIDEMENU-DBG] BEFORE .open: className="${menu.className}", inlineStyle="${menu.style.cssText}"`);
 
       setTimeout(() => {
         backdrop.classList.add('open');
         menu.classList.add('open');
-        console.log(`[SIDEMENU-DBG] .open added: className="${menu.className}"`);
-
-        const csAfter = getComputedStyle(menu);
-        console.log(`[SIDEMENU-DBG] AFTER .open (sync): display=${csAfter.display}, visibility=${csAfter.visibility}, opacity=${csAfter.opacity}, zIndex=${csAfter.zIndex}, width=${csAfter.width}, right=${csAfter.right}`);
-        console.log(`[SIDEMENU-DBG] AFTER .open (sync): inDOM=${document.body.contains(menu)}, bbox=${JSON.stringify(menu.getBoundingClientRect())}`);
-
-        const csBackdrop = getComputedStyle(backdrop);
-        console.log(`[SIDEMENU-DBG] backdrop: display=${csBackdrop.display}, visibility=${csBackdrop.visibility}, zIndex=${csBackdrop.zIndex}`);
       }, 0);
 
-      requestAnimationFrame(() => {
-        const csRAF = getComputedStyle(menu);
-        console.log(`[SIDEMENU-DBG] rAF (next frame): display=${csRAF.display}, visibility=${csRAF.visibility}, opacity=${csRAF.opacity}, zIndex=${csRAF.zIndex}`);
-        console.log(`[SIDEMENU-DBG] rAF: bbox=${JSON.stringify(menu.getBoundingClientRect())}, offsetParent=${menu.offsetParent?.tagName}#${menu.offsetParent?.id}`);
-      });
-
-      setTimeout(() => {
-        const cs100 = getComputedStyle(menu);
-        console.log(`[SIDEMENU-DBG] 100ms check: display=${cs100.display}, classList="${menu.className}", inDOM=${document.body.contains(menu)}, bbox=${JSON.stringify(menu.getBoundingClientRect())}`);
-      }, 100);
-
     } catch (e) {
-      console.error(`[SIDEMENU-DBG] ERROR in openSideMenu:`, e);
+      console.error('Error in openSideMenu:', e);
     }
   },
 
   closeSideMenu() {
-    console.log(`[SIDEMENU-DBG] closeSideMenu called from:`, new Error().stack);
     const backdrop = document.getElementById('ms-side-menu-backdrop');
     const menu = document.getElementById('ms-side-menu');
-    if (menu) menu.classList.remove('open');
-    if (backdrop) backdrop.classList.remove('open');
+    if (window.innerWidth <= 900) {
+      if (menu) { menu.classList.remove('open'); menu.style.removeProperty('display'); }
+      if (backdrop) { backdrop.classList.remove('open'); backdrop.style.removeProperty('display'); }
+    }
     this._sideMenuMeasurement = null;
   },
 
