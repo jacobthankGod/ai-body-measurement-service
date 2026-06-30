@@ -2,7 +2,12 @@
    KORRA Measurement Screen | Dedicated Tab View
    Non-destructive overlay within existing dashboard
    ═══════════════════════════════════════════════════════ */
-/* v2.1.27 */
+/* v2.1.28 */
+/* ── MOBILE-ONLY: hidden on desktop by default, shown via @media (max-width:900px) ── */
+.ms-right-col-handle,
+.ms-view3d-btn {
+  display: none;
+}
 
 /* ── CONTAINER ── */
 .ms-root {
