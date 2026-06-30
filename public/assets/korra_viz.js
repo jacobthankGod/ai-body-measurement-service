@@ -735,24 +735,27 @@ class KorraVisualizer {
             });
         }
         this._axisGroup = new THREE.Group();
-        const len = 8;
-        const headLen = 0.3;
-        const headWidth = 0.15;
-        this._axisGroup.add(new THREE.ArrowHelper(
-            new THREE.Vector3(1, 0, 0), new THREE.Vector3(0, 0, 0),
-            len, 0xFF0000, headLen, headWidth
+        const ext = 6.5;
+        const makeLine = (from, to, color) => {
+            const geo = new THREE.BufferGeometry();
+            geo.setAttribute('position', new THREE.BufferAttribute(
+                new Float32Array([from.x, from.y, from.z, to.x, to.y, to.z]), 3
+            ));
+            const mat = new THREE.LineBasicMaterial({
+                color: color,
+                transparent: true,
+                opacity: 0.9,
+                depthTest: true
+            });
+            return new THREE.Line(geo, mat);
+        };
+        // X-axis (red)
+        this._axisGroup.add(makeLine(
+            new THREE.Vector3(-ext, 0, 0), new THREE.Vector3(ext, 0, 0), 0xFF0000
         ));
-        this._axisGroup.add(new THREE.ArrowHelper(
-            new THREE.Vector3(-1, 0, 0), new THREE.Vector3(0, 0, 0),
-            len, 0xFF0000, headLen, headWidth
-        ));
-        this._axisGroup.add(new THREE.ArrowHelper(
-            new THREE.Vector3(0, 1, 0), new THREE.Vector3(0, 0, 0),
-            len, 0x00FF00, headLen, headWidth
-        ));
-        this._axisGroup.add(new THREE.ArrowHelper(
-            new THREE.Vector3(0, -1, 0), new THREE.Vector3(0, 0, 0),
-            len, 0x00FF00, headLen, headWidth
+        // Y-axis (green)
+        this._axisGroup.add(makeLine(
+            new THREE.Vector3(0, -ext, 0), new THREE.Vector3(0, ext, 0), 0x00FF00
         ));
         this.scene.add(this._axisGroup);
     }
