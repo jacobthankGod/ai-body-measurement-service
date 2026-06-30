@@ -183,6 +183,8 @@ window.KORRA_MS = {
     document.querySelector('main').style.overflow = 'hidden';
     const bottomNav = document.querySelector('.sidebar-nav');
     if (bottomNav) bottomNav.style.display = 'none';
+    const content = document.querySelector('.main-content');
+    if (content) { content.style.marginLeft = '0'; content.style.padding = '0'; }
     // Switch tab FIRST so canvas has dimensions before initViewer
     window.switchTab('scanresult');
     this.initViewer();
@@ -1323,6 +1325,8 @@ window.KORRA_MS = {
     });
     document.body.classList.remove('ai-mode');
     document.querySelector('main').style.overflow = '';
+    const content = document.querySelector('.main-content');
+    if (content) { content.style.marginLeft = ''; content.style.padding = ''; }
     this.active = false;
     this.data = null;
     if (this.viewerInstance && this.viewerInstance !== window.KORRA_VIZ) {
