@@ -30,9 +30,10 @@ class KorraVisualizer {
         this.controls = null;
         this._isOrtho = false;
         this._orthoCamera = null;
-        this._orbitTarget = new THREE.Vector3(0, 3, 0);
+        this._orbitTarget = new THREE.Vector3(0, 0.3, 0);
         this._orbitSpherical = new THREE.Spherical(3.0, Math.PI / 2, 0);
         this._orbitState = { active: false, type: null, startX: 0, startY: 0, startSpherical: null, startTarget: null };
+        this._meshSize = 0;
     }
 
     init(containerId) {
@@ -45,8 +46,8 @@ class KorraVisualizer {
 
         const aspect = container.clientWidth / container.clientHeight;
         this.camera = new THREE.PerspectiveCamera(45, aspect, 0.1, 1000);
-        this.camera.position.set(0, 3.0, 3.0);
-        this.camera.lookAt(0, 3, 0);
+        this.camera.position.set(0, 0.3, 3.0);
+        this.camera.lookAt(0, 0.3, 0);
 
         this.renderer = new THREE.WebGLRenderer({ antialias: true, alpha: true, preserveDrawingBuffer: true });
         this.renderer.setSize(container.clientWidth, container.clientHeight);
@@ -105,7 +106,7 @@ class KorraVisualizer {
         animate();
 
         // ── ORBIT + MESH DRAG CONTROLS ──
-        this._orbitTarget.set(0, 3, 0);
+        this._orbitTarget.set(0, 0.3, 0);
         this._orbitSpherical.setFromVector3(
             new THREE.Vector3().subVectors(this.camera.position, this._orbitTarget)
         );
@@ -124,7 +125,6 @@ class KorraVisualizer {
                 this._orbitState.startX = e.clientX;
                 this._orbitState.startY = e.clientY;
                 this._orbitState.startSpherical = this._orbitSpherical.clone();
-                this._orbitTarget.set(0, this.mesh ? this.mesh.position.y : 3, 0);
                 this.isInteracting = true;
                 if (this.onInteract) this.onInteract(true);
             } else if (e.button === 1) {
@@ -417,10 +417,11 @@ class KorraVisualizer {
         const size = new THREE.Vector3();
         bbox.getSize(size);
 
-        this.mesh.position.set(0, size.y / 2 + 2, 0);
-        this.camera.lookAt(0, size.y / 2 + 2, 0);
-        this.camera.position.y = size.y / 2 + 2;
-        this.camera.position.z = Math.max(2.5, size.y * 1.5);
+        this.mesh.position.set(0, size.y / 2, 0);
+        this._meshSize = size.y;
+        this.camera.lookAt(0, size.y * 0.3, 0);
+        this.camera.position.y = size.y * 0.3;
+        this.camera.position.z = Math.max(3.0, size.y * 2.0);
 
         this.scene.add(this.mesh);
 
@@ -439,7 +440,7 @@ class KorraVisualizer {
         this._outline.rotation.copy(this.mesh.rotation);
         this.scene.add(this._outline);
 
-        this.updateOrbitTarget(new THREE.Vector3(0, size.y / 2 + 2, 0));
+        this.updateOrbitTarget(new THREE.Vector3(0, size.y * 0.3, 0));
 
         return { vertices, faces, size };
     }
@@ -674,11 +675,8 @@ class KorraVisualizer {
         this.camera = new THREE.PerspectiveCamera(45, aspect, 0.1, 1000);
         this.targetRotationX = 0;
         this.targetRotationY = 0;
-        const meshY = this.mesh ? this.mesh.position.y : 3;
-        this.camera.position.set(0, meshY, 3.0);
-        this.camera.lookAt(0, meshY, 0);
-        this._orbitTarget.set(0, meshY, 0);
-        this._orbitSpherical.set(3.0, Math.PI / 2, 0);
+        const dist = this.mesh ? Math.max(3.0, this._meshSize * 2.0) : 3.0;
+        this._orbitSpherical.set(dist, Math.PI / 2, 0);
         this._applyOrbit();
         if (this.mesh) {
             this.mesh.rotation.x = 0;
@@ -723,7 +721,6 @@ class KorraVisualizer {
         this.grid = new THREE.GridHelper(40, 80, centerColor, gridColor);
         this.grid.material.opacity = opacity;
         this.grid.material.transparent = opacity < 1;
-        this.grid.position.y = 2;
         this.scene.add(this.grid);
     }
 
@@ -759,7 +756,6 @@ class KorraVisualizer {
         this._axisGroup.add(makeLine(
             new THREE.Vector3(0, 0, -ext), new THREE.Vector3(0, 0, ext), 0x00FF00
         ));
-        this._axisGroup.position.y = 2;
         this.scene.add(this._axisGroup);
     }
 
@@ -767,7 +763,7 @@ class KorraVisualizer {
     _buildCursor() {
         if (this._cursorGroup) this.scene.remove(this._cursorGroup);
         this._cursorGroup = new THREE.Group();
-        this._cursorGroup.position.set(0, 2, 0);
+        this._cursorGroup.position.set(0, 0, 0);
 
         // Dashed ring: alternating red/white arcs
         const segments = 32;
