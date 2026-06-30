@@ -2,7 +2,7 @@
    KORRA Measurement Screen | Dedicated Tab View
    Non-destructive overlay within existing dashboard
    ═══════════════════════════════════════════════════════ */
-/* v2.1.26 */
+/* v2.1.27 */
 
 /* ── CONTAINER ── */
 .ms-root {
@@ -1317,7 +1317,7 @@
   }
   .ms-side-by-side .ms-right-col.sheet-collapsed { height: 48px !important; }
   .ms-side-by-side .ms-right-col.sheet-half { height: 60vh !important; }
-  .ms-side-by-side .ms-right-col.sheet-full { height: calc(100vh) !important; }
+  .ms-side-by-side .ms-right-col.sheet-full { height: calc(100vh - 80px) !important; }
   .ms-right-col-handle {
     flex-shrink: 0;
     display: flex;
