@@ -22,6 +22,12 @@ class KorraVisualizer {
         this.wireframeMode = false;     // solid mesh by default
         this._fetchCache = new Map();   // url -> Promise<string>
         this.onInteract = null;         // callback(isInteracting: boolean)
+        this._bgMode = 'dark';
+        this._axisGroup = null;
+        this._cursorGroup = null;
+        this._lightWidget = null;
+        this._outline = null;
+        this.controls = null;
     }
 
     init(containerId) {
@@ -30,7 +36,7 @@ class KorraVisualizer {
         if (!container) return;
 
         this.scene = new THREE.Scene();
-        this.scene.background = new THREE.Color(0xD4D4D4);
+        this._applyBgMode('dark');
 
         const aspect = container.clientWidth / container.clientHeight;
         this.camera = new THREE.PerspectiveCamera(45, aspect, 0.1, 1000);
@@ -43,9 +49,15 @@ class KorraVisualizer {
         container.innerHTML = '';
         container.appendChild(this.renderer.domElement);
 
-        this.grid = new THREE.GridHelper(10, 20, 0xFFFFFF, 0x444444);
-        this.grid.material.opacity = 1.0;
-        this.scene.add(this.grid);
+        this._buildGrid();
+        this._buildAxes();
+        this._buildCursor();
+        this._buildLightWidget();
+
+        const savedBg = localStorage.getItem('korra_viewport_bg');
+        if (savedBg === 'light' || savedBg === 'dark') {
+            this.setBackgroundMode(savedBg);
+        }
 
         const ambient = new THREE.AmbientLight(0xffffff, 0.8);
         this.scene.add(ambient);
@@ -64,6 +76,10 @@ class KorraVisualizer {
             if (this.mesh && !this.isInteracting) {
                 this.mesh.rotation.y += 0.005;
                 if(this.landmarksGroup) this.landmarksGroup.rotation.y += 0.005;
+                if (this._outline) {
+                    this._outline.rotation.y = this.mesh.rotation.y;
+                    this._outline.position.copy(this.mesh.position);
+                }
             } else if (this.mesh && this.isInteracting) {
                 const rotY = this.mesh.rotation.y + (this.targetRotationY - this.mesh.rotation.y) * 0.1;
                 const rotX = this.mesh.rotation.x + (this.targetRotationX - this.mesh.rotation.x) * 0.1;
@@ -73,7 +89,13 @@ class KorraVisualizer {
                     this.landmarksGroup.rotation.y = rotY;
                     this.landmarksGroup.rotation.x = rotX;
                 }
+                if (this._outline) {
+                    this._outline.rotation.y = rotY;
+                    this._outline.rotation.x = rotX;
+                    this._outline.position.copy(this.mesh.position);
+                }
             }
+            if (this.controls) this.controls.update();
             this.renderer.render(this.scene, this.camera);
         };
         animate();
@@ -331,6 +353,27 @@ class KorraVisualizer {
         this.camera.position.z = Math.max(2.5, size.y * 1.5);
 
         this.scene.add(this.mesh);
+
+        // Orange selected outline
+        if (this._outline) {
+            this.scene.remove(this._outline);
+            if (this._outline.geometry) this._outline.geometry.dispose();
+            if (this._outline.material) this._outline.material.dispose();
+        }
+        const edgesGeo = new THREE.EdgesGeometry(geometry);
+        const outlineMat = new THREE.LineBasicMaterial({
+            color: 0xFF6600, transparent: true, opacity: 0.8
+        });
+        this._outline = new THREE.LineSegments(edgesGeo, outlineMat);
+        this._outline.position.copy(this.mesh.position);
+        this._outline.rotation.copy(this.mesh.rotation);
+        this.scene.add(this._outline);
+
+        if (this.controls) {
+            this.controls.target.set(0, size.y / 2, 0);
+            this.controls.update();
+        }
+
         return { vertices, faces, size };
     }
 
@@ -567,6 +610,167 @@ class KorraVisualizer {
             this.landmarksGroup.rotation.x = 0;
             this.landmarksGroup.rotation.y = 0;
         }
+        if (this.controls) {
+            this.controls.target.set(0, this.mesh ? this.mesh.position.y : 1, 0);
+            this.controls.update();
+        }
+    }
+
+    // ── BACKGROUND MODE ──
+    setBackgroundMode(mode) {
+        if (mode !== 'light' && mode !== 'dark') return;
+        this._bgMode = mode;
+        this._applyBgMode(mode);
+        localStorage.setItem('korra_viewport_bg', mode);
+    }
+
+    _applyBgMode(mode) {
+        if (mode === 'dark') {
+            this.scene.background = new THREE.Color(0x2B2B2B);
+            this._buildGrid(0xFFFFFF, 0x444444, 0.5);
+        } else {
+            this.scene.background = new THREE.Color(0xD4D4D4);
+            this._buildGrid(0x666666, 0xAAAAAA, 0.6);
+        }
+    }
+
+    toggleBackground() {
+        this.setBackgroundMode(this._bgMode === 'dark' ? 'light' : 'dark');
+        return this._bgMode;
+    }
+
+    // ── GRID ──
+    _buildGrid(centerColor = 0xFFFFFF, gridColor = 0x444444, opacity = 0.5) {
+        if (this.grid) {
+            this.scene.remove(this.grid);
+            if (this.grid.geometry) this.grid.geometry.dispose();
+            if (this.grid.material) this.grid.material.dispose();
+        }
+        this.grid = new THREE.GridHelper(10, 20, centerColor, gridColor);
+        this.grid.material.opacity = opacity;
+        this.grid.material.transparent = opacity < 1;
+        this.scene.add(this.grid);
+    }
+
+    // ── AXES (Red X, Green Y) ──
+    _buildAxes() {
+        if (this._axisGroup) {
+            this.scene.remove(this._axisGroup);
+            this._axisGroup.traverse(c => {
+                if (c.geometry) c.geometry.dispose();
+                if (c.material) c.material.dispose();
+            });
+        }
+        this._axisGroup = new THREE.Group();
+        const len = 8;
+        const headLen = 0.3;
+        const headWidth = 0.15;
+        this._axisGroup.add(new THREE.ArrowHelper(
+            new THREE.Vector3(1, 0, 0), new THREE.Vector3(0, 0, 0),
+            len, 0xFF0000, headLen, headWidth
+        ));
+        this._axisGroup.add(new THREE.ArrowHelper(
+            new THREE.Vector3(-1, 0, 0), new THREE.Vector3(0, 0, 0),
+            len, 0xFF0000, headLen, headWidth
+        ));
+        this._axisGroup.add(new THREE.ArrowHelper(
+            new THREE.Vector3(0, 1, 0), new THREE.Vector3(0, 0, 0),
+            len, 0x00FF00, headLen, headWidth
+        ));
+        this._axisGroup.add(new THREE.ArrowHelper(
+            new THREE.Vector3(0, -1, 0), new THREE.Vector3(0, 0, 0),
+            len, 0x00FF00, headLen, headWidth
+        ));
+        this.scene.add(this._axisGroup);
+    }
+
+    // ── 3D CURSOR ──
+    _buildCursor() {
+        if (this._cursorGroup) this.scene.remove(this._cursorGroup);
+        this._cursorGroup = new THREE.Group();
+        this._cursorGroup.position.set(0, 0, 0);
+
+        // Dashed ring: alternating red/white arcs
+        const segments = 32;
+        const radius = 0.15;
+        for (let i = 0; i < segments; i++) {
+            const startAngle = (i / segments) * Math.PI * 2;
+            const endAngle = ((i + 1) / segments) * Math.PI * 2;
+            const color = i % 2 === 0 ? 0xFF0000 : 0xFFFFFF;
+            const arcGeo = new THREE.BufferGeometry();
+            const pts = [
+                new THREE.Vector3(Math.cos(startAngle) * radius, 0, Math.sin(startAngle) * radius),
+                new THREE.Vector3(Math.cos(endAngle) * radius, 0, Math.sin(endAngle) * radius)
+            ];
+            const positions = new Float32Array([
+                pts[0].x, pts[0].y, pts[0].z,
+                pts[1].x, pts[1].y, pts[1].z
+            ]);
+            arcGeo.setAttribute('position', new THREE.BufferAttribute(positions, 3));
+            const line = new THREE.Line(arcGeo, new THREE.LineBasicMaterial({
+                color: color, transparent: true, opacity: 0.9, depthTest: false
+            }));
+            this._cursorGroup.add(line);
+        }
+
+        // Crosshair: two perpendicular lines
+        const crossExtent = 0.22;
+        const crossMat = new THREE.LineBasicMaterial({ color: 0xFFFFFF, depthTest: false });
+        const horzGeo = new THREE.BufferGeometry();
+        horzGeo.setAttribute('position', new THREE.BufferAttribute(new Float32Array([
+            -crossExtent, 0, 0, crossExtent, 0, 0
+        ]), 3));
+        this._cursorGroup.add(new THREE.Line(horzGeo, crossMat));
+        const vertGeo = new THREE.BufferGeometry();
+        vertGeo.setAttribute('position', new THREE.BufferAttribute(new Float32Array([
+            0, -crossExtent, 0, 0, crossExtent, 0
+        ]), 3));
+        this._cursorGroup.add(new THREE.Line(vertGeo, crossMat));
+
+        this._cursorGroup.renderOrder = 999;
+        this.scene.add(this._cursorGroup);
+    }
+
+    // ── POINT LIGHT WIDGET ──
+    _buildLightWidget() {
+        if (this._lightWidget) this.scene.remove(this._lightWidget);
+        this._lightWidget = new THREE.Group();
+
+        const lx = 5, ly = 10, lz = 7.5;
+        const dotMat = new THREE.MeshBasicMaterial({ color: 0x000000 });
+        const dot = new THREE.Mesh(new THREE.SphereGeometry(0.04, 16, 16), dotMat);
+        dot.position.set(lx, ly, lz);
+        this._lightWidget.add(dot);
+
+        // Dashed circle around dot
+        const ringPts = [];
+        const ringRadius = 0.12;
+        for (let i = 0; i <= 32; i++) {
+            const angle = (i / 32) * Math.PI * 2;
+            ringPts.push(Math.cos(angle) * ringRadius + lx, ly, Math.sin(angle) * ringRadius + lz);
+        }
+        const ringGeo = new THREE.BufferGeometry();
+        ringGeo.setAttribute('position', new THREE.BufferAttribute(new Float32Array(ringPts), 3));
+        const ringLine = new THREE.Line(ringGeo, new THREE.LineBasicMaterial({
+            color: 0x000000, transparent: true, opacity: 0.6
+        }));
+        this._lightWidget.add(ringLine);
+
+        // Drop line to floor
+        const dropGeo = new THREE.BufferGeometry();
+        dropGeo.setAttribute('position', new THREE.BufferAttribute(new Float32Array([
+            lx, ly, lz, lx, 0, lz
+        ]), 3));
+        const dropLine = new THREE.Line(dropGeo, new THREE.LineBasicMaterial({
+            color: 0x000000, transparent: true, opacity: 0.4
+        }));
+        this._lightWidget.add(dropLine);
+
+        this.scene.add(this._lightWidget);
+    }
+
+    toggleLightWidget(visible) {
+        if (this._lightWidget) this._lightWidget.visible = visible;
     }
 }
 
