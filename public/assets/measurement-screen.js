@@ -702,6 +702,7 @@ window.KORRA_MS = {
   // ═══ SIDE MENU ═══
   _sideMenuMeasurement: null,
   openSideMenu(key) {
+    if (this.active && window.innerWidth > 900) return;
     this._sideMenuMeasurement = key;
     try {
       const m = this.data?.measurements || {};
@@ -1309,6 +1310,8 @@ window.KORRA_MS = {
   cleanup() {
     this._destroyFabIntelligence();
     this.closeSideMenu();
+    document.getElementById('ms-side-menu')?.remove();
+    document.getElementById('ms-side-menu-backdrop')?.remove();
     const bottomNav = document.querySelector('.sidebar-nav');
     if (bottomNav) bottomNav.style.display = '';
     const controls = document.querySelector('.ms-sheet-controls');
