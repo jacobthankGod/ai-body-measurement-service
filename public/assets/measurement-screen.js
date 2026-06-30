@@ -130,6 +130,8 @@ window.KORRA_MS = {
 
   // ═══ ENTRY POINT ═══
   open(data) {
+    document.getElementById('ms-side-menu')?.remove();
+    document.getElementById('ms-side-menu-backdrop')?.remove();
     if (typeof data === 'string') {
       if (!window.KORRA_DB) return;
       window.KORRA_DB.from('measurements').select('*').eq('id', data).single().then(({ data: row, error }) => {
