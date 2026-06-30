@@ -1490,27 +1490,22 @@ body.ai-mode .sidebar-nav { display: none !important; }
   max-width: 360px;
   background: var(--Obsidian-Layer);
   z-index: 2200;
-  clip-path: inset(0 100% 0 0);
-  transition: clip-path 0.3s cubic-bezier(0.4, 0, 0.2, 1);
-  display: flex;
+  display: none;
   flex-direction: column;
   border-left: 1px solid var(--Glass-Border);
 }
 .ms-side-menu.open {
-  clip-path: inset(0);
+  display: flex;
 }
 .ms-side-menu-backdrop {
   position: fixed;
   inset: 0;
   background: rgba(0, 0, 0, 0.5);
   z-index: 2199;
-  opacity: 0;
-  pointer-events: none;
-  transition: opacity 0.3s;
+  display: none;
 }
 .ms-side-menu-backdrop.open {
-  opacity: 1;
-  pointer-events: auto;
+  display: block;
 }
 .ms-side-menu-header {
   display: flex;
