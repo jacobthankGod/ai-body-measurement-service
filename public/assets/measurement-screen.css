@@ -1490,14 +1490,14 @@ body.ai-mode .sidebar-nav { display: none !important; }
   max-width: 360px;
   background: var(--Obsidian-Layer);
   z-index: 2200;
-  transform: translateX(100%);
-  transition: transform 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+  clip-path: inset(0 100% 0 0);
+  transition: clip-path 0.3s cubic-bezier(0.4, 0, 0.2, 1);
   display: flex;
   flex-direction: column;
   border-left: 1px solid var(--Glass-Border);
 }
 .ms-side-menu.open {
-  transform: translateX(0);
+  clip-path: inset(0);
 }
 .ms-side-menu-backdrop {
   position: fixed;

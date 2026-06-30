@@ -693,7 +693,7 @@ window.KORRA_MS = {
     this._notifyPostAction();
   },
 
-  // ═══ SIDE MENU (mobile) ═══
+  // ═══ SIDE MENU ═══
   _sideMenuMeasurement: null,
   openSideMenu(key) {
     console.log(`[SIDEMENU-DBG] openSideMenu("${key}") entry`);
@@ -741,16 +741,10 @@ window.KORRA_MS = {
           </div>` : ''}
           <button class="ms-side-menu-ai-btn" onclick="KORRA_MS.closeSideMenu(); KORRA_MS.askAI('Tell me about my ${key.toLowerCase()} measurement')">Ask AI about this</button>
         </div>`;
-      console.log(`[SIDEMENU-DBG] innerHTML set, calling requestAnimationFrame`);
-      requestAnimationFrame(() => {
+      setTimeout(() => {
         backdrop.classList.add('open');
         menu.classList.add('open');
-        console.log(`[SIDEMENU-DBG] requestAnimationFrame fired, added .open class`);
-        const cs = getComputedStyle(menu);
-        console.log(`[SIDEMENU-DBG] computed: display=${cs.display}, visibility=${cs.visibility}, transform=${cs.transform}, zIndex=${cs.zIndex}, position=${cs.position}`);
-        console.log(`[SIDEMENU-DBG] backdrop computed: display=${getComputedStyle(backdrop).display}, opacity=${getComputedStyle(backdrop).opacity}, zIndex=${getComputedStyle(backdrop).zIndex}`);
-        console.log(`[SIDEMENU-DBG] menu parent: ${menu.parentElement?.tagName}#${menu.parentElement?.id || menu.parentElement?.className}`);
-      });
+      }, 0);
     } catch (e) {
       console.error(`[SIDEMENU-DBG] ERROR in openSideMenu:`, e);
     }
