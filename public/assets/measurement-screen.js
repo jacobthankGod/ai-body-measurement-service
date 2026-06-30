@@ -671,26 +671,32 @@ window.KORRA_MS = {
   // ═══ MEASUREMENT SELECTION ═══
   selectMeasurement(key) {
     console.log(`[SIDEMENU-DBG] selectMeasurement("${key}") called, innerWidth=${window.innerWidth}`);
-    this.selectedMeasurement = key;
-    this.updateBadge();
-    if (this.viewerInstance) {
-      this.viewerInstance.clearMeasurementRings();
-      const yPct = MEASUREMENT_Y[key] || 0.5;
-      const color = MEASUREMENT_COLORS[key] || '#C6FF00';
-      this.viewerInstance.showMeasurementRing(yPct, color);
-    }
-    document.querySelectorAll('#view-scanresult .ms-metric-cell').forEach(el => el.classList.remove('active'));
-    document.querySelectorAll('#view-scanresult .ms-metric-cell').forEach(el => {
-      if (el.querySelector('.ms-metric-name')?.textContent === key) el.classList.add('active');
-    });
-    if (window.innerWidth <= 900) {
-      console.log(`[SIDEMENU-DBG] mobile path → openSideMenu`);
+    try {
+      this.selectedMeasurement = key;
+      this.updateBadge();
+      if (this.viewerInstance) {
+        this.viewerInstance.clearMeasurementRings();
+        const yPct = MEASUREMENT_Y[key] || 0.5;
+        const color = MEASUREMENT_COLORS[key] || '#C6FF00';
+        this.viewerInstance.showMeasurementRing(yPct, color);
+      } else {
+        console.log(`[SIDEMENU-DBG] WARNING: viewerInstance is null/undefined`);
+      }
+      document.querySelectorAll('#view-scanresult .ms-metric-cell').forEach(el => el.classList.remove('active'));
+      document.querySelectorAll('#view-scanresult .ms-metric-cell').forEach(el => {
+        if (el.querySelector('.ms-metric-name')?.textContent === key) el.classList.add('active');
+      });
+      if (window.innerWidth <= 900) {
+        console.log(`[SIDEMENU-DBG] mobile path → openSideMenu`);
+        this.openSideMenu(key);
+        return;
+      }
+      console.log(`[SIDEMENU-DBG] desktop path → openSideMenu + _notifyPostAction`);
       this.openSideMenu(key);
-      return;
+      this._notifyPostAction();
+    } catch (e) {
+      console.error(`[SIDEMENU-DBG] ERROR in selectMeasurement:`, e);
     }
-    console.log(`[SIDEMENU-DBG] desktop path → openSideMenu + _notifyPostAction`);
-    this.openSideMenu(key);
-    this._notifyPostAction();
   },
 
   // ═══ SIDE MENU ═══
@@ -715,6 +721,7 @@ window.KORRA_MS = {
       if (!backdrop) { backdrop = document.createElement('div'); backdrop.id = 'ms-side-menu-backdrop'; backdrop.className = 'ms-side-menu-backdrop'; backdrop.onclick = () => this.closeSideMenu(); document.body.appendChild(backdrop); console.log(`[SIDEMENU-DBG] created backdrop`); }
       let menu = document.getElementById('ms-side-menu');
       if (!menu) { menu = document.createElement('div'); menu.id = 'ms-side-menu'; menu.className = 'ms-side-menu'; document.body.appendChild(menu); console.log(`[SIDEMENU-DBG] created menu`); }
+      console.log(`[SIDEMENU-DBG] menu exists=${!!menu}, backdrop exists=${!!backdrop}, parent=${menu.parentElement?.tagName}#${menu.parentElement?.id}`);
 
       menu.innerHTML = `
         <div class="ms-side-menu-header">
@@ -741,16 +748,43 @@ window.KORRA_MS = {
           </div>` : ''}
           <button class="ms-side-menu-ai-btn" onclick="KORRA_MS.closeSideMenu(); KORRA_MS.askAI('Tell me about my ${key.toLowerCase()} measurement')">Ask AI about this</button>
         </div>`;
+      console.log(`[SIDEMENU-DBG] innerHTML set, menu children=${menu.children.length}`);
+
+      const csBefore = getComputedStyle(menu);
+      console.log(`[SIDEMENU-DBG] BEFORE .open: display=${csBefore.display}, visibility=${csBefore.visibility}, opacity=${csBefore.opacity}, position=${csBefore.position}, zIndex=${csBefore.zIndex}, width=${csBefore.width}, right=${csBefore.right}, pointerEvents=${csBefore.pointerEvents}`);
+      console.log(`[SIDEMENU-DBG] BEFORE .open: className="${menu.className}", inlineStyle="${menu.style.cssText}"`);
+
       setTimeout(() => {
         backdrop.classList.add('open');
         menu.classList.add('open');
+        console.log(`[SIDEMENU-DBG] .open added: className="${menu.className}"`);
+
+        const csAfter = getComputedStyle(menu);
+        console.log(`[SIDEMENU-DBG] AFTER .open (sync): display=${csAfter.display}, visibility=${csAfter.visibility}, opacity=${csAfter.opacity}, zIndex=${csAfter.zIndex}, width=${csAfter.width}, right=${csAfter.right}`);
+        console.log(`[SIDEMENU-DBG] AFTER .open (sync): inDOM=${document.body.contains(menu)}, bbox=${JSON.stringify(menu.getBoundingClientRect())}`);
+
+        const csBackdrop = getComputedStyle(backdrop);
+        console.log(`[SIDEMENU-DBG] backdrop: display=${csBackdrop.display}, visibility=${csBackdrop.visibility}, zIndex=${csBackdrop.zIndex}`);
       }, 0);
+
+      requestAnimationFrame(() => {
+        const csRAF = getComputedStyle(menu);
+        console.log(`[SIDEMENU-DBG] rAF (next frame): display=${csRAF.display}, visibility=${csRAF.visibility}, opacity=${csRAF.opacity}, zIndex=${csRAF.zIndex}`);
+        console.log(`[SIDEMENU-DBG] rAF: bbox=${JSON.stringify(menu.getBoundingClientRect())}, offsetParent=${menu.offsetParent?.tagName}#${menu.offsetParent?.id}`);
+      });
+
+      setTimeout(() => {
+        const cs100 = getComputedStyle(menu);
+        console.log(`[SIDEMENU-DBG] 100ms check: display=${cs100.display}, classList="${menu.className}", inDOM=${document.body.contains(menu)}, bbox=${JSON.stringify(menu.getBoundingClientRect())}`);
+      }, 100);
+
     } catch (e) {
       console.error(`[SIDEMENU-DBG] ERROR in openSideMenu:`, e);
     }
   },
 
   closeSideMenu() {
+    console.log(`[SIDEMENU-DBG] closeSideMenu called from:`, new Error().stack);
     const backdrop = document.getElementById('ms-side-menu-backdrop');
     const menu = document.getElementById('ms-side-menu');
     if (menu) menu.classList.remove('open');
