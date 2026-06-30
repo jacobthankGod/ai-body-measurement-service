@@ -32,18 +32,12 @@
 .ms-header {
   display: flex;
   align-items: center;
-  justify-content: space-between;
-  padding: 0 24px;
-  height: 48px;
+  padding: 0 16px;
+  height: 40px;
   flex-shrink: 0;
   background: var(--Obsidian-Layer);
   border-bottom: 1px solid var(--Glass-Border);
   z-index: 10;
-}
-.ms-header-left {
-  display: flex;
-  align-items: center;
-  gap: 12px;
 }
 .ms-back-btn {
   width: 28px;
@@ -62,25 +56,49 @@
   color: var(--Mint);
   border-color: var(--Mint);
 }
+.ms-sheet-controls {
+  padding: 10px 20px 8px;
+  background: var(--Obsidian-Layer);
+  border-bottom: 1px solid var(--Glass-Border);
+  flex-shrink: 0;
+}
+.ms-controls-top {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  margin-bottom: 8px;
+}
+.ms-controls-toggles {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  flex-shrink: 0;
+}
+.ms-controls-buttons {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  flex-wrap: wrap;
+}
 .ms-scan-info {
   display: flex;
   flex-direction: column;
+  min-width: 0;
 }
 .ms-scan-title {
-  font-size: 14px;
+  font-size: 13px;
   font-weight: 700;
   color: var(--White);
   line-height: 1.2;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
 }
 .ms-scan-subtitle {
   font-size: 10px;
   color: var(--Neutral-500);
   font-weight: 500;
-}
-.ms-header-right {
-  display: flex;
-  align-items: center;
-  gap: 8px;
 }
 .ms-header-btn {
   width: 28px;
@@ -849,7 +867,7 @@
 .ms-side-by-side .ms-viewer {
   flex: 1 1 50%;
   min-width: 0;
-  height: calc(100vh - 128px);
+  height: calc(100vh - 40px);
   order: 1;
 }
 .ms-side-by-side .ms-right-col {
@@ -857,13 +875,17 @@
   flex: 1 1 50%;
   display: flex;
   flex-direction: column;
-  height: calc(100vh - 128px);
+  height: calc(100vh - 40px);
   min-width: 0;
   border-left: 1px solid var(--Glass-Border);
   overflow: visible;
 }
-.ms-side-by-side .ms-tabs {
+.ms-side-by-side .ms-sheet-controls {
   order: 0;
+  flex-shrink: 0;
+}
+.ms-side-by-side .ms-tabs {
+  order: 2;
   width: 100%;
   flex-direction: row;
   height: auto;
@@ -877,7 +899,7 @@
   font-size: 10px;
 }
 .ms-side-by-side .ms-sheet {
-  order: 1;
+  order: 3;
   flex: 1 1 auto;
   height: auto !important;
   min-height: 0;
@@ -1169,8 +1191,21 @@
     min-height: 0;
   }
   .ms-header {
-    padding: 0 16px;
-    height: 48px;
+    padding: 0 12px;
+    height: 40px;
+  }
+  .ms-sheet-controls {
+    padding: 8px 16px 6px;
+  }
+  .ms-controls-top {
+    flex-wrap: wrap;
+    gap: 8px;
+  }
+  .ms-controls-toggles {
+    gap: 8px;
+  }
+  .ms-controls-buttons {
+    gap: 4px;
   }
   .ms-scan-title {
     font-size: 12px;
@@ -1272,7 +1307,7 @@
   }
   .ms-side-by-side .ms-right-col.sheet-collapsed { height: 48px !important; }
   .ms-side-by-side .ms-right-col.sheet-half { height: 60vh !important; }
-  .ms-side-by-side .ms-right-col.sheet-full { height: calc(100vh - 80px) !important; }
+  .ms-side-by-side .ms-right-col.sheet-full { height: calc(100vh - 40px) !important; }
   .ms-right-col-handle {
     flex-shrink: 0;
     display: flex;
@@ -1311,13 +1346,18 @@
   .ms-right-col-handle-chevron.collapsed svg {
     transform: rotate(180deg);
   }
+  .ms-side-by-side .ms-sheet-controls {
+    flex-shrink: 0;
+    order: 0;
+  }
   .ms-side-by-side .ms-attire-selector-container {
     flex-shrink: 0;
+    order: 1;
   }
   .at-chips { display: none !important; }
   .at-status { display: none !important; }
   .ms-side-by-side .ms-tabs {
-    order: 0;
+    order: 2;
     width: 100%;
     flex-direction: row;
     height: auto;
@@ -1333,7 +1373,7 @@
     font-size: 10px;
   }
   .ms-side-by-side .ms-sheet {
-    order: 1;
+    order: 3;
     flex: 1 1 auto;
     height: auto !important;
     min-height: 0;
@@ -1366,6 +1406,7 @@
   }
   body.ai-mode header { display: none !important; }
   body.ai-mode .ms-header { display: none !important; }
+  body.ai-mode .ms-sheet-controls { display: none !important; }
   .ms-ai-view .ms-ai-topbar {
     padding-top: 8px;
     margin-bottom: 8px;

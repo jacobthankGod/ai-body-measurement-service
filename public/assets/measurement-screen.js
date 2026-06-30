@@ -220,27 +220,31 @@ window.KORRA_MS = {
     return `
       <div class="ms-root">
         <div class="ms-header">
-          <div class="ms-header-left">
-            <button class="ms-back-btn" onclick="KORRA_MS.handleBack()">
-              <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="15 18 9 12 15 6"/></svg>
-            </button>
+          <button class="ms-back-btn" onclick="KORRA_MS.handleBack()">
+            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="15 18 9 12 15 6"/></svg>
+          </button>
+        </div>
+        <div class="ms-sheet-controls" id="ms-sheet-controls">
+          <div class="ms-controls-top">
             <div class="ms-scan-info">
               <div class="ms-scan-title">${name}</div>
               <div class="ms-scan-subtitle">${date} · ${height} · ${gender}</div>
             </div>
-          </div>
-          <div class="ms-header-right">
-            <div class="ms-unit-toggle">
-              <button class="ms-unit-btn ${this.unit === 'cm' ? 'active' : ''}" onclick="KORRA_MS.setUnit('cm')">CM</button>
-              <button class="ms-unit-btn ${this.unit === 'in' ? 'active' : ''}" onclick="KORRA_MS.setUnit('in')">IN</button>
-            </div>
-            <div class="ms-ease-toggle" onclick="KORRA_MS.toggleEase()" title="Toggle between body and garment measurements">
-              <span class="ms-ease-label ${!this.showEased ? 'active' : ''}">Body</span>
-              <div class="ms-ease-track ${this.showEased ? 'active' : ''}">
-                <div class="ms-ease-thumb ${this.showEased ? 'right' : ''}"></div>
+            <div class="ms-controls-toggles">
+              <div class="ms-unit-toggle">
+                <button class="ms-unit-btn ${this.unit === 'cm' ? 'active' : ''}" onclick="KORRA_MS.setUnit('cm')">CM</button>
+                <button class="ms-unit-btn ${this.unit === 'in' ? 'active' : ''}" onclick="KORRA_MS.setUnit('in')">IN</button>
               </div>
-              <span class="ms-ease-label ${this.showEased ? 'active' : ''}">Garment</span>
+              <div class="ms-ease-toggle" onclick="KORRA_MS.toggleEase()" title="Toggle between body and garment measurements">
+                <span class="ms-ease-label ${!this.showEased ? 'active' : ''}">Body</span>
+                <div class="ms-ease-track ${this.showEased ? 'active' : ''}">
+                  <div class="ms-ease-thumb ${this.showEased ? 'right' : ''}"></div>
+                </div>
+                <span class="ms-ease-label ${this.showEased ? 'active' : ''}">Garment</span>
+              </div>
             </div>
+          </div>
+          <div class="ms-controls-buttons">
             <button class="ms-share-btn" onclick="KORRA_MS.openShareScan()" title="Share scan">
               <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="18" cy="5" r="3"/><circle cx="6" cy="12" r="3"/><circle cx="18" cy="19" r="3"/><line x1="8.59" y1="13.51" x2="15.42" y2="17.49"/><line x1="15.41" y1="6.51" x2="8.59" y2="10.49"/></svg>
               Share
@@ -254,7 +258,6 @@ window.KORRA_MS = {
             <button class="ms-header-btn ${this.overlaysVisible ? 'active' : ''}" onclick="KORRA_MS.toggleOverlays()" title="Toggle measurement lines">
               <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"/><circle cx="12" cy="12" r="3"/></svg>
             </button>
-
             <button class="ms-header-btn" onclick="KORRA_MS.resetView()" title="Reset view">
               <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="23 4 23 10 17 10"/><path d="M20.49 15a9 9 0 1 1-2.12-9.36L23 10"/></svg>
             </button>
@@ -585,6 +588,9 @@ window.KORRA_MS = {
         body.style.flexDirection = 'column';
         body.style.padding = '0 20px';
 
+        const controls = document.querySelector('.ms-sheet-controls');
+        if (controls) controls.style.display = 'none';
+
         const unitToggle = document.querySelector('.ms-unit-toggle');
         const easeToggle = document.querySelector('.ms-ease-toggle');
         if (unitToggle) unitToggle.style.display = 'none';
@@ -627,6 +633,9 @@ window.KORRA_MS = {
         const easeToggle = document.querySelector('.ms-ease-toggle');
         if (unitToggle) unitToggle.style.display = '';
         if (easeToggle) easeToggle.style.display = '';
+
+        const controls = document.querySelector('.ms-sheet-controls');
+        if (controls) controls.style.display = '';
 
         const attire = document.querySelector('.ms-attire-selector-container');
         const tabs = document.querySelector('.ms-tabs');
@@ -825,6 +834,7 @@ window.KORRA_MS = {
     const tabs = root.querySelector('.ms-tabs');
     const sheet = root.querySelector('.ms-sheet');
     const attire = root.querySelector('#ms-attire-selector');
+    const controls = root.querySelector('#ms-sheet-controls');
     if (!tabs || !sheet) return;
     const rc = document.createElement('div');
     rc.className = 'ms-right-col';
@@ -841,6 +851,7 @@ window.KORRA_MS = {
       </button>`;
       rc.appendChild(handle);
     }
+    if (controls) rc.appendChild(controls);
     if (attire) rc.appendChild(attire);
     rc.appendChild(tabs);
     rc.appendChild(sheet);
@@ -1295,6 +1306,8 @@ window.KORRA_MS = {
     this.closeSideMenu();
     const bottomNav = document.querySelector('.sidebar-nav');
     if (bottomNav) bottomNav.style.display = '';
+    const controls = document.querySelector('.ms-sheet-controls');
+    if (controls) controls.style.display = '';
     document.querySelectorAll('#view-scanresult .ms-header-btn, #view-scanresult .ms-share-btn').forEach(btn => {
       btn.style.display = '';
     });
