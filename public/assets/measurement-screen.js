@@ -987,8 +987,20 @@ window.KORRA_MS = {
           window.addEventListener('mouseup', up);
         });
       };
-      bindDrag(document.getElementById('ms-right-col-handle'));
-      bindDrag(document.getElementById('ms-sheet-controls'));
+      const rcEl = document.querySelector('.ms-side-by-side .ms-right-col');
+      if (rcEl) {
+        rcEl.addEventListener('touchstart', (e) => {
+          if (e.target.closest('button, input, select, textarea, .ms-tab, #ms-view3d-btn, #ms-right-col-handle-bar')) return;
+          const rect = rcEl.getBoundingClientRect();
+          const touchY = e.touches[0].clientY;
+          if (touchY - rect.top > 150) return;
+          onStart(touchY);
+        }, { passive: true });
+        rcEl.addEventListener('touchmove', (e) => {
+          onMove(e.touches[0].clientY);
+        }, { passive: true });
+        rcEl.addEventListener('touchend', () => onEnd());
+      }
 
       const bar = document.getElementById('ms-right-col-handle-bar');
       if (bar) bar.addEventListener('click', () => this._toggleSheet());
