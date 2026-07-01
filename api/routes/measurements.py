@@ -229,7 +229,6 @@ async def run_extraction_subprocess_cli(task_id: str, front_path: str, side_path
 
     # 4. ATOMIC PERSISTENCE (Dual Account - Unicorn Level)
             if user_id:
-                from api.services.database_service import DatabaseService
                 save_result = DatabaseService.save_measurement(
                     user_id=user_id, client_name=client_name, height=height,
                     gender=gender, biometrics=measurements, landmarks=landmarks,
@@ -294,7 +293,6 @@ async def run_extraction_task(task_id: str, front_bytes: bytes, side_bytes: byte
         photo_front_url = None
         photo_side_url = None
         if user_id:
-            from api.services.database_service import DatabaseService
             with open(f_path, 'rb') as f: fb = f.read()
             photo_front_url = DatabaseService.upload_photo_to_storage(fb, user_id, task_id, 'front')
             with open(s_path, 'rb') as f: sb = f.read()
