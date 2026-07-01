@@ -604,6 +604,7 @@ window.KORRA_MS = {
       default: content = this.buildMetricsGrid();
     }
     body.innerHTML = content;
+    void body.scrollHeight; // force reflow for correct scroll extent
     if (this.viewMode === 'compare') this.initCompareViewers();
     this.updateBadge();
   },
