@@ -2807,6 +2807,12 @@ window.loadSettings = async () => {
       try {
       const { data: profile } = await window.KORRA_DB.from('profiles').select('*').eq('id', userId).single();
       if (profile) {
+        // Phase 1: Store Expert flag
+        window.KORRA_USER_FLAGS = {
+          is_contributor: profile.is_algorithm_contributor === true
+        };
+        console.log("🛠️ Collaborative Accuracy: Expert Mode", window.KORRA_USER_FLAGS.is_contributor ? "ENABLED" : "DISABLED");
+
         // Auto-provision API key via backend (creates api_keys entry if missing)
         try {
           const { data: { session } } = await window.KORRA_DB.auth.getSession();

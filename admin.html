@@ -99,6 +99,14 @@
     #review-img { width: 100%; height: 100%; object-fit: cover; display: none; transform: scaleX(-1); }
     .preview-img { position: absolute; inset: 0; width: 100%; height: 100%; object-fit: cover; z-index: 2; display: none; }
     #loadingOverlay { position: fixed; inset: 0; background: #000; z-index: 9999999; display: flex; align-items: center; justify-content: center; font-size: 12px; font-weight: 800; letter-spacing: 0.2em; text-transform: uppercase; color: var(--Mint); }
+
+    /* Expert Mode Toggle */
+    .switch-expert { position: relative; display: inline-block; width: 34px; height: 18px; vertical-align: middle; }
+    .switch-expert input { opacity: 0; width: 0; height: 0; }
+    .slider-expert { position: absolute; cursor: pointer; top: 0; left: 0; right: 0; bottom: 0; background-color: var(--Glass); transition: .4s; border-radius: 34px; border: 1px solid var(--Glass-Border); }
+    .slider-expert:before { position: absolute; content: ""; height: 12px; width: 12px; left: 2px; bottom: 2px; background-color: var(--Neutral-500); transition: .4s; border-radius: 50%; }
+    input:checked + .slider-expert { background-color: rgba(198, 255, 0, 0.2); border-color: var(--Mint); }
+    input:checked + .slider-expert:before { transform: translateX(16px); background-color: var(--Mint); box-shadow: 0 0 10px var(--Mint); }
   </style>
 </head>
 <body>
@@ -830,7 +838,19 @@ console.warn(`🔄 Sync failure (${err.message}). Retrying ${attempt+1}/12 in ${
         const { data: profiles, count: mCount } = await window.KORRA_DB.from('profiles').select('*', { count: 'exact' });
         document.getElementById('statMerchants').textContent = mCount || profiles?.length || 0;
         const mList = document.getElementById('merchantList');
-        if (mList) mList.innerHTML = profiles?.map(p => `<tr><td>${p.company_name || p.full_name || 'Artisan'}</td><td>${p.industry || 'Tailor'}</td><td>${p.credits || 0}</td><td>${new Date(p.created_at).toLocaleDateString()}</td><td><span class="health-status status-ok">ACTIVE</span></td></tr>`).join('') || '';
+        if (mList) mList.innerHTML = profiles?.map(p => `<tr>
+          <td>${p.company_name || p.full_name || 'Artisan'}</td>
+          <td>${p.industry || 'Tailor'}</td>
+          <td>${p.credits || 0}</td>
+          <td>${new Date(p.created_at).toLocaleDateString()}</td>
+          <td>
+            <label class="switch-expert" title="Toggle Expert Contributor Mode">
+              <input type="checkbox" ${p.is_algorithm_contributor ? 'checked' : ''} onchange="window.toggleContributor('${p.id}', this.checked)">
+              <span class="slider-expert"></span>
+            </label>
+            <span class="health-status status-ok" style="margin-left:8px">ACTIVE</span>
+          </td>
+        </tr>`).join('') || '';
 
         const { data: scans, count: sCount } = await window.KORRA_DB.from('measurements').select('*', { count: 'exact' }).order('created_at', { ascending: false });
         window.ADMIN_HISTORY = scans || [];
@@ -875,6 +895,17 @@ console.warn(`🔄 Sync failure (${err.message}). Retrying ${attempt+1}/12 in ${
         window.monitorEndpoints();
       } catch (err) { console.error("Handshake Failure:", err); }
     }
+
+    window.toggleContributor = async (uid, status) => {
+      try {
+        const { error } = await window.KORRA_DB.from('profiles').update({ is_algorithm_contributor: status }).eq('id', uid);
+        if (error) throw error;
+        console.log(`✅ Contributor status updated for ${uid} -> ${status}`);
+        // Optional: show a mini toast
+      } catch (e) {
+        alert("Failed to update status: " + e.message);
+      }
+    };
 
     let trendChart = null, industryChart = null;
     window.renderAdminAnalytics = (scans, profiles) => {

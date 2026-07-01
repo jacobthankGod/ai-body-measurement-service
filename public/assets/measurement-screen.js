@@ -440,10 +440,17 @@ window.KORRA_MS = {
             const val = (raw * factor * ease).toFixed(1);
             const active = k === this.selectedMeasurement ? ' active' : '';
             const easeLabel = this.showEased && ease !== 1 ? (Math.round((ease - 1) * 1000) / 10) + '% ease' : '';
-            return `<div class="ms-metric-cell${active}" onclick="KORRA_MS.selectMeasurement('${k}')">
+
+            // Phase 2: Editable content for contributors
+            const isContributor = window.KORRA_USER_FLAGS?.is_contributor === true;
+            const editableAttr = isContributor ? `contenteditable="true" onblur="KORRA_MS.handleManualEdit('${k}', this.textContent)"` : '';
+            const editHint = isContributor ? `<div style="position:absolute; bottom:4px; right:8px; font-size:8px; opacity:0.3">EDIT</div>` : '';
+
+            return `<div class="ms-metric-cell${active}" onclick="KORRA_MS.selectMeasurement('${k}')" style="position:relative">
               <div class="ms-metric-name">${k}</div>
-              <div class="ms-metric-val">${val}${factor === 1 ? 'cm' : 'in'}</div>
+              <div class="ms-metric-val" ${editableAttr}>${val}${factor === 1 ? 'cm' : 'in'}</div>
               ${easeLabel ? `<div class="ms-metric-ease">${easeLabel}</div>` : ''}
+              ${editHint}
             </div>`;
           }).join('')}
         </div>
@@ -596,13 +603,28 @@ window.KORRA_MS = {
     console.log(`▶ renderMeasurements() viewMode=${this.viewMode}`);
     const body = document.getElementById('ms-sheet-body');
     if (!body) { console.warn('  renderMeasurements: #ms-sheet-body NOT FOUND'); return; }
-    let content;
+    let content = '';
+
+    // Phase 2: Expert Mode Banner
+    if (window.KORRA_USER_FLAGS?.is_contributor) {
+      content += `
+        <div class="expert-mode-banner" style="background:rgba(198,255,0,0.1); border:1px dashed var(--Mint); border-radius:12px; padding:12px; margin-bottom:20px; display:flex; align-items:center; gap:12px">
+          <div style="font-size:20px">✨</div>
+          <div style="flex:1">
+            <div style="font-size:11px; font-weight:800; color:var(--Mint); text-transform:uppercase; letter-spacing:0.05em">Expert Mode Active</div>
+            <div style="font-size:10px; color:var(--Neutral-400)">Your manual edits directly train the KORRA AI algorithm.</div>
+          </div>
+          <button class="btn-primary" style="padding:6px 12px; font-size:10px" id="btnSubmitRefinement" onclick="KORRA_MS.submitRefinement()">Sync Refinement</button>
+        </div>
+      `;
+    }
+
     switch (this.viewMode) {
-      case 'avatar': content = this.buildMetricsGrid(); break;
-      case 'sizes': content = this.buildSizesGrid(); break;
-      case 'shape': content = this.buildShapeCard(); break;
-      case 'compare': content = this.buildCompareView(); break;
-      default: content = this.buildMetricsGrid();
+      case 'avatar': content += this.buildMetricsGrid(); break;
+      case 'sizes': content += this.buildSizesGrid(); break;
+      case 'shape': content += this.buildShapeCard(); break;
+      case 'compare': content += this.buildCompareView(); break;
+      default: content += this.buildMetricsGrid();
     }
     if (this.viewMode !== 'ai') content += this.buildNotesHTML();
     body.innerHTML = content;
@@ -1409,6 +1431,92 @@ window.KORRA_MS = {
     this.loadCompareViewers();
     const body = document.getElementById('ms-sheet-body');
     if (body) body.innerHTML = this.buildSheetContent();
+  },
+
+  handleManualEdit(key, text) {
+    if (!this.data) return;
+    // Extract number from text (e.g. "88.0cm" -> 88.0)
+    const num = parseFloat(text);
+    if (isNaN(num)) return;
+
+    // Reverse factor if in inches
+    const factor = this.unit === 'in' ? 0.393701 : 1;
+    const rawVal = num / factor;
+
+    if (!this.manualEdits) this.manualEdits = {};
+    this.manualEdits[key] = rawVal;
+
+    // Update local data for immediate feedback
+    if (!this.data.measurements) this.data.measurements = {};
+    this.data.measurements[key] = rawVal;
+
+    console.log(`✍️ Manual Edit: ${key} -> ${rawVal}cm`);
+
+    // Enable/Highlight submit button
+    const btn = document.getElementById('btnSubmitRefinement');
+    if (btn) {
+      btn.style.background = 'var(--Mint)';
+      btn.style.color = 'var(--Teal-900)';
+      btn.textContent = 'Sync Refinement *';
+    }
+  },
+
+  async submitRefinement() {
+    if (!this.manualEdits || Object.keys(this.manualEdits).length === 0) {
+      alert("No changes to sync.");
+      return;
+    }
+
+    const btn = document.getElementById('btnSubmitRefinement');
+    if (btn) {
+      btn.disabled = true;
+      btn.textContent = 'REFINING 3D MESH...';
+    }
+
+    try {
+      const { data: { session } } = await window.KORRA_DB.auth.getSession();
+      const res = await fetch(`/api/v2/measurements/${this.data.id}/back-calculate`, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          'Authorization': `Bearer ${session.access_token}`
+        },
+        body: JSON.stringify(this.manualEdits)
+      });
+
+      if (!res.ok) throw new Error("Sync failed.");
+
+      const result = await res.json();
+      console.log("✅ Model Refined:", result);
+
+      // Update local data with new betas if returned
+      if (result.new_betas && this.data.__smpl_params) {
+        this.data.__smpl_params.shape = result.new_betas;
+      }
+
+      // Success Feedback
+      if (btn) {
+        btn.textContent = '✅ REFINED';
+        btn.style.background = 'rgba(198,255,0,0.2)';
+        btn.style.color = 'var(--Mint)';
+      }
+
+      // Reload 3D Viewer if possible
+      if (window.KORRA_VIZ) {
+        // Since we updated the betas, we would ideally regenerate the OBJ.
+        // For now, we can notify the user that the model is updated on next reload
+        // or trigger a full re-fetch of the scan if the backend updated the OBJ.
+        alert("✨ Expert Intelligence Applied. 3D Model has been optimized based on your master measurements.");
+      }
+
+      this.manualEdits = {};
+    } catch (e) {
+      alert("Refinement failed: " + e.message);
+      if (btn) {
+        btn.disabled = false;
+        btn.textContent = 'Sync Refinement';
+      }
+    }
   },
 
   // ═══ NAVIGATION ═══
