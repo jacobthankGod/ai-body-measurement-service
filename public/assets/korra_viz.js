@@ -561,8 +561,7 @@ class KorraVisualizer {
         const targetMesh = this.mesh.isGroup ? this.mesh.children[0] : this.mesh;
         if (!targetMesh || !targetMesh.geometry) return;
 
-        targetMesh.geometry.computeBoundingBox();
-        const bbox = targetMesh.geometry.boundingBox;
+        const bbox = new THREE.Box3().setFromObject(targetMesh);
         const meshHeight = bbox.max.y - bbox.min.y;
         const meshY = bbox.min.y + meshHeight * yPercent;
 
@@ -601,10 +600,11 @@ class KorraVisualizer {
         const targetMesh = this.mesh.isGroup ? this.mesh.children[0] : this.mesh;
         if (!targetMesh || !targetMesh.geometry) return;
 
-        targetMesh.geometry.computeBoundingBox();
-        const bbox = targetMesh.geometry.boundingBox;
+        const bbox = new THREE.Box3().setFromObject(targetMesh);
         const meshHeight = bbox.max.y - bbox.min.y;
         const positions = targetMesh.geometry.attributes.position;
+
+        const worldPos = new THREE.Vector3();
 
         this._measurementRings = new THREE.Group();
 
@@ -614,16 +614,15 @@ class KorraVisualizer {
             if (yPct == null) continue;
 
             const meshY = bbox.min.y + meshHeight * yPct;
-            const bandMin = bbox.min.y + meshHeight * (yPct - 0.02);
-            const bandMax = bbox.min.y + meshHeight * (yPct + 0.02);
+            const bandHalf = meshHeight * 0.02;
 
             let maxRadius = 0;
             for (let i = 0; i < positions.count; i++) {
-                const vy = positions.getY(i);
-                if (vy >= bandMin && vy <= bandMax) {
-                    const vx = positions.getX(i);
-                    const vz = positions.getZ(i);
-                    const r = Math.sqrt(vx * vx + vz * vz);
+                worldPos.set(positions.getX(i), positions.getY(i), positions.getZ(i));
+                worldPos.applyMatrix4(targetMesh.matrixWorld);
+
+                if (Math.abs(worldPos.y - meshY) <= bandHalf) {
+                    const r = Math.sqrt(worldPos.x * worldPos.x + worldPos.z * worldPos.z);
                     if (r > maxRadius) maxRadius = r;
                 }
             }
