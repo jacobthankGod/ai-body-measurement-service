@@ -199,6 +199,27 @@ async def run_extraction_subprocess_cli(task_id: str, front_path: str, side_path
                         # Upload mesh to Supabase Storage for persistence across rebuilds
                         if mesh_path.exists():
                             mesh_storage_url = DatabaseService.upload_mesh_to_storage(mesh_path, task_id)
+
+                        # Phase 0: Parse SMPL params for self-improving accuracy dataset
+                        smpl_params = data.get("smpl_params")
+                        # Phase 22: Validate smpl_params structure
+                        if smpl_params is not None:
+                            if not isinstance(smpl_params, dict):
+                                logger.warning(f"smpl_params is not a dict: {type(smpl_params)}")
+                                smpl_params = None
+                            else:
+                                required_keys = {'camera', 'pose', 'shape'}
+                                missing = required_keys - set(smpl_params.keys())
+                                if missing:
+                                    logger.warning(f"smpl_params missing required keys: {missing}")
+                        joints3d = data.get("joints3d")
+                        tpose_mesh_url = None
+                        tpose_mesh_path = data.get("tpose_mesh_path")
+                        if tpose_mesh_path and os.path.exists(tpose_mesh_path):
+                            tpose_mesh_url = DatabaseService.upload_mesh_to_storage(
+                                Path(tpose_mesh_path), f"{task_id}_tpose"
+                            )
+                            os.remove(tpose_mesh_path)
                     else:
                         raise Exception(data.get("error", "Unknown error in subprocess"))
                 except Exception as e:
@@ -215,10 +236,12 @@ async def run_extraction_subprocess_cli(task_id: str, front_path: str, side_path
                     mesh_url=mesh_url, body_shape=body_shape, size_rec=size_rec,
                     client_user_id=client_user_id,
                     clinical_realism_index=clinical_realism_index,
-                    mesh_storage_url=mesh_storage_url
+                    mesh_storage_url=mesh_storage_url,
+                    smpl_params=smpl_params, joints3d=joints3d,
+                    tpose_mesh_url=tpose_mesh_url
                 )
-                if not save_result:
-                    logger.error(f"❌ Database save failed for task {task_id}")
+                if not save_result or save_result.get("status") != "saved":
+                    logger.error(f"❌ Database save failed for task {task_id}: {save_result}")
                     return {"status": "failed", "error": "Database save failed"}
             else:
                 logger.warning(f"⚠️ [TASK {task_id}] No user_id — measurement not persisted (admin/bypass key)")
@@ -236,6 +259,9 @@ async def run_extraction_subprocess_cli(task_id: str, front_path: str, side_path
                 "body_shape": body_shape,
                 "size_recommendation": size_rec,
                 "clinical_realism_index": clinical_realism_index,
+                "smpl_params": smpl_params,
+                "joints3d": joints3d,
+                "tpose_mesh_url": tpose_mesh_url,
                 "debug": hmr_error
             }
 

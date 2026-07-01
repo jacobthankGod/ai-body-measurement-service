@@ -1,0 +1,112 @@
+{
+  "Chest Round": {
+    "mean": 100.1,
+    "std": 5.0,
+    "p5": 92.1,
+    "p95": 107.6,
+    "z_2_lower": 90.1,
+    "z_2_upper": 110.0,
+    "z_3_lower": 85.2,
+    "z_3_upper": 115.0
+  },
+  "Waist Round": {
+    "mean": 84.7,
+    "std": 4.9,
+    "p5": 77.0,
+    "p95": 93.4,
+    "z_2_lower": 75.0,
+    "z_2_upper": 94.5,
+    "z_3_lower": 70.1,
+    "z_3_upper": 99.4
+  },
+  "Hip Round": {
+    "mean": 95.3,
+    "std": 5.1,
+    "p5": 87.5,
+    "p95": 103.9,
+    "z_2_lower": 85.1,
+    "z_2_upper": 105.6,
+    "z_3_lower": 80.0,
+    "z_3_upper": 110.7
+  },
+  "Thigh Round": {
+    "mean": 55.0,
+    "std": 3.0,
+    "p5": 49.8,
+    "p95": 59.8,
+    "z_2_lower": 48.9,
+    "z_2_upper": 61.1,
+    "z_3_lower": 45.8,
+    "z_3_upper": 64.1
+  },
+  "Calf Round": {
+    "mean": 35.0,
+    "std": 2.0,
+    "p5": 31.8,
+    "p95": 38.1,
+    "z_2_lower": 31.0,
+    "z_2_upper": 39.0,
+    "z_3_lower": 29.0,
+    "z_3_upper": 41.0
+  },
+  "Shoulder": {
+    "mean": 44.2,
+    "std": 3.0,
+    "p5": 39.3,
+    "p95": 49.2,
+    "z_2_lower": 38.1,
+    "z_2_upper": 50.2,
+    "z_3_lower": 35.0,
+    "z_3_upper": 53.3
+  },
+  "Neck Round": {
+    "mean": 38.2,
+    "std": 2.1,
+    "p5": 35.0,
+    "p95": 41.3,
+    "z_2_lower": 34.1,
+    "z_2_upper": 42.3,
+    "z_3_lower": 32.0,
+    "z_3_upper": 44.3
+  },
+  "Stomach Round": {
+    "mean": 87.5,
+    "std": 4.8,
+    "p5": 80.2,
+    "p95": 95.1,
+    "z_2_lower": 77.9,
+    "z_2_upper": 97.1,
+    "z_3_lower": 73.1,
+    "z_3_upper": 102.0
+  },
+  "Bicep Round": {
+    "mean": 32.0,
+    "std": 2.0,
+    "p5": 28.5,
+    "p95": 35.3,
+    "z_2_lower": 28.0,
+    "z_2_upper": 36.0,
+    "z_3_lower": 26.0,
+    "z_3_upper": 37.9
+  },
+  "Wrist Round": {
+    "mean": 17.0,
+    "std": 1.0,
+    "p5": 15.5,
+    "p95": 18.7,
+    "z_2_lower": 15.0,
+    "z_2_upper": 19.1,
+    "z_3_lower": 14.0,
+    "z_3_upper": 20.1
+  },
+  "Ankle Round": {
+    "mean": 23.0,
+    "std": 1.5,
+    "p5": 20.4,
+    "p95": 25.2,
+    "z_2_lower": 20.1,
+    "z_2_upper": 25.9,
+    "z_3_lower": 18.6,
+    "z_3_upper": 27.3
+  }
+}

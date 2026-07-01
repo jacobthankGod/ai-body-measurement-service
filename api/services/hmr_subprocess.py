@@ -56,7 +56,7 @@ def run_hmr(front_path, side_path, height_cm, gender, mesh_path=None):
         # Perform extraction
         extraction_result = engine.extract(img_f, height_cm, gender, side_image=img_s)
 
-        # Robust Unpacking
+        # Robust Unpacking (9-element tuple as of Phase 0, backward-compatible to 7)
         if isinstance(extraction_result, tuple):
             measurements = extraction_result[0]
             vertices = extraction_result[1]
@@ -64,6 +64,9 @@ def run_hmr(front_path, side_path, height_cm, gender, mesh_path=None):
             body_shape = extraction_result[3]
             size_rec = extraction_result[4]
             error = extraction_result[5]
+            v_measure_tpose = extraction_result[6] if len(extraction_result) > 6 else None
+            smpl_params = extraction_result[7] if len(extraction_result) > 7 else None
+            joints3d = extraction_result[8] if len(extraction_result) > 8 else None
         else:
             # Fallback if something returned a single value (error string or dict)
             return {"status": "failed", "error": f"Invalid engine return type: {type(extraction_result)}"}
@@ -75,12 +78,28 @@ def run_hmr(front_path, side_path, height_cm, gender, mesh_path=None):
         if error:
             return {"status": "failed", "error": error}
 
-        # Export mesh if requested
+        # Phase 15: Snapshot raw (pre-calibration) measurements into smpl_params
+        if smpl_params is not None and measurements is not None:
+            smpl_params['raw_measurements'] = dict(measurements)
+
+        # Export posed mesh if requested
         mesh_url = None
+        tpose_mesh_path = None
         if mesh_path and vertices is not None:
             from api.services.mesh_exporter import MeshExporter
             MeshExporter.save_to_obj(vertices, mesh_path)
             mesh_url = mesh_path # Caller will convert to relative URL
+
+            # Export T-pose mesh alongside (Phase 0: self-improving accuracy)
+            if v_measure_tpose is not None:
+                tpose_path = str(mesh_path).replace('.obj', '_tpose.obj')
+                MeshExporter.save_to_obj(v_measure_tpose, tpose_path)
+                tpose_mesh_path = tpose_path
+                # Sanity check dimensions
+                v_range = np.max(v_measure_tpose, axis=0) - np.min(v_measure_tpose, axis=0)
+                logger.info(f"T-pose mesh: X={v_range[0]:.3f} Y={v_range[1]:.3f} Z={v_range[2]:.3f}")
+                if v_range[1] < 0.5 or v_range[1] > 3.0:
+                    logger.warning(f"T-pose height {v_range[1]:.3f}m outside expected [0.5, 3.0]")
 
         # Compute clinical realism index from measurement consistency
         clinical_realism_index = 97.0
@@ -148,7 +167,9 @@ def run_hmr(front_path, side_path, height_cm, gender, mesh_path=None):
         except Exception as e:
             logger.warning(f"Measurement calibration skipped: {e}")
 
-        # FINAL CLEANUP
+        # FINAL CLEANUP (safely handle T-pose mesh alias)
+        if v_measure_tpose is not None and v_measure_tpose is not vertices:
+            del v_measure_tpose
         del vertices
         gc.collect()
 
@@ -160,7 +181,10 @@ def run_hmr(front_path, side_path, height_cm, gender, mesh_path=None):
             "size_recommendation": size_rec,
             "clinical_realism_index": clinical_realism_index,
             "fusion_used": fusion_used,
-            "mesh_path": str(mesh_path) if mesh_path else None
+            "mesh_path": str(mesh_path) if mesh_path else None,
+            "smpl_params": smpl_params,
+            "joints3d": joints3d,
+            "tpose_mesh_path": str(tpose_mesh_path) if tpose_mesh_path else None
         }
 
     except Exception as e:
@@ -185,4 +209,10 @@ if __name__ == "__main__":
     os.environ["TF_CPP_MIN_LOG_LEVEL"] = "3"
 
     result = run_hmr(f_path, s_path, height, gender, mesh_out)
-    print(json.dumps(result))
+    # Phase 14: JSON serialization safety net — fallback for non-serializable types
+    try:
+        print(json.dumps(result))
+    except (TypeError, ValueError) as e:
+        logger.error(f"JSON serialization failed: {e}")
+        safe_result = {"status": "failed", "error": f"Serialization error: {e}"}
+        print(json.dumps(safe_result))

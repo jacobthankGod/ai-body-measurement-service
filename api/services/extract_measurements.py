@@ -8,6 +8,8 @@ import os
 import sys
 import types
 import inspect
+import pickle
+import json
 import numpy as np
 import logging
 import traceback
@@ -164,10 +166,13 @@ class HMRMasterEngine:
         self._shapedirs = None
         self._face_segmentation = None  # body-part → face indices from Meshcapade
         self.last_error = None
+        self._shape_prior_gmm = None
+        self._shape_scaler = None
         self._load_vertex_map()
         self._load_smpl_faces()
         self._load_face_segmentation()
         self._load_smpl_template()
+        self._load_shape_prior()
 
     def _load_vertex_map(self):
         root = self.base_dir.parent.parent
@@ -271,7 +276,51 @@ class HMRMasterEngine:
             self._v_template = None
             self._shapedirs = None
 
-    def extract(self, image: np.ndarray, height_cm: float, gender: str = 'male', side_image: Optional[np.ndarray] = None) -> Tuple[Dict[str, float], Optional[np.ndarray], Optional[dict], str, str, Optional[str], Optional[np.ndarray]]:
+    def _load_shape_prior(self):
+        """Load trained GMM shape prior and scaler from api/models/priors/."""
+        prior_dir = self.base_dir / "models" / "priors"
+        gmm_path = prior_dir / "shape_prior_gmm.pkl"
+        scaler_path = prior_dir / "shape_scaler.pkl"
+        try:
+            if gmm_path.exists() and scaler_path.exists():
+                with open(gmm_path, 'rb') as f:
+                    self._shape_prior_gmm = pickle.load(f)
+                with open(scaler_path, 'rb') as f:
+                    self._shape_scaler = pickle.load(f)
+                logger.info(f"Shape prior loaded: {self._shape_prior_gmm.n_components} components")
+            else:
+                logger.info("No shape prior found — inference will run without correction")
+        except Exception as e:
+            logger.warning(f"Could not load shape prior: {e}")
+            self._shape_prior_gmm = None
+            self._shape_scaler = None
+
+    def _apply_shape_prior(self, shapes: np.ndarray) -> np.ndarray:
+        """Apply GMM shape prior to correct implausible shapes.
+        Returns corrected shape vector (10,). If the shape is plausible
+        (log-likelihood above 5th-percentile threshold), returns unchanged.
+        Otherwise shrinks toward the nearest cluster mean.
+        """
+        if self._shape_prior_gmm is None or self._shape_scaler is None:
+            return shapes
+        shapes_std = self._shape_scaler.transform(shapes.reshape(1, -1))[0]
+        logprob = self._shape_prior_gmm.score_samples(shapes_std.reshape(1, -1))[0]
+        threshold = np.percentile(self._shape_prior_gmm.score_samples(
+            self._shape_scaler.transform(
+                self._shape_prior_gmm.means_ * 0
+            )), 5) if self._shape_prior_gmm.means_.shape[0] > 0 else -10
+        if logprob >= threshold:
+            return shapes
+        probs = self._shape_prior_gmm.predict_proba(shapes_std.reshape(1, -1))
+        best_cluster = np.argmax(probs)
+        cluster_mean_std = self._shape_prior_gmm.means_[best_cluster]
+        cluster_mean_orig = self._shape_scaler.inverse_transform(cluster_mean_std.reshape(1, -1))[0]
+        alpha = min(1.0, max(0.3, np.exp(logprob - threshold)))
+        corrected = (1 - alpha) * cluster_mean_orig + alpha * shapes
+        logger.info(f"Shape prior correction applied: logprob={logprob:.2f}, threshold={threshold:.2f}, alpha={alpha:.2f}")
+        return corrected
+
+    def extract(self, image: np.ndarray, height_cm: float, gender: str = 'male', side_image: Optional[np.ndarray] = None) -> Tuple[Dict[str, float], Optional[np.ndarray], Optional[dict], str, str, Optional[str], Optional[np.ndarray], Optional[dict], Optional[list]]:
         """
         High-Precision Extraction with ABSOLUTE MEMORY ISOLATION.
         Uses a dedicated TF Graph and Session per request to prevent leaks.
@@ -279,7 +328,7 @@ class HMRMasterEngine:
         import gc
         tf1 = setup_tf_bridge()
         if not tf1:
-            return self._fallback_ratios(height_cm, gender), None, None, "Standard", "M", "TensorFlow not found"
+            return self._fallback_ratios(height_cm, gender), None, None, "Standard", "M", "TensorFlow not found", None, None, None
 
         model = None
         try:
@@ -337,6 +386,24 @@ class HMRMasterEngine:
                     vertices = results['verts'][0]
                     joints = results['joints'][0]
 
+                    # INTERLEAVE: Extract raw SMPL params before any post-processing
+                    # These are needed for the self-improving accuracy system (Phase 0).
+                    # Preserve theta (camera/pose/shape) and 3D joints for dataset building.
+                    smpl_params = None
+                    joints3d = None
+                    if 'theta' not in results:
+                        logger.warning("SMPL param extraction skipped: 'theta' key missing from model output")
+                    else:
+                        try:
+                            theta_full = results['theta'][0]
+                            camera_params = theta_full[0:3].tolist()   # scale, tx, ty
+                            pose_params = theta_full[3:75].tolist()     # 24 joints × 3 axis-angle
+                            shape_params = theta_full[75:85].tolist()   # 10 PCA shape coefficients
+                            smpl_params = {'camera': camera_params, 'pose': pose_params, 'shape': shape_params}
+                            joints3d = results['joints'][0].tolist()    # 19 joints × 3 coordinates
+                        except Exception as e:
+                            logger.warning(f"SMPL param extraction failed: {e}")
+
                     # 7. MULTI-VIEW DEPTH REFINEMENT (Advanced)
                     # Instead of averaging vertices (which ruins the pose),
                     # we use the width from the side image to refine the depth (Z) of the front mesh.
@@ -374,13 +441,23 @@ class HMRMasterEngine:
                     # Measurements from T-pose mesh (shape-only, no pose deformation)
                     # This avoids vertex-group drift caused by pose (e.g., belly verts
                     # moving to a different Y level in a non-T-pose pose).
+                    # Uses pre-extracted smpl_params from above (Phase 0.1).
+                    # Shape prior correction: shrink implausible shapes toward GMM prior
+                    # (Phase 3 — Shape Prior Learning).
                     v_measure = vertices
-                    if self._v_template is not None and self._shapedirs is not None:
+                    if self._v_template is not None and self._shapedirs is not None and smpl_params is not None:
                         try:
-                            theta_full = results['theta'][0]
-                            shapes = np.array(theta_full[75:85], dtype=np.float64).reshape(10)
-                            v_shaped = self._v_template + (self._shapedirs @ shapes).reshape(-1, 3)
+                            shapes = np.array(smpl_params['shape'], dtype=np.float64).reshape(10)
+                            shapes_corrected = self._apply_shape_prior(shapes)
+                            v_shaped = self._v_template + (self._shapedirs @ shapes_corrected).reshape(-1, 3)
                             v_measure = v_shaped
+                            # Phase 119: Tag shape prior diagnostics into smpl_params
+                            if self._shape_prior_gmm is not None and self._shape_scaler is not None:
+                                shapes_std = self._shape_scaler.transform(shapes.reshape(1, -1))[0]
+                                shape_prior_ll = float(self._shape_prior_gmm.score_samples(shapes_std.reshape(1, -1))[0])
+                                shape_anomaly = not np.allclose(shapes, shapes_corrected, atol=1e-6)
+                                smpl_params['shape_prior_ll'] = shape_prior_ll
+                                smpl_params['shape_anomaly'] = shape_anomaly
                         except Exception as e:
                             logger.warning(f"T-pose measurement failed, falling back to posed mesh: {e}")
 
@@ -412,12 +489,12 @@ class HMRMasterEngine:
                     # Clear session before exit
                     sess.close()
 
-                    return final_measurements, vertices_scaled, landmark_2d, body_shape, size_rec, None, v_measure
+                    return final_measurements, vertices_scaled, landmark_2d, body_shape, size_rec, None, v_measure, smpl_params, joints3d
 
         except Exception as e:
             logger.error(f"❌ HMR ISOLATED CRASH: {e}")
             traceback.print_exc()
-            return self._fallback_ratios(height_cm, gender), None, None, "Standard", "M", str(e), None
+            return self._fallback_ratios(height_cm, gender), None, None, "Standard", "M", str(e), None, None, None
         finally:
             # 8. NUCLEAR MEMORY PURGE
             logger.info("♻️ HMR: Purging isolated brain and cleaning RAM...")
@@ -671,8 +748,11 @@ ENGINE = HMRMasterEngine()
 HMR_ACTIVE = True
 
 def extract_measurements_from_hmr(image, height, gender='male', side_image=None):
-    """Returns (measurements, vertices, landmarks, body_shape, size_rec, error, mesh_tpose).
-    mesh_tpose is the T-pose predicted mesh (6890x3) for PVE analysis, or None on failure.
+    """Returns (measurements, vertices, landmarks, body_shape, size_rec, error,
+    mesh_tpose, smpl_params, joints3d).
+    - mesh_tpose: T-pose predicted mesh (6890x3) for PVE analysis, or None on failure.
+    - smpl_params: dict with 'camera' (3), 'pose' (72), 'shape' (10) from HMR theta.
+    - joints3d: 19x3 SMPL 3D joints list.
     """
     return ENGINE.extract(image, height, gender, side_image=side_image)
 

@@ -1,0 +1,170 @@
+{
+  "cluster_0": {
+    "Chest Round": {
+      "alpha": 1.0,
+      "beta": 0.0,
+      "n_samples": 0
+    },
+    "Waist Round": {
+      "alpha": 1.0,
+      "beta": 0.0,
+      "n_samples": 0
+    },
+    "Hip Round": {
+      "alpha": 1.0,
+      "beta": 0.0,
+      "n_samples": 0
+    },
+    "Thigh Round": {
+      "alpha": 1.0,
+      "beta": 0.0,
+      "n_samples": 0
+    },
+    "Calf Round": {
+      "alpha": 1.0,
+      "beta": 0.0,
+      "n_samples": 0
+    },
+    "Shoulder": {
+      "alpha": 1.0,
+      "beta": 0.0,
+      "n_samples": 0
+    },
+    "Neck Round": {
+      "alpha": 1.0,
+      "beta": 0.0,
+      "n_samples": 0
+    },
+    "Stomach Round": {
+      "alpha": 1.0,
+      "beta": 0.0,
+      "n_samples": 0
+    }
+  },
+  "cluster_1": {
+    "Chest Round": {
+      "alpha": 1.0,
+      "beta": 0.0,
+      "n_samples": 0
+    },
+    "Waist Round": {
+      "alpha": 1.0,
+      "beta": 0.0,
+      "n_samples": 0
+    },
+    "Hip Round": {
+      "alpha": 1.0,
+      "beta": 0.0,
+      "n_samples": 0
+    },
+    "Thigh Round": {
+      "alpha": 1.0,
+      "beta": 0.0,
+      "n_samples": 0
+    },
+    "Calf Round": {
+      "alpha": 1.0,
+      "beta": 0.0,
+      "n_samples": 0
+    },
+    "Shoulder": {
+      "alpha": 1.0,
+      "beta": 0.0,
+      "n_samples": 0
+    },
+    "Neck Round": {
+      "alpha": 1.0,
+      "beta": 0.0,
+      "n_samples": 0
+    },
+    "Stomach Round": {
+      "alpha": 1.0,
+      "beta": 0.0,
+      "n_samples": 0
+    }
+  },
+  "cluster_2": {
+    "Chest Round": {
+      "alpha": 1.0,
+      "beta": 0.0,
+      "n_samples": 0
+    },
+    "Waist Round": {
+      "alpha": 1.0,
+      "beta": 0.0,
+      "n_samples": 0
+    },
+    "Hip Round": {
+      "alpha": 1.0,
+      "beta": 0.0,
+      "n_samples": 0
+    },
+    "Thigh Round": {
+      "alpha": 1.0,
+      "beta": 0.0,
+      "n_samples": 0
+    },
+    "Calf Round": {
+      "alpha": 1.0,
+      "beta": 0.0,
+      "n_samples": 0
+    },
+    "Shoulder": {
+      "alpha": 1.0,
+      "beta": 0.0,
+      "n_samples": 0
+    },
+    "Neck Round": {
+      "alpha": 1.0,
+      "beta": 0.0,
+      "n_samples": 0
+    },
+    "Stomach Round": {
+      "alpha": 1.0,
+      "beta": 0.0,
+      "n_samples": 0
+    }
+  },
+  "cluster_3": {
+    "Chest Round": {
+      "alpha": 1.0,
+      "beta": 0.0,
+      "n_samples": 0
+    },
+    "Waist Round": {
+      "alpha": 1.0,
+      "beta": 0.0,
+      "n_samples": 0
+    },
+    "Hip Round": {
+      "alpha": 1.0,
+      "beta": 0.0,
+      "n_samples": 0
+    },
+    "Thigh Round": {
+      "alpha": 1.0,
+      "beta": 0.0,
+      "n_samples": 0
+    },
+    "Calf Round": {
+      "alpha": 1.0,
+      "beta": 0.0,
+      "n_samples": 0
+    },
+    "Shoulder": {
+      "alpha": 1.0,
+      "beta": 0.0,
+      "n_samples": 0
+    },
+    "Neck Round": {
+      "alpha": 1.0,
+      "beta": 0.0,
+      "n_samples": 0
+    },
+    "Stomach Round": {
+      "alpha": 1.0,
+      "beta": 0.0,
+      "n_samples": 0
+    }
+  }
+}

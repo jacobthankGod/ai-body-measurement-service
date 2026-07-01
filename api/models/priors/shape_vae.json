@@ -1,0 +1,7 @@
+{
+  "version": 1,
+  "latent_dim": 4,
+  "n_train": 311,
+  "best_loss": 1.6441,
+  "beta": 0.1
+}

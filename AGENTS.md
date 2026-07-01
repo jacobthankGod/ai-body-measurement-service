@@ -101,17 +101,65 @@
 - scipy `ConvexHull.area` returns perimeter in 2D
 - `FEMALE_KEYS` includes both `Chest Round` and `Bust Round` (Bust Round = Chest Round for females)
 
-### Next Build / TODOs
-1. Fix MediaPipe model file path (`pose_landmarker_full.task`) or auto-download
-2. Create ground-truth dataset (10-20 subjects with tailor tape measurements)
-3. Port body-part face segmentation from SMPL-Anthropometry for accurate limb circumference
-4. Replace hardcoded Clinical Realism Index with actual mesh-based validation
-5. **PVE-T-SC validation done (2.16cm mean error)** — measurement error is from T-pose mismatch, not shape prediction
-6. Add trimesh as optional dependency for better plane-mesh intersection
-7. **Calibration integrated (Fusion MAE 7.2cm)** — Waist -39%, Chest -38%, Hip -34% improvement; needs per-quantile factors with more GT data
+### 250-Phase Self-Improving Accuracy Plan
+See `PLAN_SELF_IMPROVING_ACCURACY.md` (4,100 lines) — full implementation plan for a self-supervised learning flywheel using production scan data.
+
+**10 Major Tracks:**
+| Phases | Track | Key Deliverable | Scans Needed |
+|--------|-------|-----------------|-------------|
+| 0–49 | Complete Data Capture | SMPL params stored per scan | 0 (blocker) |
+| 50–82 | Dataset Pipeline | `build_training_dataset.py` | ≥ 100 |
+| 83–95 | Storage & Schema | Production infra | 0 |
+| 96–120 | Shape Prior | GMM shape prior deployed | ≥ 200 |
+| 121–140 | Measurement Consistency | Outlier detection + shrinkage | ≥ 300 |
+| 141–165 | Silhouette Consistency | IoU scores, shape optimization | ≥ 100 |
+| 166–189 | Per-Subgroup Calibration | Cluster-specific factors | ≥ 500 |
+| 190–217 | Continuous Training | Automated weekly pipeline | ≥ 100 |
+| 218–235 | Monitoring & Evaluation | Accuracy dashboard | ≥ 100 |
+| 236–250 | Advanced Models + Hardening | CNN surrogate, A/B test | ≥ 1000 |
+
+**Phase 0 (SMPL capture) blocks everything else** — commit it first.
 
 ### Research Completed (2026-06-29)
 - Deep tolerance research completed for all ~30 remaining attires (20+ web sources: tailor shops, size charts, pattern reviews, cultural garment guides)
 - **5 corrections applied across frontend + backend**: Hawaiian Shirt 1.08→1.1, Abaya off 15→18, Vyshyvanka 1.08→1.15, Flamenco Dress 1.3→1.05, Anarkali 1.2→1.12
 - All 104 entries cross-validated against research; 99 confirmed within acceptable ranges
 - Key findings: Vyshyvanka size charts show 18-20% ease; Flamenco bodice has "practically no ease"; Anarkali tailors add 2-3" ease (8-12%); Pollera 4-8 varas fabric = 30%+ volume; Gho bloused at waist = 30%+ volume
+
+## Phase 2-10 Implementation Status (2026-07-01)
+
+### Phase 2: Supabase Storage & Schema ✅
+- `scripts/setup_storage.py` — idempotent bucket creator for training_data, scan_photos, meshes
+- `scripts/005_rls_policies.sql` — RLS for training_data (service_role), scan_photos/meshes (owner)
+- `scripts/run_migration.sh` — updated with `RUN_ALL=true` mode, sequential multi-file runner
+
+### Phase 3: Shape Prior (GMM) ✅
+- `scripts/train_shape_prior.py` — BIC sweep for optimal K, train/val split, cluster analysis with per-gender evaluation, matplotlib plots
+- `api/services/extract_measurements.py` — `_load_shape_prior()` loads GMM + scaler at init; `_apply_shape_prior()` shrinks implausible shapes (logprob < 5th percentile) toward nearest cluster mean
+
+### Phase 4: Measurement Consistency ✅
+- `scripts/train_consistency_model.py` — IsolationForest on multi-measurement vectors; z-score bounds per measurement; anomaly detection
+
+### Phase 5: Silhouette Consistency ✅
+- `scripts/compute_silhouette_consistency.py` — projects SMPL mesh to 2D via weak-perspective camera, computes IoU vs image mask; batch evaluation over dataset
+
+### Phase 6: Per-Subgroup Calibration ✅
+- `scripts/train_subgroup_calibration.py` — KMeans on (shape + gender + height); Ridge regression per-cluster per-measurement (alpha, beta); extends current gender-level calibration
+
+### Phase 7: Continuous Training Pipeline ✅
+- `scripts/continuous_training_pipeline.sh` — orchestrates: build dataset → train shape prior → train consistency model → train subgroup calibration → evaluate → deploy; dry-run mode, auto versioning, cron-ready
+
+### Phase 8: Monitoring & Evaluation ✅
+- `scripts/evaluate_pipeline.py` — loads dataset records, matches to ground truth, computes per-measurement MAE, shape statistics; generates JSON dashboard
+
+### Phase 9: Advanced Models ✅
+- `scripts/train_vae_shape_prior.py` — β-VAE (10→4→10) with PyTorch; early stopping; saves state_dict + normalization params
+
+### Phase 10: Production Hardening ✅
+- `scripts/ab_test_framework.py` — register/promote/rollback/starts for model version A/B testing; traffic splitting config; JSON log
+
+## Next Steps
+- Run `setup_storage.py` (needs SUPABASE_URL + SUPABASE_SERVICE_ROLE_KEY)
+- Run migration (needs SUPABASE_DB_URL)
+- Backfill SMPL params for production scans
+- Build first dataset → train models → deploy via A/B test

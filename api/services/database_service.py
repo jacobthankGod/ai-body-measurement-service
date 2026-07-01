@@ -136,7 +136,7 @@ class DatabaseService:
             return None
 
     @classmethod
-    def save_measurement(cls, user_id: str, client_name: str, height: float, gender: str, biometrics: dict, landmarks: dict = None, mesh_url: str = None, body_shape: str = None, size_rec: str = None, client_user_id: str = None, clinical_realism_index: float = None, mesh_storage_url: str = None, photo_front_url: str = None, photo_side_url: str = None):
+    def save_measurement(cls, user_id: str, client_name: str, height: float, gender: str, biometrics: dict, landmarks: dict = None, mesh_url: str = None, body_shape: str = None, size_rec: str = None, client_user_id: str = None, clinical_realism_index: float = None, mesh_storage_url: str = None, photo_front_url: str = None, photo_side_url: str = None, smpl_params: dict = None, joints3d: list = None, tpose_mesh_url: str = None):
         """
         Save measurement to database.
         
@@ -157,6 +157,16 @@ class DatabaseService:
 
         results = []
 
+        # Phase 0: Embed SMPL params into biometrics JSONB for dataset pipeline
+        # Using __ prefix to avoid collision with actual measurement keys
+        biometrics_with_smpl = biometrics.copy() if biometrics else {}
+        if smpl_params:
+            biometrics_with_smpl['__smpl_params'] = smpl_params
+        if joints3d:
+            biometrics_with_smpl['__joints3d'] = joints3d
+            if len(joints3d) > 0:
+                logger.info(f"✅ SMPL params embedded: {len(smpl_params.get('shape', []))} shape dims, {len(joints3d)} joints")
+
         # 1. Save under merchant's account (for professional's dashboard)
         try:
             merchant_payload = {
@@ -164,7 +174,7 @@ class DatabaseService:
                 "client_name": client_name,
                 "height": height,
                 "gender": gender,
-                "biometrics": biometrics,
+                "biometrics": biometrics_with_smpl,
                 "landmarks_3d": landmarks if landmarks else {},
                 "mesh_url": mesh_url,
                 "mesh_storage_url": mesh_storage_url,
@@ -173,6 +183,7 @@ class DatabaseService:
                 "body_shape": body_shape,
                 "size_recommendation": size_rec,
                 "clinical_realism_index": clinical_realism_index,
+                "tpose_mesh_url": tpose_mesh_url,
                 "source_of_truth": True,
                 "created_at": datetime.utcnow().isoformat()
             }
@@ -195,7 +206,7 @@ class DatabaseService:
                     "client_name": client_name,
                     "height": height,
                     "gender": gender,
-                    "biometrics": biometrics,
+                    "biometrics": biometrics_with_smpl,
                     "landmarks_3d": landmarks if landmarks else {},
                     "mesh_url": mesh_url,
                     "mesh_storage_url": mesh_storage_url,
@@ -204,6 +215,7 @@ class DatabaseService:
                     "body_shape": body_shape,
                     "size_recommendation": size_rec,
                     "clinical_realism_index": clinical_realism_index,
+                    "tpose_mesh_url": tpose_mesh_url,
                     "source_of_truth": True,
                     "created_at": datetime.utcnow().isoformat()
                 }
@@ -218,7 +230,10 @@ class DatabaseService:
             except Exception as e:
                 logger.error(f"❌ Client measurement save FAILED: {e}")
 
-        return results if results else None
+        # Phase 31: Structured return dict
+        if results:
+            return {"status": "saved", "accounts": results}
+        return {"status": "failed", "accounts": [], "error": "No measurements saved"}
 
     @classmethod
     def get_api_key(cls, api_key: str) -> Optional[Dict[str, Any]]:

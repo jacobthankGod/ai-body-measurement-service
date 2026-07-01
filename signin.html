@@ -44,9 +44,10 @@
     .form-container { width: 100%; max-width: 440px; }
 
     @media (max-width: 1000px) {
-      .split-layout { grid-template-columns: 1fr; }
+      html, body { overflow: auto; height: auto; }
+      .split-layout { grid-template-columns: 1fr; min-height: 100vh; height: auto; overflow: visible; }
       .side-panel { display: none; }
-      .form-panel { padding: 48px 24px; align-items: flex-start; justify-content: flex-start; }
+      .form-panel { padding: 48px 24px; align-items: center; justify-content: center; min-height: 100vh; height: auto; }
     }
 
     .logo-area { display: flex; align-items: center; gap: 16px; margin-bottom: 48px; text-decoration: none; color: inherit; }
@@ -140,6 +141,14 @@
           supabaseKey: 'sb_publishable_miCOIXHtlxLkfDgpwE0N-g_BA1Q-x8y'
         };
         const supabase = window.supabase.createClient(config.supabaseUrl, config.supabaseKey);
+
+        // Already signed in → skip to dashboard
+        supabase.auth.getSession().then(({ data: { session } }) => {
+          if (session) {
+            const params = new URLSearchParams(window.location.search);
+            window.location.href = params.get('next') || '/dashboard';
+          }
+        });
 
         document.getElementById('signInForm').addEventListener('submit', async (e) => {
           e.preventDefault();

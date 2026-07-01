@@ -438,8 +438,10 @@
     <a href="/impact.html" onclick="toggleMenu()">Our Mission</a>
     <a href="/pricing.html" onclick="toggleMenu()">Pricing</a>
     <a href="/signin.html" onclick="toggleMenu()">Merchant Portal</a>
+    <a href="/dashboard" id="mobileDashboardLink" style="display:none" onclick="toggleMenu()">Dashboard</a>
     <div style="width:100%; height:1px; background:var(--Glass-Border); margin:16px 0"></div>
     <a href="/signup.html" class="btn btn-primary" style="width:100%; height:64px; font-size:16px">Sign Up Now</a>
+    <button id="mobileLogoutBtn" style="display:none; width:100%; height:64px; font-size:16px; background:transparent; border:1.5px solid rgba(214,48,49,0.3); border-radius:12px; color:var(--Error); font-weight:800; cursor:pointer; margin-top:16px" onclick="window.korraSupabase.auth.signOut().then(() => window.location.reload())">Sign Out</button>
     <div class="mobile-close-hint">Tap Hamburger to Close</div>
   </div>
   <section class="hero" id="home">
@@ -928,10 +930,14 @@
             const authBtns = document.getElementById('authButtons');
             const bar = document.getElementById('signedBar');
             const goBtn = document.getElementById('btnGoDashboard');
+            const mDash = document.getElementById('mobileDashboardLink');
+            const mLogout = document.getElementById('mobileLogoutBtn');
 
             if (session) {
               if(authBtns) authBtns.style.display = 'none';
               if(bar) bar.style.display = 'flex';
+              if(mDash) mDash.style.display = '';
+              if(mLogout) mLogout.style.display = '';
 
               // If Admin, update the portal link
               if (goBtn && ADMIN_LIST.includes(session.user.email.toLowerCase())) {
@@ -941,6 +947,8 @@
             } else {
               if(bar) bar.style.display = 'none';
               if(authBtns) authBtns.style.display = 'flex';
+              if(mDash) mDash.style.display = 'none';
+              if(mLogout) mLogout.style.display = 'none';
             }
           });
         } catch (err) { console.error("Auth init failed:", err); }
