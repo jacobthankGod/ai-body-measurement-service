@@ -997,10 +997,12 @@ window.KORRA_MS = {
       if (viewBtn) {
         viewBtn.addEventListener('touchstart', (e) => {
           e.stopPropagation();
+          this._viewBtnTouched = true;
           if (this._sheetSnap === 'collapsed') this._halfSheet();
           else this.collapseSheet();
         }, { passive: true });
         viewBtn.addEventListener('click', (e) => {
+          if (this._viewBtnTouched) { this._viewBtnTouched = false; return; }
           e.stopPropagation();
           if (this._sheetSnap === 'collapsed') this._halfSheet();
           else this.collapseSheet();
