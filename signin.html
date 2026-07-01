@@ -109,14 +109,6 @@
         <h2>Sign In</h2>
         <p class="sub-p">Access your dashboard to manage measurements.</p>
 
-<!-- Google OAuth Button -->
-        <button type="button" class="btn-google" id="btnGoogleSignIn">
-<img src="/assets/Google__G__logo.svg.webp" alt="Google" style="width:20px;height:20px;" />
-          Continue with Google
-        </button>
-
-        <div class="divider"><span>or</span></div>
-
         <form id="signInForm">
           <div class="form-group">
             <label class="form-label">Email Address</label>
@@ -148,32 +140,6 @@
           supabaseKey: 'sb_publishable_miCOIXHtlxLkfDgpwE0N-g_BA1Q-x8y'
         };
         const supabase = window.supabase.createClient(config.supabaseUrl, config.supabaseKey);
-
-        // Google OAuth Sign-In Handler
-        document.getElementById('btnGoogleSignIn').addEventListener('click', async () => {
-          const btn = document.getElementById('btnGoogleSignIn');
-          btn.disabled = true;
-          btn.textContent = 'Connecting...';
-
-          try {
-            const { data, error } = await supabase.auth.signInWithOAuth({
-              provider: 'google',
-              options: {
-                redirectTo: window.location.origin + '/onboarding'
-              }
-            });
-
-if (error) {
-              alert(error.message);
-              btn.disabled = false;
-              btn.innerHTML = `<img src="/assets/Google__G__logo.svg.webp" alt="Google" style="width:20px;height:20px;" /> Continue with Google`;
-            }
-          } catch (err) {
-            alert('Google sign-in failed. Please try again.');
-            btn.disabled = false;
-            btn.innerHTML = `<img src="/assets/Google__G__logo.svg.webp" alt="Google" style="width:20px;height:20px;" /> Continue with Google`;
-          }
-        });
 
         document.getElementById('signInForm').addEventListener('submit', async (e) => {
           e.preventDefault();
