@@ -123,7 +123,7 @@ def run_hmr(front_path, side_path, height_cm, gender, mesh_path=None):
             )
             front_rgb = np.array(Image.open(front_path))
             side_rgb = np.array(Image.open(side_path)) if side_path and os.path.exists(side_path) else None
-            mp_result, _ = mp_extract(front_rgb, side_rgb or front_rgb, height_cm, gender)
+            mp_result, _, _ = mp_extract(front_rgb, side_rgb or front_rgb, height_cm, gender)
 
             if mp_result and mp_result.get('Shoulder', 0) > 0:
                 # Supplement HMR with MP measurements not yet in HMR output

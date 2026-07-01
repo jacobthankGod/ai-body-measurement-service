@@ -79,27 +79,10 @@ class KorraVisualizer {
         const animate = () => {
             if (!this.renderer) return;
             requestAnimationFrame(animate);
-            if (this.mesh && !this.isInteracting) {
-                this.mesh.rotation.y += 0.005;
-                if(this.landmarksGroup) this.landmarksGroup.rotation.y += 0.005;
-                if (this._outline) {
-                    this._outline.rotation.y = this.mesh.rotation.y;
-                    this._outline.position.copy(this.mesh.position);
-                }
-            } else if (this.mesh && this.isInteracting) {
-                const rotY = this.mesh.rotation.y + (this.targetRotationY - this.mesh.rotation.y) * 0.1;
-                const rotX = this.mesh.rotation.x + (this.targetRotationX - this.mesh.rotation.x) * 0.1;
-                this.mesh.rotation.y = rotY;
-                this.mesh.rotation.x = rotX;
-                if(this.landmarksGroup) {
-                    this.landmarksGroup.rotation.y = rotY;
-                    this.landmarksGroup.rotation.x = rotX;
-                }
-                if (this._outline) {
-                    this._outline.rotation.y = rotY;
-                    this._outline.rotation.x = rotX;
-                    this._outline.position.copy(this.mesh.position);
-                }
+            if (this._outline && this.mesh) {
+                this._outline.position.copy(this.mesh.position);
+                this._outline.rotation.copy(this.mesh.rotation);
+                this._outline.scale.copy(this.mesh.scale);
             }
             this.renderer.render(this.scene, this.camera);
         };
@@ -112,13 +95,7 @@ class KorraVisualizer {
         );
 
         container.addEventListener('mousedown', (e) => {
-            if (e.button === 0) {
-                // Left-click → mesh rotation
-                this.isInteracting = true;
-                this.mouseX = e.clientX;
-                this.mouseY = e.clientY;
-                if (this.onInteract) this.onInteract(true);
-            } else if (e.button === 2) {
+            if (e.button === 2) {
                 // Right-click → camera orbit
                 this._orbitState.active = true;
                 this._orbitState.type = 'rotate';
@@ -164,14 +141,6 @@ class KorraVisualizer {
                 this._orbitState.startX = e.clientX;
                 this._orbitState.startY = e.clientY;
                 this._orbitState.startTarget = this._orbitTarget.clone();
-            } else if (this.mesh) {
-                // Left-click mesh rotation
-                const deltaX = e.clientX - this.mouseX;
-                const deltaY = e.clientY - this.mouseY;
-                this.mouseX = e.clientX;
-                this.mouseY = e.clientY;
-                this.targetRotationY += deltaX * 0.01;
-                this.targetRotationX += deltaY * 0.01;
             }
         });
 
@@ -204,8 +173,6 @@ class KorraVisualizer {
                 if (this.onInteract) this.onInteract(true);
                 this._touchState.startX = touches[0].clientX;
                 this._touchState.startY = touches[0].clientY;
-                this.mouseX = touches[0].clientX;
-                this.mouseY = touches[0].clientY;
                 // Double-tap detection
                 const now = Date.now();
                 if (now - this._touchState.lastTap < 300) {
@@ -225,15 +192,7 @@ class KorraVisualizer {
         container.addEventListener('touchmove', (e) => {
             if (!this.mesh) return;
             const touches = e.touches;
-            if (touches.length === 1 && this._touchState.fingers === 1) {
-                e.preventDefault();
-                const deltaX = touches[0].clientX - this.mouseX;
-                const deltaY = touches[0].clientY - this.mouseY;
-                this.mouseX = touches[0].clientX;
-                this.mouseY = touches[0].clientY;
-                this.targetRotationY += deltaX * 0.01;
-                this.targetRotationX += deltaY * 0.01;
-            } else if (touches.length === 2) {
+            if (touches.length === 2) {
                 e.preventDefault();
                 const dist = Math.hypot(
                     touches[1].clientX - touches[0].clientX,
@@ -257,9 +216,6 @@ class KorraVisualizer {
                 this.isInteracting = false;
                 if (this.onInteract) this.onInteract(false);
                 this._touchState.lastPinchDist = 0;
-            } else if (e.touches.length === 1) {
-                this.mouseX = e.touches[0].clientX;
-                this.mouseY = e.touches[0].clientY;
             }
         }, { passive: true });
 
@@ -408,18 +364,20 @@ class KorraVisualizer {
         const material = this.wireframeMode ? this._wireframeMat : this._solidMat;
         this.mesh = new THREE.Mesh(geometry, material);
         this.mesh.rotation.x = Math.PI;
-        this.mesh.rotation.y = Math.PI;
+        this.mesh.rotation.y = 20 * Math.PI / 180;
         this.targetRotationX = Math.PI;
-        this.targetRotationY = Math.PI;
+        this.targetRotationY = 0;
 
         geometry.computeBoundingBox();
         const bbox = geometry.boundingBox;
         const size = new THREE.Vector3();
         bbox.getSize(size);
 
-        this.mesh.position.set(0, size.y / 2, 0);
+        this.mesh.position.set(0, size.y * 0.637, 0);
+        const s = 1.3;
+        this.mesh.scale.set(s, s, s);
         this._meshSize = size.y;
-        this.camera.lookAt(0, size.y * 0.5, 0);
+        this.camera.lookAt(0, size.y * 0.3, 0);
         this.camera.position.y = size.y * 0.5;
         this.camera.position.z = Math.max(3.0, size.y * 2.0);
 
@@ -438,6 +396,7 @@ class KorraVisualizer {
         this._outline = new THREE.LineSegments(edgesGeo, outlineMat);
         this._outline.position.copy(this.mesh.position);
         this._outline.rotation.copy(this.mesh.rotation);
+        this._outline.scale.copy(this.mesh.scale);
         this.scene.add(this._outline);
 
         this.updateOrbitTarget(new THREE.Vector3(0, size.y * 0.5, 0));
@@ -546,172 +505,34 @@ class KorraVisualizer {
             }
         }
         const group = new THREE.Group();
+        group.rotation.x = Math.PI;
+        group.rotation.y = 20 * Math.PI / 180;
+        group.scale.set(1.3, 1.3, 1.3);
+        group.position.y = 0.637 * 0.4;
         const mat = new THREE.MeshPhongMaterial({ color: 0x2C3E50, wireframe: true, transparent: true, opacity: 0.2 });
         const torso = new THREE.Mesh(new THREE.CylinderGeometry(0.3, 0.25, 0.8, 16), mat);
-        torso.position.y = 1.0;
         group.add(torso);
         this.mesh = group;
         if (this.scene) this.scene.add(this.mesh);
-    }
-
-    showMeasurementRing(yPercent, color = '#C6FF00') {
-        if (!this.mesh || !this.scene) return;
-        this.clearMeasurementRings();
-
-        const targetMesh = this.mesh.isGroup ? this.mesh.children[0] : this.mesh;
-        if (!targetMesh || !targetMesh.geometry) return;
-
-        const bbox = new THREE.Box3().setFromObject(targetMesh);
-        const meshHeight = bbox.max.y - bbox.min.y;
-        const meshY = bbox.min.y + meshHeight * yPercent;
-
-        const torusGeo = new THREE.TorusGeometry(0.35, 0.008, 8, 64);
-        const torusMat = new THREE.MeshBasicMaterial({
-            color: new THREE.Color(color),
-            transparent: true,
-            opacity: 0.9,
-            side: THREE.DoubleSide
-        });
-        const torus = new THREE.Mesh(torusGeo, torusMat);
-        torus.position.y = meshY;
-        torus.rotation.x = Math.PI / 2;
-
-        const glowGeo = new THREE.TorusGeometry(0.36, 0.02, 8, 64);
-        const glowMat = new THREE.MeshBasicMaterial({
-            color: new THREE.Color(color),
-            transparent: true,
-            opacity: 0.25,
-            side: THREE.DoubleSide
-        });
-        const glow = new THREE.Mesh(glowGeo, glowMat);
-        glow.position.y = meshY;
-        glow.rotation.x = Math.PI / 2;
-
-        if (!this._measurementRings) this._measurementRings = new THREE.Group();
-        this._measurementRings.add(torus);
-        this._measurementRings.add(glow);
-        this.scene.add(this._measurementRings);
-    }
-
-    showMeasurementRings(data, colors, yMap) {
-        if (!this.mesh || !this.scene || !data) return;
-        this.clearMeasurementRings();
-
-        const targetMesh = this.mesh.isGroup ? this.mesh.children[0] : this.mesh;
-        if (!targetMesh || !targetMesh.geometry) return;
-
-        const bbox = new THREE.Box3().setFromObject(targetMesh);
-        const meshHeight = bbox.max.y - bbox.min.y;
-        const positions = targetMesh.geometry.attributes.position;
-
-        const worldPos = new THREE.Vector3();
-
-        const TORSO_KEYS = new Set(['Chest Round', 'Bust Round', 'Waist Round', 'Hip Round',
-            'Stomach Round', 'Upper Hip', 'Neck Round', 'Half Length', 'Full Top Length',
-            'High Bust', 'Under Bust', 'Bust Point', 'Trouser Waist', 'Crotch Depth']);
-        const SHOULDER_KEYS = new Set(['Shoulder', 'Across Chest', 'Across Back']);
-        const ARM_KEYS = new Set(['Bicep Round', 'Elbow Round', 'Wrist Round', 'Sleeve Length', 'Armhole Round']);
-
-        const totalHalfWidth = (bbox.max.x - bbox.min.x) / 2;
-        const torsoXThreshold = totalHalfWidth * 0.35;
-
-        this._measurementRings = new THREE.Group();
-
-        for (const [key, color] of Object.entries(colors)) {
-            if (!data.measurements || data.measurements[key] == null) continue;
-            const yPct = yMap[key];
-            if (yPct == null) continue;
-
-            const meshY = bbox.min.y + meshHeight * yPct;
-            const bandHalf = meshHeight * 0.02;
-
-            const isTorso = TORSO_KEYS.has(key);
-            const isArm = ARM_KEYS.has(key);
-
-            let maxRadius = 0;
-            let filteredCount = 0;
-            for (let i = 0; i < positions.count; i++) {
-                worldPos.set(positions.getX(i), positions.getY(i), positions.getZ(i));
-                worldPos.applyMatrix4(targetMesh.matrixWorld);
-
-                if (Math.abs(worldPos.y - meshY) <= bandHalf) {
-                    const xAbs = Math.abs(worldPos.x);
-                    if (isTorso && xAbs > torsoXThreshold) continue;
-                    if (isArm && xAbs < torsoXThreshold) continue;
-
-                    const r = Math.sqrt(worldPos.x * worldPos.x + worldPos.z * worldPos.z);
-                    if (r > maxRadius) maxRadius = r;
-                    filteredCount++;
-                }
-            }
-            if (filteredCount === 0) {
-                for (let i = 0; i < positions.count; i++) {
-                    worldPos.set(positions.getX(i), positions.getY(i), positions.getZ(i));
-                    worldPos.applyMatrix4(targetMesh.matrixWorld);
-                    if (Math.abs(worldPos.y - meshY) <= bandHalf) {
-                        const r = Math.sqrt(worldPos.x * worldPos.x + worldPos.z * worldPos.z);
-                        if (r > maxRadius) maxRadius = r;
-                    }
-                }
-            }
-            if (maxRadius < 0.05) maxRadius = 0.35;
-
-            const torusGeo = new THREE.TorusGeometry(maxRadius, 0.008, 8, 64);
-            const torusMat = new THREE.MeshBasicMaterial({
-                color: new THREE.Color(color),
-                transparent: true,
-                opacity: 0.9,
-                side: THREE.DoubleSide
-            });
-            const torus = new THREE.Mesh(torusGeo, torusMat);
-            torus.position.y = meshY;
-            torus.rotation.x = Math.PI / 2;
-
-            const glowGeo = new THREE.TorusGeometry(maxRadius + 0.01, 0.02, 8, 64);
-            const glowMat = new THREE.MeshBasicMaterial({
-                color: new THREE.Color(color),
-                transparent: true,
-                opacity: 0.25,
-                side: THREE.DoubleSide
-            });
-            const glow = new THREE.Mesh(glowGeo, glowMat);
-            glow.position.y = meshY;
-            glow.rotation.x = Math.PI / 2;
-
-            this._measurementRings.add(torus);
-            this._measurementRings.add(glow);
-        }
-
-        this.scene.add(this._measurementRings);
-    }
-
-    clearMeasurementRings() {
-        if (this._measurementRings && this.scene) {
-            this.scene.remove(this._measurementRings);
-            this._measurementRings.traverse(child => {
-                if (child.geometry) child.geometry.dispose();
-                if (child.material) child.material.dispose();
-            });
-            this._measurementRings = null;
-        }
     }
 
     resetCamera() {
         this._isOrtho = false;
         const aspect = this.camera.aspect;
         this.camera = new THREE.PerspectiveCamera(45, aspect, 0.1, 1000);
-        this.targetRotationX = 0;
-        this.targetRotationY = 0;
         const dist = this.mesh ? Math.max(3.0, this._meshSize * 2.0) : 3.0;
         this._orbitSpherical.set(dist, Math.PI / 2, 0);
         this._applyOrbit();
         if (this.mesh) {
-            this.mesh.rotation.x = 0;
-            this.mesh.rotation.y = 0;
+            this.mesh.rotation.x = Math.PI;
+            this.mesh.rotation.y = 20 * Math.PI / 180;
+            if (this._meshSize > 0) {
+                this.mesh.position.y = this._meshSize * 0.637;
+            }
         }
         if (this.landmarksGroup) {
-            this.landmarksGroup.rotation.x = 0;
-            this.landmarksGroup.rotation.y = 0;
+            this.landmarksGroup.rotation.x = Math.PI;
+            this.landmarksGroup.rotation.y = 20 * Math.PI / 180;
         }
     }
 

@@ -30,10 +30,12 @@ def extract_measurements_from_dual_photos(front_image, side_image, user_height_c
     landmarks = {}
 
     # 1A. HMR PRIMARY (High precision 3D mesh)
+    hmr_smpl_params = None
     try:
         res_data = extract_measurements_from_hmr(front_image, user_height_cm, gender, side_image=side_image)
         measurements = res_data[0]
         vertices = res_data[1]
+        hmr_smpl_params = res_data[7] if len(res_data) > 7 else None
 
         if measurements:
             # Check for valid primary measurement based on gender
@@ -41,18 +43,19 @@ def extract_measurements_from_dual_photos(front_image, side_image, user_height_c
             if measurements.get(primary_key, 0) > 0:
                 hmr_measurements = measurements
                 hmr_vertices = vertices
-                hmr_confidence = 0.85
+                hmr_confidence = 0.95
                 print("💎 KORRA: HMR 3D Mesh Extracted Successfully.")
     except Exception as e:
         print(f"⚠️ HMR Processing Note: {e}")
 
     # 1B. MEDIAPIPE COMPLEMENTARY (Anatomical landmarks)
+    mp_mask = None
     try:
-        mp_result, mp_landmarks = mp_extract(front_image, side_image, user_height_cm, gender)
+        mp_result, mp_landmarks, mp_mask = mp_extract(front_image, side_image, user_height_cm, gender)
         if mp_result and mp_result.get('Shoulder', 0) > 0:
             mp_measurements = mp_result
             landmarks = mp_landmarks
-            mp_confidence = 0.65
+            mp_confidence = 0.15
             print("✅ MediaPipe Volumetric Analysis Complete.")
     except Exception as e:
         print(f"⚠️ MediaPipe Processing Note: {e}")
@@ -68,6 +71,30 @@ def extract_measurements_from_dual_photos(front_image, side_image, user_height_c
     )
 
     # 3. SHAPE TRANSFORMER (3D mesh deformation)
+    # PILLAR 3: Silhouette-Based Shape Optimization (Iterative Refinement)
+    if hmr_smpl_params and mp_mask is not None:
+        try:
+            from api.services.silhouette_optimizer import get_optimizer
+            optimizer = get_optimizer()
+            if optimizer:
+                initial_betas = np.array(hmr_smpl_params.get('shape', [0]*10))
+                camera = np.array(hmr_smpl_params.get('camera', [1, 0, 0]))
+
+                # Refine betas to match image mask
+                optimized_betas = optimizer.optimize(initial_betas, camera, mp_mask, max_iter=20)
+
+                # Recalculate HMR measurements with optimized shape
+                from api.services.extract_measurements import ENGINE
+                v_shaped = ENGINE._v_template + np.tensordot(optimizer.shapedirs, optimized_betas, axes=([2], [0]))
+                refined_hmr = ENGINE._calculate_from_indices(v_shaped, user_height_cm, gender)
+
+                # Update hmr_measurements and smpl_params
+                hmr_measurements.update(refined_hmr)
+                hmr_smpl_params['shape'] = optimized_betas.tolist()
+                hmr_smpl_params['silhouette_optimized'] = True
+                print(f"✨ Pillar 3: Silhouette Optimization applied. Refined shape coefficients.")
+        except Exception as e:
+            print(f"⚠️ Silhouette Optimization skipped: {e}")
     if hmr_vertices is not None:
         try:
             reshaped_vertices = shape_transformer.apply_deformation(hmr_vertices, fused_metrics, gender)
@@ -89,11 +116,28 @@ def extract_measurements_from_dual_photos(front_image, side_image, user_height_c
     if hmr_measurements:
         fused_metrics.update((k, v) for k, v in hmr_measurements.items()
                             if k not in fused_metrics)
+        # Phase 0: Explicitly populate __smpl_params for calibrator/subgroup logic
+        if hmr_smpl_params:
+            fused_metrics['__smpl_params'] = hmr_smpl_params
+
     if mp_measurements:
         fused_metrics.update((k, v) for k, v in mp_measurements.items()
                             if k not in fused_metrics)
+        # Preserve pose metrics for calibration
+        if 'pose_metrics' in mp_measurements:
+            fused_metrics['pose_metrics'] = mp_measurements['pose_metrics']
+
+    # Phase 0: Consistency Monitor (Height Delta Logging)
+    if hmr_measurements and 'Height' in hmr_measurements:
+        hmr_h = hmr_measurements['Height']
+        h_delta = abs(hmr_h - user_height_cm)
+        print(f"📊 Consistency Monitor: HMR Height={hmr_h:.1f}, User Height={user_height_cm:.1f}, Delta={h_delta:.1f}cm")
+        fused_metrics['height_consistency_delta'] = round(h_delta, 2)
+        if h_delta > 10.0:
+            print("⚠️ WARNING: Significant height mismatch detected (>10cm). Results may be unreliable.")
 
     # Apply SMPL-to-real-world calibration for core measurements
+    # (Calibrator now uses __smpl_params and pose_metrics for subgroup/pose logic)
     measurement_calibrator.calibrate(fused_metrics, gender)
 
     fused_metrics['fusion_sources'] = {

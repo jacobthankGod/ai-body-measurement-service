@@ -157,15 +157,16 @@ class DatabaseService:
 
         results = []
 
-        # Phase 0: Embed SMPL params into biometrics JSONB for dataset pipeline
-        # Using __ prefix to avoid collision with actual measurement keys
+        # Phase 0: Map SMPL params and joints to dedicated columns
+        # These are used for the self-improving accuracy flywheel (Pillar 1).
+        # We also keep them in biometrics for backward compatibility in the UI.
         biometrics_with_smpl = biometrics.copy() if biometrics else {}
         if smpl_params:
             biometrics_with_smpl['__smpl_params'] = smpl_params
         if joints3d:
             biometrics_with_smpl['__joints3d'] = joints3d
             if len(joints3d) > 0:
-                logger.info(f"✅ SMPL params embedded: {len(smpl_params.get('shape', []))} shape dims, {len(joints3d)} joints")
+                logger.info(f"✅ SMPL params prepared: {len(smpl_params.get('shape', []))} shape dims, {len(joints3d)} joints")
 
         # 1. Save under merchant's account (for professional's dashboard)
         try:
@@ -184,6 +185,8 @@ class DatabaseService:
                 "size_recommendation": size_rec,
                 "clinical_realism_index": clinical_realism_index,
                 "tpose_mesh_url": tpose_mesh_url,
+                "smpl_params": smpl_params,
+                "joints_3d": joints3d,
                 "source_of_truth": True,
                 "created_at": datetime.utcnow().isoformat()
             }
@@ -216,6 +219,8 @@ class DatabaseService:
                     "size_recommendation": size_rec,
                     "clinical_realism_index": clinical_realism_index,
                     "tpose_mesh_url": tpose_mesh_url,
+                    "smpl_params": smpl_params,
+                    "joints_3d": joints3d,
                     "source_of_truth": True,
                     "created_at": datetime.utcnow().isoformat()
                 }
@@ -234,6 +239,17 @@ class DatabaseService:
         if results:
             return {"status": "saved", "accounts": results}
         return {"status": "failed", "accounts": [], "error": "No measurements saved"}
+
+    @classmethod
+    def update_measurement(cls, measurement_id: str, data: dict):
+        """Update existing measurement entry."""
+        client = cls.get_client()
+        if not client: return None
+        try:
+            return client.table("measurements").update(data).eq("id", measurement_id).execute()
+        except Exception as e:
+            logger.error(f"Database update failed: {e}")
+            return None
 
     @classmethod
     def get_api_key(cls, api_key: str) -> Optional[Dict[str, Any]]:

@@ -39,6 +39,7 @@ from api.services.vision_guard import VisionGuard
 from api.services.mesh_exporter import MeshExporter
 from api.services.database_service import DatabaseService
 from api.services.imputation_service import imputation_service
+from api.services.back_calculation_service import get_back_calc_service
 from middleware.subscription_check import validate_subscription, track_usage
 
 router = APIRouter()
@@ -502,6 +503,66 @@ async def get_extraction_status(task_id: str):
     except Exception as e:
         logger.error(f"Status check failed: {e}")
         return {"status": "processing", "error": "Handshake jitter"}
+
+@router.post("/measurements/{measurement_id}/back-calculate")
+async def back_calculate_from_manual_edits(
+    measurement_id: str,
+    manual_measurements: Dict[str, float],
+    user: dict = Depends(get_current_user)
+):
+    """
+    PILLAR 1: Feedback Loop.
+    Back-calculate SMPL shape parameters based on manual tailor edits.
+    """
+    db_client = DatabaseService.get_client()
+    if not db_client: raise HTTPException(status_code=500, detail="Database unavailable")
+
+    # 1. Fetch current scan data
+    try:
+        res = db_client.table("measurements").select("*").eq("id", measurement_id).execute()
+        if not res.data:
+            raise HTTPException(status_code=404, detail="Measurement not found")
+
+        scan_data = res.data[0]
+        initial_params = scan_data.get('smpl_params')
+        if not initial_params or 'shape' not in initial_params:
+            raise HTTPException(status_code=400, detail="Scan does not have SMPL parameters for back-calculation")
+
+        height = scan_data.get('height', 170.0)
+        gender = scan_data.get('gender', 'male')
+        initial_betas = np.array(initial_params['shape'])
+
+        # 2. Perform back-calculation
+        service = get_back_calc_service()
+        optimized_betas = service.optimize_betas(
+            target_measurements=manual_measurements,
+            initial_betas=initial_betas,
+            height_cm=height,
+            gender=gender
+        )
+
+        # 3. Update smpl_params in DB
+        updated_params = initial_params.copy()
+        updated_params['shape'] = optimized_betas.tolist()
+        updated_params['back_calculated'] = True
+        updated_params['manual_target'] = manual_measurements
+
+        DatabaseService.update_measurement(measurement_id, {
+            "smpl_params": updated_params,
+            "smpl_params_version": (scan_data.get('smpl_params_version', 1) or 1) + 1
+        })
+
+        return {
+            "status": "success",
+            "message": "Back-calculation complete. SMPL parameters optimized.",
+            "new_betas": optimized_betas.tolist()
+        }
+
+    except HTTPException: raise
+    except Exception as e:
+        logger.error(f"Back-calculation failed: {e}")
+        raise HTTPException(status_code=500, detail=str(e))
+
 
 @router.post("/keys/provision")
 async def provision_api_key(

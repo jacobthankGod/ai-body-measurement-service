@@ -79,7 +79,7 @@ class ImputationService:
 
     def fuse_measurements(self, gender: str, hmr_measurements: dict = None,
                           mp_measurements: dict = None, user_height_cm: float = 170,
-                          hmr_confidence: float = 0.9, mp_confidence: float = 0.6):
+                          hmr_confidence: float = 0.95, mp_confidence: float = 0.15):
         """
         Hybrid Fusion: Combines HMR and MediaPipe measurements using ANSUR imputation.
         - HMR is primary (higher precision, weight=0.7)

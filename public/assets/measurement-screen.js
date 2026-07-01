@@ -35,6 +35,7 @@ const MEASUREMENT_Y = {
   'Inseam': 0.35, 'Trouser Length': 0.35,
   'Bicep Round': 0.60, 'Elbow Round': 0.50, 'Wrist Round': 0.35,
 };
+window.MEASUREMENT_Y = MEASUREMENT_Y;
 
 const MEASUREMENT_DESCRIPTIONS = {
   'Chest Round': 'Circumference at the widest point of the chest.',
@@ -711,14 +712,6 @@ window.KORRA_MS = {
     try {
       this.selectedMeasurement = key;
       this.updateBadge();
-      if (this.viewerInstance) {
-        this.viewerInstance.clearMeasurementRings();
-        const yPct = MEASUREMENT_Y[key] || 0.5;
-        const color = MEASUREMENT_COLORS[key] || '#C6FF00';
-        this.viewerInstance.showMeasurementRing(yPct, color);
-      } else {
-        console.log(`[SIDEMENU-DBG] WARNING: viewerInstance is null/undefined`);
-      }
       document.querySelectorAll('#view-scanresult .ms-metric-cell').forEach(el => el.classList.remove('active'));
       document.querySelectorAll('#view-scanresult .ms-metric-cell').forEach(el => {
         if (el.querySelector('.ms-metric-name')?.textContent === key) el.classList.add('active');
@@ -858,13 +851,7 @@ window.KORRA_MS = {
     this.overlaysVisible = !this.overlaysVisible;
     const btn = document.querySelector('#view-scanresult .ms-header-btn[onclick*="toggleOverlays"]');
     if (btn) btn.classList.toggle('active', this.overlaysVisible);
-    if (this.viewerInstance) {
-      if (this.overlaysVisible) {
-        this.viewerInstance.showMeasurementRings(this.data, MEASUREMENT_COLORS, MEASUREMENT_Y);
-      } else {
-        this.viewerInstance.clearMeasurementRings();
-      }
-    }
+
   },
 
   _wrapRightCol() {
@@ -1089,9 +1076,6 @@ window.KORRA_MS = {
         if (meshData && this.viewerInstance.mesh && this.viewerInstance.mesh.geometry && this.viewerInstance.mesh.geometry.attributes.position) {
           this.viewerInstance.mesh.geometry.attributes.position.usage = THREE.DynamicDrawUsage;
         }
-        if (this.overlaysVisible && this.viewerInstance) {
-          this.viewerInstance.showMeasurementRings(this.data, MEASUREMENT_COLORS, MEASUREMENT_Y);
-        }
       };
       const cached = this.viewerInstance.getCachedMesh(meshUrl);
       if (cached) {
@@ -1106,10 +1090,6 @@ window.KORRA_MS = {
             tryLoad(text);
           })
           .catch(() => {});
-      }
-    } else {
-      if (this.overlaysVisible && this.viewerInstance) {
-        this.viewerInstance.showMeasurementRings(this.data, MEASUREMENT_COLORS, MEASUREMENT_Y);
       }
     }
     this._fabIntel._sessionStart = Date.now();
@@ -1462,9 +1442,6 @@ window.KORRA_MS = {
     if (content) { content.style.marginLeft = ''; content.style.padding = ''; }
     this.active = false;
     this.data = null;
-    if (this.viewerInstance && this.viewerInstance !== window.KORRA_VIZ) {
-      this.viewerInstance.clearMeasurementRings?.();
-    }
     this.viewerInstance = null;
     this.sheetExpanded = false;
     this._aiLoading = false;

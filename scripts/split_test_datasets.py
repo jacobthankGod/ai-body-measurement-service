@@ -150,7 +150,7 @@ def run_ssp3d_tests(max_subjects: int):
 
         # Path B: MediaPipe
         try:
-            mp_meas, mp_err = mp_extract(image_rgb, image_rgb,
+            mp_meas, mp_lms, mp_mask = mp_extract(image_rgb, image_rgb,
                                           height_cm, gender)
             if mp_meas:
                 print(f"  MP:   ", {k: f"{v:.1f}" for k, v in
@@ -199,15 +199,15 @@ def run_hbw_tests(max_subjects: int):
     from api.services.extract_measurements import extract_measurements_from_hmr
 
     gt = load_ground_truth(str(PROJECT_ROOT / "data" / "hbw" / "ground_truth.csv"))
-    images_dir = PROJECT_ROOT / "data" / "hbw" / "HBW_low_resolution" / "images" / "val_small_resolution"
+    images_dir = PROJECT_ROOT / "data" / "hbw"
 
     selected = []
-    for subj_id in list(gt.keys())[:max_subjects]:
-        subj_dir = images_dir / subj_id
-        if subj_dir.exists():
-            images = sorted(subj_dir.glob("*.png"))
-            if images:
-                selected.append((subj_id, images[0]))  # First frame per subject
+    seen_subjects = set()
+    for img_path in sorted(images_dir.glob("*.png")):
+        subj_id = img_path.name.split('_')[0]
+        if subj_id in gt and subj_id not in seen_subjects and len(selected) < max_subjects:
+            seen_subjects.add(subj_id)
+            selected.append((subj_id, img_path))
 
     print(f"Selected {len(selected)} subjects from HBW")
 
@@ -298,7 +298,7 @@ def run_unidata_tests():
         # Path B: MediaPipe
         if side_rgb is not None:
             try:
-                mp_meas, mp_err = mp_extract(front_rgb, side_rgb,
+                mp_meas, mp_lms, mp_mask = mp_extract(front_rgb, side_rgb,
                                               height_cm, gender)
                 if mp_meas:
                     print(f"  MP:   ", {k: f"{v:.1f}" for k, v in
@@ -334,6 +334,64 @@ def run_unidata_tests():
                                  'Fusion', f"unidata/{subj_id}")
             except Exception as e:
                 print(f"  Fusion ERROR: {e}")
+
+        gc.collect()
+
+
+def run_modelagency_tests(max_subjects: int):
+    """Run split tests on Model Agency (single images, professional lighting)."""
+    print("\n" + "=" * 70)
+    print("MODEL AGENCY SPLIT TESTS (professional models)")
+    print("=" * 70)
+
+    from api.services.extract_measurements import extract_measurements_from_hmr
+
+    gt_path = PROJECT_ROOT / "data" / "modelagency" / "ground_truth_downloaded.csv"
+    if not gt_path.exists():
+        print("Model Agency downloaded ground truth not found")
+        return
+
+    gt = load_ground_truth(str(gt_path))
+    images_dir = PROJECT_ROOT / "data" / "modelagency" / "downloaded"
+
+    selected = []
+    for subj_id in list(gt.keys())[:max_subjects]:
+        subj_dir = images_dir / subj_id
+        if subj_dir.exists():
+            images = sorted(subj_dir.glob("*.jpg"))
+            if images:
+                selected.append((subj_id, images[0]))  # First image
+
+    print(f"Selected {len(selected)} subjects from Model Agency")
+
+    for subj_id, img_path in selected:
+        print(f"\n  --- {subj_id}: {img_path.name} ---")
+        import cv2
+        image_bgr = cv2.imread(str(img_path))
+        if image_bgr is None:
+            print(f"  SKIP: cannot read")
+            continue
+        image_rgb = cv2.cvtColor(image_bgr, cv2.COLOR_BGR2RGB)
+
+        gt_row = gt.get(subj_id, {})
+        height_cm = float(gt_row.get('height_cm', 175))
+        gender = str(gt_row.get('gender', 'female'))
+
+        # HMR only
+        try:
+            hmr_result = extract_measurements_from_hmr(
+                image_rgb, height_cm, gender)
+            hmr_meas = hmr_result[0]
+            hmr_error = hmr_result[5]
+            if hmr_error:
+                print(f"  HMR FAILED: {hmr_error}")
+            elif hmr_meas:
+                print(f"  HMR: ", {k: f"{v:.1f}" for k, v in
+                      hmr_meas.items() if v > 0})
+                compare_vs_gt(hmr_meas, gt, subj_id, height_cm, gender,
+                             'HMR', f"modelagency/{subj_id}/{img_path.name}")
+        except Exception as e:
+            print(f"  HMR ERROR: {e}")
 
         gc.collect()
 
@@ -404,7 +462,7 @@ def main():
     parser.add_argument('--max', type=int, default=3,
                         help='Max subjects per dataset (default: 3)')
     parser.add_argument('--datasets', nargs='+',
-                        default=['ssp3d', 'hbw', 'unidata'],
+                        default=['ssp3d', 'hbw', 'unidata', 'modelagency'],
                         help='Datasets to test (default: all)')
     args = parser.parse_args()
 
@@ -419,6 +477,8 @@ def main():
         run_hbw_tests(args.max)
     if 'unidata' in args.datasets:
         run_unidata_tests()
+    if 'modelagency' in args.datasets:
+        run_modelagency_tests(args.max)
 
     print_summary()
     print("\nDone.")

@@ -14,7 +14,7 @@
   display: flex;
   flex-direction: column;
   flex: 1;
-  height: auto;
+  height: 100%;
   min-height: 0;
   overflow: hidden;
   position: relative;
@@ -214,6 +214,7 @@
   height: 100%;
   position: absolute;
   inset: 0;
+  z-index: 1;
 }
 .ms-viewer-canvas canvas {
   display: block;
@@ -281,10 +282,11 @@
   right: 12px;
   top: 50%;
   transform: translateY(-50%);
-  z-index: 3;
+  z-index: 5;
   display: flex;
   flex-direction: column;
   gap: 8px;
+  pointer-events: auto;
 }
 .ms-tool-btn {
   width: 36px;
@@ -1007,12 +1009,13 @@
 /* ── SIDE-BY-SIDE LAYOUT (Desktop) ── */
 .ms-side-by-side {
   flex-direction: row !important;
-  flex-wrap: wrap;
+  flex-wrap: nowrap;
 }
 .ms-side-by-side .ms-viewer {
   flex: 1 1 55%;
   min-width: 0;
   height: calc(100vh);
+  overflow: visible;
   order: 1;
 }
 .ms-side-by-side .ms-right-col {

@@ -53,7 +53,7 @@ def initialize_pose_detector():
             num_poses=1,
             min_pose_detection_confidence=0.6,
             min_tracking_confidence=0.6,
-            output_segmentation_masks=False
+            output_segmentation_masks=True
         )
         pose_landmarker = PoseLandmarker.create_from_options(options)
         return pose_landmarker
@@ -61,19 +61,30 @@ def initialize_pose_detector():
         print(f"❌ Failed to initialize Pose Landmarker: {e}")
         return None
 
-def detect_pose_landmarks(image: np.ndarray) -> Optional[Dict[str, Tuple[float, float]]]:
+def detect_pose_landmarks(image: np.ndarray) -> Tuple[Optional[Dict[str, Tuple[float, float, float]]], Optional[np.ndarray]]:
     global pose_landmarker
 
     if pose_landmarker is None:
-        if not initialize_pose_detector(): return None
+        if not initialize_pose_detector(): return None, None
+
+    # Get classes for this scope
+    mp_vision = get_mediapipe_vision()
+    if not mp_vision[0]: return None, None
+    Image, ImageFormat = mp_vision[0], mp_vision[1]
 
     try:
         mp_image = Image(image_format=ImageFormat.SRGB, data=image)
         result = pose_landmarker.detect(mp_image)
 
-        if not result or not result.pose_landmarks: return None
+        if not result or not result.pose_landmarks:
+            return None, None
         landmarks = result.pose_landmarks[0]
-        
+
+        # Extract segmentation mask if available
+        mask = None
+        if result.segmentation_masks:
+            mask = result.segmentation_masks[0].numpy_view()
+
         # Extended mapping for Phase 15 visualization
         landmark_mapping = {
             0: 'nose',
@@ -89,10 +100,10 @@ def detect_pose_landmarks(image: np.ndarray) -> Optional[Dict[str, Tuple[float, 
             if idx < len(landmarks):
                 lm = landmarks[idx]
                 if lm.visibility > 0.5:
-                    landmark_dict[name] = (lm.x, lm.y)
-        return landmark_dict
+                    landmark_dict[name] = (lm.x, lm.y, lm.z)
+        return landmark_dict, mask
     except Exception as e:
-        return None
+        return None, None
 
 def calculate_pixels_per_cm(landmarks, img_height, user_height_cm):
     try:
@@ -101,6 +112,7 @@ def calculate_pixels_per_cm(landmarks, img_height, user_height_cm):
         right_ankle = landmarks.get('right_ankle')
         
         if nose and left_ankle and right_ankle:
+            # landmarks are (x, y, z)
             ankle_mid_y = (left_ankle[1] + right_ankle[1]) / 2
             body_span_norm = abs(ankle_mid_y - nose[1])
             body_pixels = body_span_norm * img_height
@@ -120,16 +132,16 @@ def extract_measurements_from_dual_photos(
     side_image: np.ndarray,
     user_height_cm: float,
     gender: str = 'male'
-) -> Tuple[Dict[str, float], Dict[str, Tuple[float, float]]]:
+) -> Tuple[Dict[str, float], Dict[str, Tuple[float, float, float]], Optional[np.ndarray]]:
     """
-    PHASE 15: Volumetric Extraction + Landmark Export.
-    Returns: (measurements_dict, landmarks_for_ui)
+    PHASE 15: Volumetric Extraction + Landmark Export + Segmentation Mask.
+    Returns: (measurements_dict, landmarks_for_ui, front_segmentation_mask)
     """
-    front_lms = detect_pose_landmarks(front_image)
-    side_lms = detect_pose_landmarks(side_image)
-    
+    front_lms, front_mask = detect_pose_landmarks(front_image)
+    side_lms, _ = detect_pose_landmarks(side_image)
+
     if not front_lms:
-        return _extract_proportional_measurements(user_height_cm, gender), {}
+        return _extract_proportional_measurements(user_height_cm, gender), {}, None
 
     px_cm_front = calculate_pixels_per_cm(front_lms, front_image.shape[0], user_height_cm)
     px_cm_side = px_cm_front
@@ -141,14 +153,41 @@ def extract_measurements_from_dual_photos(
         r_sh = lms.get('right_shoulder')
         l_hp = lms.get('left_hip')
         r_hp = lms.get('right_hip')
+        # index 0 is x
         shoulder_w = abs(r_sh[0] - l_sh[0]) * img_width / px_cm if l_sh and r_sh else 0
         hip_w = abs(r_hp[0] - l_hp[0]) * img_width / px_cm if l_hp and r_hp else 0
         return shoulder_w, hip_w
 
+    def get_pose_metrics(lms):
+        # Calculate torso tilt from side view if possible
+        # Use z and y to find angle
+        l_sh = lms.get('left_shoulder')
+        r_sh = lms.get('right_shoulder')
+        l_hp = lms.get('left_hip')
+        r_hp = lms.get('right_hip')
+
+        if not (l_sh and r_sh and l_hp and r_hp):
+            return 0.0, 1.0
+
+        sh_mid_z = (l_sh[2] + r_sh[2]) / 2
+        hp_mid_z = (l_hp[2] + r_hp[2]) / 2
+        sh_mid_y = (l_sh[1] + r_sh[1]) / 2
+        hp_mid_y = (l_hp[1] + r_hp[1]) / 2
+
+        # Tilt angle in degrees
+        dz = abs(sh_mid_z - hp_mid_z)
+        dy = abs(sh_mid_y - hp_mid_y)
+        tilt = math.degrees(math.atan2(dz, dy)) if dy > 0 else 0
+
+        return tilt
+
     f_sh_w, f_hp_w = get_width(front_lms, px_cm_front, front_image.shape[1])
     s_sh_d, s_hp_d = 0, 0
+    torso_tilt = 0.0
+
     if side_lms:
         s_sh_d, s_hp_d = get_width(side_lms, px_cm_side, side_image.shape[1])
+        torso_tilt = get_pose_metrics(side_lms)
 
     if s_sh_d == 0: s_sh_d = f_sh_w * 0.65
     if s_hp_d == 0: s_hp_d = f_hp_w * 0.85
@@ -159,12 +198,22 @@ def extract_measurements_from_dual_photos(
     measurements['Waist Round'] = round(compute_elliptical_circumference(f_hp_w * 0.9, s_hp_d * 0.95), 1)
     measurements['Hip Round'] = round(compute_elliptical_circumference(f_hp_w * 1.05, s_hp_d * 1.1), 1)
 
+    # Abdomen expansion ratio: actual waist width vs expected (proportional to hip/shoulder)
+    # This is a heuristic for breathing/clothing bloating
+    expected_waist_w = (f_sh_w + f_hp_w) / 2 * 0.85
+    abdomen_expansion = f_hp_w / expected_waist_w if expected_waist_w > 0 else 1.0
+
+    measurements['pose_metrics'] = {
+        'torso_tilt': round(torso_tilt, 2),
+        'abdomen_expansion': round(abdomen_expansion, 2)
+    }
+
     base_m = _extract_proportional_measurements(user_height_cm, gender)
     for k, v in base_m.items():
         if k not in measurements: measurements[k] = v
 
     print(f"✅ Phase 15: Volumetric Extraction Success.")
-    return measurements, front_lms
+    return measurements, front_lms, front_mask
 
 def _extract_proportional_measurements(user_height_cm: float, gender: str = 'male') -> Dict[str, float]:
     if gender == 'male':

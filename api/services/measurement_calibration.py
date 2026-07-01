@@ -16,8 +16,10 @@ update as more data is collected.
 """
 import json
 import os
+import pickle
+import numpy as np
 from pathlib import Path
-from typing import Dict, Optional
+from typing import Dict, Optional, Any
 
 
 def _default_factors() -> Dict[str, Dict[str, list]]:
@@ -62,11 +64,14 @@ class MeasurementCalibrator:
     """
     Calibrates SMPL-derived measurements to real-world-equivalent values.
     Thread-safe (read-only after init).
+
+    NEW: Supports Subgroup-Specific Calibration (Pillar 4).
     """
 
     def __init__(self, factors_path: Optional[str] = None):
         self.factors_path = factors_path
         self.factors = self._load(factors_path)
+        self.subgroup_model = self._load_subgroup_model()
 
     def _load(self, path: Optional[str] = None) -> Dict[str, Dict[str, list]]:
         if path and os.path.exists(path):
@@ -74,23 +79,93 @@ class MeasurementCalibrator:
                 return json.load(f)
         return _default_factors()
 
+    def _load_subgroup_model(self) -> Optional[Dict[str, Any]]:
+        """Load the trained subgroup calibration model (KMeans + Ridge)."""
+        model_path = Path(__file__).parent.parent / "models" / "priors" / "subgroup_calibration.pkl"
+        if model_path.exists():
+            try:
+                with open(model_path, 'rb') as f:
+                    model = pickle.load(f)
+                print(f"✅ Subgroup Calibration Active: {model.get('n_clusters')} archetypes loaded.")
+                return model
+            except Exception as e:
+                print(f"⚠️ Subgroup Calibration Load failed: {e}")
+        return None
+
     def calibrate(self, measurements: Dict[str, float],
                   gender: str = 'male') -> Dict[str, float]:
         """
         Apply calibration to a measurements dict in-place and return it.
-        Only modifies measurements that have calibration factors defined.
-        Handles both Title Case (e.g. 'Waist Round') and snake_case
-        (e.g. 'waist_round') key formats. If both variants exist in the
-        dict, both are updated.
+
+        Logic:
+        1. Try Subgroup-Specific Calibration if model and smpl_params are available.
+        2. Fallback to Global Gender-Based Calibration.
+        3. Apply Pose-Aware Corrections (Waist).
         """
-        gender_factors = self.factors.get(gender, {})
-        for factor_key, (alpha, beta) in gender_factors.items():
-            snake_key = factor_key.lower().replace(' ', '_')
-            matched_keys = [k for k in (factor_key, snake_key)
-                            if k in measurements and measurements.get(k, 0) > 0]
-            for matched_key in matched_keys:
-                corrected = alpha * measurements[matched_key] + beta
-                measurements[matched_key] = round(max(corrected, 0.1), 1)
+        # A. ATTEMPT SUBGROUP CALIBRATION (Pillar 4)
+        subgroup_applied = False
+        if self.subgroup_model and 'pose_metrics' in measurements:
+            # We need shape params to find the cluster
+            # In our pipeline, smpl_params are usually available in the full measurements dict
+            # or passed through the extraction flow.
+            # Assume __smpl_params key (Phase 0 convention)
+            smpl = measurements.get('__smpl_params', {})
+            shape = smpl.get('shape')
+            height = measurements.get('height') or measurements.get('Height')
+
+            if shape and len(shape) == 10 and height:
+                try:
+                    gender_enc = 1.0 if gender.lower() == 'male' else 0.0
+                    feat = np.concatenate([shape, [gender_enc], [height / 200.0]]).reshape(1, -1)
+
+                    # Normalize features
+                    feat_std = self.subgroup_model['scaler'].transform(feat)
+
+                    # Predict cluster
+                    cluster_idx = self.subgroup_model['clusterer'].predict(feat_std)[0]
+                    cluster_factors = self.subgroup_model['per_cluster_factors'][cluster_idx]
+
+                    # Apply factors
+                    for mk, f in cluster_factors.items():
+                        if mk in measurements and measurements[mk] > 0 and f['alpha'] != 1.0:
+                            measurements[mk] = round(f['alpha'] * measurements[mk] + f['beta'], 1)
+
+                    subgroup_applied = True
+                except Exception as e:
+                    print(f"⚠️ Subgroup application failed: {e}")
+
+        # B. FALLBACK TO GLOBAL CALIBRATION (Only if subgroup didn't handle it)
+        if not subgroup_applied:
+            gender_factors = self.factors.get(gender, {})
+            for factor_key, (alpha, beta) in gender_factors.items():
+                snake_key = factor_key.lower().replace(' ', '_')
+                matched_keys = [k for k in (factor_key, snake_key)
+                                if k in measurements and measurements.get(k, 0) > 0]
+                for matched_key in matched_keys:
+                    val = measurements[matched_key]
+                    corrected = alpha * val + beta
+                    measurements[matched_key] = round(max(corrected, 0.1), 1)
+
+        # C. POSE-AWARE CORRECTIONS (Always apply)
+        pose_metrics = measurements.get('pose_metrics', {})
+        tilt = pose_metrics.get('torso_tilt', 0.0)
+        expansion = pose_metrics.get('abdomen_expansion', 1.0)
+
+        # We need the key to exist to apply pose correction
+        waist_keys = [k for k in ('Waist Round', 'waist_round') if k in measurements]
+        for wk in waist_keys:
+            val = measurements[wk]
+            shrinkage = 1.0
+            if tilt > 10:
+                # Tilt shrinkage: 1% per 2 degrees above 10
+                shrinkage *= (1.0 - (min(tilt, 30) - 10) / 100.0 * 0.5)
+            if expansion > 1.1:
+                # Expansion shrinkage: proportional to overshoot
+                shrinkage *= (1.0 / expansion)
+
+            if shrinkage != 1.0:
+                measurements[wk] = round(max(val * shrinkage, 10.0), 1)
+
         return measurements
 
     def save_factors(self, path: Optional[str] = None):
