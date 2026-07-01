@@ -119,14 +119,6 @@
           <h2 id="viewTitle">Create Your Account</h2>
           <p class="sub-p" id="viewSub">Start your body scanning journey today.</p>
 
-<!-- Google OAuth Button -->
-          <button type="button" class="btn-google" id="btnGoogleSignUp">
-<img src="/assets/Google__G__logo.svg.webp" alt="Google" style="width:20px;height:20px;" />
-            Continue with Google
-          </button>
-
-          <div class="divider"><span>or</span></div>
-
           <form id="signUpForm">
             <div class="form-group" style="display: grid; grid-template-columns: 1fr 1fr; gap: 16px;">
               <div>
@@ -196,32 +188,6 @@ if (next) {
         document.getElementById('linkSignIn').href = `/signin?next=${encodeURIComponent(next)}`;
         document.getElementById('successLoginLink').href = `/signin?next=${encodeURIComponent(next)}`;
       }
-
-      // Google OAuth Sign-Up Handler
-      document.getElementById('btnGoogleSignUp').addEventListener('click', async () => {
-        const btn = document.getElementById('btnGoogleSignUp');
-        btn.disabled = true;
-        btn.textContent = 'Connecting to Google...';
-
-        try {
-          const { data, error } = await KORRA_CORE.auth.signInWithOAuth({
-            provider: 'google',
-            options: {
-              redirectTo: window.location.origin + '/verification-success.html?next=/onboarding'
-            }
-          });
-
-if (error) {
-            alert(error.message);
-            btn.disabled = false;
-            btn.innerHTML = `<img src="/assets/Google__G__logo.svg.webp" alt="Google" style="width:20px;height:20px;" /> Continue with Google`;
-          }
-        } catch (err) {
-          alert('Google sign-up failed. Please try again.');
-          btn.disabled = false;
-          btn.innerHTML = `<img src="/assets/Google__G__logo.svg.webp" alt="Google" style="width:20px;height:20px;" /> Continue with Google`;
-        }
-      });
 
       // Build the redirect URL for email verification
       let redirectUrl = window.location.origin + '/verify';
