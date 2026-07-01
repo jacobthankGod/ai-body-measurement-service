@@ -504,7 +504,10 @@
 .ms-sheet-body {
   flex: 1;
   min-height: 0;
+  overflow-y: auto;
+  overflow-x: hidden;
   padding: 12px 20px 64px;
+  -webkit-overflow-scrolling: touch;
 }
 
 /* ── MEASUREMENT LIST ── */
@@ -1047,7 +1050,7 @@
   border-radius: 0;
   border-top: none;
   border-left: none;
-  overflow-y: auto;
+  overflow: hidden;
   overflow-x: hidden;
 }
 .ms-side-by-side .ms-sheet.expanded {
