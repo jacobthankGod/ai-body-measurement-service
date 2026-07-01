@@ -3,8 +3,8 @@
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-<title>Intelligence & Rigor | KORRA AI Accuracy Engine</title>
-  <meta name="description" content="Explore the rigorous science and data-centric AI infrastructure behind KORRA's clinical body measurement accuracy." />
+<title>KORRA | Our Intelligence & Accuracy Engine</title>
+  <meta name="description" content="Discover how KORRA combines AI with human expertise to deliver the world's most accurate body measurements." />
   <link rel="icon" type="image/png" href="/assets/body-capture.png">
   <link rel="preconnect" href="https://fonts.googleapis.com" />
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
@@ -14,201 +14,184 @@
     :root {
       --Obsidian-Deep: #050505; --Obsidian-Layer: #0B0B0C; --Accent-Teal: #C6FF00;
       --Glass: rgba(255, 255, 255, 0.04); --Glass-Border: rgba(255, 255, 255, 0.08);
-      --White: #FFFFFF; --Neutral-400: #A3A3A3; --Neutral-500: #737373;
+      --White: #FFFFFF; --Neutral-400: #A3A3A3; --Neutral-500: #737373; --Mint: #C6FF00;
+      --S-8: 8px; --S-12: 12px; --S-16: 16px; --S-24: 24px; --S-32: 32px; --S-48: 48px; --S-64: 64px; --S-80: 80px; --S-120: 120px; --S-160: 160px;
     }
     * { box-sizing: border-box; -webkit-font-smoothing: antialiased; margin: 0; padding: 0; }
-    html, body { background: var(--Obsidian-Deep); color: var(--White); font-family: 'Inter', sans-serif; line-height: 1.6; }
-    .container { width: 100%; max-width: 1100px; margin: 0 auto; padding: 0 40px; }
+    html, body { background: var(--Obsidian-Deep); color: var(--White); font-family: 'Inter', sans-serif; overflow-x: hidden; }
 
-    header { height: 80px; display: flex; align-items: center; border-bottom: 1px solid var(--Glass-Border); background: rgba(0,0,0,0.8); backdrop-filter: blur(20px); position: sticky; top: 0; z-index: 100; }
-    .logo { display: flex; align-items: center; gap: 12px; text-decoration: none; color: inherit; }
-    .logo-mark { width: 24px; height: 24px; background: var(--Accent-Teal); border-radius: 6px; transform: rotate(-8deg); }
-    .logo-text { font-size: 18px; font-weight: 900; letter-spacing: -0.05em; }
+    /* --- COPIED HEADER SYSTEM --- */
+    header { width: 100%; height: 80px; display: flex; align-items: center; position: fixed; top: 0; z-index: 999999; background: #000; border-bottom: 1px solid var(--Glass-Border); }
+    header .container { width: 100%; max-width: 1200px; margin: 0 auto; padding: 0 48px; display: flex; align-items: center; justify-content: space-between; position: relative; }
+    .logo { display: flex; align-items: center; gap: 16px; cursor: pointer; text-decoration: none; color: inherit; }
+    .logo img { height: 40px; width: auto; }
+    nav.main-nav { display: flex; gap: 20px; position: absolute; left: 50%; transform: translateX(-50%); }
+    nav.main-nav a { font-size: 12px; font-weight: 600; color: var(--White); text-decoration: none; text-transform: uppercase; letter-spacing: 0.08em; opacity: 0.6; transition: 0.2s; }
+    nav.main-nav a:hover, nav.main-nav a.active { opacity: 1; color: var(--Mint); }
+    .btn { height: 40px; padding: 0 20px; border-radius: 12px; border: 1px solid transparent; font-size: 13px; font-weight: 800; cursor: pointer; display: inline-flex; align-items: center; justify-content: center; gap: 12px; transition: 0.2s; text-decoration: none; }
+    .btn-primary { background: var(--Mint); color: #000; }
+    .btn-outline { background: transparent; border: 1px solid var(--Glass-Border); color: #fff; }
 
-    section { padding: 120px 0; border-bottom: 1px solid var(--Glass-Border); }
-    .hero { text-align: center; background: radial-gradient(circle at center, rgba(198,255,0,0.05) 0%, transparent 70%); }
-    .eyebrow { font-size: 10px; font-weight: 900; color: var(--Accent-Teal); text-transform: uppercase; letter-spacing: 0.2em; margin-bottom: 24px; }
-    h1 { font-size: clamp(32px, 6vw, 64px); font-weight: 900; line-height: 1.05; letter-spacing: -0.04em; margin-bottom: 32px; }
-    .hero-p { font-size: 20px; color: var(--Neutral-400); max-width: 800px; margin: 0 auto; }
+    /* --- CONTENT STYLES --- */
+    main { padding-top: 160px; }
+    section { padding-bottom: var(--S-120); }
+    .eyebrow { font-size: 11px; font-weight: 900; color: var(--Mint); text-transform: uppercase; letter-spacing: 0.2em; margin-bottom: 16px; }
+    h1 { font-size: clamp(32px, 5vw, 56px); font-weight: 900; line-height: 1.1; margin-bottom: 24px; letter-spacing: -0.04em; }
+    .desc { font-size: 18px; color: var(--Neutral-400); max-width: 700px; margin-bottom: 48px; }
 
-    .grid-pillars { display: grid; grid-template-columns: repeat(2, 1fr); gap: 32px; margin-top: 64px; }
-    .pillar-card { background: var(--Glass); border: 1px solid var(--Glass-Border); padding: 40px; border-radius: 24px; transition: 0.3s; }
-    .pillar-card:hover { border-color: var(--Accent-Teal); transform: translateY(-5px); }
-    .pillar-num { font-size: 12px; font-weight: 900; color: var(--Neutral-500); margin-bottom: 16px; }
-    .pillar-card h3 { font-size: 24px; font-weight: 800; margin-bottom: 16px; }
-    .pillar-card p { font-size: 14px; color: var(--Neutral-400); }
+    .grid-2 { display: grid; grid-template-columns: 1fr 1fr; gap: 48px; align-items: center; }
+    .glass-card { background: var(--Glass); border: 1px solid var(--Glass-Border); border-radius: 24px; padding: 48px; transition: 0.3s; }
+    .glass-card:hover { border-color: var(--Mint); }
 
-    .evidence-block { display: flex; gap: 64px; align-items: center; }
-    .evidence-content { flex: 1; }
-    .evidence-viz { flex: 1; background: var(--Obsidian-Layer); border-radius: 24px; border: 1px solid var(--Glass-Border); padding: 32px; min-height: 400px; position: relative; overflow: hidden; }
+    .feature-list { display: flex; flex-direction: column; gap: 32px; }
+    .feature-item h3 { font-size: 20px; font-weight: 800; margin-bottom: 8px; color: var(--Mint); }
+    .feature-item p { font-size: 15px; color: var(--Neutral-400); }
 
-    .stat-box { display: flex; gap: 40px; margin-top: 48px; }
-    .stat-item h4 { font-size: 32px; font-weight: 900; color: var(--Accent-Teal); }
-    .stat-item span { font-size: 11px; font-weight: 700; color: var(--Neutral-500); text-transform: uppercase; }
+    .stat-row { display: flex; gap: 48px; margin-top: 32px; }
+    .stat-item h4 { font-size: 32px; font-weight: 900; color: var(--Mint); }
+    .stat-item span { font-size: 10px; font-weight: 800; color: var(--Neutral-500); text-transform: uppercase; letter-spacing: 0.1em; }
 
-    .roadmap-list { margin-top: 48px; display: flex; flex-direction: column; gap: 24px; }
-    .roadmap-item { display: flex; gap: 24px; padding-left: 20px; border-left: 2px solid var(--Glass-Border); position: relative; transition: 0.3s; }
-    .roadmap-item.active { border-color: var(--Accent-Teal); }
-    .roadmap-item::before { content: ""; position: absolute; left: -7px; top: 0; width: 12px; height: 12px; border-radius: 50%; background: var(--Obsidian-Deep); border: 2px solid var(--Glass-Border); }
-    .roadmap-item.active::before { background: var(--Accent-Teal); border-color: var(--Accent-Teal); box-shadow: 0 0 15px var(--Accent-Teal); }
-    .roadmap-label { font-size: 11px; font-weight: 900; color: var(--Neutral-500); }
-    .roadmap-text h5 { font-size: 18px; font-weight: 800; margin-bottom: 4px; }
-    .roadmap-text p { font-size: 14px; color: var(--Neutral-400); }
+    .roadmap-box { margin-top: 64px; display: flex; flex-direction: column; gap: 16px; }
+    .roadmap-step { display: flex; gap: 24px; padding: 24px; border-radius: 16px; background: rgba(255,255,255,0.02); border: 1px solid var(--Glass-Border); }
+    .step-num { width: 32px; height: 32px; background: var(--Mint); color: #000; border-radius: 50%; display: flex; align-items: center; justify-content: center; font-weight: 900; font-size: 14px; flex-shrink: 0; }
+    .step-text h5 { font-size: 16px; font-weight: 800; margin-bottom: 4px; }
+    .step-text p { font-size: 13px; color: var(--Neutral-400); }
 
-    .investor-card { background: linear-gradient(135deg, var(--Teal-900), #000); border: 1px solid var(--Accent-Teal); padding: 64px; border-radius: 32px; text-align: center; }
-    .investor-card h2 { font-size: 32px; margin-bottom: 24px; }
-    .btn-primary { background: var(--Accent-Teal); color: var(--Obsidian-Deep); padding: 16px 40px; border-radius: 12px; font-weight: 800; text-decoration: none; display: inline-block; transition: 0.3s; }
-    .btn-primary:hover { transform: scale(1.05); box-shadow: 0 0 30px rgba(198,255,0,0.3); }
+    /* --- FOOTER SYSTEM --- */
+    footer { padding: var(--S-80) 0; border-top: 1px solid var(--Glass-Border); margin-top: 80px; }
+    .footer-links { display: grid; grid-template-columns: repeat(4, 1fr); gap: 48px; }
+    .footer-col h4 { font-size: 10px; font-weight: 900; text-transform: uppercase; color: var(--Neutral-500); margin-bottom: 24px; }
+    .footer-col a { display: block; color: var(--Neutral-400); text-decoration: none; margin-bottom: 12px; font-size: 13px; }
+    .footer-col a:hover { color: var(--Mint); }
 
-    footer { padding: 80px 0; border-top: 1px solid var(--Glass-Border); opacity: 0.5; font-size: 13px; text-align: center; }
-
-    @media (max-width: 800px) {
-      .grid-pillars { grid-template-columns: 1fr; }
-      .evidence-block { flex-direction: column; }
-      .stat-box { flex-direction: column; gap: 24px; }
+    @media (max-width: 900px) {
+      .grid-2 { grid-template-columns: 1fr; }
+      header .container { padding: 0 24px; }
+      nav.main-nav { display: none; }
+      .footer-links { grid-template-columns: repeat(2, 1fr); }
     }
   </style>
 </head>
 <body>
-  <header>
-    <div class="container" style="display:flex; justify-content:space-between; align-items:center; width:100%">
+  <header id="mainHeader">
+    <div class="container">
       <a class="logo" href="/">
-        <div class="logo-mark"></div>
-        <span class="logo-text">Korra Intelligence</span>
+        <img src="/assets/Korra_logo_final.png" alt="Korra">
+        <span style="font-size:22px; font-weight:900; letter-spacing:-0.03em; color:var(--Mint);">Korra</span>
       </a>
-      <a href="/" style="color:var(--Neutral-400); font-size:12px; font-weight:700; text-decoration:none">BACK TO HOME</a>
+      <nav class="main-nav">
+        <a href="/#technology">How it works</a>
+        <a href="/casestudies.html">Success Stories</a>
+        <a href="/intelligence.html" class="active">Intelligence</a>
+        <a href="/about.html">About</a>
+        <a href="/pricing.html">Pricing</a>
+      </nav>
+      <div class="header-auth">
+        <a class="btn btn-primary" href="/signup.html">Sign Up</a>
+      </div>
     </div>
   </header>
 
-  <section class="hero">
+  <main>
     <div class="container">
-      <div class="eyebrow">Evidence-Based Innovation</div>
-      <h1>Evidence. Rigor. Accuracy.</h1>
-      <p class="hero-p">KORRA is not a "black box." We are building a transparent, human-in-the-loop accuracy engine designed for the high-stakes fitting requirements of master artisans and global commerce.</p>
-    </div>
-  </section>
+      <section>
+        <div class="eyebrow">Documenting our progress</div>
+        <h1>Expert-verified accuracy for the world’s master artisans.</h1>
+        <p class="desc">KORRA isn’t just an app—it’s an intelligence engine. We combine advanced 3D scanning with real-world feedback from master tailors to ensure your clothes fit perfectly every time.</p>
 
-  <section>
-    <div class="container">
-      <div class="evidence-block">
-        <div class="evidence-content">
-          <div class="eyebrow">The Data Moat</div>
-          <h2 style="font-size:36px; margin-bottom:24px">Building the World's First "Verified" Body Shape Dataset.</h2>
-          <p style="color:var(--Neutral-400)">Most AI models are trained on static research data. KORRA operates a **Production Data Flywheel** where every expert tailor's manual edit improves the model for everyone.</p>
-
-          <div class="stat-box">
-            <div class="stat-item"><h4>86%</h4><span>Initial HMR Dominance</span></div>
-            <div class="stat-item"><h4>1,000+</h4><span>Expert Edits / Mo</span></div>
-            <div class="stat-item"><h4>±1cm</h4><span>Precision Goal</span></div>
-          </div>
-        </div>
-        <div class="evidence-viz" style="display:flex; align-items:center; justify-content:center">
-          <div style="text-align:center">
-            <div style="width:120px; height:120px; border:2px solid var(--Accent-Teal); border-radius:50%; margin:0 auto 24px; display:flex; align-items:center; justify-content:center; animation: pulse 2s infinite">
-              <div style="width:80px; height:80px; background:var(--Accent-Teal); border-radius:50%; opacity:0.2"></div>
+        <div class="grid-2">
+          <div class="glass-card">
+            <div class="eyebrow">The Feedback Loop</div>
+            <h2 style="font-size:28px; margin-bottom:24px">Learning from the world’s best tailors.</h2>
+            <p style="color:var(--Neutral-400); margin-bottom:32px">Most AI models are built on generic data. KORRA is different. We work with a network of "Expert Contributors"—master tailors who help verify and refine our measurements.</p>
+            <div class="feature-list">
+              <div class="feature-item">
+                <h3>Verified by Masters</h3>
+                <p>When an expert tailor makes a manual edit, our system learns from that correction to improve accuracy for everyone.</p>
+              </div>
+              <div class="feature-item">
+                <h3>Real Human Shapes</h3>
+                <p>We focus on the diversity of real human bodies, ensuring our 3D models match your unique silhouette, not a template.</p>
+              </div>
             </div>
-            <div style="font-size:14px; font-weight:800; color:var(--Accent-Teal)">FLYWHWEE ACTIVE</div>
-            <div style="font-size:10px; color:var(--Neutral-500); margin-top:8px">CAPTURING SMPL PARAMETERS</div>
+          </div>
+          <div style="padding-left:40px">
+            <div class="eyebrow">The Result</div>
+            <h2 style="font-size:32px; margin-bottom:16px">Clinical precision.</h2>
+            <p style="color:var(--Neutral-400)">By documenting and improving our progress daily, we maintain a standard of excellence that meets the requirements of global innovation partners.</p>
+            <div class="stat-row">
+              <div class="stat-item"><h4>±1cm</h4><span>Precision Goal</span></div>
+              <div class="stat-item"><h4>Master</h4><span>Certified Data</span></div>
+            </div>
+            <div style="margin-top:48px; padding:32px; background:rgba(198,255,0,0.05); border:1px solid var(--Mint); border-radius:24px">
+              <p style="font-size:14px; font-weight:700">“By including human expertise in the loop, we’ve created a dataset that is more accurate than any research model.”</p>
+            </div>
           </div>
         </div>
-      </div>
+      </section>
+
+      <section>
+        <div style="text-align:center; max-width:800px; margin:0 auto 64px">
+          <div class="eyebrow">Our Roadmap</div>
+          <h2 style="font-size:36px">The path to 98% accuracy.</h2>
+        </div>
+
+        <div class="roadmap-box">
+          <div class="roadmap-step">
+            <div class="step-num">1</div>
+            <div class="step-text">
+              <h5>Auto-Capture & Baseline</h5>
+              <p>We established the foundation to save high-fidelity 3D parameters for every scan. This allows us to re-examine and improve data over time.</p>
+            </div>
+          </div>
+          <div class="roadmap-step">
+            <div class="step-num">2</div>
+            <div class="step-text">
+              <h5>Expert Feedback Loop</h5>
+              <p>Approved master tailors can now refine AI results. This "Expert Mode" ensures our algorithm learns from the finest tailoring traditions.</p>
+            </div>
+          </div>
+          <div class="roadmap-step">
+            <div class="step-num">3</div>
+            <div class="step-text">
+              <h5>Silhouette Refinement</h5>
+              <p>The system now automatically adjusts the 3D model to perfectly match your actual photo silhouette before delivering results.</p>
+            </div>
+          </div>
+          <div class="roadmap-step" style="opacity:0.5">
+            <div class="step-num">4</div>
+            <div class="step-text">
+              <h5>Global Clinical Lockdown</h5>
+              <p>Achieving universal, sub-centimeter accuracy for every body archetype, anywhere in the world.</p>
+            </div>
+          </div>
+        </div>
+      </section>
+
+      <section style="text-align:center">
+        <div class="glass-card" style="background:linear-gradient(135deg, #002D2A, #000); max-width:900px; margin:0 auto">
+          <div class="eyebrow">Transparency</div>
+          <h2 style="font-size:32px; margin-bottom:24px">Designed for Rigor and Trust.</h2>
+          <p style="color:var(--Neutral-400); margin-bottom:40px">We meet the evidence and impact criteria of leading global innovation funds. Our data-acquisition strategy ensures long-term defensibility and trust for our investors and partners like DIV.fund.</p>
+          <a href="mailto:investors@korra.work" class="btn btn-primary" style="height:56px; padding:0 40px">Inquire about our accuracy data</a>
+        </div>
+      </section>
     </div>
-  </section>
-
-  <section style="background:rgba(255,255,255,0.01)">
-    <div class="container">
-      <div style="text-align:center; margin-bottom:80px">
-        <div class="eyebrow">The 4 Pillars of Precision</div>
-        <h2 style="font-size:36px">How we hit 98% accuracy.</h2>
-      </div>
-
-      <div class="grid-pillars">
-        <div class="pillar-card">
-          <div class="pillar-num">PILLAR 01</div>
-          <h3>Data Flywheel</h3>
-          <p>We capture raw SMPL parameters on every scan. When master tailors edit a result, our AI "back-calculates" the 3D shape to learn the truth from the human expert.</p>
-        </div>
-        <div class="pillar-card">
-          <div class="pillar-num">PILLAR 02</div>
-          <h3>Anatomical Prior (GMM)</h3>
-          <p>Using Gaussian Mixture Models, we define the "probability of human-ness." If the AI predicts an impossible shape, our prior "shrinks" it back to a biologically realistic state.</p>
-        </div>
-        <div class="pillar-card">
-          <div class="pillar-num">PILLAR 03</div>
-          <h3>Silhouette Optimization</h3>
-          <p>Unlike 1-shot models, KORRA iterates. We project the 3D mesh to 2D and refine the shape coefficients until the projection perfectly overlaps the user's actual silhouette.</p>
-        </div>
-        <div class="pillar-card">
-          <div class="pillar-num">PILLAR 04</div>
-          <h3>Subgroup Calibration</h3>
-          <p>We don't use generic gender averages. Our system automatically clusters users into "Body Archetypes" (Athletic, Curvy, etc.) to apply specialized calibration factors.</p>
-        </div>
-      </div>
-    </div>
-  </section>
-
-  <section>
-    <div class="container" style="max-width:800px">
-      <div class="eyebrow">Theory of Change</div>
-      <h2 style="font-size:36px; margin-bottom:16px">The 98% Accuracy Roadmap</h2>
-      <p style="color:var(--Neutral-400)">Documenting our path toward clinical-grade biometric precision.</p>
-
-      <div class="roadmap-list">
-        <div class="roadmap-item active">
-          <div class="roadmap-label">PHASE 01</div>
-          <div class="roadmap-text">
-            <h5>Data Capture & Baseline</h5>
-            <p>Establish auto-capture infrastructure for 85-dim theta vectors and 3D joints. (Completed 2026-07-01)</p>
-          </div>
-        </div>
-        <div class="roadmap-item active">
-          <div class="roadmap-label">PHASE 02</div>
-          <div class="roadmap-text">
-            <h5>Collaborative Feedback Loop</h5>
-            <p>Onboard Master Tailors as "Algorithm Contributors" to provide ground-truth refinement. (Live)</p>
-          </div>
-        </div>
-        <div class="roadmap-item">
-          <div class="roadmap-label">PHASE 03</div>
-          <div class="roadmap-text">
-            <h5>VAE Shape Manifold</h5>
-            <p>Moving from GMM to Variational Autoencoders to capture high-fidelity shape nuances.</p>
-          </div>
-        </div>
-        <div class="roadmap-item">
-          <div class="roadmap-label">PHASE 04</div>
-          <div class="roadmap-text">
-            <h5>98% Clinical Lockdown</h5>
-            <p>Achievement of < 1cm MAE across all primary tailoring biometrics at global scale.</p>
-          </div>
-        </div>
-      </div>
-    </div>
-  </section>
-
-  <section>
-    <div class="container">
-      <div class="investor-card">
-        <div class="eyebrow" style="color:var(--White)">Investor Relations</div>
-        <h2>Designed for Defensibility.</h2>
-        <p style="color:rgba(255,255,255,0.6); max-width:700px; margin:0 auto 40px">KORRA's proprietary "human-vetted" dataset creates a competitive moat that purely algorithmic solutions cannot match. We meet the rigorous evidence and impact criteria of funds like DIV.fund and USAID Development Innovations.</p>
-        <a href="mailto:investors@korra.work" class="btn-primary">Download Accuracy whitepaper</a>
-      </div>
-    </div>
-  </section>
+  </main>
 
   <footer>
     <div class="container">
-      <p>© 2026 KORRA AI. Evidence-based artisan infrastructure.</p>
+      <div class="footer-links">
+        <div class="footer-col"><h4>Product</h4><a href="/#technology">Pattern Accuracy</a><a href="/intelligence.html" style="color:var(--Mint); font-weight:800">Intelligence Roadmap</a><a href="/dashboard#api">Developer API</a><a href="/profile">Size Profile</a><a href="/pricing.html">Pricing</a></div>
+        <div class="footer-col"><h4>Company</h4><a href="/about.html">About KORRA</a><a href="/casestudies.html">Case Studies</a></div>
+        <div class="footer-col"><h4>Impact</h4><a href="/impact.html">Our Mission</a></div>
+        <div class="footer-col"><h4>Legal</h4><a href="/legal.html">Data Privacy</a><a href="/legal.html">Terms of Service</a></div>
+      </div>
+      <div style="margin-top:80px; padding-top:40px; border-top:1px solid var(--Glass-Border); display:flex; justify-content:space-between; align-items:center; font-size:13px; opacity:0.3">
+        <span>© 2026 KORRA AI. Documenting our progress toward clinical perfection.</span>
+        <div style="display:flex; gap:32px"><span>Twitter</span><span>LinkedIn</span></div>
+      </div>
     </div>
   </footer>
-
-  <script>
-    @keyframes pulse {
-      0% { transform: scale(1); opacity: 1; }
-      50% { transform: scale(1.1); opacity: 0.5; }
-      100% { transform: scale(1); opacity: 1; }
-    }
-  </script>
 </body>
 </html>
