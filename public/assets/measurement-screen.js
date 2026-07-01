@@ -971,8 +971,13 @@ window.KORRA_MS = {
       };
       const bindDrag = (el) => {
         if (!el) return;
-        el.addEventListener('touchstart', (e) => onStart(e.touches[0].clientY), { passive: true });
-        el.addEventListener('touchmove', (e) => onMove(e.touches[0].clientY), { passive: true });
+        el.addEventListener('touchstart', (e) => {
+          if (e.target.closest('#ms-view3d-btn')) return;
+          onStart(e.touches[0].clientY);
+        }, { passive: true });
+        el.addEventListener('touchmove', (e) => {
+          onMove(e.touches[0].clientY);
+        }, { passive: true });
         el.addEventListener('touchend', () => onEnd());
         el.addEventListener('mousedown', (e) => {
           onStart(e.clientY);
@@ -989,7 +994,18 @@ window.KORRA_MS = {
       if (bar) bar.addEventListener('click', () => this._toggleSheet());
 
       const viewBtn = document.getElementById('ms-view3d-btn');
-      if (viewBtn) viewBtn.addEventListener('click', (e) => { e.stopPropagation(); if (this._sheetSnap === 'collapsed') this._halfSheet(); else this.collapseSheet(); });
+      if (viewBtn) {
+        viewBtn.addEventListener('touchstart', (e) => {
+          e.stopPropagation();
+          if (this._sheetSnap === 'collapsed') this._halfSheet();
+          else this.collapseSheet();
+        }, { passive: true });
+        viewBtn.addEventListener('click', (e) => {
+          e.stopPropagation();
+          if (this._sheetSnap === 'collapsed') this._halfSheet();
+          else this.collapseSheet();
+        });
+      }
 
       if (rc && !rc.classList.contains('sheet-collapsed') && !rc.classList.contains('sheet-full')) {
         rc.classList.add('sheet-half');
