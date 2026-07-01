@@ -606,6 +606,15 @@ class KorraVisualizer {
 
         const worldPos = new THREE.Vector3();
 
+        const TORSO_KEYS = new Set(['Chest Round', 'Bust Round', 'Waist Round', 'Hip Round',
+            'Stomach Round', 'Upper Hip', 'Neck Round', 'Half Length', 'Full Top Length',
+            'High Bust', 'Under Bust', 'Bust Point', 'Trouser Waist', 'Crotch Depth']);
+        const SHOULDER_KEYS = new Set(['Shoulder', 'Across Chest', 'Across Back']);
+        const ARM_KEYS = new Set(['Bicep Round', 'Elbow Round', 'Wrist Round', 'Sleeve Length', 'Armhole Round']);
+
+        const totalHalfWidth = (bbox.max.x - bbox.min.x) / 2;
+        const torsoXThreshold = totalHalfWidth * 0.35;
+
         this._measurementRings = new THREE.Group();
 
         for (const [key, color] of Object.entries(colors)) {
@@ -616,14 +625,33 @@ class KorraVisualizer {
             const meshY = bbox.min.y + meshHeight * yPct;
             const bandHalf = meshHeight * 0.02;
 
+            const isTorso = TORSO_KEYS.has(key);
+            const isArm = ARM_KEYS.has(key);
+
             let maxRadius = 0;
+            let filteredCount = 0;
             for (let i = 0; i < positions.count; i++) {
                 worldPos.set(positions.getX(i), positions.getY(i), positions.getZ(i));
                 worldPos.applyMatrix4(targetMesh.matrixWorld);
 
                 if (Math.abs(worldPos.y - meshY) <= bandHalf) {
+                    const xAbs = Math.abs(worldPos.x);
+                    if (isTorso && xAbs > torsoXThreshold) continue;
+                    if (isArm && xAbs < torsoXThreshold) continue;
+
                     const r = Math.sqrt(worldPos.x * worldPos.x + worldPos.z * worldPos.z);
                     if (r > maxRadius) maxRadius = r;
+                    filteredCount++;
+                }
+            }
+            if (filteredCount === 0) {
+                for (let i = 0; i < positions.count; i++) {
+                    worldPos.set(positions.getX(i), positions.getY(i), positions.getZ(i));
+                    worldPos.applyMatrix4(targetMesh.matrixWorld);
+                    if (Math.abs(worldPos.y - meshY) <= bandHalf) {
+                        const r = Math.sqrt(worldPos.x * worldPos.x + worldPos.z * worldPos.z);
+                        if (r > maxRadius) maxRadius = r;
+                    }
                 }
             }
             if (maxRadius < 0.05) maxRadius = 0.35;
