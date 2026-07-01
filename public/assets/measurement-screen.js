@@ -603,6 +603,7 @@ window.KORRA_MS = {
       case 'compare': content = this.buildCompareView(); break;
       default: content = this.buildMetricsGrid();
     }
+    if (this.viewMode !== 'ai') content += this.buildNotesHTML();
     body.innerHTML = content;
     void body.scrollHeight; // force reflow for correct scroll extent
     if (this.viewMode === 'compare') this.initCompareViewers();
