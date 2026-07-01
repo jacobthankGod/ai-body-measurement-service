@@ -617,10 +617,10 @@ window.KORRA_MS = {
     const body = document.getElementById('ms-sheet-body');
     if (body) {
       if (mode === 'ai') {
-        body.style.overflow = 'hidden';
+        body.style.overflow = '';
         body.style.display = 'flex';
         body.style.flexDirection = 'column';
-        body.style.padding = '0 20px';
+        body.style.padding = '0 20px 100px';
 
         const controls = document.querySelector('.ms-sheet-controls');
         if (controls) controls.style.display = 'none';
