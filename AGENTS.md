@@ -158,8 +158,22 @@ See `PLAN_SELF_IMPROVING_ACCURACY.md` (4,100 lines) — full implementation plan
 ### Phase 10: Production Hardening ✅
 - `scripts/ab_test_framework.py` — register/promote/rollback/starts for model version A/B testing; traffic splitting config; JSON log
 
+### Track E: Freesewing Microservice ✅ (deployed)
+- `services/freesewing/server.js` — Express server on port 3002 with 5 endpoints
+- `services/freesewing/designs/` — 5 parametric garment designs (Shirt 5pcs, Jacket 3pcs, Pants 2pcs, Skirt 2pcs, Dress 2pcs) using Freesewing v4.10.0 `Design` API
+- `services/freesewing/measurement-mapper.mjs` — KORRA↔Freesewing measurement converter (cm→mm, alias support for Shoulder/Across Shoulder)
+- **DXF-AAMA export**: generates full DXF with HEADER, TABLES (6 layers), ENTITIES with LINE entities from SVG path segments
+- **Deployment**: Docker container `korra-freesewing` on EC2, port 3002, nginx proxies `/api/patterns`, `/api/pattern/`, `/api/measurements/` to it
+- **All endpoints verified via `korra.work`**: `GET /api/patterns` ✅, `POST /api/pattern/draft` ✅, `POST /api/pattern/export?format=dxf` ✅ (19KB DXF-AAMA), `GET /api/measurements/:type` ✅
+- **Known limitation**: Freesewing v4 plugins break stack rendering — annotations done manually via paths
+- **SMPL→Freesewing direct pipeline (2026-07-02)**: `extract_measurements.py` has `compute_freesewing_measurements()` — 15 FS keys computed directly from T-pose mesh (mm). Wired into `hmr_subprocess.py` as `result.freesewing`. Server `draftPattern()` accepts pre-computed FS dict via `opts.isFS`. All 5 designs use direct SMPL measurements instead of KORRA→FS conversion.
+- **3 bugs fixed (2026-07-02)**: (1) nginx now proxies `/api/pattern/` → port 3002 (was routing to FastAPI 8080, causing 404), (2) `Cache-Control: no-store` on POST pattern responses, (3) frontend `_prep()` now handles Freesewing (mm), KORRA (cm), and camelCase (cm) key formats — fallback no longer uses hardcoded defaults.
+
 ## Next Steps
 - Run `setup_storage.py` (needs SUPABASE_URL + SUPABASE_SERVICE_ROLE_KEY)
 - Run migration (needs SUPABASE_DB_URL)
 - Backfill SMPL params for production scans
 - Build first dataset → train models → deploy via A/B test
+- Harden DXF entity generation for industrial pattern export (AAMA-compliant metadata, piece count, size label)
+- Start Track F: TailorNet neural cloth simulation bridge
+- End-to-end verification: photo upload → HMR → SMPL → TailorNet → Freesewing pattern → DXF download

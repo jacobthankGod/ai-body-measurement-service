@@ -54,6 +54,7 @@ class KorraVisualizer {
         this.renderer.setPixelRatio(window.devicePixelRatio);
         container.innerHTML = '';
         container.appendChild(this.renderer.domElement);
+        this._currentContainer = containerId;
 
         this._buildGrid();
         this._buildAxes();
@@ -452,6 +453,94 @@ class KorraVisualizer {
         this.mesh.material.emissiveIntensity = active ? 1.0 : 0.1;
         this.mesh.material.emissive.setHex(active ? 0x000000 : 0x888888);
         console.log(`🛡️ Phase 119: Privacy Shield ${active ? 'ACTIVE' : 'INACTIVE'}`);
+    }
+
+    // ── Track G: Virtual Mirror (Phases 130-131) ──
+    async loadGarment(objUrl, materialSettings = {}) {
+        /**
+         * Phase 130: loadGarment() in korra_viz.js
+         * Accept geometry data, create garment mesh as a layer.
+         */
+        console.log(`👗 [VTO] Loading garment mesh: ${objUrl}`);
+        if (!this.scene) return null;
+
+        try {
+            const response = await fetch(objUrl);
+            if (!response.ok) throw new Error("Garment file missing");
+            const text = await response.text();
+
+            // Parse OBJ for garment
+            const vertices = [];
+            const faces = [];
+            const lines = text.split('\n');
+            for (let line of lines) {
+                line = line.trim();
+                if (line.startsWith('v ')) {
+                    const parts = line.split(/\s+/);
+                    vertices.push(parseFloat(parts[1]), parseFloat(parts[2]), parseFloat(parts[3]));
+                } else if (line.startsWith('f ')) {
+                    const parts = line.split(/\s+/);
+                    const p1 = parseInt(parts[1].split('/')[0]) - 1;
+                    const p2 = parseInt(parts[2].split('/')[0]) - 1;
+                    const p3 = parseInt(parts[3].split('/')[0]) - 1;
+                    faces.push(p1, p2, p3);
+                }
+            }
+
+            const geometry = new THREE.BufferGeometry();
+            geometry.setAttribute('position', new THREE.Float32BufferAttribute(vertices, 3));
+            if (faces.length > 0) geometry.setIndex(faces);
+            geometry.computeVertexNormals();
+
+            // Phase 132: Garment material from FABRIC_PRESETS
+            const material = new THREE.MeshPhongMaterial({
+                color: materialSettings.color || 0xFFFFFF,
+                transparent: true,
+                opacity: materialSettings.opacity || 0.95,
+                shininess: materialSettings.shininess || 30,
+                side: THREE.DoubleSide,
+                wireframe: this.wireframeMode
+            });
+
+            if (this.garmentMesh) {
+                this.scene.remove(this.garmentMesh);
+                if (this.garmentMesh.geometry) this.garmentMesh.geometry.dispose();
+                if (this.garmentMesh.material) this.garmentMesh.material.dispose();
+            }
+
+            this.garmentMesh = new THREE.Mesh(geometry, material);
+
+            // Align garment with body mesh
+            if (this.mesh) {
+                this.garmentMesh.position.copy(this.mesh.position);
+                this.garmentMesh.rotation.copy(this.mesh.rotation);
+                this.garmentMesh.scale.copy(this.mesh.scale);
+            }
+
+            this.scene.add(this.garmentMesh);
+            console.log("✓ [VTO] Garment mesh loaded successfully");
+            return this.garmentMesh;
+        } catch (e) {
+            console.error("❌ [VTO] Failed to load garment:", e);
+            return null;
+        }
+    }
+
+    removeGarment() {
+        /**
+         * Phase 131: removeGarment() in korra_viz.js
+         */
+        if (this.garmentMesh) {
+            this.scene.remove(this.garmentMesh);
+            if (this.garmentMesh.geometry) this.garmentMesh.geometry.dispose();
+            if (this.garmentMesh.material) this.garmentMesh.material.dispose();
+            this.garmentMesh = null;
+            console.log("🗑️ [VTO] Garment mesh removed");
+        }
+    }
+
+    toggleGarmentVisibility(visible) {
+        if (this.garmentMesh) this.garmentMesh.visible = visible;
     }
 
     applyHeatmap(contextName = "standard") {

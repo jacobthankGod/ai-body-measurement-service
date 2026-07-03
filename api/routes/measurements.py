@@ -145,7 +145,8 @@ async def run_extraction_subprocess_cli(task_id: str, front_path: str, side_path
                 side_path,
                 str(height),
                 gender,
-                str(mesh_path)
+                str(mesh_path),
+                client_name or '',
             ]
 
             logger.info(f"🚀 [TASK {task_id}] Launching External AI Process: {' '.join(cmd)}")
@@ -221,6 +222,13 @@ async def run_extraction_subprocess_cli(task_id: str, front_path: str, side_path
                                 Path(tpose_mesh_path), f"{task_id}_tpose"
                             )
                             os.remove(tpose_mesh_path)
+                        garment_mesh_url = None
+                        garment_mesh_path = data.get("garment_mesh_path")
+                        if garment_mesh_path and os.path.exists(garment_mesh_path):
+                            garment_mesh_url = DatabaseService.upload_mesh_to_storage(
+                                Path(garment_mesh_path), f"{task_id}_garment"
+                            )
+                            os.remove(garment_mesh_path)
                     else:
                         raise Exception(data.get("error", "Unknown error in subprocess"))
                 except Exception as e:
@@ -262,6 +270,8 @@ async def run_extraction_subprocess_cli(task_id: str, front_path: str, side_path
                 "smpl_params": smpl_params,
                 "joints3d": joints3d,
                 "tpose_mesh_url": tpose_mesh_url,
+                "garment_mesh_url": garment_mesh_url,
+                "garment_class": data.get("garment_class"),
                 "debug": hmr_error
             }
 
@@ -475,6 +485,82 @@ async def extract_widget(
     except Exception as e:
         logger.error(f"Widget extraction failed: {e}")
         raise HTTPException(status_code=500, detail="Failed to start widget extraction")
+
+@router.post("/measurements/{scan_id}/garment/drape")
+async def drape_garment(
+    scan_id: str,
+    payload: dict,
+    background_tasks: BackgroundTasks,
+    user: dict = Depends(get_current_user)
+):
+    """
+    Phase 119/143: Neural Cloth Simulation Bridge.
+    Generates a deformed garment mesh using TailorNet based on the scan's SMPL parameters.
+    """
+    import numpy as np
+    attire = payload.get("attire", "t-shirt")
+
+    # 1. Fetch scan data
+    from api.services.database_service import DatabaseService
+    db = DatabaseService.get_client()
+    res = db.table("measurements").select("*").eq("id", scan_id).execute()
+    if not res.data:
+        raise HTTPException(status_code=404, detail="Scan not found")
+
+    scan = res.data[0]
+    smpl_params = scan.get("biometrics", {}).get("__smpl_params")
+    if not smpl_params:
+        # Fallback to defaults if not yet extracted
+        smpl_params = {"shape": [0]*10, "betas_300": [0]*300}
+
+    gender = scan.get("gender", "male")
+
+    # 2. Run TailorNet inference
+    from api.services.tailornet_bridge import run_tailornet
+    betas = smpl_params.get("betas_300") or smpl_params.get("shape")
+
+    # Map attire to TailorNet garment class
+    garment_map = {
+        "standard": None,
+        "agbada": "t-shirt", # Proxy for demonstration
+        "senator": "shirt",
+        "kurta": "shirt",
+        "t-shirt": "t-shirt",
+        "shirt": "shirt",
+        "pant": "pant",
+        "skirt": "skirt"
+    }
+    gar_class = garment_map.get(attire, "t-shirt")
+    if not gar_class:
+        return {"success": True, "garment_mesh_url": None}
+
+    # Run TailorNet
+    result = run_tailornet(garment_class=gar_class, gender=gender, betas=betas)
+
+    if not result["success"]:
+        logger.error(f"TailorNet failed: {result['error']}")
+        return {"success": False, "error": result["error"]}
+
+    # 4. Save result
+    import trimesh
+    gar_mesh = trimesh.Trimesh(vertices=result["garment_verts"], faces=result["garment_faces"])
+
+    # Save to public/meshes/garments/
+    out_dir = Path("public/meshes/garments")
+    out_dir.mkdir(parents=True, exist_ok=True)
+    filename = f"garment_{scan_id}_{attire}.obj"
+    file_path = out_dir / filename
+    gar_mesh.export(str(file_path))
+
+    # Get Public URL (Simulated for local dev, would use Supabase Storage in prod)
+    # Using relative path for frontend consumption
+    public_url = f"/meshes/garments/{filename}"
+
+    return {
+        "success": True,
+        "garment_mesh_url": public_url,
+        "garment_class": gar_class
+    }
 
 @router.get("/measurements/status/{task_id}")
 async def get_extraction_status(task_id: str):

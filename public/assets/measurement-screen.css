@@ -461,6 +461,175 @@
   opacity: 1;
 }
 
+/* ── PATTERN TAB (Phase 30) ── */
+.ms-pattern-view {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  background: var(--Obsidian-Layer, #0f0f0f);
+  height: 100%;
+  overflow: hidden;
+}
+.ms-pattern-backbar {
+  padding: 8px 16px;
+  flex-shrink: 0;
+}
+.ms-pattern-back-btn {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  padding: 10px 16px;
+  border-radius: 10px;
+  border: none;
+  background: var(--Mint);
+  color: #000;
+  font-size: 13px;
+  font-weight: 900;
+  cursor: pointer;
+  transition: all 0.2s;
+}
+.ms-pattern-back-btn:hover { opacity: 0.85; }
+.ms-pattern-topbar {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 12px 16px;
+  border-bottom: 1px solid var(--Glass-Border, rgba(255,255,255,0.06));
+  flex-shrink: 0;
+}
+.ms-pattern-title {
+  font-size: 13px;
+  font-weight: 800;
+  color: #fff;
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+}
+.ms-pattern-controls {
+  display: flex;
+  gap: 4px;
+}
+.ms-pattern-btn {
+  width: 30px;
+  height: 30px;
+  border-radius: 8px;
+  border: 1px solid var(--Glass-Border, rgba(255,255,255,0.08));
+  background: transparent;
+  color: var(--Neutral-400, #888);
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  transition: all 0.15s;
+}
+.ms-pattern-btn:hover {
+  border-color: var(--Mint, #C6FF00);
+  color: #fff;
+}
+.ms-pattern-canvas-wrap {
+  flex: 1;
+  position: relative;
+  overflow: hidden;
+  background: radial-gradient(ellipse at center, rgba(255,255,255,0.02) 0%, transparent 70%);
+}
+.ms-pattern-canvas {
+  width: 100%;
+  height: 100%;
+  transform-origin: 0 0;
+  transition: none;
+}
+.ms-pattern-canvas svg {
+  width: 100%;
+  height: 100%;
+}
+.ms-pattern-zoom-indicator {
+  position: absolute;
+  bottom: 8px;
+  right: 8px;
+  font-size: 10px;
+  color: var(--Neutral-500, #666);
+  background: rgba(0,0,0,0.6);
+  padding: 2px 8px;
+  border-radius: 4px;
+  pointer-events: none;
+}
+.ms-pattern-footer {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 10px 16px;
+  border-top: 1px solid var(--Glass-Border, rgba(255,255,255,0.06));
+  flex-shrink: 0;
+}
+.ms-pattern-footer-label {
+  font-size: 10px;
+  color: var(--Neutral-400, #888);
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+}
+.ms-pattern-download-btn {
+  padding: 6px 14px;
+  border-radius: 8px;
+  border: 1px solid var(--Mint, #C6FF00);
+  background: transparent;
+  color: var(--Mint, #C6FF00);
+  font-size: 10px;
+  font-weight: 700;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  transition: all 0.15s;
+}
+.ms-pattern-download-btn:hover {
+  background: var(--Mint, #C6FF00);
+  color: #000;
+}
+.ms-sheet.pattern-active {
+  height: 100% !important;
+  max-height: 100% !important;
+  border-radius: 0 !important;
+}
+
+/* ── FORMAT PICKER ── */
+.ss-format-picker {
+  display: flex;
+  gap: 8px;
+  margin-bottom: 4px;
+}
+.ss-format-pill {
+  flex: 1;
+  padding: 10px;
+  border-radius: 10px;
+  border: 1px solid var(--Glass-Border, rgba(255,255,255,0.1));
+  background: transparent;
+  color: var(--Neutral-400, #888);
+  font-size: 11px;
+  font-weight: 700;
+  cursor: pointer;
+  text-align: center;
+  transition: all 0.15s;
+}
+.ss-format-pill.active {
+  border-color: var(--Mint, #C6FF00);
+  color: #fff;
+  background: rgba(198, 255, 0, 0.05);
+}
+.ss-format-pill:hover {
+  border-color: rgba(255,255,255,0.2);
+}
+.ss-spinner {
+  width: 16px;
+  height: 16px;
+  border: 2px solid var(--Neutral-500, #666);
+  border-top-color: var(--Mint, #C6FF00);
+  border-radius: 50%;
+  animation: ssSpin 0.6s linear infinite;
+  margin: 0 auto;
+}
+@keyframes ssSpin {
+  to { transform: rotate(360deg); }
+}
+
 /* ── BOTTOM SHEET ── */
 .ms-sheet {
   height: auto;
@@ -993,6 +1162,8 @@
 }
 
 /* ── ANIMATIONS ── */
+@keyframes ms-spin { to { transform: rotate(360deg); } }
+
 @keyframes msFadeIn {
   from { opacity: 0; }
   to { opacity: 1; }
@@ -1175,10 +1346,11 @@
 }
 .ms-material-rail {
   display: flex;
-  gap: 8px;
+  gap: 6px;
   overflow-x: auto;
-  padding-bottom: 4px;
+  padding: 4px 0 4px;
   scrollbar-width: none;
+  -webkit-overflow-scrolling: touch;
 }
 .ms-material-rail::-webkit-scrollbar { display: none; }
 .ms-material-btn {
@@ -1623,9 +1795,34 @@
     font-size: 13px;
     padding: 10px 14px;
   }
+  /* ── PATTERN VIEW MOBILE ── */
+  .ms-pattern-view {
+    border-radius: 0;
+  }
+  .ms-pattern-back-btn {
+    font-size: 12px;
+    padding: 8px 14px;
+  }
+  .ms-pattern-topbar {
+    padding: 8px 12px;
+  }
+  .ms-pattern-title {
+    font-size: 11px;
+  }
+  .ms-pattern-footer {
+    padding: 8px 12px;
+  }
+  .ms-pattern-canvas-wrap {
+    min-height: 200px;
+  }
 }
 
-body.ai-mode .sidebar-nav { display: none !important; }
+/* ── PATTERN view fullscreen on mobile (side-by-side) ── */
+.ms-side-by-side .ms-sheet.pattern-active {
+  height: 100% !important;
+  flex: 1 !important;
+}
+
 body.ai-mode .ms-back-btn { display: none !important; }
 
 /* ── MEASUREMENT SIDE MENU ── */

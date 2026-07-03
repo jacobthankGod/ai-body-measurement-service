@@ -98,7 +98,9 @@ MALE_KEYS = [
     'Half Length', 'Full Top Length', 'Across Back', 'Across Chest', 'Hip Round',
     'Thigh Round', 'Knee Round', 'Calf Round', 'Ankle Round', 'Trouser Waist',
     'Trouser Length', 'Inseam', 'Crotch Depth',
-    'Sleeve Length', 'Bicep Round', 'Elbow Round', 'Wrist Round'
+    'Sleeve Length', 'Bicep Round', 'Elbow Round', 'Wrist Round',
+    # Pattern-drafting dimensions (Phase 16)
+    'Across Shoulder', 'Neck to Waist', 'Waist to Hip'
 ]
 
 FEMALE_KEYS = [
@@ -108,7 +110,9 @@ FEMALE_KEYS = [
     'Across Chest', 'Across Back', 'Armhole Round', 'Sleeve Length',
     'Bicep Round', 'Elbow Round', 'Wrist Round', 'Waist Round',
     'Half Length', 'Waist to Hip', 'Upper Hip', 'Hip Round',
-    'Thigh Round', 'Knee Round', 'Calf Round', 'Ankle Round'
+    'Thigh Round', 'Knee Round', 'Calf Round', 'Ankle Round',
+    # Pattern-drafting dimensions (Phase 16)
+    'Across Shoulder', 'Neck to Waist'
 ]
 
 # ============================================================================
@@ -143,6 +147,8 @@ MALE_RATIOS = {
     'Calf Round': 0.212, 'Ankle Round': 0.153, 'Trouser Waist': 0.482, 'Trouser Length': 0.588,
     'Inseam': 0.459, 'Crotch Depth': 0.165,
     'Sleeve Length': 0.333, 'Bicep Round': 0.180, 'Elbow Round': 0.150, 'Wrist Round': 0.120,
+    # Pattern-drafting ratio aliases (Phase 16)
+    'Across Shoulder': 0.265, 'Neck to Waist': 0.353, 'Waist to Hip': 0.165,
 }
 
 FEMALE_RATIOS = {
@@ -154,6 +160,8 @@ FEMALE_RATIOS = {
     'Wrist Round': 0.109, 'Waist Round': 0.400, 'Half Length': 0.315, 'Waist to Hip': 0.109,
     'Upper Hip': 0.521, 'Hip Round': 0.570, 'Thigh Round': 0.315, 'Knee Round': 0.206,
     'Calf Round': 0.194, 'Ankle Round': 0.133,
+    # Pattern-drafting ratio aliases (Phase 16)
+    'Across Shoulder': 0.230, 'Neck to Waist': 0.315,
 }
 
 class HMRMasterEngine:
@@ -164,6 +172,8 @@ class HMRMasterEngine:
         self.smpl_faces = None
         self._v_template = None
         self._shapedirs = None
+        self._shapedirs_10 = None  # 10-PC shapedirs for HMR basis projection
+        self._num_betas = 10       # number of shape components loaded
         self._face_segmentation = None  # body-part → face indices from Meshcapade
         self.last_error = None
         self._shape_prior_gmm = None
@@ -245,18 +255,38 @@ class HMRMasterEngine:
 
     def _load_smpl_template(self):
         """Load SMPL template + shapedirs for T-pose measurement extraction.
-        Tries pre-extracted .npy files first, then falls back to pickle.
+        Prefers 300-PC model (v1.1.0), falls back to 10-PC model.
         """
-        v_path = self.project_root / "models" / "v_template.npy"
-        sd_path = self.project_root / "models" / "shapedirs.npy"
-        if v_path.exists() and sd_path.exists():
+        v300_path = self.project_root / "models" / "v_template_300.npy"
+        sd300_path = self.project_root / "models" / "shapedirs_300.npy"
+        v10_path = self.project_root / "models" / "v_template.npy"
+        sd10_path = self.project_root / "models" / "shapedirs.npy"
+
+        # Try 300-PC model first
+        if v300_path.exists() and sd300_path.exists():
             try:
-                self._v_template = np.load(str(v_path))
-                self._shapedirs = np.load(str(sd_path))
-                logger.info(f"Loaded SMPL template from .npy files: {self._v_template.shape}, {self._shapedirs.shape}")
+                self._v_template = np.load(str(v300_path))
+                self._shapedirs = np.load(str(sd300_path))
+                self._num_betas = self._shapedirs.shape[1]
+                logger.info(f"Loaded 300-PC SMPL template: v={self._v_template.shape}, sd={self._shapedirs.shape}")
+                # Also load 10-PC shapedirs for HMR-basis projection
+                if sd10_path.exists():
+                    self._shapedirs_10 = np.load(str(sd10_path))
+                    logger.info(f"Loaded 10-PC shapedirs for projection: {self._shapedirs_10.shape}")
                 return
             except Exception as e:
-                logger.warning(f"Could not load SMPL template from .npy: {e}")
+                logger.warning(f"Could not load 300-PC template: {e}")
+
+        # Fall back to 10-PC model
+        if v10_path.exists() and sd10_path.exists():
+            try:
+                self._v_template = np.load(str(v10_path))
+                self._shapedirs = np.load(str(sd10_path))
+                self._num_betas = self._shapedirs.shape[1]
+                logger.info(f"Loaded 10-PC SMPL template: {self._v_template.shape}, {self._shapedirs.shape}")
+                return
+            except Exception as e:
+                logger.warning(f"Could not load 10-PC template: {e}")
 
         import pickle
         pkl_path = self.project_root / "models" / "neutral_smpl_with_cocoplus_reg.pkl"
@@ -270,7 +300,9 @@ class HMRMasterEngine:
             sd = dd['shapedirs']
             if hasattr(sd, 'r'):
                 sd = np.array(sd)
-            self._shapedirs = np.array(sd).reshape(6890 * 3, 10)
+            nc = sd.shape[-1]
+            self._shapedirs = np.array(sd).reshape(6890 * 3, nc)
+            self._num_betas = nc
         except Exception as e:
             logger.warning(f"Could not load SMPL template: {e}")
             self._v_template = None
@@ -319,6 +351,17 @@ class HMRMasterEngine:
         corrected = (1 - alpha) * cluster_mean_orig + alpha * shapes
         logger.info(f"Shape prior correction applied: logprob={logprob:.2f}, threshold={threshold:.2f}, alpha={alpha:.2f}")
         return corrected
+
+    def _project_to_300_pc(self, betas_10: np.ndarray) -> np.ndarray:
+        """Project HMR's 10-dim betas into the 300-PC basis via least-squares.
+        Reconstructs HMR's intended shaped mesh in 10-PC space, then finds
+        the 300-PC coefficients that best reproduce it (lossless for in-span meshes).
+        """
+        if self._shapedirs_10 is None or self._num_betas != 300:
+            return np.pad(betas_10, (0, 290))
+        delta = self._shapedirs_10 @ betas_10
+        betas_300, _, _, _ = np.linalg.lstsq(self._shapedirs, delta, rcond=None)
+        return betas_300
 
     def extract(self, image: np.ndarray, height_cm: float, gender: str = 'male', side_image: Optional[np.ndarray] = None) -> Tuple[Dict[str, float], Optional[np.ndarray], Optional[dict], str, str, Optional[str], Optional[np.ndarray], Optional[dict], Optional[list]]:
         """
@@ -449,7 +492,13 @@ class HMRMasterEngine:
                         try:
                             shapes = np.array(smpl_params['shape'], dtype=np.float64).reshape(10)
                             shapes_corrected = self._apply_shape_prior(shapes)
-                            v_shaped = self._v_template + (self._shapedirs @ shapes_corrected).reshape(-1, 3)
+                            # Project HMR's 10-PC betas into full 300-PC basis
+                            if self._num_betas == 300:
+                                betas_full = self._project_to_300_pc(shapes_corrected)
+                                smpl_params['betas_300'] = betas_full.tolist()
+                            else:
+                                betas_full = shapes_corrected
+                            v_shaped = self._v_template + (self._shapedirs @ betas_full).reshape(-1, 3)
                             v_measure = v_shaped
                             # Phase 119: Tag shape prior diagnostics into smpl_params
                             if self._shape_prior_gmm is not None and self._shape_scaler is not None:
@@ -630,8 +679,8 @@ class HMRMasterEngine:
             w = (np.max(group_verts[:, 0]) - np.min(group_verts[:, 0])) * 100 * scale
             d = (np.max(group_verts[:, 2]) - np.min(group_verts[:, 2])) * 100 * scale
             a, b = w/2, d/2
-            h_val = ((a - b) ** 2) / ((a + b) ** 2)
             if (a + b) == 0: return 0.0
+            h_val = ((a - b) ** 2) / ((a + b) ** 2)
             circ = np.pi * (a + b) * (1 + (3 * h_val) / (10 + np.sqrt(4 - 3 * h_val)))
             return round(circ, 1)
 
@@ -696,6 +745,7 @@ class HMRMasterEngine:
         results['Trouser Length'] = calc_vert_dist(waist_pts, ankle_pts)
         results['Inseam'] = round(results['Trouser Length'] * 0.78, 1) # Derived from leg span in 3D
         results['Crotch Depth'] = calc_vert_dist(waist_pts, hip_pts)
+        results['Waist to Hip'] = calc_vert_dist(waist_pts, hip_pts) # Pattern drafting dimension
 
         # Male Specific
         if gender == 'male':
@@ -720,7 +770,145 @@ class HMRMasterEngine:
             results['Armhole Round'] = round(results.get('Shoulder', 0) * 0.45, 1)
             results['Sleeve Length'] = calc_vert_dist(sh_indices, self.vertex_map.get('wrist', []))
 
+        # Pattern-drafting dimension aliases (Phase 16)
+        results['Across Shoulder'] = results.get('Shoulder', 0.0)
+        results['Neck to Waist'] = results.get('Half Length', 0.0)
+
         return results
+
+    def compute_freesewing_measurements(self, vertices: np.ndarray,
+                                         user_height_cm: float,
+                                         gender: str) -> dict:
+        """Compute Freesewing measurements directly from SMPL mesh.
+
+        Returns dict with Freesewing canonical keys (mm) — ready for
+        the Freesewing pattern design API without further conversion.
+        Gender-agnostic: same vertex groups, same face masks for both sexes.
+        """
+        v_min, v_max = np.min(vertices[:, 1]), np.max(vertices[:, 1])
+        v_height = v_max - v_min
+        scale = user_height_cm / (v_height * 100)
+
+        def _circ(group_indices, group_name=''):
+            if not group_indices:
+                return 0.0
+            if self.smpl_faces is not None:
+                face_mask = self._get_body_part_faces(group_name, vertices, group_indices)
+                if face_mask is not None:
+                    return self._calc_circ_from_mesh_slice(
+                        vertices, self.smpl_faces, group_indices, scale,
+                        face_mask=face_mask)
+            # Bounding-box ellipse fallback (used for wrist)
+            gv = vertices[group_indices]
+            w = (np.max(gv[:, 0]) - np.min(gv[:, 0])) * 100 * scale
+            d = (np.max(gv[:, 2]) - np.min(gv[:, 2])) * 100 * scale
+            a, b = w / 2, d / 2
+            if (a + b) == 0:
+                return 0.0
+            h_val = ((a - b) ** 2) / ((a + b) ** 2)
+            return round(np.pi * (a + b) * (1 + (3 * h_val) / (10 + np.sqrt(4 - 3 * h_val))), 1)
+
+        def _vdist(group1, group2):
+            if not group1 or not group2:
+                return 0.0
+            y1 = np.mean(vertices[group1][:, 1])
+            y2 = np.mean(vertices[group2][:, 1])
+            return round(abs(y1 - y2) * 100 * scale, 1)
+
+        def _dist3d(group1, group2):
+            if not group1 or not group2:
+                return 0.0
+            c1 = np.mean(vertices[group1], axis=0)
+            c2 = np.mean(vertices[group2], axis=0)
+            return round(float(np.linalg.norm(c1 - c2)) * 100 * scale, 1)
+
+        # Vertex groups
+        chest_v = self.vertex_map.get('chest', [])
+        waist_v = self.vertex_map.get('waist', [])
+        hip_v = self.vertex_map.get('hips', [])
+        neck_v = self.vertex_map.get('neck', [])
+        bicep_v = self.vertex_map.get('bicep', [])
+        wrist_v = self.vertex_map.get('wrist', [])
+        thigh_v = self.vertex_map.get('thigh', [])
+        ankle_v = self.vertex_map.get('ankle', [])
+        shoulder_v = self.vertex_map.get('shoulder width', [])
+
+        # Shoulder width (dynamic X-span, same as _calculate_from_indices)
+        shoulder_cm = 0.0
+        chest_pts = self.vertex_map.get('chest', [])
+        if chest_pts:
+            chest_y = np.mean(vertices[chest_pts, 1])
+            sh_y = chest_y + 0.015
+            band = 0.012
+            sh_mask = np.abs(vertices[:, 1] - sh_y) < band
+            if np.sum(sh_mask) >= 5:
+                sh_w = (vertices[sh_mask, 0].max() - vertices[sh_mask, 0].min()) * 100 * scale
+                if 25 < sh_w < 65:
+                    shoulder_cm = round(sh_w, 1)
+        if shoulder_cm == 0 and shoulder_v:
+            shoulder_cm = round(
+                (np.max(vertices[shoulder_v, 0]) - np.min(vertices[shoulder_v, 0])) * 100 * scale, 1)
+
+        # Calf circumference — plane-mesh at mid-shin Y using leftLeg/rightLeg faces
+        calf_cm = 0.0
+        if self.smpl_faces is not None and self._face_segmentation is not None and thigh_v and ankle_v:
+            try:
+                calf_faces = set()
+                for bp in ['leftLeg', 'rightLeg']:
+                    calf_faces.update(self._face_segmentation.get(bp, []))
+                if calf_faces:
+                    calf_face_verts = self.smpl_faces[list(calf_faces)]
+                    calf_all_v = np.unique(calf_face_verts.flatten())
+                    # Midpoint Y of lower leg
+                    calf_y = np.mean(vertices[calf_all_v, 1])
+                    normal = np.array([0, 1, 0], dtype=np.float64)
+                    origin = np.array([0, calf_y, 0], dtype=np.float64)
+                    calf_mask = np.zeros(len(self.smpl_faces), dtype=bool)
+                    calf_mask[list(calf_faces)] = True
+                    pts = self._mesh_plane_intersection(vertices, self.smpl_faces[calf_mask],
+                                                        origin, normal)
+                    if len(pts) >= 3:
+                        pts = np.round(pts, decimals=6)
+                        pts = np.unique(pts, axis=0)
+                        if len(pts) >= 3:
+                            xs = pts[:, 0]
+                            x_sorted = np.sort(xs)
+                            gaps = x_sorted[1:] - x_sorted[:-1]
+                            if np.max(gaps) > 0.08:
+                                split = np.argmax(gaps) + 1
+                                th = (x_sorted[split - 1] + x_sorted[split]) / 2
+                                def _hp(p):
+                                    if len(p) < 3:
+                                        return 0.0
+                                    return ConvexHull(p[:, [0, 2]]).area * 100 * scale
+                                calf_cm = round(_hp(pts[xs < th]) + _hp(pts[xs >= th]), 1)
+                            else:
+                                calf_cm = round(ConvexHull(pts[:, [0, 2]]).area * 100 * scale, 1)
+            except Exception:
+                pass
+
+        # Inseam — hip-to-ankle vertical distance (approximates crotch→ankle)
+        inseam_cm = _vdist(hip_v, ankle_v)
+
+        # Build Freesewing dict in cm, then multiply by 10 for mm
+        fs = {
+            'chest':               _circ(chest_v, 'chest'),
+            'waist':               _circ(waist_v, 'waist'),
+            'hips':                _circ(hip_v, 'hips'),
+            'neckCircumference':   _circ(neck_v, 'neck'),
+            'shoulderToShoulder':  shoulder_cm,
+            'shoulderToWaist':     _vdist(neck_v, waist_v),
+            'waistToHips':         _vdist(waist_v, hip_v),
+            'bicepsCircumference': _circ(bicep_v, 'bicep'),
+            'wristCircumference':  _circ(wrist_v, 'wrist'),
+            'shoulderToWrist':     _dist3d(shoulder_v, wrist_v),
+            'inseam':              inseam_cm,
+            'thighCircumference':  _circ(thigh_v, 'thigh'),
+            'calfCircumference':   calf_cm,
+            'waistToHem':          _vdist(neck_v, hip_v),
+            'shoulderToHem':       _vdist(neck_v, hip_v),
+        }
+        return {k: round(v * 10, 1) for k, v in fs.items()}
 
     def _parse_vertex_indices(self, path) -> Dict[str, List[int]]:
         mapping = {}

@@ -46,6 +46,10 @@ def _default_factors() -> Dict[str, Dict[str, list]]:
             "Neck Round": [0.95, 0.0],
             "Thigh Round": [0.95, 0.0],
             "Calf Round": [0.96, 0.0],
+            # Pattern-drafting dimensions (Phase 17)
+            "Across Shoulder": [0.96, 0.0],
+            "Neck to Waist": [1.0, 0.0],
+            "Waist to Hip": [1.0, 0.0],
         },
         "female": {
             "Waist Round": [0.85, -0.0],
@@ -56,6 +60,10 @@ def _default_factors() -> Dict[str, Dict[str, list]]:
             "Neck Round": [0.93, 0.1],
             "Thigh Round": [0.95, 0.0],
             "Calf Round": [0.95, 0.0],
+            # Pattern-drafting dimensions (Phase 17)
+            "Across Shoulder": [0.93, 0.2],
+            "Neck to Waist": [1.0, 0.0],
+            "Waist to Hip": [1.0, 0.0],
         },
     }
 

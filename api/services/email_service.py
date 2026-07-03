@@ -247,6 +247,13 @@ class EmailService:
             'faso_dan_fani': 'Faso Dan Fani (Burkinabe Woven)',
             'kitenge': 'Kitenge (East African Print)',
             'kuba': 'Kuba Cloth (DRC Raffia)',
+            # Phase 1: New Pattern-Ready Attires
+            'bomber_jacket': 'Bomber Jacket (Urban Aviator)',
+            'blazer_business': 'Blazer Business (Structured Formal)',
+            'classic_jumpsuit': 'Classic Jumpsuit (One-Piece Elegant)',
+            'a_line_skirt': 'A-Line Skirt (Flared Classic)',
+            'trench_coat': 'Trench Coat (Classic Outerwear)',
+            'pencil_skirt': 'Pencil Skirt (Fitted Professional)',
         }
         specialty_display = _ATTIRE_DISPLAY.get(specialty, specialty.title())
 

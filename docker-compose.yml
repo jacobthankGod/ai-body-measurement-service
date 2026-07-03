@@ -1,0 +1,29 @@
+services:
+  korra-ai:
+    image: korra-ai:latest
+    build:
+      context: .
+      dockerfile: Dockerfile
+    container_name: korra-ai-prod
+    restart: unless-stopped
+    ports:
+      - "8080:8080"
+    env_file: .env
+    volumes:
+      - ./public/meshes:/app/public/meshes
+    networks:
+      - korra-network
+
+  freesewing:
+    build:
+      context: services/freesewing
+    container_name: korra-freesewing
+    restart: unless-stopped
+    ports:
+      - "3002:3002"
+    networks:
+      - korra-network
+
+networks:
+  korra-network:
+    driver: bridge

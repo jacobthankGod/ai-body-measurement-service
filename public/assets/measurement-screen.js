@@ -100,6 +100,11 @@ window.KORRA_MS = {
   activeContext: 'standard',
   activeMaterial: 'woven',
   heatmapActive: false,
+  // Phases 10-13: Pattern system state
+  patternViewMode: '2d',
+  activePattern: null,
+  simulationActive: false,
+  downloadFormat: 'dxf',
   showEased: true,
   compareHistory: [],
   compareBaselineIdx: 0,
@@ -142,6 +147,7 @@ window.KORRA_MS = {
     }
     if (data.biometrics && !data.measurements) data.measurements = data.biometrics;
     if (data.landmarks_3d && !data.landmarks) data.landmarks = data.landmarks_3d;
+    if (data.freesewing_data && !data.freesewing) data.freesewing = data.freesewing_data;
     this.data = data;
     window._currentScanId = data.id;
     window._currentScanName = data.client_name || '';
@@ -182,10 +188,19 @@ window.KORRA_MS = {
     }
     // Suppress page scroll — only sheet body scrolls
     document.querySelector('main').style.overflow = 'hidden';
-    const bottomNav = document.querySelector('.sidebar-nav');
-    if (bottomNav) bottomNav.style.display = 'none';
-    const content = document.querySelector('.main-content');
-    if (content) { content.style.marginLeft = '0'; content.style.padding = '0'; }
+
+    // Remove main-content padding so viewport is flush against sidebar
+    const mainContent = document.querySelector('.main-content');
+    if (mainContent) { mainContent.style.padding = '0'; }
+
+    // Phase 112: Desktop Sidebar Visibility Fix
+    // Only hide navigation and reset margins on mobile
+    if (window.innerWidth <= 900) {
+      const bottomNav = document.querySelector('.sidebar-nav');
+      if (bottomNav) bottomNav.style.display = 'none';
+      if (mainContent) { mainContent.style.marginLeft = '0'; }
+    }
+
     // Switch tab FIRST so canvas has dimensions before initViewer
     window.switchTab('scanresult');
     this.initViewer();
@@ -323,6 +338,10 @@ window.KORRA_MS = {
             <svg class="ms-tab-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="2" y="3" width="8" height="18" rx="1"/><rect x="14" y="3" width="8" height="18" rx="1"/></svg>
             Compare
           </button>
+          <button class="ms-tab ${this.viewMode === 'pattern' ? 'active' : ''}" onclick="KORRA_MS.switchView('pattern')">
+            <svg class="ms-tab-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M4 6h16M4 12h16M4 18h16"/><rect x="2" y="3" width="20" height="18" rx="2"/></svg>
+            Pattern
+          </button>
         </div>
         <div class="ms-sheet" id="ms-sheet">
           <div class="ms-sheet-handle" id="ms-sheet-handle"></div>
@@ -367,9 +386,11 @@ window.KORRA_MS = {
       case 'shape': content = this.buildShapeCard(); break;
       case 'compare': content = this.buildCompareView(); break;
       case 'ai': content = this.buildAIView(); break;
+      case 'pattern': content = this.buildPatternView(); break;
       default: content = this.buildMetricsGrid();
     }
     if (this.viewMode === 'ai') return content;
+    if (this.viewMode === 'pattern') return content;
     return content + this.buildNotesHTML();
   },
 
@@ -400,6 +421,540 @@ window.KORRA_MS = {
         </button>
       </div>
     </div>`;
+  },
+
+  // ═══ PATTERN VIEW (Phases 29-36) ═══
+  buildPatternView() {
+    return `<div class="ms-pattern-view">
+      <div class="ms-pattern-backbar">
+        <button class="ms-pattern-back-btn" onclick="KORRA_MS.closePattern()">
+          <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="15 18 9 12 15 6"/></svg>
+          Back to Measurements
+        </button>
+      </div>
+      <div class="ms-pattern-topbar">
+        <div class="ms-pattern-title">Pattern Draft</div>
+        <div class="ms-pattern-controls">
+          <button class="ms-pattern-btn" onclick="KORRA_MS.patternZoomIn()" title="Zoom in">
+            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/><line x1="11" y1="8" x2="11" y2="14"/><line x1="8" y1="11" x2="14" y2="11"/></svg>
+          </button>
+          <button class="ms-pattern-btn" onclick="KORRA_MS.patternZoomOut()" title="Zoom out">
+            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/><line x1="8" y1="11" x2="14" y2="11"/></svg>
+          </button>
+          <button class="ms-pattern-btn" onclick="KORRA_MS.patternReset()" title="Reset view">
+            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="23 4 23 10 17 10"/><path d="M20.49 15a9 9 0 1 1-2.12-9.36L23 10"/></svg>
+          </button>
+          <button class="ms-pattern-btn" onclick="KORRA_MS.renderPattern()" title="Regenerate pattern">
+            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M1 4v6h6M23 20v-6h-6"/><path d="M20.49 9A9 9 0 0 0 5.64 5.64L1 10m22 4l-4.64 4.36A9 9 0 0 1 3.51 15"/></svg>
+          </button>
+        </div>
+      </div>
+      <div class="ms-pattern-canvas-wrap" id="ms-pattern-canvas-wrap">
+        <div class="ms-pattern-canvas" id="ms-pattern-canvas"></div>
+        <div class="ms-pattern-zoom-indicator" id="ms-pattern-zoom-indicator">100%</div>
+      </div>
+      <div class="ms-pattern-footer">
+        <span class="ms-pattern-footer-label">${this.activeContext.replace(/_/g, ' ').replace(/\b\w/g, l => l.toUpperCase())} · ${window.getAttire(this.activeContext)?.patternType || 'N/A'}</span>
+        <button class="ms-pattern-download-btn" onclick="KORRA_MS.openPatternDownloadModal()">
+          <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" y1="15" x2="12" y2="3"/></svg>
+          Download
+        </button>
+      </div>
+    </div>`;
+  },
+
+  // ═══ PATTERN ZOOM/PAN (Phase 35) ═══
+  _patternZoom: 1,
+  _patternPanX: 0,
+  _patternPanY: 0,
+  _patternPanning: false,
+  _patternPanStartX: 0,
+  _patternPanStartY: 0,
+  _patternPanStartPanX: 0,
+  _patternPanStartPanY: 0,
+
+  _getPatternCanvas() {
+    return document.getElementById('ms-pattern-canvas');
+  },
+
+  _updatePatternZoom() {
+    const canvas = this._getPatternCanvas();
+    const ind = document.getElementById('ms-pattern-zoom-indicator');
+    if (!canvas) return;
+    canvas.style.transform = `translate(${this._patternPanX}px, ${this._patternPanY}px) scale(${this._patternZoom})`;
+    if (ind) ind.textContent = Math.round(this._patternZoom * 100) + '%';
+  },
+
+  patternZoomIn() {
+    this._patternZoom = Math.min(this._patternZoom * 1.2, 5);
+    this._updatePatternZoom();
+  },
+
+  patternZoomOut() {
+    this._patternZoom = Math.max(this._patternZoom / 1.2, 0.2);
+    this._updatePatternZoom();
+  },
+
+  patternReset() {
+    this._patternZoom = 1;
+    this._patternPanX = 0;
+    this._patternPanY = 0;
+    this._updatePatternZoom();
+  },
+
+  _initPatternPan() {
+    const wrap = document.getElementById('ms-pattern-canvas-wrap');
+    if (!wrap) return;
+    wrap.addEventListener('mousedown', (e) => {
+      if (e.button !== 0) return;
+      this._patternPanning = true;
+      this._patternPanStartX = e.clientX;
+      this._patternPanStartY = e.clientY;
+      this._patternPanStartPanX = this._patternPanX;
+      this._patternPanStartPanY = this._patternPanY;
+      wrap.style.cursor = 'grabbing';
+    });
+    window.addEventListener('mousemove', (e) => {
+      if (!this._patternPanning) return;
+      this._patternPanX = this._patternPanStartPanX + (e.clientX - this._patternPanStartX);
+      this._patternPanY = this._patternPanStartPanY + (e.clientY - this._patternPanStartY);
+      this._updatePatternZoom();
+    });
+    window.addEventListener('mouseup', () => {
+      if (!this._patternPanning) return;
+      this._patternPanning = false;
+      const wrap = document.getElementById('ms-pattern-canvas-wrap');
+      if (wrap) wrap.style.cursor = 'grab';
+    });
+    wrap.addEventListener('wheel', (e) => {
+      e.preventDefault();
+      if (e.deltaY > 0) this.patternZoomOut();
+      else this.patternZoomIn();
+    }, { passive: false });
+    wrap.style.cursor = 'grab';
+  },
+
+  // ═══ PATTERN RENDER — Server-backed with client fallback ═══
+  _PATTERN_API_BASE: '/api/pattern',
+
+  _buildMeasurementsDict() {
+    // Prefer pre-computed Freesewing dict (mm) from Python backend
+    const fs = this.data?.freesewing;
+    if (fs && typeof fs === 'object' && fs.chest != null) {
+      return { ...fs, _source: 'freesewing' };
+    }
+    // Fall back to KORRA keys (cm) from scan measurements
+    const mKeys = ['Across Shoulder','Neck to Waist','Waist to Hip','Sleeve Length','Inseam',
+                   'Chest Round','Waist Round','Hip Round','Shoulder','Neck Round',
+                   'Thigh Round','Calf Round','Bicep Round','Wrist Round'];
+    const measurements = {};
+    mKeys.forEach(k => { measurements[k] = this.getPatternMeasurements(k); });
+    measurements._source = 'korra';
+    return measurements;
+  },
+
+  async _fetchServerPattern(pType, measurements) {
+    const isFS = measurements._source === 'freesewing';
+    const body = { patternType: pType };
+    if (isFS) {
+      const { _source, ...fsData } = measurements;
+      body.freesewing = fsData;
+    } else {
+      body.measurements = measurements;
+    }
+    const res = await fetch(`${this._PATTERN_API_BASE}/draft`, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify(body),
+    });
+    if (!res.ok) throw new Error(`Server returned ${res.status}`);
+    return res.json();
+  },
+
+  async _fetchServerDXF(pType, measurements) {
+    const isFS = measurements._source === 'freesewing';
+    const body = { patternType: pType, format: 'dxf' };
+    if (isFS) {
+      const { _source, ...fsData } = measurements;
+      body.freesewing = fsData;
+    } else {
+      body.measurements = measurements;
+    }
+    const res = await fetch(`${this._PATTERN_API_BASE}/export?format=dxf`, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify(body),
+    });
+    if (!res.ok) throw new Error(`Server returned ${res.status}`);
+    return res.blob();
+  },
+
+  async renderPattern() {
+    const canvas = this._getPatternCanvas();
+    if (!canvas) return;
+    const attire = window.getAttire(this.activeContext);
+    const pType = attire?.patternType || 'shirt';
+    const measurements = this._buildMeasurementsDict();
+    // Show loading state
+    canvas.innerHTML =
+      `<div style="display:flex;align-items:center;justify-content:center;height:100%;color:#888;font:14px/1.4 Inter,sans-serif;flex-direction:column;gap:12px">
+        <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" style="animation:ms-spin 1s linear infinite"><circle cx="12" cy="12" r="10" stroke-dasharray="40" stroke-dashoffset="30"/></svg>
+        Drafting pattern…
+      </div>`;
+    try {
+      const result = await this._fetchServerPattern(pType, measurements);
+      // Embed server SVG; patch styles to match dark theme
+      let serverSvg = result.svg;
+      // Override svg width/height to fill canvas, keep viewBox
+      const w = canvas.clientWidth || 800;
+      const h = canvas.clientHeight || 600;
+      serverSvg = serverSvg.replace(/<svg/, `<svg width="${w}" height="${h}"`);
+      // Inject dark-theme overrides
+      const darkStyle = `
+      <style>
+        .p-outline, .fabric { fill: rgba(198, 255, 0, 0.05); stroke: var(--Mint, #C6FF00); stroke-width: 1.5; }
+        .p-seam, .seam { stroke: rgba(255,255,255,0.2); stroke-width: 0.8; stroke-dasharray: 4,3; fill: none; }
+        .p-grain, .grainline { stroke: rgba(255,255,255,0.15); stroke-width: 0.5; }
+        .p-dart, .dart { fill: rgba(255,200,100,0.15); }
+        text { fill: rgba(255,255,255,0.5); font-family: Inter, sans-serif; font-size: 9px; text-anchor: middle; }
+        .p-notch, .notch { fill: var(--Mint, #C6FF00); }
+      </style>`;
+      serverSvg = serverSvg.replace(/<\/svg>/, `${darkStyle}</svg>`);
+      canvas.innerHTML = serverSvg;
+    } catch (err) {
+      console.warn('Pattern server unavailable, falling back to client templates:', err.message);
+      this._renderPatternFallback(canvas, pType, measurements);
+    }
+    this._initPatternPan();
+  },
+
+  _renderPatternFallback(canvas, pType, measurements) {
+    const template = this.PATTERN_TEMPLATES[pType];
+    const pieceNames = template?.pieces || ['shirt_front', 'shirt_back'];
+    const width = canvas.clientWidth || 400;
+    const height = canvas.clientHeight || 400;
+    const svgNS = 'http://www.w3.org/2000/svg';
+    let svg = `<svg xmlns="${svgNS}" viewBox="0 0 ${width} ${height}" width="${width}" height="${height}">
+      <rect width="${width}" height="${height}" fill="none"/>
+      <style>
+        .p-outline { fill: rgba(198, 255, 0, 0.05); stroke: var(--Mint, #C6FF00); stroke-width: 1.5; }
+        .p-seam { stroke: rgba(255,255,255,0.2); stroke-width: 0.8; stroke-dasharray: 4,3; fill: none; }
+        .p-grain { stroke: rgba(255,255,255,0.15); stroke-width: 0.5; }
+        .p-dart { fill: rgba(255,200,100,0.15); }
+        .p-label { fill: rgba(255,255,255,0.5); font-size: 9px; font-family: 'Inter', sans-serif; text-anchor: middle; white-space: pre-line; }
+        .p-notch { fill: var(--Mint, #C6FF00); }
+      </style>`;
+    const baseScale = 2.5;
+    PatternDraft.init(baseScale);
+    const cols = Math.min(pieceNames.length, 2);
+    const rows = Math.ceil(pieceNames.length / cols);
+    const pad = 15;
+    const cellW = (width - pad * (cols + 1)) / cols;
+    const cellH = (height - pad * (rows + 1)) / rows;
+    pieceNames.forEach((piece, i) => {
+      const col = i % cols;
+      const row = Math.floor(i / cols);
+      const sectionKey = piece.replace(/-/g, '_');
+      const fnName = PatternDraft.sectionTemplate(sectionKey);
+      const fabricPreset = this.FABRIC_PRESETS[this.activeMaterial] || this.FABRIC_PRESETS.woven;
+      const K = fabricPreset.K ?? 0.8;
+      const easeCm = K >= 0.85 ? 0.9 : K >= 0.5 ? 1.5 : 2.0;
+      const seamAllow = this.SEAM_ALLOWANCE_DEFAULTS[pType] || 1.0;
+      let pieceSvg = '';
+      let pw = 50, ph = 50;
+      if (fnName && PatternTemplates[fnName]) {
+        const result = PatternTemplates[fnName](measurements, { ease: easeCm });
+        pieceSvg = result.svg;
+        pw = result.size.w;
+        ph = result.size.h;
+        PatternDraft.init(baseScale);
+        pieceSvg += PatternDraft.drawSeamAllowance(0, 0, pw, ph, seamAllow, {stroke:'rgba(255,255,255,0.12)'});
+      } else {
+        pw = cellW / baseScale * 0.8;
+        ph = cellH / baseScale * 0.8;
+        pieceSvg = PatternDraft.drawRect(2, 2, pw-4, ph-4, {rx:4, class:'p-outline', stroke:'#fff'})
+          + PatternDraft.drawLabel(piece.replace(/_/g,' ').replace(/\b\w/g,l=>l.toUpperCase()), pw/2, ph/2, {color:'#fff'});
+      }
+      const s = Math.min(cellW / (pw * baseScale), cellH / (ph * baseScale), 2);
+      const ox = pad + col * (cellW + pad) + (cellW - pw * baseScale * s) / 2;
+      const oy = pad + row * (cellH + pad) + (cellH - ph * baseScale * s) / 2;
+      svg += `<g transform="translate(${ox}, ${oy}) scale(${s})">${pieceSvg}</g>`;
+    });
+    svg += '</svg>';
+    canvas.innerHTML = svg;
+  },
+
+  // ═══ PATTERN DOWNLOAD MODAL (Phases 42-43) ═══
+  openPatternDownloadModal() {
+    const m = document.getElementById('downloadPatternModal');
+    if (!m) return;
+    const attire = window.getAttire(this.activeContext);
+    const attireInput = document.getElementById('downloadPatternAttire');
+    const matInput = document.getElementById('downloadPatternMaterial');
+    const seamInput = document.getElementById('downloadPatternSeam');
+    if (attireInput) attireInput.value = attire?.name || 'Standard';
+    if (matInput) matInput.value = this.FABRIC_PRESETS[this.activeMaterial]?.name || 'Woven';
+    if (seamInput) {
+      const def = this.SEAM_ALLOWANCE_DEFAULTS[attire?.patternType || 'shirt'] || 1.0;
+      seamInput.value = def;
+    }
+    this.downloadFormat = 'dxf';
+    document.querySelectorAll('.ss-format-pill').forEach(b => b.classList.remove('active'));
+    document.getElementById('ss-fmt-dxf')?.classList.add('active');
+    m.style.display = 'flex';
+    document.body.classList.add('modal-open');
+  },
+
+  closePatternDownloadModal() {
+    const m = document.getElementById('downloadPatternModal');
+    if (m) {
+      m.style.display = 'none';
+      document.body.classList.remove('modal-open');
+    }
+  },
+
+  // ═══ PATTERN EXPORT (future Phases 86-100) ═══
+  exportPattern() {
+    const fmt = this.downloadFormat;
+    if (fmt === 'dxf') this.exportPatternDXF();
+    else this.exportPatternPDF();
+  },
+
+  async exportPatternDXF() {
+    const attire = window.getAttire(this.activeContext);
+    const name = (attire?.name || 'pattern').replace(/\s+/g, '_');
+    const pType = attire?.patternType || 'shirt';
+    const measurements = this._buildMeasurementsDict();
+    try {
+      const blob = await this._fetchServerDXF(pType, measurements);
+      const url = URL.createObjectURL(blob);
+      const a = document.createElement('a');
+      a.href = url;
+      a.download = `${name}_pattern.dxf`;
+      a.click();
+      URL.revokeObjectURL(url);
+    } catch (err) {
+      console.warn('DXF server unavailable, falling back to client generation:', err.message);
+      const dxf = this._generateDXF();
+      const blob = new Blob([dxf], { type: 'text/plain' });
+      const url = URL.createObjectURL(blob);
+      const a = document.createElement('a');
+      a.href = url;
+      a.download = `${name}_pattern.dxf`;
+      a.click();
+      URL.revokeObjectURL(url);
+    }
+    this.closePatternDownloadModal();
+  },
+
+  exportPatternPDF() {
+    const attire = window.getAttire(this.activeContext);
+    const name = (attire?.name || 'pattern').replace(/\s+/g, '_');
+    const svgEl = this._getPatternCanvas()?.querySelector('svg');
+    if (!svgEl) return;
+    const svgData = new XMLSerializer().serializeToString(svgEl);
+    const blob = new Blob([svgData], { type: 'image/svg+xml' });
+    const url = URL.createObjectURL(blob);
+    const a = document.createElement('a');
+    a.href = url;
+    a.download = `${name}_pattern.svg`;
+    a.click();
+    URL.revokeObjectURL(url);
+    this.closePatternDownloadModal();
+  },
+
+  // ── Phase 86-99: DXF-AAMA Industrial Export ──
+  _dxfPt(v) { return PatternDraft.cm(v); },
+
+  _dxfLWPolyline(points, layer, opts = {}) {
+    const closed = opts.closed !== false;
+    let d = `0\nLWPOLYLINE\n8\n${layer}\n90\n${points.length}\n70\n${closed ? 1 : 0}\n43\n${opts.width || 0.25}\n`;
+    points.forEach(p => { d += `10\n${this._dxfPt(p.x)}\n20\n${this._dxfPt(p.y)}\n`; });
+    return d;
+  },
+
+  _dxfLine(x1, y1, x2, y2, layer) {
+    return `0\nLINE\n8\n${layer}\n10\n${this._dxfPt(x1)}\n20\n${this._dxfPt(y1)}\n11\n${this._dxfPt(x2)}\n21\n${this._dxfPt(y2)}\n`;
+  },
+
+  _dxfText(text, x, y, h, layer, opts = {}) {
+    return `0\nTEXT\n8\n${layer}\n10\n${this._dxfPt(x)}\n20\n${this._dxfPt(y)}\n40\n${h}\n1\n${text}\n72\n1\n11\n${this._dxfPt(x)}\n21\n${this._dxfPt(y)}\n`;
+  },
+
+  _dxfCircle(cx, cy, r, layer) {
+    return `0\nCIRCLE\n8\n${layer}\n10\n${this._dxfPt(cx)}\n20\n${this._dxfPt(cy)}\n40\n${this._dxfPt(r)}\n`;
+  },
+
+  _sampleBezier(p0, p1, steps = 20) {
+    const pts = [];
+    for (let t = 0; t <= steps; t++) {
+      const s = t / steps;
+      const x = (1-s)*(1-s)*(1-s)*p0.x + 3*(1-s)*(1-s)*s*(p1.cpx1||p0.x) + 3*(1-s)*s*s*(p1.cpx2||p0.x) + s*s*s*p1.x;
+      const y = (1-s)*(1-s)*(1-s)*p0.y + 3*(1-s)*(1-s)*s*(p1.cpy1||p0.y) + 3*(1-s)*s*s*(p1.cpy2||p0.y) + s*s*s*p1.y;
+      pts.push({ x, y });
+    }
+    return pts;
+  },
+
+  _dxfPieceOutline(pieceName, measurements, ease, baseX, baseY) {
+    const fnName = PatternDraft.sectionTemplate(pieceName);
+    if (!fnName || !PatternTemplates[fnName]) return '';
+    const result = PatternTemplates[fnName](measurements, { ease });
+    if (!result.svg) return '';
+    // Parse the SVG paths to extract geometry
+    const parser = new DOMParser();
+    const doc = parser.parseFromString(`<svg xmlns="http://www.w3.org/2000/svg">${result.svg}</svg>`, 'image/svg+xml');
+    const paths = doc.querySelectorAll('path');
+    let dxf = '';
+    paths.forEach(path => {
+      const cls = path.getAttribute('class') || '';
+      const d = path.getAttribute('d') || '';
+      if (!d) return;
+      const isSeam = cls.includes('p-seam');
+      const isDart = cls.includes('p-dart');
+      const layer = isSeam ? 'SEAM' : isDart ? 'INTERNAL' : 'CUTTING';
+      // Parse SVG path 'd' into polyline
+      const cmds = d.match(/[MmLlCcZz][^MmLlCcZz]*/g) || [];
+      const pts = [];
+      let cx = 0, cy = 0;
+      let first = null;
+      let closePath = false;
+      cmds.forEach(cmd => {
+        const op = cmd[0];
+        const args = cmd.slice(1).trim().split(/[\s,]+/).map(Number);
+        if (op === 'M' || op === 'm') {
+          if (pts.length > 0) { /* new subpath, flush previous */ }
+          cx = args[0]; cy = args[1];
+          first = { x: cx + baseX, y: cy + baseY };
+          pts.push(first);
+        } else if (op === 'L' || op === 'l') {
+          cx = args[0]; cy = args[1];
+          pts.push({ x: cx + baseX, y: cy + baseY });
+        } else if (op === 'C' || op === 'c') {
+          const p0 = { x: cx, y: cy };
+          const p1 = { x: args[4], y: args[5], cpx1: args[0], cpy1: args[1], cpx2: args[2], cpy2: args[3] };
+          const sampled = this._sampleBezier(p0, p1, 12);
+          sampled.forEach((p, i) => { if (i > 0) pts.push({ x: p.x + baseX, y: p.y + baseY }); });
+          cx = args[4]; cy = args[5];
+        } else if (op === 'Z' || op === 'z') {
+          closePath = true;
+        }
+      });
+      if (pts.length >= 2) {
+        dxf += this._dxfLWPolyline(pts, layer, { closed: closePath, width: isSeam ? 0.15 : 0.3 });
+      }
+    });
+    // Seam allowance overlay (from SVG)
+    const rect = doc.querySelector('rect.p-seam');
+    if (rect) {
+      // Already rendered as path with p-seam class
+    }
+    // Grainlines
+    const lines = doc.querySelectorAll('line');
+    lines.forEach(line => {
+      if (line.classList.contains('p-grain')) {
+        const x1 = parseFloat(line.getAttribute('x1')) + baseX;
+        const y1 = parseFloat(line.getAttribute('y1')) + baseY;
+        const x2 = parseFloat(line.getAttribute('x2')) + baseX;
+        const y2 = parseFloat(line.getAttribute('y2')) + baseY;
+        dxf += this._dxfLine(x1 / PatternDraft.scale, y1 / PatternDraft.scale,
+                              x2 / PatternDraft.scale, y2 / PatternDraft.scale, 'GRAIN');
+      }
+    });
+    // Notches
+    const notches = doc.querySelectorAll('path.p-notch');
+    notches.forEach(n => {
+      const d = n.getAttribute('d') || '';
+      const m = d.match(/M\s+([\d.-]+)\s+([\d.-]+)/);
+      if (m) {
+        dxf += this._dxfCircle(
+          (parseFloat(m[1]) + baseX) / PatternDraft.scale,
+          (parseFloat(m[2]) + baseY) / PatternDraft.scale,
+          0.2, 'NOTCH'
+        );
+      }
+    });
+    // Label
+    const texts = doc.querySelectorAll('text');
+    texts.forEach(t => {
+      const tx = parseFloat(t.getAttribute('x') || '0');
+      const ty = parseFloat(t.getAttribute('y') || '0');
+      const content = t.textContent || '';
+      if (content && !content.includes('FOLD')) {
+        dxf += this._dxfText(content, (tx + baseX) / PatternDraft.scale,
+                              (ty + baseY) / PatternDraft.scale, 0.5, 'LABEL');
+      }
+    });
+    return dxf;
+  },
+
+  _generateDXF() {
+    const attire = window.getAttire(this.activeContext);
+    const pType = attire?.patternType || 'shirt';
+    const template = this.PATTERN_TEMPLATES[pType];
+    const pieceNames = template?.pieces || ['shirt_front', 'shirt_back'];
+    // Build measurements
+    const mKeys = ['Across Shoulder','Neck to Waist','Waist to Hip','Sleeve Length','Inseam',
+                   'Chest Round','Waist Round','Hip Round','Shoulder','Neck Round',
+                   'Thigh Round','Calf Round','Bicep Round','Wrist Round'];
+    const measurements = {};
+    mKeys.forEach(k => { measurements[k] = this.getPatternMeasurements(k); });
+    const baseScale = 2.5;
+    PatternDraft.init(baseScale);
+    const easeCm = 1.5;
+    // DXF-AAMA header
+    let dxf = '0\nSECTION\n2\nHEADER\n9\n$ACADVER\n1\nAC1009\n9\n$INSUNITS\n70\n4\n9\n$MEASUREMENT\n70\n1\n0\nENDSEC\n';
+    // LAYER table
+    dxf += '0\nSECTION\n2\nTABLES\n0\nTABLE\n2\nLAYER\n70\n6\n';
+    const layers = [
+      ['CUTTING', '7', 'CONTINUOUS'],
+      ['SEAM', '8', 'DASHED'],
+      ['GRAIN', '3', 'CONTINUOUS'],
+      ['NOTCH', '6', 'CONTINUOUS'],
+      ['LABEL', '2', 'CONTINUOUS'],
+      ['INTERNAL', '5', 'DASHED'],
+    ];
+    layers.forEach(([name, color, ltype]) => {
+      dxf += `0\nLAYER\n2\n${name}\n70\n0\n62\n${color}\n6\n${ltype}\n`;
+    });
+    dxf += '0\nENDTAB\n0\nENDSEC\n';
+    // ENTITIES section
+    dxf += '0\nSECTION\n2\nENTITIES\n';
+    const cols = Math.min(pieceNames.length, 2);
+    const spacing = 60;
+    let maxW = 0, maxH = 0;
+    // First pass: measure pieces
+    const sizes = pieceNames.map(pn => {
+      const fnName = PatternDraft.sectionTemplate(pn);
+      if (fnName && PatternTemplates[fnName]) {
+        const r = PatternTemplates[fnName](measurements, { ease: easeCm });
+        maxW = Math.max(maxW, r.size.w);
+        maxH = Math.max(maxH, r.size.h);
+        return r.size;
+      }
+      return { w: 100, h: 100 };
+    });
+    // Second pass: draw entities
+    let cursorX = 30, cursorY = 30;
+    pieceNames.forEach((piece, i) => {
+      const size = sizes[i];
+      // Column wrap
+      if (i > 0 && i % cols === 0) { cursorX = 30; cursorY += maxH * baseScale + spacing; }
+      else if (i > 0) { cursorX += maxW * baseScale + spacing; }
+      const baseX = cursorX;
+      const baseY = cursorY;
+      // Scale base coordinates to cm (DXF stores in mm but we use cm units)
+      dxf += `0\nINSERT\n2\n${piece}\n8\n0\n10\n0\n20\n0\n0\nSEQEND\n`;
+      const pieceDxf = this._dxfPieceOutline(piece, measurements, easeCm, baseX, baseY);
+      dxf += pieceDxf;
+      // Piece bounding box
+      const pw = size.w * baseScale;
+      const ph = size.h * baseScale;
+      dxf += `0\nLINE\n8\nCUTTING\n10\n${baseX}\n20\n${baseY}\n11\n${baseX + pw}\n21\n${baseY}\n`;
+      dxf += `0\nLINE\n8\nCUTTING\n10\n${baseX}\n20\n${baseY + ph}\n11\n${baseX + pw}\n21\n${baseY + ph}\n`;
+    });
+    dxf += '0\nENDSEC\n0\nEOF\n';
+    return dxf;
   },
 
   buildNotesHTML() {
@@ -495,10 +1050,14 @@ window.KORRA_MS = {
       <div class="ms-material-section">
         <div class="ms-material-label">FABRIC</div>
         <div class="ms-material-rail">
-          <button class="ms-material-btn ${mat === 'woven' ? 'active' : ''}" onclick="KORRA_MS.setMaterial('woven')">Woven</button>
+          <button class="ms-material-btn ${mat === 'woven' ? 'active' : ''}" onclick="KORRA_MS.setMaterial('woven')" style="${mat === 'woven' ? 'border-color:var(--Mint)' : ''}">Woven</button>
           <button class="ms-material-btn ${mat === 'knit' ? 'active' : ''}" onclick="KORRA_MS.setMaterial('knit')">Knit</button>
           <button class="ms-material-btn ${mat === 'starch_bazin' ? 'active' : ''}" onclick="KORRA_MS.setMaterial('starch_bazin')">Starch Bazin</button>
           <button class="ms-material-btn ${mat === 'technical' ? 'active' : ''}" onclick="KORRA_MS.setMaterial('technical')">Technical</button>
+          <button class="ms-material-btn ${mat === 'silk' ? 'active' : ''}" onclick="KORRA_MS.setMaterial('silk')">Silk</button>
+          <button class="ms-material-btn ${mat === 'denim' ? 'active' : ''}" onclick="KORRA_MS.setMaterial('denim')">Denim</button>
+          <button class="ms-material-btn ${mat === 'linen' ? 'active' : ''}" onclick="KORRA_MS.setMaterial('linen')">Linen</button>
+          <button class="ms-material-btn ${mat === 'wool' ? 'active' : ''}" onclick="KORRA_MS.setMaterial('wool')">Wool</button>
         </div>
       </div>
       ${sizeHTML}
@@ -635,7 +1194,7 @@ window.KORRA_MS = {
 
   // ═══ VIEW MODE ═══
   switchView(mode) {
-    if (mode === 'ai' && this.viewMode !== 'ai') this._previousView = this.viewMode;
+    if ((mode === 'ai' || mode === 'pattern') && this.viewMode !== mode) this._previousView = this.viewMode;
     this.viewMode = mode;
     document.querySelectorAll('#view-scanresult .ms-tab').forEach(t => t.classList.remove('active'));
     document.querySelector(`#view-scanresult .ms-tab[onclick*="${mode}"]`)?.classList.add('active');
@@ -663,14 +1222,36 @@ window.KORRA_MS = {
         const sheet = document.querySelector('.ms-sheet');
         if (sheet) sheet.classList.add('ai-active');
 
-        const bottomNav = document.querySelector('.sidebar-nav');
-        if (bottomNav) bottomNav.style.display = 'none';
-
         document.querySelectorAll('#view-scanresult .ms-header-btn, #view-scanresult .ms-share-btn').forEach(btn => {
           btn.style.display = 'none';
         });
 
         document.body.classList.add('ai-mode');
+      } else if (mode === 'pattern') {
+        body.style.padding = '0';
+        body.style.overflow = 'hidden';
+        body.style.display = 'flex';
+        body.style.flexDirection = 'column';
+
+        const controls = document.querySelector('.ms-sheet-controls');
+        if (controls) controls.style.display = 'none';
+
+        const unitToggle = document.querySelector('.ms-unit-toggle');
+        const easeToggle = document.querySelector('.ms-ease-toggle');
+        if (unitToggle) unitToggle.style.display = 'none';
+        if (easeToggle) easeToggle.style.display = 'none';
+
+        const attire = document.querySelector('.ms-attire-selector-container');
+        const tabs = document.querySelector('.ms-tabs');
+        if (attire) attire.style.display = 'none';
+        if (tabs) tabs.style.display = 'none';
+
+        const sheet = document.querySelector('.ms-sheet');
+        if (sheet) sheet.classList.add('pattern-active');
+
+        document.querySelectorAll('#view-scanresult .ms-header-btn, #view-scanresult .ms-share-btn').forEach(btn => {
+          btn.style.display = 'none';
+        });
       } else {
         body.style.overflow = '';
         body.style.display = '';
@@ -702,9 +1283,9 @@ window.KORRA_MS = {
         if (tabs) tabs.style.display = '';
 
         const sheet = document.querySelector('.ms-sheet');
-        if (sheet) sheet.classList.remove('ai-active');
+        if (sheet) { sheet.classList.remove('ai-active'); sheet.classList.remove('pattern-active'); }
 
-        if (!this.active) {
+        if (window.innerWidth > 900) {
           const bottomNav = document.querySelector('.sidebar-nav');
           if (bottomNav) bottomNav.style.display = '';
         }
@@ -725,6 +1306,9 @@ window.KORRA_MS = {
       if (mode === 'ai') fab.classList.remove('revealed', 'pulse');
     }
     if (mode === 'compare') this.initCompareViewers();
+    if (mode === 'pattern') {
+      setTimeout(() => this.renderPattern(), 50);
+    }
     if (mode !== 'ai') this._notifyPostAction();
   },
 
@@ -795,7 +1379,7 @@ window.KORRA_MS = {
             <div class="ms-side-menu-section-title">Scan History</div>
             <div class="ms-side-menu-fit-card">${historyHtml}</div>
           </div>` : ''}
-          <button class="ms-side-menu-ai-btn" onclick="KORRA_MS.closeSideMenu(); KORRA_MS.askAI('Tell me about my ${key.toLowerCase()} measurement')">Ask AI about this</button>
+           <button class="ms-side-menu-ai-btn" onclick="KORRA_MS.closeSideMenu(); KORRA_MS.switchView('ai'); KORRA_MS.askAI('Tell me about my ${key.toLowerCase()} measurement')">Ask AI about this</button>
         </div>`;
 
       setTimeout(() => {
@@ -1209,6 +1793,9 @@ window.KORRA_MS = {
     this.switchView(this._previousView || 'avatar');
     if (this._aiLoading) this.cancelAI();
   },
+  closePattern() {
+    this.switchView(this._previousView || 'avatar');
+  },
   async askAI(prompt) {
     if (!prompt?.trim() || this._aiLoading) return;
     const body = document.getElementById('ms-ai-body');
@@ -1294,12 +1881,150 @@ window.KORRA_MS = {
     const entry = reg.find(a => a.id === this.activeContext);
     const base = entry ? entry.mult : 1.035;
     const materialCoeffs = {
-      woven: 1.0, knit: 0.85, starch_bazin: 1.1, technical: 0.9
+      woven: 1.0, knit: 0.85, starch_bazin: 1.1, technical: 0.9,
+      silk: 0.95, denim: 1.05, linen: 1.08, wool: 1.03
     };
     const mat = materialCoeffs[this.activeMaterial] || 1.0;
     const result = base * mat;
     console.log(`  getEase("${key}") → ctx="${this.activeContext}" entry=${!!entry} base=${base} mat=${mat} result=${result}`);
     return result;
+  },
+
+  // ═══ FABRIC PRESETS (Phases 2-5) ═══
+  FABRIC_PRESETS: {
+    woven:    { coeff: 1.0,  K: 0.8,  B: 0.3,  M: 1.0,  color: '#CCCCCC', name: 'Woven' },
+    knit:     { coeff: 0.85, K: 0.4,  B: 0.1,  M: 0.7,  color: '#AAAAAA', name: 'Knit' },
+    starch_bazin: { coeff: 1.1, K: 0.95, B: 0.9,  M: 1.2,  color: '#DDDDDD', name: 'Starch Bazin' },
+    technical:{ coeff: 0.9,  K: 0.5,  B: 0.4,  M: 0.8,  color: '#999999', name: 'Technical' },
+    silk:     { coeff: 0.95, K: 0.3,  B: 0.05, M: 0.5,  color: '#F5E6CA', name: 'Silk' },
+    denim:    { coeff: 1.05, K: 0.9,  B: 0.7,  M: 1.3,  color: '#4A6E9B', name: 'Denim' },
+    linen:    { coeff: 1.08, K: 0.7,  B: 0.6,  M: 0.9,  color: '#E8D5B7', name: 'Linen' },
+    wool:     { coeff: 1.03, K: 0.6,  B: 0.5,  M: 1.1,  color: '#8B7D6B', name: 'Wool' },
+  },
+
+  // ═══ PATTERN TEMPLATES (Phase 20) ═══
+  PATTERN_TEMPLATES: {
+    shirt:    { pieces: ['shirt_front','shirt_back','shirt_sleeve','shirt_collar'], baseEase: 0.08 },
+    jacket:   { pieces: ['jacket_front','jacket_back','jacket_sleeve','shirt_collar'], baseEase: 0.12 },
+    skirt:    { pieces: ['skirt_front','skirt_back'], baseEase: 0.06 },
+    tunic:    { pieces: ['shirt_front','shirt_back','shirt_sleeve'], baseEase: 0.10 },
+    coat:     { pieces: ['jacket_front','jacket_back','jacket_sleeve','shirt_collar'], baseEase: 0.15 },
+    dress:    { pieces: ['dress_front','dress_back'], baseEase: 0.08 },
+    full_body:{ pieces: ['full_body'], baseEase: 0.08 },
+    wrap:     { pieces: ['dress_front'], baseEase: 0.20 },
+    headwear: { pieces: ['shirt_collar'], baseEase: 0.02 },
+    pants:    { pieces: ['pants_front','pants_back'], baseEase: 0.06 },
+  },
+
+  // ═══ SEAM ALLOWANCE DEFAULTS (Phase 21) ═══
+  SEAM_ALLOWANCE_DEFAULTS: {
+    shirt: 1.0, jacket: 1.5, skirt: 1.0, tunic: 1.2, coat: 1.5,
+    dress: 1.0, full_body: 1.0, wrap: 2.0, headwear: 0.8, pants: 1.0,
+  },
+
+  // ═══ PATTERN PIECE CATALOG (Phase 22) ═══
+  PATTERN_PIECE_CATALOG: {
+    shirt_front:    { type:'bodice', side:'front', draftFn:'_draftShirtFront' },
+    shirt_back:     { type:'bodice', side:'back',  draftFn:'_draftShirtBack' },
+    sleeve:         { type:'sleeve', side:'both',  draftFn:'_draftSleeve' },
+    collar:         { type:'collar', side:'both',  draftFn:'_draftCollar' },
+    cuff:           { type:'cuff',   side:'both',  draftFn:'_draftCuff' },
+    rib_band:       { type:'band',   side:'both',  draftFn:'_draftBand' },
+    waistband:      { type:'band',   side:'both',  draftFn:'_draftWaistband' },
+    belt:           { type:'belt',   side:'both',  draftFn:'_draftBelt' },
+    storm_flap:     { type:'flap',   side:'front', draftFn:'_draftStormFlap' },
+    epaulette:      { type:'strap',  side:'both',  draftFn:'_draftEpaulette' },
+    jacket_front:   { type:'bodice', side:'front', draftFn:'_draftJacketFront' },
+    jacket_back:    { type:'bodice', side:'back',  draftFn:'_draftJacketBack' },
+    skirt_front:    { type:'skirt',  side:'front', draftFn:'_draftSkirtFront' },
+    skirt_back:     { type:'skirt',  side:'back',  draftFn:'_draftSkirtBack' },
+    pants_front:    { type:'pants',  side:'front', draftFn:'_draftPantsFront' },
+    pants_back:     { type:'pants',  side:'back',  draftFn:'_draftPantsBack' },
+    bodice_front:   { type:'bodice', side:'front', draftFn:'_draftBodiceFront' },
+    bodice_back:    { type:'bodice', side:'back',  draftFn:'_draftBodiceBack' },
+    tunic_front:    { type:'tunic',  side:'front', draftFn:'_draftTunicFront' },
+    tunic_back:     { type:'tunic',  side:'back',  draftFn:'_draftTunicBack' },
+    coat_front:     { type:'coat',   side:'front', draftFn:'_draftCoatFront' },
+    coat_back:      { type:'coat',   side:'back',  draftFn:'_draftCoatBack' },
+    neckband:       { type:'band',   side:'both',  draftFn:'_draftNeckband' },
+    facing:         { type:'facing', side:'front', draftFn:'_draftFacing' },
+    wrap_panel:     { type:'wrap',   side:'both',  draftFn:'_draftWrap' },
+    crown:          { type:'crown',  side:'both',  draftFn:'_draftCrown' },
+    brim:           { type:'brim',   side:'both',  draftFn:'_draftBrim' },
+    band:           { type:'band',   side:'both',  draftFn:'_draftBand' },
+    chest_pocket:   { type:'pocket', side:'front', draftFn:'_draftPocket' },
+  },
+
+  // ═══ PATTERN MEASUREMENT ACCESSOR (Phase 15) ═══
+  getPatternMeasurements(key) {
+    const mType = {
+      'Across Shoulder': 'shoulderWidth',
+      'Neck to Waist': 'neckToWaist',
+      'Waist to Hip': 'waistToHip',
+      'Sleeve Length': 'sleeveLength',
+      'Inseam': 'inseam',
+      'Chest Round': 'chestWidth',
+      'Waist Round': 'waistWidth',
+      'Hip Round': 'hipWidth',
+      'Shoulder': 'shoulderWidth',
+      'Neck Round': 'neckCirc',
+      'Thigh Round': 'thighCirc',
+      'Calf Round': 'calfCirc',
+      'Bicep Round': 'bicepCirc',
+      'Wrist Round': 'wristCirc',
+    };
+    const dim = mType[key];
+    if (!dim) return this.getEase(key);
+    const measurements = this.data?.measurements || this.data?.biometrics || {};
+    return measurements[key] || 0;
+  },
+
+  // ── Track G: Virtual Mirror (Phases 141-144) ──
+  async _updateGarmentForContext() {
+    /**
+     * Phase 143: _updateGarmentForContext()
+     * Calls TailorNet API, loads into viewer.
+     */
+    if (this.activeContext === 'standard') {
+      if (this.viewerInstance) this.viewerInstance.removeGarment();
+      return;
+    }
+
+    if (!this.data || !this.viewerInstance) return;
+
+    // Show loading spinner in badge or somewhere?
+    console.log(`👗 [VTO] Generating garment for context: ${this.activeContext}`);
+
+    try {
+      const { data: { session } } = await window.KORRA_DB.auth.getSession();
+      const res = await fetch(`/api/v2/measurements/${this.data.id}/garment/drape`, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          'Authorization': `Bearer ${session.access_token}`
+        },
+        body: JSON.stringify({
+          attire: this.activeContext,
+          material: this.activeMaterial
+        })
+      });
+
+      if (!res.ok) throw new Error("Draping failed");
+
+      const result = await res.json();
+      if (result.garment_mesh_url) {
+        const matPreset = this.FABRIC_PRESETS[this.activeMaterial] || this.FABRIC_PRESETS.woven;
+        const matSettings = {
+          color: matPreset.color ? parseInt(matPreset.color.replace('#', '0x')) : 0xFFFFFF,
+          opacity: this.activeMaterial === 'silk' ? 0.6 : 0.95,
+          shininess: this.activeMaterial === 'silk' ? 80 : 30
+        };
+        await this.viewerInstance.loadGarment(result.garment_mesh_url, matSettings);
+      }
+    } catch (e) {
+      console.warn("Garment generation skipped or failed:", e.message);
+      if (this.viewerInstance) this.viewerInstance.removeGarment();
+    }
   },
 
   setContext(ctx) {
@@ -1309,6 +2034,10 @@ window.KORRA_MS = {
     if (window.KORRA_VIZ) window.KORRA_VIZ.applyHeatmap(ctx);
     if (this._attireSelector) this._attireSelector.select(ctx);
     this.renderMeasurements();
+    if (this.viewMode === 'pattern') this.renderPattern();
+
+    // Phase 141: Trigger garment generation on context change
+    this._updateGarmentForContext();
     console.log('  setContext done');
   },
 
@@ -1321,6 +2050,18 @@ window.KORRA_MS = {
       b.classList.toggle('active', btnText.includes(mat));
     });
     this.renderMeasurements();
+    if (this.viewMode === 'pattern') this.renderPattern();
+
+    // Phase 142: Update garment material if already loaded
+    if (this.viewerInstance && this.viewerInstance.garmentMesh) {
+      const matPreset = this.FABRIC_PRESETS[this.activeMaterial] || this.FABRIC_PRESETS.woven;
+      const color = matPreset.color ? parseInt(matPreset.color.replace('#', '0x')) : 0xFFFFFF;
+      this.viewerInstance.garmentMesh.material.color.setHex(color);
+      this.viewerInstance.garmentMesh.material.opacity = mat === 'silk' ? 0.6 : 0.95;
+      this.viewerInstance.garmentMesh.material.needsUpdate = true;
+    } else {
+      this._updateGarmentForContext();
+    }
   },
 
   toggleEase() {
@@ -1537,17 +2278,22 @@ window.KORRA_MS = {
     this.closeSideMenu();
     document.getElementById('ms-side-menu')?.remove();
     document.getElementById('ms-side-menu-backdrop')?.remove();
+
+    // Phase 112: Restore Navigation and Layout
     const bottomNav = document.querySelector('.sidebar-nav');
     if (bottomNav) bottomNav.style.display = '';
-    const controls = document.querySelector('.ms-sheet-controls');
-    if (controls) controls.style.display = '';
+
+    const content = document.querySelector('.main-content');
+    if (content) {
+      content.style.marginLeft = '';
+      content.style.padding = '';
+    }
+
     document.querySelectorAll('#view-scanresult .ms-header-btn, #view-scanresult .ms-share-btn').forEach(btn => {
       btn.style.display = '';
     });
     document.body.classList.remove('ai-mode');
     document.querySelector('main').style.overflow = '';
-    const content = document.querySelector('.main-content');
-    if (content) { content.style.marginLeft = ''; content.style.padding = ''; }
     this.active = false;
     this.data = null;
     this.viewerInstance = null;
@@ -1737,5 +2483,694 @@ window.KORRA_MS = {
     if (!fab) return;
     fab.classList.remove('revealed');
     if (fi._revealTimeout) { clearTimeout(fi._revealTimeout); fi._revealTimeout = null; }
+  },
+};
+
+// ═══════════════════════════════════════════════════════════
+// PATTERN DRAFT ENGINE — SVG Primitives (Track C: Phases 51-85)
+// ═══════════════════════════════════════════════════════════
+
+const PatternDraft = {
+  // ── STATE ──
+  origin: { x: 0, y: 0 },
+  scale: 1,
+  seamAllowance: 1.0,
+  _idCounter: 0,
+
+  // ── Phase 51: Coordinate System ──
+  init(cmScale = 1) {
+    this.scale = cmScale;
+    this.origin = { x: 0, y: 0 };
+    this._idCounter = 0;
+  },
+
+  _nextId() {
+    this._idCounter++;
+    return 'pd-' + this._idCounter;
+  },
+
+  cm(v) {
+    return v * this.scale;
+  },
+
+  // ── Phase 52: Rectangle ──
+  drawRect(x, y, w, h, opts = {}) {
+    const id = this._nextId();
+    const rx = opts.rx || 0;
+    const cls = opts.class || 'p-outline';
+    const stroke = opts.stroke || null;
+    const fill = opts.fill || null;
+    let extra = '';
+    if (stroke) extra += ` stroke="${stroke}"`;
+    if (fill) extra += ` fill="${fill}"`;
+    if (opts.dash) extra += ` stroke-dasharray="${opts.dash}"`;
+    return `<rect id="${id}" class="${cls}" x="${this.cm(x)}" y="${this.cm(y)}" width="${this.cm(w)}" height="${this.cm(h)}" rx="${rx}"${extra}/>`;
+  },
+
+  // ── Phase 53: Bezier Curve ──
+  drawCurve(points, opts = {}) {
+    if (points.length < 2) return '';
+    const id = this._nextId();
+    const cls = opts.class || 'p-outline';
+    let d = `M ${this.cm(points[0].x)} ${this.cm(points[0].y)}`;
+    for (let i = 1; i < points.length; i++) {
+      const p = points[i];
+      if (p.cpx1 != null && p.cpy1 != null) {
+        const cpx2 = p.cpx2 != null ? p.cpx2 : p.cpx1;
+        const cpy2 = p.cpy2 != null ? p.cpy2 : p.cpy1;
+        d += ` C ${this.cm(p.cpx1)} ${this.cm(p.cpy1)}, ${this.cm(cpx2)} ${this.cm(cpy2)}, ${this.cm(p.x)} ${this.cm(p.y)}`;
+      } else {
+        d += ` L ${this.cm(p.x)} ${this.cm(p.y)}`;
+      }
+    }
+    if (opts.close) d += ' Z';
+    let extra = '';
+    if (opts.stroke) extra += ` stroke="${opts.stroke}"`;
+    if (opts.fill) extra += ` fill="${opts.fill}"`;
+    if (opts.dash) extra += ` stroke-dasharray="${opts.dash}"`;
+    return `<path id="${id}" class="${cls}" d="${d}"${extra}/>`;
+  },
+
+  // ── Phase 54: Arc ──
+  drawArc(cx, cy, r, startAngle, endAngle, opts = {}) {
+    const id = this._nextId();
+    const cls = opts.class || 'p-outline';
+    const startRad = (startAngle * Math.PI) / 180;
+    const endRad = (endAngle * Math.PI) / 180;
+    const x1 = cx + r * Math.cos(startRad);
+    const y1 = cy + r * Math.sin(startRad);
+    const x2 = cx + r * Math.cos(endRad);
+    const y2 = cy + r * Math.sin(endRad);
+    const largeArc = endAngle - startAngle > 180 ? 1 : 0;
+    const rCm = this.cm(r);
+    const d = `M ${this.cm(x1)} ${this.cm(y1)} A ${rCm} ${rCm} 0 ${largeArc} 1 ${this.cm(x2)} ${this.cm(y2)}`;
+    let extra = '';
+    if (opts.stroke) extra += ` stroke="${opts.stroke}"`;
+    if (opts.fill) extra += ` fill="${opts.fill}"`;
+    if (opts.dash) extra += ` stroke-dasharray="${opts.dash}"`;
+    return `<path id="${id}" class="${cls}" d="${d}"${extra}/>`;
+  },
+
+  // ── Phase 55: Dart ──
+  drawDart(x, y, width, depth, angle, opts = {}) {
+    const rad = (angle * Math.PI) / 180;
+    const tipX = x + depth * Math.cos(rad);
+    const tipY = y - depth * Math.sin(rad);
+    const halfW = width / 2;
+    const perpRad = rad + Math.PI / 2;
+    const lx = x + halfW * Math.cos(perpRad);
+    const ly = y - halfW * Math.sin(perpRad);
+    const rx = x - halfW * Math.cos(perpRad);
+    const ry = y + halfW * Math.sin(perpRad);
+    const cls = opts.class || 'p-dart';
+    const d = `M ${this.cm(lx)} ${this.cm(ly)} L ${this.cm(tipX)} ${this.cm(tipY)} L ${this.cm(rx)} ${this.cm(ry)} Z`;
+    let extra = '';
+    if (opts.fill) extra += ` fill="${opts.fill}"`;
+    else extra += ' fill="rgba(198,255,0,0.15)"';
+    return `<path id="${this._nextId()}" class="${cls}" d="${d}"${extra}/>`;
+  },
+
+  // ── Phase 56: Grainline ──
+  drawGrainline(x, y, length, angle = 0, opts = {}) {
+    const id = this._nextId();
+    const rad = (angle * Math.PI) / 180;
+    const cosA = Math.cos(rad);
+    const sinA = Math.sin(rad);
+    const halfL = length / 2;
+    const x1 = x - halfL * cosA;
+    const y1 = y - halfL * sinA;
+    const x2 = x + halfL * cosA;
+    const y2 = y + halfL * sinA;
+    const cls = opts.class || 'p-grain';
+    let extra = '';
+    if (opts.stroke) extra += ` stroke="${opts.stroke}"`;
+    const arrowSize = Math.min(4, length * 0.12);
+    const ax1 = x2 - arrowSize * cosA - arrowSize * 0.4 * sinA;
+    const ay1 = y2 + arrowSize * sinA - arrowSize * 0.4 * cosA;
+    const ax2 = x2 - arrowSize * cosA + arrowSize * 0.4 * sinA;
+    const ay2 = y2 + arrowSize * sinA + arrowSize * 0.4 * cosA;
+    return `<g id="${id}" class="${cls}">
+      <line x1="${this.cm(x1)}" y1="${this.cm(y1)}" x2="${this.cm(x2)}" y2="${this.cm(y2)}"${extra}/>
+      <polygon points="${this.cm(x2)},${this.cm(y2)} ${this.cm(ax1)},${this.cm(ay1)} ${this.cm(ax2)},${this.cm(ay2)}"${extra}/>
+    </g>`;
+  },
+
+  // ── Phase 57: Seam Allowance ──
+  drawSeamAllowance(x, y, w, h, allowance, opts = {}) {
+    const a = allowance != null ? allowance : this.seamAllowance;
+    const cls = opts.class || 'p-seam';
+    return this.drawRect(x + a, y + a, w - a * 2, h - a * 2, {
+      ...opts, class: cls, dash: '4,3', stroke: opts.stroke || 'rgba(255,255,255,0.2)'
+    });
+  },
+
+  // ── Phase 58: Notch ──
+  drawNotch(x, y, size = 4, angle = 0, opts = {}) {
+    const id = this._nextId();
+    const rad = (angle * Math.PI) / 180;
+    const h = size;
+    const w = size * 0.6;
+    const tipX = x + h * Math.cos(rad);
+    const tipY = y - h * Math.sin(rad);
+    const perpRad = rad + Math.PI / 2;
+    const lx = x + w * Math.cos(perpRad);
+    const ly = y - w * Math.sin(perpRad);
+    const rx = x - w * Math.cos(perpRad);
+    const ry = y + w * Math.sin(perpRad);
+    const cls = opts.class || 'p-notch';
+    const d = `M ${this.cm(lx)} ${this.cm(ly)} L ${this.cm(tipX)} ${this.cm(tipY)} L ${this.cm(rx)} ${this.cm(ry)} Z`;
+    let extra = '';
+    if (opts.fill) extra += ` fill="${opts.fill}"`;
+    return `<path id="${id}" class="${cls}" d="${d}"${extra}/>`;
+  },
+
+  // ── Phase 59: Label ──
+  drawLabel(text, x, y, opts = {}) {
+    const id = this._nextId();
+    const cls = opts.class || 'p-label';
+    const fontSize = opts.fontSize || 9;
+    const anchor = opts.anchor || 'middle';
+    let extra = ` font-size="${fontSize}px" text-anchor="${anchor}"`;
+    if (opts.color) extra += ` fill="${opts.color}"`;
+    if (opts.bold) extra += ' font-weight="700"';
+    return `<text id="${id}" class="${cls}" x="${this.cm(x)}" y="${this.cm(y)}"${extra}>${text}</text>`;
+  },
+
+  // ── Phase 75: patternType→template mapping ──
+  sectionTemplate(section) {
+    const map = {
+      shirt_front: 'ShirtFront',
+      shirt_back: 'ShirtBack',
+      shirt_sleeve: 'ShirtSleeve',
+      shirt_collar: 'ShirtCollar',
+      jacket_front: 'JacketFront',
+      jacket_back: 'JacketBack',
+      jacket_sleeve: 'JacketSleeve',
+      skirt_front: 'SkirtFront',
+      skirt_back: 'SkirtBack',
+      pants_front: 'PantsFront',
+      pants_back: 'PantsBack',
+      dress_front: 'DressFront',
+      dress_back: 'DressBack',
+      full_body: 'FullBody',
+    };
+    return map[section] || null;
+  },
+};
+
+// ═══════════════════════════════════════════════════════════
+// PATTERN TEMPLATES (Phases 60-73)
+// ═══════════════════════════════════════════════════════════
+
+const PatternTemplates = {
+  // Normalize measurement keys to pattern-ready values.
+  // Accepts Freesewing keys (mm), KORRA keys (cm), or camelCase (cm).
+  _prep(m) {
+    const get = (fsKey, korraKey, camelKey, fallback, divisor = 1) => {
+      let v = fallback;
+      if (m[fsKey] != null) v = m[fsKey] / 10;       // Freesewing mm → cm
+      else if (m[korraKey] != null) v = m[korraKey];  // KORRA cm
+      else if (m[camelKey] != null) v = m[camelKey];  // camelCase cm
+      return v / divisor;
+    };
+    const nc = m.neckCircumference != null ? m.neckCircumference / 10 :
+               m['Neck Round'] != null ? m['Neck Round'] :
+               m.neckCirc || 40;
+    return {
+      sw:  get('shoulderToShoulder', 'Across Shoulder', 'shoulderWidth', 42, 2),
+      ntW: get('shoulderToWaist', 'Neck to Waist', 'neckToWaist', 44, 1),
+      wtH: get('waistToHips', 'Waist to Hip', 'waistToHip', 20, 1),
+      slL: get('shoulderToWrist', 'Sleeve Length', 'sleeveLength', 60, 1),
+      ins: get('inseam', 'Inseam', 'inseam', 78, 1),
+      chW: get('chest', 'Chest Round', 'chestWidth', 100, 4),
+      chWF: get('chest', 'Chest Round', 'chestWidth', 100, 2),
+      waW: get('waist', 'Waist Round', 'waistWidth', 90, 4),
+      waWF: get('waist', 'Waist Round', 'waistWidth', 90, 2),
+      hiW: get('hips', 'Hip Round', 'hipWidth', 102, 4),
+      hiWF: get('hips', 'Hip Round', 'hipWidth', 102, 2),
+      nkW: nc / 6,
+      nkD: nc / 8 + 1,
+      biW: get('bicepsCircumference', 'Bicep Round', 'bicepCirc', 32, 2),
+      wrW: get('wristCircumference', 'Wrist Round', 'wristRound', 16, 2),
+      thW: get('thighCircumference', 'Thigh Round', 'thighCirc', 56, 2),
+      cd:  get('waistToHips', 'Waist to Hip', 'crotchDepth', 28, 1),
+    };
+  },
+
+  // ── Phase 60: Shirt Front ──
+  ShirtFront(m, opts = {}) {
+    const P = PatternDraft, s = this._prep(m);
+    const ease = opts.ease || 1.5;
+    const w = s.chW + ease;
+    const h = s.ntW + s.wtH + 3;
+    const shDrop = s.sw * 0.18;
+    const ah = s.chW * 0.22; // armhole depth factor
+    const pts = [
+      {x:0, y:s.nkD},                                    // CF neck
+      {x:s.nkW, y:0},                                    // neck/shoulder
+      {x:s.sw + 1, y:shDrop + 1},                        // shoulder tip
+      {x:s.sw + 3, y:shDrop + 5,                        // armhole top
+        cpx1: s.sw+3, cpy1: shDrop+2, cpx2: s.sw, cpy2: shDrop+4},
+      {x:w, y:shDrop + ah,                              // armhole bottom
+        cpx1: w+1, cpy1: shDrop + ah*0.3, cpx2: w+1, cpy2: shDrop + ah*0.7},
+      {x:w, y:s.ntW,                                     // side at waist
+        cpx1: w+1, cpy1: s.ntW*0.5, cpx2: w+1, cpy2: s.ntW},
+      {x:w-1, y:h},                                       // side at hip
+      {x:0, y:h},                                         // CF hem
+    ];
+    let svg = P.drawCurve(pts, {close:1, class:'p-outline', stroke:'#fff'});
+    // neckline dip
+    const nl = [
+      {x:0, y:s.nkD},
+      {x:s.nkW*0.4, y:s.nkD*0.7, cpx1:0, cpy1:s.nkD*0.7, cpx2:s.nkW*0.2, cpy2:s.nkD},
+      {x:s.nkW, y:0},
+    ];
+    svg += P.drawCurve(nl, {class:'p-outline', stroke:'#fff'});
+    // bust dart
+    svg += P.drawDart(w*0.35, s.ntW*0.55, 2.5, 10, 0, {});
+    // grainline
+    svg += P.drawGrainline(2, h*0.35, 10, 0, {stroke:'rgba(198,255,0,0.6)'});
+    // notches
+    svg += P.drawNotch(w, s.ntW, 4, 0, {fill:'#fff'});
+    svg += P.drawNotch(w-0.5, s.ntW+s.wtH, 4, 0, {fill:'#fff'});
+    // label
+    svg += P.drawLabel('Shirt Front ×2', w*0.5, h-0.7, {fontSize:8, bold:1, color:'#fff'});
+    return {svg, size:{w, h}};
+  },
+
+  // ── Phase 61: Shirt Back ──
+  ShirtBack(m, opts = {}) {
+    const P = PatternDraft, s = this._prep(m);
+    const ease = opts.ease || 1.5;
+    const w = s.chW + ease;
+    const h = s.ntW + s.wtH + 3;
+    const shDrop = s.sw * 0.16;
+    const ah = s.chW * 0.22;
+    const pts = [
+      {x:0, y:0.8},                                      // CB neck
+      {x:s.nkW, y:0.3,                                   // neck/shoulder
+        cpx1:0, cpy1:0.3, cpx2:s.nkW*0.4, cpy2:0},
+      {x:s.sw + 1, y:shDrop + 1},                         // shoulder tip
+      {x:s.sw + 3, y:shDrop + 5,                         // armhole
+        cpx1: s.sw+3, cpy1: shDrop+2, cpx2: s.sw, cpy2: shDrop+4},
+      {x:w, y:shDrop + ah,                               // armhole bottom
+        cpx1: w+1, cpy1: shDrop + ah*0.3, cpx2: w+1, cpy2: shDrop + ah*0.7},
+      {x:w, y:s.ntW,                                     // side waist
+        cpx1: w+1, cpy1: s.ntW*0.5, cpx2: w+1, cpy2: s.ntW},
+      {x:w-1, y:h},                                       // side hip
+      {x:0, y:h},                                         // CB hem
+    ];
+    let svg = P.drawCurve(pts, {close:1, class:'p-outline', stroke:'#fff'});
+    // shoulder dart
+    const dartCx = s.sw * 0.5;
+    const dartCy = shDrop * 0.65;
+    svg += P.drawDart(dartCx, dartCy, 1.8, 8, -25, {fill:'rgba(255,200,100,0.15)'});
+    svg += P.drawGrainline(2, h*0.35, 10, 0, {stroke:'rgba(198,255,0,0.6)'});
+    svg += P.drawNotch(w, s.ntW, 4, 0, {fill:'#fff'});
+    svg += P.drawLabel('Shirt Back ×2', w*0.5, h-0.7, {fontSize:8, bold:1, color:'#fff'});
+    svg += P.drawLabel('FOLD', 0.5, 0.5, {fontSize:6, color:'rgba(255,255,255,0.4)'});
+    return {svg, size:{w, h}};
+  },
+
+  // ── Phase 62: Shirt Sleeve ──
+  ShirtSleeve(m, opts = {}) {
+    const P = PatternDraft, s = this._prep(m);
+    const ease = opts.ease || 1;
+    const w = s.biW + ease;
+    const h = s.slL + 2;
+    const wrist = s.wrW + ease * 0.5;
+    const capH = s.biW * 0.45;
+    const pts = [
+      {x:w*0.3, y:0},                                     // cap left
+      {x:w*0.5, y:-capH*0.3,                             // cap top
+        cpx1: w*0.35, cpy1: -capH*0.15, cpx2: w*0.4, cpy2: -capH*0.25},
+      {x:w*0.7, y:0},                                    // cap right
+      {x:w, y:capH,                                      // bicep
+        cpx1: w, cpy1: capH*0.3, cpx2: w+1, cpy2: capH*0.7},
+      {x:wrist + 1, y:h},                                 // wrist
+      {x:0.5, y:h},                                       // hem
+      {x:0, y:capH,                                      // underarm
+        cpx1: -0.5, cpy1: capH*0.7, cpx2: 0, cpy2: capH*0.3},
+    ];
+    let svg = P.drawCurve(pts, {close:1, class:'p-outline', stroke:'#fff'});
+    svg += P.drawGrainline(w*0.5, h*0.3, 8, 0, {stroke:'rgba(198,255,0,0.6)'});
+    svg += P.drawNotch(w, capH, 3.5, 0, {fill:'#fff'});
+    svg += P.drawLabel('Sleeve ×2', w*0.5, h-0.7, {fontSize:8, bold:1, color:'#fff'});
+    return {svg, size:{w, h}};
+  },
+
+  // ── Phase 63: Shirt Collar ──
+  ShirtCollar(m, opts = {}) {
+    const P = PatternDraft, s = this._prep(m);
+    const neck = (s.nkW * 6) / 2; // half neck for half-collar
+    const collarW = 4;
+    const h = collarW + 2;
+    const curve = s.nkW * 0.3;
+    const pts = [
+      {x:0, y:0},
+      {x:neck, y:0,
+        cpx1: neck*0.3, cpy1: -curve, cpx2: neck*0.7, cpy2: -curve},
+      {x:neck, y:collarW,
+        cpx1: neck*0.7, cpy1: collarW - curve, cpx2: neck*0.3, cpy2: collarW - curve},
+      {x:0, y:collarW},
+    ];
+    let svg = P.drawCurve(pts, {close:1, class:'p-outline', stroke:'#fff'});
+    svg += P.drawGrainline(neck*0.5, collarW*0.5, 3, 90, {stroke:'rgba(198,255,0,0.6)'});
+    svg += P.drawLabel('Collar ×2', neck*0.5, collarW*0.5, {fontSize:7, bold:1, color:'#fff'});
+    return {svg, size:{w:neck, h}};
+  },
+
+  // ── Phase 64: Jacket Front ──
+  JacketFront(m, opts = {}) {
+    const P = PatternDraft, s = this._prep(m);
+    const ease = opts.ease || 4;
+    const w = s.chW + ease;
+    const h = s.ntW + s.wtH + 5;
+    const shDrop = s.sw * 0.18;
+    const ah = s.chW * 0.25;
+    const pts = [
+      {x:1.5, y:s.nkD},                                  // CF neck (lapel starts)
+      {x:s.nkW + 1, y:0.5},                              // neck/shoulder
+      {x:s.sw + 2, y:shDrop + 1.5},                       // shoulder tip
+      {x:s.sw + 4, y:shDrop + 6,                         // armhole
+        cpx1: s.sw+4, cpy1: shDrop+3, cpx2: s.sw+1, cpy2: shDrop+5},
+      {x:w, y:shDrop + ah,                               // armhole bottom
+        cpx1: w+2, cpy1: shDrop + ah*0.2, cpx2: w+2, cpy2: shDrop + ah*0.6},
+      {x:w, y:s.ntW,                                     // side waist
+        cpx1: w+2, cpy1: s.ntW*0.5, cpx2: w+2, cpy2: s.ntW},
+      {x:w-1, y:h},                                       // side hip
+      {x:0, y:h},                                         // CF hem
+      {x:0, y:s.ntW*0.3},                                // lapel bottom
+      {x:1.5, y:s.nkD},                                  // lapel to CF neck
+    ];
+    let svg = P.drawCurve(pts, {close:1, class:'p-outline', stroke:'#fff'});
+    svg += P.drawGrainline(2, h*0.4, 12, 0, {stroke:'rgba(198,255,0,0.6)'});
+    svg += P.drawNotch(w, s.ntW, 4, 0, {fill:'#fff'});
+    svg += P.drawNotch(w-1, s.ntW+s.wtH, 4, 0, {fill:'#fff'});
+    svg += P.drawLabel('Jacket Front ×2', w*0.5, h-0.7, {fontSize:8, bold:1, color:'#fff'});
+    svg += P.drawLabel('LAPEL', 0.3, s.ntW*0.15, {fontSize:6, color:'rgba(255,255,255,0.5)'});
+    return {svg, size:{w, h}};
+  },
+
+  // ── Phase 65: Jacket Back ──
+  JacketBack(m, opts = {}) {
+    const P = PatternDraft, s = this._prep(m);
+    const ease = opts.ease || 4;
+    const w = s.chW + ease;
+    const h = s.ntW + s.wtH + 5;
+    const shDrop = s.sw * 0.16;
+    const ah = s.chW * 0.25;
+    const pts = [
+      {x:0, y:1},
+      {x:s.nkW + 0.5, y:0.5,
+        cpx1:0, cpy1:0.5, cpx2:s.nkW*0.3, cpy2:0},
+      {x:s.sw + 2, y:shDrop + 1.5},
+      {x:s.sw + 4, y:shDrop + 6,
+        cpx1: s.sw+4, cpy1: shDrop+3, cpx2: s.sw+1, cpy2: shDrop+5},
+      {x:w, y:shDrop + ah,
+        cpx1: w+2, cpy1: shDrop + ah*0.2, cpx2: w+2, cpy2: shDrop + ah*0.6},
+      {x:w, y:s.ntW,
+        cpx1: w+2, cpy1: s.ntW*0.5, cpx2: w+2, cpy2: s.ntW},
+      {x:w-1, y:h},
+      {x:0.5, y:h},
+    ];
+    let svg = P.drawCurve(pts, {close:1, class:'p-outline', stroke:'#fff'});
+    // CB waist suppression (back curve)
+    const cbCurve = [
+      {x:0.5, y:1},
+      {x:0, y:s.ntW*0.4, cpx1:0.3, cpy1:s.ntW*0.2, cpx2:0, cpy2:s.ntW*0.3},
+      {x:0.5, y:s.ntW},
+    ];
+    svg += P.drawCurve(cbCurve, {class:'p-outline', stroke:'#fff', dash:'4,3'});
+    svg += P.drawGrainline(2, h*0.35, 12, 0, {stroke:'rgba(198,255,0,0.6)'});
+    svg += P.drawLabel('Jacket Back ×2', w*0.5, h-0.7, {fontSize:8, bold:1, color:'#fff'});
+    return {svg, size:{w, h}};
+  },
+
+  // ── Phase 66: Jacket Sleeve (two-piece simplified) ──
+  JacketSleeve(m, opts = {}) {
+    const P = PatternDraft, s = this._prep(m);
+    const ease = opts.ease || 2;
+    const w = s.biW + ease;
+    const h = s.slL + 2;
+    const wrist = s.wrW + ease * 0.3;
+    const capH = s.biW * 0.5;
+    const pts = [
+      {x:w*0.2, y:0},
+      {x:w*0.5, y:-capH*0.35,
+        cpx1: w*0.3, cpy1: -capH*0.15, cpx2: w*0.35, cpy2: -capH*0.3},
+      {x:w*0.8, y:0},
+      {x:w+1, y:capH,
+        cpx1: w+1, cpy1: capH*0.2, cpx2: w+2, cpy2: capH*0.6},
+      {x:wrist + 1.5, y:h},
+      {x:1, y:h},
+      {x:0, y:capH,
+        cpx1: -1, cpy1: capH*0.6, cpx2: 0, cpy2: capH*0.2},
+    ];
+    let svg = P.drawCurve(pts, {close:1, class:'p-outline', stroke:'#fff'});
+    // elbow dart
+    svg += P.drawDart(w*0.4, h*0.55, 2, 7, 10, {fill:'rgba(255,200,100,0.15)'});
+    svg += P.drawGrainline(w*0.5, h*0.3, 10, 0, {stroke:'rgba(198,255,0,0.6)'});
+    svg += P.drawLabel('Sleeve ×2', w*0.5, h-0.7, {fontSize:8, bold:1, color:'#fff'});
+    return {svg, size:{w, h}};
+  },
+
+  // ── Phase 67: Skirt Front ──
+  SkirtFront(m, opts = {}) {
+    const P = PatternDraft, s = this._prep(m);
+    const ease = opts.ease || 2;
+    const w = s.waW + ease;
+    const h = s.wtH + (s.ntW * 0.15) + 2; // skirt length from waist
+    const hemW = w * (opts.silhouette === 'a-line' ? 1.4 : opts.silhouette === 'pencil' ? 0.85 : 1);
+    const pts = [
+      {x:0, y:1},
+      {x:w, y:1,
+        cpx1: w*0.3, cpy1: 0.3, cpx2: w*0.7, cpy2: 0.3},
+      {x:hemW, y:h},
+      {x:0, y:h},
+    ];
+    let svg = P.drawCurve(pts, {close:1, class:'p-outline', stroke:'#fff'});
+    // waist darts
+    svg += P.drawDart(w*0.35, 1.5, 2, 9, -90, {});
+    svg += P.drawDart(w*0.65, 1.5, 2, 8, -90, {});
+    svg += P.drawGrainline(1.5, h*0.4, 8, 0, {stroke:'rgba(198,255,0,0.6)'});
+    svg += P.drawNotch(w, 2, 3.5, 0, {fill:'#fff'});
+    svg += P.drawLabel('Skirt Front ×2', w*0.5, h-0.7, {fontSize:8, bold:1, color:'#fff'});
+    return {svg, size:{w, h}};
+  },
+
+  // ── Phase 68: Skirt Back ──
+  SkirtBack(m, opts = {}) {
+    const P = PatternDraft, s = this._prep(m);
+    const ease = opts.ease || 2.5;
+    const w = s.waW + ease;
+    const h = s.wtH + (s.ntW * 0.15) + 2;
+    const hemW = w * (opts.silhouette === 'a-line' ? 1.5 : opts.silhouette === 'pencil' ? 0.83 : 1);
+    const pts = [
+      {x:0, y:1.5},
+      {x:w, y:1.5,
+        cpx1: w*0.3, cpy1: 0.5, cpx2: w*0.7, cpy2: 0.5},
+      {x:hemW, y:h},
+      {x:0, y:h},
+    ];
+    let svg = P.drawCurve(pts, {close:1, class:'p-outline', stroke:'#fff'});
+    svg += P.drawDart(w*0.4, 2, 2.5, 11, -90, {});
+    svg += P.drawDart(w*0.7, 2, 2, 9, -90, {});
+    svg += P.drawGrainline(1.5, h*0.4, 8, 0, {stroke:'rgba(198,255,0,0.6)'});
+    svg += P.drawLabel('Skirt Back ×2', w*0.5, h-0.7, {fontSize:8, bold:1, color:'#fff'});
+    svg += P.drawLabel('FOLD', 0.5, 0.5, {fontSize:6, color:'rgba(255,255,255,0.4)'});
+    return {svg, size:{w, h}};
+  },
+
+  // ── Phase 69: Pants Front ──
+  PantsFront(m, opts = {}) {
+    const P = PatternDraft, s = this._prep(m);
+    const ease = opts.ease || 2;
+    const w = s.waW + ease;           // quarter waist
+    const hipW = s.hiW + ease;        // quarter hip
+    const h = s.ins + s.cd + 4;       // total length
+    const kneeY = s.cd + s.ins * 0.45;
+    const kneeW = s.thW * 0.85;
+    const hemW = s.thW * 0.6;
+    const crotchExt = s.hiW * 0.25;   // crotch extension
+    const pts = [
+      {x:0, y:1.5},                                      // CF waist
+      {x:w, y:1.5,                                       // side waist
+        cpx1: w*0.3, cpy1: 0.5, cpx2: w*0.7, cpy2: 0.5},
+      {x:w, y:s.cd,                                      // side hip
+        cpx1: w, cpy1: s.cd*0.4, cpx2: w+1, cpy2: s.cd*0.7},
+      {x:kneeW+1, y:kneeY,                                // side knee
+        cpx1: w+1, cpy1: s.cd + (kneeY-s.cd)*0.3, cpx2: w, cpy2: s.cd + (kneeY-s.cd)*0.6},
+      {x:hemW+1, y:h-2},                                  // side hem
+      {x:1, y:h-2},                                       // inseam hem
+      {x:1, y:kneeY,                                      // inseam knee
+        cpx1: 0.5, cpy1: s.cd + (kneeY-s.cd)*0.6, cpx2: 0.5, cpy2: s.cd + (kneeY-s.cd)*0.3},
+      {x:crotchExt, y:s.cd,                               // crotch
+        cpx1: crotchExt*0.5, cpy1: s.cd - 2, cpx2: crotchExt*0.2, cpy2: s.cd - 1},
+      {x:0, y:s.cd - 1},                                  // CF crotch
+    ];
+    let svg = P.drawCurve(pts, {close:1, class:'p-outline', stroke:'#fff'});
+    svg += P.drawDart(w*0.4, 2, 1.5, 7, -90, {});
+    svg += P.drawGrainline(2, h*0.35, 10, 0, {stroke:'rgba(198,255,0,0.6)'});
+    svg += P.drawNotch(w, s.cd, 3.5, 0, {fill:'#fff'});
+    svg += P.drawNotch(1, kneeY, 3, 0, {fill:'#fff'});
+    svg += P.drawLabel('Pants Front ×2', w*0.5, h-0.7, {fontSize:8, bold:1, color:'#fff'});
+    return {svg, size:{w, h}};
+  },
+
+  // ── Phase 70: Pants Back ──
+  PantsBack(m, opts = {}) {
+    const P = PatternDraft, s = this._prep(m);
+    const ease = opts.ease || 3.5;
+    const w = s.waW + ease;
+    const hipW = s.hiW + ease + 1;
+    const h = s.ins + s.cd + 4;
+    const kneeY = s.cd + s.ins * 0.45;
+    const kneeW = s.thW * 0.9;
+    const hemW = s.thW * 0.62;
+    const crotchExt = s.hiW * 0.35;
+    const pts = [
+      {x:0, y:2.5},                                      // CB waist (higher)
+      {x:w, y:1.5,                                       // side waist
+        cpx1: w*0.3, cpy1: 0.8, cpx2: w*0.7, cpy2: 0.5},
+      {x:w+1, y:s.cd+1,                                  // side hip
+        cpx1: w+1, cpy1: s.cd*0.3, cpx2: w+2, cpy2: s.cd*0.6},
+      {x:kneeW+1.5, y:kneeY,                              // side knee
+        cpx1: w+1.5, cpy1: s.cd+(kneeY-s.cd)*0.3, cpx2: w+0.5, cpy2: s.cd+(kneeY-s.cd)*0.6},
+      {x:hemW+1.5, y:h-2},                                // side hem
+      {x:1.5, y:h-2},                                     // inseam hem
+      {x:1.5, y:kneeY,                                    // inseam knee
+        cpx1: 1, cpy1: s.cd+(kneeY-s.cd)*0.6, cpx2: 1, cpy2: s.cd+(kneeY-s.cd)*0.3},
+      {x:crotchExt + 1, y:s.cd + 1,                       // crotch (deeper)
+        cpx1: crotchExt*0.5+1, cpy1: s.cd-1, cpx2: crotchExt*0.2+1, cpy2: s.cd-0.5},
+      {x:0, y:s.cd},                                      // CB crotch
+    ];
+    let svg = P.drawCurve(pts, {close:1, class:'p-outline', stroke:'#fff'});
+    svg += P.drawDart(w*0.35, 2.5, 2, 9, -90, {});
+    svg += P.drawDart(w*0.65, 2.5, 1.5, 7, -90, {});
+    svg += P.drawGrainline(2, h*0.35, 10, 0, {stroke:'rgba(198,255,0,0.6)'});
+    svg += P.drawLabel('Pants Back ×2', w*0.5, h-0.7, {fontSize:8, bold:1, color:'#fff'});
+    svg += P.drawLabel('FOLD', 0.5, 0.5, {fontSize:6, color:'rgba(255,255,255,0.4)'});
+    return {svg, size:{w, h}};
+  },
+
+  // ── Phase 71: Dress Front ──
+  DressFront(m, opts = {}) {
+    const P = PatternDraft, s = this._prep(m);
+    const ease = opts.ease || 2;
+    const bw = s.chW + ease;          // bodice width
+    const sw = s.waW + ease;          // skirt width at waist
+    const skLen = s.wtH * 2 + 5;      // skirt length
+    const h = s.ntW + skLen + 3;
+    const shDrop = s.sw * 0.18;
+    const ah = s.chW * 0.22;
+    const hemW = sw * 1.3;
+    const pts = [
+      {x:0, y:s.nkD},
+      {x:s.nkW, y:0},
+      {x:s.sw + 1, y:shDrop + 1},
+      {x:s.sw + 3, y:shDrop + 5,
+        cpx1: s.sw+3, cpy1: shDrop+2, cpx2: s.sw, cpy2: shDrop+4},
+      {x:bw, y:shDrop + ah,
+        cpx1: bw+1, cpy1: shDrop+ah*0.3, cpx2: bw+1, cpy2: shDrop+ah*0.7},
+      {x:sw, y:s.ntW,                                     // waist
+        cpx1: bw, cpy1: s.ntW*0.5, cpx2: sw, cpy2: s.ntW},
+      {x:hemW, y:h},                                       // hem
+      {x:0, y:h},                                         // CF hem
+    ];
+    let svg = P.drawCurve(pts, {close:1, class:'p-outline', stroke:'#fff'});
+    const nl = [
+      {x:0, y:s.nkD},
+      {x:s.nkW*0.4, y:s.nkD*0.7, cpx1:0, cpy1:s.nkD*0.7, cpx2:s.nkW*0.2, cpy2:s.nkD},
+      {x:s.nkW, y:0},
+    ];
+    svg += P.drawCurve(nl, {class:'p-outline', stroke:'#fff'});
+    svg += P.drawDart(bw*0.35, s.ntW*0.55, 2.5, 10, 0, {});
+    // waist seam
+    svg += P.drawCurve([
+      {x:0, y:s.ntW},
+      {x:sw, y:s.ntW}
+    ], {class:'p-seam', stroke:'rgba(255,255,255,0.15)', dash:'4,2'});
+    svg += P.drawGrainline(2, h*0.35, 10, 0, {stroke:'rgba(198,255,0,0.6)'});
+    svg += P.drawLabel('Dress Front ×2', Math.max(bw, hemW)*0.5, h-0.7, {fontSize:8, bold:1, color:'#fff'});
+    return {svg, size:{w:Math.max(bw, hemW), h}};
+  },
+
+  // ── Phase 72: Dress Back ──
+  DressBack(m, opts = {}) {
+    const P = PatternDraft, s = this._prep(m);
+    const ease = opts.ease || 2;
+    const bw = s.chW + ease;
+    const sw = s.waW + ease;
+    const skLen = s.wtH * 2 + 5;
+    const h = s.ntW + skLen + 3;
+    const shDrop = s.sw * 0.16;
+    const ah = s.chW * 0.22;
+    const hemW = sw * 1.3;
+    const pts = [
+      {x:0, y:0.8},
+      {x:s.nkW, y:0.3,
+        cpx1:0, cpy1:0.3, cpx2:s.nkW*0.4, cpy2:0},
+      {x:s.sw + 1, y:shDrop + 1},
+      {x:s.sw + 3, y:shDrop + 5,
+        cpx1: s.sw+3, cpy1: shDrop+2, cpx2: s.sw, cpy2: shDrop+4},
+      {x:bw, y:shDrop + ah,
+        cpx1: bw+1, cpy1: shDrop+ah*0.3, cpx2: bw+1, cpy2: shDrop+ah*0.7},
+      {x:sw, y:s.ntW,
+        cpx1: bw, cpy1: s.ntW*0.5, cpx2: sw, cpy2: s.ntW},
+      {x:hemW, y:h},
+      {x:0, y:h},
+    ];
+    let svg = P.drawCurve(pts, {close:1, class:'p-outline', stroke:'#fff'});
+    svg += P.drawDart(s.sw*0.5, shDrop*0.65, 1.8, 8, -25, {fill:'rgba(255,200,100,0.15)'});
+    svg += P.drawCurve([
+      {x:0, y:s.ntW},
+      {x:sw, y:s.ntW}
+    ], {class:'p-seam', stroke:'rgba(255,255,255,0.15)', dash:'4,2'});
+    svg += P.drawGrainline(2, h*0.35, 10, 0, {stroke:'rgba(198,255,0,0.6)'});
+    svg += P.drawLabel('Dress Back ×2', Math.max(bw, hemW)*0.5, h-0.7, {fontSize:8, bold:1, color:'#fff'});
+    return {svg, size:{w:Math.max(bw, hemW), h}};
+  },
+
+  // ── Phase 73: Full Body (Jumpsuit / One-piece) ──
+  FullBody(m, opts = {}) {
+    const P = PatternDraft, s = this._prep(m);
+    const ease = opts.ease || 3;
+    const bw = s.chW + ease;
+    const ww = s.waW + ease;
+    const hw = s.hiW + ease;
+    const tw = s.thW + ease;
+    const h = s.ntW + s.wtH + s.ins + s.cd + 4;
+    const shDrop = s.sw * 0.18;
+    const ah = s.chW * 0.22;
+    const kneeY = s.ntW + s.wtH + s.cd + s.ins * 0.45;
+    const hemW = tw * 0.6;
+    const crotchExt = s.hiW * 0.25;
+    const pts = [
+      {x:0, y:s.nkD},                                      // CF neck
+      {x:s.nkW, y:0},
+      {x:s.sw+1, y:shDrop+1},
+      {x:s.sw+3, y:shDrop+5, cpx1:s.sw+3,cpy1:shDrop+2, cpx2:s.sw,cpy2:shDrop+4},
+      {x:bw, y:shDrop+ah, cpx1:bw+1,cpy1:shDrop+ah*0.3,cpx2:bw+1,cpy2:shDrop+ah*0.7},
+      {x:ww, y:s.ntW, cpx1:bw,cpy1:s.ntW*0.5,cpx2:ww,cpy2:s.ntW},    // waist
+      {x:hw, y:s.ntW+s.wtH, cpx1:ww,cpy1:s.ntW+s.wtH*0.4,cpx2:hw,cpy2:s.ntW+s.wtH*0.7}, // hip
+      {x:tw+1, y:s.ntW+s.wtH+s.cd, cpx1:hw+1,cpy1:s.ntW+s.wtH+s.cd*0.5,cpx2:tw+1,cpy2:s.ntW+s.wtH+s.cd*0.8}, // crotch level
+      {x:hemW+1, y:h-2},
+      {x:1, y:h-2},
+      {x:1, y:kneeY, cpx1:0.5,cpy1:s.ntW+s.wtH+s.cd+(kneeY-s.ntW-s.wtH-s.cd)*0.6,cpx2:0.5,cpy2:s.ntW+s.wtH+s.cd+(kneeY-s.ntW-s.wtH-s.cd)*0.3},
+      {x:crotchExt, y:s.ntW+s.wtH+s.cd, cpx1:crotchExt*0.5,cpy1:s.ntW+s.wtH+s.cd-2,cpx2:crotchExt*0.2,cpy2:s.ntW+s.wtH+s.cd-1},
+      {x:0, y:s.ntW+s.wtH+s.cd-1},
+    ];
+    let svg = P.drawCurve(pts, {close:1, class:'p-outline', stroke:'#fff'});
+    const nl = [
+      {x:0, y:s.nkD},
+      {x:s.nkW*0.4, y:s.nkD*0.7, cpx1:0,cpy1:s.nkD*0.7,cpx2:s.nkW*0.2,cpy2:s.nkD},
+      {x:s.nkW, y:0},
+    ];
+    svg += P.drawCurve(nl, {class:'p-outline', stroke:'#fff'});
+    svg += P.drawDart(bw*0.35, s.ntW*0.55, 2.5, 10, 0, {});
+    svg += P.drawGrainline(2, h*0.35, 10, 0, {stroke:'rgba(198,255,0,0.6)'});
+    svg += P.drawLabel('Full Body ×2', Math.max(bw, hemW)*0.5, h-0.7, {fontSize:8, bold:1, color:'#fff'});
+    return {svg, size:{w:Math.max(bw, hemW), h}};
   },
 };

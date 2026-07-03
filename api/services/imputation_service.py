@@ -33,7 +33,10 @@ class ImputationService:
         mapping = {
             'chest_round': 'chestcircumference',
             'waist_round': 'waistcircumference',
-            'height': 'stature_cm'
+            'height': 'stature_cm',
+            'across_shoulder': 'biacromialbreadth',
+            'sleeve_length': 'shoulderelbowlength',
+            'inseam': 'crotchheight_floor',
         }
 
         for korra_key, ansur_key in mapping.items():
