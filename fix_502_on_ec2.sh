@@ -207,16 +207,6 @@ server {
         proxy_set_header Connection "upgrade";
     }
 
-    # Freesewing pattern service — routes to Node.js on port 3002
-    location ~ ^/(api/pattern|api/patterns|api/measurements) {
-        proxy_pass http://127.0.0.1:3002;
-        proxy_http_version 1.1;
-        proxy_set_header Host $host;
-        proxy_set_header X-Real-IP $remote_addr;
-        proxy_set_header X-Forwarded-For $proxy_add_x_forwarded_for;
-        proxy_set_header X-Forwarded-Proto $scheme;
-    }
-
     # API routes - extended timeout for ML processing
     location /api/ {
         proxy_pass http://127.0.0.1:8080;

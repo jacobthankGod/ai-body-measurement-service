@@ -11,16 +11,7 @@ services:
     env_file: .env
     volumes:
       - ./public/meshes:/app/public/meshes
-    networks:
-      - korra-network
-
-  freesewing:
-    build:
-      context: services/freesewing
-    container_name: korra-freesewing
-    restart: unless-stopped
-    ports:
-      - "3002:3002"
+      - /home/ubuntu/tailornet_data:/app/api/services/tailornet_data
     networks:
       - korra-network
 

@@ -69,13 +69,25 @@ def save_tasks(tasks):
 
 EXTRACTION_TASKS = load_tasks()
 
-async def get_current_user(x_api_key: str = Header(None)):
-    if not x_api_key:
-        raise HTTPException(status_code=401, detail="API key required")
-    result = validate_subscription(x_api_key)
-    if not result.get('valid'):
-        raise HTTPException(status_code=403, detail=result.get('error', 'Unauthorized'))
-    return {'api_key': x_api_key, 'user_id': result.get('user_id'), 'is_admin': result.get('is_admin', False)}
+async def get_current_user(
+    x_api_key: str = Header(None),
+    authorization: str = Header(None)
+):
+    # 1. API Key Auth
+    if x_api_key:
+        result = validate_subscription(x_api_key)
+        if result.get('valid'):
+            return {'api_key': x_api_key, 'user_id': result.get('user_id'), 'is_admin': result.get('is_admin', False)}
+
+    # 2. Bearer Token Auth (Supabase JWT)
+    if authorization and authorization.startswith("Bearer "):
+        token = authorization.split(" ", 1)[1]
+        from api.routes.auth import verify_supabase_token
+        user = await verify_supabase_token(token)
+        if user:
+            return {'api_key': None, 'user_id': user.get('id'), 'is_admin': False}
+
+    raise HTTPException(status_code=401, detail="Authentication required (API Key or Bearer Token)")
 
 def cleanup_task_queue():
     global EXTRACTION_TASKS
@@ -503,9 +515,16 @@ async def drape_garment(
     # 1. Fetch scan data
     from api.services.database_service import DatabaseService
     db = DatabaseService.get_client()
-    res = db.table("measurements").select("*").eq("id", scan_id).execute()
+
+    # Security: Ensure user owns this scan
+    if not user.get('is_admin'):
+        # Allow if user is either the merchant (user_id) or the client (client_user_id)
+        res = db.table("measurements").select("*").eq("id", scan_id).or_(f"user_id.eq.{user['user_id']},client_user_id.eq.{user['user_id']}").execute()
+    else:
+        res = db.table("measurements").select("*").eq("id", scan_id).execute()
+
     if not res.data:
-        raise HTTPException(status_code=404, detail="Scan not found")
+        raise HTTPException(status_code=404, detail="Scan not found or access denied")
 
     scan = res.data[0]
     smpl_params = scan.get("biometrics", {}).get("__smpl_params")
@@ -519,47 +538,56 @@ async def drape_garment(
     from api.services.tailornet_bridge import run_tailornet
     betas = smpl_params.get("betas_300") or smpl_params.get("shape")
 
-    # Map attire to TailorNet garment class
+    # Map attire to TailorNet garment class(es) — supports multi-layer stacking
     garment_map = {
-        "standard": None,
-        "agbada": "t-shirt", # Proxy for demonstration
-        "senator": "shirt",
-        "kurta": "shirt",
-        "t-shirt": "t-shirt",
-        "shirt": "shirt",
-        "pant": "pant",
-        "skirt": "skirt"
+        "standard": [],
+        "agbada": ["shirt", "pant"],
+        "senator": ["shirt", "pant"],
+        "kurta": ["shirt", "pant"],
+        "t-shirt": ["t-shirt"],
+        "shirt": ["shirt"],
+        "blazer": ["shirt", "pant"],
+        "blazer_business": ["shirt", "pant"],
+        "bomber_jacket": ["shirt", "pant"],
+        "trench_coat": ["shirt", "pant"],
+        "pant": ["pant"],
+        "skirt": ["skirt"],
+        "a_line_skirt": ["skirt"],
+        "pencil_skirt": ["skirt"],
+        "dress": ["t-shirt", "skirt"],
+        "kaftan": ["t-shirt", "skirt"],
+        "jumpsuit": ["t-shirt", "pant"],
+        "classic_jumpsuit": ["t-shirt", "pant"],
+        "kikoy": ["shirt"],
     }
-    gar_class = garment_map.get(attire, "t-shirt")
-    if not gar_class:
+    gar_classes = garment_map.get(attire, ["t-shirt"])
+    if not gar_classes:
         return {"success": True, "garment_mesh_url": None}
 
-    # Run TailorNet
-    result = run_tailornet(garment_class=gar_class, gender=gender, betas=betas)
-
-    if not result["success"]:
-        logger.error(f"TailorNet failed: {result['error']}")
-        return {"success": False, "error": result["error"]}
-
-    # 4. Save result
+    # 4. Run TailorNet for each garment class
     import trimesh
-    gar_mesh = trimesh.Trimesh(vertices=result["garment_verts"], faces=result["garment_faces"])
-
-    # Save to public/meshes/garments/
     out_dir = Path("public/meshes/garments")
     out_dir.mkdir(parents=True, exist_ok=True)
-    filename = f"garment_{scan_id}_{attire}.obj"
-    file_path = out_dir / filename
-    gar_mesh.export(str(file_path))
+    public_urls = []
 
-    # Get Public URL (Simulated for local dev, would use Supabase Storage in prod)
-    # Using relative path for frontend consumption
-    public_url = f"/meshes/garments/{filename}"
+    for gar_class in gar_classes:
+        result = run_tailornet(garment_class=gar_class, gender=gender, betas=betas)
+        if not result["success"]:
+            logger.warning(f"TailorNet failed for {gar_class}: {result.get('error')}")
+            continue
+        gar_mesh = trimesh.Trimesh(vertices=result["garment_verts"], faces=result["garment_faces"])
+        filename = f"garment_{scan_id}_{attire}_{gar_class}.obj"
+        file_path = out_dir / filename
+        gar_mesh.export(str(file_path))
+        public_urls.append(f"/meshes/garments/{filename}")
+
+    if not public_urls:
+        return {"success": False, "error": "All TailorNet inferences failed"}
 
     return {
         "success": True,
-        "garment_mesh_url": public_url,
-        "garment_class": gar_class
+        "garment_meshes": public_urls,
+        "garment_classes": gar_classes,
     }
 
 @router.get("/measurements/status/{task_id}")

@@ -217,17 +217,6 @@ def run_hmr(front_path, side_path, height_cm, gender, mesh_path=None, attire_nam
             except Exception as e:
                 logger.warning(f"TailorNet garment prediction skipped: {e}")
 
-        # Freesewing measurements — compute from T-pose mesh directly
-        freesewing_measurements = None
-        if v_measure_tpose is not None:
-            try:
-                freesewing_measurements = engine.compute_freesewing_measurements(
-                    v_measure_tpose, height_cm, gender
-                )
-                logger.info(f"Freesewing measurements: {len(freesewing_measurements)} keys from T-pose mesh")
-            except Exception as e:
-                logger.warning(f"Freesewing computation skipped: {e}")
-
         # FINAL CLEANUP (safely handle T-pose mesh alias)
         if v_measure_tpose is not None and v_measure_tpose is not vertices:
             del v_measure_tpose
@@ -237,7 +226,6 @@ def run_hmr(front_path, side_path, height_cm, gender, mesh_path=None, attire_nam
         return {
             "status": "completed",
             "measurements": measurements,
-            "freesewing": freesewing_measurements,
             "landmarks": landmarks,
             "body_shape": body_shape,
             "size_recommendation": size_rec,

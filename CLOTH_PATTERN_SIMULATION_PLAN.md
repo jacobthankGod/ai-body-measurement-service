@@ -7,10 +7,10 @@
 
 | Layer | Technology | Why? |
 |-------|-----------|------|
-| 2D Pattern Drafting | [Freesewing.org](https://freesewing.org) (Node.js) | Industry standard for programmatic patterns. Mathematical formulas turn measurements into sewable DXF-AAMA and PDF. |
+| 2D Pattern Drafting | Client-side SVG (JavaScript) | Programmatic pattern drafting from SMPL measurements using custom geometry engine. |
 | 3D Cloth Simulation | [TailorNet](https://github.com/zgeng/TailorNet) (Python) | Neural cloth engine that uses SMPL body parameters to predict garment drape with realistic wrinkles in real-time. |
 | Virtual Try-On Rendering | PyTorch3D / Blender bpy | Renders virtual garments on the user's 3D digital twin. Handles collisions (cloth-skin clipping). |
-| Core Inference | Python + Node.js | Extract measurements (Python), draft patterns (Node.js/Freesewing), simulate drape (Python/TailorNet). |
+| Core Inference | Python + JavaScript | Extract measurements (Python), draft patterns (JavaScript), simulate drape (Python/TailorNet). |
 | 3D Viewport | Three.js (existing `korra_viz.js`) | Client-side rendering of body + garment meshes. |
 
 ### How the user "wears" the cloth (Neural Prediction)
@@ -202,145 +202,124 @@ The new features will be bridged directly to the existing **Attire Dropdown** an
 | 99 | Tolerance cleanup | `measurement-screen.js` | Round to 3dp, merge colinear |
 | 100 | DXF metadata + version | `measurement-screen.js` | Date, attire, fabric, measurements as DXF comments |
 
-### Track E: Freesewing Integration (Phases 101–115)
-**Replace client-side SVG drafting with Freesewing Node.js microservice.**
-
-| Phase | Deliverable | Files Changed | Description |
-|-------|------------|--------------|-------------|
-| 101 | Freesewing microservice scaffold | `api/services/freesewing/` | Express.js server for Freesewing patterns |
-| 102 | Freesewing package.json | `api/services/freesewing/` | Dependencies: @freesewing/core, @freesewing/plugin-bundle |
-| 103 | Pattern: Aaron (shirt) integration | `api/services/freesewing/` | Freesewing Aaron template → SMPL measurements |
-| 104 | Pattern: Simon (shirt) integration | `api/services/freesewing/` | Freesewing Simon template → SMPL measurements |
-| 105 | Pattern: Jaeger (jacket) integration | `api/services/freesewing/` | Freesewing Jaeger template → SMPL measurements |
-| 106 | Pattern: Sandy (skirt) integration | `api/services/freesewing/` | Freesewing Sandy template → SMPL measurements |
-| 107 | Pattern: Penelope (pencil skirt) | `api/services/freesewing/` | Freesewing Penelope template |
-| 108 | Pattern: Carlton (coat) integration | `api/services/freesewing/` | Freesewing Carlton template |
-| 109 | KORRA measurement → Freesewing mapping | `api/services/freesewing/` | Map SMPL keys to Freesewing measurement names |
-| 110 | Freesewing API endpoint | `api/routes/measurements.py` | POST /api/v2/pattern/draft → calls Freesewing microservice |
-| 111 | Freesewing SVG→DXF conversion | `api/services/freesewing/` | Convert Freesewing SVG output to DXF |
-| 112 | PDF rendering from Freesewing | `api/services/freesewing/` | Render SVG to PDF via Puppeteer |
-| 113 | Cache Freesewing patterns | `api/services/freesewing/` | Memoize pattern drafts per measurement profile |
-| 114 | Freesewing error handling | `api/services/freesewing/` | Validate measurements, return SVG fallback |
-| 115 | Dockerize Freesewing service | `Dockerfile.freesewing` | Standalone container for Freesewing microservice |
-
-### Track F: TailorNet Cloth Simulation (Phases 116–140)
+### Track E: TailorNet Cloth Simulation (Phases 101–125)
 **Neural cloth draping using TailorNet on SMPL body parameters.**
 
 | Phase | Deliverable | Files Changed | Description |
 |-------|------------|--------------|-------------|
-| 116 | TailorNet environment setup | `Dockerfile.tailornet` | PyTorch, CUDNN, TailorNet dependencies |
-| 117 | SMPL→TailorNet parameter bridge | `api/services/tailornet/` | Convert KORRA 10-shape params to TailorNet input |
-| 118 | Garment template loader | `api/services/tailornet/` | Load pre-trained TailorNet garment templates |
-| 119 | TailorNet inference endpoint | `api/routes/measurements.py` | POST /api/v2/garment/drape |
-| 120 | Garment mesh generation | `api/services/tailornet/` | Run TailorNet forward pass → deformed mesh |
-| 121 | Garment OBJ export | `api/services/tailornet/` | Export deformed mesh as OBJ for Three.js |
-| 122 | Garment collision with body | `api/services/tailornet/` | PyTorch3D mesh intersection → push garment outside body |
-| 123 | Garment smoothing pass | `api/services/tailornet/` | Laplacian smoothing on garment mesh |
-| 124 | Fabric parameters → TailorNet | `api/services/tailornet/` | Pass K/B/M to modify drape coefficients |
-| 125 | Multi-garment stacking | `api/services/tailornet/` | Layer multiple garments (shirt + jacket) |
-| 126 | Garment cache per shape | `api/services/tailornet/` | Store meshes to avoid re-inference |
-| 127 | TailorNet training data prep | `scripts/prepare_tailornet_data.py` | Generate garment-body pairs for fine-tuning |
-| 128 | Fine-tune TailorNet on KORRA shapes | `scripts/train_tailornet.py` | Adapt TailorNet to KORRA shape distribution |
-| 129 | TailorNet → Three.js bridge | `korra_viz.js` | Load garment OBJ, align to body mesh |
-| 130 | `loadGarment()` in korra_viz.js | `korra_viz.js` | Accept geometry data, create garment mesh |
-| 131 | `removeGarment()` in korra_viz.js | `korra_viz.js` | Dispose garment geometry |
-| 132 | Garment material from FABRIC_PRESETS | `korra_viz.js` | Color/shininess/opacity from fabric |
-| 133 | Garment fabric opacity | `korra_viz.js` | Silk=0.6, Denim=0.95, Linen=0.85, Wool=0.9 |
-| 134 | Garment fabric shininess | `korra_viz.js` | Silk=80, Denim=20, Linen=10, Wool=30 |
-| 135 | Garment specular mapping | `korra_viz.js` | Per-fabric specular color |
-| 136 | Garment toggle visibility | `korra_viz.js` | toggleGarment(visible) |
-| 137 | Garment wireframe mode | `korra_viz.js` | Wireframe for garment too |
-| 138 | Garment animate loop sync | `korra_viz.js` | Sync with body in render loop |
-| 139 | Garment + body group | `korra_viz.js` | Three.Group containing both meshes |
-| 140 | Garment scene cleanup | `korra_viz.js` | Remove on viewport reset |
+| 101 | TailorNet environment setup | `Dockerfile.tailornet` | PyTorch, CUDNN, TailorNet dependencies |
+| 102 | SMPL→TailorNet parameter bridge | `api/services/tailornet/` | Convert KORRA 10-shape params to TailorNet input |
+| 103 | Garment template loader | `api/services/tailornet/` | Load pre-trained TailorNet garment templates |
+| 104 | TailorNet inference endpoint | `api/routes/measurements.py` | POST /api/v2/garment/drape |
+| 105 | Garment mesh generation | `api/services/tailornet/` | Run TailorNet forward pass → deformed mesh |
+| 106 | Garment OBJ export | `api/services/tailornet/` | Export deformed mesh as OBJ for Three.js |
+| 107 | Garment collision with body | `api/services/tailornet/` | PyTorch3D mesh intersection → push garment outside body |
+| 108 | Garment smoothing pass | `api/services/tailornet/` | Laplacian smoothing on garment mesh |
+| 109 | Fabric parameters → TailorNet | `api/services/tailornet/` | Pass K/B/M to modify drape coefficients |
+| 110 | Multi-garment stacking | `api/services/tailornet/` | Layer multiple garments (shirt + jacket) |
+| 111 | Garment cache per shape | `api/services/tailornet/` | Store meshes to avoid re-inference |
+| 112 | TailorNet training data prep | `scripts/prepare_tailornet_data.py` | Generate garment-body pairs for fine-tuning |
+| 113 | Fine-tune TailorNet on KORRA shapes | `scripts/train_tailornet.py` | Adapt TailorNet to KORRA shape distribution |
+| 114 | TailorNet → Three.js bridge | `korra_viz.js` | Load garment OBJ, align to body mesh |
+| 115 | `loadGarment()` in korra_viz.js | `korra_viz.js` | Accept geometry data, create garment mesh |
+| 116 | `removeGarment()` in korra_viz.js | `korra_viz.js` | Dispose garment geometry |
+| 117 | Garment material from FABRIC_PRESETS | `korra_viz.js` | Color/shininess/opacity from fabric |
+| 118 | Garment fabric opacity | `korra_viz.js` | Silk=0.6, Denim=0.95, Linen=0.85, Wool=0.9 |
+| 119 | Garment fabric shininess | `korra_viz.js` | Silk=80, Denim=20, Linen=10, Wool=30 |
+| 120 | Garment specular mapping | `korra_viz.js` | Per-fabric specular color |
+| 121 | Garment toggle visibility | `korra_viz.js` | toggleGarment(visible) |
+| 122 | Garment wireframe mode | `korra_viz.js` | Wireframe for garment too |
+| 123 | Garment animate loop sync | `korra_viz.js` | Sync with body in render loop |
+| 124 | Garment + body group | `korra_viz.js` | Three.Group containing both meshes |
+| 125 | Garment scene cleanup | `korra_viz.js` | Remove on viewport reset |
 
-### Track G: Virtual Mirror & Real-time Fitting (Phases 141–160)
+### Track F: Virtual Mirror & Real-time Fitting (Phases 126–145)
 **Connecting attire/material selection to the 3D garment.**
 
 | Phase | Deliverable | Files Changed | Description |
 |-------|------------|--------------|-------------|
-| 141 | setContext() triggers loadGarment | `measurement-screen.js` | Generate garment mesh on attire change |
-| 142 | setMaterial() updates fabric | `measurement-screen.js` | Update garment material on fabric change |
-| 143 | _updateGarmentForContext() | `measurement-screen.js` | Calls TailorNet API, loads into viewer |
-| 144 | _updateGarmentFabric() | `measurement-screen.js` | Updates material from FABRIC_PRESETS |
-| 145 | Garment on avatar tab | `measurement-screen.js` | Show garment when activeContext != standard |
-| 146 | Garment hidden on 'standard' | `measurement-screen.js` | Remove garment when standard selected |
-| 147 | Body visible through sheer fabrics | `korra_viz.js` | Silk depthWrite=false for see-through |
-| 148 | Easing toggle updates garment | `measurement-screen.js` | toggleEase() re-generates with updated ease |
-| 149 | Heatmap on garment | `measurement-screen.js` | Apply heatmap coloring to garment mesh |
-| 150 | Auto-load garment on scan open | `measurement-screen.js` | Restore last context + material |
-| 151 | Simulate on orbit end | `korra_viz.js` | Restart TailorNet after camera orbit |
-| 152 | Simulate on attire change | `measurement-screen.js` | Re-drape when attire changes |
-| 153 | Simulate on material change | `measurement-screen.js` | Adjust existing draping parameters |
-| 154 | Garment loading spinner | `measurement-screen.js` | Show spinner during TailorNet inference |
-| 155 | Garment error fallback | `measurement-screen.js` | Hide garment on inference failure |
-| 156 | Garment toggle button | `measurement-screen.js` | Show/hide garment with keyboard shortcut |
-| 157 | Garment opacity slider | `measurement-screen.js` | User-adjustable garment opacity |
-| 158 | Multi-angle export with garment | `korra_export.js` | Captures include garment |
-| 159 | Share link includes garment | `measurement-screen.js` | Garment state in share data |
-| 160 | Garment visible on share page | `share.html` | Apply context + material to garment |
+| 126 | setContext() triggers loadGarment | `measurement-screen.js` | Generate garment mesh on attire change |
+| 127 | setMaterial() updates fabric | `measurement-screen.js` | Update garment material on fabric change |
+| 128 | _updateGarmentForContext() | `measurement-screen.js` | Calls TailorNet API, loads into viewer |
+| 129 | _updateGarmentFabric() | `measurement-screen.js` | Updates material from FABRIC_PRESETS |
+| 130 | Garment on avatar tab | `measurement-screen.js` | Show garment when activeContext != standard |
+| 131 | Garment hidden on 'standard' | `measurement-screen.js` | Remove garment when standard selected |
+| 132 | Body visible through sheer fabrics | `korra_viz.js` | Silk depthWrite=false for see-through |
+| 133 | Easing toggle updates garment | `measurement-screen.js` | toggleEase() re-generates with updated ease |
+| 134 | Heatmap on garment | `measurement-screen.js` | Apply heatmap coloring to garment mesh |
+| 135 | Auto-load garment on scan open | `measurement-screen.js` | Restore last context + material |
+| 136 | Simulate on orbit end | `korra_viz.js` | Restart TailorNet after camera orbit |
+| 137 | Simulate on attire change | `measurement-screen.js` | Re-drape when attire changes |
+| 138 | Simulate on material change | `measurement-screen.js` | Adjust existing draping parameters |
+| 139 | Garment loading spinner | `measurement-screen.js` | Show spinner during TailorNet inference |
+| 140 | Garment error fallback | `measurement-screen.js` | Hide garment on inference failure |
+| 141 | Garment toggle button | `measurement-screen.js` | Show/hide garment with keyboard shortcut |
+| 142 | Garment opacity slider | `measurement-screen.js` | User-adjustable garment opacity |
+| 143 | Multi-angle export with garment | `korra_export.js` | Captures include garment |
+| 144 | Share link includes garment | `measurement-screen.js` | Garment state in share data |
+| 145 | Garment visible on share page | `share.html` | Apply context + material to garment |
 
-### Track H: Fabric Physics & Simulation (Phases 161–175)
+### Track G: Fabric Physics & Simulation (Phases 146–160)
 **On-device fabric physics using simplified spring-mass system.**
 
 | Phase | Deliverable | Files Changed | Description |
 |-------|------------|--------------|-------------|
-| 161 | Spring-mass model class | `korra_viz.js` | FabricSimulation class |
-| 162 | Particle system init | `korra_viz.js` | _initParticles(vertices, mass, stiffness) |
-| 163 | Structural springs | `korra_viz.js` | Adjacent vertex connections |
-| 164 | Shear springs | `korra_viz.js` | Diagonal springs for shear resistance |
-| 165 | Bend springs | `korra_viz.js` | Second-order neighbor springs |
-| 166 | Gravity step | `korra_viz.js` | _applyGravity(dt) |
-| 167 | Spring forces | `korra_viz.js` | Hooke's law: -k(dist - rest) |
-| 168 | Damping | `korra_viz.js` | Velocity damping |
-| 169 | Body collision | `korra_viz.js` | Push garment outside body bounds |
-| 170 | Verlet integration | `korra_viz.js` | Stable position update |
-| 171 | Fixed vertices (shoulder) | `korra_viz.js` | Pinned at shoulder/neck |
-| 172 | Animate loop integration | `korra_viz.js` | Step simulation each frame |
-| 173 | Fabric K→spring stiffness | `korra_viz.js` | Map from FABRIC_PRESETS |
-| 174 | Fabric B→bend coefficient | `korra_viz.js` | Map bending resistance |
-| 175 | Fabric M→particle mass | `korra_viz.js` | Map mass per particle |
+| 146 | Spring-mass model class | `korra_viz.js` | FabricSimulation class |
+| 147 | Particle system init | `korra_viz.js` | _initParticles(vertices, mass, stiffness) |
+| 148 | Structural springs | `korra_viz.js` | Adjacent vertex connections |
+| 149 | Shear springs | `korra_viz.js` | Diagonal springs for shear resistance |
+| 150 | Bend springs | `korra_viz.js` | Second-order neighbor springs |
+| 151 | Gravity step | `korra_viz.js` | _applyGravity(dt) |
+| 152 | Spring forces | `korra_viz.js` | Hooke's law: -k(dist - rest) |
+| 153 | Damping | `korra_viz.js` | Velocity damping |
+| 154 | Body collision | `korra_viz.js` | Push garment outside body bounds |
+| 155 | Verlet integration | `korra_viz.js` | Stable position update |
+| 156 | Fixed vertices (shoulder) | `korra_viz.js` | Pinned at shoulder/neck |
+| 157 | Animate loop integration | `korra_viz.js` | Step simulation each frame |
+| 158 | Fabric K→spring stiffness | `korra_viz.js` | Map from FABRIC_PRESETS |
+| 159 | Fabric B→bend coefficient | `korra_viz.js` | Map bending resistance |
+| 160 | Fabric M→particle mass | `korra_viz.js` | Map mass per particle |
 
-### Track I: PDF Export, Polish & Share (Phases 176–190)
+### Track H: PDF Export, Polish & Share (Phases 161–175)
 **Pattern PDF, export integration, share, production hardening.**
 
 | Phase | Deliverable | Files Changed | Description |
 |-------|------------|--------------|-------------|
-| 176 | SVG→canvas rasterize | `measurement-screen.js` | Render SVG to offscreen canvas |
-| 177 | Single-page PDF layout | `measurement-screen.js` | Fit sections on A4/letter |
-| 178 | Multi-page PDF sections | `measurement-screen.js` | Flow sections across pages |
-| 179 | Scale markers on PDF | `measurement-screen.js` | 10cm scale bar per page |
-| 180 | Fold/cut lines on PDF | `measurement-screen.js` | Dashed fold, solid cut |
-| 181 | exportPatternPDF() full method | `measurement-screen.js` | jspdf-based PDF generation |
-| 182 | Measurement chart overlay on PDF | `measurement-screen.js` | Small table on page 1 |
-| 183 | Fabric info block on PDF | `measurement-screen.js` | Type, yardage, grain info |
-| 184 | exportPattern() unified | `measurement-screen.js` | Dispatches to DXF or PDF |
-| 185 | Pattern in clinical PDF export | `korra_export.js` | Append pattern pages |
-| 186 | Pattern in tailor brief | `korra_export.js` | Append to existing PDF |
-| 187 | Garment in share state | `measurement-screen.js` | Context + material in share data |
-| 188 | localStorage for attire/fabric | `dashboard.html` | Save last context + material |
-| 189 | Restore garment on load | `measurement-screen.js` | Read localStorage, apply on open |
-| 190 | Pattern download analytics | `scripts/evaluate_pipeline.py` | Track downloads by format, attire |
+| 161 | SVG→canvas rasterize | `measurement-screen.js` | Render SVG to offscreen canvas |
+| 162 | Single-page PDF layout | `measurement-screen.js` | Fit sections on A4/letter |
+| 163 | Multi-page PDF sections | `measurement-screen.js` | Flow sections across pages |
+| 164 | Scale markers on PDF | `measurement-screen.js` | 10cm scale bar per page |
+| 165 | Fold/cut lines on PDF | `measurement-screen.js` | Dashed fold, solid cut |
+| 166 | exportPatternPDF() full method | `measurement-screen.js` | jspdf-based PDF generation |
+| 167 | Measurement chart overlay on PDF | `measurement-screen.js` | Small table on page 1 |
+| 168 | Fabric info block on PDF | `measurement-screen.js` | Type, yardage, grain info |
+| 169 | exportPattern() unified | `measurement-screen.js` | Dispatches to DXF or PDF |
+| 170 | Pattern in clinical PDF export | `korra_export.js` | Append pattern pages |
+| 171 | Pattern in tailor brief | `korra_export.js` | Append to existing PDF |
+| 172 | Garment in share state | `measurement-screen.js` | Context + material in share data |
+| 173 | localStorage for attire/fabric | `dashboard.html` | Save last context + material |
+| 174 | Restore garment on load | `measurement-screen.js` | Read localStorage, apply on open |
+| 175 | Pattern download analytics | `scripts/evaluate_pipeline.py` | Track downloads by format, attire |
 
-### Track J: Backend & Production (Phases 191–200)
+### Track I: Backend & Production (Phases 176–185)
 **Server-side support, storage, testing, documentation.**
 
 | Phase | Deliverable | Files Changed | Description |
 |-------|------------|--------------|-------------|
-| 191 | API: POST /api/v2/pattern/draft | `api/routes/measurements.py` | Accept measurements + attire + material |
-| 192 | API: pattern validation | `api/routes/measurements.py` | Validate completeness for requested pattern |
-| 193 | API: DXF generation endpoint | `api/services/` | Server-side DXF alternative |
-| 194 | API: pattern template registry | `api/services/` | Server-side JSON of all templates |
-| 195 | DB: garment_settings column | Supabase migration | Store context + material + format |
-| 196 | DB: fabric_properties table | Supabase migration | K/B/M lookup per fabric |
-| 197 | Train draping params from data | `scripts/` | Learn optimal springs from user interaction |
-| 198 | Refine fabric coefficients | `scripts/` | K/B/M from user feedback |
-| 199 | Performance: garment < 2000 verts | `korra_viz.js` | Mobile budget |
-| 200 | Final docs + CLOTH_PATTERN_SIMULATION_PLAN.md | `/` | Update this file |
+| 176 | API: POST /api/v2/pattern/draft | `api/routes/measurements.py` | Accept measurements + attire + material |
+| 177 | API: pattern validation | `api/routes/measurements.py` | Validate completeness for requested pattern |
+| 178 | API: DXF generation endpoint | `api/services/` | Server-side DXF alternative |
+| 179 | API: pattern template registry | `api/services/` | Server-side JSON of all templates |
+| 180 | DB: garment_settings column | Supabase migration | Store context + material + format |
+| 181 | DB: fabric_properties table | Supabase migration | K/B/M lookup per fabric |
+| 182 | Train draping params from data | `scripts/` | Learn optimal springs from user interaction |
+| 183 | Refine fabric coefficients | `scripts/` | K/B/M from user feedback |
+| 184 | Performance: garment < 2000 verts | `korra_viz.js` | Mobile budget |
+| 185 | Final docs + CLOTH_PATTERN_SIMULATION_PLAN.md | `/` | Update this file |
 
 ---
 
-## Summary: 10 Tracks, 200 Phases
+## Summary: 9 Tracks, 185 Phases
 
 | Track | Phases | Theme |
 |-------|--------|-------|
@@ -348,21 +327,19 @@ The new features will be bridged directly to the existing **Attire Dropdown** an
 | B | 26–50 | UI/UX — Design Studio |
 | C | 51–85 | Pattern Generation Engine (SVG) |
 | D | 86–100 | DXF Export |
-| E | 101–115 | Freesewing Integration |
-| F | 116–140 | TailorNet Cloth Simulation |
-| G | 141–160 | Virtual Mirror & Real-time Fitting |
-| H | 161–175 | Fabric Physics & Simulation |
-| I | 176–190 | PDF Export, Polish & Share |
-| J | 191–200 | Backend & Production |
+| E | 101–125 | TailorNet Cloth Simulation |
+| F | 126–145 | Virtual Mirror & Real-time Fitting |
+| G | 146–160 | Fabric Physics & Simulation |
+| H | 161–175 | PDF Export, Polish & Share |
+| I | 176–185 | Backend & Production |
 
-## Status (as of Track F start)
-- **Track A (1–25)**: ✅ Complete — registry expanded, fabric model, pattern dimensions, property bags
-- **Track B (26–50)**: ✅ Complete — pattern tab, canvas, material rail 8-btn, download modal
-- **Track C (51–85)**: ✅ Complete — SVG drafting primitives and pattern templates
-- **Track D (86–100)**: ✅ Complete — industrial DXF export (bezier sampling, piece alignment)
-- **Track E (101–115)**: ✅ Complete — Freesewing microservice live on port 3002
-- **Track F (116–140)**: [/] In Progress — TailorNet bridge code pushed; models present; dataset downloading (4.4G/7.2G)
-- **Track G (141–160)**: [/] In Progress — Virtual Mirror frontend methods (loadGarment, removeGarment) implemented and wired
-- **Track H (161–175)**: ❌ Not started — Client-side fabric physics
-- **Track I (176–190)**: ❌ Not started — PDF export, share, polish
-- **Track J (191–200)**: ❌ Not started — Backend, storage, testing
+## Status (as of 2026-07-04)
+- **Track A (1–25)**: ✅ ~95% — Registry, FABRIC_PRESETS, ACTIVE_FABRIC, PATTERN_TEMPLATES, SEAM_ALLOWANCE_DEFAULTS, PATTERN_PIECE_CATALOG, getPatternMeasurements(), KORRA_MS state vars all done. Missing ANSUR mapping extension, registry validation test.
+- **Track B (26–50)**: ✅ ~85% — Pattern tab, canvas, zoom/pan, controls hide/show all done. Download modal HTML+CSS+JS implemented (DXF/PDF format selection, SVG preview). openPatternDownloadModal() full implementation.
+- **Track C (51–85)**: ✅ ~90% — SVG primitives (drawCurve, drawArc, drawDart, drawGrainline, drawSeamAllowance, drawNotch, drawLabel), 12 pattern templates (Shirt, Pant, Skirt, Jacket, Dress, Jumpsuit families), updated renderPattern() with templateMap dispatch.
+- **Track D (86–100)**: ✅ ~60% — DXF export with bezier curve sampling (_sampleBezier, _dxfPathToSegments), piece layer naming, mm conversion. Missing piece alignment optimization.
+- **Track E (101–125)**: [/] ~80% — Bridge, API endpoint, Three.js loader done. Multi-garment stacking implemented (garmentMeshes array, garment_map with multi-class entries). Missing female weights download.
+- **Track F (126–145)**: ✅ ~70% — Core hooks wired, VTO loading spinner, opacity slider with range input, share integration (context+material in link params). Missing body visibility through sheer, multi-angle export.
+- **Track G (146–160)**: ✅ ~20% — FabricSimulation class implemented (spring-mass, Verlet integration, gravity, damping, body collision, fixed vertices, K/B/M mapping). Missing animate loop integration into renderer.
+- **Track H (161–175)**: ❌ Not started — PDF export, share, polish.
+- **Track I (176–185)**: ❌ Not started — Backend, storage, testing.

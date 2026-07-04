@@ -456,20 +456,17 @@ class KorraVisualizer {
     }
 
     // ── Track G: Virtual Mirror (Phases 130-131) ──
-    async loadGarment(objUrl, materialSettings = {}) {
-        /**
-         * Phase 130: loadGarment() in korra_viz.js
-         * Accept geometry data, create garment mesh as a layer.
-         */
-        console.log(`👗 [VTO] Loading garment mesh: ${objUrl}`);
+    async loadGarment(objUrl, materialSettings = {}, garmentLayer = 0) {
+        console.log(`👗 [VTO] Loading garment mesh: ${objUrl} (layer ${garmentLayer})`);
         if (!this.scene) return null;
+
+        if (!this.garmentMeshes) this.garmentMeshes = [];
 
         try {
             const response = await fetch(objUrl);
             if (!response.ok) throw new Error("Garment file missing");
             const text = await response.text();
 
-            // Parse OBJ for garment
             const vertices = [];
             const faces = [];
             const lines = text.split('\n');
@@ -492,55 +489,75 @@ class KorraVisualizer {
             if (faces.length > 0) geometry.setIndex(faces);
             geometry.computeVertexNormals();
 
-            // Phase 132: Garment material from FABRIC_PRESETS
             const material = new THREE.MeshPhongMaterial({
                 color: materialSettings.color || 0xFFFFFF,
                 transparent: true,
                 opacity: materialSettings.opacity || 0.95,
                 shininess: materialSettings.shininess || 30,
                 side: THREE.DoubleSide,
-                wireframe: this.wireframeMode
+                wireframe: this.wireframeMode,
+                depthWrite: materialSettings.depthWrite !== false,
             });
 
-            if (this.garmentMesh) {
-                this.scene.remove(this.garmentMesh);
-                if (this.garmentMesh.geometry) this.garmentMesh.geometry.dispose();
-                if (this.garmentMesh.material) this.garmentMesh.material.dispose();
+            if (this.garmentMeshes[garmentLayer]) {
+                this.scene.remove(this.garmentMeshes[garmentLayer]);
+                if (this.garmentMeshes[garmentLayer].geometry) this.garmentMeshes[garmentLayer].geometry.dispose();
+                if (this.garmentMeshes[garmentLayer].material) this.garmentMeshes[garmentLayer].material.dispose();
             }
 
-            this.garmentMesh = new THREE.Mesh(geometry, material);
-
-            // Align garment with body mesh
+            const mesh = new THREE.Mesh(geometry, material);
             if (this.mesh) {
-                this.garmentMesh.position.copy(this.mesh.position);
-                this.garmentMesh.rotation.copy(this.mesh.rotation);
-                this.garmentMesh.scale.copy(this.mesh.scale);
+                mesh.position.copy(this.mesh.position);
+                mesh.rotation.copy(this.mesh.rotation);
+                mesh.scale.copy(this.mesh.scale);
             }
 
-            this.scene.add(this.garmentMesh);
-            console.log("✓ [VTO] Garment mesh loaded successfully");
-            return this.garmentMesh;
+            this.scene.add(mesh);
+            this.garmentMeshes[garmentLayer] = mesh;
+            console.log(`✓ [VTO] Garment layer ${garmentLayer} loaded successfully`);
+            return mesh;
         } catch (e) {
             console.error("❌ [VTO] Failed to load garment:", e);
             return null;
         }
     }
 
-    removeGarment() {
-        /**
-         * Phase 131: removeGarment() in korra_viz.js
-         */
-        if (this.garmentMesh) {
-            this.scene.remove(this.garmentMesh);
-            if (this.garmentMesh.geometry) this.garmentMesh.geometry.dispose();
-            if (this.garmentMesh.material) this.garmentMesh.material.dispose();
-            this.garmentMesh = null;
-            console.log("🗑️ [VTO] Garment mesh removed");
+    removeGarment(layer = -1) {
+        if (layer >= 0 && this.garmentMeshes && this.garmentMeshes[layer]) {
+            this.scene.remove(this.garmentMeshes[layer]);
+            if (this.garmentMeshes[layer].geometry) this.garmentMeshes[layer].geometry.dispose();
+            if (this.garmentMeshes[layer].material) this.garmentMeshes[layer].material.dispose();
+            this.garmentMeshes[layer] = null;
+            console.log(`🗑️ [VTO] Garment layer ${layer} removed`);
+            return;
         }
+        if (!this.garmentMeshes) return;
+        for (let i = 0; i < this.garmentMeshes.length; i++) {
+            if (this.garmentMeshes[i]) {
+                this.scene.remove(this.garmentMeshes[i]);
+                if (this.garmentMeshes[i].geometry) this.garmentMeshes[i].geometry.dispose();
+                if (this.garmentMeshes[i].material) this.garmentMeshes[i].material.dispose();
+            }
+        }
+        this.garmentMeshes = [];
+        console.log("🗑️ [VTO] All garment layers removed");
     }
 
     toggleGarmentVisibility(visible) {
-        if (this.garmentMesh) this.garmentMesh.visible = visible;
+        if (!this.garmentMeshes) return;
+        for (let i = 0; i < this.garmentMeshes.length; i++) {
+            if (this.garmentMeshes[i]) this.garmentMeshes[i].visible = visible;
+        }
+    }
+
+    get garmentMesh() {
+        return this.garmentMeshes && this.garmentMeshes.length > 0 ? this.garmentMeshes[this.garmentMeshes.length - 1] : null;
+    }
+
+    set garmentMesh(val) {
+        if (!this.garmentMeshes) this.garmentMeshes = [];
+        if (val === null) { this.garmentMeshes = []; return; }
+        this.garmentMeshes[0] = val;
     }
 
     applyHeatmap(contextName = "standard") {
@@ -827,6 +844,188 @@ class KorraVisualizer {
         }
         return this._isOrtho;
     }
+}
+
+// ── Track G: Fabric Physics (Spring-Mass Simulation) ──
+class FabricSimulation {
+    constructor(mesh, options = {}) {
+        this.mesh = mesh;
+        this.particles = [];
+        this.structuralSprings = [];
+        this.shearSprings = [];
+        this.bendSprings = [];
+        this.fixedIndices = new Set();
+        this.gravity = options.gravity || -9.81;
+        this.damping = options.damping || 0.99;
+        this.stiffness = options.stiffness || 0.8;
+        this.bendCoeff = options.bendCoeff || 0.3;
+        this.iterations = options.iterations || 5;
+        this._active = false;
+    }
+
+    initParticles() {
+        const pos = this.mesh.geometry.attributes.position;
+        this.particles = [];
+        for (let i = 0; i < pos.count; i++) {
+            this.particles.push({
+                x: pos.array[i * 3],
+                y: pos.array[i * 3 + 1],
+                z: pos.array[i * 3 + 2],
+                px: pos.array[i * 3],
+                py: pos.array[i * 3 + 1],
+                pz: pos.array[i * 3 + 2],
+                pinv: 1.0,
+            });
+        }
+    }
+
+    initStructuralSprings() {
+        const idx = this.mesh.geometry.index;
+        if (!idx) return;
+        const seen = new Set();
+        const key = (a, b) => a < b ? `${a}-${b}` : `${b}-${a}`;
+        for (let i = 0; i < idx.count; i += 3) {
+            const a = idx.array[i], b = idx.array[i + 1], c = idx.array[i + 2];
+            [[a,b],[b,c],[c,a]].forEach(([p,q]) => {
+                const k = key(p, q);
+                if (!seen.has(k)) {
+                    seen.add(k);
+                    const dx = this.particles[p].x - this.particles[q].x;
+                    const dy = this.particles[p].y - this.particles[q].y;
+                    const dz = this.particles[p].z - this.particles[q].z;
+                    this.structuralSprings.push({ a: p, b: q, rest: Math.sqrt(dx*dx + dy*dy + dz*dz) });
+                }
+            });
+        }
+    }
+
+    initShearSprings() {
+        const idx = this.mesh.geometry.index;
+        if (!idx) return;
+        const seen = new Set();
+        const key = (a, b) => a < b ? `${a}-${b}` : `${b}-${a}`;
+        for (let i = 0; i < idx.count; i += 3) {
+            const a = idx.array[i], b = idx.array[i + 1], c = idx.array[i + 2];
+            [[a,c]].forEach(([p,q]) => {
+                const k = key(p, q);
+                if (!seen.has(k)) {
+                    seen.add(k);
+                    const dx = this.particles[p].x - this.particles[q].x;
+                    const dy = this.particles[p].y - this.particles[q].y;
+                    const dz = this.particles[p].z - this.particles[q].z;
+                    this.shearSprings.push({ a: p, b: q, rest: Math.sqrt(dx*dx + dy*dy + dz*dz) });
+                }
+            });
+        }
+    }
+
+    initBendSprings() {
+        const idx = this.mesh.geometry.index;
+        if (!idx) return;
+        const edgeToTri = new Map();
+        const key = (a, b) => a < b ? `${a}-${b}` : `${b}-${a}`;
+        for (let i = 0; i < idx.count; i += 3) {
+            const t = [idx.array[i], idx.array[i+1], idx.array[i+2]];
+            [[0,1],[1,2],[2,0]].forEach(([p,q]) => {
+                const k = key(t[p], t[q]);
+                if (!edgeToTri.has(k)) edgeToTri.set(k, []);
+                edgeToTri.get(k).push(i / 3);
+            });
+        }
+        for (const [edge, tris] of edgeToTri) {
+            if (tris.length < 2) continue;
+            for (let i = 0; i < tris.length - 1; i++) {
+                for (let j = i + 1; j < tris.length; j++) {
+                    const pA = idx.array[tris[i] * 3], pB = idx.array[tris[i] * 3 + 1], pC = idx.array[tris[i] * 3 + 2];
+                    const pD = idx.array[tris[j] * 3], pE = idx.array[tris[j] * 3 + 1], pF = idx.array[tris[j] * 3 + 2];
+                    const all = new Set([pA, pB, pC, pD, pE, pF]);
+                    const [p1, p2, p3, p4] = [...all];
+                    const dx = this.particles[p1].x - this.particles[p2].x;
+                    const dy = this.particles[p1].y - this.particles[p2].y;
+                    const dz = this.particles[p1].z - this.particles[p2].z;
+                    this.bendSprings.push({ a: p1, b: p2, rest: Math.sqrt(dx*dx + dy*dy + dz*dz) });
+                }
+            }
+        }
+    }
+
+    fixVertices(indices) {
+        indices.forEach(i => this.fixedIndices.add(i));
+    }
+
+    _applyGravity(dt) {
+        for (let i = 0; i < this.particles.length; i++) {
+            if (this.fixedIndices.has(i)) continue;
+            this.particles[i].y += this.gravity * dt * dt;
+        }
+    }
+
+    _applySpringForces(springs, stiffness) {
+        for (const s of springs) {
+            const p1 = this.particles[s.a], p2 = this.particles[s.b];
+            const dx = p2.x - p1.x, dy = p2.y - p1.y, dz = p2.z - p1.z;
+            const dist = Math.sqrt(dx*dx + dy*dy + dz*dz);
+            if (dist < 0.001) continue;
+            const force = (dist - s.rest) * stiffness;
+            const fx = force * dx / dist, fy = force * dy / dist, fz = force * dz / dist;
+            if (!this.fixedIndices.has(s.a)) { p1.x += fx; p1.y += fy; p1.z += fz; }
+            if (!this.fixedIndices.has(s.b)) { p2.x -= fx; p2.y -= fy; p2.z -= fz; }
+        }
+    }
+
+    _applyBodyCollision(bodyParticles, margin = 0.5) {
+        for (let i = 0; i < this.particles.length; i++) {
+            if (this.fixedIndices.has(i)) continue;
+            const p = this.particles[i];
+            for (const bp of bodyParticles) {
+                const dx = p.x - bp.x, dy = p.y - bp.y, dz = p.z - bp.z;
+                const dist = Math.sqrt(dx*dx + dy*dy + dz*dz);
+                if (dist < margin && dist > 0.001) {
+                    const push = (margin - dist) / dist;
+                    p.x += dx * push * 0.5;
+                    p.y += dy * push * 0.5;
+                    p.z += dz * push * 0.5;
+                }
+            }
+        }
+    }
+
+    verletStep(dt) {
+        for (let i = 0; i < this.particles.length; i++) {
+            if (this.fixedIndices.has(i)) continue;
+            const p = this.particles[i];
+            const vx = (p.x - p.px) * this.damping;
+            const vy = (p.y - p.py) * this.damping;
+            const vz = (p.z - p.pz) * this.damping;
+            p.px = p.x; p.py = p.y; p.pz = p.z;
+            p.x += vx; p.y += vy; p.z += vz;
+        }
+    }
+
+    step(dt, bodyParticles = null) {
+        this.verletStep(dt);
+        this._applyGravity(dt);
+        this._applySpringForces(this.structuralSprings, this.stiffness);
+        this._applySpringForces(this.shearSprings, this.stiffness * 0.5);
+        this._applySpringForces(this.bendSprings, this.bendCoeff * this.stiffness);
+        if (bodyParticles) this._applyBodyCollision(bodyParticles, 0.5);
+        this._updateMesh();
+    }
+
+    _updateMesh() {
+        const pos = this.mesh.geometry.attributes.position;
+        for (let i = 0; i < this.particles.length; i++) {
+            pos.array[i * 3] = this.particles[i].x;
+            pos.array[i * 3 + 1] = this.particles[i].y;
+            pos.array[i * 3 + 2] = this.particles[i].z;
+        }
+        pos.needsUpdate = true;
+        this.mesh.geometry.computeVertexNormals();
+    }
+
+    start() { this._active = true; }
+    stop() { this._active = false; }
+    get active() { return this._active; }
 }
 
 window.KORRA_VIZ = new KorraVisualizer();

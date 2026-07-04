@@ -80,3 +80,4 @@ MESH_STORAGE_RESILIENCE_30_PHASE_PLAN.md
 *.bak
 *.tmp
 temp/
+api/services/tailornet_data/*

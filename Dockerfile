@@ -17,25 +17,34 @@ RUN apt-get update && apt-get install -y \
 # Set working directory
 WORKDIR /app
 
-# Upgrade pip and install core build tools
-RUN pip install --no-cache-dir --upgrade pip setuptools wheel
+# Create a temporary directory for pip to avoid tmpfs exhaustion (455M limit)
+# This directory is on the persistent disk.
+RUN mkdir -p /app/tmp
+ENV TMPDIR=/app/tmp
 
-# Pre-install numpy and build chumpy (Crucial for HMR)
-RUN pip install --no-cache-dir numpy==1.26.3
-RUN pip install --no-cache-dir chumpy==0.70 --no-build-isolation
+# Upgrade pip and install core build tools
+# We combine these to minimize layers and reclaim space immediately
+RUN pip install --no-cache-dir --upgrade pip setuptools wheel && \
+    pip install --no-cache-dir numpy==1.26.3 && \
+    pip install --no-cache-dir chumpy==0.70 --no-build-isolation
 
 # Copy requirements and install all dependencies
 COPY requirements.txt .
-RUN pip install --no-cache-dir -r requirements.txt
+RUN pip install --no-cache-dir -r requirements.txt && \
+    rm -rf /root/.cache/pip /app/tmp/*
 
-# PHASE 134: COLD START OPTIMIZATION (Purge caches only)
-RUN rm -rf /root/.cache/pip
-
-# PHASE 121: BAKE ANSUR MATRICES
+# Re-create essential directories
 RUN mkdir -p /app/data/ansur_processed /app/api/models/imputation
 
+# Cleanup apt to reclaim space
+RUN apt-get clean && rm -rf /var/lib/apt/lists/*
+
 # Copy the rest of the application
+# .dockerignore now properly excludes large data/ and model/ files
 COPY . .
+
+# Final cleanup of build-time temp dir
+RUN rm -rf /app/tmp
 
 # Environment variables for AWS EC2 / Docker
 ENV PORT=8080

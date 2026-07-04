@@ -47,11 +47,13 @@ if [ ! -f ~/app/.env ]; then
   echo "‼️ NEW .env CREATED. Please edit ~/app/.env with your keys."
 fi
 
-docker run -d \
-  --name korra-ai-prod \
-  -p 8080:8080 \
-  --env-file ~/app/.env \
-  --restart unless-stopped \
+docker run -d \\
+  --name korra-ai-prod \\
+  -p 8080:8080 \\
+  --env-file ~/app/.env \\
+  -v /home/ubuntu/tailornet_data:/app/api/services/tailornet_data \\
+  -v ~/app/public/meshes:/app/public/meshes \\
+  --restart unless-stopped \\
   korra-ai:latest
 
 echo "✅ Update Complete."
