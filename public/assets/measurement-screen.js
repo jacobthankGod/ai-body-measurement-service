@@ -170,6 +170,7 @@ window.KORRA_MS = {
     this.downloadFormat = 'dxf';
     this.heatmapActive = false;
     this._garmentVisible = true;
+    this._layerVisibility = {};
     this._selectedGarmentLayer = -1;
     this.compareBaselineIdx = 0;
     this.vBaseline = null;
@@ -1987,6 +1988,8 @@ window.KORRA_MS = {
       };
       const layerIdx = this.viewerInstance.garmentMeshes ? this.viewerInstance.garmentMeshes.length : 0;
       await this.viewerInstance.loadGarment(result.mesh_url, matSettings, layerIdx);
+      this._layerVisibility[layerIdx] = true;
+      this._applyGarmentVisibility();
       this._selectedGarmentLayer = layerIdx;
       this._renderVtoControls();
       this._hideVtoSpinner();
@@ -1999,17 +2002,16 @@ window.KORRA_MS = {
   _removeGarmentLayer(idx) {
     if (!this.viewerInstance) return;
     this.viewerInstance.removeGarment(idx);
+    delete this._layerVisibility[idx];
     if (this._selectedGarmentLayer === idx) this._selectedGarmentLayer = -1;
     this._renderVtoControls();
   }
 
   _toggleGarmentLayer(idx) {
     if (!this.viewerInstance || !this.viewerInstance.garmentMeshes) return;
-    const m = this.viewerInstance.garmentMeshes[idx];
-    if (m) {
-      m.visible = !m.visible;
-      this._renderVtoControls();
-    }
+    this._layerVisibility[idx] = this._layerVisibility[idx] === false;
+    this._applyGarmentVisibility();
+    this._renderVtoControls();
   }
 
   _selectGarmentLayer(idx) {
@@ -2043,9 +2045,19 @@ window.KORRA_MS = {
     if (label) label.textContent = `${Math.round(opacity * 100)}%`;
   },
 
+  _applyGarmentVisibility() {
+    if (!this.viewerInstance || !this.viewerInstance.garmentMeshes) return;
+    for (let i = 0; i < this.viewerInstance.garmentMeshes.length; i++) {
+      const m = this.viewerInstance.garmentMeshes[i];
+      if (m) {
+        m.visible = this._garmentVisible && (this._layerVisibility[i] !== false);
+      }
+    }
+  },
+
   _toggleGarments() {
     this._garmentVisible = !this._garmentVisible;
-    if (this.viewerInstance) this.viewerInstance.toggleGarmentVisibility(this._garmentVisible);
+    this._applyGarmentVisibility();
     const btn = document.getElementById('ms-garment-toggle');
     if (btn) btn.style.opacity = this._garmentVisible ? '1' : '0.4';
   },
@@ -2061,11 +2073,13 @@ window.KORRA_MS = {
 
     const list = document.getElementById('vto-layer-list');
     if (!list) return;
+    let counter = 0;
     list.innerHTML = layers.map((m, i) => {
       if (!m) return '';
+      counter++;
       const isSelected = this._selectedGarmentLayer === i;
-      const isVisible = m.visible !== false;
-      const label = ['Under', 'Mid', 'Outer', 'Layer 4'][i] || `Layer ${i+1}`;
+      const isVisible = this._layerVisibility[i] !== false;
+      const label = `Layer ${counter}`;
       return `<div class="vto-layer-item ${isSelected ? 'selected' : ''}" onclick="KORRA_MS._selectGarmentLayer(${i})">
         <span class="vto-layer-name">${label}</span>
         <span class="vto-layer-vis" onclick="event.stopPropagation();KORRA_MS._toggleGarmentLayer(${i})" style="opacity:${isVisible ? 1 : 0.3}">👁</span>
