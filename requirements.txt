@@ -52,6 +52,9 @@ sentry-sdk==1.40.1
 pandas==2.2.0
 scikit-learn==1.4.0
 
+# Spatial index for trimesh proximity (TailorNet interpenetration removal)
+rtree>=1.0,<2.0
+
 # Async HTTP (Webhooks)
 aiohttp==3.9.1
 
