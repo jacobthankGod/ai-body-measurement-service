@@ -4321,14 +4321,6 @@ window.applyPromo = () => {
         const params = [];
         if (phone) params.push('p=' + encodeURIComponent(phone));
         if (email) params.push('e=' + encodeURIComponent(email));
-        if (window.KORRA_MS) {
-            if (window.KORRA_MS.activeContext && window.KORRA_MS.activeContext !== 'standard') {
-                params.push('ctx=' + encodeURIComponent(window.KORRA_MS.activeContext));
-            }
-            if (window.KORRA_MS.activeMaterial) {
-                params.push('mat=' + encodeURIComponent(window.KORRA_MS.activeMaterial));
-            }
-        }
         const qs = params.length ? '?' + params.join('&') : '';
         const url = `${window.location.origin}/dashboard${qs}#scanresult/${window._currentScanId || ''}`;
         document.getElementById('shareScanLink').textContent = url;
@@ -4348,14 +4340,6 @@ window.applyPromo = () => {
         const params = [];
         if (phone) params.push('p=' + encodeURIComponent(phone));
         if (email) params.push('e=' + encodeURIComponent(email));
-        if (window.KORRA_MS) {
-            if (window.KORRA_MS.activeContext && window.KORRA_MS.activeContext !== 'standard') {
-                params.push('ctx=' + encodeURIComponent(window.KORRA_MS.activeContext));
-            }
-            if (window.KORRA_MS.activeMaterial) {
-                params.push('mat=' + encodeURIComponent(window.KORRA_MS.activeMaterial));
-            }
-        }
         const qs = params.length ? '?' + params.join('&') : '';
         const url = `${window.location.origin}/dashboard${qs}#scanresult/${window._currentScanId || ''}`;
         document.getElementById('shareScanLink').textContent = url;

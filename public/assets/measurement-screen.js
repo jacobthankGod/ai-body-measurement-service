@@ -169,6 +169,8 @@ window.KORRA_MS = {
     this.simulationActive = false;
     this.downloadFormat = 'dxf';
     this.heatmapActive = false;
+    this._garmentVisible = true;
+    this._selectedGarmentLayer = -1;
     this.compareBaselineIdx = 0;
     this.vBaseline = null;
     this.vLatest = null;
@@ -291,9 +293,21 @@ window.KORRA_MS = {
           <div class="ms-viewer-canvas" id="ms-viewer-canvas"></div>
           <div class="ms-viewer-badge" id="ms-viewer-badge">${this.buildBadge()}</div>
           <div class="ms-vto-controls" id="ms-vto-controls" style="display:none;">
-            <label>Opacity</label>
-            <input type="range" id="vto-opacity-slider" min="10" max="100" value="95" oninput="KORRA_MS.setGarmentOpacity(this.value/100)">
-            <span id="vto-opacity-label">95%</span>
+            <div class="vto-add-row">
+              <select id="vto-garment-select" class="vto-garment-select">
+                <option value="t-shirt">T-Shirt</option>
+                <option value="shirt">Shirt</option>
+                <option value="pant">Pant</option>
+                <option value="skirt">Skirt</option>
+              </select>
+              <button class="vto-add-btn" onclick="KORRA_MS._addGarmentLayer()">+</button>
+            </div>
+            <div class="vto-layer-list" id="vto-layer-list"></div>
+            <div class="vto-opacity-row">
+              <label>Opacity</label>
+              <input type="range" id="vto-opacity-slider" min="10" max="100" value="95" oninput="KORRA_MS.setGarmentOpacity(this.value/100)">
+              <span id="vto-opacity-label">95%</span>
+            </div>
           </div>
           <div class="ms-viewer-info">
             <div class="ms-viewer-info-title">User Perspective</div>
@@ -316,6 +330,9 @@ window.KORRA_MS = {
             </button>
             <button class="ms-tool-btn" onclick="KORRA_MS.resetViewport()" title="Reset view">
               <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="23 4 23 10 17 10"/><path d="M20.49 15a9 9 0 1 1-2.12-9.36L23 10"/></svg>
+            </button>
+            <button class="ms-tool-btn" id="ms-garment-toggle" onclick="KORRA_MS._toggleGarments()" title="Toggle garment visibility" style="display:none;">
+              <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M6 5L3 8l3 3m12-6l3 3-3 3M6 21L3 18l3-3m12 6l3-3-3-3"/><rect x="7" y="7" width="10" height="10" rx="1"/></svg>
             </button>
           </div>
           <div class="ms-options-wrapper">
@@ -1922,57 +1939,10 @@ window.KORRA_MS = {
     if (this.downloadFormat === 'dxf') this._exportPatternDXF();
     else this._exportPatternPDF();
   },
-  async _updateGarmentForContext() {
-    if (this.activeContext === 'standard') {
-      if (this.viewerInstance) this.viewerInstance.removeGarment();
-      this._hideVtoSpinner();
-      const vtoControls = document.getElementById('ms-vto-controls');
-      if (vtoControls) vtoControls.style.display = 'none';
-      return;
-    }
-    if (!this.data || !this.viewerInstance) return;
-    console.log(`👗 [VTO] Generating garment for context: ${this.activeContext}`);
-    this._showVtoSpinner();
-    try {
-      const { data: { session } } = await window.KORRA_DB.auth.getSession();
-      const res = await fetch(`/api/v2/measurements/${this.data.id}/garment/drape`, {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-          'Authorization': `Bearer ${session.access_token}`
-        },
-        body: JSON.stringify({
-          attire: this.activeContext,
-          material: this.activeMaterial
-        })
-      });
-      if (!res.ok) throw new Error("Draping failed");
-      const result = await res.json();
-      const matPreset = this.FABRIC_PRESETS[this.activeMaterial] || this.FABRIC_PRESETS.woven;
-      const matSettings = {
-        color: matPreset.color ? parseInt(matPreset.color.replace('#', '0x')) : 0xFFFFFF,
-        opacity: this.activeMaterial === 'silk' ? 0.6 : 0.95,
-        shininess: this.activeMaterial === 'silk' ? 80 : 30
-      };
-      const urls = result.garment_meshes || (result.garment_mesh_url ? [result.garment_mesh_url] : []);
-      if (urls.length > 0) {
-        this.viewerInstance.removeGarment();
-        for (let i = 0; i < urls.length; i++) {
-          const depthWrite = i === 0 || this.activeMaterial !== 'silk';
-          await this.viewerInstance.loadGarment(urls[i], { ...matSettings, depthWrite }, i);
-        }
-        const vtoControls = document.getElementById('ms-vto-controls');
-        if (vtoControls) vtoControls.style.display = 'flex';
-      }
-      this._hideVtoSpinner();
-    } catch (e) {
-      console.warn("Garment generation skipped or failed:", e.message);
-      if (this.viewerInstance) this.viewerInstance.removeGarment();
-      this._hideVtoSpinner();
-    }
-  },
+  // ═══ GARMENT LAYER CONTROLS ═══
+  _garmentTypes = ['t-shirt', 'shirt', 'pant', 'skirt'];
+  _selectedGarmentLayer = -1;
 
-  // ═══ VTO CONTROLS (Track F) ═══
   _showVtoSpinner() {
     let spinner = document.getElementById('vto-spinner');
     if (!spinner) {
@@ -1983,21 +1953,87 @@ window.KORRA_MS = {
       if (container) container.appendChild(spinner);
     }
     spinner.style.display = 'flex';
-  },
+  }
 
   _hideVtoSpinner() {
     const spinner = document.getElementById('vto-spinner');
     if (spinner) spinner.style.display = 'none';
-  },
+  }
+
+  async _addGarmentLayer() {
+    const sel = document.getElementById('vto-garment-select');
+    if (!sel) return;
+    const garClass = sel.value;
+    if (!this.data || !this.viewerInstance) return;
+    this._showVtoSpinner();
+    try {
+      const { data: { session } } = await window.KORRA_DB.auth.getSession();
+      const res = await fetch(`/api/v2/measurements/${this.data.id}/garment/mesh`, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          'Authorization': `Bearer ${session.access_token}`
+        },
+        body: JSON.stringify({ garment_class: garClass })
+      });
+      if (!res.ok) throw new Error("Garment generation failed");
+      const result = await res.json();
+      if (!result.success) throw new Error(result.error || "Unknown error");
+      const matPreset = this.FABRIC_PRESETS[this.activeMaterial] || this.FABRIC_PRESETS.woven;
+      const matSettings = {
+        color: matPreset.color ? parseInt(matPreset.color.replace('#', '0x')) : 0xFFFFFF,
+        opacity: this.activeMaterial === 'silk' ? 0.6 : 0.95,
+        shininess: this.activeMaterial === 'silk' ? 80 : 30
+      };
+      const layerIdx = this.viewerInstance.garmentMeshes ? this.viewerInstance.garmentMeshes.length : 0;
+      await this.viewerInstance.loadGarment(result.mesh_url, matSettings, layerIdx);
+      this._selectedGarmentLayer = layerIdx;
+      this._renderVtoControls();
+      this._hideVtoSpinner();
+    } catch (e) {
+      console.warn("Garment generation failed:", e.message);
+      this._hideVtoSpinner();
+    }
+  }
+
+  _removeGarmentLayer(idx) {
+    if (!this.viewerInstance) return;
+    this.viewerInstance.removeGarment(idx);
+    if (this._selectedGarmentLayer === idx) this._selectedGarmentLayer = -1;
+    this._renderVtoControls();
+  }
+
+  _toggleGarmentLayer(idx) {
+    if (!this.viewerInstance || !this.viewerInstance.garmentMeshes) return;
+    const m = this.viewerInstance.garmentMeshes[idx];
+    if (m) {
+      m.visible = !m.visible;
+      this._renderVtoControls();
+    }
+  }
+
+  _selectGarmentLayer(idx) {
+    this._selectedGarmentLayer = idx;
+    this._renderVtoControls();
+  }
 
   setGarmentOpacity(val) {
     const opacity = Math.max(0.1, Math.min(1, val));
+    const idx = this._selectedGarmentLayer;
     if (this.viewerInstance && this.viewerInstance.garmentMeshes) {
-      for (let i = 0; i < this.viewerInstance.garmentMeshes.length; i++) {
-        const mesh = this.viewerInstance.garmentMeshes[i];
+      if (idx >= 0 && this.viewerInstance.garmentMeshes[idx]) {
+        const mesh = this.viewerInstance.garmentMeshes[idx];
         if (mesh && mesh.material) {
           mesh.material.opacity = opacity;
           mesh.material.needsUpdate = true;
+        }
+      } else {
+        for (let i = 0; i < this.viewerInstance.garmentMeshes.length; i++) {
+          const mesh = this.viewerInstance.garmentMeshes[i];
+          if (mesh && mesh.material) {
+            mesh.material.opacity = opacity;
+            mesh.material.needsUpdate = true;
+          }
         }
       }
     }
@@ -2005,6 +2041,37 @@ window.KORRA_MS = {
     if (slider) slider.value = opacity;
     const label = document.getElementById('vto-opacity-label');
     if (label) label.textContent = `${Math.round(opacity * 100)}%`;
+  },
+
+  _toggleGarments() {
+    this._garmentVisible = !this._garmentVisible;
+    if (this.viewerInstance) this.viewerInstance.toggleGarmentVisibility(this._garmentVisible);
+    const btn = document.getElementById('ms-garment-toggle');
+    if (btn) btn.style.opacity = this._garmentVisible ? '1' : '0.4';
+  },
+
+  _renderVtoControls() {
+    const panel = document.getElementById('ms-vto-controls');
+    const toggle = document.getElementById('ms-garment-toggle');
+    if (!panel) return;
+    const layers = this.viewerInstance?.garmentMeshes || [];
+    const hasGarments = layers.some(m => m !== null && m !== undefined);
+    panel.style.display = hasGarments ? 'flex' : 'none';
+    if (toggle) toggle.style.display = hasGarments ? '' : 'none';
+
+    const list = document.getElementById('vto-layer-list');
+    if (!list) return;
+    list.innerHTML = layers.map((m, i) => {
+      if (!m) return '';
+      const isSelected = this._selectedGarmentLayer === i;
+      const isVisible = m.visible !== false;
+      const label = ['Under', 'Mid', 'Outer', 'Layer 4'][i] || `Layer ${i+1}`;
+      return `<div class="vto-layer-item ${isSelected ? 'selected' : ''}" onclick="KORRA_MS._selectGarmentLayer(${i})">
+        <span class="vto-layer-name">${label}</span>
+        <span class="vto-layer-vis" onclick="event.stopPropagation();KORRA_MS._toggleGarmentLayer(${i})" style="opacity:${isVisible ? 1 : 0.3}">👁</span>
+        <span class="vto-layer-del" onclick="event.stopPropagation();KORRA_MS._removeGarmentLayer(${i})">✕</span>
+      </div>`;
+    }).join('');
   },
 
   openShareScan() {
@@ -2031,8 +2098,6 @@ window.KORRA_MS = {
       setTimeout(() => this.renderPattern(), 50);
     }
 
-    // Phase 141: Trigger garment generation on context change
-    this._updateGarmentForContext();
     console.log('  setContext done');
   },
 
@@ -2049,15 +2114,19 @@ window.KORRA_MS = {
       setTimeout(() => this.renderPattern(), 50);
     }
 
-    // Phase 142: Update garment material if already loaded
-    if (this.viewerInstance && this.viewerInstance.garmentMesh) {
+    // Update all garment layer materials
+    if (this.viewerInstance && this.viewerInstance.garmentMeshes) {
       const matPreset = this.FABRIC_PRESETS[this.activeMaterial] || this.FABRIC_PRESETS.woven;
       const color = matPreset.color ? parseInt(matPreset.color.replace('#', '0x')) : 0xFFFFFF;
-      this.viewerInstance.garmentMesh.material.color.setHex(color);
-      this.viewerInstance.garmentMesh.material.opacity = mat === 'silk' ? 0.6 : 0.95;
-      this.viewerInstance.garmentMesh.material.needsUpdate = true;
-    } else {
-      this._updateGarmentForContext();
+      const opacity = mat === 'silk' ? 0.6 : 0.95;
+      for (let i = 0; i < this.viewerInstance.garmentMeshes.length; i++) {
+        const m = this.viewerInstance.garmentMeshes[i];
+        if (m && m.material) {
+          m.material.color.setHex(color);
+          m.material.opacity = opacity;
+          m.material.needsUpdate = true;
+        }
+      }
     }
   },
 

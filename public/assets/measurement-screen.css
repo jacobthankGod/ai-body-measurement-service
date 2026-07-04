@@ -2286,36 +2286,76 @@ body.ai-mode .ms-back-btn { display: none !important; }
 }
 @keyframes vto-spin { to { transform: rotate(360deg); } }
 
-/* ── Track F: VTO Controls Bar ── */
+/* ── Garment Layer Controls ── */
 .ms-vto-controls {
   position: absolute; bottom: 20px; right: 70px;
-  display: flex; align-items: center; gap: 12px;
+  display: flex; flex-direction: column; gap: 8px;
   background: rgba(0,0,0,0.7);
   backdrop-filter: blur(8px);
-  padding: 8px 16px;
+  padding: 10px 14px;
   border-radius: 10px;
   border: 1px solid var(--Glass-Border);
   z-index: 20;
+  min-width: 180px;
 }
-.ms-vto-controls label {
-  font-size: 11px;
-  color: var(--Neutral-400);
-  white-space: nowrap;
+.vto-add-row {
+  display: flex; gap: 6px; align-items: center;
 }
-.ms-vto-controls input[type="range"] {
-  width: 80px;
-  height: 4px;
-  -webkit-appearance: none;
-  appearance: none;
-  background: var(--Glass-Border);
-  border-radius: 2px;
+.vto-garment-select {
+  flex: 1; padding: 4px 8px;
+  background: rgba(255,255,255,0.08);
+  border: 1px solid var(--Glass-Border);
+  border-radius: 6px;
+  color: var(--Neutral-100);
+  font-size: 12px;
   outline: none;
-}
-.ms-vto-controls input[type="range"]::-webkit-slider-thumb {
-  -webkit-appearance: none;
-  width: 14px; height: 14px;
-  border-radius: 50%;
-  background: var(--Accent-Teal);
   cursor: pointer;
+}
+.vto-garment-select option {
+  background: #1a1a1a; color: var(--Neutral-100);
+}
+.vto-add-btn {
+  width: 28px; height: 28px;
+  display: flex; align-items: center; justify-content: center;
+  background: var(--Accent-Teal); border: none; border-radius: 6px;
+  color: #000; font-size: 16px; font-weight: 700;
+  cursor: pointer;
+  transition: opacity 0.2s;
+}
+.vto-add-btn:hover { opacity: 0.8; }
+.vto-layer-list {
+  display: flex; flex-direction: column; gap: 4px;
+  max-height: 120px; overflow-y: auto;
+}
+.vto-layer-item {
+  display: flex; align-items: center; gap: 8px;
+  padding: 4px 8px;
+  border-radius: 6px;
+  background: rgba(255,255,255,0.04);
+  cursor: pointer;
+  transition: background 0.15s;
+}
+.vto-layer-item:hover { background: rgba(255,255,255,0.08); }
+.vto-layer-item.selected { background: rgba(198,255,0,0.08); border: 1px solid rgba(198,255,0,0.2); }
+.vto-layer-name { flex: 1; font-size: 11px; color: var(--Neutral-300); }
+.vto-layer-vis { cursor: pointer; font-size: 12px; }
+.vto-layer-del { cursor: pointer; font-size: 12px; color: var(--Error); opacity: 0.7; }
+.vto-layer-del:hover { opacity: 1; }
+.vto-opacity-row {
+  display: flex; align-items: center; gap: 8px;
+  padding-top: 4px; border-top: 1px solid var(--Glass-Border);
+}
+.vto-opacity-row label {
+  font-size: 11px; color: var(--Neutral-400); white-space: nowrap;
+}
+.vto-opacity-row input[type="range"] {
+  flex: 1; height: 4px;
+  -webkit-appearance: none; appearance: none;
+  background: var(--Glass-Border); border-radius: 2px; outline: none;
+}
+.vto-opacity-row input[type="range"]::-webkit-slider-thumb {
+  -webkit-appearance: none;
+  width: 14px; height: 14px; border-radius: 50%;
+  background: var(--Accent-Teal); cursor: pointer;
 }
 

@@ -154,7 +154,7 @@ def run_ssp3d_tests(max_subjects: int):
                                           height_cm, gender)
             if mp_meas:
                 print(f"  MP:   ", {k: f"{v:.1f}" for k, v in
-                      mp_meas.items() if v > 0})
+                      mp_meas.items() if isinstance(v, (int, float)) and v > 0})
                 compare_vs_gt(mp_meas, gt, sid, height_cm, gender,
                              'MediaPipe', f"ssp3d/{img_path.name}")
         except Exception as e:
@@ -302,7 +302,7 @@ def run_unidata_tests():
                                               height_cm, gender)
                 if mp_meas:
                     print(f"  MP:   ", {k: f"{v:.1f}" for k, v in
-                          mp_meas.items() if v > 0})
+                          mp_meas.items() if isinstance(v, (int, float)) and v > 0})
                     compare_vs_gt(mp_meas, gt, subj_id, height_cm, gender,
                                  'MediaPipe', f"unidata/{subj_id}")
             except Exception as e:

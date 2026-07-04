@@ -85,6 +85,17 @@ class KorraVisualizer {
                 this._outline.rotation.copy(this.mesh.rotation);
                 this._outline.scale.copy(this.mesh.scale);
             }
+            // Sync garment layers with body mesh
+            if (this.mesh && this.garmentMeshes) {
+                for (let i = 0; i < this.garmentMeshes.length; i++) {
+                    const g = this.garmentMeshes[i];
+                    if (g) {
+                        g.position.copy(this.mesh.position);
+                        g.rotation.copy(this.mesh.rotation);
+                        g.scale.copy(this.mesh.scale);
+                    }
+                }
+            }
             this.renderer.render(this.scene, this.camera);
         };
         animate();

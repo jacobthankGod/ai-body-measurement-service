@@ -24,26 +24,6 @@ for p in (ROOT_PATH, SRC_PATH):
 logging.basicConfig(level=logging.INFO, stream=sys.stderr)
 logger = logging.getLogger("HMR_SUBPROCESS")
 
-# Track F: Attire → TailorNet garment class mapping
-_ATTIRE_TO_GARMENT = {
-    # Tops
-    't_shirt': 't-shirt', 't-shirt': 't-shirt', 'tee': 't-shirt',
-    'shirt': 'shirt', 'button_down': 'shirt', 'dress_shirt': 'shirt',
-    # Bottoms
-    'pants': 'pant', 'pant': 'pant', 'trousers': 'pant', 'jeans': 'pant',
-    'shorts': 'short-pant', 'short_pant': 'short-pant', 'short_pants': 'short-pant',
-    'skirt': 'skirt',
-}
-
-def _attire_to_garment(attire_name):
-    if not attire_name:
-        return None
-    key = attire_name.lower().replace(' ', '_').replace('-', '_')
-    for pat, gcls in _ATTIRE_TO_GARMENT.items():
-        if pat in key or key in pat:
-            return gcls
-    return None
-
 def run_hmr(front_path, side_path, height_cm, gender, mesh_path=None, attire_name=''):
     import sys # REDUNDANT IMPORT FOR SCOPE PROTECTION
     import gc
@@ -152,7 +132,7 @@ def run_hmr(front_path, side_path, height_cm, gender, mesh_path=None, attire_nam
                            'Armhole Round', 'Sleeve Length', 'Bicep Round', 'Elbow Round',
                            'Wrist Round'}
                 for k, v in mp_result.items():
-                    if k in mp_only and v > 0:
+                    if k in mp_only and isinstance(v, (int, float)) and v > 0:
                         measurements[k] = v
                 logger.info(f"MediaPipe fusion applied: +{len(mp_only & set(mp_result.keys()))} measurements")
                 fusion_used = True
@@ -187,36 +167,6 @@ def run_hmr(front_path, side_path, height_cm, gender, mesh_path=None, attire_nam
         except Exception as e:
             logger.warning(f"Measurement calibration skipped: {e}")
 
-        # Track F: TailorNet garment mesh prediction
-        garment_mesh_path = None
-        garment_class = None
-        if mesh_path and smpl_params and (smpl_params.get('betas_300') is not None or smpl_params.get('shape') is not None):
-            try:
-                garment_class = _attire_to_garment(attire_name)
-                if garment_class:
-                    from api.services.tailornet_bridge import run_tailornet
-                    # Prefer 300-PC betas from projection, fall back to 10-PC from HMR
-                    if smpl_params.get('betas_300') is not None:
-                        betas = np.array(smpl_params['betas_300'], dtype=np.float32)
-                    else:
-                        raw = smpl_params.get('shape', [])
-                        betas = np.array(raw[:10], dtype=np.float32) if raw else None
-                    if betas is not None:
-                        tn_result = run_tailornet(garment_class, gender, betas=betas)
-                        if tn_result['success'] and tn_result['garment_verts'] is not None:
-                            import trimesh
-                            gm = trimesh.Trimesh(
-                                vertices=tn_result['garment_verts'],
-                                faces=tn_result['garment_faces'],
-                                process=False,
-                            )
-                            garment_path = str(mesh_path).replace('.obj', f'_{garment_class}.obj')
-                            gm.export(garment_path, file_type='obj')
-                            garment_mesh_path = garment_path
-                            logger.info(f"TailorNet garment mesh saved: {garment_path}")
-            except Exception as e:
-                logger.warning(f"TailorNet garment prediction skipped: {e}")
-
         # FINAL CLEANUP (safely handle T-pose mesh alias)
         if v_measure_tpose is not None and v_measure_tpose is not vertices:
             del v_measure_tpose
@@ -235,8 +185,6 @@ def run_hmr(front_path, side_path, height_cm, gender, mesh_path=None, attire_nam
             "smpl_params": smpl_params,
             "joints3d": joints3d,
             "tpose_mesh_path": str(tpose_mesh_path) if tpose_mesh_path else None,
-            "garment_mesh_path": str(garment_mesh_path) if garment_mesh_path else None,
-            "garment_class": garment_class,
         }
 
     except Exception as e:

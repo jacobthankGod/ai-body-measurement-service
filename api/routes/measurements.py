@@ -234,13 +234,7 @@ async def run_extraction_subprocess_cli(task_id: str, front_path: str, side_path
                                 Path(tpose_mesh_path), f"{task_id}_tpose"
                             )
                             os.remove(tpose_mesh_path)
-                        garment_mesh_url = None
-                        garment_mesh_path = data.get("garment_mesh_path")
-                        if garment_mesh_path and os.path.exists(garment_mesh_path):
-                            garment_mesh_url = DatabaseService.upload_mesh_to_storage(
-                                Path(garment_mesh_path), f"{task_id}_garment"
-                            )
-                            os.remove(garment_mesh_path)
+
                     else:
                         raise Exception(data.get("error", "Unknown error in subprocess"))
                 except Exception as e:
@@ -282,8 +276,6 @@ async def run_extraction_subprocess_cli(task_id: str, front_path: str, side_path
                 "smpl_params": smpl_params,
                 "joints3d": joints3d,
                 "tpose_mesh_url": tpose_mesh_url,
-                "garment_mesh_url": garment_mesh_url,
-                "garment_class": data.get("garment_class"),
                 "debug": hmr_error
             }
 
@@ -498,27 +490,29 @@ async def extract_widget(
         logger.error(f"Widget extraction failed: {e}")
         raise HTTPException(status_code=500, detail="Failed to start widget extraction")
 
-@router.post("/measurements/{scan_id}/garment/drape")
-async def drape_garment(
+@router.post("/measurements/{scan_id}/garment/mesh")
+async def generate_garment_mesh(
     scan_id: str,
     payload: dict,
     background_tasks: BackgroundTasks,
     user: dict = Depends(get_current_user)
 ):
     """
-    Phase 119/143: Neural Cloth Simulation Bridge.
-    Generates a deformed garment mesh using TailorNet based on the scan's SMPL parameters.
+    Generates a single deformed garment mesh using TailorNet based on SMPL params.
+    Accepts garment_class directly (t-shirt, shirt, pant, skirt).
+    Multi-layer stacking is handled client-side by calling this endpoint multiple times.
     """
     import numpy as np
-    attire = payload.get("attire", "t-shirt")
+    garment_class = payload.get("garment_class", "t-shirt")
+    valid_classes = {"t-shirt", "shirt", "pant", "skirt"}
+    if garment_class not in valid_classes:
+        raise HTTPException(status_code=400, detail=f"Invalid garment_class. Must be one of: {', '.join(valid_classes)}")
 
     # 1. Fetch scan data
     from api.services.database_service import DatabaseService
     db = DatabaseService.get_client()
 
-    # Security: Ensure user owns this scan
     if not user.get('is_admin'):
-        # Allow if user is either the merchant (user_id) or the client (client_user_id)
         res = db.table("measurements").select("*").eq("id", scan_id).or_(f"user_id.eq.{user['user_id']},client_user_id.eq.{user['user_id']}").execute()
     else:
         res = db.table("measurements").select("*").eq("id", scan_id).execute()
@@ -529,7 +523,6 @@ async def drape_garment(
     scan = res.data[0]
     smpl_params = scan.get("biometrics", {}).get("__smpl_params")
     if not smpl_params:
-        # Fallback to defaults if not yet extracted
         smpl_params = {"shape": [0]*10, "betas_300": [0]*300}
 
     gender = scan.get("gender", "male")
@@ -538,56 +531,23 @@ async def drape_garment(
     from api.services.tailornet_bridge import run_tailornet
     betas = smpl_params.get("betas_300") or smpl_params.get("shape")
 
-    # Map attire to TailorNet garment class(es) — supports multi-layer stacking
-    garment_map = {
-        "standard": [],
-        "agbada": ["shirt", "pant"],
-        "senator": ["shirt", "pant"],
-        "kurta": ["shirt", "pant"],
-        "t-shirt": ["t-shirt"],
-        "shirt": ["shirt"],
-        "blazer": ["shirt", "pant"],
-        "blazer_business": ["shirt", "pant"],
-        "bomber_jacket": ["shirt", "pant"],
-        "trench_coat": ["shirt", "pant"],
-        "pant": ["pant"],
-        "skirt": ["skirt"],
-        "a_line_skirt": ["skirt"],
-        "pencil_skirt": ["skirt"],
-        "dress": ["t-shirt", "skirt"],
-        "kaftan": ["t-shirt", "skirt"],
-        "jumpsuit": ["t-shirt", "pant"],
-        "classic_jumpsuit": ["t-shirt", "pant"],
-        "kikoy": ["shirt"],
-    }
-    gar_classes = garment_map.get(attire, ["t-shirt"])
-    if not gar_classes:
-        return {"success": True, "garment_mesh_url": None}
-
-    # 4. Run TailorNet for each garment class
     import trimesh
     out_dir = Path("public/meshes/garments")
     out_dir.mkdir(parents=True, exist_ok=True)
-    public_urls = []
 
-    for gar_class in gar_classes:
-        result = run_tailornet(garment_class=gar_class, gender=gender, betas=betas)
-        if not result["success"]:
-            logger.warning(f"TailorNet failed for {gar_class}: {result.get('error')}")
-            continue
-        gar_mesh = trimesh.Trimesh(vertices=result["garment_verts"], faces=result["garment_faces"])
-        filename = f"garment_{scan_id}_{attire}_{gar_class}.obj"
-        file_path = out_dir / filename
-        gar_mesh.export(str(file_path))
-        public_urls.append(f"/meshes/garments/{filename}")
+    result = run_tailornet(garment_class=garment_class, gender=gender, betas=betas)
+    if not result["success"]:
+        return {"success": False, "error": result.get("error", "TailorNet inference failed")}
 
-    if not public_urls:
-        return {"success": False, "error": "All TailorNet inferences failed"}
+    gar_mesh = trimesh.Trimesh(vertices=result["garment_verts"], faces=result["garment_faces"])
+    filename = f"garment_{scan_id}_{garment_class}.obj"
+    file_path = out_dir / filename
+    gar_mesh.export(str(file_path))
 
     return {
         "success": True,
-        "garment_meshes": public_urls,
-        "garment_classes": gar_classes,
+        "mesh_url": f"/meshes/garments/{filename}",
+        "garment_class": garment_class,
     }
 
 @router.get("/measurements/status/{task_id}")
