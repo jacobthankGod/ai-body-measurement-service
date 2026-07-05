@@ -92,8 +92,6 @@
     }
 
     /* Z-INDEX LAYER STANDARDIZATION */
-    :root { --sidebar-width: 260px; }
-    .sidebar-nav { z-index: 1000; }
     header { z-index: 1100; }
     .modal-overlay { z-index: 3000; }
     .toast-notification { z-index: 4000; }
@@ -318,7 +316,7 @@
     }
     @media (max-width: 900px) { .nav-center { display: flex; } }
 
-    main { padding-top: 96px; height: 100vh; overflow-y: auto; }
+    main { padding-top: 96px; height: 100vh; overflow: hidden; }
     .container { width: 100%; max-width: 1200px; margin: 0 auto; padding: 0 48px; }
 
     /* ULTRA-MODERN ACTION CARD SYSTEM */
@@ -486,80 +484,235 @@
     .btn-outline { height: 40px; padding: 0 20px; border-radius: 8px; border: 1px solid var(--Glass-Border); color: var(--White); font-size: 12px; font-weight: 800; text-transform: uppercase; cursor: pointer; text-decoration: none; display: inline-flex; align-items: center; transition: 0.2s; background: none; }
     .btn-outline:hover { background: var(--Glass); border-color: var(--White); }
     .btn-primary { height: 40px; padding: 0 20px; border-radius: 8px; background: var(--Mint); color: var(--Obsidian); font-size: 12px; font-weight: 800; text-transform: uppercase; cursor: pointer; border: none; transition: 0.2s; }
-    .grid-dashboard { display: block; align-items: start; height: 100%; }
+    .grid-dashboard { display: flex; height: 100%; }
 
-    .sidebar-nav {
-      position: fixed;
-      top: 80px;
-      left: 0;
-      width: var(--sidebar-width, 260px);
-      height: calc(100vh - 80px);
-      z-index: 1000;
-      background: #050505; /* Solid obsidian for true edge-to-edge contrast */
+    /* ── VERTICAL SIDEBAR (CSS-only toggle) ── */
+    :root {
+      --sidebar-expanded: 270px;
+      --sidebar-collapsed: 52px;
+      --sidebar-item: 36px;
+      --sidebar-svg: 18px;
+      --sidebar-brad: 12px;
+      --sidebar-frame: 4px;
+    }
+    .vertical-sidebar { display: flex; flex-direction: column; flex-shrink: 0; }
+    #sidebar-toggle { display: none; }
+    .vertical-sidebar nav {
+      display: flex;
+      flex-flow: column;
+      width: var(--sidebar-collapsed);
+      background: #050505;
       border-right: 1px solid var(--Glass-Border);
+      height: 100%;
+      transition: width 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+      overflow: hidden;
+      padding: var(--sidebar-frame);
+    }
+    #sidebar-toggle:checked ~ nav { width: var(--sidebar-expanded); }
+    #sidebar-toggle:not(:checked) ~ nav { width: var(--sidebar-collapsed); }
+    .vertical-sidebar nav .sidebar-toggle-wrap {
+      height: var(--sidebar-item);
+      display: flex;
+      justify-content: flex-end;
+    }
+    .vertical-sidebar nav label {
+      height: 100%;
+      aspect-ratio: 1;
+      display: grid;
+      place-content: center;
+      border-radius: calc(var(--sidebar-brad) - var(--sidebar-frame));
+      cursor: pointer;
+      outline: 2px solid transparent;
+      outline-offset: -2px;
+      transition: outline 0.2s;
+    }
+    .vertical-sidebar nav label:hover { outline-color: var(--Mint); }
+    .vertical-sidebar nav label .toggle-svg { grid-area: 1 / 1; fill: var(--Neutral-500); transition: fill 0.2s; }
+    .vertical-sidebar nav label:hover .toggle-svg { fill: var(--White); }
+    #sidebar-toggle:checked ~ nav .toggle--open,
+    #sidebar-toggle:not(:checked) ~ nav .toggle--close { opacity: 0; }
+
+    .sidebar__wrapper {
       display: flex;
       flex-direction: column;
-      transition: width 0.3s cubic-bezier(0.4, 0, 0.2, 1);
-      overflow-x: hidden;
+      gap: 4px;
+      flex: 1;
+      overflow: hidden;
     }
-    .sidebar-nav.collapsed { width: 72px; }
+    .sidebar__list {
+      margin: 0;
+      padding: 0;
+      list-style: none;
+      display: flex;
+      flex-direction: column;
+      gap: 2px;
+    }
 
-    .sidebar-label {
+    /* Sidebar header (logo area) */
+    .sidebar-header {
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      gap: 2px;
+      margin-bottom: 8px;
+    }
+    .sidebar-header .logo-mark {
+      width: 28px;
+      height: 28px;
+      border-radius: 6px;
+      background: var(--Mint);
+      transform: rotate(-8deg);
+      flex-shrink: 0;
+    }
+    #sidebar-toggle:not(:checked) ~ nav .sidebar-header figcaption { opacity: 0; pointer-events: none; }
+    #sidebar-toggle:checked ~ nav .sidebar-header figcaption { opacity: 1; transition: opacity 0.3s ease-in 0.15s; }
+    .sidebar-header figcaption {
+      text-align: center;
+      transition: opacity 0.15s;
+    }
+    .sidebar-header figcaption .app-name {
+      font-size: 14px;
+      font-weight: 700;
+      color: var(--White);
+      line-height: 1.2;
+    }
+    .sidebar-header figcaption .app-sub {
       font-size: 10px;
-      font-weight: 900;
       color: var(--Neutral-500);
-      text-transform: uppercase;
-      letter-spacing: 0.1em;
-      padding: 0 24px;
-      margin: 24px 0 12px;
-      white-space: nowrap;
-      opacity: 1;
-      transition: opacity 0.2s;
+      font-weight: 500;
     }
-    .sidebar-nav.collapsed .sidebar-label { opacity: 0; }
 
-    .sidebar-nav a {
+    /* Section heading */
+    .sidebar__item--heading {
+      height: var(--sidebar-item);
+      display: flex;
+      align-items: end;
+      padding-bottom: 2px;
+    }
+    .sidebar__item--heading h2 {
+      font-size: 10px;
+      text-transform: uppercase;
+      letter-spacing: 0.5px;
+      font-weight: 700;
+      color: var(--Neutral-500);
+      white-space: nowrap;
+      transition: color 0.2s;
+    }
+    #sidebar-toggle:not(:checked) ~ nav .sidebar__item--heading { opacity: 0; }
+    #sidebar-toggle:checked ~ nav .sidebar__item--heading { opacity: 1; transition: opacity 0.3s ease-in 0.15s; }
+
+    /* Sidebar link items */
+    .sidebar__item {
+      height: var(--sidebar-item);
+      border-radius: calc(var(--sidebar-brad) - var(--sidebar-frame));
+      flex-shrink: 0;
+    }
+    .sidebar__link {
       display: flex;
       align-items: center;
-      gap: 16px;
-      padding: 14px 24px;
-      color: var(--Neutral-400);
+      gap: 10px;
+      height: 100%;
+      padding: 0 8px;
       text-decoration: none;
-      font-size: 14px;
+      color: var(--Neutral-400);
+      font-size: 13px;
       font-weight: 600;
-      transition: 0.3s;
+      border-radius: inherit;
+      transition: 0.2s;
       cursor: pointer;
       white-space: nowrap;
       border-left: 3px solid transparent;
+      outline: 2px solid transparent;
+      outline-offset: -2px;
     }
-    .sidebar-nav a:hover, .sidebar-nav a.active { background: var(--Glass); color: var(--Mint); border-left-color: var(--Mint); }
-    .sidebar-nav.collapsed a { padding: 14px 12px; gap: 0; min-width: 0; width: 100%; overflow: visible; justify-content: flex-start; }
-    .sidebar-nav.collapsed .collapse-toggle { padding: 16px 12px; gap: 0; min-width: 0; width: 100%; overflow: visible; justify-content: center; }
-    .sidebar-nav a .nav-text { transition: opacity 0.2s; }
-    .sidebar-nav.collapsed a .nav-text { opacity: 0; pointer-events: none; }
-    .sidebar-nav.collapsed .collapse-toggle .nav-text { display: none; }
+    .sidebar__link .icon {
+      flex-shrink: 0;
+      width: var(--sidebar-item);
+      height: var(--sidebar-item);
+      display: grid;
+      place-content: center;
+    }
+    .sidebar__link .icon svg {
+      width: var(--sidebar-svg);
+      height: var(--sidebar-svg);
+      stroke: var(--Neutral-500);
+      transition: stroke 0.2s;
+    }
+    .sidebar__link .text {
+      overflow: hidden;
+      color: var(--Neutral-400);
+      font-size: 13px;
+      font-weight: 600;
+      transition: color 0.2s;
+    }
+    .sidebar__link:hover { background: var(--Glass); }
+    .sidebar__link:hover .icon svg { stroke: var(--Mint); }
+    .sidebar__link:hover .text { color: var(--Mint); }
+    .sidebar__link.active { background: var(--Glass); }
+    .sidebar__link.active .icon svg { stroke: var(--Mint); }
+    .sidebar__link.active .text { color: var(--Mint); }
+    .sidebar__link.active { border-left-color: var(--Mint); }
+    .sidebar__link:focus {
+      outline-color: var(--Mint);
+      background: rgba(255,255,255,0.06);
+    }
+    /* Collapsed: hide text, section headings, figcaption */
+    #sidebar-toggle:not(:checked) ~ nav .text,
+    #sidebar-toggle:not(:checked) ~ nav .sidebar__item--heading,
+    #sidebar-toggle:not(:checked) ~ nav .sidebar-header figcaption { opacity: 0; pointer-events: none; }
 
-    .collapse-toggle {
-      margin-top: auto;
-      padding: 16px 24px;
-      border-top: 1px solid var(--Glass-Border);
-      cursor: pointer;
-      display: flex;
-      align-items: center;
-      gap: 16px;
-      color: var(--Neutral-500);
-      transition: 0.2s;
+    /* Tooltip on collapsed hover */
+    #sidebar-toggle:not(:checked) ~ nav .sidebar__link[data-tooltip]::before {
+      content: attr(data-tooltip);
+      position: fixed;
+      translate: calc(var(--sidebar-collapsed) + 4px) 0;
+      border-radius: 6px;
+      padding: 4px 10px;
+      color: #ddd;
+      background: hsl(198 16 30);
+      box-shadow: 0 6px 12px -6px #0003;
+      opacity: 0;
+      pointer-events: none;
+      scale: 0 0;
+      z-index: 999;
+      font-size: 12px;
+      font-weight: 500;
+      white-space: nowrap;
+      transition: all 250ms ease-out;
     }
-    .collapse-toggle:hover { color: var(--Mint); background: var(--Glass); }
-    .collapse-toggle svg { transition: transform 0.3s; }
-    .sidebar-nav.collapsed .collapse-toggle svg { transform: rotate(180deg); }
+    #sidebar-toggle:not(:checked) ~ nav .sidebar__link:hover[data-tooltip]::before {
+      opacity: 1;
+      scale: 1;
+    }
+
+    /* New Scan special item */
+    .sidebar__item.new-scan { margin: 4px 0; }
+    .sidebar__item.new-scan .sidebar__link {
+      background: var(--Mint);
+      color: var(--Obsidian-Deep);
+      border-radius: 8px;
+      justify-content: center;
+      font-size: 11px;
+      font-weight: 800;
+      text-transform: uppercase;
+      letter-spacing: 0.05em;
+      border-left: none;
+    }
+    .sidebar__item.new-scan .sidebar__link .icon svg { stroke: var(--Obsidian-Deep); }
+    #sidebar-toggle:not(:checked) ~ nav .sidebar__item.new-scan .text { display: none; }
+
+    /* Logout item */
+    .sidebar__item.logout { margin-top: auto; }
+    .sidebar__item.logout .sidebar__link:hover { background: rgba(214, 48, 49, 0.1); }
+    .sidebar__item.logout .sidebar__link:hover .icon svg { stroke: var(--Error); }
+    .sidebar__item.logout .sidebar__link:hover .text { color: var(--Error); }
 
     .main-content {
-      padding: 0;
-      min-height: 100%;
-      margin-left: var(--sidebar-width, 260px);
+      flex: 1;
+      min-width: 0;
       display: flex;
       flex-direction: column;
+      overflow-y: auto;
       overflow-x: hidden;
       position: relative;
       z-index: 0;
@@ -571,55 +724,87 @@
       header .container { padding: 0; justify-content: flex-start; gap: 12px; }
       .header-actions { margin-left: auto; }
       .grid-dashboard { display: block; height: auto; overflow: visible; }
-      .main-content { margin-left: 0; }
-      .sidebar-nav {
+      .main-content { margin-left: 0; overflow-y: visible; }
+
+      /* Mobile: floating pill nav at bottom */
+      .vertical-sidebar {
         position: fixed;
-        top: auto;
         bottom: 24px;
         left: 16px;
         right: 16px;
+        z-index: 1000;
+      }
+      .vertical-sidebar nav {
+        width: 100% !important;
         height: 72px;
-        width: auto !important;
         flex-direction: row;
+        align-items: center;
         border-right: none;
         border: 1.5px solid var(--Lemon);
         border-radius: 999px;
         background: #0A0A0A;
-        z-index: 1000;
-        justify-content: space-evenly;
-        padding: 0 16px;
+        padding: 0 12px;
         box-shadow: 0 0 40px rgba(198, 255, 0, 0.12);
       }
-      .sidebar-nav a {
-        flex-direction: column;
-        gap: 4px;
-        padding: 10px 0;
-        font-size: 10px;
+      #sidebar-toggle:checked ~ nav,
+      #sidebar-toggle:not(:checked) ~ nav {
+        width: 100% !important;
+        height: 72px;
+      }
+
+      .sidebar-toggle-wrap,
+      .sidebar-header,
+      .sidebar__item--heading,
+      .sidebar__item.logout { display: none; }
+
+      .sidebar__wrapper { flex: none; }
+      .sidebar__list {
+        flex-direction: row;
+        width: 100%;
+        justify-content: space-evenly;
+        gap: 0;
+      }
+      .sidebar__item {
+        height: auto;
         flex: 1;
+        border-radius: 0;
+      }
+      .sidebar__item.new-scan { display: none; }
+      .sidebar__link {
+        flex-direction: column;
+        gap: 2px;
+        padding: 8px 0;
         border-left: none;
-        border-top: none;
-        min-height: 48px;
         background: none;
+        height: auto;
+        position: relative;
       }
-      .sidebar-nav a:hover, .sidebar-nav a.active { background: none; border-top: none; }
-      .sidebar-label, .collapse-toggle, .nav-text { display: none !important; }
-
-      /* Mobile text-only labels for one-thumb reach */
-      .sidebar-nav a::after {
-          content: attr(data-label);
-          font-size: 8px;
-          font-weight: 900;
-          text-transform: uppercase;
-          letter-spacing: 0.05em;
-          opacity: 0.6;
+      .sidebar__link .icon {
+        width: auto;
+        height: auto;
       }
-      .sidebar-nav a.active::after { opacity: 1; color: var(--Lemon); }
+      .sidebar__link .icon svg {
+        width: 20px;
+        height: 20px;
+        stroke: var(--Neutral-500);
+      }
+      .sidebar__link .text {
+        font-size: 8px;
+        font-weight: 900;
+        text-transform: uppercase;
+        letter-spacing: 0.05em;
+        opacity: 0.6;
+        color: var(--Neutral-400);
+        pointer-events: auto;
+      }
+      .sidebar__link.active .text { opacity: 1; color: var(--Lemon); }
+      .sidebar__link.active .icon svg { stroke: var(--Lemon); }
 
-      /* Active indicator — two tiny bars under active tab */
-      .sidebar-nav a.active::before {
+      /* Active indicator — two tiny bars */
+      .sidebar__link.active::before {
           content: '';
           position: absolute;
-          bottom: 6px;
+          bottom: 0;
           left: 50%;
           transform: translateX(-50%);
           width: 12px;
@@ -631,10 +816,6 @@
 
       .main-content { padding: 12px 12px 120px; }
       .container { padding: 0 12px; }
-      .purchase-overlay { top: 80px; left: 0; right: 0; bottom: 84px; }
-      .scan-overlay { top: 80px; left: 0; right: 0; bottom: 84px; }
-      #purchaseSuccess { top: 80px; left: 0; right: 0; bottom: 84px; }
-      #creditOverlay { top: 80px; left: 0; right: 0; bottom: 84px; }
     }
     .glass-card { background: var(--Glass); border: 1px solid var(--Glass-Border); border-radius: 20px; padding: 32px; }
     .dashboard-split { display: flex; gap: 32px; align-items: flex-start; }
@@ -656,9 +837,8 @@
 
     /* ── HYPER-MODERN SCAN OVERLAY ── */
     .scan-overlay {
-      position: fixed; top: 80px; left: var(--sidebar-width, 260px); right: 0; bottom: 0;
+      position: absolute; top: 0; left: 0; right: 0; bottom: 0;
       background: #000; z-index: 500; display: none; flex-direction: column;
-      transition: left 0.3s cubic-bezier(0.4, 0, 0.2, 1);
     }
     .scan-overlay.active { display: flex; animation: scanFadeIn 0.35s ease-out; }
     @keyframes scanFadeIn { 0% { opacity: 0; } 100% { opacity: 1; } }
@@ -844,7 +1024,7 @@
     .landscape-grid { display: grid; grid-template-columns: 1fr 1.2fr; gap: 48px; align-items: start; }
 
     /* FULL-SCREEN PURCHASE */
-    .purchase-overlay { position: fixed; top: 80px; left: var(--sidebar-width, 260px); right: 0; bottom: 0; background: #000; z-index: 500; display: none; flex-direction: column; transition: left 0.3s cubic-bezier(0.4, 0, 0.2, 1); }
+    .purchase-overlay { position: absolute; top: 0; left: 0; right: 0; bottom: 0; background: #000; z-index: 500; display: none; flex-direction: column; }
     .purchase-overlay.active { display: flex; }
     .purchase-header { display: flex; align-items: center; justify-content: space-between; padding: 24px 40px; border-bottom: 1px solid var(--Glass-Border); flex-shrink: 0; }
     .purchase-body { flex: 1; display: grid; grid-template-columns: 1.3fr 1fr; gap: 0; overflow: hidden auto; }
@@ -959,7 +1139,7 @@
 }
 
     /* ── PURCHASE SUCCESS OVERLAY ── */
-    #purchaseSuccess { position: fixed; top: 80px; left: var(--sidebar-width, 260px); right: 0; bottom: 0; background: #000; z-index: 1000; display: none; flex-direction: column; align-items: center; justify-content: center; transition: left 0.3s cubic-bezier(0.4, 0, 0.2, 1); }
+    #purchaseSuccess { position: absolute; top: 0; left: 0; right: 0; bottom: 0; background: #000; z-index: 1000; display: none; flex-direction: column; align-items: center; justify-content: center; }
     #purchaseSuccess.active { display: flex; }
     .success-card { background: var(--Glass); border: 1px solid var(--Glass-Border); border-radius: 32px; padding: 48px 40px; max-width: 420px; width: 90%; text-align: center; position: relative; overflow: hidden; animation: successCardIn 0.5s cubic-bezier(0.16,1,0.3,1) both; }
     .success-card::before { content: ''; position: absolute; top: -50%; left: -50%; width: 200%; height: 200%; background: radial-gradient(circle at 50% 0%, rgba(198,255,0,0.06) 0%, transparent 60%); pointer-events: none; }
@@ -1115,7 +1295,7 @@
     #networkStatus.offline .status-dot { background: var(--Error); box-shadow: 0 0 10px var(--Error); animation: none; }
     #offlineOverlay { position: fixed; inset: 0; background: rgba(0,0,0,0.85); backdrop-filter: blur(10px); z-index: 99999999; display: none; align-items: center; justify-content: center; text-align: center; }
     .offline-card { background: var(--Glass); border: 1px solid var(--Glass-Border); padding: 40px; border-radius: 24px; max-width: 320px; color: #fff; }
-    #creditOverlay { position: fixed; top: 80px; left: var(--sidebar-width, 260px); right: 0; bottom: 0; background: rgba(0,0,0,0.9); backdrop-filter: blur(20px); z-index: 500; display: none; align-items: center; justify-content: center; text-align: center; transition: left 0.3s cubic-bezier(0.4, 0, 0.2, 1); }
+    #creditOverlay { position: absolute; top: 0; left: 0; right: 0; bottom: 0; background: rgba(0,0,0,0.9); backdrop-filter: blur(20px); z-index: 500; display: none; align-items: center; justify-content: center; text-align: center; }
     .credit-card { background: #0a0a0a; border: 2px solid var(--Mint); padding: 60px 40px; border-radius: 32px; max-width: 440px; box-shadow: 0 0 50px rgba(198, 255, 0, 0.2); }
   </style>
 </head>
@@ -1175,273 +1355,6 @@
 
   <div id="offlineOverlay"><div class="offline-card"><div style="font-size:32px; margin-bottom:24px">📡</div><h2 style="font-size:18px; font-weight:800; margin-bottom:12px">Sync Interrupted</h2><p style="font-size:12px; color:var(--Neutral-400)">Your internet connection is unstable. KORRA has paused updates.</p></div></div>
 
-  <div id="creditOverlay"><div class="credit-card"><div style="font-size:48px; margin-bottom:32px">💎</div><h2 style="font-size:24px; font-weight:900; margin-bottom:16px">Credits Depleted</h2><p style="font-size:14px; color:var(--Neutral-400); margin-bottom:40px">Your balance has reached 0 credits. Please top up to continue.</p><button class="btn-primary" style="width:100%; height:56px" onclick="window.dismissCreditError(); window.switchTab('billing'); window.openModal('topUpModal')">Top Up Now</button><button class="btn-outline" style="width:100%; border:none; margin-top:16px; color:var(--Neutral-500)" onclick="window.dismissCreditError()">Later</button></div></div>
-
-  <!-- PURCHASE SUCCESS CELEBRATION OVERLAY -->
-  <div id="purchaseSuccess">
-    <div class="success-card" style="position:relative;">
-      <button style="position:absolute;top:12px;right:12px;width:32px;height:32px;border:none;background:rgba(255,255,255,0.06);border-radius:50%;color:var(--Neutral-500);font-size:14px;cursor:pointer;display:flex;align-items:center;justify-content:center;" onclick="document.getElementById('purchaseSuccess').classList.remove('active')"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M18 6L6 18"/><path d="M6 6l12 12"/></svg></button>
-      <div class="success-icon-wrap">
-        <svg width="80" height="80" viewBox="0 0 100 100">
-          <circle class="success-ring" cx="50" cy="50" r="30"/>
-          <path class="success-check" d="M38 52l8 8 18-18"/>
-        </svg>
-      </div>
-      <h2 class="success-title">Payment Successful</h2>
-      <p class="success-sub">Your credits have been added</p>
-      <div class="success-credits" id="successCreditsCount">0</div>
-      <div class="success-credits-label">Credits Added</div>
-      <div style="font-size:13px;color:var(--Neutral-400);margin-bottom:16px;animation:successFadeUp 0.4s 1.15s both;">New balance: <strong style="color:#fff;" id="successNewBalance">0</strong> credits</div>
-      <hr class="success-divider">
-      <div class="success-row"><span class="label">Reference</span><span><span class="value" id="successRef">—</span><button class="copy-btn" id="successCopyBtn" onclick="const r=document.getElementById('successRef');navigator.clipboard.writeText(r.dataset.fullRef||r.textContent);this.textContent='Copied!';setTimeout(()=>this.textContent='Copy',2000)">Copy</button></span></div>
-      <div class="success-actions">
-        <button class="btn-primary" id="successPrimaryCTA" style="width:100%;height:52px;font-size:13px;">Start Scanning</button>
-        <button class="btn-ghost" id="successSecondaryCTA" style="width:100%;height:40px;font-size:11px;color:var(--Neutral-500);">View Billing</button>
-      </div>
-    </div>
-  </div>
-
-  <div class="purchase-overlay" id="receiptOverlay">
-    <div class="purchase-header">
-      <div style="display:flex; align-items:center; gap:12px;">
-        <button class="btn-ghost" style="display:flex;align-items:center;gap:8px;font-size:13px;font-weight:600;color:var(--Neutral-400);padding:8px 16px;border-radius:12px;" onclick="window.closeReceipt()"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M19 12H5"/><path d="M12 19l-7-7 7-7"/></svg>Back</button>
-        <h2 style="margin:0;font-size:18px;">Payment Receipt</h2>
-      </div>
-      <span style="font-size:11px;font-weight:700;color:var(--Neutral-400);background:var(--Glass);padding:6px 16px;border-radius:99px;border:1px solid var(--Glass-Border);" id="receiptStatusBadge">PAID</span>
-    </div>
-    <div class="purchase-body" style="flex:1;overflow-y:auto;display:flex;align-items:center;justify-content:center;padding:32px;">
-      <div style="width:100%;max-width:480px;">
-        <div style="background:var(--Glass);border-radius:24px;border:1px solid var(--Glass-Border);padding:40px;">
-          <div style="text-align:center;margin-bottom:32px;">
-            <div style="width:56px;height:56px;border-radius:50%;background:rgba(198,255,0,0.15);display:flex;align-items:center;justify-content:center;margin:0 auto 16px;">
-              <svg width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="#C6FF00" stroke-width="1.5"><path d="M12 2L2 7l10 5 10-5-10-5z"/><path d="M2 17l10 5 10-5"/><path d="M2 12l10 5 10-5"/></svg>
-            </div>
-            <h2 style="margin:0 0 4px;font-size:20px;font-weight:900;">Receipt</h2>
-            <p style="margin:0;font-size:12px;color:var(--Neutral-500);font-family:monospace;" id="receiptRef">—</p>
-          </div>
-          <div style="display:flex;flex-direction:column;gap:16px;">
-            <div style="display:flex;justify-content:space-between;padding:12px 0;border-bottom:1px solid var(--Glass-Border);">
-              <span style="font-size:13px;color:var(--Neutral-400);">Date</span>
-              <span style="font-size:13px;font-weight:600;" id="receiptDate">—</span>
-            </div>
-            <div style="display:flex;justify-content:space-between;padding:12px 0;border-bottom:1px solid var(--Glass-Border);">
-              <span style="font-size:13px;color:var(--Neutral-400);">Credits Added</span>
-              <span style="font-size:13px;font-weight:600;" id="receiptCredits">—</span>
-            </div>
-            <div style="display:flex;justify-content:space-between;padding:12px 0;border-bottom:1px solid var(--Glass-Border);">
-              <span style="font-size:13px;color:var(--Neutral-400);">Amount Paid</span>
-              <span style="font-size:18px;font-weight:900;color:var(--Mint);" id="receiptAmount">—</span>
-            </div>
-            <div style="display:flex;justify-content:space-between;padding:12px 0;">
-              <span style="font-size:13px;color:var(--Neutral-400);">Status</span>
-              <span style="font-size:13px;font-weight:700;color:var(--Mint);">PAID</span>
-            </div>
-          </div>
-          <div style="display:flex;flex-direction:column;gap:8px;margin-top:32px;">
-            <button class="btn-primary" style="width:100%;height:52px;font-size:13px;" onclick="window.print()">Print Receipt</button>
-            <button class="btn-ghost" style="width:100%;height:40px;font-size:11px;color:var(--Neutral-500);" onclick="window.closeReceipt()">Close</button>
-          </div>
-        </div>
-      </div>
-    </div>
-  </div>
-
-  <div class="scan-overlay" id="scanModal">
-    <div class="scan-header">
-      <button class="btn-ghost" style="display:flex;align-items:center;gap:8px;font-size:13px;font-weight:600;color:var(--Neutral-400);padding:8px 16px;border-radius:12px;" onclick="if(document.getElementById('frontPhoto').files[0] || document.getElementById('sidePhoto').files[0] || document.getElementById('scanClientName').value) { if(!confirm('Discard current scan data?')) return; } window.closeModal('scanModal')"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M19 12H5"/><path d="M12 19l-7-7 7-7"/></svg> Back</button>
-      <h2 style="margin:0;font-size:15px;font-weight:900;letter-spacing:0.05em;color:var(--Accent-Teal)">DIGITAL FITTING ROOM</h2>
-      <span style="font-size:10px;font-weight:700;color:var(--Neutral-500);background:var(--Glass);padding:4px 12px;border-radius:99px;border:1px solid var(--Glass-Border);display:flex;align-items:center;gap:6px;"><span style="width:6px;height:6px;border-radius:50%;background:var(--Mint);display:inline-block;"></span> Step 1 / 3</span>
-    </div>
-    <div class="scan-body">
-      <div>
-        <label style="font-size:10px;font-weight:900;color:var(--Neutral-500);text-transform:uppercase;letter-spacing:0.1em;margin-bottom:8px;display:block;">Body Specs</label>
-        <input type="text" id="scanClientName" class="input-field" placeholder="Full Name" required>
-        <input type="number" id="scanHeight" class="input-field" placeholder="Height in CM" required>
-        <select id="scanGender" class="input-field" style="appearance:none;cursor:pointer;"><option value="male">Male</option><option value="female">Female</option></select>
-
-        <div class="pro-tips-card">
-          <h4><svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" style="color:var(--Mint)"><path d="m12 3 1.912 5.813a2 2 0 0 0 1.275 1.275L21 12l-5.813 1.912a2 2 0 0 0-1.275 1.275L12 21l-1.912-5.813a2 2 0 0 0-1.275-1.275L3 12l5.813-1.912a2 2 0 0 0 1.275-1.275L12 3Z"/><path d="M5 3v4"/><path d="M19 17v4"/><path d="M3 5h4"/><path d="M17 19h4"/></svg> Pro-Tips</h4>
-          <div class="tip-row">
-            <span class="tip-bullet"><svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M21.3 15.3a2.4 2.4 0 0 1 0 3.4l-2.6 2.6a2.4 2.4 0 0 1-3.4 0L2.7 8.7a2.4 2.4 0 0 1 0-3.4l2.6-2.6a2.4 2.4 0 0 1 3.4 0Z"/><path d="m7.5 10.5 2 2"/><path d="m10.5 7.5 2 2"/><path d="m13.5 4.5 2 2"/><path d="m4.5 13.5 2 2"/></svg></span>
-            <span><b>A-Pose:</b> Keep arms 15" away.</span>
-          </div>
-          <div class="tip-row">
-            <span class="tip-bullet"><svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M20.38 3.46 16 2a4 4 0 0 1-8 0L3.62 3.46a2 2 0 0 0-1.34 2.23l.58 3.47a1 1 0 0 0 .99.84H6v10c0 1.1.9 2 2 2h8a2 2 0 0 0 2-2V10h2.15a1 1 0 0 0 .99-.84l.58-3.47a2 2 0 0 0-1.34-2.23z"/></svg></span>
-            <span><b>Fit:</b> Wear form-fitting clothes.</span>
-          </div>
-          <div class="tip-row">
-            <span class="tip-bullet"><svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><rect width="18" height="18" x="3" y="3" rx="2"/><path d="M3 9h18"/><path d="M3 15h18"/><path d="M9 3v18"/><path d="M15 3v18"/></svg></span>
-            <span><b>Wall:</b> Stand against a plain background.</span>
-          </div>
-        </div>
-      </div>
-      <div>
-        <label style="font-size:10px;font-weight:900;color:var(--Neutral-500);text-transform:uppercase;letter-spacing:0.1em;margin-bottom:8px;display:block;">Biometric Capture</label>
-        <div class="photo-grid">
-          <div class="slot-column">
-            <div class="guide-box">
-              <img src="/assets/front_pose.png" alt="Front Reference">
-              <span class="guide-tag">REF: FRONT</span>
-            </div>
-            <div class="photo-box" id="frontLabel" onclick="window.handlePreviewClick('front')">
-              <img class="preview-img" id="frontPreview" alt="Front Preview">
-              <div class="preview-overlay"><span style="font-size:10px;font-weight:900;color:#fff;">RETAKE</span></div>
-              <div class="placeholder-content" style="display:flex;flex-direction:column;align-items:center;">
-                <span>Front Pose</span>
-                <div class="tap-hint">TAP TO SNAP</div>
-              </div>
-              <input type="file" id="frontPhoto" accept="image/*" capture="environment" required style="display:none" onchange="window.handleFile(this, 'frontLabel')">
-            </div>
-          </div>
-          <div class="slot-column">
-            <div class="guide-box">
-              <img src="/assets/side_pose.png" alt="Side Reference">
-              <span class="guide-tag">REF: SIDE</span>
-            </div>
-            <div class="photo-box" id="sideLabel" onclick="window.handlePreviewClick('side')">
-              <img class="preview-img" id="sidePreview" alt="Side Preview">
-              <div class="preview-overlay"><span style="font-size:10px;font-weight:900;color:#fff;">RETAKE</span></div>
-              <div class="placeholder-content" style="display:flex;flex-direction:column;align-items:center;">
-                <span>Side Profile</span>
-                <div class="tap-hint">TAP TO SNAP</div>
-              </div>
-              <input type="file" id="sidePhoto" accept="image/*" capture="environment" required style="display:none" onchange="window.handleFile(this, 'sideLabel')">
-            </div>
-          </div>
-        </div>
-        <div id="extractionProgress" class="polling-overlay" style="margin-top:16px;margin-bottom:16px;"><div style="font-size:11px;font-weight:900;color:var(--Mint);letter-spacing:0.1em" id="progressStatus">QUEUEING TASK...</div><div class="polling-bar"><div class="polling-fill" id="progressFill"></div></div></div>
-        <form id="scanForm">
-          <button type="submit" class="btn-scan" id="btnRunScan">
-            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M5 12h14"/><path d="M12 5l7 7-7 7"/></svg>
-            Get Measurements
-          </button>
-          <button type="button" class="btn-dismiss" onclick="if(document.getElementById('frontPhoto').files[0] || document.getElementById('sidePhoto').files[0] || document.getElementById('scanClientName').value) { if(!confirm('Discard current scan data?')) return; } window.closeModal('scanModal')">Cancel</button>
-        </form>
-      </div>
-    </div>
-  </div>
-
-<div class="purchase-overlay" id="topUpModal">
-  <div class="purchase-header">
-    <div style="display:flex; align-items:center; gap:12px;">
-      <button class="btn-ghost" style="display:flex;align-items:center;gap:8px;font-size:13px;font-weight:600;color:var(--Neutral-400);padding:8px 16px;border-radius:12px;" onclick="window.closeModal('topUpModal')"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M19 12H5"/><path d="M12 19l-7-7 7-7"/></svg>Back</button>
-      <h2 style="margin:0; font-size:18px;">Purchase Credits</h2>
-    </div>
-    <span style="font-size:11px;font-weight:700;color:var(--Neutral-400);background:var(--Glass);padding:6px 16px;border-radius:99px;border:1px solid var(--Glass-Border);"><span id="bundleRateLabel">₦685</span> <span style="font-weight:400">/ scan</span></span>
-  </div>
-  <div class="purchase-body">
-    <div class="purchase-cards">
-      <div class="grid-2col">
-        <!-- 25 SCANS -->
-        <div class="purchase-card c25" data-bundle="25" onclick="window.selectBundle(this)">
-          <div class="card-bg"></div>
-          <div class="card-badge" style="background:transparent;color:var(--Neutral-500);border:1px solid var(--Glass-Border);">STARTER</div>
-          <div class="card-icon">
-            <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="var(--Mint)" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><polygon points="13 2 3 14 12 14 11 22 21 10 12 10 13 2"/></svg>
-          </div>
-          <div class="card-name">25 Scans</div>
-          <div class="card-meta">Quick starter pack</div>
-          <div class="card-price-row">
-            <span class="card-price"><span class="bundleCurr">₦</span><span id="bundleTotal25">17,125</span></span>
-            <span class="card-per"><span id="bundlePerScan25">₦685 / scan</span></span>
-          </div>
-        </div>
-        <!-- 50 SCANS -->
-        <div class="purchase-card c50" data-bundle="50" onclick="window.selectBundle(this)">
-          <div class="card-bg"></div>
-          <div class="card-badge" style="background:rgba(198,255,0,0.15);color:var(--Mint);">POPULAR</div>
-          <div class="card-icon">
-            <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="var(--Mint)" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2"/></svg>
-          </div>
-          <div class="card-name">50 Scans</div>
-          <div class="card-meta">Standard value pack</div>
-          <div class="card-price-row">
-            <span class="card-price"><span class="bundleCurr">₦</span><span id="bundleTotal50">34,250</span></span>
-            <span class="card-per"><span id="bundlePerScan50">₦685 / scan</span></span>
-          </div>
-        </div>
-        <!-- 150 SCANS -->
-        <div class="purchase-card c150" data-bundle="150" onclick="window.selectBundle(this)">
-          <div class="card-bg"></div>
-          <div class="card-badge" style="background:rgba(79,195,247,0.15);color:#4FC3F7;">BEST VALUE</div>
-          <div class="card-icon">
-            <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="#4FC3F7" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><path d="M12 19V5M5 12l7-7 7 7"/></svg>
-          </div>
-          <div class="card-name">150 Scans</div>
-          <div class="card-meta">Save 10% — growth pack</div>
-          <div class="card-price-row">
-            <span class="card-price"><span class="bundleCurr">₦</span><span id="bundleTotal150">92,475</span></span>
-            <span class="card-per"><span id="bundlePerScan150">₦617 / scan</span></span>
-            <span class="card-save">10% off</span>
-          </div>
-        </div>
-        <!-- 500 SCANS -->
-        <div class="purchase-card c500" data-bundle="500" onclick="window.selectBundle(this)">
-          <div class="card-bg"></div>
-          <div class="card-badge" style="background:rgba(124,77,255,0.15);color:#B388FF;">PRO</div>
-          <div class="card-icon">
-            <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="#B388FF" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><path d="M12 2L2 7l10 5 10-5-10-5z"/><path d="M2 17l10 5 10-5"/><path d="M2 12l10 5 10-5"/></svg>
-          </div>
-          <div class="card-name">500 Scans</div>
-          <div class="card-meta">Save 15% — bulk power</div>
-          <div class="card-price-row">
-            <span class="card-price"><span class="bundleCurr">₦</span><span id="bundleTotal500">291,000</span></span>
-            <span class="card-per"><span id="bundlePerScan500">₦582 / scan</span></span>
-            <span class="card-save">15% off</span>
-          </div>
-        </div>
-      </div>
-      <!-- CUSTOM -->
-      <div class="purchase-card ccustom" data-bundle="custom" onclick="window.selectBundle(this)">
-        <div class="card-bg"></div>
-        <div class="card-icon">
-          <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="var(--Mint)" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"/><path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z"/></svg>
-        </div>
-        <div style="display:flex; justify-content:space-between; align-items:center; flex-wrap:wrap; gap:8px;">
-          <div>
-            <div class="card-name" style="color:var(--Mint);">Custom Credits</div>
-            <div class="card-meta">Any quantity — auto discount applied</div>
-          </div>
-          <span style="font-size:9px;font-weight:700;color:var(--Neutral-500);background:rgba(198,255,0,0.1);padding:3px 10px;border-radius:99px;border:1px solid rgba(198,255,0,0.2);white-space:nowrap;">up to 25% off</span>
-        </div>
-        <div class="custom-input" style="margin-top:12px;">
-          <input type="number" class="custom-bundle-qty input-field" min="1" placeholder="Enter any quantity..." style="margin-bottom:0;height:44px;font-size:13px;" oninput="window.updateCustomBundle(this)" onclick="event.stopPropagation()">
-          <div style="display:flex;justify-content:space-between;align-items:center;margin-top:10px;">
-              <span style="font-size:12px;color:var(--Neutral-400);"><span class="bundle-per-scan">₦685 / scan</span></span>
-            <span style="font-size:20px;font-weight:900;color:var(--Mint);" class="bundle-total"><span>—</span></span>
-          </div>
-          <div style="font-size:10px;color:var(--Neutral-500);margin-top:4px;text-align:right;" class="bundle-discount">Enter quantity</div>
-        </div>
-      </div>
-    </div>
-
-    <!-- RIGHT SUMMARY PANEL -->
-    <div class="purchase-summary">
-      <div>
-        <div class="summary-title">Order Summary</div>
-        <div id="summaryContent">
-          <div class="summary-row"><span class="label">Bundle</span><span class="value" id="summaryBundle">50 Scans</span></div>
-          <div class="summary-row"><span class="label">Per scan</span><span class="value" id="summaryPerScan">₦685</span></div>
-          <div class="summary-row"><span class="label">Discount</span><span class="value" id="summaryDiscount" style="color:var(--Mint);">—</span></div>
-          <hr class="summary-divider">
-          <div class="summary-total"><span class="label">Total</span><span class="value" id="summaryTotal">₦34,250</span></div>
-          <div id="summarySavingsWrap" style="display:none;"><span class="summary-save-badge" id="summarySavings">You save 10%</span></div>
-        </div>
-      </div>
-      <div>
-        <div class="summary-promo">
-          <input type="text" id="promoCodeInput" class="input-field" style="margin-bottom:0;height:44px;font-size:12px;" placeholder="Promo code">
-          <button class="btn-outline" style="height:44px;padding:0 16px;font-size:10px;" onclick="window.applyPromo()">Apply</button>
-        </div>
-        <div id="promoStatus" style="font-size:10px;margin-bottom:12px;display:none;"></div>
-        <div style="font-size:9px;color:var(--Neutral-500);text-align:center;margin-bottom:12px;line-height:1.4;">Test: 4084 0840 8408 4081 | any future date | any 3-digit CVV</div>
-        <button class="btn-primary" id="btnConfirmPurchase" style="width:100%;height:52px;font-size:13px;" onclick="window.handlePurchase()">Purchase Credits</button>
-        <button class="btn-ghost" style="width:100%;height:40px;font-size:11px;color:var(--Neutral-500);margin-top:8px;" onclick="window.closeModal('topUpModal')">Cancel</button>
-      </div>
-    </div>
-  </div>
-</div>
-
   <!-- DOWNLOAD PATTERN MODAL -->
   <div class="modal-overlay" id="downloadPatternModal" style="z-index:3000;">
     <div class="modal-card" style="max-width:700px; padding:32px;">
@@ -1470,160 +1383,6 @@
         <button class="btn-outline" onclick="document.getElementById('downloadPatternModal').style.display='none'">Cancel</button>
         <button class="btn-primary" onclick="KORRA_MS._exportPattern()">Download Pattern</button>
       </div>
-    </div>
-  </div>
-
-  <!-- INVITE MODAL (split-screen) -->
-  <div class="modal-overlay" id="shareModal" style="z-index:3000;">
-    <div class="ss-split">
-      <div class="ss-left" style="background: linear-gradient(135deg, rgba(0,0,0,0.3), rgba(0,0,0,0.1)), url('/assets/Invite-screen-image.png') center/cover no-repeat;">
-        <div class="ss-left-content">
-          <div class="ss-brand">KORRA</div>
-          <h2 class="ss-tagline">Scale your practice,<br>seamlessly.</h2>
-          <p class="ss-sub">Send a deep link for your client to capture their body measurements.</p>
-          <div class="ss-left-footer">Invite · Enroll · Measure</div>
-        </div>
-      </div>
-      <div class="ss-right">
-        <button class="ss-close" onclick="window.closeModal('shareModal')">✕</button>
-        <div class="ss-right-inner">
-          <div class="ss-header" style="display:flex; justify-content:space-between; align-items:flex-start;">
-            <div>
-              <h2 class="ss-title">Invite Client</h2>
-              <p class="ss-desc">Send a deep link for biometric enrollment.</p>
-            </div>
-          </div>
-
-          <div class="ss-field">
-            <label class="ss-label">CLIENT NAME</label>
-            <input type="text" id="shareName" class="ss-input" placeholder="e.g. James" required>
-          </div>
-
-          <div class="ss-field">
-            <label class="ss-label">PHONE (WHATSAPP)</label>
-            <div class="ss-input-wrap">
-              <input type="text" id="sharePhone" class="ss-input" placeholder="e.g. 2348000000000" oninput="window.updateDeepLinkSilent()">
-              <button class="ss-input-btn" onclick="window.handleContactPicker()">
-                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"/><circle cx="12" cy="7" r="4"/></svg>
-                Import
-              </button>
-            </div>
-          </div>
-
-          <div class="ss-field">
-            <label class="ss-label">EMAIL (OPTIONAL)</label>
-            <input type="email" id="shareEmail" class="ss-input" placeholder="e.g. james@example.com" oninput="window.updateDeepLinkSilent()">
-          </div>
-
-          <div id="linkGeneratedArea" class="ss-link-area" style="display:none;">
-            <div class="ss-link-box">
-              <code id="deepLinkDisplay" class="ss-link-text">https://...</code>
-            </div>
-            <div class="ss-link-actions">
-              <button class="ss-btn-outline" onclick="window.copyDeepLink()">Copy Link</button>
-              <button class="ss-btn-whatsapp" onclick="window.shareToWhatsApp()">WhatsApp</button>
-              <button class="ss-btn-outline" onclick="window.shareToEmail()">Email</button>
-            </div>
-          </div>
-
-          <div class="ss-actions">
-            <button type="button" class="ss-btn-primary" id="btnGenerateLink" onclick="window.generateDeepLink()">Generate Link</button>
-            <button type="button" class="ss-btn-ghost" onclick="window.closeModal('shareModal')">Cancel</button>
-          </div>
-        </div>
-      </div>
-    </div>
-  </div>
-
-  <!-- SHARE SCAN MODAL (split layout) -->
-  <div class="modal-overlay" id="shareScanModal" style="z-index:3000;">
-    <div class="ss-split">
-      <div class="ss-left">
-        <div class="ss-left-content">
-          <div class="ss-brand">KORRA</div>
-          <h2 class="ss-tagline">Your measurements,<br>anywhere.</h2>
-          <p class="ss-sub">Share this scan with your client or tailor. They'll see the full 3D body scan with every measurement.</p>
-          <div class="ss-left-footer">Scan · Share · Fit</div>
-        </div>
-      </div>
-      <div class="ss-right">
-        <button class="ss-close" onclick="window.closeModal('shareScanModal')">✕</button>
-        <div class="ss-right-inner">
-          <div class="ss-header">
-            <h2 class="ss-title">Share Scan</h2>
-            <p class="ss-desc">Generate a shareable link for this body scan.</p>
-          </div>
-
-          <div class="ss-field">
-            <label class="ss-label">CLIENT NAME</label>
-            <input type="text" id="shareScanName" class="ss-input" placeholder="e.g. James">
-          </div>
-
-          <div class="ss-field">
-            <label class="ss-label">PHONE (WHATSAPP)</label>
-            <div class="ss-input-wrap">
-              <input type="text" id="shareScanPhone" class="ss-input" placeholder="e.g. 2348000000000" oninput="window.updateScanLinkSilent()">
-              <button class="ss-input-btn" onclick="window.handleContactPicker('shareScanName', 'shareScanPhone')">
-                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"/><circle cx="12" cy="7" r="4"/></svg>
-                Import
-              </button>
-            </div>
-          </div>
-
-          <div class="ss-field">
-            <label class="ss-label">EMAIL (OPTIONAL)</label>
-            <input type="email" id="shareScanEmail" class="ss-input" placeholder="e.g. james@example.com" oninput="window.updateScanLinkSilent()">
-          </div>
-
-          <div id="shareScanLinkArea" class="ss-link-area" style="display:none;">
-            <div class="ss-link-box">
-              <code id="shareScanLink" class="ss-link-text">https://...</code>
-            </div>
-            <div class="ss-link-actions">
-              <button class="ss-btn-outline" onclick="window.copyScanLink()">Copy Link</button>
-              <button class="ss-btn-whatsapp" onclick="window.shareScanWhatsApp()">WhatsApp</button>
-              <button class="ss-btn-outline" onclick="window.shareScanEmail()">Email</button>
-            </div>
-          </div>
-
-          <div class="ss-actions">
-            <button type="button" class="ss-btn-primary" id="btnGenerateScanLink" onclick="window.generateScanLink()">Generate Link</button>
-            <button type="button" class="ss-btn-ghost" onclick="window.closeModal('shareScanModal')">Cancel</button>
-          </div>
-        </div>
-      </div>
-    </div>
-  </div>
-
-  <!-- CUSTOM MODAL SYSTEM -->
-  <div class="modal-overlay" id="customModal" style="display:none; z-index:3000;">
-    <div class="modal-card" style="max-width:420px; text-align:center; padding:40px 32px;">
-      <div id="customModalIcon" style="font-size:32px; margin-bottom:16px;"></div>
-      <h3 id="customModalTitle" style="font-size:18px; margin-bottom:8px; letter-spacing:-0.03em;"></h3>
-      <p id="customModalMsg" style="font-size:14px; color:var(--Neutral-400); margin-bottom:24px; line-height:1.5;"></p>
-      <div id="customModalInputWrap" style="display:none; margin-bottom:20px;">
-        <input type="text" id="customModalInput" class="input-field" placeholder="Enter value..." style="margin-bottom:0;">
-      </div>
-      <div style="display:flex; gap:12px;">
-        <button id="customModalCancel" class="btn-outline" style="flex:1; display:none;">Cancel</button>
-        <button id="customModalOk" class="btn-primary" style="flex:1;">OK</button>
-      </div>
-    </div>
-  </div>
-
-  <!-- QR POSTER MODAL -->
-  <div class="modal-overlay" id="qrPosterModal">
-    <div class="modal-card" style="max-width:500px; text-align:center; padding:60px">
-      <div style="margin-bottom:32px">
-          <div style="display:flex; align-items:center; justify-content:center; gap:8px; margin:0 auto 12px;">
-            <img src="/assets/Korra_logo_final.png" alt="Korra" style="height:28px; width:auto;">
-            <span style="font-size:16px; font-weight:900; letter-spacing:-0.03em; color:var(--Mint);">Korra</span>
-          </div>
-      </div>
-      <div style="background:#fff; padding:40px; border-radius:16px; margin-bottom:32px; display:inline-block"><div id="posterQr" style="width:200px; height:200px; background:#eee; display:flex; align-items:center; justify-content:center; color:#000; font-size:10px; font-weight:900">GENERATE QR...</div></div>
-      <h2 style="font-size:32px; margin-bottom:12px; letter-spacing:-0.05em">SCAN TO START</h2>
-      <p style="color:var(--Neutral-400); margin-bottom:40px">Clinical-Grade Body Scanning Active.</p>
-      <div style="display:flex; gap:16px"><button class="btn-primary" style="flex:1" onclick="window.print()">Print Poster</button><button class="btn-outline" style="flex:1" onclick="window.closeModal('qrPosterModal')">Dismiss</button></div>
     </div>
   </div>
 
@@ -1672,57 +1431,102 @@
   <main>
     <div class="container" style="max-width: 100%; padding: 0;">
       <div class="grid-dashboard">
-        <aside class="sidebar-nav" id="sidebar" role="navigation" aria-label="Main Navigation">
-          <div class="sidebar-label">Artisan Tools</div>
-          <a onclick="window.switchTab('overview')" id="tab-overview" data-label="Home" aria-label="Home Overview">
-            <svg class="korra-icon" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round"><path d="M3 12l9-9 9 9v8a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z"/><polyline points="9 22 9 12 15 12 15 22"/></svg>
-            <span class="nav-text">Home</span>
-          </a>
-          <a onclick="window.switchTab('vault')" id="tab-vault" class="active" data-label="Clients" aria-label="Client Ledger">
-            <svg class="korra-icon" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="3" width="18" height="18" rx="2" ry="2"/><line x1="3" y1="9" x2="21" y2="9"/><line x1="9" y1="21" x2="9" y2="9"/></svg>
-            <span class="nav-text">Clients</span>
-          </a>
-          <div class="nav-center" onclick="window.openModal('scanModal')">
-            <div class="nav-center-icon">
-              <svg class="nav-center-svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
-                <path d="M3 8V5a2 2 0 0 1 2-2h3"/>
-                <path d="M16 3h3a2 2 0 0 1 2 2v3"/>
-                <path d="M21 16v3a2 2 0 0 1-2 2h-3"/>
-                <path d="M8 21H5a2 2 0 0 1-2-2v-3"/>
-                <line x1="5" y1="12" x2="19" y2="12"/>
-              </svg>
+        <input type="checkbox" id="sidebar-toggle" checked
+               onchange="localStorage.setItem('korra_sidebar_collapsed', !this.checked)">
+        <aside class="vertical-sidebar" id="sidebar" role="navigation" aria-label="Main Navigation">
+          <nav>
+            <div class="sidebar-toggle-wrap">
+              <label for="sidebar-toggle" tabindex="0">
+                <span class="toggle--icons">
+                  <svg width="18" height="18" viewBox="0 0 24 24" class="toggle-svg toggle--open">
+                    <path d="M3 5a1 1 0 1 0 0 2h18a1 1 0 1 0 0-2zM2 12a1 1 0 0 1 1-1h18a1 1 0 1 1 0 2H3a1 1 0 0 1-1-1M2 18a1 1 0 0 1 1-1h18a1 1 0 1 1 0 2H3a1 1 0 0 1-1-1"></path>
+                  </svg>
+                  <svg width="18" height="18" viewBox="0 0 24 24" class="toggle-svg toggle--close">
+                    <path d="M18.707 6.707a1 1 0 0 0-1.414-1.414L12 10.586 6.707 5.293a1 1 0 0 0-1.414 1.414L10.586 12l-5.293 5.293a1 1 0 1 0 1.414 1.414L12 13.414l5.293 5.293a1 1 0 0 0 1.414-1.414L13.414 12z"></path>
+                  </svg>
+                </span>
+              </label>
             </div>
-            <div class="nav-center-bubble">NEW SCAN</div>
-          </div>
-          <a onclick="window.switchTab('passports')" id="tab-passports" data-label="Profiles" aria-label="Saved Profiles">
-            <svg class="korra-icon" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="4" width="18" height="16" rx="2"/><line x1="7" y1="8" x2="17" y2="8"/><line x1="7" y1="12" x2="17" y2="12"/><line x1="7" y1="16" x2="11" y2="16"/></svg>
-            <span class="nav-text">Profiles</span>
-          </a>
 
-          <div class="sidebar-label" id="label-implementation">Implementation</div>
-          <a onclick="window.switchTab('widget')" id="tab-widget" data-label="Widget" data-mobile-hide="true" aria-label="Widget Customizer">
-            <svg class="korra-icon" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round"><rect x="2" y="3" width="20" height="14" rx="2" ry="2"/><line x1="8" y1="21" x2="16" y2="21"/><line x1="12" y1="17" x2="12" y2="21"/></svg>
-            <span class="nav-text">Widget</span>
-          </a>
-          <a onclick="window.switchTab('enterprise')" id="tab-enterprise" style="display:none" data-label="Insights" data-mobile-hide="true" aria-label="Intelligence Hub">
-            <svg class="korra-icon" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round"><path d="M21 16V8a2 2 0 0 0-1-1.73l-7-4a2 2 0 0 0-2 0l-7 4A2 2 0 0 0 3 8v8a2 2 0 0 0 1 1.73l7 4a2 2 0 0 0 2 0l7-4A2 2 0 0 0 21 16z"></path><polyline points="3.27 6.96 12 12.01 20.73 6.96"></polyline><line x1="12" y1="22.08" x2="12" y2="12"></line></svg>
-            <span class="nav-text">Intelligence Hub</span>
-          </a>
+            <div class="sidebar-header">
+              <div class="logo-mark"></div>
+              <figcaption>
+                <div class="app-name">KORRA</div>
+                <div class="app-sub">fitting studio</div>
+              </figcaption>
+            </div>
 
-          <div class="sidebar-label">Account</div>
-          <a onclick="window.switchTab('settings')" id="tab-settings" data-label="Settings" aria-label="Account Settings">
-            <svg class="korra-icon" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="3"/><path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 0 1 0 2.83 2 2 0 0 1-2.83 0l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 0 1-2 2 2 2 0 0 1-2-2v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 0 1-2.83 0 2 2 0 0 1 0-2.83l.06-.06a1.65 1.65 0 0 0 .33-1.82 1.65 1.65 0 0 0-1.51-1H3a2 2 0 0 1-2-2 2 2 0 0 1 2-2h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 0 1 0-2.83 2 2 0 0 1 2.83 0l.06.06a1.65 1.65 0 0 0 1.82.33 1.65 1.65 0 0 0 1-1.51V3a2 2 0 0 1 2-2 2 2 0 0 1 2 2v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 0 1 2.83 0 2 2 0 0 1 0 2.83l-.06.06a1.65 1.65 0 0 0-.33 1.82 1.65 1.65 0 0 0 1.51 1H21a2 2 0 0 1 2 2 2 2 0 0 1-2 2h-.09a1.65 1.65 0 0 0-1.51 1z"/></svg>
-            <span class="nav-text">Settings</span>
-          </a>
-          <a onclick="window.switchTab('billing')" id="tab-billing" data-mobile-hide="true">
-            <svg class="korra-icon" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round"><rect x="1" y="4" width="22" height="16" rx="2" ry="2"/><line x1="1" y1="10" x2="23" y2="10"/></svg>
-            <span class="nav-text">Billing</span>
-          </a>
+            <div class="sidebar__wrapper">
+              <ul class="sidebar__list">
+                <li class="sidebar__item item--heading"><h2>Artisan Tools</h2></li>
+                <li class="sidebar__item">
+                  <a onclick="window.switchTab('overview')" id="tab-overview" class="sidebar__link" data-tooltip="Home">
+                    <span class="icon"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round"><path d="M3 12l9-9 9 9v8a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z"/><polyline points="9 22 9 12 15 12 15 22"/></svg></span>
+                    <span class="text">Home</span>
+                  </a>
+                </li>
+                <li class="sidebar__item">
+                  <a onclick="window.switchTab('vault')" id="tab-vault" class="sidebar__link active" data-tooltip="Clients">
+                    <span class="icon"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="3" width="18" height="18" rx="2" ry="2"/><line x1="3" y1="9" x2="21" y2="9"/><line x1="9" y1="21" x2="9" y2="9"/></svg></span>
+                    <span class="text">Clients</span>
+                  </a>
+                </li>
+                <li class="sidebar__item new-scan">
+                  <a onclick="window.openModal('scanModal')" class="sidebar__link" data-tooltip="New Scan">
+                    <span class="icon"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M3 8V5a2 2 0 0 1 2-2h3"/><path d="M16 3h3a2 2 0 0 1 2 2v3"/><path d="M21 16v3a2 2 0 0 1-2 2h-3"/><path d="M8 21H5a2 2 0 0 1-2-2v-3"/><line x1="5" y1="12" x2="19" y2="12"/></svg></span>
+                    <span class="text">NEW SCAN</span>
+                  </a>
+                </li>
+                <li class="sidebar__item">
+                  <a onclick="window.switchTab('passports')" id="tab-passports" class="sidebar__link" data-tooltip="Profiles">
+                    <span class="icon"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="4" width="18" height="16" rx="2"/><line x1="7" y1="8" x2="17" y2="8"/><line x1="7" y1="12" x2="17" y2="12"/><line x1="7" y1="16" x2="11" y2="16"/></svg></span>
+                    <span class="text">Profiles</span>
+                  </a>
+                </li>
+              </ul>
 
-          <div class="collapse-toggle" onclick="window.toggleSidebar()">
-            <svg class="korra-icon" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round"><polyline points="15 18 9 12 15 6"/></svg>
-            <span class="nav-text">Collapse</span>
-          </div>
+              <ul class="sidebar__list">
+                <li class="sidebar__item item--heading"><h2>Implementation</h2></li>
+                <li class="sidebar__item">
+                  <a onclick="window.switchTab('widget')" id="tab-widget" class="sidebar__link" data-tooltip="Widget" data-mobile-hide="true">
+                    <span class="icon"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round"><rect x="2" y="3" width="20" height="14" rx="2" ry="2"/><line x1="8" y1="21" x2="16" y2="21"/><line x1="12" y1="17" x2="12" y2="21"/></svg></span>
+                    <span class="text">Widget</span>
+                  </a>
+                </li>
+                <li class="sidebar__item" style="display:none">
+                  <a onclick="window.switchTab('enterprise')" id="tab-enterprise" class="sidebar__link" data-tooltip="Insights" data-mobile-hide="true">
+                    <span class="icon"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round"><path d="M21 16V8a2 2 0 0 0-1-1.73l-7-4a2 2 0 0 0-2 0l-7 4A2 2 0 0 0 3 8v8a2 2 0 0 0 1 1.73l7 4a2 2 0 0 0 2 0l7-4A2 2 0 0 0 21 16z"></path><polyline points="3.27 6.96 12 12.01 20.73 6.96"></polyline><line x1="12" y1="22.08" x2="12" y2="12"></line></svg></span>
+                    <span class="text">Intelligence Hub</span>
+                  </a>
+                </li>
+              </ul>
+
+              <ul class="sidebar__list">
+                <li class="sidebar__item item--heading"><h2>Account</h2></li>
+                <li class="sidebar__item">
+                  <a onclick="window.switchTab('settings')" id="tab-settings" class="sidebar__link" data-tooltip="Settings">
+                    <span class="icon"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="3"/><path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 0 1 0 2.83 2 2 0 0 1-2.83 0l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 0 1-2 2 2 2 0 0 1-2-2v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 0 1-2.83 0 2 2 0 0 1 0-2.83l.06-.06a1.65 1.65 0 0 0 .33-1.82 1.65 1.65 0 0 0-1.51-1H3a2 2 0 0 1-2-2 2 2 0 0 1 2-2h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 0 1 0-2.83 2 2 0 0 1 2.83 0l.06.06a1.65 1.65 0 0 0 1.82.33 1.65 1.65 0 0 0 1-1.51V3a2 2 0 0 1 2-2 2 2 0 0 1 2 2v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 0 1 2.83 0 2 2 0 0 1 0 2.83l-.06.06a1.65 1.65 0 0 0-.33 1.82 1.65 1.65 0 0 0 1.51 1H21a2 2 0 0 1 2 2 2 2 0 0 1-2 2h-.09a1.65 1.65 0 0 0-1.51 1z"/></svg></span>
+                    <span class="text">Settings</span>
+                  </a>
+                </li>
+                <li class="sidebar__item">
+                  <a onclick="window.switchTab('billing')" id="tab-billing" class="sidebar__link" data-tooltip="Billing" data-mobile-hide="true">
+                    <span class="icon"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round"><rect x="1" y="4" width="22" height="16" rx="2" ry="2"/><line x1="1" y1="10" x2="23" y2="10"/></svg></span>
+                    <span class="text">Billing</span>
+                  </a>
+                </li>
+              </ul>
+            </div>
+
+            <ul class="sidebar__list" style="margin-top:auto">
+              <li class="sidebar__item logout">
+                <a onclick="window.signOut()" class="sidebar__link" data-tooltip="Logout">
+                  <span class="icon"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round"><path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4"/><polyline points="16 17 21 12 16 7"/><line x1="21" y1="12" x2="9" y2="12"/></svg></span>
+                  <span class="text">Logout</span>
+                </a>
+              </li>
+            </ul>
+          </nav>
         </aside>
 
         <section class="main-content">
@@ -2287,6 +2091,287 @@
             </div>
 
           </div>
+
+  <!-- OVERLAYS (nested inside main-content) -->
+  <div id="creditOverlay"><div class="credit-card"><div style="font-size:48px; margin-bottom:32px">💎</div><h2 style="font-size:24px; font-weight:900; margin-bottom:16px">Credits Depleted</h2><p style="font-size:14px; color:var(--Neutral-400); margin-bottom:40px">Your balance has reached 0 credits. Please top up to continue.</p><button class="btn-primary" style="width:100%; height:56px" onclick="window.dismissCreditError(); window.switchTab('billing'); window.openModal('topUpModal')">Top Up Now</button><button class="btn-outline" style="width:100%; border:none; margin-top:16px; color:var(--Neutral-500)" onclick="window.dismissCreditError()">Later</button></div></div>
+  <div id="purchaseSuccess">
+    <div class="success-card" style="position:relative;">
+      <button style="position:absolute;top:12px;right:12px;width:32px;height:32px;border:none;background:rgba(255,255,255,0.06);border-radius:50%;color:var(--Neutral-500);font-size:14px;cursor:pointer;display:flex;align-items:center;justify-content:center;" onclick="document.getElementById('purchaseSuccess').classList.remove('active')"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M18 6L6 18"/><path d="M6 6l12 12"/></svg></button>
+      <div class="success-icon-wrap"><svg width="80" height="80" viewBox="0 0 100 100"><circle class="success-ring" cx="50" cy="50" r="30"/><path class="success-check" d="M38 52l8 8 18-18"/></svg></div>
+      <h2 class="success-title">Payment Successful</h2>
+      <p class="success-sub">Your credits have been added</p>
+      <div class="success-credits" id="successCreditsCount">0</div>
+      <div class="success-credits-label">Credits Added</div>
+      <div style="font-size:13px;color:var(--Neutral-400);margin-bottom:16px;animation:successFadeUp 0.4s 1.15s both;">New balance: <strong style="color:#fff;" id="successNewBalance">0</strong> credits</div>
+      <hr class="success-divider">
+      <div class="success-row"><span class="label">Reference</span><span><span class="value" id="successRef">—</span><button class="copy-btn" id="successCopyBtn" onclick="const r=document.getElementById('successRef');navigator.clipboard.writeText(r.dataset.fullRef||r.textContent);this.textContent='Copied!';setTimeout(()=>this.textContent='Copy',2000)">Copy</button></span></div>
+      <div class="success-actions">
+        <button class="btn-primary" id="successPrimaryCTA" style="width:100%;height:52px;font-size:13px;">Start Scanning</button>
+        <button class="btn-ghost" id="successSecondaryCTA" style="width:100%;height:40px;font-size:11px;color:var(--Neutral-500);">View Billing</button>
+      </div>
+    </div>
+  </div>
+  <div class="purchase-overlay" id="receiptOverlay">
+    <div class="purchase-header">
+      <div style="display:flex; align-items:center; gap:12px;">
+        <button class="btn-ghost" style="display:flex;align-items:center;gap:8px;font-size:13px;font-weight:600;color:var(--Neutral-400);padding:8px 16px;border-radius:12px;" onclick="window.closeReceipt()"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M19 12H5"/><path d="M12 19l-7-7 7-7"/></svg>Back</button>
+        <h2 style="margin:0;font-size:18px;">Payment Receipt</h2>
+      </div>
+      <span style="font-size:11px;font-weight:700;color:var(--Neutral-400);background:var(--Glass);padding:6px 16px;border-radius:99px;border:1px solid var(--Glass-Border);" id="receiptStatusBadge">PAID</span>
+    </div>
+    <div class="purchase-body" style="flex:1;overflow-y:auto;display:flex;align-items:center;justify-content:center;padding:32px;">
+      <div style="width:100%;max-width:480px;">
+        <div style="background:var(--Glass);border-radius:24px;border:1px solid var(--Glass-Border);padding:40px;">
+          <div style="text-align:center;margin-bottom:32px;">
+            <div style="width:56px;height:56px;border-radius:50%;background:rgba(198,255,0,0.15);display:flex;align-items:center;justify-content:center;margin:0 auto 16px;"><svg width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="#C6FF00" stroke-width="1.5"><path d="M12 2L2 7l10 5 10-5-10-5z"/><path d="M2 17l10 5 10-5"/><path d="M2 12l10 5 10-5"/></svg></div>
+            <h2 style="margin:0 0 4px;font-size:20px;font-weight:900;">Receipt</h2>
+            <p style="margin:0;font-size:12px;color:var(--Neutral-500);font-family:monospace;" id="receiptRef">—</p>
+          </div>
+          <div style="display:flex;flex-direction:column;gap:16px;">
+            <div style="display:flex;justify-content:space-between;padding:12px 0;border-bottom:1px solid var(--Glass-Border);"><span style="font-size:13px;color:var(--Neutral-400);">Date</span><span style="font-size:13px;font-weight:600;" id="receiptDate">—</span></div>
+            <div style="display:flex;justify-content:space-between;padding:12px 0;border-bottom:1px solid var(--Glass-Border);"><span style="font-size:13px;color:var(--Neutral-400);">Credits Added</span><span style="font-size:13px;font-weight:600;" id="receiptCredits">—</span></div>
+            <div style="display:flex;justify-content:space-between;padding:12px 0;border-bottom:1px solid var(--Glass-Border);"><span style="font-size:13px;color:var(--Neutral-400);">Amount Paid</span><span style="font-size:18px;font-weight:900;color:var(--Mint);" id="receiptAmount">—</span></div>
+            <div style="display:flex;justify-content:space-between;padding:12px 0;"><span style="font-size:13px;color:var(--Neutral-400);">Status</span><span style="font-size:13px;font-weight:700;color:var(--Mint);">PAID</span></div>
+          </div>
+          <div style="display:flex;flex-direction:column;gap:8px;margin-top:32px;">
+            <button class="btn-primary" style="width:100%;height:52px;font-size:13px;" onclick="window.print()">Print Receipt</button>
+            <button class="btn-ghost" style="width:100%;height:40px;font-size:11px;color:var(--Neutral-500);" onclick="window.closeReceipt()">Close</button>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+  <div class="scan-overlay" id="scanModal">
+    <div class="scan-header">
+      <button class="btn-ghost" style="display:flex;align-items:center;gap:8px;font-size:13px;font-weight:600;color:var(--Neutral-400);padding:8px 16px;border-radius:12px;" onclick="if(document.getElementById('frontPhoto').files[0] || document.getElementById('sidePhoto').files[0] || document.getElementById('scanClientName').value) { if(!confirm('Discard current scan data?')) return; } window.closeModal('scanModal')"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M19 12H5"/><path d="M12 19l-7-7 7-7"/></svg> Back</button>
+      <h2 style="margin:0;font-size:15px;font-weight:900;letter-spacing:0.05em;color:var(--Accent-Teal)">DIGITAL FITTING ROOM</h2>
+      <span style="font-size:10px;font-weight:700;color:var(--Neutral-500);background:var(--Glass);padding:4px 12px;border-radius:99px;border:1px solid var(--Glass-Border);display:flex;align-items:center;gap:6px;"><span style="width:6px;height:6px;border-radius:50%;background:var(--Mint);display:inline-block;"></span> Step 1 / 3</span>
+    </div>
+    <div class="scan-body">
+      <div>
+        <label style="font-size:10px;font-weight:900;color:var(--Neutral-500);text-transform:uppercase;letter-spacing:0.1em;margin-bottom:8px;display:block;">Body Specs</label>
+        <input type="text" id="scanClientName" class="input-field" placeholder="Full Name" required>
+        <input type="number" id="scanHeight" class="input-field" placeholder="Height in CM" required>
+        <select id="scanGender" class="input-field" style="appearance:none;cursor:pointer;"><option value="male">Male</option><option value="female">Female</option></select>
+        <div class="pro-tips-card">
+          <h4><svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" style="color:var(--Mint)"><path d="m12 3 1.912 5.813a2 2 0 0 0 1.275 1.275L21 12l-5.813 1.912a2 2 0 0 0-1.275 1.275L12 21l-1.912-5.813a2 2 0 0 0-1.275-1.275L3 12l5.813-1.912a2 2 0 0 0 1.275-1.275L12 3Z"/><path d="M5 3v4"/><path d="M19 17v4"/><path d="M3 5h4"/><path d="M17 19h4"/></svg> Pro-Tips</h4>
+          <div class="tip-row"><span class="tip-bullet"><svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M21.3 15.3a2.4 2.4 0 0 1 0 3.4l-2.6 2.6a2.4 2.4 0 0 1-3.4 0L2.7 8.7a2.4 2.4 0 0 1 0-3.4l2.6-2.6a2.4 2.4 0 0 1 3.4 0Z"/><path d="m7.5 10.5 2 2"/><path d="m10.5 7.5 2 2"/><path d="m13.5 4.5 2 2"/><path d="m4.5 13.5 2 2"/></svg></span><span><b>A-Pose:</b> Keep arms 15" away.</span></div>
+          <div class="tip-row"><span class="tip-bullet"><svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M20.38 3.46 16 2a4 4 0 0 1-8 0L3.62 3.46a2 2 0 0 0-1.34 2.23l.58 3.47a1 1 0 0 0 .99.84H6v10c0 1.1.9 2 2 2h8a2 2 0 0 0 2-2V10h2.15a1 1 0 0 0 .99-.84l.58-3.47a2 2 0 0 0-1.34-2.23z"/></svg></span><span><b>Fit:</b> Wear form-fitting clothes.</span></div>
+          <div class="tip-row"><span class="tip-bullet"><svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><rect width="18" height="18" x="3" y="3" rx="2"/><path d="M3 9h18"/><path d="M3 15h18"/><path d="M9 3v18"/><path d="M15 3v18"/></svg></span><span><b>Wall:</b> Stand against a plain background.</span></div>
+        </div>
+      </div>
+      <div>
+        <label style="font-size:10px;font-weight:900;color:var(--Neutral-500);text-transform:uppercase;letter-spacing:0.1em;margin-bottom:8px;display:block;">Biometric Capture</label>
+        <div class="photo-grid">
+          <div class="slot-column">
+            <div class="guide-box"><img src="/assets/front_pose.png" alt="Front Reference"><span class="guide-tag">REF: FRONT</span></div>
+            <div class="photo-box" id="frontLabel" onclick="window.handlePreviewClick('front')">
+              <img class="preview-img" id="frontPreview" alt="Front Preview">
+              <div class="preview-overlay"><span style="font-size:10px;font-weight:900;color:#fff;">RETAKE</span></div>
+              <div class="placeholder-content" style="display:flex;flex-direction:column;align-items:center;"><span>Front Pose</span><div class="tap-hint">TAP TO SNAP</div></div>
+              <input type="file" id="frontPhoto" accept="image/*" capture="environment" required style="display:none" onchange="window.handleFile(this, 'frontLabel')">
+            </div>
+          </div>
+          <div class="slot-column">
+            <div class="guide-box"><img src="/assets/side_pose.png" alt="Side Reference"><span class="guide-tag">REF: SIDE</span></div>
+            <div class="photo-box" id="sideLabel" onclick="window.handlePreviewClick('side')">
+              <img class="preview-img" id="sidePreview" alt="Side Preview">
+              <div class="preview-overlay"><span style="font-size:10px;font-weight:900;color:#fff;">RETAKE</span></div>
+              <div class="placeholder-content" style="display:flex;flex-direction:column;align-items:center;"><span>Side Profile</span><div class="tap-hint">TAP TO SNAP</div></div>
+              <input type="file" id="sidePhoto" accept="image/*" capture="environment" required style="display:none" onchange="window.handleFile(this, 'sideLabel')">
+            </div>
+          </div>
+        </div>
+        <div id="extractionProgress" class="polling-overlay" style="margin-top:16px;margin-bottom:16px;"><div style="font-size:11px;font-weight:900;color:var(--Mint);letter-spacing:0.1em" id="progressStatus">QUEUEING TASK...</div><div class="polling-bar"><div class="polling-fill" id="progressFill"></div></div></div>
+        <form id="scanForm">
+          <button type="submit" class="btn-scan" id="btnRunScan"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M5 12h14"/><path d="M12 5l7 7-7 7"/></svg> Get Measurements</button>
+          <button type="button" class="btn-dismiss" onclick="if(document.getElementById('frontPhoto').files[0] || document.getElementById('sidePhoto').files[0] || document.getElementById('scanClientName').value) { if(!confirm('Discard current scan data?')) return; } window.closeModal('scanModal')">Cancel</button>
+        </form>
+      </div>
+    </div>
+  </div>
+  <div class="purchase-overlay" id="topUpModal">
+    <div class="purchase-header">
+      <div style="display:flex; align-items:center; gap:12px;">
+        <button class="btn-ghost" style="display:flex;align-items:center;gap:8px;font-size:13px;font-weight:600;color:var(--Neutral-400);padding:8px 16px;border-radius:12px;" onclick="window.closeModal('topUpModal')"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M19 12H5"/><path d="M12 19l-7-7 7-7"/></svg>Back</button>
+        <h2 style="margin:0; font-size:18px;">Purchase Credits</h2>
+      </div>
+      <span style="font-size:11px;font-weight:700;color:var(--Neutral-400);background:var(--Glass);padding:6px 16px;border-radius:99px;border:1px solid var(--Glass-Border);"><span id="bundleRateLabel">₦685</span> <span style="font-weight:400">/ scan</span></span>
+    </div>
+    <div class="purchase-body">
+      <div class="purchase-cards">
+        <div class="grid-2col">
+          <div class="purchase-card c25" data-bundle="25" onclick="window.selectBundle(this)"><div class="card-bg"></div><div class="card-badge" style="background:transparent;color:var(--Neutral-500);border:1px solid var(--Glass-Border);">STARTER</div><div class="card-icon"><svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="var(--Mint)" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><polygon points="13 2 3 14 12 14 11 22 21 10 12 10 13 2"/></svg></div><div class="card-name">25 Scans</div><div class="card-meta">Quick starter pack</div><div class="card-price-row"><span class="card-price"><span class="bundleCurr">₦</span><span id="bundleTotal25">17,125</span></span><span class="card-per"><span id="bundlePerScan25">₦685 / scan</span></span></div></div>
+          <div class="purchase-card c50" data-bundle="50" onclick="window.selectBundle(this)"><div class="card-bg"></div><div class="card-badge" style="background:rgba(198,255,0,0.15);color:var(--Mint);">POPULAR</div><div class="card-icon"><svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="var(--Mint)" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2"/></svg></div><div class="card-name">50 Scans</div><div class="card-meta">Standard value pack</div><div class="card-price-row"><span class="card-price"><span class="bundleCurr">₦</span><span id="bundleTotal50">34,250</span></span><span class="card-per"><span id="bundlePerScan50">₦685 / scan</span></span></div></div>
+          <div class="purchase-card c150" data-bundle="150" onclick="window.selectBundle(this)"><div class="card-bg"></div><div class="card-badge" style="background:rgba(79,195,247,0.15);color:#4FC3F7;">BEST VALUE</div><div class="card-icon"><svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="#4FC3F7" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><path d="M12 19V5M5 12l7-7 7 7"/></svg></div><div class="card-name">150 Scans</div><div class="card-meta">Save 10% — growth pack</div><div class="card-price-row"><span class="card-price"><span class="bundleCurr">₦</span><span id="bundleTotal150">92,475</span></span><span class="card-per"><span id="bundlePerScan150">₦617 / scan</span></span><span class="card-save">10% off</span></div></div>
+          <div class="purchase-card c500" data-bundle="500" onclick="window.selectBundle(this)"><div class="card-bg"></div><div class="card-badge" style="background:rgba(124,77,255,0.15);color:#B388FF;">PRO</div><div class="card-icon"><svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="#B388FF" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><path d="M12 2L2 7l10 5 10-5-10-5z"/><path d="M2 17l10 5 10-5"/><path d="M2 12l10 5 10-5"/></svg></div><div class="card-name">500 Scans</div><div class="card-meta">Save 15% — bulk power</div><div class="card-price-row"><span class="card-price"><span class="bundleCurr">₦</span><span id="bundleTotal500">291,000</span></span><span class="card-per"><span id="bundlePerScan500">₦582 / scan</span></span><span class="card-save">15% off</span></div></div>
+        </div>
+        <div class="purchase-card ccustom" data-bundle="custom" onclick="window.selectBundle(this)"><div class="card-bg"></div><div class="card-icon"><svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="var(--Mint)" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"/><path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z"/></svg></div><div style="display:flex; justify-content:space-between; align-items:center; flex-wrap:wrap; gap:8px;"><div><div class="card-name" style="color:var(--Mint);">Custom Credits</div><div class="card-meta">Any quantity — auto discount applied</div></div><span style="font-size:9px;font-weight:700;color:var(--Neutral-500);background:rgba(198,255,0,0.1);padding:3px 10px;border-radius:99px;border:1px solid rgba(198,255,0,0.2);white-space:nowrap;">up to 25% off</span></div>
+          <div class="custom-input" style="margin-top:12px;"><input type="number" class="custom-bundle-qty input-field" min="1" placeholder="Enter any quantity..." style="margin-bottom:0;height:44px;font-size:13px;" oninput="window.updateCustomBundle(this)" onclick="event.stopPropagation()"><div style="display:flex;justify-content:space-between;align-items:center;margin-top:10px;"><span style="font-size:12px;color:var(--Neutral-400);"><span class="bundle-per-scan">₦685 / scan</span></span><span style="font-size:20px;font-weight:900;color:var(--Mint);" class="bundle-total"><span>—</span></span></div><div style="font-size:10px;color:var(--Neutral-500);margin-top:4px;text-align:right;" class="bundle-discount">Enter quantity</div></div>
+        </div>
+      </div>
+      <div class="purchase-summary">
+        <div>
+          <div class="summary-title">Order Summary</div>
+          <div id="summaryContent">
+            <div class="summary-row"><span class="label">Bundle</span><span class="value" id="summaryBundle">50 Scans</span></div>
+            <div class="summary-row"><span class="label">Per scan</span><span class="value" id="summaryPerScan">₦685</span></div>
+            <div class="summary-row"><span class="label">Discount</span><span class="value" id="summaryDiscount" style="color:var(--Mint);">—</span></div>
+            <hr class="summary-divider">
+            <div class="summary-total"><span class="label">Total</span><span class="value" id="summaryTotal">₦34,250</span></div>
+            <div id="summarySavingsWrap" style="display:none;"><span class="summary-save-badge" id="summarySavings">You save 10%</span></div>
+          </div>
+        </div>
+        <div>
+          <div class="summary-promo"><input type="text" id="promoCodeInput" class="input-field" style="margin-bottom:0;height:44px;font-size:12px;" placeholder="Promo code"><button class="btn-outline" style="height:44px;padding:0 16px;font-size:10px;" onclick="window.applyPromo()">Apply</button></div>
+          <div id="promoStatus" style="font-size:10px;margin-bottom:12px;display:none;"></div>
+          <div style="font-size:9px;color:var(--Neutral-500);text-align:center;margin-bottom:12px;line-height:1.4;">Test: 4084 0840 8408 4081 | any future date | any 3-digit CVV</div>
+          <button class="btn-primary" id="btnConfirmPurchase" style="width:100%;height:52px;font-size:13px;" onclick="window.handlePurchase()">Purchase Credits</button>
+          <button class="btn-ghost" style="width:100%;height:40px;font-size:11px;color:var(--Neutral-500);margin-top:8px;" onclick="window.closeModal('topUpModal')">Cancel</button>
+        </div>
+      </div>
+    </div>
+  </div>
+  <!-- INVITE MODAL (split-screen) -->
+  <div class="modal-overlay" id="shareModal" style="z-index:3000;">
+    <div class="ss-split">
+      <div class="ss-left" style="background: linear-gradient(135deg, rgba(0,0,0,0.3), rgba(0,0,0,0.1)), url('/assets/Invite-screen-image.png') center/cover no-repeat;">
+        <div class="ss-left-content">
+          <div class="ss-brand">KORRA</div>
+          <h2 class="ss-tagline">Scale your practice,<br>seamlessly.</h2>
+          <p class="ss-sub">Send a deep link for your client to capture their body measurements.</p>
+          <div class="ss-left-footer">Invite · Enroll · Measure</div>
+        </div>
+      </div>
+      <div class="ss-right">
+        <button class="ss-close" onclick="window.closeModal('shareModal')">✕</button>
+        <div class="ss-right-inner">
+          <div class="ss-header" style="display:flex; justify-content:space-between; align-items:flex-start;">
+            <div>
+              <h2 class="ss-title">Invite Client</h2>
+              <p class="ss-desc">Send a deep link for biometric enrollment.</p>
+            </div>
+          </div>
+          <div class="ss-field">
+            <label class="ss-label">CLIENT NAME</label>
+            <input type="text" id="shareName" class="ss-input" placeholder="e.g. James" required>
+          </div>
+          <div class="ss-field">
+            <label class="ss-label">PHONE (WHATSAPP)</label>
+            <div class="ss-input-wrap">
+              <input type="text" id="sharePhone" class="ss-input" placeholder="e.g. 2348000000000" oninput="window.updateDeepLinkSilent()">
+              <button class="ss-input-btn" onclick="window.handleContactPicker()">
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"/><circle cx="12" cy="7" r="4"/></svg>
+                Import
+              </button>
+            </div>
+          </div>
+          <div class="ss-field">
+            <label class="ss-label">EMAIL (OPTIONAL)</label>
+            <input type="email" id="shareEmail" class="ss-input" placeholder="e.g. james@example.com" oninput="window.updateDeepLinkSilent()">
+          </div>
+          <div id="linkGeneratedArea" class="ss-link-area" style="display:none;">
+            <div class="ss-link-box">
+              <code id="deepLinkDisplay" class="ss-link-text">https://...</code>
+            </div>
+            <div class="ss-link-actions">
+              <button class="ss-btn-outline" onclick="window.copyDeepLink()">Copy Link</button>
+              <button class="ss-btn-whatsapp" onclick="window.shareToWhatsApp()">WhatsApp</button>
+              <button class="ss-btn-outline" onclick="window.shareToEmail()">Email</button>
+            </div>
+          </div>
+          <div class="ss-actions">
+            <button type="button" class="ss-btn-primary" id="btnGenerateLink" onclick="window.generateDeepLink()">Generate Link</button>
+            <button type="button" class="ss-btn-ghost" onclick="window.closeModal('shareModal')">Cancel</button>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+  <!-- SHARE SCAN MODAL (split layout) -->
+  <div class="modal-overlay" id="shareScanModal" style="z-index:3000;">
+    <div class="ss-split">
+      <div class="ss-left">
+        <div class="ss-left-content">
+          <div class="ss-brand">KORRA</div>
+          <h2 class="ss-tagline">Your measurements,<br>anywhere.</h2>
+          <p class="ss-sub">Share this scan with your client or tailor. They'll see the full 3D body scan with every measurement.</p>
+          <div class="ss-left-footer">Scan · Share · Fit</div>
+        </div>
+      </div>
+      <div class="ss-right">
+        <button class="ss-close" onclick="window.closeModal('shareScanModal')">✕</button>
+        <div class="ss-right-inner">
+          <div class="ss-header">
+            <h2 class="ss-title">Share Scan</h2>
+            <p class="ss-desc">Generate a shareable link for this body scan.</p>
+          </div>
+          <div class="ss-field">
+            <label class="ss-label">CLIENT NAME</label>
+            <input type="text" id="shareScanName" class="ss-input" placeholder="e.g. James">
+          </div>
+          <div class="ss-field">
+            <label class="ss-label">PHONE (WHATSAPP)</label>
+            <div class="ss-input-wrap">
+              <input type="text" id="shareScanPhone" class="ss-input" placeholder="e.g. 2348000000000" oninput="window.updateScanLinkSilent()">
+              <button class="ss-input-btn" onclick="window.handleContactPicker('shareScanName', 'shareScanPhone')">
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"/><circle cx="12" cy="7" r="4"/></svg>
+                Import
+              </button>
+            </div>
+          </div>
+          <div class="ss-field">
+            <label class="ss-label">EMAIL (OPTIONAL)</label>
+            <input type="email" id="shareScanEmail" class="ss-input" placeholder="e.g. james@example.com" oninput="window.updateScanLinkSilent()">
+          </div>
+          <div id="shareScanLinkArea" class="ss-link-area" style="display:none;">
+            <div class="ss-link-box">
+              <code id="shareScanLink" class="ss-link-text">https://...</code>
+            </div>
+            <div class="ss-link-actions">
+              <button class="ss-btn-outline" onclick="window.copyScanLink()">Copy Link</button>
+              <button class="ss-btn-whatsapp" onclick="window.shareScanWhatsApp()">WhatsApp</button>
+              <button class="ss-btn-outline" onclick="window.shareScanEmail()">Email</button>
+            </div>
+          </div>
+          <div class="ss-actions">
+            <button type="button" class="ss-btn-primary" id="btnGenerateScanLink" onclick="window.generateScanLink()">Generate Link</button>
+            <button type="button" class="ss-btn-ghost" onclick="window.closeModal('shareScanModal')">Cancel</button>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+  <!-- CUSTOM MODAL SYSTEM -->
+  <div class="modal-overlay" id="customModal" style="display:none; z-index:3000;">
+    <div class="modal-card" style="max-width:420px; text-align:center; padding:40px 32px;">
+      <div id="customModalIcon" style="font-size:32px; margin-bottom:16px;"></div>
+      <h3 id="customModalTitle" style="font-size:18px; margin-bottom:8px; letter-spacing:-0.03em;"></h3>
+      <p id="customModalMsg" style="font-size:14px; color:var(--Neutral-400); margin-bottom:24px; line-height:1.5;"></p>
+      <div id="customModalInputWrap" style="display:none; margin-bottom:20px;">
+        <input type="text" id="customModalInput" class="input-field" placeholder="Enter value..." style="margin-bottom:0;">
+      </div>
+      <div style="display:flex; gap:12px;">
+        <button id="customModalCancel" class="btn-outline" style="flex:1; display:none;">Cancel</button>
+        <button id="customModalOk" class="btn-primary" style="flex:1;">OK</button>
+      </div>
+    </div>
+  </div>
+  <!-- QR POSTER MODAL -->
+  <div class="modal-overlay" id="qrPosterModal">
+    <div class="modal-card" style="max-width:500px; text-align:center; padding:60px">
+      <div style="margin-bottom:32px">
+          <div style="display:flex; align-items:center; justify-content:center; gap:8px; margin:0 auto 12px;">
+            <img src="/assets/Korra_logo_final.png" alt="Korra" style="height:28px; width:auto;">
+            <span style="font-size:16px; font-weight:900; letter-spacing:-0.03em; color:var(--Mint);">Korra</span>
+          </div>
+      </div>
+      <div style="background:#fff; padding:40px; border-radius:16px; margin-bottom:32px; display:inline-block"><div id="posterQr" style="width:200px; height:200px; background:#eee; display:flex; align-items:center; justify-content:center; color:#000; font-size:10px; font-weight:900">GENERATE QR...</div></div>
+      <h2 style="font-size:32px; margin-bottom:12px; letter-spacing:-0.05em">SCAN TO START</h2>
+      <p style="color:var(--Neutral-400); margin-bottom:40px">Clinical-Grade Body Scanning Active.</p>
+      <div style="display:flex; gap:16px"><button class="btn-primary" style="flex:1" onclick="window.print()">Print Poster</button><button class="btn-outline" style="flex:1" onclick="window.closeModal('qrPosterModal')">Dismiss</button></div>
+    </div>
+  </div>
         </section>
       </div>
     </div>
@@ -2766,11 +2851,8 @@ msg.textContent = feedback; msg.style.background = aligned ? "var(--Mint)" : "rg
         document.querySelector('main').style.overflow = '';
         const mc = document.querySelector('.main-content');
         if (mc) {
-          const s = document.getElementById('sidebar');
-          const collapsed = s?.classList.contains('collapsed');
-          document.documentElement.style.setProperty('--sidebar-width', collapsed ? '72px' : '260px');
           mc.style.padding = '';
-          mc.style.marginLeft = collapsed ? '72px' : '260px';
+          mc.style.overflow = '';
         }
       }
 
@@ -3476,53 +3558,32 @@ window.loadSettings = async () => {
 
     window.debugLayout = () => {
       const mc = document.querySelector('.main-content');
-      const sidebar = document.querySelector('.sidebar-nav');
+      const sidebar = document.querySelector('.vertical-sidebar');
       const main = document.querySelector('main');
-      const vault = document.getElementById('view-vault');
       const styles = getComputedStyle(mc);
       const sidebarR = sidebar.getBoundingClientRect();
       const mcR = mc.getBoundingClientRect();
+      const cb = document.getElementById('sidebar-toggle');
       console.group('=== LAYOUT DEBUG ===');
+      console.log('sidebar checked:', cb?.checked, '| collapsed:', !cb?.checked);
       console.log('sidebar position:', sidebarR.left, sidebarR.top, sidebarR.width, sidebarR.height);
       console.log('main-content rect:', mcR.left, mcR.top, mcR.width, mcR.height);
       console.log('main-content inline style:', mc.style.cssText || '(none)');
       console.log('main overflow:', main.style.overflow || '(CSS default)', '| computed:', getComputedStyle(main).overflow);
-      console.log('--sidebar-width:', getComputedStyle(document.documentElement).getPropertyValue('--sidebar-width'));
-      console.log('margin-left:', styles.marginLeft);
+      console.log('margin-left:', styles.marginLeft, '| flex:', styles.flex);
       console.log('padding:', styles.padding);
-      console.log('sidebar z-index:', getComputedStyle(sidebar).zIndex);
-      console.log('main-content z-index:', getComputedStyle(mc).zIndex);
-      console.log('any inline margin on mc:', mc.style.marginLeft || '(none)');
+      console.log('main-content overflow:', styles.overflow);
       console.log('any inline padding on mc:', mc.style.padding || '(none)');
+      console.log('any inline overflow on mc:', mc.style.overflow || '(none)');
       console.groupEnd();
     };
 
     window.toggleSidebar = () => {
-      const sidebar = document.getElementById('sidebar');
-      sidebar.classList.toggle('collapsed');
-      const isCollapsed = sidebar.classList.contains('collapsed');
-      localStorage.setItem('korra_sidebar_collapsed', isCollapsed);
-      document.documentElement.style.setProperty('--sidebar-width', isCollapsed ? '72px' : '260px');
-
-      setTimeout(() => {
-        console.group('=== SIDEBAR DEBUG ===');
-        document.querySelectorAll('.sidebar-nav a .korra-icon').forEach((svg, i) => {
-          const r = svg.getBoundingClientRect();
-          const cx = r.left + r.width / 2, cy = r.top + r.height / 2;
-          const topEl = document.elementFromPoint(cx, cy);
-          const label = svg.closest('a')?.getAttribute('data-label') || '?';
-          console.log(`#${i} "${label}"`, {
-            svgRect: r,
-            color: getComputedStyle(svg).color,
-            visible: r.width > 0 && r.height > 0,
-            topEl: topEl?.tagName + (topEl?.className ? '.' + (typeof topEl.className === 'string' ? topEl.className : '') : ''),
-            topElZ: getComputedStyle(topEl).zIndex,
-            topElPos: getComputedStyle(topEl).position,
-            topElRect: topEl?.getBoundingClientRect()
-          });
-        });
-        console.groupEnd();
-      }, 350);
+      const cb = document.getElementById('sidebar-toggle');
+      if (cb) {
+        cb.checked = !cb.checked;
+        localStorage.setItem('korra_sidebar_collapsed', cb.checked ? 'false' : 'true');
+      }
     };
 
     // ---- CUSTOM MODAL SYSTEM (replaces alert/confirm/prompt) ----
@@ -3620,10 +3681,10 @@ window.loadSettings = async () => {
 
     async function init() {
       const savedCollapsed = localStorage.getItem('korra_sidebar_collapsed');
-      if (savedCollapsed === 'true') {
-        document.getElementById('sidebar')?.classList.add('collapsed');
-        document.documentElement.style.setProperty('--sidebar-width', '72px');
-      }
+      const cb = document.getElementById('sidebar-toggle');
+      if (cb) cb.checked = savedCollapsed !== 'true';
+      // FETCH PUBLIC CONFIG (PAYSTACK KEY + CURRENCY) FROM SERVER
+      try {
       // FETCH PUBLIC CONFIG (PAYSTACK KEY + CURRENCY) FROM SERVER
       try {
           const configRes = await fetch('/api/v2/config');
