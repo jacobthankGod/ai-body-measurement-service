@@ -197,14 +197,12 @@ window.KORRA_MS = {
     document.querySelector('main').style.overflow = 'hidden';
 
     // Full-viewport: hide sidebar, remove margin/padding so content is flush
-    if (window.innerWidth <= 900) {
-      const bottomNav = document.querySelector('.sidebar-nav');
-      if (bottomNav) bottomNav.style.display = 'none';
-      const mainContent = document.querySelector('.main-content');
-      if (mainContent) {
-        mainContent.style.marginLeft = '0';
-        mainContent.style.padding = '0';
-      }
+    const sidebar = document.querySelector('.sidebar-nav');
+    if (sidebar) sidebar.style.display = 'none';
+    const mainContent = document.querySelector('.main-content');
+    if (mainContent) {
+      mainContent.style.marginLeft = '0';
+      mainContent.style.padding = '0';
     }
 
     // Switch tab FIRST so canvas has dimensions before initViewer
@@ -2392,15 +2390,13 @@ window.KORRA_MS = {
     document.getElementById('ms-side-menu-backdrop')?.remove();
 
     // Phase 112: Restore Navigation and Layout
-    if (window.innerWidth <= 900) {
-      const bottomNav = document.querySelector('.sidebar-nav');
-      if (bottomNav) bottomNav.style.display = '';
+    const sidebar = document.querySelector('.sidebar-nav');
+    if (sidebar) sidebar.style.display = '';
 
-      const content = document.querySelector('.main-content');
-      if (content) {
-        content.style.marginLeft = '';
-        content.style.padding = '';
-      }
+    const content = document.querySelector('.main-content');
+    if (content) {
+      content.style.marginLeft = '';
+      content.style.padding = '';
     }
 
     document.querySelectorAll('#view-scanresult .ms-header-btn, #view-scanresult .ms-share-btn').forEach(btn => {
