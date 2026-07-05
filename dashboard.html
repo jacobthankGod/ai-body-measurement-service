@@ -2766,6 +2766,9 @@ msg.textContent = feedback; msg.style.background = aligned ? "var(--Mint)" : "rg
         document.querySelector('main').style.overflow = '';
         const mc = document.querySelector('.main-content');
         if (mc) {
+          const s = document.getElementById('sidebar');
+          const collapsed = s?.classList.contains('collapsed');
+          document.documentElement.style.setProperty('--sidebar-width', collapsed ? '72px' : '260px');
           mc.style.padding = '';
           mc.style.marginLeft = '';
         }
