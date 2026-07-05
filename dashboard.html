@@ -3684,7 +3684,6 @@ window.loadSettings = async () => {
       const cb = document.getElementById('sidebar-toggle');
       if (cb) cb.checked = savedCollapsed !== 'true';
       // FETCH PUBLIC CONFIG (PAYSTACK KEY + CURRENCY) FROM SERVER
-      try {
       // FETCH PUBLIC CONFIG (PAYSTACK KEY + CURRENCY) FROM SERVER
       try {
           const configRes = await fetch('/api/v2/config');
