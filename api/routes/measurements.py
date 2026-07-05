@@ -239,7 +239,6 @@ async def run_extraction_subprocess_cli(task_id: str, front_path: str, side_path
                         garment_mesh_url = None
                         if smpl_params:
                             try:
-                                import asyncio, concurrent.futures
                                 from pathlib import Path
                                 def _gen_garment():
                                     import trimesh
@@ -255,7 +254,7 @@ async def run_extraction_subprocess_cli(task_id: str, front_path: str, side_path
                                     m.export(str(out_dir / fn))
                                     return f"/meshes/garments/{fn}"
                                 loop = asyncio.get_event_loop()
-                                with concurrent.futures.ThreadPoolExecutor() as pool:
+                                with ThreadPoolExecutor() as pool:
                                     garment_mesh_url = await loop.run_in_executor(pool, _gen_garment)
                             except Exception as e:
                                 logger.warning(f"Auto garment generation skipped: {e}")
