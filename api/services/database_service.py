@@ -136,7 +136,7 @@ class DatabaseService:
             return None
 
     @classmethod
-    def save_measurement(cls, user_id: str, client_name: str, height: float, gender: str, biometrics: dict, landmarks: dict = None, mesh_url: str = None, body_shape: str = None, size_rec: str = None, client_user_id: str = None, clinical_realism_index: float = None, mesh_storage_url: str = None, photo_front_url: str = None, photo_side_url: str = None, smpl_params: dict = None, joints3d: list = None, tpose_mesh_url: str = None):
+    def save_measurement(cls, user_id: str, client_name: str, height: float, gender: str, biometrics: dict, landmarks: dict = None, mesh_url: str = None, body_shape: str = None, size_rec: str = None, client_user_id: str = None, clinical_realism_index: float = None, mesh_storage_url: str = None, photo_front_url: str = None, photo_side_url: str = None, smpl_params: dict = None, joints3d: list = None, tpose_mesh_url: str = None, garment_mesh_url: str = None):
         """
         Save measurement to database.
         
@@ -167,6 +167,8 @@ class DatabaseService:
             biometrics_with_smpl['__joints3d'] = joints3d
             if len(joints3d) > 0:
                 logger.info(f"✅ SMPL params prepared: {len(smpl_params.get('shape', []))} shape dims, {len(joints3d)} joints")
+        if garment_mesh_url:
+            biometrics_with_smpl['__garment_mesh_url'] = garment_mesh_url
 
         # 1. Save under merchant's account (for professional's dashboard)
         try:

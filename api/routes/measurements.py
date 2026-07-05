@@ -235,6 +235,31 @@ async def run_extraction_subprocess_cli(task_id: str, front_path: str, side_path
                             )
                             os.remove(tpose_mesh_path)
 
+                        # Auto-generate default t-shirt garment mesh for VTO pre-load
+                        garment_mesh_url = None
+                        if smpl_params:
+                            try:
+                                import asyncio, concurrent.futures
+                                from pathlib import Path
+                                def _gen_garment():
+                                    import trimesh
+                                    from api.services.tailornet_bridge import run_tailornet as tn
+                                    betas = smpl_params.get("betas_300") or smpl_params.get("shape")
+                                    r = tn(garment_class='t-shirt', gender=gender, betas=betas)
+                                    if not r["success"]:
+                                        return None
+                                    m = trimesh.Trimesh(vertices=r["garment_verts"], faces=r["garment_faces"])
+                                    out_dir = Path("public/meshes/garments")
+                                    out_dir.mkdir(parents=True, exist_ok=True)
+                                    fn = f"garment_{task_id}_t-shirt.obj"
+                                    m.export(str(out_dir / fn))
+                                    return f"/meshes/garments/{fn}"
+                                loop = asyncio.get_event_loop()
+                                with concurrent.futures.ThreadPoolExecutor() as pool:
+                                    garment_mesh_url = await loop.run_in_executor(pool, _gen_garment)
+                            except Exception as e:
+                                logger.warning(f"Auto garment generation skipped: {e}")
+
                     else:
                         raise Exception(data.get("error", "Unknown error in subprocess"))
                 except Exception as e:
@@ -252,7 +277,8 @@ async def run_extraction_subprocess_cli(task_id: str, front_path: str, side_path
                     clinical_realism_index=clinical_realism_index,
                     mesh_storage_url=mesh_storage_url,
                     smpl_params=smpl_params, joints3d=joints3d,
-                    tpose_mesh_url=tpose_mesh_url
+                    tpose_mesh_url=tpose_mesh_url,
+                    garment_mesh_url=garment_mesh_url
                 )
                 if not save_result or save_result.get("status") != "saved":
                     logger.error(f"❌ Database save failed for task {task_id}: {save_result}")
@@ -276,6 +302,7 @@ async def run_extraction_subprocess_cli(task_id: str, front_path: str, side_path
                 "smpl_params": smpl_params,
                 "joints3d": joints3d,
                 "tpose_mesh_url": tpose_mesh_url,
+                "garment_mesh_url": garment_mesh_url,
                 "debug": hmr_error
             }
 

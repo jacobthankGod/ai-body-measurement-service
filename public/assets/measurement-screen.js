@@ -147,6 +147,8 @@ window.KORRA_MS = {
     if (data.biometrics && !data.measurements) data.measurements = data.biometrics;
     if (data.landmarks_3d && !data.landmarks) data.landmarks = data.landmarks_3d;
     this.data = data;
+    this._preloadedGarmentUrl = data.garment_mesh_url || (data.measurements?.__garment_mesh_url);
+    this._hasAutoGarment = false;
     window._currentScanId = data.id;
     window._currentScanName = data.client_name || '';
     this.active = true;
@@ -1149,7 +1151,10 @@ window.KORRA_MS = {
       };
       const cached = this.viewerInstance.getCachedMesh(meshUrl);
       if (cached) {
-        requestAnimationFrame(() => tryLoad(cached));
+        requestAnimationFrame(() => {
+          tryLoad(cached);
+          this._loadAutoGarment();
+        });
       } else {
         const controller = new AbortController();
         const timeout = setTimeout(() => controller.abort(), 15000);
@@ -1158,6 +1163,7 @@ window.KORRA_MS = {
           .then(text => {
             this.viewerInstance._meshCache.set(meshUrl, text);
             tryLoad(text);
+            this._loadAutoGarment();
           })
           .catch(() => {});
       }
@@ -1942,6 +1948,21 @@ window.KORRA_MS = {
   },
   // ═══ GARMENT LAYER CONTROLS ═══
 
+  _loadAutoGarment() {
+    if (!this._preloadedGarmentUrl || !this.viewerInstance) return;
+    this.viewerInstance.loadGarment(
+      this._preloadedGarmentUrl,
+      { color: 0xFFFFFF, opacity: 0, shininess: 30, depthWrite: true },
+      0
+    ).then(mesh => {
+      if (mesh) {
+        mesh.visible = false;
+        this._hasAutoGarment = true;
+        this._garmentVisible = false;
+        this._renderVtoControls();
+      }
+    });
+  },
 
   _showVtoSpinner() {
     let spinner = document.getElementById('vto-spinner');
@@ -1965,6 +1986,18 @@ window.KORRA_MS = {
     if (!sel) return;
     const garClass = sel.value;
     if (!this.data || !this.viewerInstance) return;
+    // If pre-loaded invisible t-shirt exists, just show it — no API call
+    if (garClass === 't-shirt' && this._hasAutoGarment &&
+        this.viewerInstance.garmentMeshes?.[0]) {
+      this.viewerInstance.garmentMeshes[0].visible = true;
+      this._layerVisibility[0] = true;
+      this._selectedGarmentLayer = 0;
+      this._garmentVisible = true;
+      this._hasAutoGarment = false;
+      this._applyGarmentVisibility();
+      this._renderVtoControls();
+      return;
+    }
     this._showVtoSpinner();
     try {
       const { data: { session } } = await window.KORRA_DB.auth.getSession();
