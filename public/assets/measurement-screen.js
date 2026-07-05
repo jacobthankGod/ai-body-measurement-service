@@ -1941,8 +1941,7 @@ window.KORRA_MS = {
     else this._exportPatternPDF();
   },
   // ═══ GARMENT LAYER CONTROLS ═══
-  _garmentTypes = ['t-shirt', 'shirt', 'pant', 'skirt'];
-  _selectedGarmentLayer = -1;
+
 
   _showVtoSpinner() {
     let spinner = document.getElementById('vto-spinner');
@@ -1954,12 +1953,12 @@ window.KORRA_MS = {
       if (container) container.appendChild(spinner);
     }
     spinner.style.display = 'flex';
-  }
+  },
 
   _hideVtoSpinner() {
     const spinner = document.getElementById('vto-spinner');
     if (spinner) spinner.style.display = 'none';
-  }
+  },
 
   async _addGarmentLayer() {
     const sel = document.getElementById('vto-garment-select');
@@ -1997,7 +1996,7 @@ window.KORRA_MS = {
       console.warn("Garment generation failed:", e.message);
       this._hideVtoSpinner();
     }
-  }
+  },
 
   _removeGarmentLayer(idx) {
     if (!this.viewerInstance) return;
@@ -2005,19 +2004,19 @@ window.KORRA_MS = {
     delete this._layerVisibility[idx];
     if (this._selectedGarmentLayer === idx) this._selectedGarmentLayer = -1;
     this._renderVtoControls();
-  }
+  },
 
   _toggleGarmentLayer(idx) {
     if (!this.viewerInstance || !this.viewerInstance.garmentMeshes) return;
     this._layerVisibility[idx] = this._layerVisibility[idx] === false;
     this._applyGarmentVisibility();
     this._renderVtoControls();
-  }
+  },
 
   _selectGarmentLayer(idx) {
     this._selectedGarmentLayer = idx;
     this._renderVtoControls();
-  }
+  },
 
   setGarmentOpacity(val) {
     const opacity = Math.max(0.1, Math.min(1, val));
