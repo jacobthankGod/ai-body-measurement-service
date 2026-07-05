@@ -185,6 +185,15 @@ window.KORRA_MS = {
     if (meshUrl && window.KORRA_VIZ) {
       window.KORRA_VIZ.preloadMesh(meshUrl);
     }
+    // Full-viewport: hide sidebar BEFORE render so no flash
+    const sidebar = document.querySelector('.sidebar-nav');
+    if (sidebar) sidebar.style.display = 'none';
+    const mainContent = document.querySelector('.main-content');
+    if (mainContent) {
+      mainContent.style.marginLeft = '0';
+      mainContent.style.padding = '0';
+    }
+
     this.render();
     if (this.sideBySide) {
       const root = document.querySelector('#view-scanresult .ms-root');
@@ -195,15 +204,6 @@ window.KORRA_MS = {
     }
     // Suppress page scroll — only sheet body scrolls
     document.querySelector('main').style.overflow = 'hidden';
-
-    // Full-viewport: hide sidebar, remove margin/padding so content is flush
-    const sidebar = document.querySelector('.sidebar-nav');
-    if (sidebar) sidebar.style.display = 'none';
-    const mainContent = document.querySelector('.main-content');
-    if (mainContent) {
-      mainContent.style.marginLeft = '0';
-      mainContent.style.padding = '0';
-    }
 
     // Switch tab FIRST so canvas has dimensions before initViewer
     window.switchTab('scanresult');
