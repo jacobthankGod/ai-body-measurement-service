@@ -147,8 +147,6 @@ window.KORRA_MS = {
     if (data.biometrics && !data.measurements) data.measurements = data.biometrics;
     if (data.landmarks_3d && !data.landmarks) data.landmarks = data.landmarks_3d;
     this.data = data;
-    this._preloadedGarmentUrl = data.garment_mesh_url || (data.measurements?.__garment_mesh_url);
-    this._hasAutoGarment = false;
     window._currentScanId = data.id;
     window._currentScanName = data.client_name || '';
     this.active = true;
@@ -171,9 +169,6 @@ window.KORRA_MS = {
     this.simulationActive = false;
     this.downloadFormat = 'dxf';
     this.heatmapActive = false;
-    this._garmentVisible = true;
-    this._layerVisibility = {};
-    this._selectedGarmentLayer = -1;
     this.compareBaselineIdx = 0;
     this.vBaseline = null;
     this.vLatest = null;
@@ -185,15 +180,6 @@ window.KORRA_MS = {
     if (meshUrl && window.KORRA_VIZ) {
       window.KORRA_VIZ.preloadMesh(meshUrl);
     }
-    // Full-viewport: hide sidebar BEFORE render so no flash
-    const sidebar = document.querySelector('.sidebar-nav');
-    if (sidebar) sidebar.style.display = 'none';
-    const mainContent = document.querySelector('.main-content');
-    if (mainContent) {
-      mainContent.style.marginLeft = '0';
-      mainContent.style.padding = '0';
-    }
-
     this.render();
     if (this.sideBySide) {
       const root = document.querySelector('#view-scanresult .ms-root');
@@ -204,6 +190,16 @@ window.KORRA_MS = {
     }
     // Suppress page scroll — only sheet body scrolls
     document.querySelector('main').style.overflow = 'hidden';
+
+    // Full-viewport: hide sidebar, remove margin/padding so content is flush
+    const sidebar = document.querySelector(".sidebar-nav"); if (sidebar && window.innerWidth <= 900) {
+      if (sidebar) sidebar.style.display = 'none';
+      const mainContent = document.querySelector('.main-content');
+      if (mainContent) {
+        mainContent.style.marginLeft = '0';
+        mainContent.style.padding = '0';
+      }
+    }
 
     // Switch tab FIRST so canvas has dimensions before initViewer
     window.switchTab('scanresult');
@@ -294,21 +290,9 @@ window.KORRA_MS = {
           <div class="ms-viewer-canvas" id="ms-viewer-canvas"></div>
           <div class="ms-viewer-badge" id="ms-viewer-badge">${this.buildBadge()}</div>
           <div class="ms-vto-controls" id="ms-vto-controls" style="display:none;">
-            <div class="vto-add-row">
-              <select id="vto-garment-select" class="vto-garment-select">
-                <option value="t-shirt">T-Shirt</option>
-                <option value="shirt">Shirt</option>
-                <option value="pant">Pant</option>
-                <option value="skirt">Skirt</option>
-              </select>
-              <button class="vto-add-btn" onclick="KORRA_MS._addGarmentLayer()">+</button>
-            </div>
-            <div class="vto-layer-list" id="vto-layer-list"></div>
-            <div class="vto-opacity-row">
-              <label>Opacity</label>
-              <input type="range" id="vto-opacity-slider" min="10" max="100" value="95" oninput="KORRA_MS.setGarmentOpacity(this.value/100)">
-              <span id="vto-opacity-label">95%</span>
-            </div>
+            <label>Opacity</label>
+            <input type="range" id="vto-opacity-slider" min="10" max="100" value="95" oninput="KORRA_MS.setGarmentOpacity(this.value/100)">
+            <span id="vto-opacity-label">95%</span>
           </div>
           <div class="ms-viewer-info">
             <div class="ms-viewer-info-title">User Perspective</div>
@@ -331,9 +315,6 @@ window.KORRA_MS = {
             </button>
             <button class="ms-tool-btn" onclick="KORRA_MS.resetViewport()" title="Reset view">
               <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="23 4 23 10 17 10"/><path d="M20.49 15a9 9 0 1 1-2.12-9.36L23 10"/></svg>
-            </button>
-            <button class="ms-tool-btn" id="ms-garment-toggle" onclick="KORRA_MS._toggleGarments()" title="Toggle garment visibility" style="display:none;">
-              <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M6 5L3 8l3 3m12-6l3 3-3 3M6 21L3 18l3-3m12 6l3-3-3-3"/><rect x="7" y="7" width="10" height="10" rx="1"/></svg>
             </button>
           </div>
           <div class="ms-options-wrapper">
@@ -786,7 +767,7 @@ window.KORRA_MS = {
       document.querySelectorAll('#view-scanresult .ms-metric-cell').forEach(el => {
         if (el.querySelector('.ms-metric-name')?.textContent === key) el.classList.add('active');
       });
-      if (window.innerWidth <= 900) {
+      const sidebar = document.querySelector(".sidebar-nav"); if (sidebar && window.innerWidth <= 900) {
         console.log(`[SIDEMENU-DBG] mobile path → openSideMenu`);
         this.openSideMenu(key);
         return;
@@ -935,7 +916,7 @@ window.KORRA_MS = {
     const rc = document.createElement('div');
     rc.className = 'ms-right-col';
     root.insertBefore(rc, sheet);
-    if (window.innerWidth <= 900) {
+    const sidebar = document.querySelector(".sidebar-nav"); if (sidebar && window.innerWidth <= 900) {
       const handle = document.createElement('div');
       handle.className = 'ms-right-col-handle';
       handle.id = 'ms-right-col-handle';
@@ -962,7 +943,7 @@ window.KORRA_MS = {
   expandSheet() {
     this.sheetExpanded = true;
     document.getElementById('ms-sheet')?.classList.add('expanded');
-    if (window.innerWidth <= 900) {
+    const sidebar = document.querySelector(".sidebar-nav"); if (sidebar && window.innerWidth <= 900) {
       const rc = document.querySelector('.ms-side-by-side .ms-right-col');
       if (rc) { rc.classList.remove('sheet-collapsed', 'sheet-half'); rc.classList.add('sheet-full'); rc.style.overflow = 'visible'; }
       this._sheetSnap = 'full';
@@ -972,7 +953,7 @@ window.KORRA_MS = {
   collapseSheet() {
     this.sheetExpanded = false;
     document.getElementById('ms-sheet')?.classList.remove('expanded');
-    if (window.innerWidth <= 900) {
+    const sidebar = document.querySelector(".sidebar-nav"); if (sidebar && window.innerWidth <= 900) {
       const rc = document.querySelector('.ms-side-by-side .ms-right-col');
       if (rc) { rc.classList.remove('sheet-full', 'sheet-half'); rc.classList.add('sheet-collapsed'); rc.style.overflow = 'hidden'; }
       this._sheetSnap = 'collapsed';
@@ -1009,7 +990,7 @@ window.KORRA_MS = {
     else this.collapseSheet();
   },
   bindSheetDrag() {
-    if (window.innerWidth <= 900) {
+    const sidebar = document.querySelector(".sidebar-nav"); if (sidebar && window.innerWidth <= 900) {
       const rc = document.querySelector('.ms-side-by-side .ms-right-col');
       let startY = 0;
       const onStart = (y) => { startY = y; if (rc) { rc.style.transition = 'none'; rc.style.overflow = 'visible'; } };
@@ -1149,10 +1130,7 @@ window.KORRA_MS = {
       };
       const cached = this.viewerInstance.getCachedMesh(meshUrl);
       if (cached) {
-        requestAnimationFrame(() => {
-          tryLoad(cached);
-          this._loadAutoGarment();
-        });
+        requestAnimationFrame(() => tryLoad(cached));
       } else {
         const controller = new AbortController();
         const timeout = setTimeout(() => controller.abort(), 15000);
@@ -1161,7 +1139,6 @@ window.KORRA_MS = {
           .then(text => {
             this.viewerInstance._meshCache.set(meshUrl, text);
             tryLoad(text);
-            this._loadAutoGarment();
           })
           .catch(() => {});
       }
@@ -1944,24 +1921,57 @@ window.KORRA_MS = {
     if (this.downloadFormat === 'dxf') this._exportPatternDXF();
     else this._exportPatternPDF();
   },
-  // ═══ GARMENT LAYER CONTROLS ═══
-
-  _loadAutoGarment() {
-    if (!this._preloadedGarmentUrl || !this.viewerInstance) return;
-    this.viewerInstance.loadGarment(
-      this._preloadedGarmentUrl,
-      { color: 0xFFFFFF, opacity: 0, shininess: 30, depthWrite: true },
-      0
-    ).then(mesh => {
-      if (mesh) {
-        mesh.visible = false;
-        this._hasAutoGarment = true;
-        this._garmentVisible = false;
-        this._renderVtoControls();
+  async _updateGarmentForContext() {
+    if (this.activeContext === 'standard') {
+      if (this.viewerInstance) this.viewerInstance.removeGarment();
+      this._hideVtoSpinner();
+      const vtoControls = document.getElementById('ms-vto-controls');
+      if (vtoControls) vtoControls.style.display = 'none';
+      return;
+    }
+    if (!this.data || !this.viewerInstance) return;
+    console.log(`👗 [VTO] Generating garment for context: ${this.activeContext}`);
+    this._showVtoSpinner();
+    try {
+      const { data: { session } } = await window.KORRA_DB.auth.getSession();
+      const res = await fetch(`/api/v2/measurements/${this.data.id}/garment/drape`, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          'Authorization': `Bearer ${session.access_token}`
+        },
+        body: JSON.stringify({
+          attire: this.activeContext,
+          material: this.activeMaterial
+        })
+      });
+      if (!res.ok) throw new Error("Draping failed");
+      const result = await res.json();
+      const matPreset = this.FABRIC_PRESETS[this.activeMaterial] || this.FABRIC_PRESETS.woven;
+      const matSettings = {
+        color: matPreset.color ? parseInt(matPreset.color.replace('#', '0x')) : 0xFFFFFF,
+        opacity: this.activeMaterial === 'silk' ? 0.6 : 0.95,
+        shininess: this.activeMaterial === 'silk' ? 80 : 30
+      };
+      const urls = result.garment_meshes || (result.garment_mesh_url ? [result.garment_mesh_url] : []);
+      if (urls.length > 0) {
+        this.viewerInstance.removeGarment();
+        for (let i = 0; i < urls.length; i++) {
+          const depthWrite = i === 0 || this.activeMaterial !== 'silk';
+          await this.viewerInstance.loadGarment(urls[i], { ...matSettings, depthWrite }, i);
+        }
+        const vtoControls = document.getElementById('ms-vto-controls');
+        if (vtoControls) vtoControls.style.display = 'flex';
       }
-    });
+      this._hideVtoSpinner();
+    } catch (e) {
+      console.warn("Garment generation skipped or failed:", e.message);
+      if (this.viewerInstance) this.viewerInstance.removeGarment();
+      this._hideVtoSpinner();
+    }
   },
 
+  // ═══ VTO CONTROLS (Track F) ═══
   _showVtoSpinner() {
     let spinner = document.getElementById('vto-spinner');
     if (!spinner) {
@@ -1979,93 +1989,14 @@ window.KORRA_MS = {
     if (spinner) spinner.style.display = 'none';
   },
 
-  async _addGarmentLayer() {
-    const sel = document.getElementById('vto-garment-select');
-    if (!sel) return;
-    const garClass = sel.value;
-    if (!this.data || !this.viewerInstance) return;
-    // If pre-loaded invisible t-shirt exists, just show it — no API call
-    if (garClass === 't-shirt' && this._hasAutoGarment &&
-        this.viewerInstance.garmentMeshes?.[0]) {
-      this.viewerInstance.garmentMeshes[0].visible = true;
-      this._layerVisibility[0] = true;
-      this._selectedGarmentLayer = 0;
-      this._garmentVisible = true;
-      this._hasAutoGarment = false;
-      this._applyGarmentVisibility();
-      this._renderVtoControls();
-      return;
-    }
-    this._showVtoSpinner();
-    try {
-      const { data: { session } } = await window.KORRA_DB.auth.getSession();
-      const res = await fetch(`/api/v2/measurements/${this.data.id}/garment/mesh`, {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-          'Authorization': `Bearer ${session.access_token}`
-        },
-        body: JSON.stringify({ garment_class: garClass })
-      });
-      if (!res.ok) throw new Error("Garment generation failed");
-      const result = await res.json();
-      if (!result.success) throw new Error(result.error || "Unknown error");
-      const matPreset = this.FABRIC_PRESETS[this.activeMaterial] || this.FABRIC_PRESETS.woven;
-      const matSettings = {
-        color: matPreset.color ? parseInt(matPreset.color.replace('#', '0x')) : 0xFFFFFF,
-        opacity: this.activeMaterial === 'silk' ? 0.6 : 0.95,
-        shininess: this.activeMaterial === 'silk' ? 80 : 30
-      };
-      const layerIdx = this.viewerInstance.garmentMeshes ? this.viewerInstance.garmentMeshes.length : 0;
-      await this.viewerInstance.loadGarment(result.mesh_url, matSettings, layerIdx);
-      this._layerVisibility[layerIdx] = true;
-      this._applyGarmentVisibility();
-      this._selectedGarmentLayer = layerIdx;
-      this._renderVtoControls();
-      this._hideVtoSpinner();
-    } catch (e) {
-      console.warn("Garment generation failed:", e.message);
-      this._hideVtoSpinner();
-    }
-  },
-
-  _removeGarmentLayer(idx) {
-    if (!this.viewerInstance) return;
-    this.viewerInstance.removeGarment(idx);
-    delete this._layerVisibility[idx];
-    if (this._selectedGarmentLayer === idx) this._selectedGarmentLayer = -1;
-    this._renderVtoControls();
-  },
-
-  _toggleGarmentLayer(idx) {
-    if (!this.viewerInstance || !this.viewerInstance.garmentMeshes) return;
-    this._layerVisibility[idx] = this._layerVisibility[idx] === false;
-    this._applyGarmentVisibility();
-    this._renderVtoControls();
-  },
-
-  _selectGarmentLayer(idx) {
-    this._selectedGarmentLayer = idx;
-    this._renderVtoControls();
-  },
-
   setGarmentOpacity(val) {
     const opacity = Math.max(0.1, Math.min(1, val));
-    const idx = this._selectedGarmentLayer;
     if (this.viewerInstance && this.viewerInstance.garmentMeshes) {
-      if (idx >= 0 && this.viewerInstance.garmentMeshes[idx]) {
-        const mesh = this.viewerInstance.garmentMeshes[idx];
+      for (let i = 0; i < this.viewerInstance.garmentMeshes.length; i++) {
+        const mesh = this.viewerInstance.garmentMeshes[i];
         if (mesh && mesh.material) {
           mesh.material.opacity = opacity;
           mesh.material.needsUpdate = true;
-        }
-      } else {
-        for (let i = 0; i < this.viewerInstance.garmentMeshes.length; i++) {
-          const mesh = this.viewerInstance.garmentMeshes[i];
-          if (mesh && mesh.material) {
-            mesh.material.opacity = opacity;
-            mesh.material.needsUpdate = true;
-          }
         }
       }
     }
@@ -2073,49 +2004,6 @@ window.KORRA_MS = {
     if (slider) slider.value = opacity;
     const label = document.getElementById('vto-opacity-label');
     if (label) label.textContent = `${Math.round(opacity * 100)}%`;
-  },
-
-  _applyGarmentVisibility() {
-    if (!this.viewerInstance || !this.viewerInstance.garmentMeshes) return;
-    for (let i = 0; i < this.viewerInstance.garmentMeshes.length; i++) {
-      const m = this.viewerInstance.garmentMeshes[i];
-      if (m) {
-        m.visible = this._garmentVisible && (this._layerVisibility[i] !== false);
-      }
-    }
-  },
-
-  _toggleGarments() {
-    this._garmentVisible = !this._garmentVisible;
-    this._applyGarmentVisibility();
-    const btn = document.getElementById('ms-garment-toggle');
-    if (btn) btn.style.opacity = this._garmentVisible ? '1' : '0.4';
-  },
-
-  _renderVtoControls() {
-    const panel = document.getElementById('ms-vto-controls');
-    const toggle = document.getElementById('ms-garment-toggle');
-    if (!panel) return;
-    const layers = this.viewerInstance?.garmentMeshes || [];
-    const hasGarments = layers.some(m => m !== null && m !== undefined);
-    panel.style.display = hasGarments ? 'flex' : 'none';
-    if (toggle) toggle.style.display = hasGarments ? '' : 'none';
-
-    const list = document.getElementById('vto-layer-list');
-    if (!list) return;
-    let counter = 0;
-    list.innerHTML = layers.map((m, i) => {
-      if (!m) return '';
-      counter++;
-      const isSelected = this._selectedGarmentLayer === i;
-      const isVisible = this._layerVisibility[i] !== false;
-      const label = `Layer ${counter}`;
-      return `<div class="vto-layer-item ${isSelected ? 'selected' : ''}" onclick="KORRA_MS._selectGarmentLayer(${i})">
-        <span class="vto-layer-name">${label}</span>
-        <span class="vto-layer-vis" onclick="event.stopPropagation();KORRA_MS._toggleGarmentLayer(${i})" style="opacity:${isVisible ? 1 : 0.3}">👁</span>
-        <span class="vto-layer-del" onclick="event.stopPropagation();KORRA_MS._removeGarmentLayer(${i})">✕</span>
-      </div>`;
-    }).join('');
   },
 
   openShareScan() {
@@ -2142,6 +2030,8 @@ window.KORRA_MS = {
       setTimeout(() => this.renderPattern(), 50);
     }
 
+    // Phase 141: Trigger garment generation on context change
+    this._updateGarmentForContext();
     console.log('  setContext done');
   },
 
@@ -2158,19 +2048,15 @@ window.KORRA_MS = {
       setTimeout(() => this.renderPattern(), 50);
     }
 
-    // Update all garment layer materials
-    if (this.viewerInstance && this.viewerInstance.garmentMeshes) {
+    // Phase 142: Update garment material if already loaded
+    if (this.viewerInstance && this.viewerInstance.garmentMesh) {
       const matPreset = this.FABRIC_PRESETS[this.activeMaterial] || this.FABRIC_PRESETS.woven;
       const color = matPreset.color ? parseInt(matPreset.color.replace('#', '0x')) : 0xFFFFFF;
-      const opacity = mat === 'silk' ? 0.6 : 0.95;
-      for (let i = 0; i < this.viewerInstance.garmentMeshes.length; i++) {
-        const m = this.viewerInstance.garmentMeshes[i];
-        if (m && m.material) {
-          m.material.color.setHex(color);
-          m.material.opacity = opacity;
-          m.material.needsUpdate = true;
-        }
-      }
+      this.viewerInstance.garmentMesh.material.color.setHex(color);
+      this.viewerInstance.garmentMesh.material.opacity = mat === 'silk' ? 0.6 : 0.95;
+      this.viewerInstance.garmentMesh.material.needsUpdate = true;
+    } else {
+      this._updateGarmentForContext();
     }
   },
 
@@ -2390,13 +2276,14 @@ window.KORRA_MS = {
     document.getElementById('ms-side-menu-backdrop')?.remove();
 
     // Phase 112: Restore Navigation and Layout
-    const sidebar = document.querySelector('.sidebar-nav');
-    if (sidebar) sidebar.style.display = '';
+    const sidebar = document.querySelector(".sidebar-nav"); if (sidebar && window.innerWidth <= 900) {
+      if (sidebar) sidebar.style.display = '';
 
-    const content = document.querySelector('.main-content');
-    if (content) {
-      content.style.marginLeft = '';
-      content.style.padding = '';
+      const content = document.querySelector('.main-content');
+      if (content) {
+        content.style.marginLeft = '';
+        content.style.padding = '';
+      }
     }
 
     document.querySelectorAll('#view-scanresult .ms-header-btn, #view-scanresult .ms-share-btn').forEach(btn => {

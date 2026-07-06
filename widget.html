@@ -221,8 +221,30 @@
   <script src="/assets/korra_viz.js?v=1.0.15"></script>
   <script src="/assets/jspdf.min.js"></script>
   <script src="/assets/korra_export.js"></script>
+  <script src="/assets/ui-a11y.js" defer></script>
 
-<script>
+  <script>
+    // ─── UI A11Y BOOTSTRAP (non-breaking) ───
+    document.addEventListener('DOMContentLoaded', () => {
+      const cam = document.getElementById('step-camera');
+      if (!cam || !window.KORRA_UI) return;
+
+      if (cam.classList.contains('active')) {
+        try { KORRA_UI.openDialog('step-camera', {}); } catch(e) {}
+      }
+
+      try { KORRA_UI.bindEscapeToClose('step-camera'); } catch(e) {}
+
+      const mo = new MutationObserver(() => {
+        try {
+          if (cam.classList.contains('active')) KORRA_UI.openDialog('step-camera', {});
+          else KORRA_UI.closeDialog('step-camera');
+        } catch(e) {}
+      });
+      mo.observe(cam, { attributes: true, attributeFilter: ['class', 'style'] });
+      window.__KORRA_WIDGET_CAM_OBSERVER__ = mo;
+    });
+
     let activeCameraType = null, poseModel = null, cameraInstance = null, isPoseAligned = false, alignmentStartTime = 0, autoSnapTriggered = false, isReviewing = false, capturedDataUrl = null;
     let lastSpokenText = "", lastSpokenTime = 0;
 
