@@ -486,7 +486,7 @@
     .btn-outline { height: 40px; padding: 0 20px; border-radius: 8px; border: 1px solid var(--Glass-Border); color: var(--White); font-size: 12px; font-weight: 800; text-transform: uppercase; cursor: pointer; text-decoration: none; display: inline-flex; align-items: center; transition: 0.2s; background: none; }
     .btn-outline:hover { background: var(--Glass); border-color: var(--White); }
     .btn-primary { height: 40px; padding: 0 20px; border-radius: 8px; background: var(--Mint); color: var(--Obsidian); font-size: 12px; font-weight: 800; text-transform: uppercase; cursor: pointer; border: none; transition: 0.2s; }
-    .grid-dashboard { display: flex; height: 100%; width: 100%; overflow: hidden; }
+    .grid-dashboard { display: flex; height: 100%; width: 100%; overflow: clip; }
 
     .sidebar-nav {
       position: fixed;
@@ -629,7 +629,6 @@
           box-shadow: 4px 0 0 0 var(--Lemon);
       }
 
-      .main-content { padding: 12px 12px 120px; }
       .container { padding: 0 12px; }
       .purchase-overlay { top: 80px; left: 0; right: 0; bottom: 84px; }
       .scan-overlay { top: 80px; left: 0; right: 0; bottom: 84px; }
@@ -1117,6 +1116,13 @@
     #creditOverlay { position: fixed; top: 80px; left: var(--sidebar-width, 260px); right: 0; bottom: 0; background: rgba(0,0,0,0.9); backdrop-filter: blur(20px); z-index: 500; display: none; align-items: center; justify-content: center; text-align: center; transition: left 0.3s cubic-bezier(0.4, 0, 0.2, 1); }
     .credit-card { background: #0a0a0a; border: 2px solid var(--Mint); padding: 60px 40px; border-radius: 32px; max-width: 440px; box-shadow: 0 0 50px rgba(198, 255, 0, 0.2); }
   </style>
+  <script>
+    /* Set --sidebar-width before first paint to prevent layout flash */
+    (function(){
+      var c = localStorage.getItem('korra_sidebar_collapsed') === 'true';
+      document.documentElement.style.setProperty('--sidebar-width', c ? '72px' : '260px');
+    })();
+  </script>
 </head>
 <body>
   <!-- TOAST NOTIFICATION -->
@@ -1893,58 +1899,71 @@
               <h2 style="font-size: 24px; margin-bottom: 8px">Intelligence Hub</h2>
               <p style="color:var(--Neutral-400); margin-bottom:40px">Global market insights and team management for enterprise scale.</p>
 
-              <div class="dashboard-split" style="grid-template-columns: 1.5fr 1fr; gap: 48px;">
-                <div class="insights-column">
-                  <h4 style="font-size:10px; font-weight:900; color:var(--Mint); margin-bottom:24px">MARKET INTELLIGENCE</h4>
-                  <div class="glass-card" style="margin-bottom:32px; padding:32px">
-                    <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:24px">
-                        <h5 style="margin:0; font-size:14px">Global Body Shape Distribution</h5>
-                        <select class="input-field" style="width:auto; height:32px; font-size:10px; margin:0">
-                            <option>All Regions</option>
-                            <option>North America</option>
-                            <option>Europe</option>
-                            <option>Asia</option>
-                        </select>
-                    </div>
-                    <div style="height:300px; width:100%"><canvas id="enterpriseHeatmap"></canvas></div>
-                  </div>
-
-                  <h4 style="font-size:10px; font-weight:900; color:var(--Mint); margin-bottom:24px">INDUSTRIAL API MONITORING</h4>
-                  <div class="glass-card" style="padding:32px">
-                    <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:20px">
-                        <div>
-                            <div style="font-size:18px; font-weight:900">4,209 / 10,000</div>
-                            <div style="font-size:10px; color:var(--Neutral-400)">Monthly API Rate Limit Consumption</div>
-                        </div>
-                        <div style="text-align:right">
-                            <div style="font-size:14px; font-weight:900; color:var(--Mint)">HEALTHY</div>
-                            <div style="font-size:10px; color:var(--Neutral-400)">Avg Latency: 420ms</div>
-                        </div>
-                    </div>
-                    <div class="polling-bar" style="height:8px; display:block"><div class="polling-fill" style="width:42%"></div></div>
-                  </div>
+              <!-- EMPTY STATE: shown when no scan data exists -->
+              <div id="enterpriseEmptyState" style="display:none; text-align:center; padding:80px 40px;">
+                <div style="width:80px; height:80px; border-radius:50%; background:rgba(198,255,0,0.08); display:flex; align-items:center; justify-content:center; margin:0 auto 24px;">
+                  <svg width="36" height="36" viewBox="0 0 24 24" fill="none" stroke="var(--Mint)" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><path d="M21 16V8a2 2 0 0 0-1-1.73l-7-4a2 2 0 0 0-2 0l-7 4A2 2 0 0 0 3 8v8a2 2 0 0 0 1 1.73l7 4a2 2 0 0 0 2 0l7-4A2 2 0 0 0 21 16z"/><polyline points="3.27 6.96 12 12.01 20.73 6.96"/><line x1="12" y1="22.08" x2="12" y2="12"/></svg>
                 </div>
+                <h3 style="font-size:18px; margin-bottom:8px; color:var(--White)">No Insights Yet</h3>
+                <p style="font-size:13px; color:var(--Neutral-400); max-width:360px; margin:0 auto 32px; line-height:1.6">Body shape analytics, API usage metrics, and team activity will appear here once your organization starts collecting scans.</p>
+                <button class="btn-primary" onclick="window.openModal('scanModal')" style="height:44px; padding:0 28px; font-size:12px">Start First Scan</button>
+              </div>
 
-                <div class="management-column">
-                  <h4 style="font-size:10px; font-weight:900; color:var(--Mint); margin-bottom:24px">TEAM & PERMISSIONS</h4>
-                  <div class="glass-card" style="padding:24px; margin-bottom:32px">
-                    <div style="display:flex; flex-direction:column; gap:16px">
-                        <div style="display:flex; justify-content:space-between; align-items:center; padding-bottom:12px; border-bottom:1px solid var(--Glass-Border)">
-                            <div><div style="font-size:13px; font-weight:700">Sarah Chen</div><div style="font-size:10px; color:var(--Neutral-500)">DESIGN DIRECTOR</div></div>
-                            <span style="font-size:9px; background:var(--Mint); color:var(--Obsidian); padding:2px 8px; border-radius:4px; font-weight:900">ADMIN</span>
-                        </div>
-                        <div style="display:flex; justify-content:space-between; align-items:center; padding-bottom:12px; border-bottom:1px solid var(--Glass-Border)">
-                            <div><div style="font-size:13px; font-weight:700">Marcus Thorne</div><div style="font-size:10px; color:var(--Neutral-500)">FACTORY MANAGER</div></div>
-                            <span style="font-size:9px; border:1px solid var(--Glass-Border); padding:2px 8px; border-radius:4px; font-weight:900">STAFF</span>
-                        </div>
-                        <button class="btn-outline" style="width:100%; height:44px; font-size:11px; margin-top:8px">+ Invite Team Member</button>
+              <!-- POPULATED STATE: shown when scan data exists -->
+              <div id="enterpriseContent">
+                <div class="dashboard-split" style="grid-template-columns: 1.5fr 1fr; gap: 48px;">
+                  <div class="insights-column">
+                    <h4 style="font-size:10px; font-weight:900; color:var(--Mint); margin-bottom:24px">MARKET INTELLIGENCE</h4>
+                    <div class="glass-card" style="margin-bottom:32px; padding:32px">
+                      <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:24px">
+                          <h5 style="margin:0; font-size:14px">Global Body Shape Distribution</h5>
+                          <select class="input-field" style="width:auto; height:32px; font-size:10px; margin:0">
+                              <option>All Regions</option>
+                              <option>North America</option>
+                              <option>Europe</option>
+                              <option>Asia</option>
+                          </select>
+                      </div>
+                      <div style="height:300px; width:100%"><canvas id="enterpriseHeatmap"></canvas></div>
+                    </div>
+
+                    <h4 style="font-size:10px; font-weight:900; color:var(--Mint); margin-bottom:24px">INDUSTRIAL API MONITORING</h4>
+                    <div class="glass-card" style="padding:32px">
+                      <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:20px">
+                          <div>
+                              <div style="font-size:18px; font-weight:900">4,209 / 10,000</div>
+                              <div style="font-size:10px; color:var(--Neutral-400)">Monthly API Rate Limit Consumption</div>
+                          </div>
+                          <div style="text-align:right">
+                              <div style="font-size:14px; font-weight:900; color:var(--Mint)">HEALTHY</div>
+                              <div style="font-size:10px; color:var(--Neutral-400)">Avg Latency: 420ms</div>
+                          </div>
+                      </div>
+                      <div class="polling-bar" style="height:8px; display:block"><div class="polling-fill" style="width:42%"></div></div>
                     </div>
                   </div>
 
-                  <h4 style="font-size:10px; font-weight:900; color:var(--Error); margin-bottom:24px">COMPLIANCE & GDPR</h4>
-                  <div class="glass-card" style="padding:24px; border-color:rgba(214,48,49,0.2)">
-                    <p style="font-size:11px; color:var(--Neutral-400); margin-bottom:20px">Manage data subject access requests and bulk deletion portals.</p>
-                    <button class="btn-outline" style="width:100%; border-color:var(--Error); color:var(--Error); font-size:10px">Open Right to be Forgotten Portal</button>
+                  <div class="management-column">
+                    <h4 style="font-size:10px; font-weight:900; color:var(--Mint); margin-bottom:24px">TEAM & PERMISSIONS</h4>
+                    <div class="glass-card" style="padding:24px; margin-bottom:32px">
+                      <div style="display:flex; flex-direction:column; gap:16px">
+                          <div style="display:flex; justify-content:space-between; align-items:center; padding-bottom:12px; border-bottom:1px solid var(--Glass-Border)">
+                              <div><div style="font-size:13px; font-weight:700">Sarah Chen</div><div style="font-size:10px; color:var(--Neutral-500)">DESIGN DIRECTOR</div></div>
+                              <span style="font-size:9px; background:var(--Mint); color:var(--Obsidian); padding:2px 8px; border-radius:4px; font-weight:900">ADMIN</span>
+                          </div>
+                          <div style="display:flex; justify-content:space-between; align-items:center; padding-bottom:12px; border-bottom:1px solid var(--Glass-Border)">
+                              <div><div style="font-size:13px; font-weight:700">Marcus Thorne</div><div style="font-size:10px; color:var(--Neutral-500)">FACTORY MANAGER</div></div>
+                              <span style="font-size:9px; border:1px solid var(--Glass-Border); padding:2px 8px; border-radius:4px; font-weight:900">STAFF</span>
+                          </div>
+                          <button class="btn-outline" style="width:100%; height:44px; font-size:11px; margin-top:8px">+ Invite Team Member</button>
+                      </div>
+                    </div>
+
+                    <h4 style="font-size:10px; font-weight:900; color:var(--Error); margin-bottom:24px">COMPLIANCE & GDPR</h4>
+                    <div class="glass-card" style="padding:24px; border-color:rgba(214,48,49,0.2)">
+                      <p style="font-size:11px; color:var(--Neutral-400); margin-bottom:20px">Manage data subject access requests and bulk deletion portals.</p>
+                      <button class="btn-outline" style="width:100%; border-color:var(--Error); color:var(--Error); font-size:10px">Open Right to be Forgotten Portal</button>
+                    </div>
                   </div>
                 </div>
               </div>
@@ -4970,7 +4989,22 @@ window.generateDeepLink = async () => {
 
     let enterpriseChart = null;
     window.renderEnterpriseInsights = () => {
-        const ctx = document.getElementById('enterpriseHeatmap').getContext('2d');
+        const emptyState = document.getElementById('enterpriseEmptyState');
+        const content = document.getElementById('enterpriseContent');
+        const hasData = document.querySelectorAll('#view-vault .client-card, #view-vault .passport-row').length > 0 ||
+                        document.querySelectorAll('.tab-view.active .glass-card').length > 1;
+
+        if (!hasData && emptyState && content) {
+            emptyState.style.display = 'block';
+            content.style.display = 'none';
+            return;
+        }
+        if (emptyState) emptyState.style.display = 'none';
+        if (content) content.style.display = 'block';
+
+        const canvas = document.getElementById('enterpriseHeatmap');
+        if (!canvas) return;
+        const ctx = canvas.getContext('2d');
         if (enterpriseChart) enterpriseChart.destroy();
         enterpriseChart = new Chart(ctx, {
             type: 'bar',
