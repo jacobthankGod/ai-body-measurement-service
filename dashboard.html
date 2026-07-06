@@ -555,12 +555,16 @@
 
     .main-content {
       flex: 1; min-width: 0; display: flex; flex-direction: column;
-      margin-left: var(--sidebar-width, 260px);
       padding: 80px 40px 100px 40px;
       overflow-y: auto; overflow-x: hidden;
       position: relative;
       background: var(--Obsidian-Deep);
       transition: margin-left 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+    }
+
+    @media (min-width: 901px) {
+      .sidebar-nav.collapsed ~ .main-content { margin-left: 72px; }
+      .sidebar-nav:not(.collapsed) ~ .main-content { margin-left: 260px; }
     }
 
     @media (max-width: 900px) {
