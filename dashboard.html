@@ -441,7 +441,7 @@
     /* ULTRA-MODERN CLIENT LEDGER: Mobile Stacked UI */
     @media (max-width: 900px) {
         .container { padding: 0 12px !important; width: 100% !important; max-width: 100% !important; }
-        .main-content { padding: 12px 12px 120px !important; width: 100% !important; overflow-x: hidden; }
+        .main-content { padding: 12px 12px 120px !important; overflow-x: hidden; }
         .hero-grid {
             grid-template-columns: 1fr 1fr !important;
             gap: 12px !important;
@@ -496,6 +496,7 @@
       height: calc(100vh - 80px);
       background: #050505; /* Solid obsidian for true edge-to-edge contrast */
       border-right: 1px solid var(--Glass-Border);
+      z-index: 100;
       display: flex;
       flex-direction: column;
       transition: width 0.3s cubic-bezier(0.4, 0, 0.2, 1);
@@ -554,17 +555,15 @@
     .sidebar-nav.collapsed .collapse-toggle svg { transform: rotate(180deg); }
 
     .main-content {
-      flex: 1; min-width: 0; display: flex; flex-direction: column;
+      width: calc(100% - var(--sidebar-width, 260px));
+      margin-left: var(--sidebar-width, 260px);
+      display: flex; flex-direction: column;
       padding: 80px 40px 100px 40px;
       overflow-y: auto; overflow-x: hidden;
       position: relative;
       background: var(--Obsidian-Deep);
-      transition: margin-left 0.3s cubic-bezier(0.4, 0, 0.2, 1);
-    }
-
-    @media (min-width: 901px) {
-      .sidebar-nav.collapsed ~ .main-content { margin-left: 72px; }
-      .sidebar-nav:not(.collapsed) ~ .main-content { margin-left: 260px; }
+      transition: margin-left 0.3s cubic-bezier(0.4, 0, 0.2, 1),
+                  width 0.3s cubic-bezier(0.4, 0, 0.2, 1);
     }
 
     @media (max-width: 900px) {
@@ -572,7 +571,7 @@
       header .container { padding: 0; justify-content: flex-start; gap: 12px; }
       .header-actions { margin-left: auto; }
       .grid-dashboard { display: block; height: auto; overflow: visible; }
-      .main-content { margin-left: 0; }
+      .main-content { margin-left: 0; width: 100%; }
       .sidebar-nav {
         position: fixed;
         top: auto;
