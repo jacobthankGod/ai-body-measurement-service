@@ -3610,8 +3610,8 @@ window.loadSettings = async () => {
       const savedCollapsed = localStorage.getItem('korra_sidebar_collapsed');
       if (savedCollapsed === 'true') {
         document.getElementById('sidebar')?.classList.add('collapsed');
-        document.documentElement.style.setProperty('--sidebar-width', '72px');
       }
+      document.documentElement.style.setProperty('--sidebar-width', savedCollapsed === 'true' ? '72px' : '260px');
       // FETCH PUBLIC CONFIG (PAYSTACK KEY + CURRENCY) FROM SERVER
       try {
           const configRes = await fetch('/api/v2/config');
