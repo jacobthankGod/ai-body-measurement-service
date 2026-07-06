@@ -486,7 +486,7 @@
     .btn-outline { height: 40px; padding: 0 20px; border-radius: 8px; border: 1px solid var(--Glass-Border); color: var(--White); font-size: 12px; font-weight: 800; text-transform: uppercase; cursor: pointer; text-decoration: none; display: inline-flex; align-items: center; transition: 0.2s; background: none; }
     .btn-outline:hover { background: var(--Glass); border-color: var(--White); }
     .btn-primary { height: 40px; padding: 0 20px; border-radius: 8px; background: var(--Mint); color: var(--Obsidian); font-size: 12px; font-weight: 800; text-transform: uppercase; cursor: pointer; border: none; transition: 0.2s; }
-    .grid-dashboard { display: flex; height: 100%; width: 100%; overflow: clip; }
+    .grid-dashboard { height: 100%; width: 100%; overflow: clip; }
 
     .sidebar-nav {
       position: fixed;
@@ -555,15 +555,13 @@
     .sidebar-nav.collapsed .collapse-toggle svg { transform: rotate(180deg); }
 
     .main-content {
-      width: calc(100% - var(--sidebar-width, 260px));
-      margin-left: var(--sidebar-width, 260px);
+      width: 100%;
+      padding: 80px 40px 100px var(--sidebar-width, 260px);
       display: flex; flex-direction: column;
-      padding: 80px 40px 100px 40px;
       overflow-y: auto; overflow-x: hidden;
       position: relative;
       background: var(--Obsidian-Deep);
-      transition: margin-left 0.3s cubic-bezier(0.4, 0, 0.2, 1),
-                  width 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+      transition: padding-left 0.3s cubic-bezier(0.4, 0, 0.2, 1);
     }
 
     @media (max-width: 900px) {
@@ -571,7 +569,7 @@
       header .container { padding: 0; justify-content: flex-start; gap: 12px; }
       .header-actions { margin-left: auto; }
       .grid-dashboard { display: block; height: auto; overflow: visible; }
-      .main-content { margin-left: 0; width: 100%; }
+      .main-content { padding-left: 0; width: 100%; }
       .sidebar-nav {
         position: fixed;
         top: auto;
@@ -2782,7 +2780,7 @@ msg.textContent = feedback; msg.style.background = aligned ? "var(--Mint)" : "rg
         const mc = document.querySelector('.main-content');
         if (mc) {
           mc.style.padding = '';
-          mc.style.marginLeft = '';
+          mc.style.paddingLeft = '';
         }
       }
 
@@ -3497,11 +3495,11 @@ window.loadSettings = async () => {
       console.log('main-content inline style:', mc.style.cssText || '(none)');
       console.log('main overflow:', main.style.overflow || '(CSS default)', '| computed:', getComputedStyle(main).overflow);
       console.log('--sidebar-width:', getComputedStyle(document.documentElement).getPropertyValue('--sidebar-width'));
-      console.log('margin-left:', styles.marginLeft);
+      console.log('padding-left:', styles.paddingLeft);
       console.log('padding:', styles.padding);
       console.log('sidebar z-index:', getComputedStyle(sidebar).zIndex);
       console.log('main-content z-index:', getComputedStyle(mc).zIndex);
-      console.log('any inline margin on mc:', mc.style.marginLeft || '(none)');
+      console.log('any inline padding-left on mc:', mc.style.paddingLeft || '(none)');
       console.log('any inline padding on mc:', mc.style.padding || '(none)');
       console.groupEnd();
     };
@@ -3512,26 +3510,6 @@ window.loadSettings = async () => {
       const isCollapsed = sidebar.classList.contains('collapsed');
       localStorage.setItem('korra_sidebar_collapsed', isCollapsed);
       document.documentElement.style.setProperty('--sidebar-width', isCollapsed ? '72px' : '260px');
-
-      setTimeout(() => {
-        console.group('=== SIDEBAR DEBUG ===');
-        document.querySelectorAll('.sidebar-nav a .korra-icon').forEach((svg, i) => {
-          const r = svg.getBoundingClientRect();
-          const cx = r.left + r.width / 2, cy = r.top + r.height / 2;
-          const topEl = document.elementFromPoint(cx, cy);
-          const label = svg.closest('a')?.getAttribute('data-label') || '?';
-          console.log(`#${i} "${label}"`, {
-            svgRect: r,
-            color: getComputedStyle(svg).color,
-            visible: r.width > 0 && r.height > 0,
-            topEl: topEl?.tagName + (topEl?.className ? '.' + (typeof topEl.className === 'string' ? topEl.className : '') : ''),
-            topElZ: getComputedStyle(topEl).zIndex,
-            topElPos: getComputedStyle(topEl).position,
-            topElRect: topEl?.getBoundingClientRect()
-          });
-        });
-        console.groupEnd();
-      }, 350);
     };
 
     // ---- CUSTOM MODAL SYSTEM (replaces alert/confirm/prompt) ----
@@ -5046,7 +5024,7 @@ window.generateDeepLink = async () => {
       const tabId = activeTab?.id || 'none';
       const cssVar = getComputedStyle(document.documentElement).getPropertyValue('--sidebar-width').trim();
       const inlineVar = document.documentElement.style.getPropertyValue('--sidebar-width');
-      const inlineML = mc?.style.marginLeft || '(CSS)';
+      const inlinePL = mc?.style.paddingLeft || '(CSS)';
       const inlinePad = mc?.style.padding || '(CSS)';
 
       let overlap = '';
@@ -5065,8 +5043,8 @@ ${overlap}
 <hr style="border-color:#333;margin:4px 0 8px">
 <b>--sidebar-width</b> CSS: <span style="color:#C6FF00">${cssVar}</span><br>
 <b>--sidebar-width</b> inline: <span style="color:${inlineVar ? '#C6FF00' : '#666'}">${inlineVar || '(none)'}</span><br>
-<b>margin-left</b> computed: <span style="color:#C6FF00">${mcStyle.marginLeft}</span><br>
-<b>margin-left</b> inline: <span style="color:${inlineML !== '(CSS)' ? '#ff9944' : '#666'}">${inlineML}</span><br>
+<b>padding-left</b> computed: <span style="color:#C6FF00">${mcStyle.paddingLeft}</span><br>
+<b>padding-left</b> inline: <span style="color:${inlinePL !== '(CSS)' ? '#ff9944' : '#666'}">${inlinePL}</span><br>
 <b>padding</b> computed: <span>${mcStyle.padding}</span><br>
 <b>overflow</b>: ${mcStyle.overflow}<br>
 <hr style="border-color:#333;margin:4px 0 8px">

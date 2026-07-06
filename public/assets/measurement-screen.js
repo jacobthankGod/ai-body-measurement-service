@@ -196,7 +196,7 @@ window.KORRA_MS = {
       if (sidebar) sidebar.style.display = 'none';
       const mainContent = document.querySelector('.main-content');
       if (mainContent) {
-        mainContent.style.marginLeft = '0';
+        mainContent.style.paddingLeft = '0';
         mainContent.style.padding = '0';
       }
     }
@@ -2281,7 +2281,7 @@ window.KORRA_MS = {
 
       const content = document.querySelector('.main-content');
       if (content) {
-        content.style.marginLeft = '';
+        content.style.paddingLeft = '';
         content.style.padding = '';
       }
     }
