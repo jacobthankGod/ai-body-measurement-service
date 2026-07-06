@@ -4989,5 +4989,91 @@ window.generateDeepLink = async () => {
 
     init();
   </script>
+
+<script>
+(function() {
+  let enabled = false, panel = null, showOutlines = false, outlineStyle = null;
+
+  function refresh() {
+    requestAnimationFrame(() => {
+      const sb = document.querySelector('.sidebar-nav');
+      const mc = document.querySelector('.main-content');
+      const main = document.querySelector('main');
+      const gd = document.querySelector('.grid-dashboard');
+      const header = document.querySelector('header');
+      const sbR = sb?.getBoundingClientRect();
+      const mcR = mc?.getBoundingClientRect();
+      const mainR = main?.getBoundingClientRect();
+      const gdR = gd?.getBoundingClientRect();
+      const mcStyle = mc ? getComputedStyle(mc) : {};
+      const activeTab = document.querySelector('.tab-view.active');
+      const tabId = activeTab?.id || 'none';
+      const cssVar = getComputedStyle(document.documentElement).getPropertyValue('--sidebar-width').trim();
+      const inlineVar = document.documentElement.style.getPropertyValue('--sidebar-width');
+      const inlineML = mc?.style.marginLeft || '(CSS)';
+      const inlinePad = mc?.style.padding || '(CSS)';
+
+      let overlap = '';
+      if (sbR && mcR && mcR.left < sbR.right - 1)
+        overlap = `<div style="color:#ff4444;font-weight:900;margin-bottom:8px">⚠️ OVERLAP: mc.left(${mcR.left}) ${'<'} sb.right(${sbR.right})</div>`;
+
+      panel.innerHTML = `<div style="display:flex;justify-content:space-between;margin-bottom:8px">
+<strong style="color:#C6FF00;font-size:13px">LAYOUT DEBUG</strong>
+<span style="color:#666;font-size:10px">Ctrl+D hide</span></div>
+<hr style="border-color:#333;margin:4px 0 8px">
+${overlap}
+<b>Active Tab:</b> <span style="color:${tabId === 'view-overview' || tabId === 'view-vault' ? '#C6FF00' : '#ff9944'}">${tabId}</span><br>
+<b>Sidebar:</b> l=${sbR?.left} t=${sbR?.top} w=${sbR?.width} h=${sbR?.height} <span style="color:#666">(z:${sb ? getComputedStyle(sb).zIndex : '?'})</span><br>
+<b>Main-content:</b> l=${mcR?.left} t=${mcR?.top} w=${mcR?.width} h=${mcR?.height} <span style="color:#666">(z:${mcStyle.zIndex})</span><br>
+<b>Header:</b> l=${header ? header.getBoundingClientRect().left : '?'}<br>
+<hr style="border-color:#333;margin:4px 0 8px">
+<b>--sidebar-width</b> CSS: <span style="color:#C6FF00">${cssVar}</span><br>
+<b>--sidebar-width</b> inline: <span style="color:${inlineVar ? '#C6FF00' : '#666'}">${inlineVar || '(none)'}</span><br>
+<b>margin-left</b> computed: <span style="color:#C6FF00">${mcStyle.marginLeft}</span><br>
+<b>margin-left</b> inline: <span style="color:${inlineML !== '(CSS)' ? '#ff9944' : '#666'}">${inlineML}</span><br>
+<b>padding</b> computed: <span>${mcStyle.padding}</span><br>
+<b>overflow</b>: ${mcStyle.overflow}<br>
+<hr style="border-color:#333;margin:4px 0 8px">
+<b>main:</b> l=${mainR?.left} t=${mainR?.top} w=${mainR?.width} h=${mainR?.height}<br>
+<b>grid-dashboard:</b> l=${gdR?.left} t=${gdR?.top} w=${gdR?.width} h=${gdR?.height}<br>
+<hr style="border-color:#333;margin:4px 0 8px">
+<label><input type="checkbox" id="__dbg_outlines_chk" ${showOutlines ? 'checked' : ''} onchange="window.__DEBUG.toggleOutlines(this.checked)"> Show element outlines</label>`;
+    });
+  }
+
+  window.__DEBUG = {
+    toggle() { enabled = !enabled; if (panel) { panel.style.display = enabled ? 'block' : 'none'; if (enabled) refresh(); } },
+    refresh,
+    toggleOutlines(on) {
+      showOutlines = on;
+      const existing = document.getElementById('__dbg_outlines_style');
+      if (on) {
+        if (!existing) {
+          const s = document.createElement('style');
+          s.id = '__dbg_outlines_style';
+          s.textContent = `.sidebar-nav{outline:3px solid #C6FF00!important}.main-content{outline:3px solid #ff6644!important}header{outline:3px solid #4488ff!important}.tab-view.active{outline:3px dashed #ff44ff!important}.grid-dashboard{outline:2px dashed #888!important}main{outline:2px dashed #666!important}`;
+          document.head.appendChild(s);
+        }
+      } else { const s = document.getElementById('__dbg_outlines_style'); if (s) s.remove(); }
+    }
+  };
+
+  if (document.readyState === 'loading') {
+    document.addEventListener('DOMContentLoaded', () => {
+      panel = document.createElement('div');
+      panel.id = '__layout_debug';
+      panel.style.cssText = 'position:fixed;bottom:16px;left:16px;z-index:99999;background:#000;border:1px solid #C6FF00;border-radius:12px;padding:16px;font:11px/1.4 monospace;color:#fff;max-height:60vh;overflow-y:auto;display:none;min-width:340px;box-shadow:0 0 40px rgba(0,0,0,0.8)';
+      document.body.appendChild(panel);
+      document.addEventListener('keydown', (e) => { if (e.ctrlKey && e.key === 'd') { e.preventDefault(); window.__DEBUG.toggle(); } });
+    });
+  } else {
+    panel = document.createElement('div');
+    panel.id = '__layout_debug';
+    panel.style.cssText = 'position:fixed;bottom:16px;left:16px;z-index:99999;background:#000;border:1px solid #C6FF00;border-radius:12px;padding:16px;font:11px/1.4 monospace;color:#fff;max-height:60vh;overflow-y:auto;display:none;min-width:340px;box-shadow:0 0 40px rgba(0,0,0,0.8)';
+    document.body.appendChild(panel);
+    document.addEventListener('keydown', (e) => { if (e.ctrlKey && e.key === 'd') { e.preventDefault(); window.__DEBUG.toggle(); } });
+  }
+})();
+</script>
 </body>
 </html>
