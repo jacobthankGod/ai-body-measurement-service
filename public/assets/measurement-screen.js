@@ -192,9 +192,8 @@ window.KORRA_MS = {
     document.querySelector('main').style.overflow = 'hidden';
 
     // Full-viewport: hide sidebar, remove margin/padding so content is flush
-    if (window.innerWidth <= 900) {
-      const bottomNav = document.querySelector('.sidebar-nav');
-      if (bottomNav) bottomNav.style.display = 'none';
+    const sidebar = document.querySelector(".sidebar-nav"); if (sidebar && window.innerWidth <= 900) {
+      if (sidebar) sidebar.style.display = 'none';
       const mainContent = document.querySelector('.main-content');
       if (mainContent) {
         mainContent.style.marginLeft = '0';
@@ -768,7 +767,7 @@ window.KORRA_MS = {
       document.querySelectorAll('#view-scanresult .ms-metric-cell').forEach(el => {
         if (el.querySelector('.ms-metric-name')?.textContent === key) el.classList.add('active');
       });
-      if (window.innerWidth <= 900) {
+      const sidebar = document.querySelector(".sidebar-nav"); if (sidebar && window.innerWidth <= 900) {
         console.log(`[SIDEMENU-DBG] mobile path → openSideMenu`);
         this.openSideMenu(key);
         return;
@@ -917,7 +916,7 @@ window.KORRA_MS = {
     const rc = document.createElement('div');
     rc.className = 'ms-right-col';
     root.insertBefore(rc, sheet);
-    if (window.innerWidth <= 900) {
+    const sidebar = document.querySelector(".sidebar-nav"); if (sidebar && window.innerWidth <= 900) {
       const handle = document.createElement('div');
       handle.className = 'ms-right-col-handle';
       handle.id = 'ms-right-col-handle';
@@ -944,7 +943,7 @@ window.KORRA_MS = {
   expandSheet() {
     this.sheetExpanded = true;
     document.getElementById('ms-sheet')?.classList.add('expanded');
-    if (window.innerWidth <= 900) {
+    const sidebar = document.querySelector(".sidebar-nav"); if (sidebar && window.innerWidth <= 900) {
       const rc = document.querySelector('.ms-side-by-side .ms-right-col');
       if (rc) { rc.classList.remove('sheet-collapsed', 'sheet-half'); rc.classList.add('sheet-full'); rc.style.overflow = 'visible'; }
       this._sheetSnap = 'full';
@@ -954,7 +953,7 @@ window.KORRA_MS = {
   collapseSheet() {
     this.sheetExpanded = false;
     document.getElementById('ms-sheet')?.classList.remove('expanded');
-    if (window.innerWidth <= 900) {
+    const sidebar = document.querySelector(".sidebar-nav"); if (sidebar && window.innerWidth <= 900) {
       const rc = document.querySelector('.ms-side-by-side .ms-right-col');
       if (rc) { rc.classList.remove('sheet-full', 'sheet-half'); rc.classList.add('sheet-collapsed'); rc.style.overflow = 'hidden'; }
       this._sheetSnap = 'collapsed';
@@ -991,7 +990,7 @@ window.KORRA_MS = {
     else this.collapseSheet();
   },
   bindSheetDrag() {
-    if (window.innerWidth <= 900) {
+    const sidebar = document.querySelector(".sidebar-nav"); if (sidebar && window.innerWidth <= 900) {
       const rc = document.querySelector('.ms-side-by-side .ms-right-col');
       let startY = 0;
       const onStart = (y) => { startY = y; if (rc) { rc.style.transition = 'none'; rc.style.overflow = 'visible'; } };
@@ -2277,9 +2276,8 @@ window.KORRA_MS = {
     document.getElementById('ms-side-menu-backdrop')?.remove();
 
     // Phase 112: Restore Navigation and Layout
-    if (window.innerWidth <= 900) {
-      const bottomNav = document.querySelector('.sidebar-nav');
-      if (bottomNav) bottomNav.style.display = '';
+    const sidebar = document.querySelector(".sidebar-nav"); if (sidebar && window.innerWidth <= 900) {
+      if (sidebar) sidebar.style.display = '';
 
       const content = document.querySelector('.main-content');
       if (content) {
