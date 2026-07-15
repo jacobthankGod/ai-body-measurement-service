@@ -191,15 +191,10 @@ window.KORRA_MS = {
     // Suppress page scroll — only sheet body scrolls
     document.querySelector('main').style.overflow = 'hidden';
 
-    // Full-viewport: hide sidebar, remove margin/padding so content is flush
-    if (window.innerWidth <= 900) {
-      const bottomNav = document.querySelector('.sidebar-nav');
-      if (bottomNav) bottomNav.style.display = 'none';
-      const mainContent = document.querySelector('.main-content');
-      if (mainContent) {
-        mainContent.style.marginLeft = '0';
-        mainContent.style.padding = '0';
-      }
+    // Full-viewport: remove padding so content is flush
+    const mainContent = document.querySelector('.main-content');
+    if (mainContent) {
+      mainContent.style.padding = '0';
     }
 
     // Switch tab FIRST so canvas has dimensions before initViewer
@@ -251,6 +246,10 @@ window.KORRA_MS = {
               <div class="ms-scan-subtitle">${date} · ${height} · ${gender}</div>
             </div>
             <div class="ms-controls-toggles">
+              <button class="ms-tryon-btn" onclick="KORRA_MS.switchView('tryon')" title="Virtual try-on">
+                <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M20.84 4.61a5.5 5.5 0 0 0-7.78 0L12 5.67l-1.06-1.06a5.5 5.5 0 0 0-7.78 7.78l1.06 1.06L12 21.23l7.78-7.78 1.06-1.06a5.5 5.5 0 0 0 0-7.78z"/></svg>
+                Try On
+              </button>
               <div class="ms-unit-toggle">
                 <button class="ms-unit-btn ${this.unit === 'cm' ? 'active' : ''}" onclick="KORRA_MS.setUnit('cm')">CM</button>
                 <button class="ms-unit-btn ${this.unit === 'in' ? 'active' : ''}" onclick="KORRA_MS.setUnit('in')">IN</button>
@@ -294,6 +293,7 @@ window.KORRA_MS = {
             <label>Opacity</label>
             <input type="range" id="vto-opacity-slider" min="10" max="100" value="95" oninput="KORRA_MS.setGarmentOpacity(this.value/100)">
             <span id="vto-opacity-label">95%</span>
+            <button class="ms-vto-btn" id="vto-visibility-btn" onclick="KORRA_MS.toggleGarmentVisibility()" title="Toggle garment visibility">ON</button>
           </div>
           <div class="ms-viewer-info">
             <div class="ms-viewer-info-title">User Perspective</div>
@@ -316,6 +316,9 @@ window.KORRA_MS = {
             </button>
             <button class="ms-tool-btn" onclick="KORRA_MS.resetViewport()" title="Reset view">
               <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="23 4 23 10 17 10"/><path d="M20.49 15a9 9 0 1 1-2.12-9.36L23 10"/></svg>
+            </button>
+            <button class="ms-tool-btn" id="ms-toggle-autorotate" onclick="KORRA_MS.toggleAutoRotate()" title="Auto-rotate">
+              <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="1 4 1 10 7 10"/><path d="M3.51 15a9 9 0 1 0 2.13-9.36L1 10"/></svg>
             </button>
           </div>
           <div class="ms-options-wrapper">
@@ -393,9 +396,11 @@ window.KORRA_MS = {
       case 'compare': content = this.buildCompareView(); break;
       case 'pattern': content = this.buildPatternView(); break;
       case 'ai': content = this.buildAIView(); break;
+      case 'tryon': content = this.buildTryOnView(); break;
+      case 'reconstruct': content = this.buildReconstructView(); break;
       default: content = this.buildMetricsGrid();
     }
-    if (this.viewMode === 'ai') return content;
+    if (this.viewMode === 'ai' || this.viewMode === 'tryon') return content;
     return content + this.buildNotesHTML();
   },
 
@@ -662,13 +667,13 @@ window.KORRA_MS = {
 
   // ═══ VIEW MODE ═══
   switchView(mode) {
-    if (mode === 'ai' && this.viewMode !== mode) this._previousView = this.viewMode;
+    if ((mode === 'ai' || mode === 'tryon' || mode === 'reconstruct') && this.viewMode !== mode) this._previousView = this.viewMode;
     this.viewMode = mode;
     document.querySelectorAll('#view-scanresult .ms-tab').forEach(t => t.classList.remove('active'));
     document.querySelector(`#view-scanresult .ms-tab[onclick*="${mode}"]`)?.classList.add('active');
     const body = document.getElementById('ms-sheet-body');
     if (body) {
-      if (mode === 'ai' || mode === 'pattern') {
+      if (mode === 'ai' || mode === 'tryon' || mode === 'reconstruct' || mode === 'pattern') {
         body.style.overflow = '';
         body.style.display = 'flex';
         body.style.flexDirection = 'column';
@@ -690,7 +695,8 @@ window.KORRA_MS = {
         const sheet = document.querySelector('.ms-sheet');
         if (sheet) {
            if (mode === 'ai') sheet.classList.add('ai-active');
-           else sheet.classList.remove('ai-active');
+           else if (mode === 'tryon') sheet.classList.add('tryon-active');
+           else sheet.classList.remove('ai-active', 'tryon-active');
         }
 
         document.querySelectorAll('#view-scanresult .ms-header-btn, #view-scanresult .ms-share-btn').forEach(btn => {
@@ -698,6 +704,16 @@ window.KORRA_MS = {
         });
 
         if (mode === 'ai') document.body.classList.add('ai-mode');
+        if (mode === 'tryon') {
+          document.body.classList.add('tryon-mode');
+          this._restoreViewport();
+          setTimeout(() => this._initTryOn(), 50);
+        }
+        if (mode === 'reconstruct') {
+          document.body.classList.add('tryon-mode');
+          this._restoreViewport();
+          setTimeout(() => this._initReconstruct(), 50);
+        }
       } else {
         body.style.overflow = '';
         body.style.display = '';
@@ -729,7 +745,7 @@ window.KORRA_MS = {
         if (tabs) tabs.style.display = '';
 
         const sheet = document.querySelector('.ms-sheet');
-        if (sheet) sheet.classList.remove('ai-active');
+        if (sheet) sheet.classList.remove('ai-active', 'tryon-active');
 
         if (window.innerWidth > 900) {
           // const bottomNav = document.querySelector('.sidebar-nav');
@@ -740,7 +756,8 @@ window.KORRA_MS = {
           btn.style.display = '';
         });
 
-        document.body.classList.remove('ai-mode');
+        document.body.classList.remove('ai-mode', 'tryon-mode');
+        this._restoreViewport();
       }
       const rightCol = document.querySelector('.ms-right-col');
       if (rightCol && window.innerWidth <= 900) rightCol.style.overflow = mode === 'ai' ? 'visible' : '';
@@ -1142,6 +1159,22 @@ window.KORRA_MS = {
             tryLoad(text);
           })
           .catch(() => {});
+      }
+    }
+    // Swap to TailorNet body if available (from extract response or stored DB)
+    const tnBodyUrl = this.data?.tailornet_body_url || this.data?.biometrics?.__smpl_params?.__tailornet_body_url;
+    if (tnBodyUrl && this.viewerInstance?.loadTailornetBody) {
+      const cached = this.viewerInstance._meshCache.get(tnBodyUrl);
+      if (cached) {
+        requestAnimationFrame(() => this.viewerInstance.loadTailornetBody(tnBodyUrl));
+      } else {
+        fetch(tnBodyUrl)
+          .then(r => { if (!r.ok) throw new Error('Missing'); return r.text(); })
+          .then(text => {
+            this.viewerInstance._meshCache.set(tnBodyUrl, text);
+            this.viewerInstance.loadTailornetBody(tnBodyUrl);
+          })
+          .catch(() => { console.warn('TailorNet body not available'); });
       }
     }
     this._fabIntel._sessionStart = Date.now();
@@ -1948,6 +1981,16 @@ window.KORRA_MS = {
       });
       if (!res.ok) throw new Error("Draping failed");
       const result = await res.json();
+      // Swap to TailorNet body from drape if not yet loaded
+      if (result.body_mesh && this.viewerInstance?.loadTailornetBody && !this.viewerInstance._tailornetBodyLoaded) {
+        fetch(result.body_mesh)
+          .then(r => { if (!r.ok) throw new Error('Missing'); return r.text(); })
+          .then(text => {
+            this.viewerInstance._meshCache.set(result.body_mesh, text);
+            this.viewerInstance.loadTailornetBody(result.body_mesh);
+          })
+          .catch(() => {});
+      }
       const matPreset = this.FABRIC_PRESETS[this.activeMaterial] || this.FABRIC_PRESETS.woven;
       const matSettings = {
         color: matPreset.color ? parseInt(matPreset.color.replace('#', '0x')) : 0xFFFFFF,
@@ -2005,6 +2048,443 @@ window.KORRA_MS = {
     if (slider) slider.value = opacity;
     const label = document.getElementById('vto-opacity-label');
     if (label) label.textContent = `${Math.round(opacity * 100)}%`;
+  },
+
+  toggleGarmentVisibility() {
+    if (!this.viewerInstance || !this.viewerInstance.garmentMeshes) return;
+    const first = this.viewerInstance.garmentMeshes.find(m => m);
+    const visible = first ? !first.visible : false;
+    this.viewerInstance.toggleGarmentVisibility(visible);
+    const btn = document.getElementById('vto-visibility-btn');
+    if (btn) {
+      btn.textContent = visible ? 'ON' : 'OFF';
+      btn.classList.toggle('active', visible);
+    }
+  },
+
+  toggleAutoRotate() {
+    if (!this.viewerInstance) return;
+    const enabled = !this.viewerInstance.autoRotate;
+    this.viewerInstance.setAutoRotate(enabled);
+    const btn = document.getElementById('ms-toggle-autorotate');
+    if (btn) btn.classList.toggle('active', enabled);
+  },
+
+  // ═══ AI CHAT (IN-SHEET VIEW) ═══
+  buildAIView() {
+    return `<div class="ms-ai-view">
+      <div class="ms-ai-topbar">
+        <button class="ms-ai-back" onclick="KORRA_MS.switchView(KORRA_MS._previousView || 'avatar')">
+          <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="15 18 9 12 15 6"/></svg>
+          Back to Measurements
+        </button>
+        <div class="ms-ai-title">Ask AI</div>
+      </div>
+      <div class="ms-ai-prompt-bar">
+        <button class="ms-ai-prompt-btn" onclick="KORRA_MS.askAI('Explain my body measurements')">Explain this scan</button>
+        <button class="ms-ai-prompt-btn" onclick="KORRA_MS.askAI('Recommend clothing fit for my body')">Clothing fit</button>
+        <button class="ms-ai-prompt-btn" onclick="KORRA_MS.askAI('Give me a body summary')">Body summary</button>
+        <button class="ms-ai-prompt-btn" onclick="KORRA_MS.askAI('What measurements changed since last scan?')">Progress insights</button>
+        <button class="ms-ai-newchat" onclick="KORRA_MS.newChat()" title="New conversation">+</button>
+      </div>
+      <div class="ms-ai-body" id="ms-ai-body"></div>
+      <div class="ms-ai-input-bar">
+        <input class="ms-ai-input" id="ms-ai-input" placeholder="Ask about your measurements..." onkeydown="if(event.key==='Enter'&&!this.disabled)KORRA_MS.askAI(this.value)">
+        <button class="ms-ai-send" id="ms-ai-send" onclick="KORRA_MS.askAI(document.getElementById('ms-ai-input').value)">
+          <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="22" y1="2" x2="11" y2="13"/><polygon points="22 2 15 22 11 13 2 9 22 2"/></svg>
+        </button>
+      </div>
+    </div>`;
+  },
+
+  // ═══ TRY-ON (OOTDiffusion) ═══
+  buildTryOnView() {
+    return `
+      <div class="ms-tryon-view">
+        <div class="ms-tryon-topbar">
+          <button class="ms-tryon-back" onclick="KORRA_MS.switchView(KORRA_MS._previousView || 'avatar')">
+            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="15 18 9 12 15 6"/></svg>
+            Back to Measurements
+          </button>
+          <div class="ms-tryon-title">Virtual Try-On</div>
+          <div class="ms-tryon-subtitle">AI-powered garment visualization</div>
+        </div>
+        <div class="ms-tryon-input-area">
+          <div class="ms-tryon-preview-box">
+            <div class="ms-tryon-preview-label">Person Photo</div>
+            <div class="ms-tryon-preview-img" id="ms-tryon-person-preview">
+              <img id="ms-tryon-person-img" src="" alt="Person" style="display:none">
+              <div class="ms-tryon-placeholder" id="ms-tryon-person-placeholder">
+                <svg width="40" height="40" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"/><circle cx="12" cy="7" r="4"/></svg>
+                <span>Upload a person photo</span>
+              </div>
+            </div>
+            <input type="file" id="ms-tryon-person-file" accept="image/*" style="display:none">
+            <button class="ms-tryon-upload-btn" onclick="document.getElementById('ms-tryon-person-file').click()">
+              <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="17 8 12 3 7 8"/><line x1="12" y1="3" x2="12" y2="15"/></svg>
+              Choose Image
+            </button>
+          </div>
+          <div class="ms-tryon-arrow">
+            <svg width="32" height="32" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="5" y1="12" x2="19" y2="12"/><polyline points="12 5 19 12 12 19"/></svg>
+          </div>
+          <div class="ms-tryon-preview-box">
+            <div class="ms-tryon-preview-label">Garment Photo</div>
+            <div class="ms-tryon-preview-img" id="ms-tryon-garment-preview">
+              <img id="ms-tryon-garment-img" src="" alt="Garment" style="display:none">
+              <div class="ms-tryon-placeholder" id="ms-tryon-garment-placeholder">
+                <svg width="40" height="40" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><rect x="3" y="3" width="18" height="18" rx="2" ry="2"/><circle cx="8.5" cy="8.5" r="1.5"/><polyline points="21 15 16 10 5 21"/></svg>
+                <span>Upload a garment photo</span>
+              </div>
+            </div>
+            <input type="file" id="ms-tryon-garment-file" accept="image/*" style="display:none">
+            <button class="ms-tryon-upload-btn" onclick="document.getElementById('ms-tryon-garment-file').click()">
+              <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="17 8 12 3 7 8"/><line x1="12" y1="3" x2="12" y2="15"/></svg>
+              Choose Image
+            </button>
+          </div>
+        </div>
+        <div class="ms-tryon-action-row">
+          <button class="ms-tryon-generate-btn" id="ms-tryon-generate-btn" disabled onclick="KORRA_MS._runTryOn()">Generate Try-On</button>
+        </div>
+        <div style="text-align: center; margin-top: 8px;">
+          <a href="#" onclick="event.preventDefault(); KORRA_MS.switchView('reconstruct')" style="color: var(--accent); font-size: 13px; text-decoration: underline; cursor: pointer;">Need a 3D garment model? Reconstruct from photo →</a>
+        </div>
+        <div class="ms-tryon-status" id="ms-tryon-status" style="display:none;">
+          <div class="ms-tryon-spinner"></div>
+          <span id="ms-tryon-status-text">Generating try-on... (~2 min)</span>
+        </div>
+        <div class="ms-tryon-results" id="ms-tryon-results" style="display:none;">
+          <div class="ms-tryon-results-label">Results</div>
+          <div class="ms-tryon-results-grid" id="ms-tryon-results-grid"></div>
+        </div>
+      </div>`;
+  },
+
+  buildReconstructView() {
+    return `
+      <div class="ms-tryon-view">
+        <div class="ms-tryon-topbar">
+          <button class="ms-tryon-back" onclick="KORRA_MS.switchView(KORRA_MS._previousView || 'avatar')">
+            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="15 18 9 12 15 6"/></svg>
+            Back to Measurements
+          </button>
+          <div class="ms-tryon-title">Garment Reconstruction</div>
+          <div class="ms-tryon-subtitle">Image → 3D Mesh + Sewing Pattern</div>
+        </div>
+        <div class="ms-tryon-input-area">
+          <div class="ms-tryon-preview-box" style="max-width: 400px; margin: 0 auto;">
+            <div class="ms-tryon-preview-label">Garment Photo</div>
+            <div class="ms-tryon-preview-img" id="ms-recon-preview">
+              <img id="ms-recon-img" src="" alt="Garment" style="display:none">
+              <div class="ms-tryon-placeholder" id="ms-recon-placeholder">
+                <svg width="40" height="40" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><rect x="3" y="3" width="18" height="18" rx="2" ry="2"/><circle cx="8.5" cy="8.5" r="1.5"/><polyline points="21 15 16 10 5 21"/></svg>
+                <span>Upload a garment photo (front view, plain background)</span>
+              </div>
+            </div>
+            <input type="file" id="ms-recon-file" accept="image/*" style="display:none">
+            <button class="ms-tryon-upload-btn" onclick="document.getElementById('ms-recon-file').click()">
+              <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="17 8 12 3 7 8"/><line x1="12" y1="3" x2="12" y2="15"/></svg>
+              Choose Image
+            </button>
+          </div>
+        </div>
+        <div class="ms-tryon-action-row">
+          <button class="ms-tryon-generate-btn" id="ms-recon-generate-btn" disabled onclick="KORRA_MS._runReconstruct()">Reconstruct Garment</button>
+        </div>
+        <div class="ms-tryon-status" id="ms-recon-status" style="display:none;">
+          <div class="ms-tryon-spinner"></div>
+          <span id="ms-recon-status-text">Reconstructing... (~30 sec)</span>
+        </div>
+        <div class="ms-recon-error" id="ms-recon-error" data-type="server" style="display:none;">
+          <div class="ms-recon-error-icon" id="ms-recon-error-icon"></div>
+          <div class="ms-recon-error-message" id="ms-recon-error-message"></div>
+          <div class="ms-recon-error-actions" id="ms-recon-error-actions"></div>
+        </div>
+        <div class="ms-tryon-results" id="ms-recon-results" style="display:none;">
+          <div class="ms-tryon-results-label">Results</div>
+          <div id="ms-recon-results-content"></div>
+        </div>
+      </div>`;
+  },
+
+  _initTryOn() {
+    this._tryonPersonFile = null;
+    this._tryonGarmentFile = null;
+    this._tryonPersonObjectUrl = null;
+    this._tryonGarmentObjectUrl = null;
+
+    const setupUpload = (fileId, imgId, placeholderId, slot) => {
+      const input = document.getElementById(fileId);
+      if (!input) return;
+      input.onchange = (e) => {
+        const file = e.target.files[0];
+        if (!file) return;
+        const img = document.getElementById(imgId);
+        const placeholder = document.getElementById(placeholderId);
+        if (slot === 'person') {
+          if (this._tryonPersonObjectUrl) URL.revokeObjectURL(this._tryonPersonObjectUrl);
+          this._tryonPersonFile = file;
+          this._tryonPersonObjectUrl = URL.createObjectURL(file);
+          if (img) { img.src = this._tryonPersonObjectUrl; img.style.display = ''; }
+        } else {
+          if (this._tryonGarmentObjectUrl) URL.revokeObjectURL(this._tryonGarmentObjectUrl);
+          this._tryonGarmentFile = file;
+          this._tryonGarmentObjectUrl = URL.createObjectURL(file);
+          if (img) { img.src = this._tryonGarmentObjectUrl; img.style.display = ''; }
+        }
+        if (placeholder) placeholder.style.display = 'none';
+        this._checkTryOnReady();
+      };
+    };
+    setupUpload('ms-tryon-person-file', 'ms-tryon-person-img', 'ms-tryon-person-placeholder', 'person');
+    setupUpload('ms-tryon-garment-file', 'ms-tryon-garment-img', 'ms-tryon-garment-placeholder', 'garment');
+  },
+
+  _checkTryOnReady() {
+    const btn = document.getElementById('ms-tryon-generate-btn');
+    if (!btn) return;
+    btn.disabled = !(this._tryonPersonFile && this._tryonGarmentFile);
+  },
+
+  async _runTryOn() {
+    const btn = document.getElementById('ms-tryon-generate-btn');
+    const status = document.getElementById('ms-tryon-status');
+    const statusText = document.getElementById('ms-tryon-status-text');
+    const results = document.getElementById('ms-tryon-results');
+    const resultsGrid = document.getElementById('ms-tryon-results-grid');
+    if (!btn || !status || !results || !resultsGrid) return;
+
+    if (!this._tryonPersonFile) {
+      alert('Please select a person photo first.');
+      return;
+    }
+    if (!this._tryonGarmentFile) {
+      alert('Please select a garment photo first.');
+      return;
+    }
+
+    btn.style.display = 'none';
+    status.style.display = 'flex';
+    if (statusText) statusText.textContent = 'Generating try-on... (~2 min)';
+    results.style.display = 'none';
+
+    try {
+      const { data: { session } } = await window.KORRA_DB.auth.getSession();
+      const formData = new FormData();
+      formData.append('scan_id', this.data?.id || '');
+      formData.append('attire', this.activeContext || 't-shirt');
+      formData.append('person_image', this._tryonPersonFile);
+      formData.append('garment_image', this._tryonGarmentFile);
+
+      const res = await fetch('/api/v2/tryon', {
+        method: 'POST',
+        headers: { 'Authorization': `Bearer ${session.access_token}` },
+        body: formData
+      });
+
+      if (!res.ok) {
+        const err = await res.json().catch(() => ({}));
+        throw new Error(err.detail || `Try-on failed (${res.status})`);
+      }
+
+      const data = await res.json();
+      status.style.display = 'none';
+      results.style.display = 'block';
+
+      if (data.result_urls && data.result_urls.length > 0) {
+        resultsGrid.innerHTML = '';
+        data.result_urls.forEach((url, i) => {
+          const card = document.createElement('div');
+          card.className = 'ms-tryon-result-card';
+          card.innerHTML = `<img src="${url}" alt="Try-on ${i+1}">`;
+          card.onclick = () => this._showTryOnResult(url);
+          resultsGrid.appendChild(card);
+          // Auto-show first result in viewport
+          if (i === 0) this._showTryOnResult(url);
+        });
+      } else {
+        resultsGrid.innerHTML = '<div class="ms-tryon-no-results">No results generated</div>';
+      }
+    } catch (e) {
+      status.style.display = 'none';
+      btn.style.display = '';
+      alert('Try-on failed: ' + e.message);
+    }
+  },
+
+  _showTryOnResult(url) {
+    const canvas = document.getElementById('ms-viewer-canvas');
+    if (canvas) canvas.style.display = 'none';
+    let overlay = document.getElementById('ms-tryon-result-overlay');
+    if (!overlay) {
+      overlay = document.createElement('div');
+      overlay.id = 'ms-tryon-result-overlay';
+      overlay.className = 'ms-tryon-result-overlay';
+      overlay.innerHTML = `
+        <img id="ms-tryon-result-img" src="" alt="Try-on result">
+        <button class="ms-tryon-overlay-close" onclick="KORRA_MS._restoreViewport()" title="Close try-on result">&times;</button>
+      `;
+      const viewer = document.querySelector('.ms-viewer');
+      if (viewer) viewer.appendChild(overlay);
+    }
+    const img = document.getElementById('ms-tryon-result-img');
+    if (img) img.src = url;
+    overlay.style.display = 'flex';
+  },
+
+  _restoreViewport() {
+    const canvas = document.getElementById('ms-viewer-canvas');
+    if (canvas) canvas.style.display = '';
+    const overlay = document.getElementById('ms-tryon-result-overlay');
+    if (overlay) overlay.style.display = 'none';
+  },
+
+  _initReconstruct() {
+    this._reconFile = null;
+    this._reconObjectUrl = null;
+
+    const input = document.getElementById('ms-recon-file');
+    if (!input) return;
+    input.onchange = (e) => {
+      const file = e.target.files[0];
+      if (!file) return;
+      this._dismissReconError();
+      const img = document.getElementById('ms-recon-img');
+      const placeholder = document.getElementById('ms-recon-placeholder');
+      if (this._reconObjectUrl) URL.revokeObjectURL(this._reconObjectUrl);
+      this._reconFile = file;
+      this._reconObjectUrl = URL.createObjectURL(file);
+      if (img) { img.src = this._reconObjectUrl; img.style.display = ''; }
+      if (placeholder) placeholder.style.display = 'none';
+      const btn = document.getElementById('ms-recon-generate-btn');
+      if (btn) btn.disabled = false;
+    };
+  },
+
+  async _runReconstruct() {
+    const btn = document.getElementById('ms-recon-generate-btn');
+    const status = document.getElementById('ms-recon-status');
+    const statusText = document.getElementById('ms-recon-status-text');
+    const results = document.getElementById('ms-recon-results');
+    const resultsContent = document.getElementById('ms-recon-results-content');
+    if (!btn || !status || !results || !resultsContent) return;
+
+    // Validation: no file
+    if (!this._reconFile) {
+      this._showReconError('Please select a garment photo first.', 'validation');
+      return;
+    }
+
+    // Validation: file format
+    const allowedTypes = ['image/jpeg', 'image/png', 'image/webp'];
+    if (!allowedTypes.includes(this._reconFile.type)) {
+      this._showReconError('Please select an image file (JPEG, PNG, or WebP).', 'validation');
+      return;
+    }
+
+    // Validation: file size (20MB)
+    const MAX_SIZE = 20 * 1024 * 1024;
+    if (this._reconFile.size > MAX_SIZE) {
+      this._showReconError('Image too large. Maximum size is 20MB.', 'validation');
+      return;
+    }
+
+    btn.style.display = 'none';
+    status.style.display = 'flex';
+    if (statusText) statusText.textContent = 'Reconstructing garment... (~30 sec)';
+    results.style.display = 'none';
+
+    try {
+      const formData = new FormData();
+      formData.append('file', this._reconFile);
+      formData.append('include_mesh', 'true');
+      formData.append('include_pattern', 'true');
+
+      // Validate token against Supabase server (auto-refreshes if expired)
+      if (!window.KORRA_DB) {
+        this._showReconError('Authentication not initialized. Please refresh the page.', 'auth');
+        return;
+      }
+      const { data: { user }, error: authError } = await window.KORRA_DB.auth.getUser();
+      if (authError || !user) {
+        console.error('[RECONSTRUCT] Auth error:', authError?.message || 'no user');
+        this._showReconError('Your session has expired. Please sign in and try again.', 'auth');
+        return;
+      }
+      const { data: { session } } = await window.KORRA_DB.auth.getSession();
+      if (!session) {
+        this._showReconError('Your session has expired. Please sign in and try again.', 'auth');
+        return;
+      }
+      console.log('[RECONSTRUCT] Token validated for user:', user.id);
+
+      // Timeout with AbortController (5 min + 10s buffer)
+      const controller = new AbortController();
+      const timeoutId = setTimeout(() => controller.abort(), 310000);
+
+      let res;
+      try {
+        res = await fetch('/api/v2/garment/reconstruct', {
+          method: 'POST',
+          headers: { 'Authorization': `Bearer ${session.access_token}` },
+          body: formData,
+          signal: controller.signal
+        });
+      } finally {
+        clearTimeout(timeoutId);
+      }
+
+      if (!res.ok) {
+        if (res.status === 503) {
+          throw Object.assign(new Error('Service temporarily unavailable. Please try again in a few minutes.'), { status: 503 });
+        }
+        if (res.status === 502) {
+          throw Object.assign(new Error('The reconstruction backend encountered an error. Our team has been notified.'), { status: 502 });
+        }
+        const err = await res.json().catch(() => ({}));
+        throw new Error(err.detail || `Reconstruction failed (${res.status})`);
+      }
+
+      const blob = await res.blob();
+
+      // Validate ZIP response
+      if (blob.size < 100) {
+        throw new Error('Received an empty response from the server. Please try again.');
+      }
+
+      const url = URL.createObjectURL(blob);
+
+      status.style.display = 'none';
+      results.style.display = 'block';
+      resultsContent.innerHTML = `
+        <div style="padding: 16px; text-align: center;">
+          <p style="color: var(--text-secondary); margin-bottom: 16px;">Garment reconstructed successfully!</p>
+          <a href="${url}" download="garment_reconstruction.zip" class="ms-tryon-generate-btn" style="display: inline-block; text-decoration: none; margin-bottom: 12px;">
+            Download ZIP (Mesh + Pattern)
+          </a>
+          <div style="margin-top: 12px;">
+            <button class="ms-tryon-upload-btn" onclick="KORRA_MS.switchView('tryon')" style="margin: 0 auto;">
+              Use in Virtual Try-On →
+            </button>
+          </div>
+        </div>
+      `;
+    } catch (e) {
+      status.style.display = 'none';
+      btn.style.display = '';
+      if (e.name === 'AbortError') {
+        this._showReconError('Reconstruction timed out. Try a simpler garment photo or try again.', 'server');
+      } else if (e.status === 503) {
+        this._showReconError(e.message, 'server');
+      } else if (e.status === 502) {
+        this._showReconError(e.message, 'server');
+      } else if (e.message === 'Failed to fetch' || e instanceof TypeError) {
+        this._showReconError('Network error. Check your internet connection and try again.', 'server');
+      } else {
+        this._showReconError(e.message || 'Something went wrong. Please try again.', 'server');
+      }
+    }
   },
 
   openShareScan() {
@@ -2276,16 +2756,10 @@ window.KORRA_MS = {
     document.getElementById('ms-side-menu')?.remove();
     document.getElementById('ms-side-menu-backdrop')?.remove();
 
-    // Phase 112: Restore Navigation and Layout
-    if (window.innerWidth <= 900) {
-      const bottomNav = document.querySelector('.sidebar-nav');
-      if (bottomNav) bottomNav.style.display = '';
-
-      const content = document.querySelector('.main-content');
-      if (content) {
-        content.style.marginLeft = '';
-        content.style.padding = '';
-      }
+    // Phase 112: Restore Layout
+    const content = document.querySelector('.main-content');
+    if (content) {
+      content.style.padding = '';
     }
 
     document.querySelectorAll('#view-scanresult .ms-header-btn, #view-scanresult .ms-share-btn').forEach(btn => {
@@ -2482,6 +2956,58 @@ window.KORRA_MS = {
     if (!fab) return;
     fab.classList.remove('revealed');
     if (fi._revealTimeout) { clearTimeout(fi._revealTimeout); fi._revealTimeout = null; }
+  },
+
+  // ═══ RECONSTRUCT ERROR STATES ═══
+  _showReconError(message, type) {
+    const errorEl = document.getElementById('ms-recon-error');
+    const iconEl = document.getElementById('ms-recon-error-icon');
+    const msgEl = document.getElementById('ms-recon-error-message');
+    const actionsEl = document.getElementById('ms-recon-error-actions');
+    if (!errorEl) return;
+
+    errorEl.dataset.type = type || 'server';
+
+    const icons = {
+      validation: '<svg viewBox="0 0 24 24" class="ms-recon-error-icon-svg"><path fill="#F59E0B" d="M12 2L1 21h22L12 2zm0 4l7.53 13H4.47L12 6zm-1 5v4h2v-4h-2zm0 6v2h2v-2h-2z"/></svg>',
+      auth: '<svg viewBox="0 0 24 24" class="ms-recon-error-icon-svg"><path fill="#9CA3AF" d="M18 8h-1V6c0-2.76-2.24-5-5-5S7 3.24 7 6v2H6c-1.1 0-2 .9-2 2v10c0 1.1.9 2 2 2h12c1.1 0 2-.9 2-2V10c0-1.1-.9-2-2-2zm-6 9c-1.1 0-2-.9-2-2s.9-2 2-2 2 .9 2 2-.9 2-2 2zm3.1-9H8.9V6c0-1.71 1.39-3.1 3.1-3.1 1.71 0 3.1 1.39 3.1 3.1v2z"/></svg>',
+      server: '<svg viewBox="0 0 24 24" class="ms-recon-error-icon-svg"><path fill="#DC2626" d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm1 15h-2v-2h2v2zm0-4h-2V7h2v6z"/></svg>'
+    };
+    iconEl.innerHTML = icons[type] || icons.server;
+    msgEl.textContent = message;
+
+    actionsEl.innerHTML = '';
+    if (type === 'auth') {
+      actionsEl.innerHTML = '<button class="ms-recon-error-action-btn" onclick="KORRA_MS._handleReconAuthError()">Sign In</button>';
+    } else if (type === 'server') {
+      actionsEl.innerHTML = '<button class="ms-recon-error-action-btn" onclick="KORRA_MS._retryReconstruct()">Retry</button>';
+    }
+
+    errorEl.style.display = 'flex';
+
+    const statusEl = document.getElementById('ms-recon-status');
+    if (statusEl) statusEl.style.display = 'none';
+
+    if (type === 'validation') {
+      const genBtn = document.getElementById('ms-recon-generate-btn');
+      if (genBtn) genBtn.style.display = 'block';
+    }
+
+    console.error('[RECONSTRUCT]', JSON.stringify({ type, message, timestamp: new Date().toISOString() }));
+  },
+
+  _dismissReconError() {
+    const errorEl = document.getElementById('ms-recon-error');
+    if (errorEl) errorEl.style.display = 'none';
+  },
+
+  _retryReconstruct() {
+    this._dismissReconError();
+    this._runReconstruct();
+  },
+
+  _handleReconAuthError() {
+    window.location.href = '/signin.html?return=' + encodeURIComponent(window.location.pathname);
   },
 };
 

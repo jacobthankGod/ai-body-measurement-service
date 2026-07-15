@@ -37,7 +37,7 @@
 /* ── HEADER BAR ── */
 .ms-back-btn {
   position: absolute;
-  top: 12px;
+  top: 4px;
   left: 12px;
   z-index: 15;
   display: flex;
@@ -64,7 +64,7 @@
   flex-shrink: 0;
 }
 .ms-sheet-controls {
-  padding: 10px 20px 8px;
+  padding: 2px 20px 6px;
   background: var(--Obsidian-Layer);
   border-bottom: 1px solid var(--Glass-Border);
   flex-shrink: 0;
@@ -74,7 +74,7 @@
   align-items: center;
   justify-content: space-between;
   gap: 12px;
-  margin-bottom: 8px;
+  margin-bottom: 2px;
 }
 .ms-controls-toggles {
   display: flex;
@@ -224,7 +224,7 @@
 }
 .ms-viewer-badge {
   position: absolute;
-  top: 16px;
+  top: 4px;
   left: 16px;
   z-index: 2;
   pointer-events: none;
@@ -256,7 +256,7 @@
 /* ── VIEWPORT INFO (Top-Left) ── */
 .ms-viewer-info {
   position: absolute;
-  top: 56px;
+  top: 96px;
   left: 16px;
   z-index: 3;
   pointer-events: none;
@@ -373,7 +373,7 @@
 /* ── FLOATING MEASUREMENT BADGE ── */
 .ms-badge {
   position: absolute;
-  top: 80px;
+  top: 0;
   left: 16px;
   background: rgba(0, 0, 0, 0.75);
   backdrop-filter: blur(12px);
@@ -549,7 +549,7 @@
   min-height: 0;
   overflow-y: auto;
   overflow-x: hidden;
-  padding: 12px 20px 64px;
+  padding: 4px 20px 64px;
   -webkit-overflow-scrolling: touch;
 }
 
@@ -1143,7 +1143,7 @@
   text-transform: uppercase;
   letter-spacing: 0.5px;
   padding: 2px 0;
-  margin-bottom: 6px;
+  margin-bottom: 2px;
   border-bottom: none;
 }
 .ms-metrics-grid {
@@ -1199,7 +1199,7 @@
 
 /* ── FIXED ATTIRE SELECTOR CONTAINER ── */
 .ms-attire-selector-container {
-  padding: 8px 20px 4px;
+  padding: 2px 20px 2px;
   border-bottom: 1px solid var(--Glass-Border);
   background: var(--Obsidian-Layer);
   z-index: 10;
@@ -1667,9 +1667,8 @@
     font-size: 13px;
     padding: 10px 14px;
   }
-
-
-body.ai-mode .ms-back-btn { display: none !important; }
+  body.ai-mode .ms-back-btn { display: none !important; }
+}
 
 /* ── MEASUREMENT SIDE MENU ── */
 .ms-side-menu {
@@ -2317,5 +2316,414 @@ body.ai-mode .ms-back-btn { display: none !important; }
   border-radius: 50%;
   background: var(--Accent-Teal);
   cursor: pointer;
+}
+
+.ms-tool-btn.active {
+  background: var(--Accent-Teal);
+  color: #000;
+  box-shadow: 0 0 12px rgba(0, 200, 200, 0.4);
+}
+
+.ms-vto-btn {
+  background: rgba(255,255,255,0.1);
+  border: 1px solid var(--Glass-Border);
+  color: var(--Neutral-300);
+  font-size: 11px;
+  font-weight: 700;
+  padding: 4px 12px;
+  border-radius: 6px;
+  cursor: pointer;
+  transition: all 0.2s;
+  font-family: inherit;
+}
+.ms-vto-btn:hover {
+  background: rgba(255,255,255,0.2);
+  color: #fff;
+}
+.ms-vto-btn.active {
+  background: var(--Accent-Teal);
+  color: #000;
+}
+
+/* ═══ TRY-ON BUTTON (header toggles bar) ═══ */
+.ms-tryon-btn {
+  background: linear-gradient(135deg, #FF6B6B, #EE5A24);
+  border: none;
+  color: #fff;
+  font-size: 12px;
+  font-weight: 800;
+  padding: 8px 16px;
+  border-radius: 8px;
+  cursor: pointer;
+  font-family: inherit;
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  letter-spacing: 0.03em;
+  transition: all 0.2s;
+}
+.ms-tryon-btn:hover {
+  transform: scale(1.04);
+  box-shadow: 0 0 20px rgba(238,90,36,0.5);
+}
+.ms-tryon-btn svg {
+  width: 16px;
+  height: 16px;
+}
+
+/* ═══ TRY-ON VIEW (sheet panel) ═══ */
+.ms-tryon-view {
+  display: flex;
+  flex-direction: column;
+  flex: 1;
+  min-height: 0;
+  padding: 0 20px 20px;
+  overflow-y: auto;
+}
+.ms-tryon-topbar {
+  flex-shrink: 0;
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  padding: 12px 0 4px;
+  border-bottom: 1px solid var(--Glass-Border);
+  margin-bottom: 16px;
+  flex-wrap: wrap;
+}
+.ms-tryon-back {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  padding: 8px 14px;
+  border-radius: 8px;
+  border: none;
+  background: var(--Mint);
+  color: #000;
+  font-size: 12px;
+  font-weight: 800;
+  cursor: pointer;
+  font-family: inherit;
+  transition: all 0.2s;
+}
+.ms-tryon-back:hover { opacity: 0.85; }
+.ms-tryon-title {
+  font-size: 16px;
+  font-weight: 800;
+  color: #fff;
+}
+.ms-tryon-subtitle {
+  font-size: 11px;
+  color: var(--Neutral-500);
+  width: 100%;
+}
+
+/* ── Input area ── */
+.ms-tryon-input-area {
+  display: flex;
+  align-items: center;
+  gap: 16px;
+  justify-content: center;
+  margin-bottom: 20px;
+  flex-wrap: wrap;
+  flex: 1;
+}
+.ms-tryon-preview-box {
+  flex: 1;
+  min-width: 160px;
+  max-width: 220px;
+}
+.ms-tryon-preview-label {
+  font-size: 10px;
+  color: var(--Neutral-400);
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+  margin-bottom: 6px;
+}
+.ms-tryon-preview-img {
+  width: 100%;
+  aspect-ratio: 3/4;
+  background: var(--Surface-Soft);
+  border: 1px solid var(--Glass-Border);
+  border-radius: 10px;
+  overflow: hidden;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  position: relative;
+}
+.ms-tryon-preview-img img {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  display: block;
+}
+.ms-tryon-placeholder {
+  position: absolute;
+  inset: 0;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+  color: var(--Neutral-500);
+  font-size: 12px;
+}
+.ms-tryon-arrow {
+  color: var(--Accent-Teal);
+  flex-shrink: 0;
+  margin-top: 24px;
+}
+.ms-tryon-upload-btn {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  background: rgba(255,255,255,0.08);
+  border: 1px dashed var(--Glass-Border);
+  color: var(--Neutral-300);
+  font-size: 11px;
+  font-weight: 600;
+  padding: 8px 16px;
+  border-radius: 8px;
+  cursor: pointer;
+  font-family: inherit;
+  transition: all 0.2s;
+  margin-top: 8px;
+}
+.ms-tryon-upload-btn:hover {
+  background: rgba(255,255,255,0.15);
+  border-color: var(--Accent-Teal);
+  color: #fff;
+}
+.ms-tryon-upload-btn svg { width: 14px; height: 14px; }
+
+/* ── Action row ── */
+.ms-tryon-action-row {
+  text-align: center;
+  margin-bottom: 16px;
+  margin-top: 4px;
+}
+.ms-tryon-generate-btn {
+  background: var(--Accent-Teal);
+  color: #000;
+  border: none;
+  font-size: 15px;
+  font-weight: 800;
+  padding: 14px 40px;
+  border-radius: 10px;
+  cursor: pointer;
+  font-family: inherit;
+  transition: all 0.2s;
+}
+.ms-tryon-generate-btn:disabled {
+  opacity: 0.45;
+  cursor: not-allowed;
+  background: rgba(198, 255, 0, 0.35);
+}
+.ms-tryon-generate-btn:hover:not(:disabled) {
+  transform: scale(1.04);
+  box-shadow: 0 0 24px rgba(198,255,0,0.35);
+}
+
+/* ── Status ── */
+.ms-tryon-status {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 12px;
+  padding: 32px;
+  color: var(--Neutral-400);
+  font-size: 13px;
+}
+.ms-tryon-spinner {
+  width: 36px;
+  height: 36px;
+  border: 3px solid var(--Glass-Border);
+  border-top-color: var(--Accent-Teal);
+  border-radius: 50%;
+  animation: ms-tryon-spin 0.8s linear infinite;
+}
+@keyframes ms-tryon-spin {
+  to { transform: rotate(360deg); }
+}
+
+/* ── Results ── */
+.ms-tryon-results-label {
+  font-size: 11px;
+  color: var(--Neutral-400);
+  margin-bottom: 8px;
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+}
+.ms-tryon-results-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(160px, 1fr));
+  gap: 12px;
+}
+.ms-tryon-result-card {
+  background: var(--Surface-Soft);
+  border: 1px solid var(--Glass-Border);
+  border-radius: 10px;
+  overflow: hidden;
+  cursor: pointer;
+  transition: all 0.2s;
+}
+.ms-tryon-result-card:hover {
+  border-color: var(--Accent-Teal);
+  transform: translateY(-3px);
+  box-shadow: 0 6px 24px rgba(0,0,0,0.5);
+}
+.ms-tryon-result-card img {
+  width: 100%;
+  aspect-ratio: 3/4;
+  object-fit: cover;
+  display: block;
+}
+.ms-tryon-no-results {
+  color: var(--Neutral-500);
+  font-size: 13px;
+  padding: 24px;
+  text-align: center;
+}
+
+/* ═══ TRY-ON RESULT OVERLAY (in viewport) ═══ */
+.ms-tryon-result-overlay {
+  position: absolute;
+  inset: 0;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: #111;
+  z-index: 100;
+}
+.ms-tryon-result-overlay img {
+  max-width: 100%;
+  max-height: 100%;
+  object-fit: contain;
+}
+.ms-tryon-overlay-close {
+  position: absolute;
+  top: 10px;
+  right: 10px;
+  width: 32px;
+  height: 32px;
+  border-radius: 50%;
+  background: rgba(0,0,0,0.6);
+  border: 1px solid rgba(255,255,255,0.15);
+  color: #fff;
+  font-size: 20px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+  transition: all 0.2s;
+  z-index: 101;
+}
+.ms-tryon-overlay-close:hover {
+  background: rgba(255,60,60,0.7);
+  border-color: #ff4444;
+}
+
+/* ═══ RESPONSIVE: TRY-ON FULL-SCREEN (≤900px) ═══ */
+@media (max-width: 900px) {
+  .ms-tryon-view {
+    position: fixed;
+    top: 0;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    z-index: 2200;
+    background: #0A0A0A;
+    padding: 12px 16px;
+    padding-top: max(12px, env(safe-area-inset-top));
+    padding-bottom: max(12px, env(safe-area-inset-bottom));
+    overflow-y: auto;
+    -webkit-overflow-scrolling: touch;
+  }
+  body.tryon-mode header { display: none !important; }
+  body.tryon-mode .ms-sheet-controls { display: none !important; }
+  body.tryon-mode .ms-back-btn { display: none !important; }
+  .ms-tryon-topbar { padding-top: 4px; }
+  .ms-tryon-back { font-size: 11px; padding: 6px 10px; }
+  .ms-tryon-title { font-size: 14px; }
+  .ms-tryon-input-area { gap: 10px; }
+  .ms-tryon-preview-box { min-width: 130px; max-width: 180px; }
+  .ms-tryon-generate-btn { font-size: 14px; padding: 12px 32px; width: 100%; max-width: 320px; }
+  .ms-tryon-action-row { margin-top: 8px; }
+}
+
+/* SIDEBAR: also full-screen */
+@media (min-width: 901px) {
+  body.tryon-mode .ms-back-btn { display: none !important; }
+  .ms-side-by-side .ms-sheet.tryon-active {
+    height: 100% !important;
+  }
+}
+
+/* ═══ RECONSTRUCT ERROR STATES ═══ */
+.ms-recon-error {
+  display: none;
+  flex-direction: column;
+  align-items: center;
+  padding: 24px 20px;
+  margin: 12px 0;
+  border-radius: 10px;
+  animation: reconErrorSlideDown 0.3s ease-out;
+}
+.ms-recon-error[data-type="validation"] {
+  background: rgba(245, 158, 11, 0.08);
+  border: 1px solid rgba(245, 158, 11, 0.25);
+}
+.ms-recon-error[data-type="auth"] {
+  background: rgba(107, 114, 128, 0.08);
+  border: 1px solid rgba(107, 114, 128, 0.25);
+}
+.ms-recon-error[data-type="server"] {
+  background: rgba(220, 38, 38, 0.08);
+  border: 1px solid rgba(220, 38, 38, 0.25);
+}
+@keyframes reconErrorSlideDown {
+  from { opacity: 0; transform: translateY(-10px); }
+  to { opacity: 1; transform: translateY(0); }
+}
+.ms-recon-error-icon-svg {
+  width: 44px;
+  height: 44px;
+  margin-bottom: 12px;
+}
+.ms-recon-error-message {
+  font-size: 13px;
+  color: var(--Neutral-300);
+  text-align: center;
+  margin-bottom: 16px;
+  line-height: 1.6;
+}
+.ms-recon-error-actions {
+  display: flex;
+  gap: 10px;
+}
+.ms-recon-error-action-btn {
+  padding: 8px 18px;
+  background: var(--Accent-Teal);
+  color: #0A0A0A;
+  border: none;
+  border-radius: 8px;
+  font-size: 13px;
+  font-weight: 600;
+  cursor: pointer;
+  font-family: inherit;
+  transition: all 0.2s;
+}
+.ms-recon-error-action-btn:hover {
+  transform: scale(1.04);
+  box-shadow: 0 0 16px rgba(0, 212, 255, 0.3);
+}
+.ms-recon-error-action-btn.btn-outline {
+  background: transparent;
+  color: var(--Neutral-400);
+  border: 1px solid var(--Glass-Border);
+}
+.ms-recon-error-action-btn.btn-outline:hover {
+  border-color: var(--Neutral-400);
+  box-shadow: none;
 }
 
