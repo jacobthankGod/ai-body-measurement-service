@@ -1,0 +1,13 @@
+{
+  "id": "jacobthankgod/korra-garment-backend",
+  "title": "Korra Garment Reconstruction Backend",
+  "code_file": "notebook.ipynb",
+  "language": "python",
+  "kernel_type": "notebook",
+  "is_private": false,
+  "enable_gpu": true,
+  "enable_internet": true,
+  "dataset_sources": [],
+  "competition_sources": [],
+  "kernel_sources": []
+}
