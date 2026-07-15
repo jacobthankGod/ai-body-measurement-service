@@ -135,16 +135,28 @@ tunnel_url = None
 
 def start_tunnel():
     global tunnel_url
+    print(f"[TUN] Starting cloudflared from {CLOUDFLARED}...")
     p = subprocess.Popen(
         [CLOUDFLARED, "tunnel", "--no-autoupdate", "run", "--url", "http://localhost:8000"],
         stdout=subprocess.PIPE, stderr=subprocess.STDOUT, text=True, bufsize=1
     )
-    for line in p.stdout:
-        m = re.search(r'https?://[^\s]*trycloudflare\.com[^\s]*', line.strip())
-        if m:
-            tunnel_url = m.group(0)
-            print(f"\n{'='*60}\nTUNNEL URL: {tunnel_url}\n{'='*60}")
-            break
+    import threading as _th
+    def _reader():
+        import re as _re
+        for line in p.stdout:
+            line = line.rstrip("\n")
+            print(f"[TUN] {line}")
+            m = _re.search(r'https?://[^\s]*trycloudflare\.com[^\s]*', line)
+            if m:
+                global tunnel_url
+                tunnel_url = m.group(0)
+                print(f"\n{'='*60}\nTUNNEL URL: {tunnel_url}\n{'='*60}")
+    _th.Thread(target=_reader, daemon=True).start()
+    time.sleep(2)
+    if p.poll() is not None:
+        print(f"[TUN] WARNING: cloudflared exited immediately (code {p.returncode})")
+    else:
+        print(f"[TUN] cloudflared running (PID {p.pid})")
     return p
 
 
@@ -159,9 +171,9 @@ def start_server():
             break
     return p
 
-# +++ FIX: Start server FIRST, then tunnel +++
-s_proc = start_server()      # Blocks until port 8000 is up
-t_proc = start_tunnel()      # Blocks until tunnel URL (origin now reachable)
+# Start server first, then tunnel
+s_proc = start_server()
+t_proc = start_tunnel()
 
 # Wait then health check
 time.sleep(3)
@@ -171,15 +183,26 @@ try:
 except Exception as e:
     print(f"Health check: {e}")
 
+# Wait up to 90s for tunnel URL
+for _wait in range(30):
+    if tunnel_url:
+        break
+    time.sleep(3)
+    print(f"[Tunnel] Waiting for URL... ({_wait*3+3}s)")
+    if t_proc.poll() is not None:
+        print(f"[Tunnel] cloudflared died (code {t_proc.returncode}), restarting...")
+        t_proc = start_tunnel()
+
 if tunnel_url:
     print(f"\nReady! Tunnel URL: {tunnel_url}")
     register_tunnel(tunnel_url)
 else:
-    print(f"\nKeep watching for the Tunnel URL above...")
+    print(f"\nTunnel URL not yet available — will retry in keep-alive loop")
 
-# === KEEP-ALIVE LOOP ===
-print("\nKeep-alive running. Will print status every 5 minutes.")
+# === KEEP-ALIVE LOOP (every 30s) ===
+print("\nKeep-alive running. Will check every 30 seconds.")
 import datetime as dt
+_tunnel_failures = 0
 while True:
     try:
         r = requests.get("http://localhost:8000/health", timeout=5)
@@ -190,10 +213,20 @@ while True:
         print(f"[{now}] Healthy | GPU: {j.get('gpu','?')} | Tunnel: {'OK' if tunnel_url else 'WAITING'}")
         if tunnel_url:
             register_tunnel(tunnel_url)
+            _tunnel_failures = 0
+        elif t_proc.poll() is not None:
+            print(f"[{now}] Tunnel died (code {t_proc.returncode}), restarting...")
+            t_proc = start_tunnel()
+        else:
+            _tunnel_failures += 1
+            if _tunnel_failures >= 6:
+                print(f"[{now}] Tunnel still waiting after 3 min, restarting...")
+                t_proc.kill()
+                t_proc = start_tunnel()
+                _tunnel_failures = 0
     except Exception as e:
         print(f"[{dt.datetime.now().strftime('%H:%M:%S')}] Server down! Restarting... ({e})")
         s_proc = start_server()
-        if not tunnel_url:
-            t_proc.kill()
-            t_proc = start_tunnel()
-    time.sleep(300)
+        t_proc.kill()
+        t_proc = start_tunnel()
+    time.sleep(30)
