@@ -136,7 +136,7 @@ tunnel_url = None
 def start_tunnel():
     global tunnel_url
     p = subprocess.Popen(
-        [CLOUDFLARED, "tunnel", "--url", "http://localhost:8000", "--no-autoupdate"],
+        [CLOUDFLARED, "tunnel", "run", "--url", "http://localhost:8000"],
         stdout=subprocess.PIPE, stderr=subprocess.STDOUT, text=True, bufsize=1
     )
     for line in p.stdout:
@@ -188,8 +188,6 @@ while True:
             tunnel_url = j.get('tunnel_url')
         now = dt.datetime.now().strftime("%H:%M:%S")
         print(f"[{now}] Healthy | GPU: {j.get('gpu','?')} | Tunnel: {'OK' if tunnel_url else 'WAITING'}")
-        if tunnel_url:
-            register_tunnel(tunnel_url)
         if tunnel_url:
             register_tunnel(tunnel_url)
     except Exception as e:
