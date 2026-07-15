@@ -136,7 +136,7 @@ tunnel_url = None
 def start_tunnel():
     global tunnel_url
     p = subprocess.Popen(
-        [CLOUDFLARED, "tunnel", "run", "--url", "http://localhost:8000"],
+        [CLOUDFLARED, "tunnel", "--no-autoupdate", "run", "--url", "http://localhost:8000"],
         stdout=subprocess.PIPE, stderr=subprocess.STDOUT, text=True, bufsize=1
     )
     for line in p.stdout:
