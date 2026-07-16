@@ -129,7 +129,7 @@ def update_task(task_id, data):
         logger.error(f"Failed to persist task {task_id} to disk: {e}")
 
 # --- SUBPROCESS RELIABILITY ENGINE ---
-async def run_extraction_subprocess_cli(task_id: str, front_path: str, side_path: str, height: float, gender: str, client_name: str, user_id: str, client_user_id: str = None):
+async def run_extraction_subprocess_cli(task_id: str, front_path: str, side_path: str, height: float, gender: str, client_name: str, user_id: str, client_user_id: str = None, photo_front_url: str = None, photo_side_url: str = None):
     """
     Isolated Subprocess Worker: Runs AI in a COMPLETELY separate OS process via CLI.
     This is the ultimate protection against TensorFlow memory leaks in the main process.
@@ -241,6 +241,13 @@ async def run_extraction_subprocess_cli(task_id: str, front_path: str, side_path
                                 Path(garment_mesh_path), f"{task_id}_garment"
                             )
                             os.remove(garment_mesh_path)
+                        tailornet_body_url = None
+                        tn_body_path = data.get("tailornet_body_path")
+                        if tn_body_path and os.path.exists(tn_body_path):
+                            tailornet_body_url = DatabaseService.upload_mesh_to_storage(
+                                Path(tn_body_path), f"{task_id}_tn_body"
+                            )
+                            os.remove(tn_body_path)
                     else:
                         raise Exception(data.get("error", "Unknown error in subprocess"))
                 except Exception as e:
@@ -250,6 +257,9 @@ async def run_extraction_subprocess_cli(task_id: str, front_path: str, side_path
 
     # 4. ATOMIC PERSISTENCE (Dual Account - Unicorn Level)
             if user_id:
+                # Embed TailorNet body URL in smpl_params for persistence
+                if tailornet_body_url and isinstance(smpl_params, dict):
+                    smpl_params['__tailornet_body_url'] = tailornet_body_url
                 save_result = DatabaseService.save_measurement(
                     user_id=user_id, client_name=client_name, height=height,
                     gender=gender, biometrics=measurements, landmarks=landmarks,
@@ -258,7 +268,8 @@ async def run_extraction_subprocess_cli(task_id: str, front_path: str, side_path
                     clinical_realism_index=clinical_realism_index,
                     mesh_storage_url=mesh_storage_url,
                     smpl_params=smpl_params, joints3d=joints3d,
-                    tpose_mesh_url=tpose_mesh_url
+                    tpose_mesh_url=tpose_mesh_url,
+                    photo_front_url=photo_front_url, photo_side_url=photo_side_url
                 )
                 if not save_result or save_result.get("status") != "saved":
                     logger.error(f"❌ Database save failed for task {task_id}: {save_result}")
@@ -283,6 +294,7 @@ async def run_extraction_subprocess_cli(task_id: str, front_path: str, side_path
                 "joints3d": joints3d,
                 "tpose_mesh_url": tpose_mesh_url,
                 "garment_mesh_url": garment_mesh_url,
+                "tailornet_body_url": tailornet_body_url,
                 "garment_class": data.get("garment_class"),
                 "debug": hmr_error
             }
@@ -325,7 +337,7 @@ async def run_extraction_task(task_id: str, front_bytes: bytes, side_bytes: byte
 
 # 2. ISOLATED EXECUTION
         # We now await the async subprocess function (with client_user_id for dual ownership)
-        result = await run_extraction_subprocess_cli(task_id, f_path, s_path, height, gender, client_name, user_id, client_user_id)
+        result = await run_extraction_subprocess_cli(task_id, f_path, s_path, height, gender, client_name, user_id, client_user_id, photo_front_url=photo_front_url, photo_side_url=photo_side_url)
 
 # 3. TASK SYNC
         update_task(task_id, result)
@@ -569,6 +581,7 @@ async def drape_garment(
     out_dir = Path("public/meshes/garments")
     out_dir.mkdir(parents=True, exist_ok=True)
     public_urls = []
+    public_body_url = None
 
     for gar_class in gar_classes:
         result = run_tailornet(garment_class=gar_class, gender=gender, betas=betas)
@@ -581,12 +594,20 @@ async def drape_garment(
         gar_mesh.export(str(file_path))
         public_urls.append(f"/meshes/garments/{filename}")
 
+        # Export TailorNet body mesh once (same body for all garment classes)
+        if not public_body_url and result.get("body_verts") is not None:
+            body_mesh = trimesh.Trimesh(vertices=result["body_verts"], faces=result["body_faces"], process=False)
+            body_file = f"garment_{scan_id}_{attire}_body.obj"
+            body_mesh.export(str(out_dir / body_file))
+            public_body_url = f"/meshes/garments/{body_file}"
+
     if not public_urls:
         return {"success": False, "error": "All TailorNet inferences failed"}
 
     return {
         "success": True,
         "garment_meshes": public_urls,
+        "body_mesh": public_body_url,
         "garment_classes": gar_classes,
     }
 
@@ -720,7 +741,8 @@ async def provision_api_key(
 
     db_client = DatabaseService.get_client()
     if not db_client:
-        raise HTTPException(status_code=500, detail="Database unavailable")
+        logger.warning("Database unavailable for key provisioning — returning graceful response")
+        return {"key": None, "tier": None, "created": False, "error": "Database temporarily unavailable"}
 
     PLAN_TIER_MAP = {
         "starter": "tailor_pro",

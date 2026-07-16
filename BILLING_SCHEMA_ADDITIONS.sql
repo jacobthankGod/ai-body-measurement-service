@@ -63,7 +63,7 @@ ALTER TABLE public.subscriptions ADD COLUMN IF NOT EXISTS auto_renew BOOLEAN DEF
 -- 4. PROFILE TAX FIELDS
 ALTER TABLE public.profiles ADD COLUMN IF NOT EXISTS tax_id TEXT;
 ALTER TABLE public.profiles ADD COLUMN IF NOT EXISTS billing_address JSONB;
-ALTER TABLE public.profiles ADD COLUMN IF NOT EXISTSvat_number TEXT;
+ALTER TABLE public.profiles ADD COLUMN IF NOT EXISTS vat_number TEXT;
 
 -- 5. ADD INDEXES FOR PERFORMANCE
 CREATE INDEX IF NOT EXISTS idx_invoices_user_id ON public.invoices(user_id);
@@ -76,7 +76,7 @@ ALTER TABLE public.localized_pricing ENABLE ROW LEVEL SECURITY;
 
 -- Localized pricing: Public can read, only admins can write
 CREATE POLICY "Public pricing viewable by everyone" ON public.localized_pricing FOR SELECT USING (true);
-CREATE POLICY "Admins can manage pricing" ON public.localized_pranapricing FOR ALL
+CREATE POLICY "Admins can manage pricing" ON public.localized_pricing FOR ALL
   USING (auth.uid() IN (SELECT id FROM auth.users WHERE email LIKE '%@korra%'));
 
 -- 7. UPDATE EXISTING INVOICES WITH TAX DATA (Migration)

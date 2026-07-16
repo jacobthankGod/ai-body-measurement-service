@@ -107,6 +107,18 @@
   color: var(--Neutral-500);
   font-weight: 500;
 }
+.ms-garment-badge {
+  display: inline-block;
+  margin-left: 6px;
+  padding: 1px 6px;
+  font-size: 9px;
+  font-weight: 600;
+  color: #0d3d38;
+  background: #1DBFAF;
+  border-radius: 8px;
+  vertical-align: middle;
+  line-height: 1.4;
+}
 .ms-header-btn {
   width: 28px;
   height: 28px;
@@ -3096,6 +3108,117 @@
   font-size: 13px;
 }
 
+/* ═══ VTO OPTIONS (Garment Type + Color Picker) ═══ */
+.ms-tryon-optional-row {
+  display: flex;
+  gap: 16px;
+  justify-content: center;
+  flex-wrap: wrap;
+  margin: 8px 0 12px;
+}
+.ms-tryon-opt-group {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+}
+.ms-tryon-opt-group label {
+  font-size: 10px;
+  color: var(--Neutral-400);
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+}
+.ms-tryon-select {
+  padding: 6px 12px;
+  border-radius: 8px;
+  border: 1px solid var(--Glass-Border);
+  background: var(--Surface-Soft);
+  color: #fff;
+  font-size: 12px;
+  font-family: inherit;
+  outline: none;
+  cursor: pointer;
+}
+.ms-tryon-color-picker {
+  display: flex;
+  gap: 4px;
+}
+.ms-tryon-color-swatch {
+  width: 24px;
+  height: 24px;
+  border-radius: 50%;
+  border: 2px solid transparent;
+  cursor: pointer;
+  padding: 0;
+  transition: border-color 0.2s;
+}
+.ms-tryon-color-swatch:hover {
+  border-color: var(--Neutral-400);
+}
+.ms-tryon-color-swatch.selected {
+  border-color: var(--Accent-Teal);
+}
+
+/* ═══ VTO PARTIAL RESULTS WARNING ═══ */
+.ms-vto-partial-warning {
+  background: rgba(231, 76, 60, 0.1);
+  border: 1px solid rgba(231, 76, 60, 0.25);
+  border-radius: 8px;
+  padding: 8px 12px;
+  font-size: 11px;
+  color: #E74C3C;
+  text-align: center;
+}
+
+/* ═══ VTO ACTIONS (Compare, Save) ═══ */
+.ms-vto-actions {
+  display: flex;
+  gap: 8px;
+  justify-content: center;
+}
+.ms-vto-action-btn {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  padding: 6px 14px;
+  border-radius: 8px;
+  border: 1px solid var(--Glass-Border);
+  background: transparent;
+  color: var(--Neutral-300);
+  font-size: 11px;
+  font-weight: 600;
+  cursor: pointer;
+  font-family: inherit;
+  transition: all 0.2s;
+}
+.ms-vto-action-btn:hover {
+  background: rgba(255,255,255,0.06);
+  color: var(--Neutral-100);
+}
+
+/* ═══ VTO COMPARISON SLIDER ═══ */
+.ms-vto-compare-overlay {
+  position: absolute;
+  top: 0;
+  left: 50%;
+  bottom: 0;
+  width: 3px;
+  background: var(--Accent-Teal);
+  z-index: 10;
+  cursor: ew-resize;
+}
+.ms-vto-compare-handle {
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  transform: translate(-50%, -50%);
+  width: 24px;
+  height: 24px;
+  border-radius: 50%;
+  background: var(--Accent-Teal);
+  border: 2px solid #0A0A0A;
+  box-shadow: 0 2px 8px rgba(0,0,0,0.5);
+}
+
 /* ═══ VTO SUBSCRIPTION BADGE ═══ */
 .ms-vto-sub-badge {
   display: inline-flex;
@@ -3203,5 +3326,785 @@
     min-width: 200px;
     padding: 10px 14px;
   }
+}
+
+/* ═══ PHASE 177: SPLIT-SCREEN VTO LAYOUT ═══ */
+.ms-vto-split-screen {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 16px;
+  width: 100%;
+}
+.ms-vto-split-panel {
+  position: relative;
+  border-radius: 12px;
+  overflow: hidden;
+  background: var(--Surface-Soft);
+  border: 1px solid var(--Glass-Border);
+  aspect-ratio: 3/4;
+}
+.ms-vto-split-panel img {
+  width: 100%;
+  height: 100%;
+  object-fit: contain;
+  display: block;
+}
+.ms-vto-split-panel .ms-vto-panel-label {
+  position: absolute;
+  top: 8px;
+  left: 8px;
+  background: rgba(0,0,0,0.6);
+  backdrop-filter: blur(8px);
+  padding: 4px 10px;
+  border-radius: 6px;
+  font-size: 10px;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.08em;
+  color: var(--Neutral-200);
+  z-index: 5;
+}
+.ms-vto-split-toggle {
+  display: flex;
+  justify-content: center;
+  margin-bottom: 8px;
+}
+.ms-vto-split-toggle button {
+  padding: 6px 16px;
+  border-radius: 8px;
+  border: 1px solid var(--Glass-Border);
+  background: transparent;
+  color: var(--Neutral-400);
+  font-size: 11px;
+  font-weight: 600;
+  cursor: pointer;
+  font-family: inherit;
+  transition: all 0.2s;
+}
+.ms-vto-split-toggle button.active {
+  background: var(--Accent-Teal);
+  color: #0A0A0A;
+  border-color: var(--Accent-Teal);
+}
+.ms-vto-split-toggle button:hover:not(.active) {
+  background: rgba(255,255,255,0.06);
+  color: var(--Neutral-200);
+}
+
+/* ═══ PHASE 179: BLUEPRINT OVERLAY ═══ */
+.ms-vto-blueprint-overlay {
+  position: absolute;
+  inset: 0;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: rgba(0,0,0,0.85);
+  backdrop-filter: blur(4px);
+  z-index: 8;
+  opacity: 0;
+  pointer-events: none;
+  transition: opacity 0.3s ease;
+}
+.ms-vto-blueprint-overlay.visible {
+  opacity: 1;
+  pointer-events: auto;
+}
+.ms-vto-blueprint-overlay svg {
+  width: 80%;
+  height: 80%;
+  stroke: var(--Accent-Teal);
+  stroke-width: 0.5;
+  fill: none;
+}
+.ms-vto-blueprint-toggle {
+  position: absolute;
+  top: 8px;
+  right: 8px;
+  width: 28px;
+  height: 28px;
+  border-radius: 6px;
+  border: 1px solid var(--Glass-Border);
+  background: rgba(0,0,0,0.5);
+  backdrop-filter: blur(8px);
+  color: var(--Neutral-300);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+  z-index: 6;
+  transition: all 0.2s;
+}
+.ms-vto-blueprint-toggle:hover {
+  background: var(--Accent-Teal);
+  color: #0A0A0A;
+}
+
+/* ═══ PHASE 180: LINKED ZOOM/PAN ═══ */
+.ms-vto-linked-zoom {
+  cursor: zoom-in;
+}
+.ms-vto-linked-zoom.zoomed-in {
+  cursor: zoom-out;
+}
+
+/* ═══ PHASE 148: REFINEMENT LOADING STATE ═══ */
+.ms-vto-refinement-status {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  padding: 12px 16px;
+  background: rgba(0,0,0,0.4);
+  backdrop-filter: blur(8px);
+  border-radius: 10px;
+  border: 1px solid var(--Glass-Border);
+  margin: 8px 0;
+}
+.ms-vto-refinement-status .refinement-dot {
+  width: 8px;
+  height: 8px;
+  border-radius: 50%;
+  background: var(--Accent-Teal);
+  animation: refinement-pulse 1.5s ease-in-out infinite;
+}
+@keyframes refinement-pulse {
+  0%, 100% { opacity: 0.4; transform: scale(1); }
+  50% { opacity: 1; transform: scale(1.2); }
+}
+.ms-vto-refinement-status span {
+  font-size: 12px;
+  color: var(--Neutral-300);
+}
+
+/* ═══ PHASE 182: VTO HISTORY ═══ */
+.ms-vto-history {
+  margin-top: 16px;
+  padding: 12px;
+  background: rgba(0,0,0,0.2);
+  border-radius: 10px;
+  border: 1px solid var(--Glass-Border);
+}
+.ms-vto-history-title {
+  font-size: 11px;
+  font-weight: 700;
+  color: var(--Neutral-400);
+  text-transform: uppercase;
+  letter-spacing: 0.08em;
+  margin-bottom: 8px;
+}
+.ms-vto-history-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(80px, 1fr));
+  gap: 8px;
+}
+.ms-vto-history-thumb {
+  position: relative;
+  aspect-ratio: 3/4;
+  border-radius: 8px;
+  overflow: hidden;
+  border: 1px solid var(--Glass-Border);
+  cursor: pointer;
+  transition: border-color 0.2s;
+}
+.ms-vto-history-thumb:hover {
+  border-color: var(--Accent-Teal);
+}
+.ms-vto-history-thumb img {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+}
+.ms-vto-history-thumb .history-angle {
+  position: absolute;
+  bottom: 2px;
+  left: 2px;
+  background: rgba(0,0,0,0.7);
+  padding: 2px 6px;
+  border-radius: 4px;
+  font-size: 9px;
+  font-weight: 700;
+  color: var(--Neutral-200);
+  text-transform: uppercase;
+}
+
+/* ═══ PHASE 200: FIT SCORE BADGE ═══ */
+.ms-vto-fit-score {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 6px;
+  padding: 6px 12px;
+  background: rgba(0,0,0,0.3);
+  border-radius: 8px;
+  font-size: 12px;
+}
+.ms-vto-fit-score .fit-label {
+  color: var(--Neutral-400);
+  font-weight: 600;
+}
+.ms-vto-fit-score .fit-value {
+  font-weight: 700;
+  font-size: 13px;
+}
+
+/* ═══ PHASE 199: AUTO-ROTATE BUTTON ═══ */
+.ms-vto-action-btn.active {
+  background: var(--Accent-Teal);
+  color: #0A0A0A;
+  border-color: var(--Accent-Teal);
+}
+
+/* ═══ PHASE 181: DEEP VIEW MODAL ═══ */
+#ms-vto-deep-modal img {
+  transition: transform 0.2s ease;
+}
+#ms-vto-deep-modal img:hover {
+  transform: scale(1.02);
+}
+
+/* ═══ PHASE 186: PORTRAIT LOCK DURING SYNTHESIS ═══ */
+body.vto-synthesizing {
+  overflow: hidden;
+}
+@media (orientation: landscape) and (max-height: 500px) {
+  body.vto-synthesizing::after {
+    content: 'Please rotate your device to portrait mode';
+    position: fixed;
+    inset: 0;
+    z-index: 99999;
+    background: #0A0A0A;
+    color: var(--Neutral-300);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 14px;
+    font-weight: 600;
+    text-align: center;
+    padding: 20px;
+  }
+}
+
+/* ═══ PHASE 211: VTO FEEDBACK ═══ */
+.ms-vto-feedback {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 12px;
+  padding: 10px 0;
+  font-size: 12px;
+  color: var(--Neutral-400);
+}
+.ms-vto-feedback-btn {
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  padding: 5px 12px;
+  border-radius: 6px;
+  border: 1px solid var(--Glass-Border);
+  background: transparent;
+  color: var(--Neutral-400);
+  font-size: 11px;
+  font-weight: 600;
+  cursor: pointer;
+  font-family: inherit;
+  transition: all 0.2s;
+}
+.ms-vto-feedback-btn:hover {
+  background: rgba(255,255,255,0.06);
+  color: var(--Neutral-200);
+}
+.ms-vto-feedback-btn.selected-up {
+  background: rgba(46, 204, 113, 0.15);
+  color: #2ECC71;
+  border-color: rgba(46, 204, 113, 0.3);
+}
+.ms-vto-feedback-btn.selected-down {
+  background: rgba(231, 76, 60, 0.15);
+  color: #E74C3C;
+  border-color: rgba(231, 76, 60, 0.3);
+}
+
+/* ═══ PHASE 154: MISSING SCAN FALLBACK ═══ */
+.ms-vto-fallback {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  text-align: center;
+  padding: 40px 24px;
+  max-width: 400px;
+  margin: 60px auto;
+}
+.ms-vto-fallback-icon {
+  width: 64px;
+  height: 64px;
+  border-radius: 50%;
+  background: rgba(255,255,255,0.05);
+  border: 2px solid var(--Glass-Border);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 28px;
+  color: var(--Neutral-400);
+  margin-bottom: 16px;
+}
+.ms-vto-fallback h3 {
+  font-size: 16px;
+  color: var(--Neutral-100);
+  margin: 0 0 8px;
+}
+.ms-vto-fallback p {
+  font-size: 13px;
+  color: var(--Neutral-400);
+  line-height: 1.5;
+  margin: 0 0 8px;
+}
+.ms-vto-fallback-sub {
+  font-size: 12px !important;
+  opacity: 0.7;
+}
+.ms-vto-fallback-btn {
+  margin-top: 16px;
+  padding: 10px 20px;
+  border-radius: 8px;
+  border: none;
+  background: var(--Accent-Mint);
+  color: #000;
+  font-weight: 600;
+  font-size: 13px;
+  cursor: pointer;
+  font-family: inherit;
+}
+.ms-vto-fallback-btn:hover { opacity: 0.9; }
+.ms-tryon-ref-missing {
+  width: 100%;
+  height: 100%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: rgba(255,255,255,0.03);
+  border: 1px dashed var(--Glass-Border);
+  border-radius: 6px;
+  font-size: 10px;
+  color: var(--Neutral-500);
+  min-height: 60px;
+}
+
+/* ═══ PHASE 203: VERSION NAV ═══ */
+.ms-vto-version-nav {
+  border-top: 1px solid var(--Glass-Border);
+  margin-top: 8px;
+}
+.ms-vto-version-nav .ms-vto-action-btn {
+  font-size: 11px;
+  padding: 4px 10px;
+}
+.ms-vto-version-nav .ms-vto-action-btn:disabled {
+  opacity: 0.4;
+  cursor: not-allowed;
+}
+
+/* ═══ PHASE 216: DRAG-AND-DROP ═══ */
+.ms-recon-drag-highlight {
+  border-color: var(--Accent-Mint, #1DBFAF) !important;
+  background: rgba(29, 191, 175, 0.08) !important;
+  box-shadow: 0 0 0 2px rgba(29, 191, 175, 0.3) !important;
+}
+
+/* ═══ PHASE 220: GARMENT TYPE SELECTOR ═══ */
+.ms-recon-garment-type-row {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  padding: 0 16px;
+  margin: 12px 0;
+}
+.ms-recon-garment-type-label {
+  font-size: 11px;
+  font-weight: 600;
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+  color: var(--Neutral-400);
+  white-space: nowrap;
+}
+.ms-recon-garment-type-select {
+  flex: 1;
+  max-width: 200px;
+  padding: 6px 10px;
+  border-radius: 6px;
+  border: 1px solid var(--Glass-Border);
+  background: var(--Neutral-900, #111);
+  color: var(--Neutral-100, #eee);
+  font-size: 13px;
+  font-family: inherit;
+  cursor: pointer;
+  outline: none;
+}
+.ms-recon-garment-type-select:focus {
+  border-color: var(--Accent-Mint, #1DBFAF);
+}
+.ms-recon-share-btn {
+  margin-left: auto;
+  padding: 5px 12px;
+  border-radius: 6px;
+  border: 1px solid var(--Glass-Border);
+  background: transparent;
+  color: var(--Neutral-300, #ccc);
+  font-size: 11px;
+  font-family: inherit;
+  cursor: pointer;
+  transition: border-color 0.2s;
+}
+.ms-recon-share-btn:hover {
+  border-color: var(--Accent-Mint, #1DBFAF);
+  color: var(--Accent-Mint, #1DBFAF);
+}
+
+/* ═══ PHASE 218: CAMERA BUTTON ═══ */
+.ms-recon-camera-btn svg {
+  vertical-align: middle;
+}
+
+/* ═══ PHASE 219: RECENT RECONSTRUCTIONS ═══ */
+.ms-recon-history {
+  padding: 0 16px;
+  margin: 16px 0;
+}
+.ms-recon-history-title {
+  font-size: 11px;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.06em;
+  color: var(--Neutral-400);
+  margin-bottom: 10px;
+}
+.ms-recon-history-grid {
+  display: flex;
+  gap: 8px;
+  overflow-x: auto;
+  padding-bottom: 4px;
+}
+.ms-recon-history-grid::-webkit-scrollbar {
+  height: 3px;
+}
+.ms-recon-history-grid::-webkit-scrollbar-thumb {
+  background: var(--Neutral-700);
+  border-radius: 2px;
+}
+.ms-recon-history-item {
+  flex: 0 0 80px;
+  cursor: pointer;
+  border-radius: 6px;
+  overflow: hidden;
+  border: 1px solid var(--Glass-Border);
+  transition: border-color 0.2s;
+}
+.ms-recon-history-item:hover {
+  border-color: var(--Accent-Mint, #1DBFAF);
+}
+.ms-recon-history-item img {
+  width: 80px;
+  height: 60px;
+  object-fit: cover;
+  display: block;
+}
+.ms-recon-history-thumb-placeholder {
+  width: 80px;
+  height: 60px;
+  background: var(--Neutral-800, #222);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+.ms-recon-history-meta {
+  padding: 4px 6px;
+  display: flex;
+  flex-direction: column;
+  gap: 1px;
+}
+.ms-recon-history-name {
+  font-size: 9px;
+  color: var(--Neutral-300, #ccc);
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+.ms-recon-history-date {
+  font-size: 8px;
+  color: var(--Neutral-500, #666);
+}
+
+/* ═══ PHASE 217: RECON LOADING SKELETON ═══ */
+.ms-recon-skeleton {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+  padding: 20px;
+}
+.ms-recon-skeleton-item {
+  height: 80px;
+  background: linear-gradient(90deg, rgba(255,255,255,0.05) 25%, rgba(255,255,255,0.1) 50%, rgba(255,255,255,0.05) 75%);
+  background-size: 200% 100%;
+  animation: reconShimmer 1.5s infinite;
+  border-radius: 8px;
+}
+@keyframes reconShimmer {
+  0% { background-position: 200% 0; }
+  100% { background-position: -200% 0; }
+}
+
+/* ═══ PHASE 186: PORTRAIT LOCK DURING VTO SYNTHESIS ═══ */
+@media (orientation: landscape) and (max-height: 500px) {
+  .ms-vto-synthesizing::after {
+    content: 'Rotate to portrait mode for best results';
+    position: fixed;
+    top: 0;
+    left: 0;
+    right: 0;
+    padding: 12px;
+    background: rgba(0,0,0,0.9);
+    color: #57d7c0;
+    text-align: center;
+    z-index: 9999;
+    font-size: 13px;
+    font-weight: 600;
+  }
+}
+
+/* ═══ PHASE 221: AR PREVIEW BUTTON ═══ */
+.ms-recon-ar-btn {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  margin: 12px 16px;
+  padding: 10px 20px;
+  border-radius: 10px;
+  border: 1px solid rgba(29, 191, 175, 0.4);
+  background: rgba(29, 191, 175, 0.12);
+  color: #1DBFAF;
+  font-size: 13px;
+  font-weight: 700;
+  cursor: pointer;
+  transition: all 0.2s;
+}
+.ms-recon-ar-btn:hover {
+  background: rgba(29, 191, 175, 0.25);
+  border-color: #1DBFAF;
+}
+
+/* ═══ PHASE 222: GARMENT MEASUREMENT OVERLAY ═══ */
+.ms-garment-meas-card {
+  margin: 12px 16px;
+  padding: 16px;
+  border-radius: 12px;
+  background: rgba(255, 255, 255, 0.03);
+  border: 1px solid var(--Glass-Border);
+}
+.ms-garment-meas-title {
+  font-size: 11px;
+  font-weight: 900;
+  color: #fff;
+  text-transform: uppercase;
+  margin-bottom: 12px;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+}
+.ms-garment-unit-toggle {
+  transform: scale(0.85);
+  transform-origin: right center;
+}
+.ms-garment-meas-row {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 6px 0;
+  border-bottom: 1px solid var(--Glass-Border);
+}
+.ms-garment-meas-row:last-child { border-bottom: none; }
+.ms-garment-meas-name {
+  font-size: 12px;
+  color: var(--Neutral-400);
+}
+.ms-garment-meas-val {
+  font-size: 13px;
+  font-weight: 700;
+  color: var(--Mint);
+}
+
+/* ═══ PHASE 223: FIT ANALYSIS CARD ═══ */
+.ms-recon-fit-card {
+  margin: 12px 16px;
+  padding: 16px;
+  border-radius: 12px;
+  background: rgba(255, 255, 255, 0.03);
+  border: 1px solid var(--Glass-Border);
+}
+.ms-recon-fit-title {
+  font-size: 11px;
+  font-weight: 900;
+  color: #fff;
+  text-transform: uppercase;
+  margin-bottom: 8px;
+}
+.ms-recon-fit-legend {
+  display: flex;
+  gap: 12px;
+  flex-wrap: wrap;
+  margin-bottom: 12px;
+}
+.ms-recon-fit-legend-item {
+  display: flex;
+  align-items: center;
+  gap: 4px;
+  font-size: 9px;
+  color: var(--Neutral-500);
+}
+.ms-recon-fit-dot {
+  width: 8px;
+  height: 8px;
+  border-radius: 50%;
+  flex-shrink: 0;
+}
+.ms-recon-fit-dot.ms-recon-fit-good { background: #22c55e; }
+.ms-recon-fit-dot.ms-recon-fit-loose { background: #eab308; }
+.ms-recon-fit-dot.ms-recon-fit-tight { background: #ef4444; }
+.ms-recon-fit-header {
+  display: grid;
+  grid-template-columns: 2fr 1fr 1fr 1fr 1.2fr;
+  gap: 4px;
+  font-size: 9px;
+  font-weight: 900;
+  color: var(--Neutral-500);
+  text-transform: uppercase;
+  padding: 6px 0;
+  border-bottom: 1px solid var(--Glass-Border);
+}
+.ms-recon-fit-row {
+  display: grid;
+  grid-template-columns: 2fr 1fr 1fr 1fr 1.2fr;
+  gap: 4px;
+  align-items: center;
+  padding: 6px 0;
+  border-bottom: 1px solid rgba(255,255,255,0.03);
+}
+.ms-recon-fit-row:last-child { border-bottom: none; }
+.ms-recon-fit-name {
+  font-size: 11px;
+  color: var(--Neutral-400);
+}
+.ms-recon-fit-body,
+.ms-recon-fit-garment {
+  font-size: 11px;
+  color: #fff;
+  font-variant-numeric: tabular-nums;
+}
+.ms-recon-fit-ease {
+  font-size: 11px;
+  font-weight: 700;
+  font-variant-numeric: tabular-nums;
+}
+.ms-recon-fit-ease.good { color: #22c55e; }
+.ms-recon-fit-ease.loose { color: #eab308; }
+.ms-recon-fit-ease.tight { color: #ef4444; }
+.ms-recon-fit-ease.snug { color: var(--Neutral-400); }
+.ms-recon-fit-status {
+  font-size: 9px;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.04em;
+}
+.ms-recon-fit-status.ms-recon-fit-good { color: #22c55e; }
+.ms-recon-fit-status.ms-recon-fit-loose { color: #eab308; }
+.ms-recon-fit-status.ms-recon-fit-tight { color: #ef4444; }
+.ms-recon-fit-status.ms-recon-fit-snug { color: var(--Neutral-400); }
+
+/* ═══ PHASE 233: BETA FEEDBACK CARD ═══ */
+.ms-feedback-card {
+  margin: 12px 16px;
+  padding: 16px;
+  border-radius: 12px;
+  background: rgba(198, 255, 0, 0.04);
+  border: 1px solid rgba(198, 255, 0, 0.2);
+}
+.ms-feedback-header {
+  font-size: 13px;
+  font-weight: 700;
+  color: #fff;
+  margin-bottom: 10px;
+}
+.ms-feedback-stars {
+  display: flex;
+  gap: 4px;
+  margin-bottom: 10px;
+}
+.ms-feedback-star {
+  width: 32px;
+  height: 32px;
+  border-radius: 6px;
+  border: 1px solid var(--Glass-Border);
+  background: transparent;
+  color: var(--Neutral-500);
+  font-size: 18px;
+  cursor: pointer;
+  transition: all 0.15s;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+.ms-feedback-star:hover,
+.ms-feedback-star.active {
+  color: #eab308;
+  border-color: #eab308;
+  background: rgba(234, 179, 8, 0.1);
+}
+.ms-feedback-comment {
+  width: 100%;
+  padding: 10px;
+  border-radius: 8px;
+  border: 1px solid var(--Glass-Border);
+  background: rgba(255, 255, 255, 0.03);
+  color: #fff;
+  font-size: 12px;
+  font-family: 'Inter', sans-serif;
+  resize: none;
+  outline: none;
+  transition: border-color 0.2s;
+  margin-bottom: 10px;
+}
+.ms-feedback-comment:focus { border-color: var(--Mint); }
+.ms-feedback-actions {
+  display: flex;
+  gap: 8px;
+}
+.ms-feedback-submit {
+  padding: 8px 16px;
+  border-radius: 8px;
+  border: none;
+  background: var(--Mint);
+  color: var(--Teal-900);
+  font-size: 11px;
+  font-weight: 700;
+  cursor: pointer;
+  transition: opacity 0.2s;
+}
+.ms-feedback-submit:disabled { opacity: 0.4; cursor: not-allowed; }
+.ms-feedback-dismiss {
+  padding: 8px 16px;
+  border-radius: 8px;
+  border: 1px solid var(--Glass-Border);
+  background: transparent;
+  color: var(--Neutral-400);
+  font-size: 11px;
+  font-weight: 600;
+  cursor: pointer;
+  transition: all 0.15s;
+}
+.ms-feedback-dismiss:hover { border-color: rgba(255,255,255,0.2); }
+.ms-feedback-thanks {
+  text-align: center;
+  color: var(--Mint);
+  font-size: 13px;
+  font-weight: 700;
+  padding: 8px 0;
 }
 

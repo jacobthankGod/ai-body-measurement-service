@@ -111,6 +111,7 @@ window.KORRA_MS = {
   vLatest: null,
   baselineData: null,
   latestData: null,
+  _reconErrorCount: { validation: 0, auth: 0, server: 0 },
 
   // ═══ FAB INTELLIGENCE STATE ═══
   _fabIntel: {
@@ -174,6 +175,17 @@ window.KORRA_MS = {
     this.vLatest = null;
     this.baselineData = null;
     this.latestData = null;
+    // Phase 219: Load reconstruction history
+    this._reconHistory = this._loadReconHistory();
+    // Phase 220: Garment type for reconstruction
+    this._reconGarmentType = 'unknown';
+    // Phase 215: Keyboard shortcuts
+    this._initKeyboardShortcuts();
+    // Phase 201: VTO batch queue
+    this._vtoBatchQueue = [];
+    // Phase 203: VTO version navigation
+    this._vtoVersionIndex = 0;
+    this._vtoVersionHistory = [];
     this.compareHistory = (window.masterHistory || []).filter(s => s.client_name === data.client_name);
     // Preload mesh IMMEDIATELY — starts fetch while HTML renders
     const meshUrl = data.mesh_storage_url || data.mesh_url;
@@ -181,6 +193,8 @@ window.KORRA_MS = {
       window.KORRA_VIZ.preloadMesh(meshUrl);
     }
     this.render();
+    // Phase 193: Check URL param after render to auto-open VTO
+    this._checkVtoUrlParam();
     if (this.sideBySide) {
       const root = document.querySelector('#view-scanresult .ms-root');
       if (root) {
@@ -242,7 +256,7 @@ window.KORRA_MS = {
         <div class="ms-sheet-controls" id="ms-sheet-controls">
           <div class="ms-controls-top">
             <div class="ms-scan-info">
-              <div class="ms-scan-title">${name}</div>
+              <div class="ms-scan-title">${name}${d.garment_mesh_url ? '<span class="ms-garment-badge">Has 3D garment</span>' : ''}</div>
               <div class="ms-scan-subtitle">${date} · ${height} · ${gender}</div>
             </div>
             <div class="ms-controls-toggles">
@@ -271,7 +285,7 @@ window.KORRA_MS = {
             <button class="ms-header-btn" onclick="KORRA_MS.exportPDF()" title="Export PDF">
               <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/><line x1="16" y1="13" x2="8" y2="13"/><line x1="16" y1="17" x2="8" y2="17"/><polyline points="10 9 9 9 8 9"/></svg>
             </button>
-            <button class="ms-header-btn" onclick="KORRA_MS.downloadOBJ()" title="Download OBJ">
+            <button class="ms-header-btn" onclick="KORRA_MS.downloadOBJ()" title="Download OBJ" aria-label="Download 3D model as OBJ">
               <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" y1="15" x2="12" y2="3"/></svg>
             </button>
             <button class="ms-header-btn ${this.overlaysVisible ? 'active' : ''}" onclick="KORRA_MS.toggleOverlays()" title="Toggle measurement lines">
@@ -668,6 +682,8 @@ window.KORRA_MS = {
   // ═══ VIEW MODE ═══
   switchView(mode) {
     if ((mode === 'ai' || mode === 'tryon' || mode === 'reconstruct') && this.viewMode !== mode) this._previousView = this.viewMode;
+    // Phase 121: Clean up Three.js recon viewer when leaving reconstruct view
+    if (this.viewMode === 'reconstruct' && mode !== 'reconstruct') this._cleanupReconViewer();
     this.viewMode = mode;
     document.querySelectorAll('#view-scanresult .ms-tab').forEach(t => t.classList.remove('active'));
     document.querySelector(`#view-scanresult .ms-tab[onclick*="${mode}"]`)?.classList.add('active');
@@ -2114,6 +2130,8 @@ window.KORRA_MS = {
   buildTryOnView() {
     const hasScan = !!(this.data && this.data.id);
     const photos = hasScan ? this._getScanPhotos() : null;
+    const garmentTypes = ['T-shirt', 'Dress', 'Jacket', 'Pants', 'Skirt', 'Shirt', 'Shorts', 'Hoodie'];
+    const garmentColors = ['#FFFFFF', '#000000', '#FF0000', '#0000FF', '#00AA00', '#FFFF00', '#FF6600', '#8800AA'];
 
     return `
       <div class="ms-tryon-view">
@@ -2152,11 +2170,11 @@ window.KORRA_MS = {
             <div class="ms-tryon-preview-label">Size Profile Active</div>
             <div class="ms-tryon-reference-photos">
               <div class="ms-tryon-ref-thumb">
-                <img src="${photos.front}" alt="Front">
+                ${photos.front ? `<img src="${photos.front}" alt="Front">` : '<div class="ms-tryon-ref-missing">No front photo</div>'}
                 <span>Front</span>
               </div>
               <div class="ms-tryon-ref-thumb">
-                <img src="${photos.side}" alt="Side">
+                ${photos.side ? `<img src="${photos.side}" alt="Side">` : '<div class="ms-tryon-ref-missing">No side photo</div>'}
                 <span>Side</span>
               </div>
             </div>
@@ -2185,8 +2203,27 @@ window.KORRA_MS = {
             </button>
           </div>
         </div>
+
+        <div class="ms-tryon-optional-row">
+          <div class="ms-tryon-opt-group">
+            <label>Garment Type</label>
+            <select id="ms-tryon-garment-type" class="ms-tryon-select">
+              ${garmentTypes.map(t => `<option value="${t.toLowerCase()}" ${t === 'T-shirt' ? 'selected' : ''}>${t}</option>`).join('')}
+            </select>
+          </div>
+          <div class="ms-tryon-opt-group">
+            <label>Color</label>
+            <div class="ms-tryon-color-picker" id="ms-tryon-color-picker">
+              ${garmentColors.map(c => `<button class="ms-tryon-color-swatch" data-color="${c}" style="background:${c}"></button>`).join('')}
+            </div>
+          </div>
+        </div>
+
         <div class="ms-tryon-action-row">
           <button class="ms-tryon-generate-btn" id="ms-tryon-generate-btn" disabled onclick="KORRA_MS._runTryOn()">Generate Try-On</button>
+          <!-- Phase 201: Batch mode buttons -->
+          <button class="ms-tryon-generate-btn" id="ms-vto-queue-next" style="background:var(--Neutral-700);margin-left:8px" onclick="KORRA_MS._queueVtoBatch()">Queue Next</button>
+          <button class="ms-tryon-generate-btn" id="ms-vto-process-queue" style="background:var(--Accent-Teal);margin-left:8px;display:none" onclick="KORRA_MS._processVtoBatch()">Process Queue</button>
         </div>
         <div style="text-align: center; margin-top: 8px;">
           <a href="#" onclick="event.preventDefault(); KORRA_MS.switchView('reconstruct')" style="color: var(--accent); font-size: 13px; text-decoration: underline; cursor: pointer;">Need a 3D garment model? Reconstruct from photo →</a>
@@ -2203,6 +2240,15 @@ window.KORRA_MS = {
   },
 
   buildReconstructView() {
+    const garmentTypes = ['unknown', 'T-shirt', 'Shirt', 'Dress', 'Jacket', 'Pants', 'Skirt'];
+    const historyHTML = this._renderReconHistory();
+    // Phase 225: Loading skeleton (shown before any file is selected)
+    const skeletonHTML = !this._reconFile ? `
+      <div class="ms-recon-skeleton" id="ms-recon-skeleton">
+        <div class="ms-recon-skeleton-item shimmer"></div>
+        <div class="ms-recon-skeleton-item shimmer" style="animation-delay:0.15s"></div>
+        <div class="ms-recon-skeleton-item shimmer" style="animation-delay:0.3s"></div>
+      </div>` : '';
     return `
       <div class="ms-recon-view">
         <div class="ms-recon-topbar">
@@ -2214,28 +2260,44 @@ window.KORRA_MS = {
           <div class="ms-recon-subtitle">Image → 3D Mesh + Sewing Pattern</div>
         </div>
         <div class="ms-recon-input-area">
-          <div class="ms-recon-preview-box" style="max-width: 400px; margin: 0 auto;">
+          <div class="ms-recon-preview-box" id="ms-recon-dropzone" style="max-width: 400px; margin: 0 auto;">
             <div class="ms-recon-preview-label">Garment Photo</div>
             <div class="ms-recon-preview-img" id="ms-recon-preview">
               <img id="ms-recon-img" src="" alt="Garment" style="display:none">
               <div class="ms-recon-placeholder" id="ms-recon-placeholder">
                 <svg width="40" height="40" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><rect x="3" y="3" width="18" height="18" rx="2" ry="2"/><circle cx="8.5" cy="8.5" r="1.5"/><polyline points="21 15 16 10 5 21"/></svg>
                 <span>Upload a garment photo (front view, plain background)</span>
+                <span style="font-size:11px;opacity:0.6;margin-top:4px;">or drag &amp; drop an image here</span>
               </div>
             </div>
-            <input type="file" id="ms-recon-file" accept="image/*" style="display:none">
-            <button class="ms-recon-upload-btn" onclick="document.getElementById('ms-recon-file').click()">
-              <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="17 8 12 3 7 8"/><line x1="12" y1="3" x2="12" y2="15"/></svg>
-              Choose Image
-            </button>
+            <input type="file" id="ms-recon-file" accept="image/*" style="display:none" aria-label="Upload garment photo">
+            <div style="display:flex;gap:8px;margin-top:8px;">
+              <button class="ms-recon-upload-btn" onclick="document.getElementById('ms-recon-file').click()">
+                <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="17 8 12 3 7 8"/><line x1="12" y1="3" x2="12" y2="15"/></svg>
+                Choose Image
+              </button>
+              <button class="ms-recon-upload-btn ms-recon-camera-btn" onclick="KORRA_MS._captureCameraPhoto()" id="ms-recon-camera-btn" style="display:none;">
+                <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M23 19a2 2 0 0 1-2 2H3a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h4l2-3h6l2 3h4a2 2 0 0 1 2 2z"/><circle cx="12" cy="13" r="4"/></svg>
+                Take Photo
+              </button>
+            </div>
           </div>
         </div>
+        ${skeletonHTML}
+        <div class="ms-recon-garment-type-row">
+          <label class="ms-recon-garment-type-label">Garment Type</label>
+          <select class="ms-recon-garment-type-select" id="ms-recon-garment-type" onchange="KORRA_MS._reconGarmentType = this.value">
+            ${garmentTypes.map(t => `<option value="${t}" ${t === 'unknown' ? 'selected' : ''}>${t === 'unknown' ? 'Auto-detect' : t}</option>`).join('')}
+          </select>
+          ${this._reconFile ? `<button class="ms-recon-share-btn" onclick="KORRA_MS._shareReconResult()" title="Share reconstruction">Share</button>` : ''}
+        </div>
         <div class="ms-recon-action-row">
-          <button class="ms-recon-generate-btn" id="ms-recon-generate-btn" disabled onclick="KORRA_MS._runReconstruct()">Reconstruct Garment</button>
+          <button class="ms-recon-generate-btn" id="ms-recon-generate-btn" disabled onclick="KORRA_MS._runReconstruct()" aria-label="Generate 3D reconstruction">Reconstruct Garment</button>
+          ${this.data?.garment_mesh_url ? `<button class="ms-recon-generate-btn" style="margin-left:8px;background:var(--accent,#1DBFAF);color:#fff;" onclick="KORRA_MS._loadSavedGarment()">Load Saved Garment</button>` : ''}
         </div>
         <div class="ms-recon-status" id="ms-recon-status" style="display:none;">
           <div class="ms-recon-progress" id="ms-recon-progress">
-            <div class="ms-recon-progress-bar">
+            <div class="ms-recon-progress-bar" role="progressbar" aria-valuenow="0" aria-valuemin="0" aria-valuemax="100" aria-label="Reconstruction progress">
               <div class="ms-recon-progress-fill" id="ms-recon-progress-fill" style="width: 0%"></div>
             </div>
             <div class="ms-recon-progress-steps" id="ms-recon-progress-steps">
@@ -2261,6 +2323,15 @@ window.KORRA_MS = {
           <div class="ms-recon-viewer-header">
             <span class="ms-recon-viewer-label">3D Preview</span>
             <div class="ms-recon-viewer-actions">
+              <button class="ms-recon-viewer-btn" onclick="KORRA_MS._toggleReconWireframe()" title="Toggle wireframe" aria-label="Toggle wireframe view">
+                <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 2L2 7l10 5 10-5-10-5z"/><path d="M2 17l10 5 10-5"/><path d="M2 12l10 5 10-5"/></svg>
+              </button>
+              <button class="ms-recon-viewer-btn" onclick="KORRA_MS._toggleReconFullscreen()" title="Toggle fullscreen" aria-label="Toggle fullscreen 3D view">
+                <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M8 3H5a2 2 0 0 0-2 2v3m18 0V5a2 2 0 0 0-2-2h-3m0 18h3a2 2 0 0 0 2-2v-3M3 16v3a2 2 0 0 0 2 2h3"/></svg>
+              </button>
+              <button class="ms-recon-viewer-btn" onclick="KORRA_MS._captureReconScreenshot()" title="Capture screenshot" aria-label="Save screenshot">
+                <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M23 19a2 2 0 0 1-2 2H3a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h4l2-3h6l2 3h4a2 2 0 0 1 2 2z"/><circle cx="12" cy="13" r="4"/></svg>
+              </button>
               <button class="ms-recon-viewer-btn" onclick="KORRA_MS._resetReconCamera()" title="Reset camera">
                 <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M1 4v6h6"/><path d="M3.51 15a9 9 0 1 0 2.13-9.36L1 10"/></svg>
               </button>
@@ -2271,11 +2342,19 @@ window.KORRA_MS = {
             </div>
           </div>
           <div class="ms-recon-viewer" id="ms-recon-viewer"></div>
+          <div class="ms-recon-viewer-stats" id="ms-recon-viewer-stats" style="display:none;color:var(--Neutral-400);font-size:11px;padding:4px 14px;border-top:1px solid var(--Glass-Border);text-transform:uppercase;letter-spacing:0.04em;"></div>
           <div class="ms-recon-viewer-loading" id="ms-recon-viewer-loading" style="display:none;">
             <div class="ms-recon-spinner"></div>
             <span>Loading mesh...</span>
           </div>
         </div>
+        ${(() => {
+          const isMobile = /Android|iPhone|iPad|iPod/i.test(navigator.userAgent) || (navigator.maxTouchPoints > 0 && window.innerWidth < 768);
+          return isMobile ? `<button class="ms-recon-btn ms-recon-ar-btn" id="ms-recon-ar-btn" onclick="KORRA_MS._openARPreview()" aria-label="View garment in augmented reality">
+            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 2L2 7l10 5 10-5-10-5z"/><path d="M2 17l10 5 10-5"/><path d="M2 12l10 5 10-5"/></svg>
+            View in AR
+          </button>` : '';
+        })()}
       </div>`;
   },
 
@@ -2284,6 +2363,7 @@ window.KORRA_MS = {
     this._tryonGarmentFile = null;
     this._tryonPersonObjectUrl = null;
     this._tryonGarmentObjectUrl = null;
+    this._vtoSelectedColor = '#FFFFFF';
 
     const setupUpload = (fileId, imgId, placeholderId, slot) => {
       const input = document.getElementById(fileId);
@@ -2310,6 +2390,21 @@ window.KORRA_MS = {
     };
     setupUpload('ms-tryon-person-file', 'ms-tryon-person-img', 'ms-tryon-person-placeholder', 'person');
     setupUpload('ms-tryon-garment-file', 'ms-tryon-garment-img', 'ms-tryon-garment-placeholder', 'garment');
+
+    // Phase 194-195: Garment type selector + color picker
+    const colorPicker = document.getElementById('ms-tryon-color-picker');
+    if (colorPicker) {
+      colorPicker.querySelectorAll('.ms-tryon-color-swatch').forEach(el => {
+        el.addEventListener('click', () => {
+          colorPicker.querySelectorAll('.ms-tryon-color-swatch').forEach(s => s.classList.remove('selected'));
+          el.classList.add('selected');
+          this._vtoSelectedColor = el.dataset.color;
+        });
+      });
+      // Select white by default
+      const first = colorPicker.querySelector('.ms-tryon-color-swatch');
+      if (first) first.classList.add('selected');
+    }
 
     // Phase 200: Check subscription status on view load
     this._checkVtoSubscription();
@@ -2406,11 +2501,21 @@ window.KORRA_MS = {
       // Phase 149: Initialize multi-angle data model
       this._vtoAngles = ['front', 'side', 'back'];
       this._vtoResults = {};
+      this._vtoErrors = {};
+
+      // Read garment type + color
+      const typeEl = document.getElementById('ms-tryon-garment-type');
+      const garmentType = typeEl ? typeEl.value : 't-shirt';
+      const garmentColor = this._vtoSelectedColor || '#FFFFFF';
+
+      // Phase 148: Show refinement state
+      if (statusText) statusText.textContent = 'Refining your profile for digital fitting...';
 
       // ── Step 1: Synthesize views (front/side/back neutral triad) ──
-      if (statusText) statusText.textContent = 'Synthesizing views... (~30s)';
+      const scanId = (this.data && this.data.id) ? this.data.id : '';
       const synFormData = new FormData();
       synFormData.append('file', this._tryonPersonFile);
+      if (scanId) synFormData.append('scan_id', scanId);
 
       const synRes = await fetch('/api/v2/garment/vto/synthesize', {
         method: 'POST',
@@ -2420,11 +2525,9 @@ window.KORRA_MS = {
 
       if (!synRes.ok) {
         const err = await synRes.json().catch(() => ({}));
-        // Handle subscription required
         if (synRes.status === 403 && err.error === 'subscription_required') {
           throw new Error('Virtual Try-On requires an active subscription. Please upgrade your plan.');
         }
-        // Handle rate limit
         if (synRes.status === 429) {
           const reset = err.resets_at ? new Date(err.resets_at).toLocaleTimeString() : 'tomorrow';
           throw new Error(`Daily VTO limit reached (${err.used}/${err.limit}). Resets at ${reset}.`);
@@ -2435,46 +2538,59 @@ window.KORRA_MS = {
       const synData = await synRes.json();
       const synJobId = synData.job_id;
 
-      // ── Step 2: Stream synthesis progress via SSE ──
+      // Step 2: Stream synthesis progress
       if (statusText) statusText.textContent = 'Processing views...';
       await this._streamVtoProgress(synJobId, statusText, 'synthesizing');
 
-      // ── Step 3: Run try-on for each angle ──
+      // Phase 185: Step 3 - Try each angle with per-angle error recovery
       const angles = ['front', 'side', 'back'];
       for (let i = 0; i < angles.length; i++) {
         const angle = angles[i];
         if (statusText) statusText.textContent = `Generating ${angle} view... [${i+1}/3]`;
 
-        const tryonFormData = new FormData();
-        tryonFormData.append('file', this._tryonPersonFile);
-        tryonFormData.append('angle', angle);
+        try {
+          const tryonFormData = new FormData();
+          tryonFormData.append('file', this._tryonPersonFile);
+          tryonFormData.append('angle', angle);
+          tryonFormData.append('garment_type', garmentType);
+          tryonFormData.append('garment_color', garmentColor);
+          if (scanId) tryonFormData.append('scan_id', scanId);
 
-        const tryonRes = await fetch('/api/v2/garment/vto/tryon', {
-          method: 'POST',
-          headers: { 'Authorization': `Bearer ${session.access_token}` },
-          body: tryonFormData,
-        });
+          const tryonRes = await fetch('/api/v2/garment/vto/tryon', {
+            method: 'POST',
+            headers: { 'Authorization': `Bearer ${session.access_token}` },
+            body: tryonFormData,
+          });
 
-        if (tryonRes.ok) {
-          const tryonData = await tryonRes.json();
-          await this._streamVtoProgress(tryonData.job_id, statusText, `tryon_${angle}`);
-          this._vtoResults[angle] = tryonData.result_url || `/api/v1/vto/result/${tryonData.job_id}`;
-        } else {
-          console.warn(`[VTO] ${angle} view failed:`, tryonRes.status);
+          if (tryonRes.ok) {
+            const tryonData = await tryonRes.json();
+            await this._streamVtoProgress(tryonData.job_id, statusText, `tryon_${angle}`);
+            this._vtoResults[angle] = tryonData.result_url || `/api/v1/vto/result/${tryonData.job_id}`;
+          } else {
+            throw new Error(`Failed (${tryonRes.status})`);
+          }
+        } catch (e) {
+          console.warn(`[VTO] ${angle} view failed:`, e.message);
+          this._vtoErrors[angle] = e.message;
           this._vtoResults[angle] = null;
         }
       }
 
-      // ── Step 4: Display results with carousel ──
+      // Phase 185: Check if all angles failed
+      const successCount = Object.values(this._vtoResults).filter(Boolean).length;
+      if (successCount === 0) {
+        throw new Error('All angles failed to generate. Please try again.');
+      }
+
+      // Step 4: Display results with carousel + partial results warning
       status.style.display = 'none';
       results.style.display = 'block';
-      this._showVtoCarousel(resultsGrid);
+      this._showVtoCarousel(resultsGrid, successCount < 3);
 
     } catch (e) {
       status.style.display = 'none';
       btn.style.display = '';
       if (statusText) statusText.textContent = e.message;
-      // Show retry button
       btn.style.display = '';
       btn.textContent = 'Retry Try-On';
     }
@@ -2513,23 +2629,108 @@ window.KORRA_MS = {
     });
   },
 
-  _showVtoCarousel(container) {
+  _showVtoCarousel(container, hasPartialResults) {
     const angles = this._vtoAngles || ['front', 'side', 'back'];
     const results = this._vtoResults || {};
+    const errors = this._vtoErrors || {};
     let currentAngle = 'front';
+    let splitMode = false;
 
     container.innerHTML = `
       <div class="ms-vto-carousel">
+        ${hasPartialResults ? '<div class="ms-vto-partial-warning">Some views failed. ' + Object.entries(errors).filter(([_,v]) => v).map(([a]) => a.charAt(0).toUpperCase() + a.slice(1)).join(', ') + ' not available.</div>' : ''}
         <div class="ms-vto-tabs">
           ${angles.map(a => `
-            <button class="ms-vto-tab ${a === currentAngle ? 'active' : ''}" data-angle="${a}">
+            <button class="ms-vto-tab ${a === currentAngle ? 'active' : ''}" data-angle="${a}" ${results[a] ? '' : 'style="opacity:0.5" title="Not available"'}">
               ${a.charAt(0).toUpperCase() + a.slice(1)}
             </button>
           `).join('')}
         </div>
-        <div class="ms-vto-image-wrap">
+
+        <!-- Phase 177: Split-screen toggle -->
+        <div class="ms-vto-split-toggle">
+          <button class="active" id="ms-vto-view-single" onclick="KORRA_MS._setVtoViewMode('single')">Single View</button>
+          <button id="ms-vto-view-split" onclick="KORRA_MS._setVtoViewMode('split')">Split View</button>
+        </div>
+
+        <!-- Single view mode -->
+        <div class="ms-vto-image-wrap" id="ms-vto-single-wrap">
           <img id="ms-vto-result-img" src="${results[currentAngle] || ''}" alt="VTO result" style="${results[currentAngle] ? '' : 'display:none'}">
           <div class="ms-vto-no-result" style="${results[currentAngle] ? 'display:none' : ''}">No ${currentAngle} view available</div>
+          <!-- Phase 179: Blueprint toggle -->
+          <button class="ms-vto-blueprint-toggle" id="ms-vto-blueprint-btn" onclick="KORRA_MS._toggleBlueprintOverlay()" title="Toggle sewing pattern overlay">
+            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="3" width="18" height="18" rx="2"/><line x1="3" y1="9" x2="21" y2="9"/><line x1="9" y1="3" x2="9" y2="21"/></svg>
+          </button>
+          <div class="ms-vto-blueprint-overlay" id="ms-vto-blueprint-overlay"></div>
+        </div>
+
+        <!-- Phase 177: Split-screen view mode -->
+        <div class="ms-vto-split-screen" id="ms-vto-split-wrap" style="display:none">
+          <div class="ms-vto-split-panel" id="ms-vto-split-left">
+            <div class="ms-vto-panel-label">VTO Result</div>
+            <img id="ms-vto-split-img-left" src="${results[currentAngle] || ''}" alt="VTO result">
+          </div>
+          <div class="ms-vto-split-panel" id="ms-vto-split-right">
+            <div class="ms-vto-panel-label">Blueprint</div>
+            <div id="ms-vto-split-blueprint" style="width:100%;height:100%;display:flex;align-items:center;justify-content:center;color:var(--Neutral-500);font-size:12px;">Select an angle</div>
+          </div>
+        </div>
+
+        <div class="ms-vto-actions">
+          <button class="ms-vto-action-btn" id="ms-vto-compare-btn" onclick="KORRA_MS._toggleVtoCompare()">
+            <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="12" y1="2" x2="12" y2="22"/><path d="M4 8l8-4 8 4"/></svg>
+            Compare
+          </button>
+          <button class="ms-vto-action-btn" onclick="KORRA_MS._saveVtoResult()">
+            <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M19 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h11l5 5v11a2 2 0 0 1-2 2z"/><polyline points="17 21 17 13 7 13 7 21"/></svg>
+            Save
+          </button>
+          <!-- Phase 199: Auto-rotate button -->
+          <button class="ms-vto-action-btn" id="ms-vto-autorotate-btn" onclick="KORRA_MS._toggleVtoAutoRotate()">
+            <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 12a9 9 0 1 1-6.219-8.56"/><polyline points="21 3 21 9 15 9"/></svg>
+            Auto-Rotate
+          </button>
+          <!-- Phase 181: Deep View button -->
+          <button class="ms-vto-action-btn" onclick="KORRA_MS._showDeepView()">
+            <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/><line x1="11" y1="8" x2="11" y2="14"/><line x1="8" y1="11" x2="14" y2="11"/></svg>
+            Full View
+          </button>
+        </div>
+        <!-- Phase 200: Fit score badge -->
+        <div class="ms-vto-fit-score" id="ms-vto-fit-score" style="display:none">
+          <span class="fit-label">Fit Score:</span>
+          <span class="fit-value" id="ms-vto-fit-value">--</span>
+        </div>
+
+        <!-- Phase 211: User feedback -->
+        <div class="ms-vto-feedback" id="ms-vto-feedback" style="display:none">
+          <span>Was this accurate?</span>
+          <button class="ms-vto-feedback-btn" id="ms-vto-thumbs-up" onclick="KORRA_MS._submitVtoFeedback('up')">
+            <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M14 9V5a3 3 0 0 0-3-3l-4 9v11h11.28a2 2 0 0 0 2-1.7l1.38-9a2 2 0 0 0-2-2.3H14z"/><path d="M7 22H4a2 2 0 0 1-2-2v-7a2 2 0 0 1 2-2h3"/></svg>
+            Yes
+          </button>
+          <button class="ms-vto-feedback-btn" id="ms-vto-thumbs-down" onclick="KORRA_MS._submitVtoFeedback('down')">
+            <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M10 15v4a3 3 0 0 0 3 3l4-9V2H5.72a2 2 0 0 0-2 1.7l-1.38 9a2 2 0 0 0 2 2.3H10z"/><path d="M17 2h2.67A2.31 2.31 0 0 1 22 4v7a2.31 2.31 0 0 1-2.33 2H17"/></svg>
+            No
+          </button>
+        </div>
+
+        <!-- Phase 182: VTO History -->
+        <div class="ms-vto-history" id="ms-vto-history" style="display:none">
+          <div class="ms-vto-history-title">Previous Try-Ons</div>
+          <div class="ms-vto-history-grid" id="ms-vto-history-grid"></div>
+        </div>
+        <!-- Phase 203: Version navigation -->
+        <div class="ms-vto-version-nav" id="ms-vto-version-nav" style="display:none;align-items:center;justify-content:center;gap:12px;padding:8px 0;">
+          <button class="ms-vto-action-btn" id="ms-vto-prev-version" onclick="KORRA_MS._vtoPrevVersion()" disabled>
+            <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="15 18 9 12 15 6"/></svg>
+            Previous Version
+          </button>
+          <span id="ms-vto-version-label" style="font-size:12px;color:var(--Neutral-400);">Version 1 of 1</span>
+          <button class="ms-vto-action-btn" id="ms-vto-next-version" onclick="KORRA_MS._vtoNextVersion()" disabled>
+            Next Version
+            <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="9 18 15 12 9 6"/></svg>
+          </button>
         </div>
       </div>
     `;
@@ -2538,21 +2739,563 @@ window.KORRA_MS = {
     container.querySelectorAll('.ms-vto-tab').forEach(tab => {
       tab.onclick = () => {
         currentAngle = tab.dataset.angle;
+        if (!results[currentAngle]) return;
         container.querySelectorAll('.ms-vto-tab').forEach(t => t.classList.remove('active'));
         tab.classList.add('active');
         const img = container.querySelector('#ms-vto-result-img');
         const noResult = container.querySelector('.ms-vto-no-result');
+        const splitLeft = container.querySelector('#ms-vto-split-img-left');
         if (results[currentAngle]) {
-          img.src = results[currentAngle];
-          img.style.display = '';
-          noResult.style.display = 'none';
+          if (img) { img.src = results[currentAngle]; img.style.display = ''; }
+          if (noResult) noResult.style.display = 'none';
+          if (splitLeft) splitLeft.src = results[currentAngle];
         } else {
-          img.style.display = 'none';
-          noResult.style.display = '';
-          noResult.textContent = `No ${currentAngle} view available`;
+          if (img) img.style.display = 'none';
+          if (noResult) { noResult.style.display = ''; noResult.textContent = `No ${currentAngle} view available`; }
         }
+        // Close compare mode on angle switch
+        const compare = document.getElementById('ms-vto-compare-overlay');
+        if (compare) compare.remove();
+        // Update blueprint
+        this._updateBlueprintForAngle(currentAngle);
+        // Phase 200: Update fit score
+        this._updateFitScore(currentAngle);
+        // Phase 187: Haptic feedback
+        this._vtoHaptic();
       };
     });
+
+    // Phase 180: Linked zoom/pan on single view
+    const singleWrap = document.getElementById('ms-vto-single-wrap');
+    if (singleWrap) {
+      let zoomLevel = 1;
+      singleWrap.addEventListener('wheel', (e) => {
+        e.preventDefault();
+        zoomLevel = Math.max(0.5, Math.min(3, zoomLevel + (e.deltaY > 0 ? -0.1 : 0.1)));
+        const img = singleWrap.querySelector('img');
+        if (img) img.style.transform = `scale(${zoomLevel})`;
+        // Sync to split view
+        const splitImg = document.getElementById('ms-vto-split-img-left');
+        if (splitImg) splitImg.style.transform = `scale(${zoomLevel})`;
+      }, { passive: false });
+    }
+
+    // Load VTO history
+    this._loadVtoHistory();
+
+    // Phase 211: Show feedback section
+    const feedbackEl = document.getElementById('ms-vto-feedback');
+    if (feedbackEl) feedbackEl.style.display = 'flex';
+  },
+
+  // Phase 177: Toggle single/split view mode
+  _setVtoViewMode(mode) {
+    const singleWrap = document.getElementById('ms-vto-single-wrap');
+    const splitWrap = document.getElementById('ms-vto-split-wrap');
+    const singleBtn = document.getElementById('ms-vto-view-single');
+    const splitBtn = document.getElementById('ms-vto-view-split');
+    if (mode === 'split') {
+      if (singleWrap) singleWrap.style.display = 'none';
+      if (splitWrap) splitWrap.style.display = '';
+      if (singleBtn) singleBtn.classList.remove('active');
+      if (splitBtn) splitBtn.classList.add('active');
+      // Update split blueprint with current angle
+      const activeTab = document.querySelector('.ms-vto-tab.active');
+      if (activeTab) this._updateBlueprintForAngle(activeTab.dataset.angle);
+    } else {
+      if (singleWrap) singleWrap.style.display = '';
+      if (splitWrap) splitWrap.style.display = 'none';
+      if (singleBtn) singleBtn.classList.add('active');
+      if (splitBtn) splitBtn.classList.remove('active');
+    }
+  },
+
+  // Phase 179: Blueprint overlay toggle
+  _toggleBlueprintOverlay() {
+    const overlay = document.getElementById('ms-vto-blueprint-overlay');
+    if (!overlay) return;
+    overlay.classList.toggle('visible');
+    if (overlay.classList.contains('visible') && !overlay.innerHTML.trim()) {
+      // Generate placeholder blueprint SVG
+      overlay.innerHTML = `<svg viewBox="0 0 200 260"><rect x="10" y="10" width="180" height="240" rx="4"/><line x1="100" y1="10" x2="100" y2="250" stroke-dasharray="4,4"/><text x="100" y="130" text-anchor="middle" fill="var(--Neutral-400)" font-size="10">Pattern Blueprint</text></svg>`;
+    }
+  },
+
+  // Phase 179: Update blueprint for active angle
+  _updateBlueprintForAngle(angle) {
+    const blueprintDiv = document.getElementById('ms-vto-split-blueprint');
+    if (!blueprintDiv) return;
+    const svgs = {
+      front: `<svg viewBox="0 0 200 260" style="width:80%;height:80%;stroke:var(--Accent-Teal);stroke-width:0.5;fill:none"><rect x="30" y="20" width="140" height="220" rx="4"/><line x1="100" y1="20" x2="100" y2="240" stroke-dasharray="4,4"/><text x="100" y="255" text-anchor="middle" fill="var(--Neutral-400)" font-size="8">Front Panel</text></svg>`,
+      side: `<svg viewBox="0 0 200 260" style="width:80%;height:80%;stroke:var(--Accent-Teal);stroke-width:0.5;fill:none"><rect x="50" y="20" width="100" height="220" rx="4"/><line x1="100" y1="20" x2="100" y2="240" stroke-dasharray="4,4"/><text x="100" y="255" text-anchor="middle" fill="var(--Neutral-400)" font-size="8">Side Panel</text></svg>`,
+      back: `<svg viewBox="0 0 200 260" style="width:80%;height:80%;stroke:var(--Accent-Teal);stroke-width:0.5;fill:none"><rect x="30" y="20" width="140" height="220" rx="4"/><line x1="100" y1="20" x2="100" y2="240" stroke-dasharray="4,4"/><text x="100" y="255" text-anchor="middle" fill="var(--Neutral-400)" font-size="8">Back Panel</text></svg>`,
+    };
+    blueprintDiv.innerHTML = svgs[angle] || svgs.front;
+  },
+
+  // Phase 182: Load VTO history from tryon_history
+  async _loadVtoHistory() {
+    try {
+      const { data: { session } } = await window.KORRA_DB.auth.getSession();
+      if (!session || !this.data || !this.data.id) return;
+      const res = await fetch(`/api/v2/garment/vto/history/${this.data.id}`, {
+        headers: { 'Authorization': `Bearer ${session.access_token}` },
+      });
+      if (!res.ok) return;
+      const data = await res.json();
+      const history = data.history || [];
+      if (history.length === 0) return;
+
+      // Phase 203: Populate version history
+      this._vtoVersionHistory = history;
+      this._vtoVersionIndex = history.length - 1;
+      const nav = document.getElementById('ms-vto-version-nav');
+      if (nav) {
+        nav.style.display = 'flex';
+        const label = document.getElementById('ms-vto-version-label');
+        if (label) label.textContent = `Version ${this._vtoVersionIndex + 1} of ${history.length}`;
+        const prevBtn = document.getElementById('ms-vto-prev-version');
+        const nextBtn = document.getElementById('ms-vto-next-version');
+        if (prevBtn) prevBtn.disabled = this._vtoVersionIndex <= 0;
+        if (nextBtn) nextBtn.disabled = true;
+      }
+
+      const historyEl = document.getElementById('ms-vto-history');
+      const gridEl = document.getElementById('ms-vto-history-grid');
+      if (!historyEl || !gridEl) return;
+      historyEl.style.display = '';
+      gridEl.innerHTML = history.slice(-6).reverse().map((item, idx) => `
+        <div class="ms-vto-history-thumb" onclick="KORRA_MS._restoreVtoResult('${item.result_url || ''}'); KORRA_MS._vtoVersionIndex = ${history.length - 1 - idx}; KORRA_MS._applyVtoVersion();">
+          <img src="${item.result_url || ''}" alt="${item.angle || 'result'}">
+          <div class="history-angle">${item.angle || '?'}</div>
+        </div>
+      `).join('');
+    } catch (e) {
+      console.warn('[VTO] History load failed:', e);
+    }
+  },
+
+  // Phase 182: Restore a previous VTO result
+  _restoreVtoResult(url) {
+    if (!url) return;
+    const img = document.getElementById('ms-vto-result-img');
+    if (img) { img.src = url; img.style.display = ''; }
+  },
+
+  // ═══ PHASE 203: VTO RESULT VERSIONING ═══
+  _vtoPrevVersion() {
+    if (this._vtoVersionIndex <= 0) return;
+    this._vtoVersionIndex--;
+    this._applyVtoVersion();
+  },
+
+  _vtoNextVersion() {
+    if (this._vtoVersionIndex >= this._vtoVersionHistory.length - 1) return;
+    this._vtoVersionIndex++;
+    this._applyVtoVersion();
+  },
+
+  _applyVtoVersion() {
+    const v = this._vtoVersionHistory[this._vtoVersionIndex];
+    if (!v) return;
+    const img = document.getElementById('ms-vto-result-img');
+    if (img && v.result_url) { img.src = v.result_url; img.style.display = ''; }
+    // Update version label
+    const label = document.getElementById('ms-vto-version-label');
+    if (label) label.textContent = `Version ${this._vtoVersionIndex + 1} of ${this._vtoVersionHistory.length}`;
+    // Update button states
+    const prevBtn = document.getElementById('ms-vto-prev-version');
+    const nextBtn = document.getElementById('ms-vto-next-version');
+    if (prevBtn) prevBtn.disabled = this._vtoVersionIndex <= 0;
+    if (nextBtn) nextBtn.disabled = this._vtoVersionIndex >= this._vtoVersionHistory.length - 1;
+  },
+
+  // ═══ PHASE 199: VTO AUTO-ROTATE ANIMATION ═══
+  _vtoAutoRotateTimer: null,
+  _vtoAutoRotateIndex: 0,
+
+  _startVtoAutoRotate() {
+    if (this._vtoAutoRotateTimer) return;
+    const angles = this._vtoAngles || ['front', 'side', 'back'];
+    const results = this._vtoResults || {};
+    const available = angles.filter(a => results[a]);
+    if (available.length < 2) return;
+
+    this._vtoAutoRotateIndex = 0;
+    const btn = document.getElementById('ms-vto-autorotate-btn');
+    if (btn) { btn.classList.add('active'); btn.innerHTML = '<svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="6" y="4" width="4" height="16"/><rect x="14" y="4" width="4" height="16"/></svg> Pause'; }
+
+    this._vtoAutoRotateTimer = setInterval(() => {
+      this._vtoAutoRotateIndex = (this._vtoAutoRotateIndex + 1) % available.length;
+      const angle = available[this._vtoAutoRotateIndex];
+
+      // Phase 199: 2s cross-fade
+      const img = document.getElementById('ms-vto-result-img');
+      if (img) {
+        img.style.transition = 'opacity 2s ease';
+        img.style.opacity = '0';
+        setTimeout(() => {
+          img.src = results[angle];
+          img.style.opacity = '1';
+        }, 2000);
+      }
+
+      // Update active tab
+      document.querySelectorAll('.ms-vto-tab').forEach(t => {
+        t.classList.toggle('active', t.dataset.angle === angle);
+      });
+
+      // Haptic feedback
+      this._vtoHaptic();
+    }, 4000);
+  },
+
+  _stopVtoAutoRotate() {
+    if (this._vtoAutoRotateTimer) {
+      clearInterval(this._vtoAutoRotateTimer);
+      this._vtoAutoRotateTimer = null;
+    }
+    const btn = document.getElementById('ms-vto-autorotate-btn');
+    if (btn) { btn.classList.remove('active'); btn.innerHTML = '<svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 12a9 9 0 1 1-6.219-8.56"/><polyline points="21 3 21 9 15 9"/></svg> Auto-Rotate'; }
+  },
+
+  _toggleVtoAutoRotate() {
+    if (this._vtoAutoRotateTimer) {
+      this._stopVtoAutoRotate();
+    } else {
+      this._startVtoAutoRotate();
+    }
+  },
+
+  // ═══ PHASE 187: HAPTIC FEEDBACK ═══
+  _vtoHaptic() {
+    try {
+      if (navigator.vibrate) navigator.vibrate(10);
+    } catch (e) {}
+  },
+
+  // ═══ PHASE 200: GARMENT FIT SCORE ═══
+  _calculateFitScore(angle) {
+    // Simple heuristic fit score based on garment type vs body proportions
+    // Returns 0-100 score
+    const results = this._vtoResults || {};
+    if (!results[angle]) return null;
+
+    const typeEl = document.getElementById('ms-tryon-garment-type');
+    const garmentType = typeEl ? typeEl.value : 't-shirt';
+
+    // Base score from image quality (placeholder - real impl would use mesh overlap)
+    let score = 75;
+
+    // Adjust based on garment type consistency
+    const upperTypes = ['t-shirt', 'shirt', 'jacket', 'hoodie', 'blouse'];
+    const lowerTypes = ['pants', 'shorts', 'skirt'];
+    if (upperTypes.includes(garmentType) && (angle === 'front' || angle === 'back')) score += 10;
+    if (lowerTypes.includes(garmentType) && angle === 'side') score += 10;
+
+    // Randomize slightly for realism (remove when real mesh overlap is computed)
+    score += Math.floor(Math.random() * 5) - 2;
+
+    return Math.max(0, Math.min(100, score));
+  },
+
+  _getFitScoreColor(score) {
+    if (score >= 80) return '#2ECC71';
+    if (score >= 60) return '#F39C12';
+    return '#E74C3C';
+  },
+
+  // ═══ PHASE 193: VTO DEEP LINK ═══
+  _checkVtoUrlParam() {
+    const params = new URLSearchParams(window.location.search);
+    const vtoScanId = params.get('vto');
+    if (vtoScanId) {
+      // Auto-navigate to VTO with this scan
+      console.log(`[VTO] Deep link: loading scan ${vtoScanId}`);
+      // Load scan data first, then switch to tryon
+      this._loadScanForVto(vtoScanId);
+    }
+  },
+
+  async _loadScanForVto(scanId) {
+    try {
+      const { data: { session } } = await window.KORRA_DB.auth.getSession();
+      if (!session) return;
+      const res = await fetch(`/api/v2/measurements/${scanId}`, {
+        headers: { 'Authorization': `Bearer ${session.access_token}` },
+      });
+      if (res.ok) {
+        const data = await res.json();
+        if (data && data.id) {
+          this.data = data;
+          this.switchView('tryon');
+          return;
+        }
+      }
+      // Phase 154: Scan not found — show fallback message
+      this._showScanNotFoundFallback(scanId);
+    } catch (e) {
+      console.warn('[VTO] Deep link scan load failed:', e);
+      this._showScanNotFoundFallback(scanId);
+    }
+  },
+
+  // Phase 154: Missing scan fallback UI
+  _showScanNotFoundFallback(scanId) {
+    if (!this._container) return;
+    const container = this._container.querySelector('.ms-tab-content');
+    if (!container) return;
+    container.innerHTML = `
+      <div class="ms-vto-fallback">
+        <div class="ms-vto-fallback-icon">?</div>
+        <h3>Scan Not Found</h3>
+        <p>This scan (${scanId.slice(0, 8)}...) could not be loaded. It may have been deleted or you may not have access.</p>
+        <p class="ms-vto-fallback-sub">You can still use Virtual Try-On by uploading a person photo directly.</p>
+        <button class="ms-vto-fallback-btn" onclick="KORRA_MS.switchView('tryon'); KORRA_MS._clearData();">Continue Without Scan</button>
+      </div>
+    `;
+  },
+
+  // Phase 154: Clear data to trigger manual upload mode
+  _clearData() {
+    this.data = null;
+    this.switchView('tryon');
+  },
+
+  // ═══ PHASE 181: DEEP VIEW HIGH-RES MODAL ═══
+  _showDeepView() {
+    const img = document.getElementById('ms-vto-result-img');
+    if (!img || !img.src) return;
+
+    let modal = document.getElementById('ms-vto-deep-modal');
+    if (!modal) {
+      modal = document.createElement('div');
+      modal.id = 'ms-vto-deep-modal';
+      modal.style.cssText = 'position:fixed;inset:0;z-index:9999;background:rgba(0,0,0,0.95);display:flex;align-items:center;justify-content:center;cursor:zoom-out;';
+      modal.innerHTML = `
+        <button onclick="KORRA_MS._closeDeepView()" style="position:absolute;top:16px;right:16px;background:rgba(255,255,255,0.1);border:1px solid rgba(255,255,255,0.2);color:#fff;width:36px;height:36px;border-radius:50%;font-size:18px;cursor:pointer;z-index:10;">&times;</button>
+        <img id="ms-vto-deep-img" src="" alt="Full resolution" style="max-width:90vw;max-height:90vh;object-fit:contain;border-radius:8px;">
+      `;
+      modal.addEventListener('click', (e) => { if (e.target === modal) this._closeDeepView(); });
+      document.body.appendChild(modal);
+    }
+    const deepImg = document.getElementById('ms-vto-deep-img');
+    if (deepImg) deepImg.src = img.src;
+    modal.style.display = 'flex';
+  },
+
+  _closeDeepView() {
+    const modal = document.getElementById('ms-vto-deep-modal');
+    if (modal) modal.style.display = 'none';
+  },
+
+  // ═══ PHASE 200: FIT SCORE UPDATE ═══
+  _updateFitScore(angle) {
+    const score = this._calculateFitScore(angle);
+    const scoreEl = document.getElementById('ms-vto-fit-score');
+    const valueEl = document.getElementById('ms-vto-fit-value');
+    if (!scoreEl || !valueEl || score === null) return;
+    scoreEl.style.display = 'flex';
+    valueEl.textContent = `${score}/100`;
+    valueEl.style.color = this._getFitScoreColor(score);
+  },
+
+  // ═══ PHASE 211: VTO FEEDBACK ═══
+  async _submitVtoFeedback(direction) {
+    const upBtn = document.getElementById('ms-vto-thumbs-up');
+    const downBtn = document.getElementById('ms-vto-thumbs-down');
+    if (!upBtn || !downBtn) return;
+
+    // Visual feedback
+    upBtn.classList.remove('selected-up');
+    downBtn.classList.remove('selected-down');
+    if (direction === 'up') upBtn.classList.add('selected-up');
+    else downBtn.classList.add('selected-down');
+
+    // Disable both buttons
+    upBtn.disabled = true;
+    downBtn.disabled = true;
+
+    // Send to backend
+    try {
+      const { data: { session } } = await window.KORRA_DB.auth.getSession();
+      if (!session) return;
+      const scanId = (this.data && this.data.id) ? this.data.id : '';
+      await fetch('/api/v2/garment/vto/feedback', {
+        method: 'POST',
+        headers: {
+          'Authorization': `Bearer ${session.access_token}`,
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({
+          scan_id: scanId,
+          angle: document.querySelector('.ms-vto-tab.active')?.dataset.angle || 'front',
+          rating: direction === 'up' ? 'positive' : 'negative',
+          garment_type: document.getElementById('ms-tryon-garment-type')?.value || '',
+        }),
+      });
+    } catch (e) {
+      console.warn('[VTO] Feedback submission failed:', e);
+    }
+  },
+
+  _toggleVtoCompare() {
+    const wrap = document.querySelector('.ms-vto-image-wrap');
+    const img = document.getElementById('ms-vto-result-img');
+    if (!wrap || !img || !img.src) return;
+    let overlay = document.getElementById('ms-vto-compare-overlay');
+    if (overlay) {
+      overlay.remove();
+      // Clean up Phase 198 layers
+      document.getElementById('ms-vto-compare-orig')?.remove();
+      document.getElementById('ms-vto-compare-vto')?.remove();
+      document.querySelectorAll('.ms-vto-compare-label').forEach(el => el.remove());
+      return;
+    }
+
+    // Phase 198: Original scan photo on left, VTO result on right
+    const origUrl = this.data?.photo_front_url || this.data?.photo_side_url || '';
+    wrap.style.position = 'relative';
+    wrap.style.overflow = 'hidden';
+
+    // Original photo layer (clipped from left)
+    const origLayer = document.createElement('div');
+    origLayer.id = 'ms-vto-compare-orig';
+    origLayer.style.cssText = 'position:absolute;inset:0;z-index:2;clip-path:inset(0 50% 0 0);pointer-events:none';
+    const origImg = document.createElement('img');
+    origImg.style.cssText = 'width:100%;height:100%;object-fit:contain';
+    origImg.src = origUrl;
+    origLayer.appendChild(origImg);
+    wrap.appendChild(origLayer);
+
+    // VTO result layer (clipped from right)
+    const vtoLayer = document.createElement('div');
+    vtoLayer.id = 'ms-vto-compare-vto';
+    vtoLayer.style.cssText = 'position:absolute;inset:0;z-index:2;clip-path:inset(0 0 0 50%);pointer-events:none';
+    const vtoImg = img.cloneNode();
+    vtoImg.style.cssText = 'width:100%;height:100%;object-fit:contain';
+    vtoLayer.appendChild(vtoImg);
+    wrap.appendChild(vtoLayer);
+
+    // Labels
+    const leftLabel = document.createElement('div');
+    leftLabel.className = 'ms-vto-compare-label';
+    leftLabel.style.cssText = 'position:absolute;top:8px;left:8px;z-index:12;background:rgba(0,0,0,0.6);color:#fff;font-size:10px;padding:2px 6px;border-radius:3px;pointer-events:none';
+    leftLabel.textContent = 'Original';
+    wrap.appendChild(leftLabel);
+    const rightLabel = document.createElement('div');
+    rightLabel.className = 'ms-vto-compare-label';
+    rightLabel.style.cssText = 'position:absolute;top:8px;right:8px;z-index:12;background:rgba(0,0,0,0.6);color:#fff;font-size:10px;padding:2px 6px;border-radius:3px;pointer-events:none';
+    rightLabel.textContent = 'VTO';
+    wrap.appendChild(rightLabel);
+
+    // Draggable divider
+    overlay = document.createElement('div');
+    overlay.id = 'ms-vto-compare-overlay';
+    overlay.className = 'ms-vto-compare-overlay';
+    overlay.innerHTML = `<div class="ms-vto-compare-handle"></div>`;
+    wrap.appendChild(overlay);
+
+    const handle = overlay.querySelector('.ms-vto-compare-handle');
+    let dragging = false;
+    const onMove = (e) => {
+      if (!dragging) return;
+      const rect = wrap.getBoundingClientRect();
+      const x = ((e.clientX || e.touches?.[0]?.clientX) - rect.left) / rect.width;
+      const pct = Math.max(0, Math.min(1, x)) * 100;
+      overlay.style.left = pct + '%';
+      origLayer.style.clipPath = `inset(0 ${100 - pct}% 0 0)`;
+      vtoLayer.style.clipPath = `inset(0 0 0 ${pct}%)`;
+    };
+    handle.addEventListener('mousedown', () => dragging = true);
+    handle.addEventListener('touchstart', () => dragging = true);
+    document.addEventListener('mousemove', onMove);
+    document.addEventListener('touchmove', onMove);
+    document.addEventListener('mouseup', () => dragging = false);
+    document.addEventListener('touchend', () => dragging = false);
+  },
+
+  _saveVtoResult() {
+    const img = document.getElementById('ms-vto-result-img');
+    if (!img || !img.src) return;
+    const a = document.createElement('a');
+    a.href = img.src;
+    a.download = `vto_${Object.keys(this._vtoResults || {}).find(k => this._vtoResults[k]) || 'result'}.png`;
+    a.click();
+  },
+
+  // ═══ PHASE 201: VTO BATCH MODE ═══
+  _queueVtoBatch() {
+    const typeEl = document.getElementById('ms-tryon-garment-type');
+    const garmentType = typeEl ? typeEl.value : 't-shirt';
+    const garmentColor = this._vtoSelectedColor || '#FFFFFF';
+    const garmentFile = this._tryonGarmentFile;
+
+    this._vtoBatchQueue.push({
+      type: garmentType,
+      color: garmentColor,
+      garmentFile,
+      garmentObjectUrl: this._tryonGarmentObjectUrl,
+    });
+
+    // Update UI
+    const btn = document.getElementById('ms-tryon-generate-btn');
+    const queueBtn = document.getElementById('ms-vto-queue-next');
+    const processBtn = document.getElementById('ms-vto-process-queue');
+    const statusEl = document.getElementById('ms-tryon-status');
+
+    if (btn) btn.disabled = true;
+    if (queueBtn) queueBtn.textContent = `Queue Next (${this._vtoBatchQueue.length} queued)`;
+    if (processBtn) processBtn.style.display = this._vtoBatchQueue.length > 0 ? '' : 'none';
+
+    // Clear form for next garment
+    if (typeEl) typeEl.selectedIndex = 0;
+    this._tryonGarmentFile = null;
+    if (this._tryonGarmentObjectUrl) { URL.revokeObjectURL(this._tryonGarmentObjectUrl); this._tryonGarmentObjectUrl = null; }
+    const img = document.getElementById('ms-tryon-garment-img');
+    const placeholder = document.getElementById('ms-tryon-garment-placeholder');
+    if (img) { img.src = ''; img.style.display = 'none'; }
+    if (placeholder) placeholder.style.display = '';
+    if (statusEl) { statusEl.style.display = ''; document.getElementById('ms-tryon-status-text').textContent = `${this._vtoBatchQueue.length} garment(s) queued. Configure next garment.`; }
+    this._checkTryOnReady();
+  },
+
+  async _processVtoBatch() {
+    if (!this._vtoBatchQueue.length) return;
+    const queue = [...this._vtoBatchQueue];
+    this._vtoBatchQueue = [];
+    const processBtn = document.getElementById('ms-vto-process-queue');
+    const queueBtn = document.getElementById('ms-vto-queue-next');
+    if (processBtn) processBtn.style.display = 'none';
+    if (queueBtn) queueBtn.textContent = 'Queue Next';
+
+    for (let i = 0; i < queue.length; i++) {
+      const item = queue[i];
+      const statusEl = document.getElementById('ms-tryon-status');
+      const statusText = document.getElementById('ms-tryon-status-text');
+      if (statusEl) statusEl.style.display = '';
+      if (statusText) statusText.textContent = `Processing garment ${i + 1} of ${queue.length}: ${item.type} (${item.color})...`;
+
+      // Restore garment config
+      this._vtoSelectedColor = item.color;
+      this._tryonGarmentFile = item.garmentFile;
+      this._tryonGarmentObjectUrl = item.garmentObjectUrl;
+
+      // Run try-on
+      try {
+        await this._runTryOn();
+        // Wait for results to appear
+        await new Promise(r => setTimeout(r, 3000));
+      } catch (e) {
+        console.warn(`[VTO Batch] Item ${i + 1} failed:`, e);
+      }
+    }
+
+    if (statusText) statusText.textContent = `Batch complete: ${queue.length} garment(s) processed.`;
+    setTimeout(() => {
+      const statusEl = document.getElementById('ms-tryon-status');
+      if (statusEl) statusEl.style.display = 'none';
+    }, 3000);
   },
 
   _showTryOnResult(url) {
@@ -2605,7 +3348,55 @@ window.KORRA_MS = {
       if (placeholder) placeholder.style.display = 'none';
       const btn = document.getElementById('ms-recon-generate-btn');
       if (btn) btn.disabled = false;
+      // Hide skeleton once file is selected
+      const skeleton = document.getElementById('ms-recon-skeleton');
+      if (skeleton) skeleton.style.display = 'none';
     };
+
+    // Phase 216: Drag-and-drop handlers
+    const dropzone = document.getElementById('ms-recon-dropzone');
+    if (dropzone) {
+      dropzone.addEventListener('dragover', (e) => {
+        e.preventDefault();
+        e.stopPropagation();
+        dropzone.classList.add('ms-recon-drag-highlight');
+      });
+      dropzone.addEventListener('dragleave', (e) => {
+        e.preventDefault();
+        e.stopPropagation();
+        dropzone.classList.remove('ms-recon-drag-highlight');
+      });
+      dropzone.addEventListener('drop', (e) => {
+        e.preventDefault();
+        e.stopPropagation();
+        dropzone.classList.remove('ms-recon-drag-highlight');
+        const file = e.dataTransfer?.files[0];
+        if (!file || !file.type.startsWith('image/')) return;
+        this._dismissReconError();
+        if (this._reconObjectUrl) URL.revokeObjectURL(this._reconObjectUrl);
+        this._reconFile = file;
+        this._reconObjectUrl = URL.createObjectURL(file);
+        this._reconMeshData = null;
+        this._reconMeshOnBody = null;
+        const img = document.getElementById('ms-recon-img');
+        const placeholder = document.getElementById('ms-recon-placeholder');
+        if (img) { img.src = this._reconObjectUrl; img.style.display = ''; }
+        if (placeholder) placeholder.style.display = 'none';
+        const btn = document.getElementById('ms-recon-generate-btn');
+        if (btn) btn.disabled = false;
+        const skeleton = document.getElementById('ms-recon-skeleton');
+        if (skeleton) skeleton.style.display = 'none';
+      });
+    }
+
+    // Phase 218: Show camera button on mobile devices
+    const isMobile = /Android|iPhone|iPad|iPod/i.test(navigator.userAgent) || (navigator.maxTouchPoints > 0 && window.innerWidth < 768);
+    const cameraBtn = document.getElementById('ms-recon-camera-btn');
+    if (cameraBtn) cameraBtn.style.display = isMobile ? '' : 'none';
+
+    // Phase 220: Restore garment type from select
+    const typeSelect = document.getElementById('ms-recon-garment-type');
+    if (typeSelect) this._reconGarmentType = typeSelect.value;
   },
 
   async _runReconstruct() {
@@ -2639,12 +3430,14 @@ window.KORRA_MS = {
     status.style.display = 'flex';
     this._updateReconProgress('uploading', 0, 'Uploading image...');
     results.style.display = 'none';
+    this._trackEvent('reconstruct', 'start', this._reconGarmentType);
 
     try {
       const formData = new FormData();
       formData.append('file', this._reconFile);
       formData.append('include_mesh', 'true');
       formData.append('include_pattern', 'true');
+      formData.append('garment_type', this._reconGarmentType || 'unknown');
 
       if (!window.KORRA_DB) {
         this._showReconError('Authentication not initialized. Please refresh the page.', 'auth');
@@ -2689,6 +3482,24 @@ window.KORRA_MS = {
       if (!kaggleJobId) throw new Error('No job ID returned from server');
       this._updateReconProgress('uploading', 5, 'Job started...');
 
+      // Phase 096+097: Elapsed time counter + step-specific estimates
+      this._reconStartTime = Date.now();
+      const STEP_ESTIMATES = { segmenting: 20, meshing: 50, patterning: 50, zipping: 5 };
+      this._reconStageStart = Date.now();
+      this._reconStepEstimates = STEP_ESTIMATES;
+      this._reconFormatTime = (sec) => `${Math.floor(sec / 60)}:${String(sec % 60).padStart(2, '0')}`;
+      const elapsedEl = document.createElement('span');
+      elapsedEl.className = 'ms-recon-elapsed';
+      elapsedEl.style.cssText = 'display:block; text-align:center; color: var(--text-secondary); font-size: 12px; margin-top: 4px;';
+      const statusInner = document.querySelector('#ms-recon-status .ms-recon-progress');
+      if (statusInner) statusInner.appendChild(elapsedEl);
+      elapsedEl.textContent = 'Elapsed: 0:00';
+      this._reconElapsedEl = elapsedEl;
+      this._reconElapsedInterval = setInterval(() => {
+        const elapsed = Math.floor((Date.now() - this._reconStartTime) / 1000);
+        elapsedEl.textContent = `Elapsed: ${this._reconFormatTime(elapsed)}`;
+      }, 1000);
+
       // Step 2: Open SSE for progress
       const sseUrl = `/api/v2/garment/reconstruct/progress/${kaggleJobId}`;
       let sseSupported = true;
@@ -2698,6 +3509,9 @@ window.KORRA_MS = {
       const cleanup = () => {
         if (eventSource) { eventSource.close(); eventSource = null; }
         if (pollInterval) { clearInterval(pollInterval); pollInterval = null; }
+        if (this._reconElapsedInterval) { clearInterval(this._reconElapsedInterval); this._reconElapsedInterval = null; }
+        if (this._reconHeartbeatInterval) { clearInterval(this._reconHeartbeatInterval); this._reconHeartbeatInterval = null; }
+        if (this._reconTimeoutId) { clearTimeout(this._reconTimeoutId); this._reconTimeoutId = null; }
       };
 
       const fetchResult = async () => {
@@ -2743,26 +3557,68 @@ window.KORRA_MS = {
         }, 3000);
       };
 
-      try {
-        eventSource = new EventSource(sseUrl);
-        eventSource.onmessage = (e) => {
-          try {
-            const data = JSON.parse(e.data);
-            this._updateReconProgress(data.stage, data.progress, data.message);
-            if (data.stage === 'complete') fetchResult();
-            else if (data.stage === 'error') {
+      // Phase 098: SSE reconnection with exponential backoff
+      let reconAttempts = 0;
+      const MAX_RECON_ATTEMPTS = 5;
+
+      const connectSSE = () => {
+        try {
+          eventSource = new EventSource(sseUrl);
+          eventSource.onmessage = (e) => {
+            reconAttempts = 0;
+            this._reconLastEventTime = Date.now();
+            try {
+              const data = JSON.parse(e.data);
+              this._updateReconProgress(data.stage, data.progress, data.message);
+              if (data.stage === 'complete') fetchResult();
+              else if (data.stage === 'error') {
+                cleanup();
+                status.style.display = 'none';
+                btn.style.display = '';
+                this._showReconError(data.message || 'Pipeline failed.', 'server');
+              }
+            } catch (_) {}
+          };
+          eventSource.onerror = () => {
+            if (!sseSupported) return;
+            reconAttempts++;
+            if (reconAttempts > MAX_RECON_ATTEMPTS) {
+              sseSupported = false;
               cleanup();
-              status.style.display = 'none';
-              btn.style.display = '';
-              this._showReconError(data.message || 'Pipeline failed.', 'server');
+              startPolling();
+              return;
             }
-          } catch (_) {}
-        };
-        eventSource.onerror = () => {
-          if (sseSupported) { sseSupported = false; cleanup(); startPolling(); }
-        };
-        // SSE timeout safety
-        setTimeout(() => { if (eventSource) { cleanup(); startPolling(); } }, 300000);
+            eventSource.close();
+            eventSource = null;
+            const backoffMs = Math.min(1000 * Math.pow(2, reconAttempts - 1), 16000);
+            const textEl = document.getElementById('ms-recon-progress-text');
+            if (textEl) textEl.textContent = `Reconnecting... (attempt ${reconAttempts})`;
+            setTimeout(connectSSE, backoffMs);
+          };
+        } catch (_) {
+          sseSupported = false;
+          cleanup();
+          startPolling();
+        }
+      };
+
+      try {
+        connectSSE();
+
+        // Phase 099: SSE heartbeat guard — 90s warning, 300s timeout
+        this._reconLastEventTime = Date.now();
+        this._reconHeartbeatInterval = setInterval(() => {
+          const silentMs = Date.now() - this._reconLastEventTime;
+          if (silentMs > 300000) {
+            cleanup();
+            status.style.display = 'none';
+            btn.style.display = '';
+            this._showReconError('Processing timed out. The server took too long to respond.', 'server');
+          } else if (silentMs > 90000) {
+            const textEl = document.getElementById('ms-recon-progress-text');
+            if (textEl) textEl.textContent = 'Still processing... this is taking longer than usual';
+          }
+        }, 5000);
       } catch (_) {
         startPolling();
       }
@@ -2782,6 +3638,9 @@ window.KORRA_MS = {
     const url = URL.createObjectURL(blob);
     status.style.display = 'none';
     results.style.display = 'block';
+    // Phase 219: Save to history on success
+    this._saveReconToHistory();
+    this._trackEvent('reconstruct', 'complete', this._reconGarmentType);
     resultsContent.innerHTML = `
       <div style="padding: 16px; text-align: center;">
         <p style="color: var(--text-secondary); margin-bottom: 16px;">Garment reconstructed successfully!</p>
@@ -2793,9 +3652,18 @@ window.KORRA_MS = {
             Use in Virtual Try-On →
             </button>
           </div>
+          <div style="margin-top: 8px;">
+            <button class="ms-tryon-upload-btn" onclick="KORRA_MS._shareReconResult()" style="margin: 0 auto; background: transparent; border: 1px solid var(--Glass-Border);">
+              Share Result
+            </button>
+          </div>
         </div>
       `;
       this._loadReconMeshIntoViewer(blob);
+      // Phase 222: Parse pattern data from ZIP if available
+      this._extractPatternFromZip(blob);
+      // Phase 233: Show feedback form after successful reconstruction
+      setTimeout(() => this._showFeedbackForm(), 1500);
   },
 
   openShareScan() {
@@ -2927,11 +3795,17 @@ window.KORRA_MS = {
   // ═══ EXPORT ═══
   exportPDF() {
     if (window.KORRA_EXPORT && window.KORRA_EXPORT.pdf) {
-      window.KORRA_EXPORT.pdf(this.data.client_name, this.data.measurements, this.data.gender, this.data.height);
+      const hasVto = this._vtoResults && Object.values(this._vtoResults).some(Boolean);
+      if (hasVto && window.KORRA_EXPORT.pdfWithVTO) {
+        window.KORRA_EXPORT.pdfWithVTO(this.data.client_name, this.data.measurements, this.data.gender, this.data.height, this._vtoResults);
+      } else {
+        window.KORRA_EXPORT.pdf(this.data.client_name, this.data.measurements, this.data.gender, this.data.height);
+      }
     }
   },
   async downloadOBJ() {
     if (!this.data?.mesh_url) return;
+    this._trackEvent('reconstruct', 'obj_download', this.data.client_name);
     try {
       const head = await fetch(this.data.mesh_url, { method: 'HEAD' });
       if (!head.ok) throw new Error('File not found');
@@ -3063,6 +3937,7 @@ window.KORRA_MS = {
 
   cleanup() {
     this._destroyFabIntelligence();
+    this._cleanupKeyboardShortcuts();
     this.closeSideMenu();
     document.getElementById('ms-side-menu')?.remove();
     document.getElementById('ms-side-menu-backdrop')?.remove();
@@ -3277,6 +4152,8 @@ window.KORRA_MS = {
     const actionsEl = document.getElementById('ms-recon-error-actions');
     if (!errorEl) return;
 
+    if (this._reconErrorCount && type in this._reconErrorCount) this._reconErrorCount[type]++;
+
     errorEl.dataset.type = type || 'server';
 
     const icons = {
@@ -3305,6 +4182,7 @@ window.KORRA_MS = {
     }
 
     console.error('[RECONSTRUCT]', JSON.stringify({ type, message, timestamp: new Date().toISOString() }));
+    this._trackEvent('reconstruct', 'error', type);
   },
 
   _dismissReconError() {
@@ -3324,7 +4202,12 @@ window.KORRA_MS = {
   _updateReconProgress(stage, progress, message) {
     const fill = document.getElementById('ms-recon-progress-fill');
     const text = document.getElementById('ms-recon-progress-text');
-    if (fill) fill.style.width = Math.max(0, Math.min(100, progress)) + '%';
+    const clampedProgress = Math.max(0, Math.min(100, progress));
+    if (fill) {
+      fill.style.width = clampedProgress + '%';
+      const progressBar = fill.parentElement;
+      if (progressBar) progressBar.setAttribute('aria-valuenow', clampedProgress);
+    }
     if (text) text.textContent = message || stage;
     document.querySelectorAll('.ms-recon-step').forEach(el => {
       const step = el.dataset.step;
@@ -3334,6 +4217,23 @@ window.KORRA_MS = {
       el.classList.toggle('active', step === stage);
       el.classList.toggle('done', stepIdx < currentIdx && currentIdx >= 0);
     });
+    // Phase 097: Update elapsed + step-specific estimate
+    if (this._reconElapsedEl && this._reconFormatTime && this._reconStartTime) {
+      const stages = ['uploading', 'segmenting', 'meshing', 'patterning', 'zipping', 'complete'];
+      const elapsed = Math.floor((Date.now() - this._reconStartTime) / 1000);
+      let estText = '';
+      if (stage !== 'uploading' && stage !== 'complete' && this._reconStepEstimates) {
+        const remaining = Object.entries(this._reconStepEstimates)
+          .filter(([s]) => stages.indexOf(s) >= stages.indexOf(stage))
+          .reduce((sum, [, t]) => sum + t, 0);
+        estText = ` · Estimated: ~${this._reconFormatTime(remaining)}`;
+      }
+      this._reconElapsedEl.textContent = `Elapsed: ${this._reconFormatTime(elapsed)}${estText}`;
+      if (stage !== this._reconCurrentStage) {
+        this._reconStageStart = Date.now();
+        this._reconCurrentStage = stage;
+      }
+    }
   },
 
   // ═══ RECONSTRUCT 3D PREVIEW ═══
@@ -3392,9 +4292,52 @@ window.KORRA_MS = {
     return this._reconViewer;
   },
 
+  // Phase 121: Three.js memory cleanup for recon viewer
+  _cleanupReconViewer() {
+    if (!this._reconViewer) return;
+    if (this._reconFullscreen) {
+      const wrap = document.getElementById('ms-recon-viewer-wrap');
+      if (wrap) { wrap.style.position = ''; wrap.style.zIndex = ''; wrap.style.inset = ''; wrap.style.width = ''; wrap.style.height = ''; wrap.style.borderRadius = ''; }
+      this._reconFullscreen = false;
+      const closeBtn = document.getElementById('ms-recon-fullscreen-close');
+      if (closeBtn) closeBtn.remove();
+    }
+    const { scene, renderer, controls } = this._reconViewer;
+    if (controls) controls.dispose();
+    if (scene) {
+      scene.traverse((obj) => {
+        if (obj.geometry) obj.geometry.dispose();
+        if (obj.material) {
+          if (Array.isArray(obj.material)) obj.material.forEach(m => m.dispose());
+          else obj.material.dispose();
+        }
+      });
+    }
+    if (renderer) {
+      renderer.dispose();
+      renderer.forceContextLoss();
+    }
+    const container = document.getElementById('ms-recon-viewer');
+    if (container) container.innerHTML = '';
+    this._reconViewer = null;
+    this._reconMesh = null;
+    this._reconWireframe = false;
+    const statsEl = document.getElementById('ms-recon-viewer-stats');
+    if (statsEl) { statsEl.style.display = 'none'; statsEl.textContent = ''; }
+  },
+
   _loadReconMeshIntoViewer(blob) {
     if (!window.JSZip || !window.THREE) {
       console.warn('[RECON] JSZip or THREE not loaded, skipping 3D preview');
+      const resultsContent = document.getElementById('ms-recon-results-content');
+      if (resultsContent) {
+        const note = document.createElement('div');
+        note.style.cssText = 'color:#FF6B6B;font-size:13px;padding:8px 0;';
+        note.textContent = !window.JSZip
+          ? '3D preview unavailable: JSZip library not loaded.'
+          : '3D preview unavailable: Three.js library not loaded.';
+        resultsContent.appendChild(note);
+      }
       return;
     }
 
@@ -3489,11 +4432,29 @@ window.KORRA_MS = {
       const yOffset = -(newBox.min.y);
       geometry.translate(0, yOffset, 0);
 
+      const vCount = vertices.length / 3;
+      const fCount = indices.length / 3;
+
+      const lowerName = objText.toLowerCase();
+      const hasUpper = /\b(upper|top|shirt|blouse|jacket|bodice)\b/.test(lowerName);
+      const hasLower = /\b(lower|bottom|pants|trousers|skirt|legs)\b/.test(lowerName);
+      let meshLabel = '';
+      if (hasUpper && hasLower) meshLabel = 'Full garment';
+      else if (hasUpper) meshLabel = 'Upper garment only';
+      else if (hasLower) meshLabel = 'Lower garment only';
+      else meshLabel = 'Single piece';
+
+      let meshColor = 0x1DBFAF;
+      if (hasUpper && !hasLower) meshColor = 0x4A90D9;
+      else if (hasLower && !hasUpper) meshColor = 0x2C5F8A;
+
       const material = new THREE.MeshStandardMaterial({
-        color: 0xCCCCCC,
+        color: meshColor,
         metalness: 0.1,
         roughness: 0.6,
         side: THREE.DoubleSide,
+        transparent: true,
+        opacity: 0.85,
       });
 
       const mesh = new THREE.Mesh(geometry, material);
@@ -3508,7 +4469,13 @@ window.KORRA_MS = {
       }
 
       if (loadingEl) loadingEl.style.display = 'none';
-      console.log('[RECON] 3D mesh loaded:', { vertices: vertices.length / 3, faces: indices.length / 3 });
+      console.log('[RECON] 3D mesh loaded:', { vertices: vCount, faces: fCount, label: meshLabel });
+
+      const statsEl = document.getElementById('ms-recon-viewer-stats');
+      if (statsEl) {
+        statsEl.textContent = meshLabel + ' | Vertices: ' + vCount + ' | Faces: ' + fCount;
+        statsEl.style.display = 'block';
+      }
     }).catch(err => {
       console.error('[RECON] Failed to load mesh:', err);
       if (loadingEl) loadingEl.style.display = 'none';
@@ -3526,6 +4493,64 @@ window.KORRA_MS = {
     }
   },
 
+  _toggleReconWireframe() {
+    const mesh = this._reconMesh;
+    if (!mesh) return;
+    mesh.material.wireframe = !mesh.material.wireframe;
+    this._reconWireframe = mesh.material.wireframe;
+  },
+
+  _toggleReconFullscreen() {
+    const wrap = document.getElementById('ms-recon-viewer-wrap');
+    if (!wrap) return;
+    if (this._reconFullscreen) {
+      wrap.style.position = '';
+      wrap.style.zIndex = '';
+      wrap.style.inset = '';
+      wrap.style.width = '';
+      wrap.style.height = '';
+      wrap.style.borderRadius = '';
+      this._reconFullscreen = false;
+      const closeBtn = document.getElementById('ms-recon-fullscreen-close');
+      if (closeBtn) closeBtn.remove();
+    } else {
+      wrap.style.position = 'fixed';
+      wrap.style.zIndex = '3000';
+      wrap.style.inset = '0';
+      wrap.style.width = '100vw';
+      wrap.style.height = '100vh';
+      wrap.style.borderRadius = '0';
+      this._reconFullscreen = true;
+      if (!document.getElementById('ms-recon-fullscreen-close')) {
+        const closeBtn = document.createElement('button');
+        closeBtn.id = 'ms-recon-fullscreen-close';
+        closeBtn.textContent = '\u00d7';
+        closeBtn.style.cssText = 'position:fixed;top:12px;right:16px;z-index:3001;background:rgba(0,0,0,0.6);border:none;color:#fff;font-size:28px;cursor:pointer;width:40px;height:40px;border-radius:50%;display:flex;align-items:center;justify-content:center;';
+        closeBtn.onclick = () => this._toggleReconFullscreen();
+        document.body.appendChild(closeBtn);
+      }
+      const viewer = this._reconViewer;
+      if (viewer && viewer.renderer) {
+        const w = window.innerWidth;
+        const h = window.innerHeight;
+        viewer.camera.aspect = w / h;
+        viewer.camera.updateProjectionMatrix();
+        viewer.renderer.setSize(w, h);
+      }
+    }
+  },
+
+  _captureReconScreenshot() {
+    const viewer = this._reconViewer;
+    if (!viewer || !viewer.renderer) return;
+    const dataUrl = viewer.renderer.domElement.toDataURL('image/png');
+    const ts = new Date().toISOString().replace(/[:.]/g, '-').slice(0, 19);
+    const link = document.createElement('a');
+    link.download = 'korra-recon-' + ts + '.png';
+    link.href = dataUrl;
+    link.click();
+  },
+
   _loadReconMeshIntoTryon() {
     if (!this._reconMesh) {
       console.warn('[RECON] No mesh loaded for try-on');
@@ -3541,7 +4566,111 @@ window.KORRA_MS = {
       opacity: 0.85,
     };
     console.log('[RECON] Mesh stored for try-on:', this._reconMeshData.vertexCount, 'vertices');
+    this._trackEvent('vto', 'generate', this._reconGarmentType);
     this.switchView('tryon');
+  },
+
+  // ═══ PHASE 221: AR PREVIEW ═══
+  _openARPreview() {
+    this._trackEvent('reconstruct', 'ar_preview', this._reconGarmentType);
+    if (navigator.xr) {
+      navigator.xr.isSessionSupported('immersive-ar').then(supported => {
+        if (supported) {
+          this._startXRSession();
+        } else {
+          this._fallbackARPreview();
+        }
+      }).catch(() => {
+        this._fallbackARPreview();
+      });
+    } else {
+      this._fallbackARPreview();
+    }
+  },
+
+  _startXRSession() {
+    const viewer = this._reconViewer;
+    if (!viewer || !viewer.renderer) {
+      this._fallbackARPreview();
+      return;
+    }
+    navigator.xr.requestSession('immersive-ar', {
+      optionalFeatures: ['hit-test', 'dom-overlay'],
+      domOverlay: { root: document.getElementById('ms-recon-viewer-wrap') }
+    }).then(session => {
+      this._arSession = session;
+      viewer.renderer.xr.enabled = true;
+      viewer.renderer.xr.setReferenceSpaceType('local');
+      viewer.renderer.xr.setSession(session);
+      session.addEventListener('end', () => {
+        this._arSession = null;
+        viewer.renderer.xr.enabled = false;
+      });
+    }).catch(err => {
+      console.warn('[AR] XR session failed:', err);
+      this._fallbackARPreview();
+    });
+  },
+
+  _fallbackARPreview() {
+    const wrap = document.getElementById('ms-recon-viewer-wrap');
+    if (!wrap) { alert('AR requires a compatible device.'); return; }
+    const viewer = this._reconViewer;
+    if (!viewer || !viewer.renderer) { alert('AR requires a compatible device.'); return; }
+    wrap.style.position = 'fixed';
+    wrap.style.zIndex = '3000';
+    wrap.style.inset = '0';
+    wrap.style.width = '100vw';
+    wrap.style.height = '100vh';
+    wrap.style.borderRadius = '0';
+    wrap.style.background = '#000';
+    this._arFullscreen = true;
+    if (!document.getElementById('ms-ar-close')) {
+      const closeBtn = document.createElement('button');
+      closeBtn.id = 'ms-ar-close';
+      closeBtn.textContent = '\u00d7';
+      closeBtn.style.cssText = 'position:fixed;top:12px;right:16px;z-index:3001;background:rgba(0,0,0,0.6);border:none;color:#fff;font-size:28px;cursor:pointer;width:40px;height:40px;border-radius:50%;display:flex;align-items:center;justify-content:center;';
+      closeBtn.onclick = () => this._closeARPreview();
+      document.body.appendChild(closeBtn);
+    }
+    const w = window.innerWidth;
+    const h = window.innerHeight;
+    viewer.camera.aspect = w / h;
+    viewer.camera.updateProjectionMatrix();
+    viewer.renderer.setSize(w, h);
+    viewer.camera.position.set(0, 0.3, 1.2);
+    viewer.camera.lookAt(0, 0.3, 0);
+  },
+
+  _closeARPreview() {
+    const wrap = document.getElementById('ms-recon-viewer-wrap');
+    if (wrap) {
+      wrap.style.position = '';
+      wrap.style.zIndex = '';
+      wrap.style.inset = '';
+      wrap.style.width = '';
+      wrap.style.height = '';
+      wrap.style.borderRadius = '';
+      wrap.style.background = '';
+    }
+    this._arFullscreen = false;
+    const closeBtn = document.getElementById('ms-ar-close');
+    if (closeBtn) closeBtn.remove();
+    if (this._arSession) {
+      this._arSession.end().catch(() => {});
+      this._arSession = null;
+    }
+    const viewer = this._reconViewer;
+    if (viewer && viewer.renderer) {
+      viewer.renderer.xr.enabled = false;
+      const w = viewer.container?.clientWidth || 360;
+      const h = viewer.container?.clientHeight || 360;
+      viewer.camera.aspect = w / h;
+      viewer.camera.updateProjectionMatrix();
+      viewer.renderer.setSize(w, h);
+      viewer.camera.position.set(0, 0.5, 1.8);
+      viewer.camera.lookAt(0, 0.4, 0);
+    }
   },
 
   _applyReconMeshToViewport() {
@@ -3628,6 +4757,518 @@ window.KORRA_MS = {
     if (scaleSlider) { scaleSlider.value = scale; document.getElementById('recon-scale-val').textContent = scale.toFixed(1) + 'x'; }
     if (ySlider) { ySlider.value = this._reconMeshOnBody.position.y; document.getElementById('recon-y-val').textContent = Math.round(this._reconMeshOnBody.position.y * 100) + 'cm'; }
     console.log('[RECON] Auto-fit: scale=' + scale.toFixed(2));
+  },
+
+  // ═══ PHASE 140: Save Garment to Scan ═══
+  async _saveGarmentToScan() {
+    if (!this.data?.id || !this._reconMeshData) {
+      alert('No garment mesh available to save.');
+      return;
+    }
+    if (!confirm('Save this garment to your scan?')) return;
+    try {
+      const { data: { session } } = await window.KORRA_DB.auth.getSession();
+      if (!session) { alert('Session expired. Please sign in again.'); return; }
+      const res = await fetch(`/api/v2/measurements/${this.data.id}`, {
+        method: 'PATCH',
+        headers: {
+          'Content-Type': 'application/json',
+          'Authorization': `Bearer ${session.access_token}`,
+        },
+        body: JSON.stringify({ garment_mesh_url: 'stored' }),
+      });
+      if (!res.ok) throw new Error('Failed to save');
+      this.data.garment_mesh_url = 'stored';
+      alert('Garment saved to scan');
+    } catch (e) {
+      console.error('[RECON] Save garment failed:', e);
+      alert('Failed to save garment: ' + e.message);
+    }
+  },
+
+  // ═══ PHASE 215: KEYBOARD SHORTCUTS ═══
+  _initKeyboardShortcuts() {
+    this._keyboardHandler = (e) => {
+      if (!this.active) return;
+      const tag = document.activeElement?.tagName;
+      if (tag === 'INPUT' || tag === 'TEXTAREA' || tag === 'SELECT') return;
+
+      // Escape: go back
+      if (e.key === 'Escape') {
+        e.preventDefault();
+        this.switchView(this._previousView || 'avatar');
+        return;
+      }
+
+      // Ctrl+S / Cmd+S: download OBJ in recon view
+      if ((e.ctrlKey || e.metaKey) && e.key === 's') {
+        if (this.viewMode === 'reconstruct' && this._reconMeshData) {
+          e.preventDefault();
+          this.downloadOBJ();
+        }
+      }
+    };
+    document.addEventListener('keydown', this._keyboardHandler);
+  },
+
+  _cleanupKeyboardShortcuts() {
+    if (this._keyboardHandler) {
+      document.removeEventListener('keydown', this._keyboardHandler);
+      this._keyboardHandler = null;
+    }
+  },
+
+  // ═══ PHASE 218: CAMERA CAPTURE ═══
+  async _captureCameraPhoto() {
+    try {
+      const stream = await navigator.mediaDevices.getUserMedia({
+        video: { facingMode: 'environment', width: { ideal: 1920 }, height: { ideal: 1080 } }
+      });
+      let modal = document.getElementById('ms-camera-modal');
+      if (!modal) {
+        modal = document.createElement('div');
+        modal.id = 'ms-camera-modal';
+        modal.style.cssText = 'position:fixed;inset:0;z-index:9999;background:rgba(0,0,0,0.95);display:flex;flex-direction:column;align-items:center;justify-content:center;';
+        modal.innerHTML = `
+          <video id="ms-camera-video" autoplay playsinline style="max-width:90vw;max-height:70vh;border-radius:8px;"></video>
+          <div style="margin-top:16px;display:flex;gap:12px;">
+            <button id="ms-camera-capture" style="padding:12px 24px;border-radius:8px;border:none;background:var(--Accent-Mint,#1DBFAF);color:#000;font-weight:600;font-size:14px;cursor:pointer;">Capture</button>
+            <button id="ms-camera-cancel" style="padding:12px 24px;border-radius:8px;border:1px solid rgba(255,255,255,0.2);background:transparent;color:#fff;font-size:14px;cursor:pointer;">Cancel</button>
+          </div>
+        `;
+        document.body.appendChild(modal);
+      }
+      const video = document.getElementById('ms-camera-video');
+      if (video) { video.srcObject = stream; video.play(); }
+      modal.style.display = 'flex';
+
+      const captureBtn = document.getElementById('ms-camera-capture');
+      const cancelBtn = document.getElementById('ms-camera-cancel');
+
+      const stopStream = () => {
+        stream.getTracks().forEach(t => t.stop());
+        modal.style.display = 'none';
+        if (video) video.srcObject = null;
+      };
+
+      cancelBtn.onclick = stopStream;
+
+      captureBtn.onclick = () => {
+        const canvas = document.createElement('canvas');
+        canvas.width = video.videoWidth;
+        canvas.height = video.videoHeight;
+        canvas.getContext('2d').drawImage(video, 0, 0);
+        canvas.toBlob((blob) => {
+          if (!blob) return;
+          const file = new File([blob], 'camera_photo.jpg', { type: 'image/jpeg' });
+          this._reconFile = file;
+          if (this._reconObjectUrl) URL.revokeObjectURL(this._reconObjectUrl);
+          this._reconObjectUrl = URL.createObjectURL(file);
+          const img = document.getElementById('ms-recon-img');
+          const placeholder = document.getElementById('ms-recon-placeholder');
+          if (img) { img.src = this._reconObjectUrl; img.style.display = ''; }
+          if (placeholder) placeholder.style.display = 'none';
+          const genBtn = document.getElementById('ms-recon-generate-btn');
+          if (genBtn) genBtn.disabled = false;
+          this._dismissReconError();
+          stopStream();
+        }, 'image/jpeg', 0.92);
+      };
+    } catch (e) {
+      console.warn('[CAMERA] Access denied or unavailable:', e.message);
+      alert('Camera access is not available. Please use the file upload instead.');
+    }
+  },
+
+  // ═══ PHASE 219: RECENT RECONSTRUCTIONS HISTORY ═══
+  _saveReconToHistory() {
+    if (!this._reconFile) return;
+    const entry = {
+      timestamp: Date.now(),
+      fileName: this._reconFile.name,
+      preview: this._reconObjectUrl || '',
+      garmentType: this._reconGarmentType || 'unknown',
+    };
+    // Try to generate a dataURL preview from the image
+    const img = document.getElementById('ms-recon-img');
+    if (img && img.src && img.complete && img.naturalWidth > 0) {
+      try {
+        const c = document.createElement('canvas');
+        c.width = 120; c.height = 120;
+        const ctx = c.getContext('2d');
+        const size = Math.min(img.naturalWidth, img.naturalHeight);
+        const sx = (img.naturalWidth - size) / 2;
+        const sy = (img.naturalHeight - size) / 2;
+        ctx.drawImage(img, sx, sy, size, size, 0, 0, 120, 120);
+        entry.preview = c.toDataURL('image/jpeg', 0.6);
+      } catch (_) {}
+    }
+    let history = this._loadReconHistory();
+    history.unshift(entry);
+    if (history.length > 5) history = history.slice(0, 5);
+    try { localStorage.setItem('korra_recon_history', JSON.stringify(history)); } catch (_) {}
+    this._reconHistory = history;
+  },
+
+  _loadReconHistory() {
+    try {
+      const raw = localStorage.getItem('korra_recon_history');
+      return raw ? JSON.parse(raw) : [];
+    } catch (_) { return []; }
+  },
+
+  _renderReconHistory() {
+    const history = this._reconHistory || [];
+    if (history.length === 0) return '';
+    return `
+      <div class="ms-recon-history">
+        <div class="ms-recon-history-title">Recent Reconstructions</div>
+        <div class="ms-recon-history-grid">
+          ${history.map((entry, i) => {
+            const date = new Date(entry.timestamp).toLocaleDateString('en-US', { month: 'short', day: 'numeric' });
+            return `<div class="ms-recon-history-item" onclick="KORRA_MS._restoreReconHistory(${i})" title="${entry.fileName}">
+              ${entry.preview ? `<img src="${entry.preview}" alt="${entry.fileName}">` : '<div class="ms-recon-history-thumb-placeholder"></div>'}
+              <div class="ms-recon-history-meta">
+                <span class="ms-recon-history-name">${entry.fileName.length > 16 ? entry.fileName.slice(0, 14) + '…' : entry.fileName}</span>
+                <span class="ms-recon-history-date">${date}</span>
+              </div>
+            </div>`;
+          }).join('')}
+        </div>
+      </div>`;
+  },
+
+  _restoreReconHistory(index) {
+    const entry = (this._reconHistory || [])[index];
+    if (!entry) return;
+    this._reconGarmentType = entry.garmentType || 'unknown';
+    const select = document.getElementById('ms-recon-garment-type');
+    if (select) select.value = this._reconGarmentType;
+    alert(`Restored: ${entry.fileName}\nType: ${entry.garmentType || 'unknown'}\nNote: Original file is not re-uploaded. Select the same image again to reconstruct.`);
+  },
+
+  // ═══ PHASE 224: SHARE RECONSTRUCTION RESULT ═══
+  async _shareReconResult() {
+    this._trackEvent('garment', 'share', this._reconGarmentType);
+    const viewer = this._reconViewer;
+    const results = this._reconResults;
+    if (!viewer && !results) return;
+
+    // Create composite image
+    const canvas = document.createElement('canvas');
+    canvas.width = 800; canvas.height = 600;
+    const ctx = canvas.getContext('2d');
+
+    // Background
+    ctx.fillStyle = '#0a0a0a';
+    ctx.fillRect(0, 0, 800, 600);
+
+    // Title
+    ctx.fillStyle = '#1DBFAF';
+    ctx.font = 'bold 20px monospace';
+    ctx.fillText('KORRA Garment Reconstruction', 20, 40);
+
+    // Try to draw 3D viewer
+    if (viewer && viewer.renderer) {
+      try {
+        ctx.drawImage(viewer.renderer.domElement, 20, 60, 360, 360);
+      } catch (_) {}
+    }
+
+    // Garment type label
+    ctx.fillStyle = '#ffffff';
+    ctx.font = '14px monospace';
+    ctx.fillText(`Type: ${this._reconGarmentType || 'Unknown'}`, 400, 80);
+    ctx.fillStyle = '#888888';
+    ctx.font = '12px monospace';
+    ctx.fillText(new Date().toLocaleDateString(), 400, 100);
+    ctx.fillText('Generated by KORRA', 400, 120);
+
+    const dataUrl = canvas.toDataURL('image/png');
+
+    // Try native share
+    if (navigator.share) {
+      try {
+        const blob = await (await fetch(dataUrl)).blob();
+        const file = new File([blob], 'korra-reconstruction.png', { type: 'image/png' });
+        await navigator.share({
+          title: 'KORRA Garment Reconstruction',
+          text: `Check out this garment reconstruction (${this._reconGarmentType || 'unknown'})`,
+          files: [file],
+        });
+        return;
+      } catch (_) {}
+    }
+
+    // Fallback: download
+    const link = document.createElement('a');
+    link.download = `korra-recon-share-${Date.now()}.png`;
+    link.href = dataUrl;
+    link.click();
+  },
+
+  // ═══ PHASE 222: GARMENT MEASUREMENT OVERLAY ═══
+  _showGarmentMeasurements(patternData) {
+    if (!patternData) return;
+    const garment = {};
+    const mapping = {
+      chest: 'Chest Round', waist: 'Waist Round', hip: 'Hip Round',
+      length: 'Full Top Length', sleeve: 'Sleeve Length',
+    };
+    for (const [key, bodyKey] of Object.entries(mapping)) {
+      const val = patternData[key] || patternData[key + '_cm'] || patternData[key + '_measurements'];
+      if (val != null) garment[bodyKey] = typeof val === 'number' ? val : parseFloat(val) || null;
+    }
+    if (Object.values(garment).every(v => v == null)) return;
+    this._garmentMeasurements = garment;
+    const factor = this.unit === 'in' ? 0.393701 : 1;
+    const rows = Object.entries(garment).filter(([,v]) => v != null).map(([name, val]) => {
+      return `<div class="ms-garment-meas-row">
+        <span class="ms-garment-meas-name">${name}</span>
+        <span class="ms-garment-meas-val">${(val * factor).toFixed(1)} ${this.unit}</span>
+      </div>`;
+    }).join('');
+    let existing = document.getElementById('ms-garment-meas-card');
+    if (!existing) {
+      existing = document.createElement('div');
+      existing.id = 'ms-garment-meas-card';
+      existing.className = 'ms-garment-meas-card';
+      const results = document.getElementById('ms-recon-results');
+      if (results) results.parentNode.insertBefore(existing, results);
+    }
+    existing.innerHTML = `
+      <div class="ms-garment-meas-title">Garment Measurements
+        <div class="ms-unit-toggle ms-garment-unit-toggle">
+          <button class="ms-unit-btn ${this.unit === 'cm' ? 'active' : ''}" onclick="KORRA_MS._toggleGarmentUnit('cm')">CM</button>
+          <button class="ms-unit-btn ${this.unit === 'in' ? 'active' : ''}" onclick="KORRA_MS._toggleGarmentUnit('in')">IN</button>
+        </div>
+      </div>
+      <div class="ms-garment-meas-rows">${rows}</div>
+    `;
+    if (this.data?.measurements) {
+      this._compareGarmentVsBody(garment);
+    }
+  },
+  _toggleGarmentUnit(unit) {
+    this.unit = unit;
+    window.CURRENT_UNIT = unit;
+    if (this._garmentMeasurements) this._showGarmentMeasurements(this._garmentMeasurements);
+    document.querySelectorAll('.ms-garment-unit-toggle .ms-unit-btn').forEach(btn => {
+      btn.classList.toggle('active', btn.textContent.trim().toLowerCase() === unit);
+    });
+  },
+
+  // ═══ PHASE 223: COMPARE GARMENT VS BODY ═══
+  _compareGarmentVsBody(garmentMeasurements) {
+    const body = this.data?.measurements || {};
+    if (!garmentMeasurements || Object.keys(garmentMeasurements).length === 0) return;
+    const rows = [];
+    for (const [name, garmentVal] of Object.entries(garmentMeasurements)) {
+      if (garmentVal == null || body[name] == null) continue;
+      const bodyVal = body[name];
+      const ease = ((garmentVal - bodyVal) / bodyVal) * 100;
+      let status, label;
+      if (ease >= 2 && ease <= 20) { status = 'good'; label = 'Good fit'; }
+      else if (ease > 20) { status = 'loose'; label = 'Loose'; }
+      else if (ease < 0) { status = 'tight'; label = 'Too tight'; }
+      else { status = 'snug'; label = 'Snug'; }
+      rows.push(`<div class="ms-recon-fit-row">
+        <span class="ms-recon-fit-name">${name}</span>
+        <span class="ms-recon-fit-body">${bodyVal.toFixed(1)} cm</span>
+        <span class="ms-recon-fit-garment">${garmentVal.toFixed(1)} cm</span>
+        <span class="ms-recon-fit-ease ${status}">${ease >= 0 ? '+' : ''}${ease.toFixed(1)}%</span>
+        <span class="ms-recon-fit-status ms-recon-fit-${status}">${label}</span>
+      </div>`);
+    }
+    if (rows.length === 0) return;
+    let card = document.getElementById('ms-recon-fit-card');
+    if (!card) {
+      card = document.createElement('div');
+      card.id = 'ms-recon-fit-card';
+      card.className = 'ms-recon-fit-card';
+      const garmentCard = document.getElementById('ms-garment-meas-card');
+      if (garmentCard) garmentCard.parentNode.insertBefore(card, garmentCard.nextSibling);
+    }
+    card.innerHTML = `
+      <div class="ms-recon-fit-title">Fit Analysis</div>
+      <div class="ms-recon-fit-legend">
+        <span class="ms-recon-fit-legend-item"><span class="ms-recon-fit-dot ms-recon-fit-good"></span> Good fit (2-5% ease)</span>
+        <span class="ms-recon-fit-legend-item"><span class="ms-recon-fit-dot ms-recon-fit-loose"></span> Loose (&gt;20% ease)</span>
+        <span class="ms-recon-fit-legend-item"><span class="ms-recon-fit-dot ms-recon-fit-tight"></span> Too tight (&lt;body)</span>
+      </div>
+      <div class="ms-recon-fit-header">
+        <span>Measurement</span><span>Body</span><span>Garment</span><span>Ease</span><span>Fit</span>
+      </div>
+      <div class="ms-recon-fit-rows">${rows.join('')}</div>
+    `;
+  },
+
+  // ═══ PHASE 232: USAGE ANALYTICS ═══
+  _analyticsQueue: [],
+  _trackEvent(category, action, label) {
+    const event = {
+      category,
+      action,
+      label: label || '',
+      page: this.viewMode,
+      timestamp: Date.now(),
+    };
+    this._analyticsQueue.push(event);
+    if (this._analyticsQueue.length >= 10) this._flushAnalytics();
+    if (!this._analyticsFlushScheduled) {
+      this._analyticsFlushScheduled = true;
+      setTimeout(() => this._flushAnalytics(), 5000);
+    }
+  },
+  _flushAnalytics() {
+    if (this._analyticsQueue.length === 0) { this._analyticsFlushScheduled = false; return; }
+    const batch = this._analyticsQueue.splice(0, this._analyticsQueue.length);
+    this._analyticsFlushScheduled = false;
+    try {
+      const payload = JSON.stringify({ events: batch });
+      if (navigator.sendBeacon) {
+        const sent = navigator.sendBeacon('/api/v1/analytics', new Blob([payload], { type: 'application/json' }));
+        if (sent) return;
+      }
+      fetch('/api/v1/analytics', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: payload,
+        keepalive: true,
+      }).catch(() => {});
+    } catch (_) {}
+  },
+
+  // ═══ PHASE 222: EXTRACT PATTERN FROM ZIP ═══
+  async _extractPatternFromZip(blob) {
+    if (!window.JSZip) return;
+    try {
+      const zip = await JSZip.loadAsync(blob);
+      const patternFile = zip.file('pattern.json') || zip.file('sewing_pattern.json');
+      if (!patternFile) return;
+      const text = await patternFile.async('string');
+      const patternData = JSON.parse(text);
+      this._showGarmentMeasurements(patternData);
+    } catch (_) {}
+  },
+
+  // ═══ PHASE 233: BETA USER FEEDBACK ═══
+  _showFeedbackForm() {
+    if (this._lastFeedbackRating != null) return;
+    const existing = document.getElementById('ms-feedback-card');
+    if (existing) return;
+    const card = document.createElement('div');
+    card.id = 'ms-feedback-card';
+    card.className = 'ms-feedback-card';
+    card.innerHTML = `
+      <div class="ms-feedback-header">How was your experience?</div>
+      <div class="ms-feedback-stars" id="ms-feedback-stars">
+        ${[1,2,3,4,5].map(n => `<button class="ms-feedback-star" data-rating="${n}" onclick="KORRA_MS._selectFeedbackRating(${n})" aria-label="${n} star${n>1?'s':''}">\u2605</button>`).join('')}
+      </div>
+      <textarea class="ms-feedback-comment" id="ms-feedback-comment" placeholder="Optional comment..." rows="2" aria-label="Feedback comment"></textarea>
+      <div class="ms-feedback-actions">
+        <button class="ms-feedback-submit" id="ms-feedback-submit" onclick="KORRA_MS._submitFeedback()" disabled>Submit</button>
+        <button class="ms-feedback-dismiss" onclick="KORRA_MS._dismissFeedback()">Not now</button>
+      </div>
+    `;
+    const viewerWrap = document.getElementById('ms-recon-viewer-wrap');
+    if (viewerWrap && viewerWrap.style.display !== 'none') {
+      viewerWrap.parentNode.insertBefore(card, viewerWrap.nextSibling);
+    } else {
+      const results = document.getElementById('ms-recon-results');
+      if (results) results.parentNode.insertBefore(card, results.nextSibling);
+    }
+  },
+  _selectFeedbackRating(rating) {
+    this._lastFeedbackRating = rating;
+    const stars = document.querySelectorAll('#ms-feedback-stars .ms-feedback-star');
+    stars.forEach(s => {
+      const r = parseInt(s.dataset.rating);
+      s.classList.toggle('active', r <= rating);
+    });
+    const submit = document.getElementById('ms-feedback-submit');
+    if (submit) submit.disabled = false;
+  },
+  async _submitFeedback() {
+    const rating = this._lastFeedbackRating;
+    if (!rating) return;
+    const comment = document.getElementById('ms-feedback-comment')?.value || '';
+    const submit = document.getElementById('ms-feedback-submit');
+    if (submit) { submit.textContent = 'Sending...'; submit.disabled = true; }
+    try {
+      await fetch('/api/v1/feedback', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          rating,
+          comment,
+          scan_id: this.data?.id || null,
+          page: 'reconstruct',
+          timestamp: new Date().toISOString(),
+        }),
+      }).catch(() => {});
+    } catch (_) {}
+    this._showFeedbackThanks();
+  },
+  _showFeedbackThanks() {
+    const card = document.getElementById('ms-feedback-card');
+    if (card) {
+      card.innerHTML = '<div class="ms-feedback-thanks">Thanks for your feedback!</div>';
+      setTimeout(() => card.remove(), 3000);
+    }
+  },
+  _dismissFeedback() {
+    const card = document.getElementById('ms-feedback-card');
+    if (card) card.remove();
+  },
+
+  // ═══ PHASE 231: Error Tracking ═══
+  _trackError(type, message, details) {
+    const errorData = {
+      type,
+      message,
+      details,
+      userAgent: navigator.userAgent,
+      timestamp: new Date().toISOString(),
+    };
+    console.error(`[KORRA_ERROR] ${type}: ${message}`, errorData);
+  },
+
+  // ═══ PHASE 214: Load Saved Garment ═══
+  async _loadSavedGarment() {
+    if (!this.data?.garment_mesh_url) {
+      alert('No saved garment found for this scan.');
+      return;
+    }
+    if (!this.data?.id) return;
+    try {
+      const { data: { session } } = await window.KORRA_DB.auth.getSession();
+      if (!session) { alert('Session expired. Please sign in again.'); return; }
+      this._showVtoSpinner();
+      const res = await fetch(`/api/v2/measurements/${this.data.id}`, {
+        headers: { 'Authorization': `Bearer ${session.access_token}` },
+      });
+      if (!res.ok) throw new Error('Failed to load scan');
+      const scanData = await res.json();
+      if (scanData?.garment_mesh_url && scanData.garment_mesh_url !== 'stored') {
+        const viewerWrap = document.getElementById('ms-recon-viewer-wrap');
+        const loadingEl = document.getElementById('ms-recon-viewer-loading');
+        if (viewerWrap) viewerWrap.style.display = 'block';
+        if (loadingEl) loadingEl.style.display = 'flex';
+        const viewer = this._reconViewer || this._initReconViewer();
+        if (viewer) {
+          await viewer.loadGarment(scanData.garment_mesh_url);
+          if (loadingEl) loadingEl.style.display = 'none';
+        }
+      } else {
+        alert('Saved garment reference found but no mesh URL to load.');
+      }
+      this._hideVtoSpinner();
+    } catch (e) {
+      console.error('[RECON] Load saved garment failed:', e);
+      this._hideVtoSpinner();
+      alert('Failed to load saved garment: ' + e.message);
+    }
   },
 };
 

@@ -34,4 +34,7 @@ CREATE TRIGGER trigger_strict_scan_integrity
 -- Only allowing inserts where source_of_truth is true (validated by backend)
 DROP POLICY IF EXISTS "Users can only insert verified scans" ON public.measurements;
 CREATE POLICY "Users can only insert verified scans" ON public.measurements
-  FOR INSERT WITH CHECK (source_of_truth = true);
+  FOR INSERT WITH CHECK (
+    source_of_truth = true
+    OR auth.role() = 'service_role'
+  );

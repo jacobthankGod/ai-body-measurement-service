@@ -1,0 +1,29 @@
+{
+  "accounts": [
+    {
+      "email": "jacobthankgod4@gmail.com",
+      "username": "jacobthankgod",
+      "token": "KGAT_4ada61fb7668048f325fa249acbf744e",
+      "slug_base": "gr-backend"
+    },
+    {
+      "email": "jacobchibbs@gmail.com",
+      "username": "jacobchibbs",
+      "token": "KGAT_05497d83f811e16b5494e837c67dd705",
+      "slug_base": "gr-backend"
+    },
+    {
+      "email": "gardeinfoodsllc@gmail.com",
+      "username": "gardeinfoodsllc",
+      "token": "KGAT_00149c6f969f4e7af1a6ee2eab3eca48",
+      "slug_base": "gr-backend"
+    },
+    {
+      "email": "delightnnedinma1@gmail.com",
+      "username": "delightnnedinma",
+      "token": "KGAT_b59a811e4ad65c91665e69c1c64360be",
+      "slug_base": "gr-backend"
+    }
+  ],
+  "_comment": "Each account needs a Kaggle API token (KGAT_ format). Generate at kaggle.com -> Settings -> Create API Token."
+}

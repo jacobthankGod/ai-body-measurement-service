@@ -187,6 +187,35 @@ def run_hmr(front_path, side_path, height_cm, gender, mesh_path=None, attire_nam
         except Exception as e:
             logger.warning(f"Measurement calibration skipped: {e}")
 
+        # NEW: Export TailorNet body mesh for every scan
+        tailornet_body_path = None
+        if mesh_path and smpl_params:
+            try:
+                # Prefer 300-PC betas, fall back to 10-PC padded to 300
+                if smpl_params.get('betas_300') is not None:
+                    tn_betas = np.array(smpl_params['betas_300'], dtype=np.float32)
+                else:
+                    raw = smpl_params.get('shape', [])
+                    tn_betas = np.zeros(300, dtype=np.float32)
+                    tn_betas[:min(len(raw), 10)] = np.array(raw[:10], dtype=np.float32)
+                from api.services.tailornet.models.smpl4garment import SMPL4Garment
+                smpl4g = SMPL4Garment(gender, body_only=True)
+                body_m, _ = smpl4g.run(beta=tn_betas)
+                import trimesh
+                bm = trimesh.Trimesh(
+                    vertices=np.array(body_m.v, dtype=np.float32),
+                    faces=np.array(body_m.f, dtype=np.int32),
+                    process=False,
+                )
+                tn_body_path = str(mesh_path).replace('.obj', '_tn_body.obj')
+                bm.export(tn_body_path, file_type='obj')
+                tailornet_body_path = tn_body_path
+                logger.info(f"TailorNet body mesh saved: {tn_body_path}")
+                del smpl4g, body_m, bm
+                gc.collect()
+            except Exception as e:
+                logger.warning(f"TailorNet body export skipped: {e}")
+
         # Track F: TailorNet garment mesh prediction
         garment_mesh_path = None
         garment_class = None
@@ -235,6 +264,7 @@ def run_hmr(front_path, side_path, height_cm, gender, mesh_path=None, attire_nam
             "smpl_params": smpl_params,
             "joints3d": joints3d,
             "tpose_mesh_path": str(tpose_mesh_path) if tpose_mesh_path else None,
+            "tailornet_body_path": str(tailornet_body_path) if tailornet_body_path else None,
             "garment_mesh_path": str(garment_mesh_path) if garment_mesh_path else None,
             "garment_class": garment_class,
         }

@@ -42,35 +42,79 @@ class SmplPaths:
         return smpl_m
 
     def get_hres_smpl_model_data(self):
+        import os, logging
+        _log = logging.getLogger('smpl_paths')
+
+        # Check for pre-computed cache first (avoids slow loop subdivision)
+        cache_path = os.path.join(
+            os.path.dirname(os.path.dirname(os.path.abspath(__file__))),
+            '..', 'tailornet_data', 'smpl', f'{self.gender}_hres_model.pkl'
+        )
+        cache_path = os.path.normpath(cache_path)
+        if os.path.exists(cache_path):
+            _log.info(f"Loading cached hres SMPL model from {cache_path}")
+            return pkl.load(open(cache_path, 'rb'))
 
         dd = pkl.load(open(self.get_smpl_file(), 'rb'), encoding='latin1')
         backwards_compatibility_replacements(dd)
 
-        hv, hf, mapping = get_hres(dd['v_template'], dd['f'])
+        # Try high-res subdivision; fall back to standard model if it's too slow
+        try:
+            _log.info("Computing high-res SMPL subdivision (may take a while)...")
+            hv, hf, mapping = get_hres(dd['v_template'], dd['f'])
 
+            num_betas = dd['shapedirs'].shape[-1]
+            J_reg = dd['J_regressor'].asformat('csr')
+
+            model = {
+                'v_template': hv,
+                'weights': np.hstack([
+                    np.expand_dims(
+                        np.mean(
+                            mapping.dot(np.repeat(np.expand_dims(dd['weights'][:, i], -1), 3)).reshape(-1, 3)
+                            , axis=1),
+                        axis=-1)
+                    for i in range(24)
+                ]),
+                'posedirs': mapping.dot(dd['posedirs'].reshape((-1, 207))).reshape(-1, 3, 207),
+                'shapedirs': mapping.dot(dd['shapedirs'].reshape((-1, num_betas))).reshape(-1, 3, num_betas),
+                'J_regressor': sp.csr_matrix((J_reg.data, J_reg.indices, J_reg.indptr), shape=(24, hv.shape[0])),
+                'kintree_table': dd['kintree_table'],
+                'bs_type': dd['bs_type'],
+                'bs_style': dd['bs_style'],
+                'J': dd['J'],
+                'f': hf,
+            }
+
+            # Cache for next time
+            try:
+                os.makedirs(os.path.dirname(cache_path), exist_ok=True)
+                with open(cache_path, 'wb') as f:
+                    pkl.dump(model, f)
+                _log.info(f"Cached hres model to {cache_path}")
+            except Exception:
+                pass
+
+            return model
+        except Exception as e:
+            _log.warning(f"High-res subdivision failed ({e}), using standard SMPL model")
+
+        # Fallback: use standard SMPL model directly (same shape, fewer vertices)
         num_betas = dd['shapedirs'].shape[-1]
         J_reg = dd['J_regressor'].asformat('csr')
 
         model = {
-            'v_template': hv,
-            'weights': np.hstack([
-                np.expand_dims(
-                    np.mean(
-                        mapping.dot(np.repeat(np.expand_dims(dd['weights'][:, i], -1), 3)).reshape(-1, 3)
-                        , axis=1),
-                    axis=-1)
-                for i in range(24)
-            ]),
-            'posedirs': mapping.dot(dd['posedirs'].reshape((-1, 207))).reshape(-1, 3, 207),
-            'shapedirs': mapping.dot(dd['shapedirs'].reshape((-1, num_betas))).reshape(-1, 3, num_betas),
-            'J_regressor': sp.csr_matrix((J_reg.data, J_reg.indices, J_reg.indptr), shape=(24, hv.shape[0])),
+            'v_template': dd['v_template'],
+            'weights': dd['weights'],
+            'posedirs': dd['posedirs'],
+            'shapedirs': dd['shapedirs'],
+            'J_regressor': sp.csr_matrix((J_reg.data, J_reg.indices, J_reg.indptr), shape=(24, dd['v_template'].shape[0])),
             'kintree_table': dd['kintree_table'],
             'bs_type': dd['bs_type'],
             'bs_style': dd['bs_style'],
             'J': dd['J'],
-            'f': hf,
+            'f': dd['f'],
         }
-
         return model
 
     def get_hres_smpl(self):

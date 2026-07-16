@@ -81,3 +81,5 @@ MESH_STORAGE_RESILIENCE_30_PHASE_PLAN.md
 *.tmp
 temp/
 api/services/tailornet_data/*
+=4.49.0
+Garment-GPT/

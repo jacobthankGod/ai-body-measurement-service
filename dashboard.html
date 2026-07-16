@@ -2887,10 +2887,18 @@ window.loadSettings = async () => {
 
           if (hash.startsWith('scanresult/')) {
               const scanId = hash.split('/')[1];
+              // Phase 191: Check for vto=1 param to auto-open VTO view
+              const urlParams = new URLSearchParams(window.location.search);
+              const openVto = urlParams.get('vto') === '1';
               if (scanId && window.KORRA_MS) {
                   window.KORRA_DB.from('measurements').select('*').eq('id', scanId).single().then(({ data, error }) => {
                       if (data && !error) {
                           window.KORRA_MS.open(data);
+                          if (openVto) {
+                              setTimeout(() => {
+                                  window.KORRA_MS.switchView('tryon');
+                              }, 500);
+                          }
                           setTimeout(restoreModal, 50);
                       } else {
                           window.switchTab('overview'); restoreModal();
@@ -3839,10 +3847,18 @@ window.loadSettings = async () => {
 
         if (hash.startsWith('scanresult/')) {
           const scanId = hash.split('/')[1];
+          // Phase 191: Check for vto=1 param to auto-open VTO view
+          const urlParams2 = new URLSearchParams(window.location.search);
+          const openVto2 = urlParams2.get('vto') === '1';
           if (scanId && window.KORRA_MS) {
             window.KORRA_DB.from('measurements').select('*').eq('id', scanId).single().then(({ data, error }) => {
               if (data && !error) {
                 window.KORRA_MS.open(data);
+                if (openVto2) {
+                  setTimeout(() => {
+                    window.KORRA_MS.switchView('tryon');
+                  }, 500);
+                }
                 setTimeout(restoreModal, 50);
               } else {
                 window.switchTab('overview');
@@ -4482,6 +4498,10 @@ window.applyPromo = () => {
             if (window.KORRA_MS.activeMaterial) {
                 params.push('mat=' + encodeURIComponent(window.KORRA_MS.activeMaterial));
             }
+            // Phase 191: Include VTO flag when VTO results exist
+            if (window.KORRA_MS._vtoResults && Object.values(window.KORRA_MS._vtoResults).some(Boolean)) {
+                params.push('vto=1');
+            }
         }
         const qs = params.length ? '?' + params.join('&') : '';
         const url = `${window.location.origin}/dashboard${qs}#scanresult/${window._currentScanId || ''}`;
@@ -4508,6 +4528,10 @@ window.applyPromo = () => {
             }
             if (window.KORRA_MS.activeMaterial) {
                 params.push('mat=' + encodeURIComponent(window.KORRA_MS.activeMaterial));
+            }
+            // Phase 191: Include VTO flag when VTO results exist
+            if (window.KORRA_MS._vtoResults && Object.values(window.KORRA_MS._vtoResults).some(Boolean)) {
+                params.push('vto=1');
             }
         }
         const qs = params.length ? '?' + params.join('&') : '';

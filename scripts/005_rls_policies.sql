@@ -25,24 +25,34 @@ END $$;
 
 -- 2. Scan photos bucket: owner read
 -- (Users can see their own uploads)
-CREATE POLICY IF NOT EXISTS "scan_photos_owner_select"
-ON storage.objects FOR SELECT
-USING (
-    bucket_id = 'scan_photos'
-    AND auth.role() = 'service_role'
-    OR (auth.role() = 'authenticated'
-        AND auth.uid()::text = (storage.foldername(name))[1])
-);
+DO $$
+BEGIN
+  IF NOT EXISTS (SELECT 1 FROM pg_policies WHERE policyname = 'scan_photos_owner_select' AND tablename = 'objects') THEN
+    CREATE POLICY "scan_photos_owner_select"
+    ON storage.objects FOR SELECT
+    USING (
+        bucket_id = 'scan_photos'
+        AND auth.role() = 'service_role'
+        OR (auth.role() = 'authenticated'
+            AND auth.uid()::text = (storage.foldername(name))[1])
+    );
+  END IF;
+END $$;
 
 -- 3. Meshes bucket: owner read
-CREATE POLICY IF NOT EXISTS "meshes_owner_select"
-ON storage.objects FOR SELECT
-USING (
-    bucket_id = 'meshes'
-    AND auth.role() = 'service_role'
-    OR (auth.role() = 'authenticated'
-        AND auth.uid()::text = (storage.foldername(name))[1])
-);
+DO $$
+BEGIN
+  IF NOT EXISTS (SELECT 1 FROM pg_policies WHERE policyname = 'meshes_owner_select' AND tablename = 'objects') THEN
+    CREATE POLICY "meshes_owner_select"
+    ON storage.objects FOR SELECT
+    USING (
+        bucket_id = 'meshes'
+        AND auth.role() = 'service_role'
+        OR (auth.role() = 'authenticated'
+            AND auth.uid()::text = (storage.foldername(name))[1])
+    );
+  END IF;
+END $$;
 
 -- 4. Verify policies exist
 SELECT schemaname, tablename, policyname, permissive, roles, cmd

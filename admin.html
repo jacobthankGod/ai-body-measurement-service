@@ -818,7 +818,13 @@ console.warn(`🔄 Sync failure (${err.message}). Retrying ${attempt+1}/12 in ${
                         body: fd
                     });
                     if (res.ok) { const d = await res.json(); pollTask(d.task_id); }
-                    else if (btn) { btn.disabled = false; }
+                    else {
+                      if (btn) btn.disabled = false;
+                      if (res.status === 401 || res.status === 403) {
+                        alert("Session expired. Redirecting to sign in.");
+                        window.location.href = '/signin';
+                      }
+                    }
                 } catch (err) { if (btn) btn.disabled = false; }
             };
         }

@@ -50,6 +50,7 @@ WorkingDirectory=${PROXY_DIR}
 ExecStart=/usr/bin/python3 ${PROXY_DIR}/server.py
 Restart=always
 RestartSec=5
+ExecStartPost=/bin/bash -c 'for i in 1 2 3 4 5; do if curl -sf --max-time 2 http://127.0.0.1:8001/api/v2/garment/health > /dev/null 2>&1; then echo "[bootstrap] Proxy healthy after ${i}s"; exit 0; fi; sleep 1; done; echo "[bootstrap] Proxy NOT healthy after 5s"; exit 1'
 Environment=KAGGLE_TUNNEL_URL=
 Environment=SUPABASE_URL=${SUPABASE_URL}
 Environment=SUPABASE_ANON_KEY=${SUPABASE_ANON_KEY}
@@ -84,5 +85,14 @@ location /api/v2/garment/ {\
     nginx -t && systemctl reload nginx
 fi
 
+# ── Cron job: auto-recover on health failure ────────────────────
+cat > /etc/cron.d/garment-proxy-health << CRON
+SHELL=/bin/bash
+PATH=/usr/local/sbin:/usr/local/bin:/usr/sbin:/usr/bin:/sbin:/bin
+*/5 * * * * ubuntu curl -sf --max-time 5 http://127.0.0.1:8001/api/v2/garment/health > /dev/null 2>&1 || (echo "[cron] Proxy unhealthy, restarting..." && sudo systemctl restart garment-proxy)
+CRON
+chmod 644 /etc/cron.d/garment-proxy-health
+
 echo "=== Bootstrap complete: $(date -u +%Y-%m-%dT%H:%M:%SZ) ==="
 echo "Tunnel URL will be auto-registered by Kaggle keep-alive script."
+echo "Cron health-check installed: every 5 min"

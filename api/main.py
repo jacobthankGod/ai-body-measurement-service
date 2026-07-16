@@ -11,7 +11,7 @@ from fastapi.responses import JSONResponse, FileResponse, Response, RedirectResp
 from fastapi.staticfiles import StaticFiles
 from pathlib import Path
 
-from api.routes import auth, measurements, health, sharing, qrcode, payments, subscriptions, admin, admin_auth, invoices, webhooks, notifications, scan_requests, ai_assistant
+from api.routes import auth, measurements, health, sharing, qrcode, payments, subscriptions, admin, admin_auth, invoices, webhooks, notifications, scan_requests, ai_assistant, tryon
 from api.config import CORS_ORIGINS, FEATURES
 
 # Configure Logging
@@ -83,6 +83,7 @@ app.include_router(notifications.router, prefix="/api/v2", tags=["Notifications"
 app.include_router(scan_requests.router, prefix="/api/v2", tags=["ScanRequests"])
 app.include_router(admin_auth.router, prefix="/api/v2", tags=["Admin"])
 app.include_router(ai_assistant.router, prefix="/api/v2", tags=["AI"])
+app.include_router(tryon.router, prefix="/api/v2", tags=["TryOn"])
 
 # --- STATIC PAGE SERVING ---
 # PHASE 502 FIX: Enhanced static file serving with explicit route logging
@@ -127,6 +128,9 @@ async def serve_dashboard():
 
 @app.get("/verify")
 async def serve_verify(): return get_safe_file("verify.html")
+
+@app.get("/reset-password")
+async def serve_reset_password(): return get_safe_file("reset-password.html")
 
 # PHASE 502 FIX: Explicit favicon route to prevent 404 errors
 @app.get("/favicon.ico")
@@ -179,6 +183,8 @@ async def catch_all(full_path: str):
     if target.exists() and target.is_file():
         if full_path.endswith('.obj'):
             return FileResponse(str(target), headers={"Cache-Control": "public, max-age=86400"})
+        if full_path.endswith('.html'):
+            return FileResponse(str(target), headers={"Cache-Control": "no-cache, no-store, must-revalidate"})
         return FileResponse(str(target))
 
     # Check in public folder
@@ -186,6 +192,8 @@ async def catch_all(full_path: str):
     if public_target.exists() and public_target.is_file():
         if full_path.endswith('.obj'):
             return FileResponse(str(public_target), headers={"Cache-Control": "public, max-age=86400"})
+        if full_path.endswith('.html'):
+            return FileResponse(str(public_target), headers={"Cache-Control": "no-cache, no-store, must-revalidate"})
         return FileResponse(str(public_target))
 
     # Default fallback for clean URLs

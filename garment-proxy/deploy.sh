@@ -20,11 +20,26 @@ LOCAL_DIR="$(dirname "$0")"
 case "${1:-deploy}" in
     deploy|"")
         echo "=== Deploying proxy to EC2 ==="
+        # Verify SSH key
+        if [ ! -f "$SSH_KEY" ]; then
+            echo "ERROR: SSH key not found at $SSH_KEY"
+            exit 1
+        fi
+        # Copy files
         scp -i "$SSH_KEY" "$LOCAL_DIR/server.py" "$REMOTE_USER@$EC2_IP:$REMOTE_DIR/server.py"
+        scp -i "$SSH_KEY" "$(dirname "$0")/../scripts/garment_proxy_health_check.sh" "$REMOTE_USER@$EC2_IP:$REMOTE_DIR/health_check.sh"
+        # Restart service
         ssh -i "$SSH_KEY" "$REMOTE_USER@$EC2_IP" "sudo systemctl restart garment-proxy"
-        sleep 2
-        echo "=== Service restarted ==="
-        ssh -i "$SSH_KEY" "$REMOTE_USER@$EC2_IP" "sudo journalctl -u garment-proxy --no-pager -n 5"
+        sleep 3
+        # Verify health
+        ssh -i "$SSH_KEY" "$REMOTE_USER@$EC2_IP" << 'VERIFY'
+            echo "=== Service Status ==="
+            sudo systemctl is-active garment-proxy
+            echo "=== Health Check ==="
+            curl -sf --max-time 5 http://127.0.0.1:8001/api/v2/garment/health 2>/dev/null | python3 -m json.tool 2>/dev/null || echo "FAILED"
+            echo "=== Recent Logs ==="
+            sudo journalctl -u garment-proxy --no-pager -n 10
+VERIFY
         ;;
 
     launch)

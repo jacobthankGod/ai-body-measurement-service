@@ -71,10 +71,10 @@
 | 39 | Image Upload in Chat | Allow users to snap a photo of their fabric for AI analysis. |
 | 40 | Code/Metric Formatting | Display measurements in bold, distinct colors within chat. |
 | 41 | Loading State Animation | Neural "Thinking" pulse animation. |
-| 42 | Chat History View | Expandable sidebar to see previous consultation sessions. |
-| 43 | Feedback Loop (Rating) | Thumbs up/down on AI advice for future fine-tuning. |
-| 44 | Mobile Optimization | Responsive chat drawer for mobile tailoring. |
-| 45 | Export Chat to PDF | Append the consultation log to the final Tailor Brief. |
+| 42 | 3D Mesh Snapshot Engine | Auto-capture Front/Side/Back 3D views for PDF injection. |
+| 43 | Functional Zone Layout | Implement multi-column grid grouping (Foundation/Limbs/Tailor-Offsets). |
+| 44 | Secure QR Bridge | Add unique QR code linking the physical PDF to the live 3D Viewer. |
+| 45 | Clinical Trust Stamp | Integrate the "99% Verified" stamp and Garment-Specific Cut Offsets. |
 
 ### Track D: Hardening & Production (Phases 46–50)
 **Latency, Security, and Final Polish.**

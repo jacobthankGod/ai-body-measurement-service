@@ -14,6 +14,12 @@ from datetime import datetime, timezone
 from fastapi import FastAPI, UploadFile, File, HTTPException, Request
 from fastapi.responses import StreamingResponse, JSONResponse
 import httpx
+try:
+    import imagehash
+    from PIL import Image as PILImage
+    HAS_IMAGEHASH = True
+except ImportError:
+    HAS_IMAGEHASH = False
 import uvicorn
 
 # ── Config (all from env, no local files) ──────────────────────
@@ -22,6 +28,8 @@ SUPABASE_URL = os.getenv("SUPABASE_URL", "https://blsettabymllulsxtziw.supabase.
 SUPABASE_ANON_KEY = os.getenv("SUPABASE_ANON_KEY", "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImJsc2V0dGFieW1sbHVsc3h0eml3Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3ODAwNTY3NjksImV4cCI6MjA5NTYzMjc2OX0.PuMsTbgyRRcCQ04Y7Y9Y75WjRqmzgMP4S2_B4372V_U")
 MAX_RETRIES = 5
 TUNNEL_CACHE_FILE = "/tmp/kaggle_tunnel_url.txt"
+PERCEPTUAL_HASH_CACHE = {}  # {phash: result_zip}
+PHASH_CACHE_MAX = 50
 
 # ── Load cached tunnel URL from disk (survives proxy restart) ──
 def _load_cached_tunnel() -> str:
@@ -82,6 +90,23 @@ async def sb_get_job(job_id: str) -> dict | None:
 
 # ── FastAPI app ────────────────────────────────────────────────
 app = FastAPI(title="Garment Reconstruction Proxy")
+
+# Phase 208: Background pre-warm task
+@app.on_event("startup")
+async def start_prewarm_loop():
+    async def _prewarm_loop():
+        while True:
+            await asyncio.sleep(120)  # Every 2 minutes
+            if KAGGLE_TUNNEL_URL:
+                try:
+                    async with httpx.AsyncClient(timeout=30) as client:
+                        resp = await client.get(f"{KAGGLE_TUNNEL_URL}/api/v1/prewarm")
+                        if resp.status_code == 200:
+                            data = resp.json()
+                            logger.info(f"Prewarm: {data.get('elapsed_sec', '?')}s — {data.get('results', {})}")
+                except Exception as e:
+                    logger.debug(f"Prewarm failed (non-critical): {e}")
+    asyncio.create_task(_prewarm_loop())
 
 # ── Rate limiting (in-memory, resets on restart — fine for proxy) ──
 rate_limits: dict[str, tuple[int, float]] = {}
@@ -179,6 +204,132 @@ async def sb_check_scan_ownership(user_id: str, scan_id: str) -> bool:
         params={"id": f"eq.{scan_id}", "user_id": f"eq.{user_id}"},
     )
     return resp.status_code == 200 and len(resp.json()) > 0
+
+
+# ── Phase 151: Scan photo resolution ──
+async def sb_get_scan_photos(scan_id: str) -> dict:
+    """Get photo_front_url and photo_side_url from measurements table."""
+    resp = await sb_query(
+        "measurements",
+        select="photo_front_url,photo_side_url",
+        params={"id": f"eq.{scan_id}"},
+    )
+    if resp.status_code == 200:
+        rows = resp.json()
+        if rows:
+            return rows[0]
+    return {}
+
+
+# ── Phase 152: Refined photo persistence ──
+async def sb_save_refined_photos(scan_id: str, front_url: str = None, side_url: str = None, back_url: str = None):
+    """Save refined neutral photo URLs to measurements table."""
+    updates = {}
+    if front_url:
+        updates["refined_front_url"] = front_url
+    if side_url:
+        updates["refined_side_url"] = side_url
+    if back_url:
+        updates["refined_back_url"] = back_url
+    if updates:
+        await sb_query("measurements", method="PATCH", json_data=updates, params={"id": f"eq.{scan_id}"})
+
+
+# ── Phase 155: Refined-back cache check ──
+async def sb_get_refined_photos(scan_id: str) -> dict:
+    """Check if refined photos already exist for this scan. Returns URLs or empty dict."""
+    resp = await sb_query(
+        "measurements",
+        select="refined_front_url,refined_side_url,refined_back_url",
+        params={"id": f"eq.{scan_id}"},
+    )
+    if resp.status_code == 200:
+        rows = resp.json()
+        if rows:
+            row = rows[0]
+            # Return only non-null URLs
+            return {k: v for k, v in row.items() if v}
+    return {}
+
+
+# ── Phase 175: tryon_history persistence ──
+async def sb_save_tryon_history(scan_id: str, result: dict):
+    """
+    Append a VTO result to the tryon_history JSONB array.
+    result should contain: {angle, result_url, garment_type, garment_color, seed, created_at}
+    """
+    # Read current history
+    resp = await sb_query(
+        "measurements",
+        select="tryon_history",
+        params={"id": f"eq.{scan_id}"},
+    )
+    history = []
+    if resp.status_code == 200:
+        rows = resp.json()
+        if rows and rows[0].get("tryon_history"):
+            history = rows[0]["tryon_history"]
+            if not isinstance(history, list):
+                history = []
+
+    history.append(result)
+
+    # Keep only last 10 results
+    history = history[-10:]
+
+    await sb_query(
+        "measurements",
+        method="PATCH",
+        json_data={"tryon_history": history},
+        params={"id": f"eq.{scan_id}"},
+    )
+
+
+async def sb_get_tryon_history(scan_id: str) -> list:
+    """Get VTO history for a scan."""
+    resp = await sb_query(
+        "measurements",
+        select="tryon_history",
+        params={"id": f"eq.{scan_id}"},
+    )
+    if resp.status_code == 200:
+        rows = resp.json()
+        if rows and rows[0].get("tryon_history"):
+            return rows[0]["tryon_history"]
+    return []
+
+
+# ── Phase 152: Upload refined photo to Supabase storage ──
+async def sb_upload_refined_photo(user_id: str, scan_id: str, angle: str, image_bytes: bytes) -> str:
+    """Upload refined photo to scan_photos bucket. Returns public URL."""
+    import hashlib
+    path = f"{user_id}/{scan_id}/refined_{angle}.png"
+    try:
+        resp = await sb_query(
+            "scan_photos",
+            method="POST",
+            json_data=None,
+            params={"upsert": "true"},
+        )
+        # Use direct upload via httpx to Supabase storage API
+        upload_url = f"{SUPABASE_URL}/storage/v1/object/scan_photos/{path}"
+        headers = {
+            "Authorization": f"Bearer {SUPABASE_SERVICE_KEY}",
+            "Content-Type": "image/png",
+            "x-upsert": "true",
+        }
+        async with httpx.AsyncClient(timeout=30) as client:
+            upload_resp = await client.put(upload_url, content=image_bytes, headers=headers)
+            if upload_resp.status_code in (200, 201):
+                # Return public URL
+                public_url = f"{SUPABASE_URL}/storage/v1/object/public/scan_photos/{path}"
+                return public_url
+            else:
+                logger.warning(f"Photo upload failed: {upload_resp.status_code} {upload_resp.text[:200]}")
+                return ""
+    except Exception as e:
+        logger.warning(f"Photo upload error: {e}")
+        return ""
 @app.get("/api/v2/garment/health")
 @app.get("/health")
 async def health():
@@ -260,6 +411,32 @@ async def update_tunnel(data: dict):
         print(f"[Tunnel] Failed to cache URL to disk: {e}")
     print(f"Tunnel URL updated: {url}")
     return {"status": "ok", "tunnel_url": url}
+
+def _compute_phash(image_bytes: bytes):
+    """Compute perceptual hash of image for caching."""
+    if not HAS_IMAGEHASH:
+        return None
+    try:
+        img = PILImage.open(io.BytesIO(image_bytes))
+        return str(imagehash.phash(img))
+    except Exception:
+        return None
+
+def _check_phash_cache(phash: str):
+    """Check if result exists in phash cache."""
+    if phash and phash in PERCEPTUAL_HASH_CACHE:
+        return PERCEPTUAL_HASH_CACHE[phash]
+    return None
+
+def _store_phash_cache(phash: str, result: dict):
+    """Store result in phash cache with LRU eviction."""
+    if not phash:
+        return
+    if len(PERCEPTUAL_HASH_CACHE) >= PHASH_CACHE_MAX:
+        oldest = next(iter(PERCEPTUAL_HASH_CACHE))
+        del PERCEPTUAL_HASH_CACHE[oldest]
+    PERCEPTUAL_HASH_CACHE[phash] = result
+
 
 @app.post("/api/v2/garment/reconstruct")
 async def reconstruct_garment(
@@ -408,77 +585,16 @@ async def pattern_only(request: Request, file: UploadFile = File(...)):
 # ═══════════════════════════════════════════════════════════════
 
 @app.post("/api/v2/garment/vto/synthesize")
-async def vto_synthesize(request: Request, file: UploadFile = File(...)):
+async def vto_synthesize(
+    request: Request,
+    file: UploadFile = File(...),
+    scan_id: str = "",
+):
     """
-    Multi-angle VTO: generates front/side/back neutral triad.
-    Requires active subscription. Rate-limited to 5/day per user.
-    """
-    user_id = await verify_jwt(request.headers.get("authorization"))
-
-    # ── Subscription gate (Phase 200) ──
-    sub = await check_subscription(user_id)
-    if not sub["active"]:
-        raise HTTPException(403, detail={
-            "error": "subscription_required",
-            "message": "Virtual Try-On requires an active subscription.",
-            "plan": sub["plan"],
-        })
-
-    # ── Rate limit (Phase 204): 5 VTO per user per day ──
-    vto_count = await sb_get_vto_count_today(user_id)
-    if vto_count >= VTO_DAILY_LIMIT:
-        reset_time = await sb_get_vto_reset_time(user_id)
-        raise HTTPException(429, detail={
-            "error": "vto_rate_limit",
-            "message": f"Daily VTO limit reached ({VTO_DAILY_LIMIT}/day).",
-            "used": vto_count,
-            "limit": VTO_DAILY_LIMIT,
-            "resets_at": reset_time,
-        })
-
-    # ── Validate image ──
-    image_bytes = await file.read()
-    if len(image_bytes) > 20 * 1024 * 1024:
-        raise HTTPException(413, "Image too large (max 20MB)")
-
-    # ── Forward to Kaggle synthesize-views endpoint ──
-    if not KAGGLE_TUNNEL_URL:
-        raise HTTPException(503, "No Kaggle backend connected")
-
-    # Record usage immediately (optimistic)
-    await sb_record_vto_usage(user_id)
-
-    try:
-        async with httpx.AsyncClient(timeout=httpx.Timeout(connect=15.0, read=180.0, write=30.0, pool=10.0)) as client:
-            files = {"file": (file.filename, image_bytes, file.content_type)}
-            params = {"user_id": user_id}
-            resp = await client.post(f"{KAGGLE_TUNNEL_URL}/api/v1/synthesize-views", files=files, params=params)
-
-            if resp.status_code == 200:
-                return resp.json()
-            elif resp.status_code == 429:
-                # Kaggle-side rate limit (shouldn't happen, but handle)
-                raise HTTPException(429, detail=resp.json())
-            else:
-                detail = ""
-                try:
-                    detail = resp.json().get("detail", resp.text[:300])
-                except Exception:
-                    detail = resp.text[:300]
-                raise HTTPException(502, f"Backend error {resp.status_code}: {detail}")
-    except HTTPException:
-        raise
-    except httpx.TimeoutException:
-        raise HTTPException(504, "VTO synthesis timed out")
-    except Exception as e:
-        raise HTTPException(502, f"VTO synthesis failed: {str(e)[:200]}")
-
-
-@app.post("/api/v2/garment/vto/tryon")
-async def vto_tryon(request: Request, file: UploadFile = File(...), angle: str = "front"):
-    """
-    Multi-angle VTO: runs OOTDiffusion for a single angle.
-    Requires active subscription. Rate-limited to 5/day per user.
+    Phase 151: Multi-angle VTO with scan_id passthrough.
+    Phase 155: Checks for cached refined photos before re-synthesis.
+    Phase 152: Persists refined photos after synthesis.
+    Phase 189: 180s per-angle timeout.
     """
     user_id = await verify_jwt(request.headers.get("authorization"))
 
@@ -503,9 +619,129 @@ async def vto_tryon(request: Request, file: UploadFile = File(...), angle: str =
             "resets_at": reset_time,
         })
 
+    # ── Phase 155: Cache check — if scan_id provided, check for existing refined photos ──
+    if scan_id:
+        cached = await sb_get_refined_photos(scan_id)
+        if cached.get("refined_front_url") and cached.get("refined_side_url"):
+            logger.info(f"[VTO] Cache hit for scan {scan_id}: using existing refined photos")
+            return {
+                "cached": True,
+                "front_url": cached.get("refined_front_url"),
+                "side_url": cached.get("refined_side_url"),
+                "back_url": cached.get("refined_back_url"),
+                "scan_id": scan_id,
+            }
+
+    # ── Validate image ──
     image_bytes = await file.read()
     if len(image_bytes) > 20 * 1024 * 1024:
         raise HTTPException(413, "Image too large (max 20MB)")
+
+    # ── Forward to Kaggle synthesize-views endpoint ──
+    if not KAGGLE_TUNNEL_URL:
+        raise HTTPException(503, "No Kaggle backend connected")
+
+    await sb_record_vto_usage(user_id)
+
+    try:
+        async with httpx.AsyncClient(timeout=httpx.Timeout(connect=15.0, read=180.0, write=30.0, pool=10.0)) as client:
+            files = {"file": (file.filename, image_bytes, file.content_type)}
+            params = {"user_id": user_id, "scan_id": scan_id}
+            resp = await client.post(f"{KAGGLE_TUNNEL_URL}/api/v1/synthesize-views", files=files, params=params)
+
+            if resp.status_code == 200:
+                result = resp.json()
+
+                # ── Phase 152: Persist refined photos if scan_id provided ──
+                if scan_id and result.get("angles"):
+                    angles = result["angles"]
+                    await sb_save_refined_photos(
+                        scan_id,
+                        front_url=angles.get("front"),
+                        side_url=angles.get("side"),
+                        back_url=angles.get("back"),
+                    )
+                    result["scan_id"] = scan_id
+
+                return result
+            elif resp.status_code == 429:
+                raise HTTPException(429, detail=resp.json())
+            else:
+                detail = ""
+                try:
+                    detail = resp.json().get("detail", resp.text[:300])
+                except Exception:
+                    detail = resp.text[:300]
+                raise HTTPException(502, f"Backend error {resp.status_code}: {detail}")
+    except HTTPException:
+        raise
+    except httpx.TimeoutException:
+        raise HTTPException(504, "VTO synthesis timed out")
+    except Exception as e:
+        raise HTTPException(502, f"VTO synthesis failed: {str(e)[:200]}")
+
+
+@app.post("/api/v2/garment/vto/tryon")
+async def vto_tryon(
+    request: Request,
+    file: UploadFile = File(...),
+    angle: str = "front",
+    garment_type: str = "casual",
+    garment_color: str = "#000000",
+    scan_id: str = "",
+):
+    """
+    Phase 151: Single-angle VTO with scan_id passthrough.
+    Phase 175: Persists result to tryon_history.
+    Phase 189: 180s timeout per angle.
+    """
+    user_id = await verify_jwt(request.headers.get("authorization"))
+
+    # ── Subscription gate ──
+    sub = await check_subscription(user_id)
+    if not sub["active"]:
+        raise HTTPException(403, detail={
+            "error": "subscription_required",
+            "message": "Virtual Try-On requires an active subscription.",
+            "plan": sub["plan"],
+        })
+
+    # ── Rate limit ──
+    vto_count = await sb_get_vto_count_today(user_id)
+    if vto_count >= VTO_DAILY_LIMIT:
+        reset_time = await sb_get_vto_reset_time(user_id)
+        raise HTTPException(429, detail={
+            "error": "vto_rate_limit",
+            "message": f"Daily VTO limit reached ({VTO_DAILY_LIMIT}/day).",
+            "used": vto_count,
+            "limit": VTO_DAILY_LIMIT,
+            "resets_at": reset_time,
+        })
+
+    # ── Phase 151: If scan_id provided, resolve photo from scan ──
+    if scan_id and not file.filename:
+        # No file uploaded — try to get photo from scan
+        photos = await sb_get_scan_photos(scan_id)
+        if photos.get("photo_front_url"):
+            # Download front photo from Supabase storage
+            try:
+                async with httpx.AsyncClient(timeout=30) as client:
+                    img_resp = await client.get(photos["photo_front_url"])
+                    if img_resp.status_code == 200:
+                        image_bytes = img_resp.content
+                        file = UploadFile(filename="scan_photo.png", file=io.BytesIO(image_bytes))
+                    else:
+                        raise HTTPException(404, "Could not load scan photo")
+            except HTTPException:
+                raise
+            except Exception as e:
+                raise HTTPException(500, f"Failed to load scan photo: {e}")
+        else:
+            raise HTTPException(404, "No photo found for this scan")
+    else:
+        image_bytes = await file.read()
+        if len(image_bytes) > 20 * 1024 * 1024:
+            raise HTTPException(413, "Image too large (max 20MB)")
 
     if not KAGGLE_TUNNEL_URL:
         raise HTTPException(503, "No Kaggle backend connected")
@@ -515,11 +751,25 @@ async def vto_tryon(request: Request, file: UploadFile = File(...), angle: str =
     try:
         async with httpx.AsyncClient(timeout=httpx.Timeout(connect=15.0, read=180.0, write=30.0, pool=10.0)) as client:
             files = {"file": (file.filename, image_bytes, file.content_type)}
-            params = {"user_id": user_id, "angle": angle}
+            params = {"user_id": user_id, "angle": angle, "garment_type": garment_type, "garment_color": garment_color}
             resp = await client.post(f"{KAGGLE_TUNNEL_URL}/api/v1/vto/tryon", files=files, params=params)
 
             if resp.status_code == 200:
-                return resp.json()
+                result = resp.json()
+
+                # ── Phase 175: Persist to tryon_history if scan_id ──
+                if scan_id:
+                    from datetime import datetime, timezone
+                    await sb_save_tryon_history(scan_id, {
+                        "angle": angle,
+                        "result_url": result.get("result_url"),
+                        "garment_type": garment_type,
+                        "garment_color": garment_color,
+                        "seed": result.get("seed", 42),
+                        "created_at": datetime.now(timezone.utc).isoformat(),
+                    })
+
+                return result
             else:
                 detail = ""
                 try:
@@ -584,6 +834,135 @@ async def vto_status(user_id: str = None, request: Request = None):
         "subscription": sub,
     }
 
+
+@app.get("/api/v2/garment/vto/history/{scan_id}")
+async def vto_history(scan_id: str, request: Request):
+    """Phase 182: Get VTO history for a scan."""
+    user_id = await verify_jwt(request.headers.get("authorization"))
+    if not await sb_check_scan_ownership(user_id, scan_id):
+        raise HTTPException(403, "Not authorized to view this scan's history")
+    history = await sb_get_tryon_history(scan_id)
+    return {"history": history, "scan_id": scan_id}
+
+
+@app.post("/api/v2/garment/vto/feedback")
+async def vto_feedback(request: Request):
+    """Phase 211: Collect user feedback on VTO accuracy."""
+    user_id = await verify_jwt(request.headers.get("authorization"))
+    body = await request.json()
+    scan_id = body.get("scan_id", "")
+    angle = body.get("angle", "")
+    rating = body.get("rating", "")
+    garment_type = body.get("garment_type", "")
+
+    if not scan_id or not rating:
+        raise HTTPException(400, "scan_id and rating required")
+
+    # Store in vto_usage table as a feedback row (repurpose for simplicity)
+    # In production, create a separate vto_feedback table
+    try:
+        await sb_query(
+            "vto_usage",
+            method="POST",
+            json_data={
+                "user_id": user_id,
+                "created_at": "now()",
+                "scan_id": scan_id,
+                "angle": angle,
+                "rating": rating,
+                "garment_type": garment_type,
+            },
+        )
+    except Exception as e:
+        logger.warning(f"Feedback storage failed: {e}")
+
+    return {"status": "ok"}
+
+
+# Phase 210: A/B test traffic routing
+AB_CONFIG_PATH = "/home/ubuntu/garment-proxy/ab_config.json"
+
+def _load_ab_config():
+    """Load A/B test config for VTO traffic splitting."""
+    try:
+        with open(AB_CONFIG_PATH) as f:
+            return json.load(f)
+    except FileNotFoundError:
+        return {"active_version": "baseline", "traffic_split": {"baseline": 100}}
+
+def _assign_ab_version(user_id: str) -> str:
+    """Deterministically assign A/B version based on user_id hash."""
+    config = _load_ab_config()
+    split = config.get("traffic_split", {})
+    if not split or len(split) <= 1:
+        return config.get("active_version", "baseline")
+    # Deterministic hash-based assignment
+    h = int(hashlib.md5(user_id.encode()).hexdigest()[:8], 16)
+    bucket = h % 100
+    cumulative = 0
+    for version, pct in sorted(split.items()):
+        cumulative += pct
+        if bucket < cumulative:
+            return version
+    return config.get("active_version", "baseline")
+
+
+@app.get("/api/v2/garment/ab/status")
+async def ab_test_status():
+    """Phase 210: Get current A/B test configuration."""
+    return _load_ab_config()
+
+
+@app.post("/api/v2/garment/ab/assign")
+async def ab_test_assign(request: Request):
+    """Phase 210: Get A/B version assignment for a user."""
+    body = await request.json()
+    user_id = body.get("user_id", "")
+    version = _assign_ab_version(user_id)
+    return {"version": version, "user_id": user_id}
+
+
+# Phase 209: GPU cost tracking
+@app.get("/api/v2/garment/cost/usage")
+async def gpu_cost_usage(request: Request):
+    """Proxy for GPU cost usage from Kaggle backend."""
+    user_id = await verify_jwt(request.headers.get("authorization"))
+    try:
+        async with httpx.AsyncClient(timeout=10) as client:
+            resp = await client.get(
+                f"{KAGGLE_URL}/api/v1/cost/usage",
+                params={"user_id": user_id},
+            )
+            if resp.status_code == 200:
+                return resp.json()
+    except Exception as e:
+        logger.warning(f"Cost usage fetch failed: {e}")
+    return {"error": " unavailable"}
+
+
+
+# Phase 192: AI Master Tailor — forward to Kaggle VLM
+@app.post("/api/v2/garment/tailor/chat")
+async def tailor_chat_proxy(
+    file: UploadFile = File(None),
+    message: str = "",
+    history: str = "[]",
+    measurements: str = "{}",
+):
+    """Forward tailor chat to Kaggle VLM endpoint."""
+    try:
+        async with httpx.AsyncClient(timeout=60) as client:
+            form_data = {"message": message, "history": history, "measurements": measurements}
+            if file and file.filename:
+                image_bytes = await file.read()
+                form_data["file"] = (file.filename, image_bytes, file.content_type or "image/png")
+            resp = await client.post(f"{KAGGLE_TUNNEL_URL}/api/v1/tailor/chat", data=form_data)
+            if resp.status_code == 200:
+                return resp.json()
+            return {"error": f"Kaggle returned {resp.status_code}"}
+    except Exception as e:
+        logger.warning(f"Tailor chat failed: {e}")
+        return {"error": str(e), "source": "proxy_error"}
 
 if __name__ == "__main__":
     uvicorn.run(app, host="0.0.0.0", port=8001)

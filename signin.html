@@ -118,11 +118,24 @@
           <div class="form-group">
             <label class="form-label">Password</label>
             <input type="password" class="form-input" id="inPass" placeholder="••••••••" required>
+            <div style="text-align:right; margin-top:10px;">
+              <a href="#" id="forgotLink" style="font-size:13px; color:var(--Neutral-400); text-decoration:none;">Forgot Password?</a>
+            </div>
           </div>
           <button type="submit" class="btn">Sign In</button>
         </form>
 
-        <a href="/signup" class="switch-link">Don't have an account? <span>Sign Up</span></a>
+        <a href="/signup" id="signupLink" class="switch-link">Don't have an account? <span>Sign Up</span></a>
+
+        <div id="forgotPanel" style="display:none;">
+          <p class="sub-p">Enter your account email and we'll send a secure reset link.</p>
+          <div class="form-group">
+            <label class="form-label">Email Address</label>
+            <input type="email" class="form-input" id="resetEmail" placeholder="name@email.com" required>
+          </div>
+          <button type="button" id="sendResetBtn" class="btn">Send Reset Link</button>
+          <a href="#" id="backToSignIn" class="switch-link">Back to <span>Sign In</span></a>
+        </div>
       </div>
 </div>
   </div>
@@ -183,6 +196,45 @@
             if (next) window.location.href = next;
             else if (ADMIN_LIST.includes(email.toLowerCase())) window.location.href = '/admin';
             else window.location.href = '/dashboard';
+          }
+        });
+
+        // --- FORGOT PASSWORD (inline panel) ---
+        const forgotLink = document.getElementById('forgotLink');
+        const backToSignIn = document.getElementById('backToSignIn');
+        const signInForm = document.getElementById('signInForm');
+        const forgotPanel = document.getElementById('forgotPanel');
+        const signupLink = document.getElementById('signupLink');
+        const sendResetBtn = document.getElementById('sendResetBtn');
+        const resetEmail = document.getElementById('resetEmail');
+
+        function toggleForgot(show) {
+          signInForm.style.display = show ? 'none' : 'block';
+          forgotPanel.style.display = show ? 'block' : 'none';
+          signupLink.style.display = show ? 'none' : 'block';
+          if (show) { resetEmail.value = document.getElementById('inEmail').value; resetEmail.focus(); }
+        }
+
+        forgotLink.addEventListener('click', (e) => { e.preventDefault(); toggleForgot(true); });
+        backToSignIn.addEventListener('click', (e) => { e.preventDefault(); toggleForgot(false); });
+
+        sendResetBtn.addEventListener('click', async () => {
+          const email = resetEmail.value.trim();
+          if (!email) { alert('Please enter your email address.'); return; }
+          sendResetBtn.textContent = 'Sending...';
+          sendResetBtn.style.opacity = '0.7';
+          const { error } = await supabase.auth.resetPasswordForEmail(email, {
+            redirectTo: window.location.origin + '/reset-password'
+          });
+          sendResetBtn.textContent = 'Send Reset Link';
+          sendResetBtn.style.opacity = '1';
+          if (error) {
+            alert(error.message);
+          } else {
+            forgotPanel.innerHTML = '<div style="width:80px;height:80px;background:var(--Mint);color:var(--Obsidian);border-radius:50%;margin:0 auto 32px;display:flex;align-items:center;justify-content:center;font-size:32px;box-shadow:0 0 40px rgba(198,255,0,0.3)">✓</div>' +
+              '<h2>Check your email</h2>' +
+              '<p class="sub-p">If an account exists for <strong>' + email + '</strong>, a reset link is on its way. Check your inbox (and spam folder).</p>' +
+              '<a href="/signin" class="switch-link">Back to <span>Sign In</span></a>';
           }
         });
       }

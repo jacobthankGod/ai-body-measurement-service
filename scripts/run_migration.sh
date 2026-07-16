@@ -34,6 +34,7 @@ if [ "$RUN_ALL" = "true" ]; then
     echo "Running all pending migrations..."
     run_sql_file "scripts/004_smpl_params_migration.sql"
     run_sql_file "scripts/005_rls_policies.sql"
+    run_sql_file "scripts/006_drafts_table.sql"
     echo "All migrations completed successfully"
 else
     run_sql_file "$MIGRATION_FILE"

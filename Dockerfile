@@ -53,4 +53,4 @@ ENV ENVIRONMENT=production
 
 # Command to run the application
 # Uses PORT env var (set by Docker or EC2 systemd service)
-CMD ["sh", "-c", "uvicorn api.main:app --host 0.0.0.0 --port ${PORT} --workers 1"]
+CMD ["sh", "-c", "uvicorn api.main:app --host 0.0.0.0 --port ${PORT} --workers 1 --h11-max-incoming-body-size 52428800"]

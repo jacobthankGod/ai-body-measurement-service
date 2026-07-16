@@ -92,7 +92,7 @@ class DatabaseService:
             client.storage.from_('meshes').upload(
                 file_name,
                 file_bytes,
-                {"content-type": "model/obj", "upsert": True}
+                {"content-type": "model/obj"}
             )
 
             public_url = client.storage.from_('meshes').get_public_url(file_name)
@@ -125,7 +125,7 @@ class DatabaseService:
             client.storage.from_('scan_photos').upload(
                 file_name,
                 photo_bytes,
-                {"content-type": "image/png", "upsert": True}
+                {"content-type": "image/png"}
             )
 
             public_url = client.storage.from_('scan_photos').get_public_url(file_name)

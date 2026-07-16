@@ -1,5 +1,11 @@
 import os
+import sys
 import pickle
+
+# Patch chumpy for Python 3.11+ before it's imported
+sys.path.insert(0, os.path.join(os.path.dirname(__file__), '..'))
+import chumpy_patch  # noqa: F401 — patches inspect.getargspec
+
 import chumpy as ch
 import numpy as np
 import cv2
@@ -12,21 +18,29 @@ import global_var
 
 class SMPL4Garment(object):
     """SMPL class for garments."""
-    def __init__(self, gender):
+    def __init__(self, gender, body_only=False):
         self.gender = gender
+        self._body_only = body_only
         smpl_model = SmplPaths(gender=gender).get_hres_smpl_model_data()
         self.smpl_base = Smpl(smpl_model)
+        self._garment_loaded = False
+        if not body_only:
+            self._load_garment_data()
+
+    def _load_garment_data(self):
+        if self._garment_loaded:
+            return
         with open(os.path.join(global_var.DATA_DIR, global_var.GAR_INFO_FILE), 'rb') as f:
             self.class_info = pickle.load(f)
-
-        # skirt_weight: n_skirt x n_body
-        # skirt_skinning: n_skirt x 24
         self.skirt_weight = ch.array(np.load(os.path.join(
             global_var.DATA_DIR, 'skirt_weight.npz'))['w'])
         self.skirt_skinning = self.skirt_weight.dot(self.smpl_base.weights)
+        self._garment_loaded = True
 
     def run(self, beta=None, theta=None, garment_d=None, garment_class=None):
         """Outputs body and garment of specified garment class given theta, beta and displacements."""
+        if garment_d is not None and garment_class is not None:
+            self._load_garment_data()
         if beta is not None:
             self.smpl_base.betas[:beta.shape[0]] = beta
         else:

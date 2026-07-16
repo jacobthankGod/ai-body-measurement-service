@@ -1,0 +1,284 @@
+<!doctype html>
+<html lang="en">
+<head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1.0">
+<title>TailorNet VTO Viewer — KORRA</title>
+<style>
+  * { margin:0; padding:0; box-sizing:border-box; }
+  body { background:#050505; color:#fff; font-family:'Inter',sans-serif; overflow:hidden; height:100vh; display:flex; flex-direction:column; }
+  #canvas-container { flex:1; position:relative; }
+  canvas { display:block; width:100%; height:100%; }
+  #controls { position:absolute; bottom:24px; left:50%; transform:translateX(-50%); display:flex; gap:16px; align-items:center;
+    background:rgba(11,11,12,0.85); backdrop-filter:blur(16px); border:1px solid rgba(255,255,255,0.08);
+    border-radius:16px; padding:12px 20px; z-index:10; flex-wrap:wrap; justify-content:center; }
+  #controls label { font-size:11px; font-weight:600; color:#a3a3a3; white-space:nowrap; }
+  #controls select, #controls input[type=range] { background:rgba(255,255,255,0.06); border:1px solid rgba(255,255,255,0.1);
+    border-radius:8px; color:#fff; padding:6px 10px; font-size:12px; outline:none; cursor:pointer; }
+  #controls select option { background:#1a1a1a; }
+  #controls input[type=range] { width:100px; padding:0; height:4px; -webkit-appearance:none; appearance:none; }
+  #controls input[type=range]::-webkit-slider-thumb { -webkit-appearance:none; width:14px; height:14px; border-radius:50%;
+    background:#c6ff00; cursor:pointer; }
+  #controls input[type=range]::-moz-range-thumb { width:14px; height:14px; border-radius:50%; background:#c6ff00; border:none; cursor:pointer; }
+  .btn { padding:6px 14px; border-radius:8px; border:1px solid rgba(255,255,255,0.1); background:rgba(255,255,255,0.04);
+    color:#fff; font-size:11px; font-weight:700; cursor:pointer; transition:0.2s; }
+  .btn:hover { background:rgba(198,255,0,0.15); border-color:#c6ff00; }
+  .btn.active { background:rgba(198,255,0,0.2); border-color:#c6ff00; color:#c6ff00; }
+  #stats { position:absolute; top:16px; left:16px; font-size:11px; color:#737373; font-family:monospace;
+    background:rgba(0,0,0,0.6); padding:8px 12px; border-radius:8px; border:1px solid rgba(255,255,255,0.06); z-index:10; line-height:1.5; }
+  #stats span { color:#a3a3a3; }
+  h1 { position:absolute; top:16px; left:50%; transform:translateX(-50%); font-size:13px; font-weight:800;
+    color:#c6ff00; letter-spacing:0.1em; text-transform:uppercase; z-index:10;
+    background:rgba(0,0,0,0.6); padding:6px 16px; border-radius:99px; border:1px solid rgba(198,255,0,0.2); }
+  @media(max-width:600px) { #controls { bottom:12px; padding:10px 14px; gap:10px; font-size:10px; width:96%; }
+    #controls label { font-size:10px; } #controls input[type=range] { width:60px; } }
+</style>
+</head>
+<body>
+<h1>TAILORNET VTO VIEWER</h1>
+<div id="canvas-container"></div>
+<div id="stats">
+  <div id="stats-body">Body: —</div>
+  <div id="stats-garment">Garment: —</div>
+</div>
+<div id="controls">
+  <label>Subject</label>
+  <select id="subject-select">
+    <option value="1">Subj 1 · slight (-0.13)</option>
+    <option value="2">Subj 2 · average (+0.52)</option>
+    <option value="3" selected>Subj 3 · avg+ (+0.77)</option>
+    <option value="4">Subj 4 · large (+1.11)</option>
+    <option value="5">Subj 5 · extreme (+1.34)</option>
+  </select>
+  <label>Garment</label>
+  <button class="btn active" id="toggle-garment">ON</button>
+  <label>Opacity</label>
+  <input type="range" id="opacity-slider" min="10" max="100" value="85">
+  <span id="opacity-label" style="font-size:11px;color:#a3a3a3;min-width:28px">85%</span>
+  <label>Auto-rotate</label>
+  <button class="btn active" id="toggle-rotate">ON</button>
+</div>
+
+<script type="importmap">
+{
+  "imports": {
+    "three": "https://cdn.jsdelivr.net/npm/three@0.160.0/build/three.module.js",
+    "three/addons/": "https://cdn.jsdelivr.net/npm/three@0.160.0/examples/jsm/"
+  }
+}
+</script>
+<script type="module">
+import * as THREE from 'three';
+import { OrbitControls } from 'three/addons/controls/OrbitControls.js';
+
+const container = document.getElementById('canvas-container');
+const scene = new THREE.Scene();
+scene.background = new THREE.Color(0x111111);
+const camera = new THREE.PerspectiveCamera(30, container.clientWidth / container.clientHeight, 0.01, 100);
+camera.position.set(1.2, 0.8, 1.8);
+
+const renderer = new THREE.WebGLRenderer({ antialias: true });
+renderer.setSize(container.clientWidth, container.clientHeight);
+renderer.setPixelRatio(Math.min(devicePixelRatio, 2));
+renderer.toneMapping = THREE.ACESFilmicToneMapping;
+renderer.toneMappingExposure = 1.2;
+container.appendChild(renderer.domElement);
+
+const controls = new OrbitControls(camera, renderer.domElement);
+controls.target.set(0, 0, 0);
+controls.enableDamping = true;
+controls.dampingFactor = 0.08;
+controls.minDistance = 0.5;
+controls.maxDistance = 5;
+controls.autoRotate = true;
+controls.autoRotateSpeed = 2.0;
+controls.update();
+
+// Lighting
+const ambient = new THREE.AmbientLight(0x404060, 0.6);
+scene.add(ambient);
+
+const key = new THREE.DirectionalLight(0xffffff, 1.8);
+key.position.set(2, 3, 2);
+scene.add(key);
+
+const fill = new THREE.DirectionalLight(0x8888ff, 0.4);
+fill.position.set(-1, 0.5, -1);
+scene.add(fill);
+
+const rim = new THREE.DirectionalLight(0xff8844, 0.3);
+rim.position.set(0, -1, -2);
+scene.add(rim);
+
+const hemi = new THREE.HemisphereLight(0x8888ff, 0x444422, 0.6);
+scene.add(hemi);
+
+// Grid helper for ground reference
+const grid = new THREE.GridHelper(2, 20, 0x333333, 0x222222);
+grid.position.y = -0.5;
+scene.add(grid);
+
+// State
+let bodyMesh = null;
+let garmentMesh = null;
+let garmentVisible = true;
+let garmentOpacity = 0.85;
+
+// Same OBJ loader as korra_viz.js loadGarment()
+async function loadObj(url, color = 0xffffff, opacity = 1.0, side = THREE.DoubleSide) {
+  const resp = await fetch(url);
+  if (!resp.ok) throw new Error('Failed to load: ' + url);
+  const text = await resp.text();
+
+  const vertices = [];
+  const faces = [];
+  const lines = text.split('\n');
+
+  for (const line of lines) {
+    const t = line.trim();
+    if (t.startsWith('v ')) {
+      const p = t.split(/\s+/);
+      vertices.push(parseFloat(p[1]), parseFloat(p[2]), parseFloat(p[3]));
+    } else if (t.startsWith('f ')) {
+      const p = t.split(/\s+/);
+      const p1 = parseInt(p[1].split('/')[0]) - 1;
+      const p2 = parseInt(p[2].split('/')[0]) - 1;
+      const p3 = parseInt(p[3].split('/')[0]) - 1;
+      faces.push(p1, p2, p3);
+    }
+  }
+
+  const geo = new THREE.BufferGeometry();
+  geo.setAttribute('position', new THREE.Float32BufferAttribute(vertices, 3));
+  if (faces.length) geo.setIndex(faces);
+  geo.computeVertexNormals();
+
+  const mat = new THREE.MeshPhongMaterial({
+    color, transparent: opacity < 1, opacity,
+    side, shininess: 30,
+    depthWrite: opacity > 0.99,
+  });
+
+  return new THREE.Mesh(geo, mat);
+}
+
+function disposeMesh(mesh) {
+  if (!mesh) return;
+  scene.remove(mesh);
+  if (mesh.geometry) mesh.geometry.dispose();
+  if (mesh.material) mesh.material.dispose();
+}
+
+async function loadSubject(num) {
+  disposeMesh(bodyMesh);
+  disposeMesh(garmentMesh);
+  bodyMesh = null;
+  garmentMesh = null;
+
+  const baseUrl = `/meshes/garments/ssp3d_subj_${num}`;
+
+  try {
+    const [body, garment] = await Promise.all([
+      loadObj(baseUrl + '_body.obj', 0x8888cc, 1.0, THREE.DoubleSide),
+      loadObj(baseUrl + '_garment.obj', 0xc6ff00, garmentOpacity, THREE.DoubleSide),
+    ]);
+
+    // Scale and center
+    const box = new THREE.Box3().setFromObject(body);
+    const size = box.getSize(new THREE.Vector3());
+    const center = box.getCenter(new THREE.Vector3());
+
+    // Normalize height to ~1.8m for consistent viewing
+    const heightTarget = 1.8;
+    const scale = heightTarget / size.y;
+
+    body.scale.setScalar(scale);
+    garment.scale.setScalar(scale);
+
+    // Center on Y origin (feet at y=0)
+    const bodyBox = new THREE.Box3().setFromObject(body);
+    const bodyCenter = bodyBox.getCenter(new THREE.Vector3());
+    const bodyMin = bodyBox.min;
+
+    body.position.y = -bodyMin.y;
+    garment.position.y = -bodyMin.y;
+
+    // Body color: dark blue-gray with low opacity to see through
+    body.material.color.setHex(0x6666aa);
+    body.material.transparent = true;
+    body.material.opacity = 0.85;
+    body.material.depthWrite = false;
+    body.material.needsUpdate = true;
+
+    scene.add(body);
+    scene.add(garment);
+    bodyMesh = body;
+    garmentMesh = garment;
+
+    // Update stats
+    const bv = body.geometry.attributes.position.count;
+    const gv = garment.geometry.attributes.position.count;
+    const gf = garment.geometry.index ? garment.geometry.index.count / 3 : 0;
+    document.getElementById('stats-body').innerHTML = `Body: <span>${bv} verts</span>`;
+    document.getElementById('stats-garment').innerHTML =
+      `Garment: <span>${gv} verts</span> · <span>${gf} faces</span> · <span style="color:#c6ff00">${size.y.toFixed(2)}m</span>`;
+
+    // Auto-frame camera
+    controls.target.set(0, 0, 0);
+    controls.update();
+
+  } catch (e) {
+    console.error('Failed to load subject:', e);
+    const el = document.getElementById('stats-body');
+    if (el) el.innerHTML = `<span style="color:#ff4444">Error: ${e.message || e}</span>`;
+  }
+}
+
+// Controls
+document.getElementById('subject-select').addEventListener('change', (e) => {
+  loadSubject(e.target.value);
+});
+
+document.getElementById('toggle-garment').addEventListener('click', (e) => {
+  garmentVisible = !garmentVisible;
+  if (garmentMesh) garmentMesh.visible = garmentVisible;
+  e.target.textContent = garmentVisible ? 'ON' : 'OFF';
+  e.target.classList.toggle('active', garmentVisible);
+});
+
+document.getElementById('toggle-rotate').addEventListener('click', (e) => {
+  controls.autoRotate = !controls.autoRotate;
+  e.target.textContent = controls.autoRotate ? 'ON' : 'OFF';
+  e.target.classList.toggle('active', controls.autoRotate);
+});
+
+document.getElementById('opacity-slider').addEventListener('input', (e) => {
+  garmentOpacity = parseInt(e.target.value) / 100;
+  if (garmentMesh) {
+    garmentMesh.material.opacity = garmentOpacity;
+    garmentMesh.material.transparent = garmentOpacity < 1;
+    garmentMesh.material.needsUpdate = true;
+  }
+  document.getElementById('opacity-label').textContent = e.target.value + '%';
+});
+
+// Resize
+window.addEventListener('resize', () => {
+  const w = container.clientWidth;
+  const h = container.clientHeight;
+  camera.aspect = w / h;
+  camera.updateProjectionMatrix();
+  renderer.setSize(w, h);
+});
+
+// Animate
+function animate() {
+  requestAnimationFrame(animate);
+  controls.update();
+  renderer.render(scene, camera);
+}
+
+// Load default subject
+loadSubject(3);
+animate();
+</script>
+</body>
+</html>

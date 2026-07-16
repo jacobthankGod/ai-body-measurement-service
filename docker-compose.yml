@@ -9,6 +9,11 @@ services:
     ports:
       - "8080:8080"
     env_file: .env
+    environment:
+      - PAYSTACK_PUBLIC_KEY=pk_live_b401fac946e696dad14e6e4bd13d706313215f06
+      - PAYSTACK_SECRET_KEY=${PAYSTACK_SECRET_KEY}
+      - SUPABASE_URL=https://blsettabymllulsxtziw.supabase.co
+      - SUPABASE_ANON_KEY=eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImJsc2V0dGFieW1sbHVsc3h0eml3Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3ODAwNTY3NjksImV4cCI6MjA5NTYzMjc2OX0.PuMsTbgyRRcCQ04Y7Y9Y75WjRqmzgMP4S2_B4372V_U
     volumes:
       - ./public/meshes:/app/public/meshes
       - /home/ubuntu/tailornet_data:/app/api/services/tailornet_data

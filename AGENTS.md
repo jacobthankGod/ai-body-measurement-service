@@ -161,9 +161,58 @@ See `PLAN_SELF_IMPROVING_ACCURACY.md` (4,100 lines) — full implementation plan
 ### Track E: Freesewing Microservice ❌ (removed 2026-07-03)
 Entire Freesewing implementation removed: `services/freesewing/` directory, Docker container, all frontend pattern code (PatternDraft engine, PatternTemplates, pattern tab/view, DXF export, download modal), backend `compute_freesewing_measurements()` in extract_measurements.py, and nginx proxy rules.
 
+### Garment Reconstruction Pipeline ✅ (2026-07-10)
+Image → 3D Mesh + Sewing Pattern — zero-cost, self-hosted.
+
+| Component | Location | Purpose |
+|-----------|----------|---------|
+| Kaggle Notebook | `kaggle-garment-backend/notebook.ipynb` | GPU backend (GarmentRec + GarmentGPT + SAM2 + GarmentCode) |
+| API Server | `kaggle-garment-backend/api_server.py` | FastAPI inference server on Kaggle |
+| EC2 Proxy | `garment-proxy/server.py` | Routes requests to Kaggle tunnel, caching, rate limiting |
+| Frontend | `public/assets/measurement-screen.js` | `buildReconstructView()` + `_runReconstruct()` |
+| Plan | `PLAN_GARMENT_RECONSTRUCTION.md` | Full 2000-line implementation plan |
+
+**Architecture:**
+```
+Frontend → EC2 Proxy (port 8001) → Cloudflare Tunnel → Kaggle GPU (T4 x2)
+```
+
+**Models:**
+- GarmentRec: 3D mesh reconstruction (Google Drive weights)
+- GarmentGPT: sewing pattern generation (HuggingFace: ChimerAI/GarmentGPT)
+- SAM2: garment segmentation (Facebook Research)
+- GarmentCode: pattern→mesh simulation (pip: pygarment)
+
+**Deployment:**
+1. Upload `notebook.ipynb` to Kaggle, start with GPU
+2. EC2 proxy already deployed (systemd: `garment-proxy`)
+3. Update tunnel URL: `ssh -i ~/Downloads/korra-ai-key.pem ubuntu@korra.work "sudo sed -i 's|KAGGLE_TUNNEL_URL=.*|KAGGLE_TUNNEL_URL=https://YOUR-TUNNEL.trycloudflare.com|' /etc/systemd/system/garment-proxy.service && sudo systemctl daemon-reload && sudo systemctl restart garment-proxy"`
+4. Current tunnel URL: `https://alternative-nasa-slope-clone.trycloudflare.com` (active 2026-07-14 00:02 UTC). **New one generated each Kaggle restart. The notebook auto-registers its tunnel with the EC2 proxy via `POST /api/v2/garment/internal/tunnel` (see Cell 10), so the manual `sed` step below is no longer required — just re-run the notebook.**
+
+**Pipeline verified working end-to-end 2026-07-10** (HTTP 200, ZIP with mesh.obj + pattern.json + meta.json).
+
+**Known fix (2026-07-10):** `onnxruntime-gpu` fails on Kaggle (missing `libcudart.so.13` → `rembg` calls `sys.exit(1)` → bare 500). Cell 1 now installs plain `onnxruntime` (CPU). `rembg` is pre-warmed at startup (downloads u2net ~176MB on first run, ~3s cached); errors surface via `/debug/error` and `/kaggle/working/last_error.txt`. `api_server.py` catches `BaseException` (not just `Exception`) via middleware + endpoint handler.
+
+## Kaggle Accounts
+| Email | Username | API Key |
+|-------|----------|---------|
+| jacobthankgod4@gmail.com | jacobthankgod | `KGAT_4ada61fb7668048f325fa249acbf744e` |
+| jacobchibbs@gmail.com | jacobchibbs | `KGAT_05497d83f811e16b5494e837c67dd705` |
+| gardeinfoodsllc@gmail.com | gardeinfoodsllc | `KGAT_00149c6f969f4e7af1a6ee2eab3eca48` |
+| delightnnedinma1@gmail.com | delightnnedinma | `KGAT_b59a811e4ad65c91665e69c1c64360be` |
+
+## API Keys (configured 2026-07-09)
+- **Supabase anon**: `eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImJsc2V0dGFieW1sbHVsc3h0eml3Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3ODAwNTY3NjksImV4cCI6MjA5NTYzMjc2OX0.PuMsTbgyRRcCQ04Y7Y9Y75WjRqmzgMP4S2_B4372V_U`
+- **Supabase service_role**: `eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImJsc2V0dGFieW1sbHVsc3h0eml3Iiwicm9sZSI6InNlcnZpY2Vfcm9sZSIsImlhdCI6MTc4MDA1Njc2OSwiZXhwIjoyMDk1NjMyNzY5fQ.oQz1KDOXuPdP2l35pXQVjry5stoe9_Wp4nzEDwPXX2I`
+- **Paystack live secret**: `sk_live_*` (stored in environment variables)
+- **Paystack test secret**: `sk_test_*` (stored in environment variables)
+- **Paystack live public**: `pk_live_b401fac946e696dad14e6e4bd13d706313215f06`
+- **Supabase URL**: `https://blsettabymllulsxtziw.supabase.co`
+- **Supabase DB**: `postgresql://postgres:J@c0b@$$#&12345@db.blsettabymllulsxtziw.supabase.co:5432/postgres`
+
 ## Next Steps
-- Run `setup_storage.py` (needs SUPABASE_URL + SUPABASE_SERVICE_ROLE_KEY)
-- Run migration (needs SUPABASE_DB_URL)
 - Backfill SMPL params for production scans
 - Build first dataset → train models → deploy via A/B test
-- Start Track F: TailorNet neural cloth simulation bridge
+- Upload notebook.ipynb to Kaggle and start GPU session
+- Update tunnel URL on EC2 after Kaggle notebook starts
+- Add Replicate credits for try-on inference

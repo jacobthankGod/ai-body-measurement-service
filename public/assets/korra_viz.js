@@ -34,6 +34,9 @@ class KorraVisualizer {
         this._orbitSpherical = new THREE.Spherical(3.0, Math.PI / 2, 0);
         this._orbitState = { active: false, type: null, startX: 0, startY: 0, startSpherical: null, startTarget: null };
         this._meshSize = 0;
+        this.autoRotate = false;
+        this.autoRotateSpeed = 2.0;
+        this._tailornetBodyLoaded = false;
     }
 
     init(containerId) {
@@ -52,6 +55,8 @@ class KorraVisualizer {
         this.renderer = new THREE.WebGLRenderer({ antialias: true, alpha: true, preserveDrawingBuffer: true });
         this.renderer.setSize(container.clientWidth, container.clientHeight);
         this.renderer.setPixelRatio(window.devicePixelRatio);
+        this.renderer.toneMapping = THREE.ACESFilmicToneMapping;
+        this.renderer.toneMappingExposure = 1.2;
         container.innerHTML = '';
         container.appendChild(this.renderer.domElement);
         this._currentContainer = containerId;
@@ -84,6 +89,10 @@ class KorraVisualizer {
                 this._outline.position.copy(this.mesh.position);
                 this._outline.rotation.copy(this.mesh.rotation);
                 this._outline.scale.copy(this.mesh.scale);
+            }
+            if (this.autoRotate) {
+                this._orbitSpherical.theta += 0.005 * this.autoRotateSpeed;
+                this._applyOrbit();
             }
             this.renderer.render(this.scene, this.camera);
         };
@@ -547,6 +556,37 @@ class KorraVisualizer {
         if (!this.garmentMeshes) return;
         for (let i = 0; i < this.garmentMeshes.length; i++) {
             if (this.garmentMeshes[i]) this.garmentMeshes[i].visible = visible;
+        }
+    }
+
+    setAutoRotate(enabled) {
+        this.autoRotate = enabled;
+    }
+
+    async loadTailornetBody(url) {
+        if (!this.scene) return null;
+        try {
+            const cached = this._meshCache.get(url);
+            if (cached) {
+                this.parseAndRenderOBJ(cached);
+                this._tailornetBodyLoaded = true;
+                return this.mesh;
+            }
+            const controller = new AbortController();
+            const timeout = setTimeout(() => controller.abort(), 15000);
+            const text = await fetch(url, { signal: controller.signal }).then(r => {
+                clearTimeout(timeout);
+                if (!r.ok) throw new Error('TailorNet body missing');
+                return r.text();
+            });
+            this._meshCache.set(url, text);
+            this.parseAndRenderOBJ(text);
+            this._tailornetBodyLoaded = true;
+            return this.mesh;
+        } catch (e) {
+            console.warn('TailorNet body load failed:', e);
+            this._tailornetBodyLoaded = false;
+            return null;
         }
     }
 
