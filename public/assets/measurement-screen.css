@@ -3034,6 +3034,99 @@
   color: var(--Neutral-300);
 }
 
+/* ═══ VTO CAROUSEL (Multi-Angle) ═══ */
+.ms-vto-carousel {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+  width: 100%;
+}
+.ms-vto-tabs {
+  display: flex;
+  gap: 4px;
+  justify-content: center;
+}
+.ms-vto-tab {
+  padding: 8px 20px;
+  border-radius: 8px;
+  border: 1px solid var(--Glass-Border);
+  background: transparent;
+  color: var(--Neutral-400);
+  font-size: 12px;
+  font-weight: 700;
+  cursor: pointer;
+  font-family: inherit;
+  transition: all 0.2s;
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+}
+.ms-vto-tab:hover {
+  background: rgba(255,255,255,0.06);
+  color: var(--Neutral-200);
+}
+.ms-vto-tab.active {
+  background: var(--Accent-Teal);
+  color: #0A0A0A;
+  border-color: var(--Accent-Teal);
+}
+.ms-vto-image-wrap {
+  position: relative;
+  width: 100%;
+  max-width: 360px;
+  margin: 0 auto;
+  aspect-ratio: 3/4;
+  border-radius: 12px;
+  overflow: hidden;
+  background: var(--Surface-Soft);
+  border: 1px solid var(--Glass-Border);
+}
+.ms-vto-image-wrap img {
+  width: 100%;
+  height: 100%;
+  object-fit: contain;
+  display: block;
+}
+.ms-vto-no-result {
+  position: absolute;
+  inset: 0;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  color: var(--Neutral-500);
+  font-size: 13px;
+}
+
+/* ═══ VTO SUBSCRIPTION BADGE ═══ */
+.ms-vto-sub-badge {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  padding: 4px 10px;
+  border-radius: 6px;
+  font-size: 11px;
+  font-weight: 600;
+  background: rgba(46, 204, 113, 0.12);
+  color: #2ECC71;
+  border: 1px solid rgba(46, 204, 113, 0.25);
+}
+.ms-vto-sub-badge.expired {
+  background: rgba(231, 76, 60, 0.12);
+  color: #E74C3C;
+  border-color: rgba(231, 76, 60, 0.25);
+}
+.ms-vto-sub-badge .dot {
+  width: 6px;
+  height: 6px;
+  border-radius: 50%;
+  background: currentColor;
+}
+.ms-vto-usage {
+  font-size: 11px;
+  color: var(--Neutral-400);
+  text-align: center;
+  margin-top: 6px;
+}
+
 /* ═══ RECON MESH CONTROLS (Try-on overlay) ═══ */
 .ms-recon-mesh-controls {
   position: absolute;

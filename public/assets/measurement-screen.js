@@ -2124,6 +2124,11 @@ window.KORRA_MS = {
           </button>
           <div class="ms-tryon-title">Virtual Try-On</div>
           <div class="ms-tryon-subtitle">AI-powered garment visualization</div>
+          <div class="ms-vto-sub-badge" id="ms-vto-sub-badge" style="display:none">
+            <span class="dot"></span>
+            <span id="ms-vto-sub-text">Active</span>
+          </div>
+          <div class="ms-vto-usage" id="ms-vto-usage" style="display:none"></div>
         </div>
         <div class="ms-tryon-input-area">
           <div class="ms-tryon-preview-box" id="ms-tryon-person-box" style="${hasScan ? 'display:none' : ''}">
@@ -2305,6 +2310,46 @@ window.KORRA_MS = {
     };
     setupUpload('ms-tryon-person-file', 'ms-tryon-person-img', 'ms-tryon-person-placeholder', 'person');
     setupUpload('ms-tryon-garment-file', 'ms-tryon-garment-img', 'ms-tryon-garment-placeholder', 'garment');
+
+    // Phase 200: Check subscription status on view load
+    this._checkVtoSubscription();
+  },
+
+  async _checkVtoSubscription() {
+    const badge = document.getElementById('ms-vto-sub-badge');
+    const badgeText = document.getElementById('ms-vto-sub-text');
+    const usageEl = document.getElementById('ms-vto-usage');
+    const btn = document.getElementById('ms-tryon-generate-btn');
+    try {
+      const { data: { session } } = await window.KORRA_DB.auth.getSession();
+      if (!session) return;
+      const res = await fetch('/api/v2/garment/vto/status', {
+        headers: { 'Authorization': `Bearer ${session.access_token}` },
+      });
+      if (!res.ok) return;
+      const data = await res.json();
+      const sub = data.subscription || {};
+      if (badge) {
+        badge.style.display = 'inline-flex';
+        if (sub.active) {
+          badge.classList.remove('expired');
+          if (badgeText) badgeText.textContent = `${sub.plan || 'Active'}`;
+        } else {
+          badge.classList.add('expired');
+          if (badgeText) badgeText.textContent = 'No Subscription';
+          if (btn) {
+            btn.disabled = true;
+            btn.title = 'Virtual Try-On requires an active subscription';
+          }
+        }
+      }
+      if (usageEl) {
+        usageEl.style.display = 'block';
+        usageEl.textContent = `${data.remaining} try-ons remaining today`;
+      }
+    } catch (e) {
+      console.warn('[VTO] Subscription check failed:', e);
+    }
   },
 
   _checkTryOnReady() {
@@ -2351,51 +2396,163 @@ window.KORRA_MS = {
 
     btn.style.display = 'none';
     status.style.display = 'flex';
-    if (statusText) statusText.textContent = 'Generating try-on... (~2 min)';
+    if (statusText) statusText.textContent = 'Checking subscription...';
     results.style.display = 'none';
 
     try {
       const { data: { session } } = await window.KORRA_DB.auth.getSession();
-      const formData = new FormData();
-      formData.append('scan_id', this.data?.id || '');
-      formData.append('attire', this.activeContext || 't-shirt');
-      formData.append('person_image', this._tryonPersonFile);
-      formData.append('garment_image', this._tryonGarmentFile);
+      if (!session) throw new Error('Please sign in to use Virtual Try-On');
 
-      const res = await fetch('/api/v2/tryon', {
+      // Phase 149: Initialize multi-angle data model
+      this._vtoAngles = ['front', 'side', 'back'];
+      this._vtoResults = {};
+
+      // ── Step 1: Synthesize views (front/side/back neutral triad) ──
+      if (statusText) statusText.textContent = 'Synthesizing views... (~30s)';
+      const synFormData = new FormData();
+      synFormData.append('file', this._tryonPersonFile);
+
+      const synRes = await fetch('/api/v2/garment/vto/synthesize', {
         method: 'POST',
         headers: { 'Authorization': `Bearer ${session.access_token}` },
-        body: formData
+        body: synFormData,
       });
 
-      if (!res.ok) {
-        const err = await res.json().catch(() => ({}));
-        throw new Error(err.detail || `Try-on failed (${res.status})`);
+      if (!synRes.ok) {
+        const err = await synRes.json().catch(() => ({}));
+        // Handle subscription required
+        if (synRes.status === 403 && err.error === 'subscription_required') {
+          throw new Error('Virtual Try-On requires an active subscription. Please upgrade your plan.');
+        }
+        // Handle rate limit
+        if (synRes.status === 429) {
+          const reset = err.resets_at ? new Date(err.resets_at).toLocaleTimeString() : 'tomorrow';
+          throw new Error(`Daily VTO limit reached (${err.used}/${err.limit}). Resets at ${reset}.`);
+        }
+        throw new Error(err.detail || err.message || `View synthesis failed (${synRes.status})`);
       }
 
-      const data = await res.json();
+      const synData = await synRes.json();
+      const synJobId = synData.job_id;
+
+      // ── Step 2: Stream synthesis progress via SSE ──
+      if (statusText) statusText.textContent = 'Processing views...';
+      await this._streamVtoProgress(synJobId, statusText, 'synthesizing');
+
+      // ── Step 3: Run try-on for each angle ──
+      const angles = ['front', 'side', 'back'];
+      for (let i = 0; i < angles.length; i++) {
+        const angle = angles[i];
+        if (statusText) statusText.textContent = `Generating ${angle} view... [${i+1}/3]`;
+
+        const tryonFormData = new FormData();
+        tryonFormData.append('file', this._tryonPersonFile);
+        tryonFormData.append('angle', angle);
+
+        const tryonRes = await fetch('/api/v2/garment/vto/tryon', {
+          method: 'POST',
+          headers: { 'Authorization': `Bearer ${session.access_token}` },
+          body: tryonFormData,
+        });
+
+        if (tryonRes.ok) {
+          const tryonData = await tryonRes.json();
+          await this._streamVtoProgress(tryonData.job_id, statusText, `tryon_${angle}`);
+          this._vtoResults[angle] = tryonData.result_url || `/api/v1/vto/result/${tryonData.job_id}`;
+        } else {
+          console.warn(`[VTO] ${angle} view failed:`, tryonRes.status);
+          this._vtoResults[angle] = null;
+        }
+      }
+
+      // ── Step 4: Display results with carousel ──
       status.style.display = 'none';
       results.style.display = 'block';
+      this._showVtoCarousel(resultsGrid);
 
-      if (data.result_urls && data.result_urls.length > 0) {
-        resultsGrid.innerHTML = '';
-        data.result_urls.forEach((url, i) => {
-          const card = document.createElement('div');
-          card.className = 'ms-tryon-result-card';
-          card.innerHTML = `<img src="${url}" alt="Try-on ${i+1}">`;
-          card.onclick = () => this._showTryOnResult(url);
-          resultsGrid.appendChild(card);
-          // Auto-show first result in viewport
-          if (i === 0) this._showTryOnResult(url);
-        });
-      } else {
-        resultsGrid.innerHTML = '<div class="ms-tryon-no-results">No results generated</div>';
-      }
     } catch (e) {
       status.style.display = 'none';
       btn.style.display = '';
-      alert('Try-on failed: ' + e.message);
+      if (statusText) statusText.textContent = e.message;
+      // Show retry button
+      btn.style.display = '';
+      btn.textContent = 'Retry Try-On';
     }
+  },
+
+  async _streamVtoProgress(jobId, statusTextEl, defaultStage) {
+    return new Promise((resolve) => {
+      const timeout = setTimeout(() => resolve(), 180000);
+      let settled = false;
+      const finish = () => { if (!settled) { settled = true; clearTimeout(timeout); resolve(); } };
+
+      fetch(`/api/v2/garment/vto/progress/${jobId}`)
+        .then(res => {
+          if (!res.ok) { finish(); return; }
+          const reader = res.body.getReader();
+          const decoder = new TextDecoder();
+          let buffer = '';
+          const pump = () => reader.read().then(({ done, value }) => {
+            if (done) { finish(); return; }
+            buffer += decoder.decode(value, { stream: true });
+            const lines = buffer.split('\n');
+            buffer = lines.pop();
+            for (const line of lines) {
+              if (!line.startsWith('data: ')) continue;
+              try {
+                const evt = JSON.parse(line.slice(6));
+                if (statusTextEl) statusTextEl.textContent = evt.message || `${evt.stage}...`;
+                if (evt.stage === 'complete' || evt.stage === 'error') { finish(); return; }
+              } catch (e) {}
+            }
+            pump();
+          }).catch(() => finish());
+          pump();
+        })
+        .catch(() => finish());
+    });
+  },
+
+  _showVtoCarousel(container) {
+    const angles = this._vtoAngles || ['front', 'side', 'back'];
+    const results = this._vtoResults || {};
+    let currentAngle = 'front';
+
+    container.innerHTML = `
+      <div class="ms-vto-carousel">
+        <div class="ms-vto-tabs">
+          ${angles.map(a => `
+            <button class="ms-vto-tab ${a === currentAngle ? 'active' : ''}" data-angle="${a}">
+              ${a.charAt(0).toUpperCase() + a.slice(1)}
+            </button>
+          `).join('')}
+        </div>
+        <div class="ms-vto-image-wrap">
+          <img id="ms-vto-result-img" src="${results[currentAngle] || ''}" alt="VTO result" style="${results[currentAngle] ? '' : 'display:none'}">
+          <div class="ms-vto-no-result" style="${results[currentAngle] ? 'display:none' : ''}">No ${currentAngle} view available</div>
+        </div>
+      </div>
+    `;
+
+    // Tab switching
+    container.querySelectorAll('.ms-vto-tab').forEach(tab => {
+      tab.onclick = () => {
+        currentAngle = tab.dataset.angle;
+        container.querySelectorAll('.ms-vto-tab').forEach(t => t.classList.remove('active'));
+        tab.classList.add('active');
+        const img = container.querySelector('#ms-vto-result-img');
+        const noResult = container.querySelector('.ms-vto-no-result');
+        if (results[currentAngle]) {
+          img.src = results[currentAngle];
+          img.style.display = '';
+          noResult.style.display = 'none';
+        } else {
+          img.style.display = 'none';
+          noResult.style.display = '';
+          noResult.textContent = `No ${currentAngle} view available`;
+        }
+      };
+    });
   },
 
   _showTryOnResult(url) {

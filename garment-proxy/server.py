@@ -122,7 +122,63 @@ async def verify_jwt(authorization: str = None) -> str:
         print(f"[AUTH] JWT verification network error: {e}")
         raise HTTPException(502, "Auth service unavailable")
 
-# ── Routes ─────────────────────────────────────────────────────
+# ── VTO rate limit (Phase 204): 5 per user per day, tracked in Supabase ──
+VTO_DAILY_LIMIT = 5
+
+async def sb_get_vto_count_today(user_id: str) -> int:
+    """Count VTO generations for this user today (UTC)."""
+    today = datetime.now(timezone.utc).strftime("%Y-%m-%d")
+    resp = await sb_query(
+        "vto_usage",
+        select="id",
+        params={
+            "user_id": f"eq.{user_id}",
+            "created_at": f"gte.{today}T00:00:00Z",
+            "select": "id",
+        },
+    )
+    if resp.status_code == 200:
+        return len(resp.json())
+    return 0
+
+async def sb_record_vto_usage(user_id: str):
+    """Record a VTO generation for rate tracking."""
+    await sb_query("vto_usage", method="POST", json_data={
+        "user_id": user_id,
+        "created_at": datetime.now(timezone.utc).isoformat(),
+    })
+
+async def sb_get_vto_reset_time(user_id: str) -> str:
+    """Get when the user's daily VTO limit resets (next UTC midnight)."""
+    today = datetime.now(timezone.utc).strftime("%Y-%m-%d")
+    return f"{today}T23:59:59Z"
+
+async def check_subscription(user_id: str) -> dict:
+    """Check if user has an active subscription. Returns {active, plan, expires_at}."""
+    resp = await sb_query(
+        "subscriptions",
+        select="*",
+        params={
+            "user_id": f"eq.{user_id}",
+            "status": f"eq.active",
+            "select": "*",
+        },
+    )
+    if resp.status_code == 200:
+        subs = resp.json()
+        if subs:
+            sub = subs[0]
+            return {"active": True, "plan": sub.get("plan", "free"), "expires_at": sub.get("expires_at")}
+    return {"active": False, "plan": "free", "expires_at": None}
+
+async def sb_check_scan_ownership(user_id: str, scan_id: str) -> bool:
+    """Verify user owns this scan."""
+    resp = await sb_query(
+        "scans",
+        select="id",
+        params={"id": f"eq.{scan_id}", "user_id": f"eq.{user_id}"},
+    )
+    return resp.status_code == 200 and len(resp.json()) > 0
 @app.get("/api/v2/garment/health")
 @app.get("/health")
 async def health():
@@ -346,6 +402,188 @@ async def mesh_only(request: Request, file: UploadFile = File(...)):
 @app.post("/api/v2/garment/pattern-only")
 async def pattern_only(request: Request, file: UploadFile = File(...)):
     return await reconstruct_garment(request, file, include_mesh=False, include_pattern=True)
+
+# ═══════════════════════════════════════════════════════════════
+#  VTO — Virtual Try-On (subscription-gated, rate-limited)
+# ═══════════════════════════════════════════════════════════════
+
+@app.post("/api/v2/garment/vto/synthesize")
+async def vto_synthesize(request: Request, file: UploadFile = File(...)):
+    """
+    Multi-angle VTO: generates front/side/back neutral triad.
+    Requires active subscription. Rate-limited to 5/day per user.
+    """
+    user_id = await verify_jwt(request.headers.get("authorization"))
+
+    # ── Subscription gate (Phase 200) ──
+    sub = await check_subscription(user_id)
+    if not sub["active"]:
+        raise HTTPException(403, detail={
+            "error": "subscription_required",
+            "message": "Virtual Try-On requires an active subscription.",
+            "plan": sub["plan"],
+        })
+
+    # ── Rate limit (Phase 204): 5 VTO per user per day ──
+    vto_count = await sb_get_vto_count_today(user_id)
+    if vto_count >= VTO_DAILY_LIMIT:
+        reset_time = await sb_get_vto_reset_time(user_id)
+        raise HTTPException(429, detail={
+            "error": "vto_rate_limit",
+            "message": f"Daily VTO limit reached ({VTO_DAILY_LIMIT}/day).",
+            "used": vto_count,
+            "limit": VTO_DAILY_LIMIT,
+            "resets_at": reset_time,
+        })
+
+    # ── Validate image ──
+    image_bytes = await file.read()
+    if len(image_bytes) > 20 * 1024 * 1024:
+        raise HTTPException(413, "Image too large (max 20MB)")
+
+    # ── Forward to Kaggle synthesize-views endpoint ──
+    if not KAGGLE_TUNNEL_URL:
+        raise HTTPException(503, "No Kaggle backend connected")
+
+    # Record usage immediately (optimistic)
+    await sb_record_vto_usage(user_id)
+
+    try:
+        async with httpx.AsyncClient(timeout=httpx.Timeout(connect=15.0, read=180.0, write=30.0, pool=10.0)) as client:
+            files = {"file": (file.filename, image_bytes, file.content_type)}
+            params = {"user_id": user_id}
+            resp = await client.post(f"{KAGGLE_TUNNEL_URL}/api/v1/synthesize-views", files=files, params=params)
+
+            if resp.status_code == 200:
+                return resp.json()
+            elif resp.status_code == 429:
+                # Kaggle-side rate limit (shouldn't happen, but handle)
+                raise HTTPException(429, detail=resp.json())
+            else:
+                detail = ""
+                try:
+                    detail = resp.json().get("detail", resp.text[:300])
+                except Exception:
+                    detail = resp.text[:300]
+                raise HTTPException(502, f"Backend error {resp.status_code}: {detail}")
+    except HTTPException:
+        raise
+    except httpx.TimeoutException:
+        raise HTTPException(504, "VTO synthesis timed out")
+    except Exception as e:
+        raise HTTPException(502, f"VTO synthesis failed: {str(e)[:200]}")
+
+
+@app.post("/api/v2/garment/vto/tryon")
+async def vto_tryon(request: Request, file: UploadFile = File(...), angle: str = "front"):
+    """
+    Multi-angle VTO: runs OOTDiffusion for a single angle.
+    Requires active subscription. Rate-limited to 5/day per user.
+    """
+    user_id = await verify_jwt(request.headers.get("authorization"))
+
+    # ── Subscription gate ──
+    sub = await check_subscription(user_id)
+    if not sub["active"]:
+        raise HTTPException(403, detail={
+            "error": "subscription_required",
+            "message": "Virtual Try-On requires an active subscription.",
+            "plan": sub["plan"],
+        })
+
+    # ── Rate limit ──
+    vto_count = await sb_get_vto_count_today(user_id)
+    if vto_count >= VTO_DAILY_LIMIT:
+        reset_time = await sb_get_vto_reset_time(user_id)
+        raise HTTPException(429, detail={
+            "error": "vto_rate_limit",
+            "message": f"Daily VTO limit reached ({VTO_DAILY_LIMIT}/day).",
+            "used": vto_count,
+            "limit": VTO_DAILY_LIMIT,
+            "resets_at": reset_time,
+        })
+
+    image_bytes = await file.read()
+    if len(image_bytes) > 20 * 1024 * 1024:
+        raise HTTPException(413, "Image too large (max 20MB)")
+
+    if not KAGGLE_TUNNEL_URL:
+        raise HTTPException(503, "No Kaggle backend connected")
+
+    await sb_record_vto_usage(user_id)
+
+    try:
+        async with httpx.AsyncClient(timeout=httpx.Timeout(connect=15.0, read=180.0, write=30.0, pool=10.0)) as client:
+            files = {"file": (file.filename, image_bytes, file.content_type)}
+            params = {"user_id": user_id, "angle": angle}
+            resp = await client.post(f"{KAGGLE_TUNNEL_URL}/api/v1/vto/tryon", files=files, params=params)
+
+            if resp.status_code == 200:
+                return resp.json()
+            else:
+                detail = ""
+                try:
+                    detail = resp.json().get("detail", resp.text[:300])
+                except Exception:
+                    detail = resp.text[:300]
+                raise HTTPException(502, f"Backend error {resp.status_code}: {detail}")
+    except HTTPException:
+        raise
+    except httpx.TimeoutException:
+        raise HTTPException(504, "VTO try-on timed out")
+    except Exception as e:
+        raise HTTPException(502, f"VTO try-on failed: {str(e)[:200]}")
+
+
+@app.get("/api/v2/garment/vto/progress/{kaggle_job_id}")
+async def vto_progress_sse(kaggle_job_id: str):
+    """SSE relay for VTO progress (multi-angle)."""
+    if not KAGGLE_TUNNEL_URL:
+        raise HTTPException(503, "No Kaggle backend connected")
+
+    async def relay_events():
+        try:
+            async with httpx.AsyncClient(timeout=60) as client:
+                async with client.stream("GET", f"{KAGGLE_TUNNEL_URL}/api/v1/vto/progress/{kaggle_job_id}") as resp:
+                    if resp.status_code != 200:
+                        yield f"data: {json.dumps({'stage': 'error', 'progress': -1, 'message': 'SSE unavailable'})}\n\n"
+                        return
+                    async for line in resp.aiter_lines():
+                        if line.startswith("data: "):
+                            yield f"{line}\n\n"
+        except httpx.TimeoutException:
+            yield f"data: {json.dumps({'stage': 'error', 'progress': -1, 'message': 'SSE timed out'})}\n\n"
+        except Exception as e:
+            yield f"data: {json.dumps({'stage': 'error', 'progress': -1, 'message': f'SSE relay error: {str(e)[:100]}'})}\n\n"
+
+    return StreamingResponse(
+        relay_events(),
+        media_type="text/event-stream",
+        headers={"Cache-Control": "no-cache", "Connection": "keep-alive", "X-Accel-Buffering": "no"},
+    )
+
+
+@app.get("/api/v2/garment/vto/status")
+async def vto_status(user_id: str = None, request: Request = None):
+    """Return VTO usage status for the current user."""
+    if request:
+        uid = await verify_jwt(request.headers.get("authorization"))
+    elif user_id:
+        uid = user_id
+    else:
+        raise HTTPException(401, "Missing user")
+
+    count = await sb_get_vto_count_today(uid)
+    reset = await sb_get_vto_reset_time(uid)
+    sub = await check_subscription(uid)
+    return {
+        "used_today": count,
+        "limit": VTO_DAILY_LIMIT,
+        "remaining": max(0, VTO_DAILY_LIMIT - count),
+        "resets_at": reset,
+        "subscription": sub,
+    }
+
 
 if __name__ == "__main__":
     uvicorn.run(app, host="0.0.0.0", port=8001)
