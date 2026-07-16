@@ -1958,9 +1958,22 @@ window.KORRA_MS = {
   async _updateGarmentForContext() {
     if (this.activeContext === 'standard') {
       if (this.viewerInstance) this.viewerInstance.removeGarment();
+      if (this._reconMeshOnBody && this.viewerInstance?.scene) {
+        this.viewerInstance.scene.remove(this._reconMeshOnBody);
+        this._reconMeshOnBody = null;
+      }
       this._hideVtoSpinner();
       const vtoControls = document.getElementById('ms-vto-controls');
       if (vtoControls) vtoControls.style.display = 'none';
+      const reconControls = document.getElementById('ms-recon-mesh-controls');
+      if (reconControls) reconControls.style.display = 'none';
+      return;
+    }
+    // If we have a reconstructed mesh, use it directly instead of server drape
+    if (this._reconMeshData) {
+      console.log('[VTO] Using reconstructed mesh for try-on');
+      this._applyReconMeshToViewport();
+      this._hideVtoSpinner();
       return;
     }
     if (!this.data || !this.viewerInstance) return;
@@ -2415,6 +2428,8 @@ window.KORRA_MS = {
   _initReconstruct() {
     this._reconFile = null;
     this._reconObjectUrl = null;
+    this._reconMeshData = null;
+    this._reconMeshOnBody = null;
 
     const input = document.getElementById('ms-recon-file');
     if (!input) return;
@@ -2427,6 +2442,8 @@ window.KORRA_MS = {
       if (this._reconObjectUrl) URL.revokeObjectURL(this._reconObjectUrl);
       this._reconFile = file;
       this._reconObjectUrl = URL.createObjectURL(file);
+      this._reconMeshData = null;
+      this._reconMeshOnBody = null;
       if (img) { img.src = this._reconObjectUrl; img.style.display = ''; }
       if (placeholder) placeholder.style.display = 'none';
       const btn = document.getElementById('ms-recon-generate-btn');
@@ -3353,10 +3370,107 @@ window.KORRA_MS = {
   },
 
   _loadReconMeshIntoTryon() {
-    if (this._reconMesh) {
-      console.log('[RECON] Mesh ready for try-on:', this._reconMesh.geometry.attributes.position.count, 'vertices');
-      this.switchView('tryon');
+    if (!this._reconMesh) {
+      console.warn('[RECON] No mesh loaded for try-on');
+      return;
     }
+    // Store mesh data for try-on
+    this._reconMeshData = {
+      mesh: this._reconMesh,
+      scene: this._reconViewer?.scene,
+      vertexCount: this._reconMesh.geometry.attributes.position.count,
+      scale: 1.0,
+      position: { x: 0, y: 0, z: 0 },
+      opacity: 0.85,
+    };
+    console.log('[RECON] Mesh stored for try-on:', this._reconMeshData.vertexCount, 'vertices');
+    this.switchView('tryon');
+  },
+
+  _applyReconMeshToViewport() {
+    const data = this._reconMeshData;
+    if (!data || !data.mesh || !this.viewerInstance) return;
+    const mesh = data.mesh.clone();
+    mesh.material = mesh.material.clone();
+    mesh.material.transparent = true;
+    mesh.material.opacity = data.opacity;
+    mesh.scale.setScalar(data.scale);
+    mesh.position.set(data.position.x, data.position.y, data.position.z);
+    if (this.viewerInstance.scene) {
+      this.viewerInstance.scene.add(mesh);
+    }
+    this._reconMeshOnBody = mesh;
+    this._showReconMeshControls();
+    console.log('[RECON] Mesh applied to try-on viewport');
+  },
+
+  _showReconMeshControls() {
+    let controls = document.getElementById('ms-recon-mesh-controls');
+    if (!controls) {
+      controls = document.createElement('div');
+      controls.id = 'ms-recon-mesh-controls';
+      controls.className = 'ms-recon-mesh-controls';
+      controls.innerHTML = `
+        <div class="ms-recon-mesh-control-row">
+          <label>Scale</label>
+          <input type="range" id="recon-scale" min="0.3" max="3.0" step="0.05" value="1.0">
+          <span id="recon-scale-val">1.0x</span>
+        </div>
+        <div class="ms-recon-mesh-control-row">
+          <label>Opacity</label>
+          <input type="range" id="recon-opacity" min="0.1" max="1.0" step="0.05" value="0.85">
+          <span id="recon-opacity-val">85%</span>
+        </div>
+        <div class="ms-recon-mesh-control-row">
+          <label>Y Offset</label>
+          <input type="range" id="recon-y-offset" min="-0.5" max="0.5" step="0.01" value="0">
+          <span id="recon-y-val">0cm</span>
+        </div>
+        <button class="ms-recon-mesh-fit-btn" onclick="KORRA_MS._autoFitReconMesh()">Auto-Fit</button>
+      `;
+      const viewer = document.querySelector('.ms-viewer');
+      if (viewer) viewer.appendChild(controls);
+
+      document.getElementById('recon-scale')?.addEventListener('input', (e) => {
+        const v = parseFloat(e.target.value);
+        if (this._reconMeshOnBody) this._reconMeshOnBody.scale.setScalar(v);
+        this._reconMeshData.scale = v;
+        document.getElementById('recon-scale-val').textContent = v.toFixed(1) + 'x';
+      });
+      document.getElementById('recon-opacity')?.addEventListener('input', (e) => {
+        const v = parseFloat(e.target.value);
+        if (this._reconMeshOnBody) this._reconMeshOnBody.material.opacity = v;
+        this._reconMeshData.opacity = v;
+        document.getElementById('recon-opacity-val').textContent = Math.round(v * 100) + '%';
+      });
+      document.getElementById('recon-y-offset')?.addEventListener('input', (e) => {
+        const v = parseFloat(e.target.value);
+        if (this._reconMeshOnBody) this._reconMeshOnBody.position.y = v;
+        this._reconMeshData.position.y = v;
+        document.getElementById('recon-y-val').textContent = Math.round(v * 100) + 'cm';
+      });
+    }
+    controls.style.display = 'block';
+  },
+
+  _autoFitReconMesh() {
+    if (!this._reconMeshOnBody || !this.viewerInstance) return;
+    const box = new THREE.Box3().setFromObject(this._reconMeshOnBody);
+    const size = new THREE.Vector3();
+    box.getSize(size);
+    const targetHeight = 0.8;
+    const scale = targetHeight / size.y;
+    this._reconMeshOnBody.scale.setScalar(scale);
+    this._reconMeshData.scale = scale;
+    const center = new THREE.Vector3();
+    box.getCenter(center);
+    this._reconMeshOnBody.position.y = -center.y * scale + 0.1;
+    this._reconMeshData.position.y = this._reconMeshOnBody.position.y;
+    const scaleSlider = document.getElementById('recon-scale');
+    const ySlider = document.getElementById('recon-y-offset');
+    if (scaleSlider) { scaleSlider.value = scale; document.getElementById('recon-scale-val').textContent = scale.toFixed(1) + 'x'; }
+    if (ySlider) { ySlider.value = this._reconMeshOnBody.position.y; document.getElementById('recon-y-val').textContent = Math.round(this._reconMeshOnBody.position.y * 100) + 'cm'; }
+    console.log('[RECON] Auto-fit: scale=' + scale.toFixed(2));
   },
 };
 

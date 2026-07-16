@@ -3034,3 +3034,81 @@
   color: var(--Neutral-300);
 }
 
+/* ═══ RECON MESH CONTROLS (Try-on overlay) ═══ */
+.ms-recon-mesh-controls {
+  position: absolute;
+  bottom: 16px;
+  left: 50%;
+  transform: translateX(-50%);
+  background: rgba(10, 10, 10, 0.85);
+  backdrop-filter: blur(12px);
+  border: 1px solid var(--Glass-Border);
+  border-radius: 12px;
+  padding: 14px 18px;
+  display: none;
+  flex-direction: column;
+  gap: 10px;
+  z-index: 50;
+  min-width: 220px;
+}
+.ms-recon-mesh-control-row {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}
+.ms-recon-mesh-control-row label {
+  font-size: 11px;
+  color: var(--Neutral-400);
+  min-width: 52px;
+  font-weight: 600;
+}
+.ms-recon-mesh-control-row input[type="range"] {
+  flex: 1;
+  height: 4px;
+  -webkit-appearance: none;
+  appearance: none;
+  background: rgba(255,255,255,0.15);
+  border-radius: 2px;
+  outline: none;
+}
+.ms-recon-mesh-control-row input[type="range"]::-webkit-slider-thumb {
+  -webkit-appearance: none;
+  width: 14px;
+  height: 14px;
+  border-radius: 50%;
+  background: var(--Accent-Teal);
+  cursor: pointer;
+}
+.ms-recon-mesh-control-row span {
+  font-size: 11px;
+  color: var(--Neutral-300);
+  min-width: 36px;
+  text-align: right;
+  font-family: var(--Font-Mono);
+}
+.ms-recon-mesh-fit-btn {
+  margin-top: 4px;
+  padding: 8px 16px;
+  border-radius: 8px;
+  border: 1px solid var(--Accent-Teal);
+  background: transparent;
+  color: var(--Accent-Teal);
+  font-size: 11px;
+  font-weight: 700;
+  cursor: pointer;
+  font-family: inherit;
+  transition: all 0.2s;
+}
+.ms-recon-mesh-fit-btn:hover {
+  background: var(--Accent-Teal);
+  color: #0A0A0A;
+}
+
+@media (max-width: 900px) {
+  .ms-recon-mesh-controls {
+    bottom: 8px;
+    min-width: 200px;
+    padding: 10px 14px;
+  }
+}
+
