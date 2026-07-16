@@ -3,6 +3,10 @@
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <meta http-equiv="Cache-Control" content="no-cache, no-store, must-revalidate" />
+  <meta http-equiv="Pragma" content="no-cache" />
+  <meta http-equiv="Expires" content="0" />
+  <script>if(localStorage.getItem('_dv')!=='3'){localStorage.setItem('_dv','3');location.reload(true)}</script>
   <title>Dashboard | KORRA</title>
   <link rel="icon" type="image/png" href="/assets/body-capture.png">
   <link rel="preconnect" href="https://fonts.googleapis.com" />
@@ -92,8 +96,6 @@
     }
 
     /* Z-INDEX LAYER STANDARDIZATION */
-    :root { --sidebar-width: 260px; }
-    .sidebar-nav { z-index: 1000; }
     header { z-index: 1100; }
     .modal-overlay { z-index: 3000; }
     .toast-notification { z-index: 4000; }
@@ -258,65 +260,6 @@
 
     @media (max-width: 900px) { .credit-badge { display: none !important; } }
     @media (min-width: 901px) { .mobile-only { display: none !important; } }
-    @media (max-width: 900px) {
-      .sidebar-nav a[data-mobile-hide] { display: none !important; }
-      .sidebar-nav { justify-content: space-evenly; }
-    }
-
-    /* INLINE CENTER TAB — embedded in sidebar/bottom nav */
-    .nav-center {
-        display: none;
-        flex-direction: column;
-        align-items: center;
-        justify-content: center;
-        gap: 4px;
-        cursor: pointer;
-        position: relative;
-        flex: 1;
-    }
-    .nav-center-icon {
-        width: 40px;
-        height: 40px;
-        border-radius: 50%;
-        background: var(--Lemon);
-        display: flex;
-        align-items: center;
-        justify-content: center;
-        box-shadow: 0 0 20px rgba(198, 255, 0, 0.3);
-        transition: transform 0.25s cubic-bezier(0.2, 0.8, 0.2, 1);
-    }
-    .nav-center-icon:active { transform: scale(0.9); }
-    .nav-center-svg {
-        width: 22px;
-        height: 22px;
-        color: #050505;
-    }
-    .nav-center-bubble {
-        position: absolute;
-        top: -30px;
-        left: 50%;
-        transform: translateX(-50%);
-        background: var(--Lemon);
-        color: #050505;
-        font-size: 7px;
-        font-weight: 900;
-        padding: 3px 10px;
-        border-radius: 14px;
-        white-space: nowrap;
-        letter-spacing: 0.08em;
-        line-height: 1;
-    }
-    .nav-center-bubble::after {
-        content: '';
-        position: absolute;
-        bottom: -3px;
-        left: 50%;
-        transform: translateX(-50%) rotate(45deg);
-        width: 6px;
-        height: 6px;
-        background: var(--Lemon);
-    }
-    @media (max-width: 900px) { .nav-center { display: flex; } }
 
     main { padding-top: 96px; height: 100vh; overflow-y: auto; }
     .container { width: 100%; max-width: 1200px; margin: 0 auto; padding: 0 48px; }
@@ -345,6 +288,8 @@
     .action-card:hover img { opacity: 0.45; transform: scale(0.95); }
     .card-img-zoom { padding: 0px !important; object-fit: cover !important; }
     .action-card:hover .card-img-zoom { transform: scale(1.05) !important; }
+    .card-img-fit { padding: 24px !important; object-fit: contain !important; opacity: 0.85 !important; }
+    .action-card:hover .card-img-fit { transform: scale(0.97) !important; }
 
     .action-overlay {
       position: absolute; inset: 0;
@@ -486,78 +431,9 @@
     .btn-outline { height: 40px; padding: 0 20px; border-radius: 8px; border: 1px solid var(--Glass-Border); color: var(--White); font-size: 12px; font-weight: 800; text-transform: uppercase; cursor: pointer; text-decoration: none; display: inline-flex; align-items: center; transition: 0.2s; background: none; }
     .btn-outline:hover { background: var(--Glass); border-color: var(--White); }
     .btn-primary { height: 40px; padding: 0 20px; border-radius: 8px; background: var(--Mint); color: var(--Obsidian); font-size: 12px; font-weight: 800; text-transform: uppercase; cursor: pointer; border: none; transition: 0.2s; }
-    .grid-dashboard { display: block; align-items: start; height: 100%; }
-
-    .sidebar-nav {
-      position: fixed;
-      top: 80px;
-      left: 0;
-      width: var(--sidebar-width, 260px);
-      height: calc(100vh - 80px);
-      z-index: 1000;
-      background: #050505; /* Solid obsidian for true edge-to-edge contrast */
-      border-right: 1px solid var(--Glass-Border);
-      display: flex;
-      flex-direction: column;
-      transition: width 0.3s cubic-bezier(0.4, 0, 0.2, 1);
-      overflow-x: hidden;
-    }
-    .sidebar-nav.collapsed { width: 72px; }
-
-    .sidebar-label {
-      font-size: 10px;
-      font-weight: 900;
-      color: var(--Neutral-500);
-      text-transform: uppercase;
-      letter-spacing: 0.1em;
-      padding: 0 24px;
-      margin: 24px 0 12px;
-      white-space: nowrap;
-      opacity: 1;
-      transition: opacity 0.2s;
-    }
-    .sidebar-nav.collapsed .sidebar-label { opacity: 0; }
-
-    .sidebar-nav a {
-      display: flex;
-      align-items: center;
-      gap: 16px;
-      padding: 14px 24px;
-      color: var(--Neutral-400);
-      text-decoration: none;
-      font-size: 14px;
-      font-weight: 600;
-      transition: 0.3s;
-      cursor: pointer;
-      white-space: nowrap;
-      border-left: 3px solid transparent;
-    }
-    .sidebar-nav a:hover, .sidebar-nav a.active { background: var(--Glass); color: var(--Mint); border-left-color: var(--Mint); }
-    .sidebar-nav.collapsed a { padding: 14px 12px; gap: 0; min-width: 0; width: 100%; overflow: visible; justify-content: flex-start; }
-    .sidebar-nav.collapsed .collapse-toggle { padding: 16px 12px; gap: 0; min-width: 0; width: 100%; overflow: visible; justify-content: center; }
-    .sidebar-nav a .nav-text { transition: opacity 0.2s; }
-    .sidebar-nav.collapsed a .nav-text { opacity: 0; pointer-events: none; }
-    .sidebar-nav.collapsed .collapse-toggle .nav-text { display: none; }
-
-    .collapse-toggle {
-      margin-top: auto;
-      padding: 16px 24px;
-      border-top: 1px solid var(--Glass-Border);
-      cursor: pointer;
-      display: flex;
-      align-items: center;
-      gap: 16px;
-      color: var(--Neutral-500);
-      transition: 0.2s;
-    }
-    .collapse-toggle:hover { color: var(--Mint); background: var(--Glass); }
-    .collapse-toggle svg { transition: transform 0.3s; }
-    .sidebar-nav.collapsed .collapse-toggle svg { transform: rotate(180deg); }
-
     .main-content {
-      padding: 0;
+      padding: 32px 40px;
       min-height: 100%;
-      margin-left: var(--sidebar-width, 260px);
       display: flex;
       flex-direction: column;
       overflow-x: hidden;
@@ -565,75 +441,55 @@
       background: var(--Obsidian-Deep);
     }
 
+    /* Mobile Bottom Nav */
+    .mobile-bottom-nav { display: none; }
+
     @media (max-width: 900px) {
       header { padding: 0 16px; }
-      header .container { padding: 0; justify-content: flex-start; gap: 12px; }
+      header .container { padding: 0; justify-content: space-between; gap: 12px; }
+      header .container .logo { flex: 0; }
+      header .container #tab-overview { display: none; }
       .header-actions { margin-left: auto; }
-      .grid-dashboard { display: block; height: auto; overflow: visible; }
-      .main-content { margin-left: 0; }
-      .sidebar-nav {
-        position: fixed;
-        top: auto;
-        bottom: 24px;
-        left: 16px;
-        right: 16px;
-        height: 72px;
-        width: auto !important;
-        flex-direction: row;
-        border-right: none;
-        border: 1.5px solid var(--Lemon);
-        border-radius: 999px;
-        background: #0A0A0A;
-        z-index: 1000;
-        justify-content: space-evenly;
-        padding: 0 16px;
-        box-shadow: 0 0 40px rgba(198, 255, 0, 0.12);
-      }
-      .sidebar-nav a {
-        flex-direction: column;
-        gap: 4px;
-        padding: 10px 0;
-        font-size: 10px;
-        flex: 1;
-        border-left: none;
-        border-top: none;
-        min-height: 48px;
-        background: none;
-      }
-      .sidebar-nav a:hover, .sidebar-nav a.active { background: none; border-top: none; }
-      .sidebar-label, .collapse-toggle, .nav-text { display: none !important; }
-
-      /* Mobile text-only labels for one-thumb reach */
-      .sidebar-nav a::after {
-          content: attr(data-label);
-          font-size: 8px;
-          font-weight: 900;
-          text-transform: uppercase;
-          letter-spacing: 0.05em;
-          opacity: 0.6;
-      }
-      .sidebar-nav a.active::after { opacity: 1; color: var(--Lemon); }
-
-      /* Active indicator — two tiny bars under active tab */
-      .sidebar-nav a.active::before {
-          content: '';
-          position: absolute;
-          bottom: 6px;
-          left: 50%;
-          transform: translateX(-50%);
-          width: 12px;
-          height: 2px;
-          background: var(--Lemon);
-          border-radius: 2px;
-          box-shadow: 4px 0 0 0 var(--Lemon);
-      }
-
-      .main-content { padding: 12px 12px 120px; }
+      .main-content { padding: 12px 12px 80px; }
       .container { padding: 0 12px; }
       .purchase-overlay { top: 80px; left: 0; right: 0; bottom: 84px; }
       .scan-overlay { top: 80px; left: 0; right: 0; bottom: 84px; }
       #purchaseSuccess { top: 80px; left: 0; right: 0; bottom: 84px; }
       #creditOverlay { top: 80px; left: 0; right: 0; bottom: 84px; }
+
+      .mobile-bottom-nav {
+        display: flex;
+        position: fixed;
+        bottom: 0; left: 0; right: 0;
+        height: 72px;
+        background: #0A0A0A;
+        border-top: 1px solid var(--Glass-Border);
+        z-index: 1000;
+        justify-content: space-around;
+        align-items: center;
+        padding: 0 8px;
+        padding-bottom: env(safe-area-inset-bottom, 0);
+      }
+      .mobile-nav-item {
+        display: flex; flex-direction: column; align-items: center; justify-content: center;
+        gap: 4px; font-size: 10px; font-weight: 600; color: var(--Neutral-400);
+        cursor: pointer; padding: 8px 12px; border-radius: 12px; transition: 0.2s;
+        text-decoration: none; -webkit-tap-highlight-color: transparent;
+      }
+      .mobile-nav-item:active, .mobile-nav-item.active { color: var(--Lemon); }
+      .mobile-nav-item .korra-icon { width: 20px; height: 20px; }
+      .mobile-nav-center {
+        display: flex; align-items: center; justify-content: center;
+        cursor: pointer; margin-top: -20px; -webkit-tap-highlight-color: transparent;
+      }
+      .mobile-nav-center-icon {
+        width: 52px; height: 52px; border-radius: 50%;
+        background: var(--Lemon); display: flex; align-items: center; justify-content: center;
+        box-shadow: 0 0 20px rgba(198, 255, 0, 0.3);
+        transition: transform 0.25s cubic-bezier(0.2, 0.8, 0.2, 1);
+      }
+      .mobile-nav-center-icon:active { transform: scale(0.9); }
+      .mobile-nav-center-icon svg { width: 22px; height: 22px; color: #050505; }
     }
     .glass-card { background: var(--Glass); border: 1px solid var(--Glass-Border); border-radius: 20px; padding: 32px; }
     .dashboard-split { display: flex; gap: 32px; align-items: flex-start; }
@@ -653,11 +509,72 @@
     .modal-card { width: 100%; max-width: 600px; background: #0a0a0a; border: 1px solid var(--Glass-Border); border-radius: 24px; padding: 40px; transition: max-width 0.3s ease; max-height: 90vh; overflow-y: auto; }
     .modal-card-landscape { max-width: 1000px; }
 
+    /* ── SHARE / INVITE MODAL (split layout) ── */
+    #shareModal, #shareScanModal { align-items:stretch; justify-content:stretch; }
+    #shareModal .ss-split, #shareScanModal .ss-split { width:100%; max-width:100%; height:100%; max-height:100%; border-radius:0; border:none; min-height:100vh; }
+    .ss-split { display:flex; width:100%; height:100%; min-height:100vh; background:#0a0a0a; }
+    .ss-left { flex:0 0 45%; background:linear-gradient(135deg, rgba(0,0,0,0.6), rgba(0,0,0,0.2)), url('/assets/Invite-screen-image.png') center/cover no-repeat; display:flex; align-items:flex-end; padding:60px; position:relative; }
+    .ss-left::after { content:''; position:absolute; inset:0; background:linear-gradient(to top, rgba(0,0,0,0.8) 0%, transparent 60%); }
+    .ss-left-content { position:relative; z-index:2; }
+    .ss-brand { font-size:12px; font-weight:900; letter-spacing:0.3em; color:var(--Mint); margin-bottom:24px; }
+    .ss-tagline { font-size:36px; font-weight:900; color:#fff; line-height:1.15; margin-bottom:16px; letter-spacing:-0.03em; }
+    .ss-sub { font-size:15px; color:rgba(255,255,255,0.7); line-height:1.6; margin-bottom:32px; max-width:380px; }
+    .ss-left-footer { font-size:10px; font-weight:700; letter-spacing:0.15em; color:rgba(255,255,255,0.4); text-transform:uppercase; }
+    .ss-right { flex:1; padding:60px; position:relative; display:flex; flex-direction:column; overflow-y:auto; }
+    .ss-right-inner { display:flex; flex-direction:column; gap:24px; flex:1; max-width:480px; }
+    .ss-close { position:absolute; top:24px; right:24px; width:40px; height:40px; border-radius:50%; background:rgba(255,255,255,0.06); border:1px solid var(--Glass-Border); color:var(--Neutral-400); font-size:16px; cursor:pointer; display:flex; align-items:center; justify-content:center; transition:0.2s; z-index:5; }
+    .ss-close:hover { background:rgba(255,255,255,0.12); color:#fff; }
+    .ss-header { margin-bottom:8px; }
+    .ss-title { font-size:28px; font-weight:900; color:#fff; margin:0 0 6px; letter-spacing:-0.03em; }
+    .ss-desc { font-size:14px; color:var(--Neutral-400); margin:0; line-height:1.5; }
+    .ss-field { display:flex; flex-direction:column; gap:8px; }
+    .ss-label { font-size:11px; font-weight:900; color:var(--Neutral-500); text-transform:uppercase; letter-spacing:0.08em; }
+    .ss-input { height:48px; padding:0 16px; border-radius:14px; border:1px solid var(--Glass-Border); background:rgba(255,255,255,0.04); color:#fff; font-size:14px; font-weight:500; outline:none; transition:0.2s; width:100%; box-sizing:border-box; }
+    .ss-input:focus { border-color:var(--Mint); box-shadow:0 0 0 3px rgba(198,255,0,0.12); }
+    .ss-input::placeholder { color:var(--Neutral-500); }
+    .ss-input-wrap { display:flex; gap:10px; }
+    .ss-input-wrap .ss-input { flex:1; }
+    .ss-input-btn { display:flex; align-items:center; gap:8px; padding:0 16px; height:48px; border-radius:14px; border:1px solid var(--Glass-Border); background:rgba(255,255,255,0.04); color:var(--Neutral-400); font-size:12px; font-weight:700; cursor:pointer; white-space:nowrap; transition:0.2s; }
+    .ss-input-btn svg { width:16px; height:16px; }
+    .ss-input-btn:hover { background:rgba(255,255,255,0.08); color:#fff; }
+    .ss-actions { display:flex; gap:12px; margin-top:auto; padding-top:20px; }
+    .ss-btn-primary { flex:1; height:52px; border-radius:14px; background:var(--Mint); color:#050505; font-size:14px; font-weight:900; border:none; cursor:pointer; transition:0.2s; letter-spacing:0.02em; }
+    .ss-btn-primary:hover { background:#d4ff33; transform:translateY(-1px); box-shadow:0 8px 24px rgba(198,255,0,0.2); }
+    .ss-btn-ghost { height:52px; padding:0 24px; border-radius:14px; background:transparent; border:1px solid var(--Glass-Border); color:var(--Neutral-400); font-size:14px; font-weight:700; cursor:pointer; transition:0.2s; }
+    .ss-btn-ghost:hover { background:rgba(255,255,255,0.05); color:#fff; }
+    .ss-link-area { background:rgba(255,255,255,0.03); border:1px solid var(--Glass-Border); border-radius:16px; padding:20px; }
+    .ss-link-box { background:rgba(0,0,0,0.4); border:1px solid var(--Glass-Border); border-radius:12px; padding:14px 16px; margin-bottom:14px; overflow:hidden; }
+    .ss-link-text { font-size:12px; color:var(--Mint); word-break:break-all; font-family:monospace; }
+    .ss-link-actions { display:flex; gap:10px; }
+    .ss-btn-outline { flex:1; height:42px; border-radius:12px; border:1px solid var(--Glass-Border); background:transparent; color:var(--Neutral-400); font-size:12px; font-weight:700; cursor:pointer; transition:0.2s; }
+    .ss-btn-outline:hover { background:rgba(255,255,255,0.06); color:#fff; border-color:rgba(255,255,255,0.2); }
+    .ss-btn-whatsapp { flex:1; height:42px; border-radius:12px; border:none; background:#25D366; color:#fff; font-size:12px; font-weight:700; cursor:pointer; transition:0.2s; }
+    .ss-btn-whatsapp:hover { background:#20bd5a; }
+    .ss-divider { height:1px; background:var(--Glass-Border); margin:4px 0; }
+    .ss-row { display:flex; gap:12px; align-items:center; }
+    .ss-icon-wrap { width:44px; height:44px; border-radius:14px; background:rgba(255,255,255,0.05); display:flex; align-items:center; justify-content:center; flex-shrink:0; }
+    .ss-icon-wrap svg { width:18px; height:18px; color:var(--Mint); }
+    .ss-card { background:var(--Glass); border:1px solid var(--Glass-Border); border-radius:16px; padding:24px; }
+    .ss-ring { width:52px; height:52px; border-radius:50%; border:3px solid var(--Mint); display:flex; align-items:center; justify-content:center; }
+    .ss-check { color:var(--Mint); }
+    .ss-credits { font-size:28px; font-weight:900; color:#fff; }
+    .ss-credits-label { font-size:11px; font-weight:700; color:var(--Neutral-500); text-transform:uppercase; letter-spacing:0.08em; }
+    .ss-panel { background:var(--Glass); border:1px solid var(--Glass-Border); border-radius:16px; padding:28px; }
+
+    @media (max-width: 900px) {
+      #shareModal, #shareScanModal { align-items:stretch; }
+      #shareModal .ss-split, #shareScanModal .ss-split { min-height:100vh; height:100%; border-radius:0; }
+      .ss-left { display:none; }
+      .ss-right { padding:32px 20px; padding-top:calc(32px + env(safe-area-inset-top, 0)); padding-bottom:calc(32px + env(safe-area-inset-bottom, 0)); }
+      .ss-right-inner { max-width:100%; }
+      .ss-title { font-size:24px; }
+      .ss-close { top:16px; right:16px; width:36px; height:36px; }
+    }
+
     /* ── HYPER-MODERN SCAN OVERLAY ── */
     .scan-overlay {
-      position: fixed; top: 80px; left: var(--sidebar-width, 260px); right: 0; bottom: 0;
+      position: fixed; top: 80px; left: 0; right: 0; bottom: 0;
       background: #000; z-index: 500; display: none; flex-direction: column;
-      transition: left 0.3s cubic-bezier(0.4, 0, 0.2, 1);
     }
     .scan-overlay.active { display: flex; animation: scanFadeIn 0.35s ease-out; }
     @keyframes scanFadeIn { 0% { opacity: 0; } 100% { opacity: 1; } }
@@ -843,7 +760,7 @@
     .landscape-grid { display: grid; grid-template-columns: 1fr 1.2fr; gap: 48px; align-items: start; }
 
     /* FULL-SCREEN PURCHASE */
-    .purchase-overlay { position: fixed; top: 80px; left: var(--sidebar-width, 260px); right: 0; bottom: 0; background: #000; z-index: 500; display: none; flex-direction: column; transition: left 0.3s cubic-bezier(0.4, 0, 0.2, 1); }
+    .purchase-overlay { position: fixed; top: 80px; left: 0; right: 0; bottom: 0; background: #000; z-index: 500; display: none; flex-direction: column; }
     .purchase-overlay.active { display: flex; }
     .purchase-header { display: flex; align-items: center; justify-content: space-between; padding: 24px 40px; border-bottom: 1px solid var(--Glass-Border); flex-shrink: 0; }
     .purchase-body { flex: 1; display: grid; grid-template-columns: 1.3fr 1fr; gap: 0; overflow: hidden auto; }
@@ -958,7 +875,7 @@
 }
 
     /* ── PURCHASE SUCCESS OVERLAY ── */
-    #purchaseSuccess { position: fixed; top: 80px; left: var(--sidebar-width, 260px); right: 0; bottom: 0; background: #000; z-index: 1000; display: none; flex-direction: column; align-items: center; justify-content: center; transition: left 0.3s cubic-bezier(0.4, 0, 0.2, 1); }
+    #purchaseSuccess { position: fixed; top: 80px; left: 0; right: 0; bottom: 0; background: #000; z-index: 1000; display: none; flex-direction: column; align-items: center; justify-content: center; }
     #purchaseSuccess.active { display: flex; }
     .success-card { background: var(--Glass); border: 1px solid var(--Glass-Border); border-radius: 32px; padding: 48px 40px; max-width: 420px; width: 90%; text-align: center; position: relative; overflow: hidden; animation: successCardIn 0.5s cubic-bezier(0.16,1,0.3,1) both; }
     .success-card::before { content: ''; position: absolute; top: -50%; left: -50%; width: 200%; height: 200%; background: radial-gradient(circle at 50% 0%, rgba(198,255,0,0.06) 0%, transparent 60%); pointer-events: none; }
@@ -1114,7 +1031,7 @@
     #networkStatus.offline .status-dot { background: var(--Error); box-shadow: 0 0 10px var(--Error); animation: none; }
     #offlineOverlay { position: fixed; inset: 0; background: rgba(0,0,0,0.85); backdrop-filter: blur(10px); z-index: 99999999; display: none; align-items: center; justify-content: center; text-align: center; }
     .offline-card { background: var(--Glass); border: 1px solid var(--Glass-Border); padding: 40px; border-radius: 24px; max-width: 320px; color: #fff; }
-    #creditOverlay { position: fixed; top: 80px; left: var(--sidebar-width, 260px); right: 0; bottom: 0; background: rgba(0,0,0,0.9); backdrop-filter: blur(20px); z-index: 500; display: none; align-items: center; justify-content: center; text-align: center; transition: left 0.3s cubic-bezier(0.4, 0, 0.2, 1); }
+    #creditOverlay { position: fixed; top: 80px; left: 0; right: 0; bottom: 0; background: rgba(0,0,0,0.9); backdrop-filter: blur(20px); z-index: 500; display: none; align-items: center; justify-content: center; text-align: center; }
     .credit-card { background: #0a0a0a; border: 2px solid var(--Mint); padding: 60px 40px; border-radius: 32px; max-width: 440px; box-shadow: 0 0 50px rgba(198, 255, 0, 0.2); }
   </style>
 </head>
@@ -1247,16 +1164,16 @@
 
   <div class="scan-overlay" id="scanModal">
     <div class="scan-header">
-      <button class="btn-ghost" style="display:flex;align-items:center;gap:8px;font-size:13px;font-weight:600;color:var(--Neutral-400);padding:8px 16px;border-radius:12px;" onclick="if(document.getElementById('frontPhoto').files[0] || document.getElementById('sidePhoto').files[0] || document.getElementById('scanClientName').value) { if(!confirm('Discard current scan data?')) return; } window.closeModal('scanModal')"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M19 12H5"/><path d="M12 19l-7-7 7-7"/></svg> Back</button>
+      <button class="btn-ghost" style="display:flex;align-items:center;gap:8px;font-size:13px;font-weight:600;color:var(--Neutral-400);padding:8px 16px;border-radius:12px;" onclick="if(document.getElementById('frontPhoto').files[0] || document.getElementById('sidePhoto').files[0] || document.getElementById('scanClientName').value) { if(!confirm('Discard current scan data?')) return; _draftClear(); } window.closeModal('scanModal')"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M19 12H5"/><path d="M12 19l-7-7 7-7"/></svg> Back</button>
       <h2 style="margin:0;font-size:15px;font-weight:900;letter-spacing:0.05em;color:var(--Accent-Teal)">DIGITAL FITTING ROOM</h2>
       <span style="font-size:10px;font-weight:700;color:var(--Neutral-500);background:var(--Glass);padding:4px 12px;border-radius:99px;border:1px solid var(--Glass-Border);display:flex;align-items:center;gap:6px;"><span style="width:6px;height:6px;border-radius:50%;background:var(--Mint);display:inline-block;"></span> Step 1 / 3</span>
     </div>
     <div class="scan-body">
       <div>
         <label style="font-size:10px;font-weight:900;color:var(--Neutral-500);text-transform:uppercase;letter-spacing:0.1em;margin-bottom:8px;display:block;">Body Specs</label>
-        <input type="text" id="scanClientName" class="input-field" placeholder="Full Name" required>
-        <input type="number" id="scanHeight" class="input-field" placeholder="Height in CM" required>
-        <select id="scanGender" class="input-field" style="appearance:none;cursor:pointer;"><option value="male">Male</option><option value="female">Female</option></select>
+        <input type="text" id="scanClientName" class="input-field" placeholder="Full Name" required oninput="_draftSave('clientName', this.value)">
+        <input type="number" id="scanHeight" class="input-field" placeholder="Height in CM" required oninput="_draftSave('height', this.value)">
+        <select id="scanGender" class="input-field" style="appearance:none;cursor:pointer;" onchange="_draftSave('gender', this.value)"><option value="male">Male</option><option value="female">Female</option></select>
 
         <div class="pro-tips-card">
           <h4><svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" style="color:var(--Mint)"><path d="m12 3 1.912 5.813a2 2 0 0 0 1.275 1.275L21 12l-5.813 1.912a2 2 0 0 0-1.275 1.275L12 21l-1.912-5.813a2 2 0 0 0-1.275-1.275L3 12l5.813-1.912a2 2 0 0 0 1.275-1.275L12 3Z"/><path d="M5 3v4"/><path d="M19 17v4"/><path d="M3 5h4"/><path d="M17 19h4"/></svg> Pro-Tips</h4>
@@ -1314,7 +1231,13 @@
             <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M5 12h14"/><path d="M12 5l7 7-7 7"/></svg>
             Get Measurements
           </button>
-          <button type="button" class="btn-dismiss" onclick="if(document.getElementById('frontPhoto').files[0] || document.getElementById('sidePhoto').files[0] || document.getElementById('scanClientName').value) { if(!confirm('Discard current scan data?')) return; } window.closeModal('scanModal')">Cancel</button>
+          <div style="display:flex; gap:8px; justify-content:center; margin-top:8px">
+            <button type="button" id="btnSaveDraft" class="btn-dismiss" style="flex:0; padding:10px 20px; font-size:12px; color:var(--Accent-Teal)" onclick="window._draftSaveToSupabase()">
+              <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="vertical-align:middle;margin-right:6px"><path d="M19 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h11l5 5v11a2 2 0 0 1-2 2z"/><polyline points="17 21 17 13 7 13 7 21"/><polyline points="7 3 7 8 15 8"/></svg>
+              Save as Draft
+            </button>
+            <button type="button" class="btn-dismiss" onclick="if(document.getElementById('frontPhoto').files[0] || document.getElementById('sidePhoto').files[0] || document.getElementById('scanClientName').value) { if(!confirm('Discard current scan data?')) return; _draftClear(); } window.closeModal('scanModal')">Cancel</button>
+          </div>
         </form>
       </div>
     </div>
@@ -1627,12 +1550,16 @@
   </div>
 
   <header>
-    <div class="container">
-      <a class="logo" href="/">
+    <div class="container" style="display:flex; align-items:center; justify-content:space-between;">
+      <a class="logo" href="/" style="flex:1;">
         <img src="/assets/Korra_logo_final.png" alt="Korra" style="height:40px; width:auto;">
         <span style="font-size:22px; font-weight:900; letter-spacing:-0.03em; color:var(--Mint);">Korra</span>
       </a>
-      <div class="header-actions">
+      <a onclick="window.switchTab('overview')" id="tab-overview" style="display:flex; align-items:center; gap:8px; padding:8px 16px; border-radius:12px; font-size:14px; font-weight:600; color:var(--Neutral-400); cursor:pointer; transition:0.2s; text-decoration:none;" onmouseover="this.style.color='var(--Mint)'; this.style.background='var(--Glass)'" onmouseout="this.style.color='var(--Neutral-400)'; this.style.background='transparent'">
+        <svg style="width:18px; height:18px;" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 12l9-9 9 9v8a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z"/><polyline points="9 22 9 12 15 12 15 22"/></svg>
+        Home
+      </a>
+      <div class="header-actions" style="flex:1; justify-content:flex-end;">
         <div class="credit-badge" id="headerCreditMonitor"><span>CREDITS:</span> <b id="headerCredits">0</b></div>
         <div class="profile-trigger" id="profileTrigger" onclick="window.toggleProfileMenu(event)">
             <img src="/assets/user-profile-new.png" id="profileImageHeader" alt="User Profile">
@@ -1668,64 +1595,37 @@
     </div>
   </header>
 
+  <nav class="mobile-bottom-nav" aria-label="Mobile Navigation">
+    <a onclick="window.switchTab('overview')" class="mobile-nav-item">
+      <svg class="korra-icon" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 12l9-9 9 9v8a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z"/><polyline points="9 22 9 12 15 12 15 22"/></svg>
+      <span>Home</span>
+    </a>
+    <a onclick="window.switchTab('vault')" class="mobile-nav-item">
+      <svg class="korra-icon" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="3" width="18" height="18" rx="2" ry="2"/><line x1="3" y1="9" x2="21" y2="9"/><line x1="9" y1="21" x2="9" y2="9"/></svg>
+      <span>Clients</span>
+    </a>
+    <div class="mobile-nav-center" onclick="window.openModal('scanModal')">
+      <div class="mobile-nav-center-icon">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
+          <path d="M3 8V5a2 2 0 0 1 2-2h3"/><path d="M16 3h3a2 2 0 0 1 2 2v3"/>
+          <path d="M21 16v3a2 2 0 0 1-2 2h-3"/><path d="M8 21H5a2 2 0 0 1-2-2v-3"/>
+          <line x1="5" y1="12" x2="19" y2="12"/>
+        </svg>
+      </div>
+    </div>
+    <a onclick="window.switchTab('settings')" class="mobile-nav-item">
+      <svg class="korra-icon" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="3"/><path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 0 1 0 2.83 2 2 0 0 1-2.83 0l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 0 1-2 2 2 2 0 0 1-2-2v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 0 1-2.83 0 2 2 0 0 1 0-2.83l.06-.06a1.65 1.65 0 0 0 .33-1.82 1.65 1.65 0 0 0-1.51-1H3a2 2 0 0 1-2-2 2 2 0 0 1 2-2h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 0 1 0-2.83 2 2 0 0 1 2.83 0l.06.06a1.65 1.65 0 0 0 1.82.33 1.65 1.65 0 0 0 1-1.51V3a2 2 0 0 1 2-2 2 2 0 0 1 2 2v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 0 1 2.83 0 2 2 0 0 1 0 2.83l-.06.06a1.65 1.65 0 0 0-.33 1.82 1.65 1.65 0 0 0 1.51 1H21a2 2 0 0 1 2 2 2 2 0 0 1-2 2h-.09a1.65 1.65 0 0 0-1.51 1z"/></svg>
+      <span>Settings</span>
+    </a>
+    <a onclick="window.openModal('shareModal')" class="mobile-nav-item">
+      <svg class="korra-icon" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round"><path d="M16 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/><circle cx="8.5" cy="7" r="4"/><line x1="20" y1="8" x2="20" y2="14"/><line x1="23" y1="11" x2="17" y2="11"/></svg>
+      <span>Invite</span>
+    </a>
+  </nav>
+
   <main>
-    <div class="container" style="max-width: 100%; padding: 0;">
-      <div class="grid-dashboard">
-        <aside class="sidebar-nav" id="sidebar" role="navigation" aria-label="Main Navigation">
-          <div class="sidebar-label">Artisan Tools</div>
-          <a onclick="window.switchTab('overview')" id="tab-overview" data-label="Home" aria-label="Home Overview">
-            <svg class="korra-icon" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round"><path d="M3 12l9-9 9 9v8a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z"/><polyline points="9 22 9 12 15 12 15 22"/></svg>
-            <span class="nav-text">Home</span>
-          </a>
-          <a onclick="window.switchTab('vault')" id="tab-vault" class="active" data-label="Clients" aria-label="Client Ledger">
-            <svg class="korra-icon" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="3" width="18" height="18" rx="2" ry="2"/><line x1="3" y1="9" x2="21" y2="9"/><line x1="9" y1="21" x2="9" y2="9"/></svg>
-            <span class="nav-text">Clients</span>
-          </a>
-          <div class="nav-center" onclick="window.openModal('scanModal')">
-            <div class="nav-center-icon">
-              <svg class="nav-center-svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
-                <path d="M3 8V5a2 2 0 0 1 2-2h3"/>
-                <path d="M16 3h3a2 2 0 0 1 2 2v3"/>
-                <path d="M21 16v3a2 2 0 0 1-2 2h-3"/>
-                <path d="M8 21H5a2 2 0 0 1-2-2v-3"/>
-                <line x1="5" y1="12" x2="19" y2="12"/>
-              </svg>
-            </div>
-            <div class="nav-center-bubble">NEW SCAN</div>
-          </div>
-          <a onclick="window.switchTab('passports')" id="tab-passports" data-label="Profiles" aria-label="Saved Profiles">
-            <svg class="korra-icon" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="4" width="18" height="16" rx="2"/><line x1="7" y1="8" x2="17" y2="8"/><line x1="7" y1="12" x2="17" y2="12"/><line x1="7" y1="16" x2="11" y2="16"/></svg>
-            <span class="nav-text">Profiles</span>
-          </a>
-
-          <div class="sidebar-label" id="label-implementation">Implementation</div>
-          <a onclick="window.switchTab('widget')" id="tab-widget" data-label="Widget" data-mobile-hide="true" aria-label="Widget Customizer">
-            <svg class="korra-icon" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round"><rect x="2" y="3" width="20" height="14" rx="2" ry="2"/><line x1="8" y1="21" x2="16" y2="21"/><line x1="12" y1="17" x2="12" y2="21"/></svg>
-            <span class="nav-text">Widget</span>
-          </a>
-          <a onclick="window.switchTab('enterprise')" id="tab-enterprise" style="display:none" data-label="Insights" data-mobile-hide="true" aria-label="Intelligence Hub">
-            <svg class="korra-icon" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round"><path d="M21 16V8a2 2 0 0 0-1-1.73l-7-4a2 2 0 0 0-2 0l-7 4A2 2 0 0 0 3 8v8a2 2 0 0 0 1 1.73l7 4a2 2 0 0 0 2 0l7-4A2 2 0 0 0 21 16z"></path><polyline points="3.27 6.96 12 12.01 20.73 6.96"></polyline><line x1="12" y1="22.08" x2="12" y2="12"></line></svg>
-            <span class="nav-text">Intelligence Hub</span>
-          </a>
-
-          <div class="sidebar-label">Account</div>
-          <a onclick="window.switchTab('settings')" id="tab-settings" data-label="Settings" aria-label="Account Settings">
-            <svg class="korra-icon" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="3"/><path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 0 1 0 2.83 2 2 0 0 1-2.83 0l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 0 1-2 2 2 2 0 0 1-2-2v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 0 1-2.83 0 2 2 0 0 1 0-2.83l.06-.06a1.65 1.65 0 0 0 .33-1.82 1.65 1.65 0 0 0-1.51-1H3a2 2 0 0 1-2-2 2 2 0 0 1 2-2h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 0 1 0-2.83 2 2 0 0 1 2.83 0l.06.06a1.65 1.65 0 0 0 1.82.33 1.65 1.65 0 0 0 1-1.51V3a2 2 0 0 1 2-2 2 2 0 0 1 2 2v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 0 1 2.83 0 2 2 0 0 1 0 2.83l-.06.06a1.65 1.65 0 0 0-.33 1.82 1.65 1.65 0 0 0 1.51 1H21a2 2 0 0 1 2 2 2 2 0 0 1-2 2h-.09a1.65 1.65 0 0 0-1.51 1z"/></svg>
-            <span class="nav-text">Settings</span>
-          </a>
-          <a onclick="window.switchTab('billing')" id="tab-billing" data-mobile-hide="true">
-            <svg class="korra-icon" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round"><rect x="1" y="4" width="22" height="16" rx="2" ry="2"/><line x1="1" y1="10" x2="23" y2="10"/></svg>
-            <span class="nav-text">Billing</span>
-          </a>
-
-          <div class="collapse-toggle" onclick="window.toggleSidebar()">
-            <svg class="korra-icon" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round"><polyline points="15 18 9 12 15 6"/></svg>
-            <span class="nav-text">Collapse</span>
-          </div>
-        </aside>
-
         <section class="main-content">
-          <div id="view-overview" class="tab-view" style="padding: 32px 40px;">
+          <div id="view-overview" class="tab-view active" style="padding: 32px 40px; background: var(--Obsidian-Deep);">
             <div style="margin-bottom:48px">
                 <h2 style="font-size:24px; margin-bottom:4px">Welcome back.</h2>
                 <p style="color:var(--Neutral-400); font-size:14px">Your clinical-grade fitting system is active and ready.</p>
@@ -1733,7 +1633,7 @@
 
             <div class="hero-grid">
                 <!-- SCAN CARD -->
-                <div class="action-card" onclick="window.switchTab('vault'); window.openModal('scanModal');">
+                <div class="action-card" onclick="window.openModal('scanModal');">
                     <img src="/assets/get_measurement.png" class="card-img-zoom">
                     <div class="action-overlay">
                         <div class="action-tag">Acuracy First</div>
@@ -1764,68 +1664,72 @@
 
                 <!-- NEW: INVITE CLIENT CARD -->
                 <div class="action-card" onclick="window.openModal('shareModal')">
-                    <img src="/assets/invite-icon.webp" style="padding:48px">
+                    <img src="/assets/Invite-screen-image.png" class="card-img-zoom">
                     <div class="action-overlay">
                         <div class="action-tag">Enrollment</div>
                         <h3 class="action-title">Invite A New<br>Client to Scan</h3>
-                        <div class="action-cta"><svg class="korra-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor"><path d="M16 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"></path><circle cx="8.5" cy="7" r="4"></circle><line x1="20" y1="8" x2="20" y2="14"></line><line x1="23" y1="11" x2="17" y2="11"></line></svg></div>
+                        <div class="action-cta"><svg class="korra-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor"><line x1="5" y1="12" x2="19" y2="12"></line><polyline points="12 5 19 12 12 19"></polyline></svg></div>
+                    </div>
+                </div>
+
+                <!-- SETTINGS CARD -->
+                <div class="action-card" onclick="window.switchTab('settings')">
+                    <img src="/assets/settings.png" class="card-img-zoom">
+                    <div class="action-overlay">
+                        <div class="action-tag">Configuration</div>
+                        <h3 class="action-title">Account<br>Settings</h3>
+                        <div class="action-cta"><svg class="korra-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor"><line x1="5" y1="12" x2="19" y2="12"></line><polyline points="12 5 19 12 12 19"></polyline></svg></div>
+                    </div>
+                </div>
+
+                <!-- BILLING CARD -->
+                <div class="action-card" onclick="window.switchTab('billing')">
+                    <img src="/assets/subscription.png" class="card-img-fit">
+                    <div class="action-overlay">
+                        <div class="action-tag">Billing & Plans</div>
+                        <h3 class="action-title">Manage<br>Subscription</h3>
+                        <div class="action-cta"><svg class="korra-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor"><line x1="5" y1="12" x2="19" y2="12"></line><polyline points="12 5 19 12 12 19"></polyline></svg></div>
+                    </div>
+                </div>
+
+                <!-- CLIENTS CARD -->
+                <div class="action-card" onclick="window.switchTab('vault')">
+                    <img src="/assets/view-clients-new.png" class="card-img-zoom">
+                    <div class="action-overlay">
+                        <div class="action-tag">Client Ledger</div>
+                        <h3 class="action-title">View All<br>Clients</h3>
+                        <div class="action-cta"><svg class="korra-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor"><line x1="5" y1="12" x2="19" y2="12"></line><polyline points="12 5 19 12 12 19"></polyline></svg></div>
+                    </div>
+                </div>
+
+                <!-- DRAFT CARD -->
+                <div class="action-card" id="draftCard" style="display:none" onclick="(async()=>{let d=await window._draftLoadFromSupabase();if(d){window._draftRestoreToForm(d);window.openModal('scanModal')}else{window.showAlert('No saved draft.')}})()">
+                    <img src="/assets/get_measurement.png" class="card-img-zoom" style="opacity:0.6">
+                    <div class="action-overlay">
+                        <div class="action-tag" id="draftBadge" style="background:var(--Accent-Teal);color:#000">1 Saved</div>
+                        <h3 class="action-title">Draft<br>Scan</h3>
+                        <div class="action-cta"><svg class="korra-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor"><line x1="5" y1="12" x2="19" y2="12"></line><polyline points="12 5 19 12 12 19"></polyline></svg></div>
+                    </div>
+                    <div style="position:absolute;bottom:8px;right:8px;z-index:30">
+                        <span style="font-size:9px;color:var(--Neutral-500);cursor:pointer;text-decoration:underline;padding:4px 8px" onclick="event.stopPropagation();if(confirm('Discard saved draft?'))window._draftDiscard()">Discard</span>
                     </div>
                 </div>
             </div>
-          </div>
 
-          <div id="view-vault" class="tab-view active" style="padding: 32px 40px; background: var(--Obsidian-Deep);">
-            <div class="stat-grid"><div class="glass-card stat-card"><h4>Total Profiles</h4><div class="value" id="statTotal">0</div></div><div class="glass-card stat-card"><h4>Credits</h4><div class="value" id="statCredits">0</div></div></div>
-            <div class="ledger-full">
-                <div class="glass-card" style="padding:24px">
-                  <div style="display:flex; flex-direction:column; gap:20px; margin-bottom:32px">
-                    <div style="display:flex; justify-content:space-between; align-items:center"><h2 style="font-size:20px">Ledger</h2><button class="btn-outline" style="height:32px; font-size:10px" onclick="window.exportLedgerCSV()">Export CSV</button></div>
-
-                    <!-- Phase 115: Merchant Ledger Filter -->
-                    <div style="display:flex; gap:12px">
-                        <select id="ledgerFilter" class="input-field" style="flex:1; margin:0; height:40px; font-size:12px" onchange="window.filterLedger(this.value)">
-                            <option value="all">All Clients</option>
-                            <option value="needs_pattern">Needs Pattern</option>
-                            <option value="fit_optimized">Fit Optimized</option>
-                        </select>
-                        <button class="btn-ghost" style="height:40px; font-size:10px" onclick="window.exportLedgerBulk()">Bulk</button>
+            <!-- DRAFT BANNER -->
+            <div id="draftBanner" class="glass-card" style="display:none; margin-top:24px; padding:20px 24px; align-items:center; justify-content:space-between; background:linear-gradient(135deg, rgba(0,168,255,0.08) 0%, rgba(0,0,0,0.4) 100%)">
+                <div style="display:flex; align-items:center; gap:16px">
+                    <span style="font-size:28px">📝</span>
+                    <div>
+                        <div style="font-size:14px; font-weight:800; color:var(--White)">Unfinished Scan</div>
+                        <div style="font-size:12px; color:var(--Neutral-400)">You have a scan saved as draft. Continue where you left off.</div>
                     </div>
-
-                    <input type="text" id="ledgerSearch" class="input-field" style="margin-bottom:0; height:44px" placeholder="Search clients...">
-
-                    <!-- ADVANCED FILTERS -->
-                    <div style="display:grid; grid-template-columns: 1fr 1fr; gap:12px; margin-top:12px">
-                        <input type="number" id="filterHeightMin" class="input-field" style="height:36px; font-size:10px; margin-bottom:0" placeholder="Min Height (cm)">
-                        <input type="number" id="filterHeightMax" class="input-field" style="height:36px; font-size:10px; margin-bottom:0" placeholder="Max Height (cm)">
-                    </div>
-                    <div style="display:grid; grid-template-columns: 1fr 1fr; gap:12px; margin-top:8px; margin-bottom:20px">
-                        <input type="date" id="filterDateStart" class="input-field" style="height:36px; font-size:10px; margin-bottom:0; appearance:none">
-                        <input type="date" id="filterDateEnd" class="input-field" style="height:36px; font-size:10px; margin-bottom:0; appearance:none">
-                    </div>
-
-                    <div style="display:grid; grid-template-columns: 1fr 1fr; gap:12px"><button class="btn-outline" onclick="window.openModal('scanModal')">+ Start Scan</button><button class="btn-primary" onclick="window.openModal('shareModal')">+ Invite</button></div>
-
-                  <!-- Phase 119: Privacy Controls -->
-                  <div style="margin-top:20px; padding:12px; background:rgba(255,255,255,0.02); border-radius:12px; border:1px solid var(--Glass-Border)">
-                    <div style="display:flex; justify-content:space-between; align-items:center">
-                      <div>
-                        <div style="font-size:11px; font-weight:700">Privacy Shield</div>
-                        <div style="font-size:9px; color:var(--Neutral-500)">Blur Digital Twin identity</div>
-                      </div>
-                      <label class="toggle-switch">
-                        <input type="checkbox" id="privacyShieldToggle" onchange="window.handlePrivacyToggle(this.checked)">
-                        <span class="slider"></span>
-                      </label>
-                    </div>
-                  </div>
-
-                    <button class="btn-outline" style="width:100%; border-style:dashed; color:var(--Neutral-500); font-size:10px; margin-top:20px" onclick="window.triggerBulkImport()">↑ Bulk Import Clients (CSV)</button>
-                    <button class="btn-outline" style="width:100%; border-color:var(--Mint); color:var(--Mint); font-size:10px" onclick="window.requestIndustrialDemo()">Enterprise: Request Industrial Demo</button>
-                    <input type="file" id="bulkImportFile" accept=".csv" style="display:none" onchange="window.handleBulkImport(this)">
-                  </div>
-                  <div id="scanList"></div>
                 </div>
-              </div>
+                <div style="display:flex; align-items:center; gap:8px">
+                    <button class="btn-primary" style="height:36px; padding:0 20px; font-size:12px" onclick="(async()=>{let d=await window._draftLoadFromSupabase();if(d){window._draftRestoreToForm(d);window.openModal('scanModal')}})()">Continue</button>
+                    <button class="btn-outline" style="height:36px; padding:0 12px; font-size:11px; color:var(--Neutral-500)" onclick="if(confirm('Discard saved draft?'))window._draftDiscard()">Discard</button>
+                    <span style="font-size:18px; color:var(--Neutral-600); cursor:pointer; padding:4px" onclick="sessionStorage.setItem('_draftDismissed','1');document.getElementById('draftBanner').style.display='none'" title="Dismiss">✕</span>
+                </div>
             </div>
 
             <div id="measurementResultsCard" class="glass-card" style="display:none; margin-top:24px; background:linear-gradient(135deg, rgba(198,255,0,0.05) 0%, rgba(0,0,0,0.4) 100%)">
@@ -1878,7 +1782,64 @@
             </div>
           </div>
 
+          <div id="view-vault" class="tab-view" style="padding: 32px 40px; background: var(--Obsidian-Deep);">
+            <a onclick="window.switchTab('overview')" style="display:inline-flex; align-items:center; gap:10px; padding:10px 20px; border-radius:14px; background:rgba(255,255,255,0.06); border:1px solid var(--Glass-Border); color:var(--White); font-size:14px; font-weight:900; cursor:pointer; margin-bottom:28px; transition:all 0.25s cubic-bezier(0.2,0.8,0.2,1); text-decoration:none; letter-spacing:-0.01em;" onmouseover="this.style.background='rgba(255,255,255,0.1)'; this.style.borderColor='rgba(255,255,255,0.2)'; this.style.transform='translateX(-4px)'" onmouseout="this.style.background='rgba(255,255,255,0.06)'; this.style.borderColor='var(--Glass-Border)'; this.style.transform='translateX(0)'">
+              <svg style="width:18px; height:18px; stroke-width:2.5;" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round"><line x1="19" y1="12" x2="5" y2="12"/><polyline points="12 19 5 12 12 5"/></svg>
+              Back
+            </a>
+            <div style="margin-bottom:40px">
+                <h2 style="font-size:32px; margin-bottom:8px">Clients</h2>
+                <p style="color:var(--Neutral-400); font-size:16px">Manage your client ledger and scan history.</p>
+            </div>
+            <div class="stat-grid"><div class="glass-card stat-card"><h4>Total Profiles</h4><div class="value" id="statTotal">0</div></div><div class="glass-card stat-card"><h4>Credits</h4><div class="value" id="statCredits">0</div></div></div>
+            <div class="ledger-full">
+                <div class="glass-card" style="padding:24px">
+                  <div style="display:flex; flex-direction:column; gap:20px; margin-bottom:32px">
+                    <div style="display:flex; justify-content:space-between; align-items:center"><h2 style="font-size:20px">Ledger</h2><button class="btn-outline" style="height:32px; font-size:10px" onclick="window.exportLedgerCSV()">Export CSV</button></div>
+                    <div style="display:flex; gap:12px">
+                        <select id="ledgerFilter" class="input-field" style="flex:1; margin:0; height:40px; font-size:12px" onchange="window.filterLedger(this.value)">
+                            <option value="all">All Clients</option>
+                            <option value="needs_pattern">Needs Pattern</option>
+                            <option value="fit_optimized">Fit Optimized</option>
+                        </select>
+                        <button class="btn-ghost" style="height:40px; font-size:10px" onclick="window.exportLedgerBulk()">Bulk</button>
+                    </div>
+                    <input type="text" id="ledgerSearch" class="input-field" style="margin-bottom:0; height:44px" placeholder="Search clients...">
+                    <div style="display:grid; grid-template-columns: 1fr 1fr; gap:12px; margin-top:12px">
+                        <input type="number" id="filterHeightMin" class="input-field" style="height:36px; font-size:10px; margin-bottom:0" placeholder="Min Height (cm)">
+                        <input type="number" id="filterHeightMax" class="input-field" style="height:36px; font-size:10px; margin-bottom:0" placeholder="Max Height (cm)">
+                    </div>
+                    <div style="display:grid; grid-template-columns: 1fr 1fr; gap:12px; margin-top:8px; margin-bottom:20px">
+                        <input type="date" id="filterDateStart" class="input-field" style="height:36px; font-size:10px; margin-bottom:0; appearance:none">
+                        <input type="date" id="filterDateEnd" class="input-field" style="height:36px; font-size:10px; margin-bottom:0; appearance:none">
+                    </div>
+                    <div style="display:grid; grid-template-columns: 1fr 1fr; gap:12px"><button class="btn-outline" onclick="window.openModal('scanModal')">+ Start Scan</button><button class="btn-primary" onclick="window.openModal('shareModal')">+ Invite</button></div>
+                  <div style="margin-top:20px; padding:12px; background:rgba(255,255,255,0.02); border-radius:12px; border:1px solid var(--Glass-Border)">
+                    <div style="display:flex; justify-content:space-between; align-items:center">
+                      <div>
+                        <div style="font-size:11px; font-weight:700">Privacy Shield</div>
+                        <div style="font-size:9px; color:var(--Neutral-500)">Blur Digital Twin identity</div>
+                      </div>
+                      <label class="toggle-switch">
+                        <input type="checkbox" id="privacyShieldToggle" onchange="window.handlePrivacyToggle(this.checked)">
+                        <span class="slider"></span>
+                      </label>
+                    </div>
+                  </div>
+                    <button class="btn-outline" style="width:100%; border-style:dashed; color:var(--Neutral-500); font-size:10px; margin-top:20px" onclick="window.triggerBulkImport()">↑ Bulk Import Clients (CSV)</button>
+                    <button class="btn-outline" style="width:100%; border-color:var(--Mint); color:var(--Mint); font-size:10px" onclick="window.requestIndustrialDemo()">Enterprise: Request Industrial Demo</button>
+                    <input type="file" id="bulkImportFile" accept=".csv" style="display:none" onchange="window.handleBulkImport(this)">
+                  </div>
+                  <div id="scanList"></div>
+                </div>
+              </div>
+          </div>
+
           <div id="view-passports" class="tab-view" style="padding: 32px 40px;">
+            <a onclick="window.switchTab('overview')" style="display:inline-flex; align-items:center; gap:10px; padding:10px 20px; border-radius:14px; background:rgba(255,255,255,0.06); border:1px solid var(--Glass-Border); color:var(--White); font-size:14px; font-weight:900; cursor:pointer; margin-bottom:28px; transition:all 0.25s cubic-bezier(0.2,0.8,0.2,1); text-decoration:none; letter-spacing:-0.01em;" onmouseover="this.style.background='rgba(255,255,255,0.1)'; this.style.borderColor='rgba(255,255,255,0.2)'; this.style.transform='translateX(-4px)'" onmouseout="this.style.background='rgba(255,255,255,0.06)'; this.style.borderColor='var(--Glass-Border)'; this.style.transform='translateX(0)'">
+              <svg style="width:18px; height:18px; stroke-width:2.5;" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round"><line x1="19" y1="12" x2="5" y2="12"/><polyline points="12 19 5 12 12 5"/></svg>
+              Back
+            </a>
             <div style="margin-bottom:40px">
                 <h2 style="font-size:32px; margin-bottom:8px">Fitting Profiles</h2>
                 <p style="color:var(--Neutral-400); font-size:16px">Your universal body identity across all platforms.</p>
@@ -1889,7 +1850,10 @@
 
           <!-- ENTERPRISE INTELLIGENCE HUB -->
           <div id="view-enterprise" class="tab-view" style="padding: 32px 40px;">
-            <div class="glass-card">
+            <a onclick="window.switchTab('overview')" style="display:inline-flex; align-items:center; gap:10px; padding:10px 20px; border-radius:14px; background:rgba(255,255,255,0.06); border:1px solid var(--Glass-Border); color:var(--White); font-size:14px; font-weight:900; cursor:pointer; margin-bottom:28px; transition:all 0.25s cubic-bezier(0.2,0.8,0.2,1); text-decoration:none; letter-spacing:-0.01em;" onmouseover="this.style.background='rgba(255,255,255,0.1)'; this.style.borderColor='rgba(255,255,255,0.2)'; this.style.transform='translateX(-4px)'" onmouseout="this.style.background='rgba(255,255,255,0.06)'; this.style.borderColor='var(--Glass-Border)'; this.style.transform='translateX(0)'">
+              <svg style="width:18px; height:18px; stroke-width:2.5;" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round"><line x1="19" y1="12" x2="5" y2="12"/><polyline points="12 19 5 12 12 5"/></svg>
+              Back
+            </a>
               <h2 style="font-size: 24px; margin-bottom: 8px">Intelligence Hub</h2>
               <p style="color:var(--Neutral-400); margin-bottom:40px">Global market insights and team management for enterprise scale.</p>
 
@@ -1948,10 +1912,12 @@
                   </div>
                 </div>
               </div>
-            </div>
           </div>
           <div id="view-widget" class="tab-view" style="padding: 32px 40px;">
-            <div class="glass-card">
+            <a onclick="window.switchTab('overview')" style="display:inline-flex; align-items:center; gap:10px; padding:10px 20px; border-radius:14px; background:rgba(255,255,255,0.06); border:1px solid var(--Glass-Border); color:var(--White); font-size:14px; font-weight:900; cursor:pointer; margin-bottom:28px; transition:all 0.25s cubic-bezier(0.2,0.8,0.2,1); text-decoration:none; letter-spacing:-0.01em;" onmouseover="this.style.background='rgba(255,255,255,0.1)'; this.style.borderColor='rgba(255,255,255,0.2)'; this.style.transform='translateX(-4px)'" onmouseout="this.style.background='rgba(255,255,255,0.06)'; this.style.borderColor='var(--Glass-Border)'; this.style.transform='translateX(0)'">
+              <svg style="width:18px; height:18px; stroke-width:2.5;" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round"><line x1="19" y1="12" x2="5" y2="12"/><polyline points="12 19 5 12 12 5"/></svg>
+              Back
+            </a>
               <div style="display:flex; justify-content:space-between; align-items:flex-start; margin-bottom:40px">
                 <div>
                   <h2 style="font-size: 24px; margin-bottom: 8px">Brand Studio</h2>
@@ -2088,7 +2054,6 @@
                   </div>
                 </div>
               </div>
-            </div>
           </div>
 
 <!-- ═══════════════════════════════════════════════════════
@@ -2099,7 +2064,10 @@
 </div>
 
 <div id="view-billing" class="tab-view" style="padding: 32px 40px;">
-  <div class="glass-card">
+  <a onclick="window.switchTab('overview')" style="display:inline-flex; align-items:center; gap:10px; padding:10px 20px; border-radius:14px; background:rgba(255,255,255,0.06); border:1px solid var(--Glass-Border); color:var(--White); font-size:14px; font-weight:900; cursor:pointer; margin-bottom:28px; transition:all 0.25s cubic-bezier(0.2,0.8,0.2,1); text-decoration:none; letter-spacing:-0.01em;" onmouseover="this.style.background='rgba(255,255,255,0.1)'; this.style.borderColor='rgba(255,255,255,0.2)'; this.style.transform='translateX(-4px)'" onmouseout="this.style.background='rgba(255,255,255,0.06)'; this.style.borderColor='var(--Glass-Border)'; this.style.transform='translateX(0)'">
+    <svg style="width:18px; height:18px; stroke-width:2.5;" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round"><line x1="19" y1="12" x2="5" y2="12"/><polyline points="12 19 5 12 12 5"/></svg>
+    Back
+  </a>
     <div style="display:flex; align-items:center; justify-content:space-between; margin-bottom:32px;">
       <h2 style="margin:0">Billing & Plans</h2>
       <span style="font-size:11px; font-weight:700; color:var(--Neutral-400); letter-spacing:0.05em; background:var(--Glass); padding:6px 16px; border-radius:99px; border:1px solid var(--Glass-Border);" id="billingGlobalRate">₦<span id="billingRateValue">300</span> <span style="font-weight:400">/ scan</span></span>
@@ -2134,9 +2102,12 @@
         </table>
       </div>
     </div>
-  </div>
 </div>
           <div id="view-settings" class="tab-view" style="padding: 32px 40px;">
+            <a onclick="window.switchTab('overview')" style="display:inline-flex; align-items:center; gap:10px; padding:10px 20px; border-radius:14px; background:rgba(255,255,255,0.06); border:1px solid var(--Glass-Border); color:var(--White); font-size:14px; font-weight:900; cursor:pointer; margin-bottom:28px; transition:all 0.25s cubic-bezier(0.2,0.8,0.2,1); text-decoration:none; letter-spacing:-0.01em;" onmouseover="this.style.background='rgba(255,255,255,0.1)'; this.style.borderColor='rgba(255,255,255,0.2)'; this.style.transform='translateX(-4px)'" onmouseout="this.style.background='rgba(255,255,255,0.06)'; this.style.borderColor='var(--Glass-Border)'; this.style.transform='translateX(0)'">
+              <svg style="width:18px; height:18px; stroke-width:2.5;" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round"><line x1="19" y1="12" x2="5" y2="12"/><polyline points="12 19 5 12 12 5"/></svg>
+              Back
+            </a>
 
             <div class="glass-card settings-card">
               <div class="settings-section-header">
@@ -2287,8 +2258,6 @@
 
           </div>
         </section>
-      </div>
-    </div>
   </main>
 
   <script src="https://cdn.jsdelivr.net/npm/chart.js" defer></script>
@@ -2298,6 +2267,7 @@
   <script src="https://cdnjs.cloudflare.com/ajax/libs/qrcodejs/1.0.0/qrcode.min.js" defer></script>
   <script src="/assets/supabase.min.js"></script>
   <script src="/assets/three.min.js"></script>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/jszip/3.10.1/jszip.min.js" defer></script>
   <script src="/assets/korra_viz.js?v=1.0.15"></script>
   <script src="/assets/heatmap_shader.js" defer></script>
   <script>
@@ -2438,11 +2408,13 @@ window.getAttireHeat = (id) => window.getAttire(id).heat;
 window.getAttireName = (id) => window.getAttire(id).name;
 window.getAttireSub = (id) => window.getAttire(id).subtitle;
   </script>
-  <script src="/assets/measurement-screen.js?v=3.1.0"></script>
+  <script src="/assets/measurement-screen.js?v=4.0.1"></script>
   <script src="/assets/jspdf.min.js"></script>
   <script src="/assets/korra_export.js"></script>
 
   <script>
+// Force reload when restored from bfcache (back/forward navigation)
+window.addEventListener('pageshow', function(e) { if (e.persisted) window.location.reload(); });
 // --- ENV & CONFIG ---
     // Placeholder - will be fetched in init() after auth
     const CONFIG = { url: 'https://blsettabymllulsxtziw.supabase.co', key: 'sb_publishable_miCOIXHtlxLkfDgpwE0N-g_BA1Q-x8y', paystack: '' };
@@ -2692,6 +2664,7 @@ msg.textContent = feedback; msg.style.background = aligned ? "var(--Mint)" : "rg
       img.style.display = 'block';
       overlay.style.display = 'flex';
       placeholder.style.display = 'none';
+      _draftSave(fileId, capturedDataUrl);
       window.speak("Photo confirmed.", true);
       fetch(capturedDataUrl).then(res => res.blob()).then(blob => {
           const file = new File([blob], `${activeCameraType}.jpg`, { type: "image/jpeg" });
@@ -2714,6 +2687,7 @@ msg.textContent = feedback; msg.style.background = aligned ? "var(--Mint)" : "rg
           img.style.display = 'block';
           overlay.style.display = 'flex';
           placeholder.style.display = 'none';
+          _draftSave(labelId === 'frontLabel' ? 'frontPhoto' : 'sidePhoto', e.target.result);
         }; reader.readAsDataURL(input.files[0]);
       }
     };
@@ -2755,9 +2729,7 @@ msg.textContent = feedback; msg.style.background = aligned ? "var(--Mint)" : "rg
       }
 
       document.querySelectorAll('.tab-view').forEach(t => t.classList.remove('active'));
-      document.querySelectorAll('.sidebar-nav a').forEach(a => a.classList.remove('active'));
       document.getElementById('view-' + id)?.classList.add('active');
-      document.getElementById('tab-' + id)?.classList.add('active');
 
       // Restore main layout when leaving scanresult view
       if (id !== 'scanresult') {
@@ -2766,7 +2738,6 @@ msg.textContent = feedback; msg.style.background = aligned ? "var(--Mint)" : "rg
         const mc = document.querySelector('.main-content');
         if (mc) {
           mc.style.padding = '';
-          mc.style.marginLeft = '';
         }
       }
 
@@ -2816,23 +2787,8 @@ window.loadSettings = async () => {
         };
         console.log("🛠️ Collaborative Accuracy: Expert Mode", window.KORRA_USER_FLAGS.is_contributor ? "ENABLED" : "DISABLED");
 
-        // Auto-provision API key via backend (creates api_keys entry if missing)
-        try {
-          const { data: { session } } = await window.KORRA_DB.auth.getSession();
-          if (session?.access_token) {
-            const keyRes = await fetch('/api/v2/keys/provision', {
-              method: 'POST',
-              headers: { 'Authorization': `Bearer ${session.access_token}` }
-            });
-            if (keyRes.ok) {
-              const keyData = await keyRes.json();
-              currentApiKey = keyData.key;
-            }
-          }
-        } catch (e) {
-          console.warn('API key provision failed, falling back to profile key:', e);
-          currentApiKey = profile.api_key;
-        }
+        // Use profile's stored API key (backend provision endpoint is temporarily unavailable)
+        currentApiKey = profile.api_key;
         const safelySetText = (id, text) => { const el = document.getElementById(id); if (el) el.textContent = text; };
         const safelySetVal = (id, val) => { const el = document.getElementById(id); if (el) el.value = val || ""; };
 
@@ -2904,13 +2860,7 @@ window.loadSettings = async () => {
         }
 
         // ACCOUNT TYPE CONTEXTUAL UI
-        if (profile.account_type === 'individual') {
-            const wTab = document.getElementById('tab-widget');
-            const implLabel = document.getElementById('label-implementation');
-
-            if (wTab) wTab.style.display = 'none';
-            if (implLabel) implLabel.style.display = 'none';
-        } else if (profile.account_type === 'enterprise') {
+        if (profile.account_type === 'enterprise') {
             const entTab = document.getElementById('tab-enterprise');
             if (entTab) entTab.style.display = 'flex';
             const dropdownEnt = document.getElementById('dropdownEnterprise');
@@ -3466,57 +3416,6 @@ window.loadSettings = async () => {
 
 
 
-    window.debugLayout = () => {
-      const mc = document.querySelector('.main-content');
-      const sidebar = document.querySelector('.sidebar-nav');
-      const main = document.querySelector('main');
-      const vault = document.getElementById('view-vault');
-      const styles = getComputedStyle(mc);
-      const sidebarR = sidebar.getBoundingClientRect();
-      const mcR = mc.getBoundingClientRect();
-      console.group('=== LAYOUT DEBUG ===');
-      console.log('sidebar position:', sidebarR.left, sidebarR.top, sidebarR.width, sidebarR.height);
-      console.log('main-content rect:', mcR.left, mcR.top, mcR.width, mcR.height);
-      console.log('main-content inline style:', mc.style.cssText || '(none)');
-      console.log('main overflow:', main.style.overflow || '(CSS default)', '| computed:', getComputedStyle(main).overflow);
-      console.log('--sidebar-width:', getComputedStyle(document.documentElement).getPropertyValue('--sidebar-width'));
-      console.log('margin-left:', styles.marginLeft);
-      console.log('padding:', styles.padding);
-      console.log('sidebar z-index:', getComputedStyle(sidebar).zIndex);
-      console.log('main-content z-index:', getComputedStyle(mc).zIndex);
-      console.log('any inline margin on mc:', mc.style.marginLeft || '(none)');
-      console.log('any inline padding on mc:', mc.style.padding || '(none)');
-      console.groupEnd();
-    };
-
-    window.toggleSidebar = () => {
-      const sidebar = document.getElementById('sidebar');
-      sidebar.classList.toggle('collapsed');
-      const isCollapsed = sidebar.classList.contains('collapsed');
-      localStorage.setItem('korra_sidebar_collapsed', isCollapsed);
-      document.documentElement.style.setProperty('--sidebar-width', isCollapsed ? '72px' : '260px');
-
-      setTimeout(() => {
-        console.group('=== SIDEBAR DEBUG ===');
-        document.querySelectorAll('.sidebar-nav a .korra-icon').forEach((svg, i) => {
-          const r = svg.getBoundingClientRect();
-          const cx = r.left + r.width / 2, cy = r.top + r.height / 2;
-          const topEl = document.elementFromPoint(cx, cy);
-          const label = svg.closest('a')?.getAttribute('data-label') || '?';
-          console.log(`#${i} "${label}"`, {
-            svgRect: r,
-            color: getComputedStyle(svg).color,
-            visible: r.width > 0 && r.height > 0,
-            topEl: topEl?.tagName + (topEl?.className ? '.' + (typeof topEl.className === 'string' ? topEl.className : '') : ''),
-            topElZ: getComputedStyle(topEl).zIndex,
-            topElPos: getComputedStyle(topEl).position,
-            topElRect: topEl?.getBoundingClientRect()
-          });
-        });
-        console.groupEnd();
-      }, 350);
-    };
-
     // ---- CUSTOM MODAL SYSTEM (replaces alert/confirm/prompt) ----
     window.showModal = ({ icon = '', title = '', message = '', showInput = false, inputValue = '', okText = 'OK', cancelText = 'Cancel', showCancel = false, onOk, onCancel }) => {
       return new Promise((resolve) => {
@@ -3571,8 +3470,254 @@ window.loadSettings = async () => {
       await window.showModal({ icon, title: icon === '✕' ? 'Error' : icon === '✓' ? 'Success' : icon === '⚠' ? 'Warning' : 'Notice', message: msg, showCancel: false, okText: 'OK' });
     };
 
+    // ═══ INDEXEDDB SCAN DRAFT PERSISTENCE ═══
+    const DRAFT_DB = 'korra-scan-draft';
+    const DRAFT_STORE = 'draft';
+
+    function _draftOpen() {
+      return new Promise((resolve, reject) => {
+        const req = indexedDB.open(DRAFT_DB, 1);
+        req.onupgradeneeded = (e) => {
+          if (!e.target.result.objectStoreNames.contains(DRAFT_STORE))
+            e.target.result.createObjectStore(DRAFT_STORE);
+        };
+        req.onsuccess = (e) => resolve(e.target.result);
+        req.onerror = (e) => reject(e.target.error);
+      });
+    }
+
+    async function _draftSave(key, value) {
+      try {
+        const db = await _draftOpen();
+        const tx = db.transaction(DRAFT_STORE, 'readwrite');
+        tx.objectStore(DRAFT_STORE).put(value, key);
+        tx.oncomplete = () => db.close();
+      } catch (e) { console.warn('Draft save failed:', e); }
+    }
+
+    async function _draftLoad(key) {
+      try {
+        const db = await _draftOpen();
+        return await new Promise((resolve, reject) => {
+          const tx = db.transaction(DRAFT_STORE, 'readonly');
+          const req = tx.objectStore(DRAFT_STORE).get(key);
+          req.onsuccess = () => { db.close(); resolve(req.result); };
+          req.onerror = (e) => { db.close(); reject(e.target.error); };
+        });
+      } catch (e) { return null; }
+    }
+
+    async function _draftClear() {
+      try {
+        const db = await _draftOpen();
+        const tx = db.transaction(DRAFT_STORE, 'readwrite');
+        tx.objectStore(DRAFT_STORE).clear();
+        tx.oncomplete = () => db.close();
+      } catch (e) { console.warn('Draft clear failed:', e); }
+    }
+
+    async function _restoreScanDraft() {
+      const front = await _draftLoad('frontPhoto');
+      const side = await _draftLoad('sidePhoto');
+      const name = await _draftLoad('clientName');
+      const height = await _draftLoad('height');
+      const gender = await _draftLoad('gender');
+      if (!front && !side) return;
+      // Restore preview images
+      const frontCard = document.getElementById('frontLabel');
+      const sideCard = document.getElementById('sideLabel');
+      if (front && frontCard) {
+        const img = frontCard.querySelector('.preview-img');
+        const overlay = frontCard.querySelector('.preview-overlay');
+        const placeholder = frontCard.querySelector('.placeholder-content');
+        img.src = front; img.style.display = 'block';
+        overlay.style.display = 'flex'; placeholder.style.display = 'none';
+        // Reconstruct File object for submission
+        fetch(front).then(r => r.blob()).then(blob => {
+          const dt = new DataTransfer();
+          dt.items.add(new File([blob], 'front.jpg', { type: 'image/jpeg' }));
+          document.getElementById('frontPhoto').files = dt.files;
+        }).catch(() => {});
+      }
+      if (side && sideCard) {
+        const img = sideCard.querySelector('.preview-img');
+        const overlay = sideCard.querySelector('.preview-overlay');
+        const placeholder = sideCard.querySelector('.placeholder-content');
+        img.src = side; img.style.display = 'block';
+        overlay.style.display = 'flex'; placeholder.style.display = 'none';
+        fetch(side).then(r => r.blob()).then(blob => {
+          const dt = new DataTransfer();
+          dt.items.add(new File([blob], 'side.jpg', { type: 'image/jpeg' }));
+          document.getElementById('sidePhoto').files = dt.files;
+        }).catch(() => {});
+      }
+      if (name) document.getElementById('scanClientName').value = name;
+      if (height) document.getElementById('scanHeight').value = height;
+      if (gender) document.getElementById('scanGender').value = gender;
+      window.showAlert('Draft scan restored. Continue where you left off.');
+    }
+
+    // ═══ SUPABASE DRAFT PERSISTENCE ═══
+    window.currentDraftId = null;
+
+    window._draftSaveToSupabase = async () => {
+      const name = document.getElementById('scanClientName').value.trim();
+      const height = document.getElementById('scanHeight').value.trim();
+      const gender = document.getElementById('scanGender').value;
+      const frontFile = document.getElementById('frontPhoto').files[0];
+      const sideFile = document.getElementById('sidePhoto').files[0];
+      if (!frontFile && !sideFile) { window.showAlert('Capture at least one photo before saving.'); return false; }
+      const saveBtn = document.getElementById('btnSaveDraft');
+      if (saveBtn) { saveBtn.disabled = true; saveBtn.textContent = 'Saving...'; }
+      try {
+        const { data: { session } } = await window.KORRA_DB.auth.getSession();
+        if (!session) { window.showSessionExpired(); return false; }
+        const userId = session.user.id;
+        const draftId = window.currentDraftId || crypto.randomUUID();
+        let frontUrl = '', sideUrl = '';
+
+        const uploadPhoto = async (file, side) => {
+          if (!file) return '';
+          const path = `drafts/${userId}/${draftId}_${side}.jpg`;
+          const { error } = await window.KORRA_DB.storage.from('scan_photos').upload(path, file, {
+            contentType: 'image/jpeg', upsert: true
+          });
+          if (error && !error.message.includes('duplicate')) console.warn('Draft photo upload:', error.message);
+          const { data: { publicUrl } } = window.KORRA_DB.storage.from('scan_photos').getPublicUrl(path);
+          return publicUrl;
+        };
+
+        [frontUrl, sideUrl] = await Promise.all([
+          uploadPhoto(frontFile, 'front'),
+          uploadPhoto(sideFile, 'side')
+        ]);
+
+        const payload = {
+          user_id: userId,
+          client_name: name || '',
+          height: height ? parseFloat(height) : null,
+          gender: gender || '',
+          front_photo_url: frontUrl,
+          side_photo_url: sideUrl,
+          status: 'draft',
+          updated_at: new Date().toISOString()
+        };
+
+        if (window.currentDraftId) {
+          await window.KORRA_DB.from('drafts').update(payload).eq('id', window.currentDraftId);
+        } else {
+          const { data, error } = await window.KORRA_DB.from('drafts').insert(payload).select('id').single();
+          if (error) throw error;
+          window.currentDraftId = data.id;
+          draftId = data.id;
+        }
+        if (saveBtn) { saveBtn.disabled = false; saveBtn.textContent = 'Save as Draft'; }
+        window.showAlert('Draft saved!');
+        window.closeModal('scanModal');
+        await window._refreshDraftUI();
+        return true;
+      } catch (e) {
+        console.error('Draft save failed:', e);
+        if (saveBtn) { saveBtn.disabled = false; saveBtn.textContent = 'Save as Draft'; }
+        window.showAlert('Failed to save draft. Please try again.');
+        return false;
+      }
+    };
+
+    window._draftLoadFromSupabase = async () => {
+      try {
+        const { data: { session } } = await window.KORRA_DB.auth.getSession();
+        if (!session) return null;
+        const { data, error } = await window.KORRA_DB.from('drafts')
+          .select('*').eq('user_id', session.user.id).eq('status', 'draft')
+          .order('updated_at', { ascending: false }).limit(1);
+        if (error) throw error;
+        if (data && data.length > 0) {
+          window.currentDraftId = data[0].id;
+          return data[0];
+        }
+        return null;
+      } catch (e) {
+        console.warn('Draft load failed:', e);
+        return null;
+      }
+    };
+
+    window._draftDiscard = async () => {
+      _draftClear();
+      if (window.currentDraftId) {
+        try {
+          await window.KORRA_DB.from('drafts').update({ status: 'discarded' }).eq('id', window.currentDraftId);
+        } catch (e) {
+          console.warn('Supabase draft discard failed:', e);
+        }
+      }
+      window.currentDraftId = null;
+      await window._refreshDraftUI();
+    };
+
+    window._draftRestoreToForm = async (draft) => {
+      if (!draft) return;
+      if (draft.client_name) document.getElementById('scanClientName').value = draft.client_name;
+      if (draft.height) document.getElementById('scanHeight').value = draft.height;
+      if (draft.gender) document.getElementById('scanGender').value = draft.gender;
+
+      const restorePhoto = async (url, labelId, fileId) => {
+        if (!url) return;
+        try {
+          const card = document.getElementById(labelId);
+          const img = card.querySelector('.preview-img');
+          const overlay = card.querySelector('.preview-overlay');
+          const placeholder = card.querySelector('.placeholder-content');
+          img.src = url; img.style.display = 'block';
+          overlay.style.display = 'flex'; placeholder.style.display = 'none';
+          const res = await fetch(url);
+          const blob = await res.blob();
+          const dt = new DataTransfer();
+          dt.items.add(new File([blob], fileId, { type: 'image/jpeg' }));
+          document.getElementById(fileId === 'front.jpg' ? 'frontPhoto' : 'sidePhoto').files = dt.files;
+        } catch (e) { console.warn('Photo restore failed:', e); }
+      };
+
+      await Promise.all([
+        restorePhoto(draft.front_photo_url, 'frontLabel', 'front.jpg'),
+        restorePhoto(draft.side_photo_url, 'sideLabel', 'side.jpg')
+      ]);
+    };
+
+    window._refreshDraftUI = async () => {
+      const draft = await window._draftLoadFromSupabase();
+      const card = document.getElementById('draftCard');
+      const banner = document.getElementById('draftBanner');
+      const draftIndicator = document.getElementById('draftBadge');
+      if (draft) {
+        if (card) card.style.display = 'block';
+        if (banner && !sessionStorage.getItem('_draftDismissed')) banner.style.display = 'flex';
+        if (draftIndicator) draftIndicator.style.display = 'flex';
+      } else {
+        if (card) card.style.display = 'none';
+        if (banner) banner.style.display = 'none';
+        if (draftIndicator) draftIndicator.style.display = 'none';
+      }
+    };
+
     window.showConfirm = async (msg) => {
       return window.showModal({ icon: '⚠', title: 'Confirm', message: msg, showCancel: true, okText: 'Continue', cancelText: 'Cancel' });
+    };
+
+    window.showSessionExpired = async () => {
+      const ok = await window.showModal({
+        icon: '⚠',
+        title: 'Session Expired',
+        message: 'Your session has expired. Please sign in again to continue.',
+        showCancel: true,
+        okText: 'Sign In',
+        cancelText: 'Cancel'
+      });
+      if (ok) {
+        if (window.KORRA_DB) await window.KORRA_DB.auth.signOut();
+        window.location.href = '/signin';
+      }
     };
 
     window.showPrompt = async (msg, defaultValue = '') => {
@@ -3611,11 +3756,6 @@ window.loadSettings = async () => {
     };
 
     async function init() {
-      const savedCollapsed = localStorage.getItem('korra_sidebar_collapsed');
-      if (savedCollapsed === 'true') {
-        document.getElementById('sidebar')?.classList.add('collapsed');
-        document.documentElement.style.setProperty('--sidebar-width', '72px');
-      }
       // FETCH PUBLIC CONFIG (PAYSTACK KEY + CURRENCY) FROM SERVER
       try {
           const configRes = await fetch('/api/v2/config');
@@ -3673,7 +3813,7 @@ window.loadSettings = async () => {
       const { data: { session } } = await window.KORRA_DB.auth.getSession();
       if (!session) { window.location.href = '/signin'; return; }
       userId = session.user.id;
-      fetchHistory(); await window.loadSettings(); document.getElementById('loadingOverlay').style.display = 'none';
+      fetchHistory(); await window.loadSettings(); _restoreScanDraft(); window._refreshDraftUI(); document.getElementById('loadingOverlay').style.display = 'none';
 
       // Silent promise rejection listener for debugging persistence issues
       window.addEventListener('unhandledrejection', (e) => {
@@ -3774,6 +3914,8 @@ window.loadSettings = async () => {
             window.hapticFeedback('success');
             window.LAST_MEASUREMENT_DATA = data;
             fetchHistory();
+            _draftClear();
+            window._draftDiscard();
             setTimeout(() => {
                 overlay.style.display = 'none';
                 btn.disabled = false;
@@ -3811,10 +3953,22 @@ window.loadSettings = async () => {
       const fd = new FormData(); fd.append('front', frontFile); fd.append('side', sideFile); fd.append('height', height); fd.append('gender', document.getElementById('scanGender').value); fd.append('client_name', name);
 
       try {
-          const apiKey = currentApiKey;
+          const headers = {};
+          if (currentApiKey) {
+            headers['X-API-Key'] = currentApiKey;
+          } else {
+            const { data: { session } } = await window.KORRA_DB.auth.getSession();
+            if (session?.access_token) {
+              headers['Authorization'] = 'Bearer ' + session.access_token;
+            } else {
+              btn.disabled = false;
+              window.showSessionExpired();
+              return;
+            }
+          }
           const res = await window.resilientFetch('/api/v2/measurements/extract', {
               method: 'POST',
-              headers: { 'X-API-Key': apiKey },
+              headers,
               body: fd,
               timeout: 30000 // Allow 30s for large uploads
           });
@@ -3824,7 +3978,7 @@ window.loadSettings = async () => {
           } else {
               btn.disabled = false;
               if (res.status === 402) window.showAlert("Insufficient credits. Please top up.");
-              else if (res.status === 401 || res.status === 403) window.showAlert("Authentication failed. Please sign in again.");
+              else if (res.status === 401 || res.status === 403) { window.showSessionExpired(); return; }
               else window.showAlert("Error starting scan. Please try again.");
           }
       } catch (err) {

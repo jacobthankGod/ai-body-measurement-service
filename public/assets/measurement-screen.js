@@ -2099,6 +2099,9 @@ window.KORRA_MS = {
 
   // ═══ TRY-ON (OOTDiffusion) ═══
   buildTryOnView() {
+    const hasScan = !!(this.data && this.data.id);
+    const photos = hasScan ? this._getScanPhotos() : null;
+
     return `
       <div class="ms-tryon-view">
         <div class="ms-tryon-topbar">
@@ -2110,7 +2113,7 @@ window.KORRA_MS = {
           <div class="ms-tryon-subtitle">AI-powered garment visualization</div>
         </div>
         <div class="ms-tryon-input-area">
-          <div class="ms-tryon-preview-box">
+          <div class="ms-tryon-preview-box" id="ms-tryon-person-box" style="${hasScan ? 'display:none' : ''}">
             <div class="ms-tryon-preview-label">Person Photo</div>
             <div class="ms-tryon-preview-img" id="ms-tryon-person-preview">
               <img id="ms-tryon-person-img" src="" alt="Person" style="display:none">
@@ -2125,6 +2128,26 @@ window.KORRA_MS = {
               Choose Image
             </button>
           </div>
+
+          ${hasScan ? `
+          <div class="ms-tryon-preview-box" id="ms-tryon-reference-box">
+            <div class="ms-tryon-preview-label">Size Profile Active</div>
+            <div class="ms-tryon-reference-photos">
+              <div class="ms-tryon-ref-thumb">
+                <img src="${photos.front}" alt="Front">
+                <span>Front</span>
+              </div>
+              <div class="ms-tryon-ref-thumb">
+                <img src="${photos.side}" alt="Side">
+                <span>Side</span>
+              </div>
+            </div>
+            <div class="ms-tryon-ref-status">Using your existing scan for digital fitting</div>
+            <button class="ms-tryon-upload-btn" style="margin-top:12px; background:transparent; border:1px solid var(--Neutral-700)" onclick="KORRA_MS._toggleManualTryOn()">
+              Use Different Photo instead
+            </button>
+          </div>
+          ` : ''}
           <div class="ms-tryon-arrow">
             <svg width="32" height="32" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="5" y1="12" x2="19" y2="12"/><polyline points="12 5 19 12 12 19"/></svg>
           </div>
@@ -2205,6 +2228,25 @@ window.KORRA_MS = {
           <div class="ms-tryon-results-label">Results</div>
           <div id="ms-recon-results-content"></div>
         </div>
+        <div class="ms-recon-viewer-wrap" id="ms-recon-viewer-wrap" style="display:none;">
+          <div class="ms-recon-viewer-header">
+            <span class="ms-recon-viewer-label">3D Preview</span>
+            <div class="ms-recon-viewer-actions">
+              <button class="ms-recon-viewer-btn" onclick="KORRA_MS._resetReconCamera()" title="Reset camera">
+                <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M1 4v6h6"/><path d="M3.51 15a9 9 0 1 0 2.13-9.36L1 10"/></svg>
+              </button>
+              <button class="ms-recon-viewer-btn" onclick="KORRA_MS._loadReconMeshIntoTryon()" title="Use in Virtual Try-On">
+                <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M16 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/><circle cx="8.5" cy="7" r="4"/><line x1="20" y1="8" x2="20" y2="14"/><line x1="23" y1="11" x2="17" y2="11"/></svg>
+                Use in Try-On
+              </button>
+            </div>
+          </div>
+          <div class="ms-recon-viewer" id="ms-recon-viewer"></div>
+          <div class="ms-recon-viewer-loading" id="ms-recon-viewer-loading" style="display:none;">
+            <div class="ms-tryon-spinner"></div>
+            <span>Loading mesh...</span>
+          </div>
+        </div>
       </div>`;
   },
 
@@ -2242,9 +2284,28 @@ window.KORRA_MS = {
   },
 
   _checkTryOnReady() {
+    const hasScan = !!(this.data && this.data.id);
+    const hasPerson = this._tryonPersonFile || hasScan;
+    const hasGarment = !!this._tryonGarmentFile;
+
     const btn = document.getElementById('ms-tryon-generate-btn');
     if (!btn) return;
-    btn.disabled = !(this._tryonPersonFile && this._tryonGarmentFile);
+    btn.disabled = !(hasPerson && hasGarment);
+  },
+
+  _getScanPhotos() {
+    if (!this.data) return { front: '', side: '' };
+    return {
+      front: this.data.photo_front_url || '',
+      side: this.data.photo_side_url || ''
+    };
+  },
+
+  _toggleManualTryOn() {
+    const refBox = document.getElementById('ms-tryon-reference-box');
+    const personBox = document.getElementById('ms-tryon-person-box');
+    if (refBox) refBox.style.display = 'none';
+    if (personBox) personBox.style.display = 'block';
   },
 
   async _runTryOn() {
@@ -2470,6 +2531,7 @@ window.KORRA_MS = {
           </div>
         </div>
       `;
+      this._loadReconMeshIntoViewer(blob);
     } catch (e) {
       status.style.display = 'none';
       btn.style.display = '';
@@ -3008,6 +3070,203 @@ window.KORRA_MS = {
 
   _handleReconAuthError() {
     window.location.href = '/signin.html?return=' + encodeURIComponent(window.location.pathname);
+  },
+
+  // ═══ RECONSTRUCT 3D PREVIEW ═══
+  _initReconViewer() {
+    const container = document.getElementById('ms-recon-viewer');
+    if (!container || !window.THREE) return null;
+    container.innerHTML = '';
+
+    const w = container.clientWidth || 360;
+    const h = container.clientHeight || 360;
+
+    const scene = new THREE.Scene();
+    scene.background = new THREE.Color(0x1A1A2E);
+
+    const camera = new THREE.PerspectiveCamera(40, w / h, 0.01, 100);
+    camera.position.set(0, 0.3, 1.8);
+    camera.lookAt(0, 0.3, 0);
+
+    const renderer = new THREE.WebGLRenderer({ antialias: true, alpha: true });
+    renderer.setSize(w, h);
+    renderer.setPixelRatio(Math.min(window.devicePixelRatio, 2));
+    renderer.toneMapping = THREE.ACESFilmicToneMapping;
+    renderer.toneMappingExposure = 1.0;
+    container.appendChild(renderer.domElement);
+
+    const ambient = new THREE.AmbientLight(0xffffff, 0.6);
+    scene.add(ambient);
+    const dirLight = new THREE.DirectionalLight(0xffffff, 1.2);
+    dirLight.position.set(2, 4, 3);
+    scene.add(dirLight);
+    const fillLight = new THREE.DirectionalLight(0xffffff, 0.4);
+    fillLight.position.set(-2, 1, -2);
+    scene.add(fillLight);
+
+    const grid = new THREE.GridHelper(1, 10, 0x444466, 0x333355);
+    grid.position.y = 0;
+    scene.add(grid);
+
+    let controls = null;
+    if (THREE.OrbitControls) {
+      controls = new THREE.OrbitControls(camera, renderer.domElement);
+      controls.enableDamping = true;
+      controls.dampingFactor = 0.08;
+      controls.target.set(0, 0.3, 0);
+      controls.update();
+    }
+
+    const animLoop = () => {
+      requestAnimationFrame(animLoop);
+      if (controls) controls.update();
+      renderer.render(scene, camera);
+    };
+    animLoop();
+
+    this._reconViewer = { scene, camera, renderer, controls, container };
+    return this._reconViewer;
+  },
+
+  _loadReconMeshIntoViewer(blob) {
+    if (!window.JSZip || !window.THREE) {
+      console.warn('[RECON] JSZip or THREE not loaded, skipping 3D preview');
+      return;
+    }
+
+    const viewerWrap = document.getElementById('ms-recon-viewer-wrap');
+    const loadingEl = document.getElementById('ms-recon-viewer-loading');
+    if (viewerWrap) viewerWrap.style.display = 'block';
+    if (loadingEl) loadingEl.style.display = 'flex';
+
+    const viewer = this._reconViewer || this._initReconViewer();
+    if (!viewer) return;
+
+    JSZip.loadAsync(blob).then(zip => {
+      const objFile = zip.file('garment.obj') || zip.file('mesh.obj') || zip.file('model.obj');
+      if (!objFile) {
+        if (loadingEl) loadingEl.style.display = 'none';
+        console.warn('[RECON] No OBJ file found in ZIP');
+        return;
+      }
+      return objFile.async('string');
+    }).then(objText => {
+      if (!objText) return;
+
+      const geometry = new THREE.BufferGeometry();
+      const vertices = [];
+      const indices = [];
+      const normals = [];
+      const uvs = [];
+      const vArr = [], vnArr = [], vtArr = [];
+
+      const lines = objText.split('\n');
+      for (const line of lines) {
+        const parts = line.trim().split(/\s+/);
+        if (parts[0] === 'v') {
+          vArr.push(parseFloat(parts[1]), parseFloat(parts[2]), parseFloat(parts[3]));
+        } else if (parts[0] === 'vn') {
+          vnArr.push(parseFloat(parts[1]), parseFloat(parts[2]), parseFloat(parts[3]));
+        } else if (parts[0] === 'vt') {
+          vtArr.push(parseFloat(parts[1]), parseFloat(parts[2]));
+        } else if (parts[0] === 'f') {
+          const faceVerts = parts.slice(1);
+          const idxs = faceVerts.map(f => {
+            const [vi] = f.split('/').map(Number);
+            return vi - 1;
+          });
+          for (let i = 1; i < idxs.length - 1; i++) {
+            indices.push(idxs[0], idxs[i], idxs[i + 1]);
+          }
+          for (const f of faceVerts) {
+            const [vi, vti, vni] = f.split('/').map(Number);
+            const i3 = (vi - 1) * 3;
+            vertices.push(vArr[i3], vArr[i3 + 1], vArr[i3 + 2]);
+            if (vni && vnArr.length) {
+              const i3n = (vni - 1) * 3;
+              normals.push(vnArr[i3n], vnArr[i3n + 1], vnArr[i3n + 2]);
+            }
+            if (vti && vtArr.length) {
+              const i2 = (vti - 1) * 2;
+              uvs.push(vtArr[i2], vtArr[i2 + 1]);
+            }
+          }
+        }
+      }
+
+      if (indices.length === 0) {
+        geometry.setAttribute('position', new THREE.Float32BufferAttribute(vertices, 3));
+        geometry.computeVertexNormals();
+      } else {
+        const posArr = new Float32Array(vertices);
+        geometry.setAttribute('position', new THREE.Float32BufferAttribute(posArr, 3));
+        if (normals.length) geometry.setAttribute('normal', new THREE.Float32BufferAttribute(normals, 3));
+        else geometry.computeVertexNormals();
+        if (uvs.length) geometry.setAttribute('uv', new THREE.Float32BufferAttribute(uvs, 2));
+        geometry.setIndex(indices);
+      }
+
+      geometry.computeBoundingBox();
+      const box = geometry.boundingBox;
+      const center = new THREE.Vector3();
+      box.getCenter(center);
+      geometry.translate(-center.x, -center.y, -center.z);
+
+      const size = new THREE.Vector3();
+      box.getSize(size);
+      const maxDim = Math.max(size.x, size.y, size.z);
+      if (maxDim > 0) {
+        const scale = 1.2 / maxDim;
+        geometry.scale(scale, scale, scale);
+      }
+
+      geometry.computeBoundingBox();
+      const newBox = geometry.boundingBox;
+      const yOffset = -(newBox.min.y);
+      geometry.translate(0, yOffset, 0);
+
+      const material = new THREE.MeshStandardMaterial({
+        color: 0xCCCCCC,
+        metalness: 0.1,
+        roughness: 0.6,
+        side: THREE.DoubleSide,
+      });
+
+      const mesh = new THREE.Mesh(geometry, material);
+      viewer.scene.add(mesh);
+      this._reconMesh = mesh;
+
+      viewer.camera.position.set(0, 0.5, 1.8);
+      viewer.camera.lookAt(0, 0.4, 0);
+      if (viewer.controls) {
+        viewer.controls.target.set(0, 0.4, 0);
+        viewer.controls.update();
+      }
+
+      if (loadingEl) loadingEl.style.display = 'none';
+      console.log('[RECON] 3D mesh loaded:', { vertices: vertices.length / 3, faces: indices.length / 3 });
+    }).catch(err => {
+      console.error('[RECON] Failed to load mesh:', err);
+      if (loadingEl) loadingEl.style.display = 'none';
+    });
+  },
+
+  _resetReconCamera() {
+    const viewer = this._reconViewer;
+    if (!viewer) return;
+    viewer.camera.position.set(0, 0.5, 1.8);
+    viewer.camera.lookAt(0, 0.4, 0);
+    if (viewer.controls) {
+      viewer.controls.target.set(0, 0.4, 0);
+      viewer.controls.update();
+    }
+  },
+
+  _loadReconMeshIntoTryon() {
+    if (this._reconMesh) {
+      console.log('[RECON] Mesh ready for try-on:', this._reconMesh.geometry.attributes.position.count, 'vertices');
+      this.switchView('tryon');
+    }
   },
 };
 
