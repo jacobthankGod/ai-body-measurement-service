@@ -2795,3 +2795,60 @@
   z-index: 5;
 }
 
+/* ═══ RECONSTRUCT PROGRESS BAR ═══ */
+.ms-recon-progress {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 12px;
+  padding: 24px;
+  width: 100%;
+}
+.ms-recon-progress-bar {
+  width: 100%;
+  max-width: 320px;
+  height: 6px;
+  background: rgba(255, 255, 255, 0.08);
+  border-radius: 3px;
+  overflow: hidden;
+}
+.ms-recon-progress-fill {
+  height: 100%;
+  width: 0%;
+  background: var(--Accent-Teal);
+  border-radius: 3px;
+  transition: width 0.4s ease, background-color 0.6s ease;
+}
+.ms-recon-progress-fill[data-stage="segmenting"] { background: #4A90D9; }
+.ms-recon-progress-fill[data-stage="meshing"] { background: #9B59B6; }
+.ms-recon-progress-fill[data-stage="patterning"] { background: #E67E22; }
+.ms-recon-progress-fill[data-stage="zipping"] { background: #1DBFAF; }
+.ms-recon-progress-fill[data-stage="complete"] { background: #2ECC71; }
+.ms-recon-progress-steps {
+  display: flex;
+  gap: 16px;
+  font-size: 11px;
+  color: var(--Neutral-500);
+}
+.ms-recon-step {
+  position: relative;
+  padding: 2px 0;
+  transition: color 0.3s;
+}
+.ms-recon-step.active {
+  color: var(--Accent-Teal);
+  font-weight: 600;
+}
+.ms-recon-step.done {
+  color: #2ECC71;
+}
+.ms-recon-step.done::after {
+  content: '✓';
+  margin-left: 4px;
+  font-size: 10px;
+}
+.ms-recon-progress-text {
+  font-size: 13px;
+  color: var(--Neutral-300);
+}
+

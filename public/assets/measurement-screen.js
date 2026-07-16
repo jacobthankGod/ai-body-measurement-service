@@ -2216,8 +2216,19 @@ window.KORRA_MS = {
           <button class="ms-tryon-generate-btn" id="ms-recon-generate-btn" disabled onclick="KORRA_MS._runReconstruct()">Reconstruct Garment</button>
         </div>
         <div class="ms-tryon-status" id="ms-recon-status" style="display:none;">
-          <div class="ms-tryon-spinner"></div>
-          <span id="ms-recon-status-text">Reconstructing... (~30 sec)</span>
+          <div class="ms-recon-progress" id="ms-recon-progress">
+            <div class="ms-recon-progress-bar">
+              <div class="ms-recon-progress-fill" id="ms-recon-progress-fill" style="width: 0%"></div>
+            </div>
+            <div class="ms-recon-progress-steps" id="ms-recon-progress-steps">
+              <span class="ms-recon-step" data-step="uploading">Upload</span>
+              <span class="ms-recon-step" data-step="segmenting">Segment</span>
+              <span class="ms-recon-step" data-step="meshing">Mesh</span>
+              <span class="ms-recon-step" data-step="patterning">Pattern</span>
+              <span class="ms-recon-step" data-step="zipping">Package</span>
+            </div>
+            <span class="ms-recon-progress-text" id="ms-recon-progress-text">Uploading image...</span>
+          </div>
         </div>
         <div class="ms-recon-error" id="ms-recon-error" data-type="server" style="display:none;">
           <div class="ms-recon-error-icon" id="ms-recon-error-icon"></div>
@@ -2426,7 +2437,6 @@ window.KORRA_MS = {
   async _runReconstruct() {
     const btn = document.getElementById('ms-recon-generate-btn');
     const status = document.getElementById('ms-recon-status');
-    const statusText = document.getElementById('ms-recon-status-text');
     const results = document.getElementById('ms-recon-results');
     const resultsContent = document.getElementById('ms-recon-results-content');
     if (!btn || !status || !results || !resultsContent) return;
@@ -2453,7 +2463,7 @@ window.KORRA_MS = {
 
     btn.style.display = 'none';
     status.style.display = 'flex';
-    if (statusText) statusText.textContent = 'Reconstructing garment... (~30 sec)';
+    this._updateReconProgress('uploading', 0, 'Uploading image...');
     results.style.display = 'none';
 
     try {
@@ -2462,7 +2472,6 @@ window.KORRA_MS = {
       formData.append('include_mesh', 'true');
       formData.append('include_pattern', 'true');
 
-      // Validate token against Supabase server (auto-refreshes if expired)
       if (!window.KORRA_DB) {
         this._showReconError('Authentication not initialized. Please refresh the page.', 'auth');
         return;
@@ -2480,10 +2489,9 @@ window.KORRA_MS = {
       }
       console.log('[RECONSTRUCT] Token validated for user:', user.id);
 
-      // Timeout with AbortController (5 min + 10s buffer)
+      // Step 1: POST to get job_id (fast, returns immediately)
       const controller = new AbortController();
-      const timeoutId = setTimeout(() => controller.abort(), 310000);
-
+      const timeoutId = setTimeout(() => controller.abort(), 30000);
       let res;
       try {
         res = await fetch('/api/v2/garment/reconstruct', {
@@ -2497,56 +2505,123 @@ window.KORRA_MS = {
       }
 
       if (!res.ok) {
-        if (res.status === 503) {
-          throw Object.assign(new Error('Service temporarily unavailable. Please try again in a few minutes.'), { status: 503 });
-        }
-        if (res.status === 502) {
-          throw Object.assign(new Error('The reconstruction backend encountered an error. Our team has been notified.'), { status: 502 });
-        }
+        if (res.status === 503) throw Object.assign(new Error('Service temporarily unavailable. Please try again in a few minutes.'), { status: 503 });
+        if (res.status === 502) throw Object.assign(new Error('The reconstruction backend encountered an error.'), { status: 502 });
         const err = await res.json().catch(() => ({}));
         throw new Error(err.detail || `Reconstruction failed (${res.status})`);
       }
 
-      const blob = await res.blob();
+      const { job_id: kaggleJobId } = await res.json();
+      if (!kaggleJobId) throw new Error('No job ID returned from server');
+      this._updateReconProgress('uploading', 5, 'Job started...');
 
-      // Validate ZIP response
-      if (blob.size < 100) {
-        throw new Error('Received an empty response from the server. Please try again.');
+      // Step 2: Open SSE for progress
+      const sseUrl = `/api/v2/garment/reconstruct/progress/${kaggleJobId}`;
+      let sseSupported = true;
+      let eventSource = null;
+      let pollInterval = null;
+
+      const cleanup = () => {
+        if (eventSource) { eventSource.close(); eventSource = null; }
+        if (pollInterval) { clearInterval(pollInterval); pollInterval = null; }
+      };
+
+      const fetchResult = async () => {
+        cleanup();
+        try {
+          const zipRes = await fetch(`/api/v2/garment/job/${kaggleJobId}`, {
+            headers: { 'Authorization': `Bearer ${session.access_token}` }
+          });
+          if (!zipRes.ok) throw new Error(`Failed to fetch result (${zipRes.status})`);
+          const blob = await zipRes.blob();
+          if (blob.size < 100) throw new Error('Received an empty response from the server.');
+          this._onReconstructComplete(blob, status, results, resultsContent, btn);
+        } catch (e) {
+          status.style.display = 'none';
+          btn.style.display = '';
+          this._showReconError(e.message || 'Failed to download result.', 'server');
+        }
+      };
+
+      // Try SSE first, fall back to polling
+      const startPolling = () => {
+        sseSupported = false;
+        let pollCount = 0;
+        pollInterval = setInterval(async () => {
+          pollCount++;
+          try {
+            const stRes = await fetch(`/api/v2/garment/status/${kaggleJobId}`, {
+              headers: { 'Authorization': `Bearer ${session.access_token}` }
+            });
+            if (stRes.ok) {
+              const st = await stRes.json();
+              this._updateReconProgress(st.stage, st.progress, st.message);
+              if (st.stage === 'complete') { fetchResult(); }
+              else if (st.stage === 'error') {
+                cleanup();
+                status.style.display = 'none';
+                btn.style.display = '';
+                this._showReconError(st.message || 'Pipeline failed.', 'server');
+              }
+            }
+          } catch (_) {}
+          if (pollCount > 120) { cleanup(); /* 6min timeout */ }
+        }, 3000);
+      };
+
+      try {
+        eventSource = new EventSource(sseUrl);
+        eventSource.onmessage = (e) => {
+          try {
+            const data = JSON.parse(e.data);
+            this._updateReconProgress(data.stage, data.progress, data.message);
+            if (data.stage === 'complete') fetchResult();
+            else if (data.stage === 'error') {
+              cleanup();
+              status.style.display = 'none';
+              btn.style.display = '';
+              this._showReconError(data.message || 'Pipeline failed.', 'server');
+            }
+          } catch (_) {}
+        };
+        eventSource.onerror = () => {
+          if (sseSupported) { sseSupported = false; cleanup(); startPolling(); }
+        };
+        // SSE timeout safety
+        setTimeout(() => { if (eventSource) { cleanup(); startPolling(); } }, 300000);
+      } catch (_) {
+        startPolling();
       }
 
-      const url = URL.createObjectURL(blob);
-
+    } catch (e) {
       status.style.display = 'none';
-      results.style.display = 'block';
-      resultsContent.innerHTML = `
-        <div style="padding: 16px; text-align: center;">
-          <p style="color: var(--text-secondary); margin-bottom: 16px;">Garment reconstructed successfully!</p>
-          <a href="${url}" download="garment_reconstruction.zip" class="ms-tryon-generate-btn" style="display: inline-block; text-decoration: none; margin-bottom: 12px;">
-            Download ZIP (Mesh + Pattern)
-          </a>
-          <div style="margin-top: 12px;">
-            <button class="ms-tryon-upload-btn" onclick="KORRA_MS.switchView('tryon')" style="margin: 0 auto;">
-              Use in Virtual Try-On →
+      btn.style.display = '';
+      if (e.name === 'AbortError') this._showReconError('Upload timed out. Try a smaller image.', 'server');
+      else if (e.status === 503) this._showReconError(e.message, 'server');
+      else if (e.status === 502) this._showReconError(e.message, 'server');
+      else if (e.message === 'Failed to fetch' || e instanceof TypeError) this._showReconError('Network error. Check your internet connection.', 'server');
+      else this._showReconError(e.message || 'Something went wrong.', 'server');
+    }
+  },
+
+  _onReconstructComplete(blob, status, results, resultsContent, btn) {
+    const url = URL.createObjectURL(blob);
+    status.style.display = 'none';
+    results.style.display = 'block';
+    resultsContent.innerHTML = `
+      <div style="padding: 16px; text-align: center;">
+        <p style="color: var(--text-secondary); margin-bottom: 16px;">Garment reconstructed successfully!</p>
+        <a href="${url}" download="garment_reconstruction.zip" class="ms-tryon-generate-btn" style="display: inline-block; text-decoration: none; margin-bottom: 12px;">
+          Download ZIP (Mesh + Pattern)
+        </a>
+        <div style="margin-top: 12px;">
+          <button class="ms-tryon-upload-btn" onclick="KORRA_MS.switchView('tryon')" style="margin: 0 auto;">
+            Use in Virtual Try-On →
             </button>
           </div>
         </div>
       `;
       this._loadReconMeshIntoViewer(blob);
-    } catch (e) {
-      status.style.display = 'none';
-      btn.style.display = '';
-      if (e.name === 'AbortError') {
-        this._showReconError('Reconstruction timed out. Try a simpler garment photo or try again.', 'server');
-      } else if (e.status === 503) {
-        this._showReconError(e.message, 'server');
-      } else if (e.status === 502) {
-        this._showReconError(e.message, 'server');
-      } else if (e.message === 'Failed to fetch' || e instanceof TypeError) {
-        this._showReconError('Network error. Check your internet connection and try again.', 'server');
-      } else {
-        this._showReconError(e.message || 'Something went wrong. Please try again.', 'server');
-      }
-    }
   },
 
   openShareScan() {
@@ -3070,6 +3145,21 @@ window.KORRA_MS = {
 
   _handleReconAuthError() {
     window.location.href = '/signin.html?return=' + encodeURIComponent(window.location.pathname);
+  },
+
+  _updateReconProgress(stage, progress, message) {
+    const fill = document.getElementById('ms-recon-progress-fill');
+    const text = document.getElementById('ms-recon-progress-text');
+    if (fill) fill.style.width = Math.max(0, Math.min(100, progress)) + '%';
+    if (text) text.textContent = message || stage;
+    document.querySelectorAll('.ms-recon-step').forEach(el => {
+      const step = el.dataset.step;
+      const stages = ['uploading', 'segmenting', 'meshing', 'patterning', 'zipping', 'complete'];
+      const currentIdx = stages.indexOf(stage);
+      const stepIdx = stages.indexOf(step);
+      el.classList.toggle('active', step === stage);
+      el.classList.toggle('done', stepIdx < currentIdx && currentIdx >= 0);
+    });
   },
 
   // ═══ RECONSTRUCT 3D PREVIEW ═══

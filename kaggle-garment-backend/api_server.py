@@ -118,6 +118,8 @@ import tempfile
 import logging
 import gc
 import asyncio
+import threading
+import traceback
 from pathlib import Path
 from datetime import datetime
 from contextlib import asynccontextmanager
@@ -158,8 +160,84 @@ sam2_model = None
 garmentrec_model = None
 garmentgpt_predictor = None
 
+# ---- async model loading state ----
+models_loaded = threading.Event()
+loading_state = {}
+loading_errors = {}
+
 # ---- async job queue ----
 jobs = {}
+job_progress = {}  # {job_id: {"stage": str, "progress": int, "message": str, "sequence": int}}
+job_progress_events = {}  # {job_id: [asyncio.Event]} — for SSE subscribers
+
+# ---- health tracking ----
+SERVER_START_TIME = time.time()
+REQUEST_COUNT = 0
+ERROR_COUNT = 0
+MODEL_LOAD_TIMES = {}
+
+# ---- structured error codes (Phase 31) ----
+ERROR_CODES = {
+    "CUDA_OOM": {"code": "CUDA_OOM", "message": "GPU out of memory", "recoverable": True},
+    "SAM2_LOAD_FAILED": {"code": "SAM2_LOAD_FAILED", "message": "SAM2 model failed to load", "recoverable": True},
+    "GARMENTREC_LOAD_FAILED": {"code": "GARMENTREC_LOAD_FAILED", "message": "GarmentRec model failed to load", "recoverable": True},
+    "GARMENTGPT_LOAD_FAILED": {"code": "GARMENTGPT_LOAD_FAILED", "message": "GarmentGPT model failed to load", "recoverable": True},
+    "REMBG_FAILED": {"code": "REMBG_FAILED", "message": "Background removal failed", "recoverable": True},
+    "MODEL_CORRUPT": {"code": "MODEL_CORRUPT", "message": "Model checkpoint is corrupt or incompatible", "recoverable": False},
+    "INFERENCE_FAILED": {"code": "INFERENCE_FAILED", "message": "Model inference failed", "recoverable": True},
+    "TIMEOUT": {"code": "TIMEOUT", "message": "Request timed out", "recoverable": True},
+    "INVALID_IMAGE": {"code": "INVALID_IMAGE", "message": "Invalid or unreadable image", "recoverable": False},
+    "IMAGE_TOO_LARGE": {"code": "IMAGE_TOO_LARGE", "message": "Image exceeds size limit", "recoverable": False},
+    "UNKNOWN": {"code": "UNKNOWN", "message": "An unexpected error occurred", "recoverable": False},
+}
+
+
+def _structured_error(err_key, detail=None, extra=None):
+    """Build a structured error response dict."""
+    entry = ERROR_CODES.get(err_key, ERROR_CODES["UNKNOWN"])
+    out = {"error": dict(entry)}
+    if detail:
+        out["error"]["detail"] = str(detail)
+    if extra:
+        out["error"]["extra"] = extra
+    return out
+
+
+def _write_error_context(error_key, detail=None, request_path=None):
+    """Write rich error context to /kaggle/working/last_error.txt (Phase 33)."""
+    try:
+        import datetime
+        parts = [
+            f"=== Error at {datetime.datetime.utcnow().isoformat()}Z ===",
+            f"Code: {error_key}",
+            f"Detail: {detail}" if detail else "",
+            f"Path: {request_path}" if request_path else "",
+            f"GPU allocated: {torch.cuda.memory_allocated() / (1024**3):.2f}GB" if torch.cuda.is_available() else "GPU: N/A",
+            f"GPU reserved: {torch.cuda.memory_reserved() / (1024**3):.2f}GB" if torch.cuda.is_available() else "",
+            f"Models: rembg={rembg_remove is not None} sam2={sam2_model is not None} " +
+            f"garmentrec={garmentrec_model is not None} garmentgpt={garmentgpt_predictor is not None}",
+            f"Loading state: {loading_state}",
+            "=" * 60,
+        ]
+        open("/kaggle/working/last_error.txt", "w").write("\n".join(parts))
+    except Exception:
+        pass
+
+
+# ---- retry logic (Phase 32) ----
+def _retry_on_oom(func, max_retries=2):
+    """Retry a model load if it fails with CUDA OOM, clearing cache between attempts."""
+    for attempt in range(max_retries + 1):
+        try:
+            return func()
+        except RuntimeError as e:
+            if "out of memory" in str(e).lower() and attempt < max_retries:
+                logger.warning(f"CUDA OOM on attempt {attempt+1}/{max_retries+1}, clearing cache and retrying...")
+                gc.collect()
+                if torch.cuda.is_available():
+                    torch.cuda.empty_cache()
+                continue
+            raise
 
 
 # ═══════════════════════════════════════════════════════════════
@@ -167,7 +245,8 @@ jobs = {}
 # ═══════════════════════════════════════════════════════════════
 
 def _load_sam2():
-    """Load SAM2 on CPU. Handles checkpoint version mismatches by filtering unexpected keys."""
+    """Load SAM2 on CPU. Handles checkpoint version mismatches by filtering unexpected keys.
+    Disables CUDA cache warmup to prevent OOM on restart (leaked GPU memory from previous process)."""
     from sam2.build_sam import build_sam2
     from sam2.sam2_image_predictor import SAM2ImagePredictor
 
@@ -193,8 +272,16 @@ def _load_sam2():
 
     _build_mod._load_checkpoint = _patched_load_checkpoint
     try:
+        # Disable SAM2's CUDA cache warmup to prevent OOM on server restart.
+        # The warmup hardcodes torch.device("cuda") in PositionEmbeddingSine.__init__,
+        # bypassing the torch.device("cpu") context. Hydra overrides disable it.
+        hydra_overrides = [
+            "++model.image_encoder.neck.position_encoding.warmup_cache=false",
+            "++model.memory_encoder.position_encoding.warmup_cache=false",
+        ]
         with torch.device("cpu"):
-            m = build_sam2("sam2_hiera_l.yaml", ckpt, device=CPU_DEVICE)
+            m = build_sam2("sam2_hiera_l.yaml", ckpt, device=CPU_DEVICE,
+                           hydra_overrides_extra=hydra_overrides)
     finally:
         _build_mod._load_checkpoint = _orig_load_checkpoint
 
@@ -548,25 +635,66 @@ def _load_rembg():
 #  Model loading
 # ═══════════════════════════════════════════════════════════════
 
-def load_models():
-    """Load all real models. If ANY fails, the server exits — no fallbacks."""
-    logger.info("Loading models...")
-
-    _load_rembg()
-
-    global sam2_model, predict_fn
-    sam2_model, predict_fn = _load_sam2()
-
-    global garmentrec_model
-    garmentrec_model = _load_garmentrec()
-
-    global garmentgpt_predictor
-    garmentgpt_predictor = _load_garmentgpt()
-
-    gc.collect()
+def _log_gpu_memory(tag: str = ""):
+    """Log current GPU memory state for debugging CUDA OOM issues."""
     if torch.cuda.is_available():
-        torch.cuda.empty_cache()
-    logger.info("All models loaded successfully")
+        allocated = torch.cuda.memory_allocated() / (1024**3)
+        reserved = torch.cuda.memory_reserved() / (1024**3)
+        logger.info(f"[GPU MEM] {tag} allocated={allocated:.2f}GB reserved={reserved:.2f}GB")
+
+
+def _loading_thread():
+    """Run model loading in a background thread so uvicorn can start immediately."""
+    global rembg_remove, predict_fn, sam2_model, garmentrec_model, garmentgpt_predictor
+    global loading_state, loading_errors, MODEL_LOAD_TIMES
+    logger.info("Background model loading thread started")
+    try:
+        t0 = time.time()
+        loading_state["rembg"] = "loading"
+        _load_rembg()
+        loading_state["rembg"] = "loaded"
+        MODEL_LOAD_TIMES["rembg"] = time.time() - t0
+        gc.collect()
+        if torch.cuda.is_available():
+            torch.cuda.empty_cache()
+
+        t1 = time.time()
+        loading_state["sam2"] = "loading"
+        _log_gpu_memory("before_sam2")
+        sam2_model, predict_fn = _retry_on_oom(lambda: _load_sam2(), max_retries=2)
+        loading_state["sam2"] = "loaded"
+        MODEL_LOAD_TIMES["sam2"] = time.time() - t1
+        gc.collect()
+        if torch.cuda.is_available():
+            torch.cuda.empty_cache()
+
+        t2 = time.time()
+        loading_state["garmentrec"] = "loading"
+        _log_gpu_memory("before_garmentrec")
+        garmentrec_model = _load_garmentrec()
+        loading_state["garmentrec"] = "loaded"
+        MODEL_LOAD_TIMES["garmentrec"] = time.time() - t2
+        gc.collect()
+        if torch.cuda.is_available():
+            torch.cuda.empty_cache()
+
+        t3 = time.time()
+        loading_state["garmentgpt"] = "loading"
+        _log_gpu_memory("before_garmentgpt")
+        garmentgpt_predictor = _load_garmentgpt()
+        loading_state["garmentgpt"] = "loaded"
+        MODEL_LOAD_TIMES["garmentgpt"] = time.time() - t3
+        gc.collect()
+        if torch.cuda.is_available():
+            torch.cuda.empty_cache()
+
+        _log_gpu_memory("all_loaded")
+        logger.info("All models loaded successfully")
+    except Exception as e:
+        logger.error(f"Model loading thread failed: {e}")
+        loading_errors["fatal"] = traceback.format_exc()
+    finally:
+        models_loaded.set()
 
 
 # ═══════════════════════════════════════════════════════════════
@@ -621,25 +749,43 @@ def post_result_to_proxy(job_id: str, result_zip: bytes):
 
 async def process_full_pipeline(job_id: str, image_bytes: bytes, include_mesh: bool, include_pattern: bool):
     """Runs in background. Builds ZIP, stores in jobs dict, posts to EC2 proxy."""
+    seq = 0
+    def emit_progress(stage, progress, message):
+        nonlocal seq
+        seq += 1
+        job_progress[job_id] = {"stage": stage, "progress": progress, "message": message, "sequence": seq}
+        for evt in job_progress_events.get(job_id, []):
+            evt.set()
+
     try:
+        emit_progress("uploading", 5, "Processing image...")
         image = Image.open(io.BytesIO(image_bytes)).convert("RGB")
+
+        emit_progress("segmenting", 15, "Removing background...")
         nobg = rembg_remove(image)
+
+        emit_progress("segmenting", 30, "Segmenting garment...")
         mask = segment_garment(image)
 
         mesh_data = None
         pattern_data = None
 
         if include_mesh and garmentrec_model is not None:
+            emit_progress("meshing", 40, "Reconstructing 3D mesh...")
             with tempfile.TemporaryDirectory() as tmp:
                 mesh_data = run_garmentrec(garmentrec_model, nobg, tmp)
             gc.collect()
 
         if include_pattern and garmentgpt_predictor is not None:
+            emit_progress("patterning", 65, "Generating sewing pattern...")
             pattern_data = run_garmentgpt(garmentgpt_predictor, nobg)
 
+        emit_progress("zipping", 90, "Packaging results...")
         result_zip = build_zip(job_id, mesh_data, pattern_data)
         jobs[job_id]["status"] = "completed"
         jobs[job_id]["result_zip"] = result_zip
+
+        emit_progress("complete", 100, "Done!")
 
         # Post to EC2 proxy for persistent storage
         post_result_to_proxy(job_id, result_zip)
@@ -649,6 +795,7 @@ async def process_full_pipeline(job_id: str, image_bytes: bytes, include_mesh: b
         err = tb.format_exc()
         jobs[job_id]["status"] = "failed"
         jobs[job_id]["error"] = str(e)
+        emit_progress("error", -1, str(e)[:200])
         try:
             open("/kaggle/working/last_error.txt", "w").write(err)
         except Exception:
@@ -662,8 +809,22 @@ async def process_full_pipeline(job_id: str, image_bytes: bytes, include_mesh: b
 
 @asynccontextmanager
 async def lifespan(app):
-    load_models()
+    # Start model loading in background thread — uvicorn serves immediately
+    thread = threading.Thread(target=_loading_thread, daemon=True)
+    thread.start()
     yield
+    # Graceful shutdown: release models and free GPU memory
+    global rembg_remove, predict_fn, sam2_model, garmentrec_model, garmentgpt_predictor
+    logger.info("Shutting down — releasing models...")
+    rembg_remove = None
+    predict_fn = None
+    sam2_model = None
+    garmentrec_model = None
+    garmentgpt_predictor = None
+    gc.collect()
+    if torch.cuda.is_available():
+        torch.cuda.empty_cache()
+    logger.info("Shutdown complete")
 
 
 app = FastAPI(title="Garment Reconstruction API", lifespan=lifespan)
@@ -671,33 +832,98 @@ app = FastAPI(title="Garment Reconstruction API", lifespan=lifespan)
 
 @app.middleware("http")
 async def catch_all_errors(request, call_next):
+    global REQUEST_COUNT, ERROR_COUNT
+    path = request.url.path
+    include_in_count = not path.startswith("/health") and not path.startswith("/ready")
+    if include_in_count:
+        REQUEST_COUNT += 1
     try:
         return await call_next(request)
     except BaseException as e:
+        if include_in_count:
+            ERROR_COUNT += 1
         import traceback as tb
-
-        err = tb.format_exc()
-        try:
-            open("/kaggle/working/last_error.txt", "w").write(err)
-        except Exception:
-            pass
+        err_type = type(e).__name__
+        err_tb = tb.format_exc()
+        err_key = "CUDA_OOM" if "out of memory" in str(e).lower() else "UNKNOWN"
+        _write_error_context(err_key, detail=err_tb, request_path=path)
         tb.print_exc()
-        logger.error(f"UNCAUGHT: {type(e).__name__}: {e}")
-        return JSONResponse(status_code=500, content={"detail": f"UNCAUGHT {type(e).__name__}: {str(e)}"})
+        logger.error(f"UNCAUGHT {err_key}: {err_type}: {e}")
+        return JSONResponse(status_code=500, content=_structured_error(err_key, detail=str(e)))
 
 
 @app.get("/health")
-async def health():
-    return {
-        "status": "healthy",
+async def health(ready: bool = False, verbose: bool = False):
+    global REQUEST_COUNT, ERROR_COUNT
+    gpu_allocated = None
+    gpu_reserved = None
+    gpu_ok = True
+    if torch.cuda.is_available():
+        gpu_allocated = torch.cuda.memory_allocated() / (1024**3)
+        gpu_reserved = torch.cuda.memory_reserved() / (1024**3)
+        gpu_ok = gpu_allocated < 15.0  # 15GB threshold
+
+    base = {
+        "status": "healthy" if models_loaded.is_set() else "loading",
         "device": GPU_DEVICE,
         "gpu": torch.cuda.get_device_name(0) if torch.cuda.is_available() else "cpu",
+        "models_ready": models_loaded.is_set(),
+        "loading_state": loading_state,
+        "loading_errors": loading_errors if loading_errors else None,
         "rembg": rembg_remove is not None,
         "sam2": sam2_model is not None,
         "garmentrec": garmentrec_model is not None,
         "garmentgpt": garmentgpt_predictor is not None,
         "jobs_processing": sum(1 for j in jobs.values() if j["status"] == "processing"),
+        "uptime_sec": time.time() - SERVER_START_TIME,
+        "request_count": REQUEST_COUNT,
+        "error_count": ERROR_COUNT,
+        "gpu_ok": gpu_ok,
     }
+    if verbose or ready:
+        gpu_allocated = torch.cuda.memory_allocated() / (1024**3) if torch.cuda.is_available() else 0
+        gpu_reserved = torch.cuda.memory_reserved() / (1024**3) if torch.cuda.is_available() else 0
+        base["gpu_memory_gb"] = {
+            "allocated": round(gpu_allocated, 2) if gpu_allocated else None,
+            "reserved": round(gpu_reserved, 2) if gpu_reserved else None,
+            "threshold_15gb_ok": gpu_ok,
+        }
+        base["model_load_times_sec"] = {k: round(v, 2) for k, v in MODEL_LOAD_TIMES.items()}
+
+    if ready and not models_loaded.is_set():
+        return JSONResponse(status_code=503, content=base)
+
+    if not gpu_ok:
+        return JSONResponse(status_code=503, content=base)
+
+    return base
+
+
+@app.get("/ready")
+async def ready():
+    if models_loaded.is_set():
+        return {"status": "ready"}
+    return JSONResponse(status_code=503, content={
+        "status": "loading",
+        "loading_state": loading_state,
+        "loading_errors": loading_errors if loading_errors else None,
+    })
+
+
+@app.get("/health/deep")
+async def health_deep():
+    """Run a tiny inference to verify models actually work (slow check)."""
+    if not models_loaded.is_set():
+        return JSONResponse(status_code=503, content={"status": "loading", "detail": "Models not ready"})
+    try:
+        # Test rembg: create 8x8 dummy image
+        from PIL import Image
+        import numpy as np
+        dummy = Image.new("RGB", (8, 8), (255, 255, 255))
+        _ = rembg_remove(dummy)
+        return {"status": "ready", "checks": {"rembg": "ok"}}
+    except Exception as e:
+        return JSONResponse(status_code=503, content={"status": "degraded", "checks": {"rembg": f"fail: {e}"}})
 
 
 # ─────────────────────────────────────────────────────────────
@@ -713,11 +939,24 @@ async def reconstruct(
 ):
     image_bytes = await file.read()
     if len(image_bytes) > 10 * 1024 * 1024:
-        raise HTTPException(400, "Image too large (max 10MB)")
+        raise HTTPException(400, detail=_structured_error("IMAGE_TOO_LARGE"))
     if not (file.content_type or "").startswith("image/"):
-        raise HTTPException(400, "File must be an image")
+        raise HTTPException(400, detail=_structured_error("INVALID_IMAGE", detail="File must be an image"))
+    # Validate image can be opened and has valid dimensions
+    try:
+        _test_img = Image.open(io.BytesIO(image_bytes))
+        _test_img.verify()
+        _test_img = Image.open(io.BytesIO(image_bytes))
+        if _test_img.width < 32 or _test_img.height < 32:
+            raise HTTPException(400, detail=_structured_error("INVALID_IMAGE", detail=f"Image too small ({_test_img.width}x{_test_img.height}), min 32x32"))
+        if _test_img.width > 4096 or _test_img.height > 4096:
+            raise HTTPException(400, detail=_structured_error("INVALID_IMAGE", detail=f"Image too large ({_test_img.width}x{_test_img.height}), max 4096x4096"))
+    except HTTPException:
+        raise
+    except Exception as _e:
+        raise HTTPException(400, detail=_structured_error("INVALID_IMAGE", detail=str(_e)))
     if rembg_remove is None:
-        raise HTTPException(503, "rembg not available")
+        raise HTTPException(503, detail=_structured_error("REMBG_FAILED", detail="rembg not available"))
 
     job_id = str(uuid.uuid4())[:8]
     jobs[job_id] = {
@@ -748,6 +987,70 @@ async def get_job(job_id: str):
     elif job["status"] == "failed":
         return JSONResponse(status_code=500, content={"status": "failed", "error": job["error"]})
     return {"status": "processing"}
+
+
+@app.get("/api/v1/reconstruct/progress/{job_id}")
+async def reconstruct_progress(job_id: str):
+    """SSE endpoint — streams progress events for a reconstruction job."""
+    if job_id not in jobs:
+        raise HTTPException(404, "Job not found")
+
+    async def event_generator():
+        last_seq = 0
+        timeout_count = 0
+        max_timeout = 60  # 60 * 5s = 300s max idle
+        while timeout_count < max_timeout:
+            progress = job_progress.get(job_id, {})
+            current_seq = progress.get("sequence", 0)
+            if current_seq > last_seq:
+                last_seq = current_seq
+                timeout_count = 0
+                data = json.dumps({
+                    "stage": progress.get("stage", "unknown"),
+                    "progress": progress.get("progress", 0),
+                    "message": progress.get("message", ""),
+                })
+                yield f"data: {data}\n\n"
+                if progress.get("stage") in ("complete", "error"):
+                    break
+            else:
+                timeout_count += 1
+            # Wait for new event or timeout after 5s
+            evt = asyncio.Event()
+            job_progress_events.setdefault(job_id, []).add(evt)
+            try:
+                await asyncio.wait_for(evt.wait(), timeout=5.0)
+            except asyncio.TimeoutError:
+                pass
+            finally:
+                job_progress_events.get(job_id, set()).discard(evt)
+        # Cleanup
+        job_progress_events.pop(job_id, None)
+
+    return StreamingResponse(
+        event_generator(),
+        media_type="text/event-stream",
+        headers={
+            "Cache-Control": "no-cache",
+            "Connection": "keep-alive",
+            "X-Accel-Buffering": "no",
+        },
+    )
+
+
+@app.get("/api/v1/reconstruct/status")
+async def reconstruct_status(job_id: str):
+    """Simple status check (non-SSE) for polling fallback."""
+    job = jobs.get(job_id)
+    if not job:
+        raise HTTPException(404, "Job not found")
+    progress = job_progress.get(job_id, {})
+    return {
+        "status": job["status"],
+        "stage": progress.get("stage", "unknown"),
+        "progress": progress.get("progress", 0),
+        "message": progress.get("message", ""),
+    }
 
 
 # ─────────────────────────────────────────────────────────────
@@ -808,6 +1111,18 @@ async def debug_error():
 
 
 if __name__ == "__main__":
+    import signal
     import nest_asyncio
     nest_asyncio.apply()
-    uvicorn.run(app, host="0.0.0.0", port=8000)
+
+    def _graceful_exit(signum, frame):
+        logger.info(f"Received signal {signum}, cleaning up GPU memory...")
+        gc.collect()
+        if torch.cuda.is_available():
+            torch.cuda.empty_cache()
+        logger.info("GPU memory cleaned, exiting.")
+        raise SystemExit(0)
+
+    signal.signal(signal.SIGTERM, _graceful_exit)
+    signal.signal(signal.SIGINT, _graceful_exit)
+    uvicorn.run(app, host="0.0.0.0", port=8000, limit_concurrency=2, backlog=10)
