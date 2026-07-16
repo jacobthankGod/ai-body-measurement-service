@@ -2186,36 +2186,36 @@ window.KORRA_MS = {
 
   buildReconstructView() {
     return `
-      <div class="ms-tryon-view">
-        <div class="ms-tryon-topbar">
-          <button class="ms-tryon-back" onclick="KORRA_MS.switchView(KORRA_MS._previousView || 'avatar')">
+      <div class="ms-recon-view">
+        <div class="ms-recon-topbar">
+          <button class="ms-recon-back" onclick="KORRA_MS.switchView(KORRA_MS._previousView || 'avatar')">
             <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="15 18 9 12 15 6"/></svg>
             Back to Measurements
           </button>
-          <div class="ms-tryon-title">Garment Reconstruction</div>
-          <div class="ms-tryon-subtitle">Image → 3D Mesh + Sewing Pattern</div>
+          <div class="ms-recon-title">Garment Reconstruction</div>
+          <div class="ms-recon-subtitle">Image → 3D Mesh + Sewing Pattern</div>
         </div>
-        <div class="ms-tryon-input-area">
-          <div class="ms-tryon-preview-box" style="max-width: 400px; margin: 0 auto;">
-            <div class="ms-tryon-preview-label">Garment Photo</div>
-            <div class="ms-tryon-preview-img" id="ms-recon-preview">
+        <div class="ms-recon-input-area">
+          <div class="ms-recon-preview-box" style="max-width: 400px; margin: 0 auto;">
+            <div class="ms-recon-preview-label">Garment Photo</div>
+            <div class="ms-recon-preview-img" id="ms-recon-preview">
               <img id="ms-recon-img" src="" alt="Garment" style="display:none">
-              <div class="ms-tryon-placeholder" id="ms-recon-placeholder">
+              <div class="ms-recon-placeholder" id="ms-recon-placeholder">
                 <svg width="40" height="40" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><rect x="3" y="3" width="18" height="18" rx="2" ry="2"/><circle cx="8.5" cy="8.5" r="1.5"/><polyline points="21 15 16 10 5 21"/></svg>
                 <span>Upload a garment photo (front view, plain background)</span>
               </div>
             </div>
             <input type="file" id="ms-recon-file" accept="image/*" style="display:none">
-            <button class="ms-tryon-upload-btn" onclick="document.getElementById('ms-recon-file').click()">
+            <button class="ms-recon-upload-btn" onclick="document.getElementById('ms-recon-file').click()">
               <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="17 8 12 3 7 8"/><line x1="12" y1="3" x2="12" y2="15"/></svg>
               Choose Image
             </button>
           </div>
         </div>
-        <div class="ms-tryon-action-row">
-          <button class="ms-tryon-generate-btn" id="ms-recon-generate-btn" disabled onclick="KORRA_MS._runReconstruct()">Reconstruct Garment</button>
+        <div class="ms-recon-action-row">
+          <button class="ms-recon-generate-btn" id="ms-recon-generate-btn" disabled onclick="KORRA_MS._runReconstruct()">Reconstruct Garment</button>
         </div>
-        <div class="ms-tryon-status" id="ms-recon-status" style="display:none;">
+        <div class="ms-recon-status" id="ms-recon-status" style="display:none;">
           <div class="ms-recon-progress" id="ms-recon-progress">
             <div class="ms-recon-progress-bar">
               <div class="ms-recon-progress-fill" id="ms-recon-progress-fill" style="width: 0%"></div>
@@ -2235,8 +2235,8 @@ window.KORRA_MS = {
           <div class="ms-recon-error-message" id="ms-recon-error-message"></div>
           <div class="ms-recon-error-actions" id="ms-recon-error-actions"></div>
         </div>
-        <div class="ms-tryon-results" id="ms-recon-results" style="display:none;">
-          <div class="ms-tryon-results-label">Results</div>
+        <div class="ms-recon-results" id="ms-recon-results" style="display:none;">
+          <div class="ms-recon-results-label">Results</div>
           <div id="ms-recon-results-content"></div>
         </div>
         <div class="ms-recon-viewer-wrap" id="ms-recon-viewer-wrap" style="display:none;">
@@ -2254,7 +2254,7 @@ window.KORRA_MS = {
           </div>
           <div class="ms-recon-viewer" id="ms-recon-viewer"></div>
           <div class="ms-recon-viewer-loading" id="ms-recon-viewer-loading" style="display:none;">
-            <div class="ms-tryon-spinner"></div>
+            <div class="ms-recon-spinner"></div>
             <span>Loading mesh...</span>
           </div>
         </div>

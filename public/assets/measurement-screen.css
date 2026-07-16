@@ -2642,6 +2642,9 @@
   body.tryon-mode header { display: none !important; }
   body.tryon-mode .ms-sheet-controls { display: none !important; }
   body.tryon-mode .ms-back-btn { display: none !important; }
+  body.recon-mode header { display: none !important; }
+  body.recon-mode .ms-sheet-controls { display: none !important; }
+  body.recon-mode .ms-back-btn { display: none !important; }
   .ms-tryon-topbar { padding-top: 4px; }
   .ms-tryon-back { font-size: 11px; padding: 6px 10px; }
   .ms-tryon-title { font-size: 14px; }
@@ -2649,11 +2652,19 @@
   .ms-tryon-preview-box { min-width: 130px; max-width: 180px; }
   .ms-tryon-generate-btn { font-size: 14px; padding: 12px 32px; width: 100%; max-width: 320px; }
   .ms-tryon-action-row { margin-top: 8px; }
+  .ms-recon-topbar { padding-top: 4px; }
+  .ms-recon-back { font-size: 11px; padding: 6px 10px; }
+  .ms-recon-title { font-size: 14px; }
+  .ms-recon-input-area { gap: 10px; }
+  .ms-recon-preview-box { min-width: 130px; max-width: 180px; }
+  .ms-recon-generate-btn { font-size: 14px; padding: 12px 32px; width: 100%; max-width: 320px; }
+  .ms-recon-action-row { margin-top: 8px; }
 }
 
 /* SIDEBAR: also full-screen */
 @media (min-width: 901px) {
   body.tryon-mode .ms-back-btn { display: none !important; }
+  body.recon-mode .ms-back-btn { display: none !important; }
   .ms-side-by-side .ms-sheet.tryon-active {
     height: 100% !important;
   }
@@ -2793,6 +2804,177 @@
   color: var(--Neutral-400);
   font-size: 13px;
   z-index: 5;
+}
+
+/* ═══ RECONSTRUCT VIEW — Dedicated CSS ═══ */
+.ms-recon-view {
+  display: flex;
+  flex-direction: column;
+  flex: 1;
+  min-height: 0;
+  padding: 0 20px 20px;
+  overflow-y: auto;
+}
+.ms-recon-topbar {
+  flex-shrink: 0;
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  padding: 12px 0 4px;
+  border-bottom: 1px solid var(--Glass-Border);
+  margin-bottom: 16px;
+  flex-wrap: wrap;
+}
+.ms-recon-back {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  padding: 8px 14px;
+  border-radius: 8px;
+  border: none;
+  background: var(--Mint);
+  color: #000;
+  font-size: 12px;
+  font-weight: 800;
+  cursor: pointer;
+  font-family: inherit;
+  transition: all 0.2s;
+}
+.ms-recon-back:hover { opacity: 0.85; }
+.ms-recon-title {
+  font-size: 16px;
+  font-weight: 800;
+  color: #fff;
+}
+.ms-recon-subtitle {
+  font-size: 11px;
+  color: var(--Neutral-500);
+  width: 100%;
+}
+.ms-recon-input-area {
+  display: flex;
+  align-items: center;
+  gap: 16px;
+  justify-content: center;
+  margin-bottom: 20px;
+  flex-wrap: wrap;
+  flex: 1;
+}
+.ms-recon-preview-box {
+  flex: 1;
+  min-width: 160px;
+  max-width: 220px;
+}
+.ms-recon-preview-label {
+  font-size: 10px;
+  color: var(--Neutral-400);
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+  margin-bottom: 6px;
+}
+.ms-recon-preview-img {
+  width: 100%;
+  aspect-ratio: 3/4;
+  background: var(--Surface-Soft);
+  border: 1px solid var(--Glass-Border);
+  border-radius: 10px;
+  overflow: hidden;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  position: relative;
+}
+.ms-recon-preview-img img {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  display: block;
+}
+.ms-recon-placeholder {
+  position: absolute;
+  inset: 0;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+  color: var(--Neutral-500);
+  font-size: 12px;
+}
+.ms-recon-upload-btn {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  background: rgba(255,255,255,0.08);
+  border: 1px dashed var(--Glass-Border);
+  color: var(--Neutral-300);
+  font-size: 11px;
+  font-weight: 600;
+  padding: 8px 16px;
+  border-radius: 8px;
+  cursor: pointer;
+  font-family: inherit;
+  transition: all 0.2s;
+  margin-top: 8px;
+}
+.ms-recon-upload-btn:hover {
+  background: rgba(255,255,255,0.15);
+  border-color: var(--Accent-Teal);
+}
+.ms-recon-action-row {
+  display: flex;
+  justify-content: center;
+  margin-top: 4px;
+}
+.ms-recon-generate-btn {
+  background: var(--Accent-Teal);
+  color: #0A0A0A;
+  border: none;
+  font-weight: 800;
+  padding: 14px 40px;
+  border-radius: 10px;
+  cursor: pointer;
+  font-family: inherit;
+  transition: all 0.2s;
+}
+.ms-recon-generate-btn:disabled {
+  opacity: 0.45;
+  cursor: not-allowed;
+  background: rgba(198, 255, 0, 0.35);
+}
+.ms-recon-generate-btn:hover:not(:disabled) {
+  transform: scale(1.04);
+  box-shadow: 0 0 24px rgba(198,255,0,0.35);
+}
+.ms-recon-status {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 12px;
+  padding: 32px;
+  color: var(--Neutral-400);
+  font-size: 13px;
+}
+.ms-recon-spinner {
+  width: 36px;
+  height: 36px;
+  border: 3px solid var(--Glass-Border);
+  border-top-color: var(--Accent-Teal);
+  border-radius: 50%;
+  animation: ms-recon-spin 0.8s linear infinite;
+}
+@keyframes ms-recon-spin {
+  to { transform: rotate(360deg); }
+}
+.ms-recon-results {
+  margin-top: 16px;
+}
+.ms-recon-results-label {
+  font-size: 11px;
+  color: var(--Neutral-400);
+  margin-bottom: 8px;
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
 }
 
 /* ═══ RECONSTRUCT PROGRESS BAR ═══ */
