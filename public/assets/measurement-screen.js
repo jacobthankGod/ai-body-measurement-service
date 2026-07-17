@@ -2149,36 +2149,38 @@ window.KORRA_MS = {
         <div class="ms-tryon-input-area">
           <div class="ms-tryon-preview-box" id="ms-tryon-person-box" style="${hasScan ? 'display:none' : ''}">
             <div class="ms-tryon-preview-label">Person Photo</div>
-            <div class="ms-tryon-preview-img" id="ms-tryon-person-preview">
+            <div class="ms-tryon-preview-img" id="ms-tryon-person-preview"
+                 onclick="document.getElementById('ms-tryon-person-file').click()"
+                 ondragover="event.preventDefault(); this.classList.add('ms-tryon-dragover')"
+                 ondragleave="this.classList.remove('ms-tryon-dragover')"
+                 ondrop="event.preventDefault(); this.classList.remove('ms-tryon-dragover'); const f=event.dataTransfer.files[0]; if(f&&f.type.startsWith('image/')){document.getElementById('ms-tryon-person-file').files=event.dataTransfer.files; document.getElementById('ms-tryon-person-file').dispatchEvent(new Event('change'))}">
               <img id="ms-tryon-person-img" src="" alt="Person" style="display:none">
               <div class="ms-tryon-placeholder" id="ms-tryon-person-placeholder">
                 <svg width="40" height="40" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"/><circle cx="12" cy="7" r="4"/></svg>
-                <span>Upload a person photo</span>
+                <span>Drop a person photo here</span>
+                <span class="ms-tryon-upload-hint">or click to browse</span>
               </div>
             </div>
             <input type="file" id="ms-tryon-person-file" accept="image/*" style="display:none">
-            <button class="ms-tryon-upload-btn" onclick="document.getElementById('ms-tryon-person-file').click()">
-              <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="17 8 12 3 7 8"/><line x1="12" y1="3" x2="12" y2="15"/></svg>
-              Choose Image
-            </button>
           </div>
 
           ${hasScan ? `
           <div class="ms-tryon-preview-box" id="ms-tryon-reference-box">
-            <div class="ms-tryon-preview-label">Size Profile Active</div>
+            <div class="ms-tryon-preview-label">Your Scan</div>
             <div class="ms-tryon-reference-photos">
               <div class="ms-tryon-ref-thumb">
-                ${photos.front ? `<img src="${photos.front}" alt="Front">` : '<div class="ms-tryon-ref-missing">No front photo</div>'}
+                ${photos.front ? `<img src="${photos.front}" alt="Front">` : '<div class="ms-tryon-ref-missing"><svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"/><circle cx="12" cy="7" r="4"/></svg></div>'}
                 <span>Front</span>
               </div>
               <div class="ms-tryon-ref-thumb">
-                ${photos.side ? `<img src="${photos.side}" alt="Side">` : '<div class="ms-tryon-ref-missing">No side photo</div>'}
+                ${photos.side ? `<img src="${photos.side}" alt="Side">` : '<div class="ms-tryon-ref-missing"><svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"/><circle cx="12" cy="7" r="4"/></svg></div>'}
                 <span>Side</span>
               </div>
             </div>
-            <div class="ms-tryon-ref-status">Using your existing scan for digital fitting</div>
-            <button class="ms-tryon-upload-btn" style="margin-top:12px; background:transparent; border:1px solid var(--Neutral-700)" onclick="KORRA_MS._toggleManualTryOn()">
-              Use Different Photo instead
+            <div class="ms-tryon-ref-status">Using your scan for digital fitting</div>
+            <button class="ms-tryon-upload-btn ms-tryon-switch-btn" onclick="KORRA_MS._toggleManualTryOn()">
+              <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 12a9 9 0 0 0-9-9 9.75 9.75 0 0 0-6.74 2.74L3 8"/><path d="M3 3v5h5"/><path d="M3 12a9 9 0 0 0 9 9 9.75 9.75 0 0 0 6.74-2.74L21 16"/><path d="M16 16h5v5"/></svg>
+              Use a different photo
             </button>
           </div>
           ` : ''}
@@ -2187,18 +2189,19 @@ window.KORRA_MS = {
           </div>
           <div class="ms-tryon-preview-box">
             <div class="ms-tryon-preview-label">Garment Photo</div>
-            <div class="ms-tryon-preview-img" id="ms-tryon-garment-preview">
+            <div class="ms-tryon-preview-img" id="ms-tryon-garment-preview"
+                 onclick="document.getElementById('ms-tryon-garment-file').click()"
+                 ondragover="event.preventDefault(); this.classList.add('ms-tryon-dragover')"
+                 ondragleave="this.classList.remove('ms-tryon-dragover')"
+                 ondrop="event.preventDefault(); this.classList.remove('ms-tryon-dragover'); const f=event.dataTransfer.files[0]; if(f&&f.type.startsWith('image/')){document.getElementById('ms-tryon-garment-file').files=event.dataTransfer.files; document.getElementById('ms-tryon-garment-file').dispatchEvent(new Event('change'))}">
               <img id="ms-tryon-garment-img" src="" alt="Garment" style="display:none">
               <div class="ms-tryon-placeholder" id="ms-tryon-garment-placeholder">
                 <svg width="40" height="40" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><rect x="3" y="3" width="18" height="18" rx="2" ry="2"/><circle cx="8.5" cy="8.5" r="1.5"/><polyline points="21 15 16 10 5 21"/></svg>
-                <span>Upload a garment photo</span>
+                <span>Drop a garment photo here</span>
+                <span class="ms-tryon-upload-hint">or click to browse</span>
               </div>
             </div>
             <input type="file" id="ms-tryon-garment-file" accept="image/*" style="display:none">
-            <button class="ms-tryon-upload-btn" onclick="document.getElementById('ms-tryon-garment-file').click()">
-              <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="17 8 12 3 7 8"/><line x1="12" y1="3" x2="12" y2="15"/></svg>
-              Choose Image
-            </button>
           </div>
         </div>
 

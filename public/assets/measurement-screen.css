@@ -4108,3 +4108,44 @@ body.vto-synthesizing {
   padding: 8px 0;
 }
 
+/* VTO upload cards: click + drag-and-drop */
+.ms-tryon-preview-img {
+  cursor: pointer;
+  transition: border-color 0.2s, background 0.2s;
+}
+.ms-tryon-preview-img:hover {
+  border-color: var(--accent, #1DBFAF);
+}
+.ms-tryon-dragover {
+  border-color: var(--accent, #1DBFAF) !important;
+  background: rgba(29, 191, 175, 0.08) !important;
+}
+.ms-tryon-upload-hint {
+  display: block;
+  font-size: 11px;
+  color: var(--Neutral-400, #888);
+  margin-top: 4px;
+}
+.ms-tryon-switch-btn {
+  margin-top: 12px;
+  background: transparent;
+  border: 1px solid var(--Neutral-700, #444);
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+}
+.ms-tryon-switch-btn:hover {
+  border-color: var(--accent, #1DBFAF);
+  color: var(--accent, #1DBFAF);
+}
+.ms-tryon-ref-thumb .ms-tryon-ref-missing {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 100%;
+  height: 100%;
+  background: var(--Neutral-800, #2a2a2a);
+  border-radius: 6px;
+  color: var(--Neutral-500, #666);
+}
+
