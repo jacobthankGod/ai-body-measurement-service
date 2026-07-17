@@ -2130,8 +2130,6 @@ window.KORRA_MS = {
   buildTryOnView() {
     const hasScan = !!(this.data && this.data.id);
     const photos = hasScan ? this._getScanPhotos() : null;
-    const garmentTypes = ['T-shirt', 'Dress', 'Jacket', 'Pants', 'Skirt', 'Shirt', 'Shorts', 'Hoodie'];
-    const garmentColors = ['#FFFFFF', '#000000', '#FF0000', '#0000FF', '#00AA00', '#FFFF00', '#FF6600', '#8800AA'];
 
     return `
       <div class="ms-tryon-view">
@@ -2201,21 +2199,6 @@ window.KORRA_MS = {
               <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="17 8 12 3 7 8"/><line x1="12" y1="3" x2="12" y2="15"/></svg>
               Choose Image
             </button>
-          </div>
-        </div>
-
-        <div class="ms-tryon-optional-row">
-          <div class="ms-tryon-opt-group">
-            <label>Garment Type</label>
-            <select id="ms-tryon-garment-type" class="ms-tryon-select">
-              ${garmentTypes.map(t => `<option value="${t.toLowerCase()}" ${t === 'T-shirt' ? 'selected' : ''}>${t}</option>`).join('')}
-            </select>
-          </div>
-          <div class="ms-tryon-opt-group">
-            <label>Color</label>
-            <div class="ms-tryon-color-picker" id="ms-tryon-color-picker">
-              ${garmentColors.map(c => `<button class="ms-tryon-color-swatch" data-color="${c}" style="background:${c}"></button>`).join('')}
-            </div>
           </div>
         </div>
 
@@ -2391,21 +2374,6 @@ window.KORRA_MS = {
     setupUpload('ms-tryon-person-file', 'ms-tryon-person-img', 'ms-tryon-person-placeholder', 'person');
     setupUpload('ms-tryon-garment-file', 'ms-tryon-garment-img', 'ms-tryon-garment-placeholder', 'garment');
 
-    // Phase 194-195: Garment type selector + color picker
-    const colorPicker = document.getElementById('ms-tryon-color-picker');
-    if (colorPicker) {
-      colorPicker.querySelectorAll('.ms-tryon-color-swatch').forEach(el => {
-        el.addEventListener('click', () => {
-          colorPicker.querySelectorAll('.ms-tryon-color-swatch').forEach(s => s.classList.remove('selected'));
-          el.classList.add('selected');
-          this._vtoSelectedColor = el.dataset.color;
-        });
-      });
-      // Select white by default
-      const first = colorPicker.querySelector('.ms-tryon-color-swatch');
-      if (first) first.classList.add('selected');
-    }
-
     // Phase 200: Check subscription status on view load
     this._checkVtoSubscription();
   },
@@ -2503,10 +2471,9 @@ window.KORRA_MS = {
       this._vtoResults = {};
       this._vtoErrors = {};
 
-      // Read garment type + color
-      const typeEl = document.getElementById('ms-tryon-garment-type');
-      const garmentType = typeEl ? typeEl.value : 't-shirt';
-      const garmentColor = this._vtoSelectedColor || '#FFFFFF';
+      // GarmentRec detects type from image — no manual selection needed
+      const garmentType = 'unknown';
+      const garmentColor = '#FFFFFF';
 
       // Phase 148: Show refinement state
       if (statusText) statusText.textContent = 'Refining your profile for digital fitting...';
@@ -2976,22 +2943,13 @@ window.KORRA_MS = {
 
   // ═══ PHASE 200: GARMENT FIT SCORE ═══
   _calculateFitScore(angle) {
-    // Simple heuristic fit score based on garment type vs body proportions
+    // Simple heuristic fit score
     // Returns 0-100 score
     const results = this._vtoResults || {};
     if (!results[angle]) return null;
 
-    const typeEl = document.getElementById('ms-tryon-garment-type');
-    const garmentType = typeEl ? typeEl.value : 't-shirt';
-
     // Base score from image quality (placeholder - real impl would use mesh overlap)
     let score = 75;
-
-    // Adjust based on garment type consistency
-    const upperTypes = ['t-shirt', 'shirt', 'jacket', 'hoodie', 'blouse'];
-    const lowerTypes = ['pants', 'shorts', 'skirt'];
-    if (upperTypes.includes(garmentType) && (angle === 'front' || angle === 'back')) score += 10;
-    if (lowerTypes.includes(garmentType) && angle === 'side') score += 10;
 
     // Randomize slightly for realism (remove when real mesh overlap is computed)
     score += Math.floor(Math.random() * 5) - 2;
@@ -3131,7 +3089,7 @@ window.KORRA_MS = {
           scan_id: scanId,
           angle: document.querySelector('.ms-vto-tab.active')?.dataset.angle || 'front',
           rating: direction === 'up' ? 'positive' : 'negative',
-          garment_type: document.getElementById('ms-tryon-garment-type')?.value || '',
+          garment_type: 'unknown',
         }),
       });
     } catch (e) {
@@ -3226,9 +3184,8 @@ window.KORRA_MS = {
 
   // ═══ PHASE 201: VTO BATCH MODE ═══
   _queueVtoBatch() {
-    const typeEl = document.getElementById('ms-tryon-garment-type');
-    const garmentType = typeEl ? typeEl.value : 't-shirt';
-    const garmentColor = this._vtoSelectedColor || '#FFFFFF';
+    const garmentType = 'unknown';
+    const garmentColor = '#FFFFFF';
     const garmentFile = this._tryonGarmentFile;
 
     this._vtoBatchQueue.push({
