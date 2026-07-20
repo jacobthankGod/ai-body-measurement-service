@@ -53,6 +53,13 @@
   transition: all 0.2s;
   align-self: flex-start;
 }
+.ms-back-viewer {
+  position: absolute;
+  top: 12px;
+  right: 12px;
+  z-index: 10;
+  margin: 0;
+}
 .ms-back-btn:hover {
   background: rgba(0, 0, 0, 0.7);
 }

@@ -250,10 +250,6 @@ window.KORRA_MS = {
     return `
       <div class="ms-root">
         <div class="ms-sheet-controls" id="ms-sheet-controls">
-          <button class="ms-back-btn" onclick="KORRA_MS.handleBack()">
-            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="15 18 9 12 15 6"/></svg>
-            back
-          </button>
           <div class="ms-controls-top">
             <div class="ms-scan-info">
               <div class="ms-scan-title">${name}${d.garment_mesh_url ? '<span class="ms-garment-badge">Has 3D garment</span>' : ''}</div>
@@ -305,6 +301,10 @@ window.KORRA_MS = {
         </div>
         <div class="ms-attire-selector-container" id="ms-attire-selector" style="display: ${this.showEased ? '' : 'none'}"></div>
         <div class="ms-viewer" id="ms-viewer">
+          <button class="ms-back-btn ms-back-viewer" onclick="KORRA_MS.handleBack()">
+            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="15 18 9 12 15 6"/></svg>
+            back
+          </button>
           <div class="ms-viewer-canvas" id="ms-viewer-canvas"></div>
           <div class="ms-viewer-badge" id="ms-viewer-badge">${this.buildBadge()}</div>
           <div class="ms-vto-controls" id="ms-vto-controls" style="display:none;">
