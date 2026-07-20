@@ -127,6 +127,14 @@ from contextlib import asynccontextmanager
 import numpy as np
 import torch
 from PIL import Image
+
+# Ensure python-multipart is available (torch --force-reinstall can wipe it)
+import subprocess as _sp, sys as _s
+try:
+    import multipart  # noqa: F401
+except ImportError:
+    _sp.check_call([_s.executable, "-m", "pip", "install", "-q", "python-multipart"])
+
 from fastapi import FastAPI, UploadFile, File, HTTPException
 from fastapi.responses import StreamingResponse, JSONResponse
 import uvicorn
@@ -134,7 +142,32 @@ import uvicorn
 logging.basicConfig(level=logging.INFO)
 logger = logging.getLogger("garment-api")
 
-WORKING_DIR = Path("/kaggle/working")
+def _resolve_working_dir() -> Path:
+    env_dir = os.getenv("GARMENT_WORKING_DIR")
+    if env_dir:
+        try:
+            candidate = Path(env_dir).expanduser()
+            candidate.mkdir(parents=True, exist_ok=True)
+            return candidate.resolve()
+        except OSError:
+            pass
+
+    # Modal: /root is the working dir; Kaggle: /kaggle/working
+    for candidate in [Path("/root"), Path("/kaggle/working"), Path.cwd()]:
+        try:
+            if not candidate.exists():
+                continue  # Don't CREATE dirs — only use existing ones
+            return candidate.resolve()
+        except OSError:
+            continue
+
+    # Fallback: create /root if nothing else exists
+    fallback = Path("/root")
+    fallback.mkdir(parents=True, exist_ok=True)
+    return fallback.resolve()
+
+
+WORKING_DIR = _resolve_working_dir()
 WEIGHTS_DIR = WORKING_DIR / "weights"
 DEVICE = "cuda" if torch.cuda.is_available() else "cpu"
 GPU_DEVICE = DEVICE
@@ -223,7 +256,7 @@ def _write_error_context(error_key, detail=None, request_path=None):
             f"Loading state: {loading_state}",
             "=" * 60,
         ]
-        open("/kaggle/working/last_error.txt", "w").write("\n".join(parts))
+        (WORKING_DIR / "last_error.txt").write_text("\n".join(parts))
     except Exception:
         pass
 
@@ -243,6 +276,14 @@ def _retry_on_oom(func, max_retries=2):
                 continue
             raise
 
+
+# Patch PIL._typing for SAM2 compatibility (Pillow 10+ removed _Ink)
+try:
+    import PIL._typing as _pil_typing
+    if not hasattr(_pil_typing, '_Ink'):
+        _pil_typing._Ink = type(None)
+except ImportError:
+    pass
 
 # ═══════════════════════════════════════════════════════════════
 #  SAM2 segmentation (with checkpoint compatibility patch)
@@ -317,6 +358,11 @@ def segment_garment(image: Image.Image) -> np.ndarray:
 
 def _load_garmentrec():
     """Load GarmentRec model on CPU. Fails if assets or SMPL model are missing."""
+    # NumPy 2.x compat shim (SMPL.py uses np.float which was removed)
+    import numpy as _np_gar
+    if not hasattr(_np_gar, 'float'):
+        _np_gar.float = float
+
     import pymeshlab as _pml
     _Percentage = getattr(_pml, 'PercentageValue', None) or getattr(_pml, 'Percentage', None)
     if _Percentage is not None:
@@ -337,6 +383,129 @@ def _load_garmentrec():
     pca_folder = gar_dir.parent / "data" / "tmps"
     dense_template_folder = gar_dir.parent / "data"
     model_path = gar_dir.parent / "models" / "mrf_0.1_shading_0.1" / "mrf_0.1_shading_0.1_pca64_ep100_bth0.pth"
+    # Fallback to code/models path (legacy setup)
+    if not model_path.exists():
+        alt = gar_dir / "models" / "mrf_0.1_shading_0.1" / "mrf_0.1_shading_0.1_pca64_ep100_bth0.pth"
+        if alt.exists():
+            model_path = alt
+
+    # Auto-generate missing garment templates (OBJ + spiral indices)
+    # using faces_uvs from tex_uv.pkl for correct topology (not 2D Delaunay)
+    GARMENTS_META = [
+        ("T-shirt", 1954), ("front_open_T-shirt", 1954),
+        ("Shirt", 2468), ("front_open_Shirt", 2468),
+        ("Shorts", 678), ("Pants", 1180),
+    ]
+    _need_gen = False
+    for g, _ in GARMENTS_META:
+        gd = pca_folder / g
+        if gd.exists():
+            if not (gd / "garment_tmp.obj").exists() or not (gd / "spiral_indices_2.npy").exists():
+                _need_gen = True
+                break
+    if _need_gen:
+        try:
+            logger.info("Generating missing GarmentRec templates (OBJ + spiral indices)...")
+            from collections import deque
+            import numpy as np
+            import pickle
+            import trimesh as _tm
+
+            for gtype, _ in GARMENTS_META:
+                gdir = pca_folder / gtype
+                if not gdir.exists():
+                    continue
+                obj_path = gdir / "garment_tmp.obj"
+                dense_obj_path = gdir / "garment_tmp_subdivide_uv_new.obj"
+                spiral_path = gdir / "spiral_indices_2.npy"
+                pca_path = gdir / "pca_data_64.npz"
+                tex_uv_path = gdir / "tex_uv.pkl"
+                if obj_path.exists() and dense_obj_path.exists() and spiral_path.exists():
+                    continue
+                if not pca_path.exists() or not tex_uv_path.exists():
+                    logger.warning(f"  {gtype}: SKIPPING, base assets missing (PCA/UV)")
+                    continue
+                logger.info(f"  Processing {gtype}...")
+                pca = np.load(str(pca_path))
+                verts = pca["mean"].reshape(-1, 3)
+                with open(str(tex_uv_path), "rb") as f:
+                    tex_uv = pickle.load(f)
+                fu = tex_uv["faces_uvs"]
+                vu = tex_uv["verts_uvs"]
+                faces_uvs = fu.numpy() if hasattr(fu, "numpy") else fu
+                verts_uvs = vu.numpy() if hasattr(vu, "numpy") else vu
+                # Write coarse OBJ
+                if not obj_path.exists():
+                    with open(str(obj_path), "w") as f:
+                        for v in verts:
+                            f.write(f"v {v[0]:.8f} {v[1]:.8f} {v[2]:.8f}\n")
+                        for vt in verts_uvs:
+                            f.write(f"vt {vt[0]:.8f} {vt[1]:.8f}\n")
+                        for face in faces_uvs:
+                            f.write(f"f {int(face[0])+1}/{int(face[0])+1} {int(face[1])+1}/{int(face[1])+1} {int(face[2])+1}/{int(face[2])+1}\n")
+                    logger.info(f"    {verts.shape[0]} verts -> {obj_path.name}")
+                # Subdivision via trimesh (compute UVs for dense mesh)
+                if not dense_obj_path.exists():
+                    try:
+                        _mesh = _tm.load(str(obj_path), force="mesh")
+                        for _ in range(2):
+                            _mesh = _mesh.subdivide()
+                        _verts = _mesh.vertices
+                        _faces = _mesh.faces
+                        # Compute planar UV coords for subdivided vertices
+                        _c = _verts.mean(axis=0)
+                        _, _, _Vt = np.linalg.svd(_verts - _c, full_matrices=False)
+                        _uv = (_verts - _c) @ _Vt[:2].T
+                        _uv -= _uv.min(axis=0)
+                        _r = _uv.max(axis=0)
+                        _r[_r < 1e-8] = 1.0
+                        _uv /= _r
+                        with open(str(dense_obj_path), "w") as f:
+                            for v in _verts:
+                                f.write(f"v {v[0]:.8f} {v[1]:.8f} {v[2]:.8f}\n")
+                            for vt in _uv:
+                                f.write(f"vt {vt[0]:.6f} {vt[1]:.6f}\n")
+                            for face in _faces:
+                                f.write(f"f {int(face[0])+1}/{int(face[0])+1} {int(face[1])+1}/{int(face[1])+1} {int(face[2])+1}/{int(face[2])+1}\n")
+                        logger.info(f"    {_verts.shape[0]} verts -> {dense_obj_path.name}")
+                    except Exception as _sub_e:
+                        logger.warning(f"    subdivision failed: {_sub_e}, copying base")
+                        import shutil as _sh
+                        _sh.copy2(str(obj_path), str(dense_obj_path))
+                # Spiral indices (BFS adjacency from faces_uvs)
+                if not spiral_path.exists():
+                    V = verts.shape[0]
+                    faces_for_adj = np.array(faces_uvs, dtype=int)
+                    adj = {i: set() for i in range(V)}
+                    for face in faces_for_adj:
+                        for i in range(3):
+                            for j in range(i + 1, 3):
+                                v0, v1 = int(face[i]), int(face[j])
+                                adj[v0].add(v1)
+                                adj[v1].add(v0)
+                    max_neighbors = 20
+                    spiral = np.zeros((V, max_neighbors), dtype=np.int64)
+                    for v in range(V):
+                        seq = [v]
+                        visited = {v}
+                        q = deque([(nbr, 1) for nbr in sorted(adj[v])])
+                        visited.update(adj[v])
+                        seq.extend(sorted(adj[v]))
+                        while len(seq) < max_neighbors and q:
+                            cur, dist = q.popleft()
+                            for nbr in sorted(adj[cur]):
+                                if nbr not in visited and len(seq) < max_neighbors:
+                                    visited.add(nbr)
+                                    seq.append(nbr)
+                                    q.append((nbr, dist + 1))
+                        while len(seq) < max_neighbors:
+                            seq.append(v)
+                        spiral[v] = seq[:max_neighbors]
+                    np.save(str(spiral_path), spiral[np.newaxis, :, :])
+                    logger.info(f"    Spiral: {spiral.shape[0]}x{max_neighbors}")
+            logger.info("GarmentRec template generation complete")
+        except Exception as e:
+            logger.warning(f"GarmentRec template generation failed (non-fatal): {e}")
 
     for p in [midpair_path, dense_midpair_path, pca_folder, model_path]:
         if not p.exists():
@@ -609,16 +778,23 @@ def _load_rembg():
         try:
             from rembg import remove
             break
-        except BaseException:
+        except BaseException as _err:
+            logger.warning(f"rembg import error (attempt {attempt+1}): {_err}")
             if attempt == 0:
-                logger.warning("rembg import failed, installing rembg[cpu]...")
+                logger.warning("rembg import failed, reinstalling rembg --no-deps...")
                 try:
                     subprocess.check_call(
-                        [_sys.executable, "-m", "pip", "install", "rembg[cpu]"],
+                        [_sys.executable, "-m", "pip", "install", "--force-reinstall",
+                         "rembg", "--no-deps"],
                         stdout=subprocess.DEVNULL, stderr=subprocess.DEVNULL,
                     )
-                except subprocess.CalledProcessError:
-                    pass
+                    subprocess.check_call(
+                        [_sys.executable, "-m", "pip", "install",
+                         "onnxruntime", "Pillow", "numpy", "scipy>=1.14.1"],
+                        stdout=subprocess.DEVNULL, stderr=subprocess.DEVNULL,
+                    )
+                except subprocess.CalledProcessError as _e:
+                    logger.warning(f"rembg reinstall failed: {_e}")
             else:
                 logger.warning("rembg import failed after reinstall, using PIL fallback")
                 rembg_remove = _simple_remove_background
@@ -630,9 +806,17 @@ def _load_rembg():
         remove(dummy)
         rembg_remove = remove
         logger.info("rembg + u2net ready")
-    except Exception:
-        logger.warning("rembg warmup failed, using PIL fallback")
-        rembg_remove = _simple_remove_background
+    except Exception as _warmup_err:
+        logger.warning(f"rembg warmup failed ({_warmup_err}), using PIL fallback")
+        # Try one more time with alpha_matting=False explicitly
+        try:
+            dummy = Image.new("RGB", (8, 8), (255, 255, 255))
+            remove(dummy, alpha_matting_enabled=False)
+            rembg_remove = remove
+            logger.info("rembg ready (without alpha matting)")
+        except Exception:
+            logger.warning("rembg completely unavailable, using PIL fallback")
+            rembg_remove = _simple_remove_background
 
 
 # ═══════════════════════════════════════════════════════════════
@@ -648,57 +832,54 @@ def _log_gpu_memory(tag: str = ""):
 
 
 def _loading_thread():
-    """Run model loading in a background thread so uvicorn can start immediately."""
+    """Run model loading in a background thread so uvicorn can start immediately.
+    Each model is loaded independently — one failure does NOT block others."""
     global rembg_remove, predict_fn, sam2_model, garmentrec_model, garmentgpt_predictor
     global loading_state, loading_errors, MODEL_LOAD_TIMES
     logger.info("Background model loading thread started")
-    try:
+
+    def _safe_load(name, load_fn, *args):
+        """Load a model with individual error handling — never blocks other models."""
+        global loading_errors
         t0 = time.time()
-        loading_state["rembg"] = "loading"
-        _load_rembg()
-        loading_state["rembg"] = "loaded"
-        MODEL_LOAD_TIMES["rembg"] = time.time() - t0
-        gc.collect()
-        if torch.cuda.is_available():
-            torch.cuda.empty_cache()
+        try:
+            loading_state[name] = "loading"
+            result = load_fn(*args) if args else load_fn()
+            loading_state[name] = "loaded"
+            MODEL_LOAD_TIMES[name] = time.time() - t0
+            logger.info(f"{name} loaded in {MODEL_LOAD_TIMES[name]:.1f}s")
+            gc.collect()
+            if torch.cuda.is_available():
+                torch.cuda.empty_cache()
+            return result
+        except Exception as e:
+            loading_state[name] = "failed"
+            loading_errors[name] = traceback.format_exc()
+            logger.error(f"{name} load failed: {e}")
+            return None
 
-        t1 = time.time()
-        loading_state["sam2"] = "loading"
-        _log_gpu_memory("before_sam2")
-        sam2_model, predict_fn = _retry_on_oom(lambda: _load_sam2(), max_retries=2)
-        loading_state["sam2"] = "loaded"
-        MODEL_LOAD_TIMES["sam2"] = time.time() - t1
-        gc.collect()
-        if torch.cuda.is_available():
-            torch.cuda.empty_cache()
+    # rembg (critical — has PIL fallback built in)
+    _safe_load("rembg", _load_rembg)
 
-        t2 = time.time()
-        loading_state["garmentrec"] = "loading"
-        _log_gpu_memory("before_garmentrec")
-        garmentrec_model = _load_garmentrec()
-        loading_state["garmentrec"] = "loaded"
-        MODEL_LOAD_TIMES["garmentrec"] = time.time() - t2
-        gc.collect()
-        if torch.cuda.is_available():
-            torch.cuda.empty_cache()
+    # SAM2 (has fallback to simple foreground mask)
+    result = _safe_load("sam2", lambda: _retry_on_oom(lambda: _load_sam2(), max_retries=2))
+    if result is not None:
+        sam2_model, predict_fn = result
 
-        t3 = time.time()
-        loading_state["garmentgpt"] = "loading"
-        _log_gpu_memory("before_garmentgpt")
-        garmentgpt_predictor = _load_garmentgpt()
-        loading_state["garmentgpt"] = "loaded"
-        MODEL_LOAD_TIMES["garmentgpt"] = time.time() - t3
-        gc.collect()
-        if torch.cuda.is_available():
-            torch.cuda.empty_cache()
+    # GarmentRec (has trimesh shim fallback for pytorch3d)
+    result = _safe_load("garmentrec", _load_garmentrec)
+    if result is not None:
+        garmentrec_model = result
 
-        _log_gpu_memory("all_loaded")
-        logger.info("All models loaded successfully")
-    except Exception as e:
-        logger.error(f"Model loading thread failed: {e}")
-        loading_errors["fatal"] = traceback.format_exc()
-    finally:
-        models_loaded.set()
+    # GarmentGPT (has vllm shim fallback)
+    result = _safe_load("garmentgpt", _load_garmentgpt)
+    if result is not None:
+        garmentgpt_predictor = result
+
+    _log_gpu_memory("all_loaded")
+    loaded = sum(1 for v in loading_state.values() if v == "loaded")
+    logger.info(f"Model loading complete: {loaded}/4 models loaded")
+    models_loaded.set()
 
 
 # ═══════════════════════════════════════════════════════════════
@@ -801,10 +982,31 @@ async def process_full_pipeline(job_id: str, image_bytes: bytes, include_mesh: b
         jobs[job_id]["error"] = str(e)
         emit_progress("error", -1, str(e)[:200])
         try:
-            open("/kaggle/working/last_error.txt", "w").write(err)
+            (WORKING_DIR / "last_error.txt").write_text(err)
         except Exception:
             pass
         logger.error(f"Job {job_id} failed: {e}")
+
+
+def _run_in_thread(coro_factory):
+    """Run an async coroutine in a background thread with its own event loop.
+    Initializes CUDA context for the thread to prevent device mismatch."""
+    def _target():
+        try:
+            import torch
+            if torch.cuda.is_available():
+                torch.cuda.set_device(0)
+                torch.cuda.init()
+        except Exception:
+            pass
+        loop = asyncio.new_event_loop()
+        asyncio.set_event_loop(loop)
+        try:
+            loop.run_until_complete(coro_factory())
+        finally:
+            loop.close()
+    thread = threading.Thread(target=_target, daemon=True)
+    thread.start()
 
 
 # ═══════════════════════════════════════════════════════════════
@@ -1030,8 +1232,8 @@ async def reconstruct(
         "created_at": datetime.utcnow().isoformat(),
     }
 
-    # Spawn background task (non-blocking)
-    asyncio.create_task(process_full_pipeline(job_id, image_bytes, include_mesh, include_pattern))
+    # Spawn background task in a thread (non-blocking)
+    _run_in_thread(lambda: process_full_pipeline(job_id, image_bytes, include_mesh, include_pattern))
 
     return {"job_id": job_id, "status": "processing"}
 
@@ -1168,7 +1370,7 @@ async def pattern_endpoint(file: UploadFile = File(...)):
 @app.get("/debug/error")
 async def debug_error():
     try:
-        return {"error": open("/kaggle/working/last_error.txt").read()}
+        return {"error": (WORKING_DIR / "last_error.txt").read_text()}
     except Exception as e:
         return {"error": f"No error file: {e}"}
 
@@ -1998,7 +2200,7 @@ async def process_vto_synthesis(job_id: str, image_bytes: bytes, user_id: str):
         _vto_emit(job_id, "error", -1, str(e)[:200])
         logger.error(f"VTO job {job_id} failed: {e}")
         try:
-            open("/kaggle/working/last_error.txt", "w").write(tb.format_exc())
+            (WORKING_DIR / "last_error.txt").write_text(tb.format_exc())
         except Exception:
             pass
 
@@ -2108,7 +2310,7 @@ async def process_vto_tryon(job_id: str, image_bytes: bytes, angle: str, user_id
         _vto_emit(job_id, "error", -1, str(e)[:200])
         logger.error(f"VTO try-on {job_id} ({angle}) failed: {e}")
         try:
-            open("/kaggle/working/last_error.txt", "w").write(tb.format_exc())
+            (WORKING_DIR / "last_error.txt").write_text(tb.format_exc())
         except Exception:
             pass
 
@@ -2127,7 +2329,7 @@ async def synthesize_views(
 
     job_id = str(uuid.uuid4())[:8]
     vto_jobs[job_id] = {"status": "processing", "angles": {}, "error": None, "user_id": user_id, "symmetry": None, "uv_data": None}
-    asyncio.create_task(process_vto_synthesis(job_id, image_bytes, user_id))
+    _run_in_thread(lambda: process_vto_synthesis(job_id, image_bytes, user_id))
     return {"job_id": job_id, "status": "processing"}
 
 
@@ -2151,7 +2353,7 @@ async def vto_tryon_endpoint(
 
     job_id = str(uuid.uuid4())[:8]
     vto_jobs[job_id] = {"status": "processing", "result_url": None, "error": None, "user_id": user_id, "angle": angle, "garment_type": garment_type, "garment_color": garment_color}
-    asyncio.create_task(process_vto_tryon(job_id, image_bytes, angle, user_id, seed=seed, garment_type=garment_type, garment_color=garment_color))
+    _run_in_thread(lambda: process_vto_tryon(job_id, image_bytes, angle, user_id, seed=seed, garment_type=garment_type, garment_color=garment_color))
     return {"job_id": job_id, "status": "processing", "seed": seed, "garment_type": garment_type, "garment_color": garment_color}
 
 
@@ -2180,7 +2382,7 @@ async def vto_multi_tryon(
         jid = str(uuid.uuid4())[:8]
         job_ids[angle] = jid
         vto_jobs[jid] = {"status": "processing", "result_url": None, "error": None, "user_id": user_id, "angle": angle}
-        asyncio.create_task(process_vto_tryon(jid, image_bytes, angle, user_id, seed=seed))
+        _run_in_thread(lambda a=angle, j=jid: process_vto_tryon(j, image_bytes, a, user_id, seed=seed))
 
     return {
         "job_ids": job_ids,
@@ -2366,10 +2568,28 @@ async def quality_dashboard():
     }
 
 
+def _start_server():
+    """Start uvicorn directly unless a notebook event loop is active."""
+    try:
+        asyncio.get_running_loop()
+    except RuntimeError:
+        uvicorn.run(app, host="0.0.0.0", port=8000, limit_concurrency=10, backlog=10)
+        return None
+
+    def _target():
+        uvicorn.run(app, host="0.0.0.0", port=8000, limit_concurrency=10, backlog=10)
+
+    thread = threading.Thread(target=_target, daemon=True, name="garment-uvicorn")
+    thread.start()
+    return thread
+
+
 if __name__ == "__main__":
     import signal
-    import nest_asyncio
-    nest_asyncio.apply()
+
+    # Create event loop early to avoid nest_asyncio/uvloop conflict
+    loop = asyncio.new_event_loop()
+    asyncio.set_event_loop(loop)
 
     def _graceful_exit(signum, frame):
         logger.info(f"Received signal {signum}, cleaning up GPU memory...")
@@ -2381,4 +2601,4 @@ if __name__ == "__main__":
 
     signal.signal(signal.SIGTERM, _graceful_exit)
     signal.signal(signal.SIGINT, _graceful_exit)
-    uvicorn.run(app, host="0.0.0.0", port=8000, limit_concurrency=2, backlog=10)
+    _start_server()
