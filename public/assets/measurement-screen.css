@@ -36,24 +36,22 @@
 
 /* ── HEADER BAR ── */
 .ms-back-btn {
-  position: absolute;
-  top: 4px;
-  left: 12px;
-  z-index: 15;
   display: flex;
   align-items: center;
   gap: 4px;
-  padding: 8px 16px;
+  padding: 6px 14px;
+  margin-bottom: 6px;
   border-radius: 8px;
   border: none;
   background: rgba(0, 0, 0, 0.5);
   color: #fff;
-  font-size: 14px;
+  font-size: 13px;
   font-weight: 900;
   cursor: pointer;
   backdrop-filter: blur(4px);
   -webkit-backdrop-filter: blur(4px);
   transition: all 0.2s;
+  align-self: flex-start;
 }
 .ms-back-btn:hover {
   background: rgba(0, 0, 0, 0.7);
@@ -64,10 +62,12 @@
   flex-shrink: 0;
 }
 .ms-sheet-controls {
-  padding: 2px 20px 6px;
+  padding: 8px 20px 6px;
   background: var(--Obsidian-Layer);
   border-bottom: 1px solid var(--Glass-Border);
   flex-shrink: 0;
+  display: flex;
+  flex-direction: column;
 }
 .ms-controls-top {
   display: flex;
@@ -236,7 +236,7 @@
 }
 .ms-viewer-badge {
   position: absolute;
-  top: 4px;
+  top: 48px;
   left: 16px;
   z-index: 2;
   pointer-events: none;
@@ -268,7 +268,7 @@
 /* ── VIEWPORT INFO (Top-Left) ── */
 .ms-viewer-info {
   position: absolute;
-  top: 96px;
+  top: 130px;
   left: 16px;
   z-index: 3;
   pointer-events: none;
@@ -1412,12 +1412,8 @@
     display: none;
   }
   .ms-back-btn {
-    position: fixed;
-    top: calc(92px + env(safe-area-inset-top));
-    left: 12px;
-    z-index: 2200;
-    padding: 10px 16px;
-    font-size: 14px;
+    padding: 6px 12px;
+    font-size: 12px;
     font-weight: 900;
   }
   .ms-badge {
@@ -1638,7 +1634,6 @@
     font-size: 13px;
     padding: 10px 14px;
   }
-  body.ai-mode .ms-back-btn { display: none !important; }
 }
 
 /* ── MEASUREMENT SIDE MENU ── */
@@ -2662,10 +2657,8 @@
   }
   body.tryon-mode header { display: none !important; }
   body.tryon-mode .ms-sheet-controls { display: none !important; }
-  body.tryon-mode .ms-back-btn { display: none !important; }
   body.recon-mode header { display: none !important; }
   body.recon-mode .ms-sheet-controls { display: none !important; }
-  body.recon-mode .ms-back-btn { display: none !important; }
   .ms-tryon-topbar { padding-top: 4px; }
   .ms-tryon-back { font-size: 11px; padding: 6px 10px; }
   .ms-tryon-title { font-size: 14px; }
@@ -2684,8 +2677,6 @@
 
 /* SIDEBAR: also full-screen */
 @media (min-width: 901px) {
-  body.tryon-mode .ms-back-btn { display: none !important; }
-  body.recon-mode .ms-back-btn { display: none !important; }
   .ms-side-by-side .ms-sheet.tryon-active {
     height: 100% !important;
   }
