@@ -265,29 +265,6 @@
   transform: scale(1.1);
 }
 
-/* ── VIEWPORT INFO (Top-Left) ── */
-.ms-viewer-info {
-  position: absolute;
-  top: 130px;
-  left: 16px;
-  z-index: 3;
-  pointer-events: none;
-}
-.ms-viewer-info-title {
-  font-size: 12px;
-  font-weight: 700;
-  color: #fff;
-  font-family: 'Inter', sans-serif;
-  text-shadow: 0 1px 4px rgba(0,0,0,0.6);
-}
-.ms-viewer-info-sub {
-  font-size: 10px;
-  color: rgba(255,255,255,0.6);
-  font-family: 'Inter', sans-serif;
-  text-shadow: 0 1px 4px rgba(0,0,0,0.6);
-  margin-top: 1px;
-}
-
 /* ── VIEWPORT TOOLBAR (Right) ── */
 .ms-viewer-toolbar {
   position: absolute;
