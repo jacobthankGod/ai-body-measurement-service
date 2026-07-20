@@ -260,6 +260,10 @@ window.KORRA_MS = {
               <div class="ms-scan-subtitle">${date} · ${height} · ${gender}</div>
             </div>
             <div class="ms-controls-toggles">
+              <button class="ms-tryon-btn" onclick="KORRA_MS.switchView('tryon')" title="Virtual try-on">
+                <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M20.84 4.61a5.5 5.5 0 0 0-7.78 0L12 5.67l-1.06-1.06a5.5 5.5 0 0 0-7.78 7.78l1.06 1.06L12 21.23l7.78-7.78 1.06-1.06a5.5 5.5 0 0 0 0-7.78z"/></svg>
+                Try On
+              </button>
               <div class="ms-unit-toggle">
                 <button class="ms-unit-btn ${this.unit === 'cm' ? 'active' : ''}" onclick="KORRA_MS.setUnit('cm')">CM</button>
                 <button class="ms-unit-btn ${this.unit === 'in' ? 'active' : ''}" onclick="KORRA_MS.setUnit('in')">IN</button>
@@ -299,7 +303,7 @@ window.KORRA_MS = {
             </button>
           </div>
         </div>
-        <div class="ms-attire-selector-container" id="ms-attire-selector"></div>
+        <div class="ms-attire-selector-container" id="ms-attire-selector" style="display: ${this.showEased ? '' : 'none'}"></div>
         <div class="ms-viewer" id="ms-viewer">
           <div class="ms-viewer-canvas" id="ms-viewer-canvas"></div>
           <div class="ms-viewer-badge" id="ms-viewer-badge">${this.buildBadge()}</div>
