@@ -260,14 +260,6 @@ window.KORRA_MS = {
               <div class="ms-scan-subtitle">${date} · ${height} · ${gender}</div>
             </div>
             <div class="ms-controls-toggles">
-              <button class="ms-tryon-btn" onclick="KORRA_MS.switchView('tryon')" title="Virtual try-on">
-                <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M20.84 4.61a5.5 5.5 0 0 0-7.78 0L12 5.67l-1.06-1.06a5.5 5.5 0 0 0-7.78 7.78l1.06 1.06L12 21.23l7.78-7.78 1.06-1.06a5.5 5.5 0 0 0 0-7.78z"/></svg>
-                Try On
-              </button>
-              <button class="ms-tryon-btn ms-recon-shortcut-btn" onclick="KORRA_MS.switchView('reconstruct')" title="Reconstruct garment from photo">
-                <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 16V8a2 2 0 0 0-1-1.73l-7-4a2 2 0 0 0-2 0l-7 4A2 2 0 0 0 3 8v8a2 2 0 0 0 1 1.73l7 4a2 2 0 0 0 2 0l7-4A2 2 0 0 0 21 16z"/><polyline points="3.27 6.96 12 12.01 20.73 6.96"/><line x1="12" y1="22.08" x2="12" y2="12"/></svg>
-                Reconstruct
-              </button>
               <div class="ms-unit-toggle">
                 <button class="ms-unit-btn ${this.unit === 'cm' ? 'active' : ''}" onclick="KORRA_MS.setUnit('cm')">CM</button>
                 <button class="ms-unit-btn ${this.unit === 'in' ? 'active' : ''}" onclick="KORRA_MS.setUnit('in')">IN</button>
@@ -281,6 +273,10 @@ window.KORRA_MS = {
               </div>
             </div>
           </div>
+          <button class="ms-recon-sheet-btn" onclick="KORRA_MS.switchView('reconstruct')" title="Convert garment photo to 3D cloth">
+            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 16V8a2 2 0 0 0-1-1.73l-7-4a2 2 0 0 0-2 0l-7 4A2 2 0 0 0 3 8v8a2 2 0 0 0 1 1.73l7 4a2 2 0 0 0 2 0l7-4A2 2 0 0 0 21 16z"/><polyline points="3.27 6.96 12 12.01 20.73 6.96"/><line x1="12" y1="22.08" x2="12" y2="12"/></svg>
+            Reconstruct
+          </button>
           <div class="ms-controls-buttons">
             <button class="ms-share-btn" onclick="KORRA_MS.openShareScan()" title="Share scan">
               <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="18" cy="5" r="3"/><circle cx="6" cy="12" r="3"/><circle cx="18" cy="19" r="3"/><line x1="8.59" y1="13.51" x2="15.42" y2="17.49"/><line x1="15.41" y1="6.51" x2="8.59" y2="10.49"/></svg>
@@ -2237,28 +2233,26 @@ window.KORRA_MS = {
             Back to Measurements
           </button>
           <div class="ms-recon-title">Garment Reconstruction</div>
-          <div class="ms-recon-subtitle">Image → 3D Mesh + Sewing Pattern</div>
+          <div class="ms-recon-subtitle">Convert image to 3D cloth</div>
         </div>
         <div class="ms-recon-input-area">
-          <div class="ms-recon-preview-box" id="ms-recon-dropzone" style="max-width: 400px; margin: 0 auto;">
+          <div class="ms-recon-preview-box" id="ms-recon-dropzone" style="max-width: 140px; margin: 0 auto;">
             <div class="ms-recon-preview-label">Garment Photo</div>
             <div class="ms-recon-preview-img" id="ms-recon-preview">
               <img id="ms-recon-img" src="" alt="Garment" style="display:none">
               <div class="ms-recon-placeholder" id="ms-recon-placeholder">
-                <svg width="40" height="40" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><rect x="3" y="3" width="18" height="18" rx="2" ry="2"/><circle cx="8.5" cy="8.5" r="1.5"/><polyline points="21 15 16 10 5 21"/></svg>
-                <span>Upload a garment photo (front view, plain background)</span>
-                <span style="font-size:11px;opacity:0.6;margin-top:4px;">or drag &amp; drop an image here</span>
+                <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><rect x="3" y="3" width="18" height="18" rx="2" ry="2"/><circle cx="8.5" cy="8.5" r="1.5"/><polyline points="21 15 16 10 5 21"/></svg>
+                <span style="font-size:9px;">Upload garment photo</span>
               </div>
             </div>
             <input type="file" id="ms-recon-file" accept="image/*" style="display:none" aria-label="Upload garment photo">
-            <div style="display:flex;gap:8px;margin-top:8px;">
+            <div style="display:flex;gap:4px;margin-top:4px;">
               <button class="ms-recon-upload-btn" onclick="document.getElementById('ms-recon-file').click()">
-                <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="17 8 12 3 7 8"/><line x1="12" y1="3" x2="12" y2="15"/></svg>
-                Choose Image
+                <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="17 8 12 3 7 8"/><line x1="12" y1="3" x2="12" y2="15"/></svg>
+                Choose
               </button>
               <button class="ms-recon-upload-btn ms-recon-camera-btn" onclick="KORRA_MS._captureCameraPhoto()" id="ms-recon-camera-btn" style="display:none;">
-                <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M23 19a2 2 0 0 1-2 2H3a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h4l2-3h6l2 3h4a2 2 0 0 1 2 2z"/><circle cx="12" cy="13" r="4"/></svg>
-                Take Photo
+                <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M23 19a2 2 0 0 1-2 2H3a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h4l2-3h6l2 3h4a2 2 0 0 1 2 2z"/><circle cx="12" cy="13" r="4"/></svg>
               </button>
             </div>
           </div>

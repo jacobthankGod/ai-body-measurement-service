@@ -2875,27 +2875,27 @@
 .ms-recon-input-area {
   display: flex;
   align-items: center;
-  gap: 16px;
+  gap: 8px;
   justify-content: center;
-  margin-bottom: 20px;
+  margin-bottom: 10px;
   flex-wrap: wrap;
   flex: 1;
 }
 .ms-recon-preview-box {
   flex: 1;
-  min-width: 160px;
-  max-width: 220px;
+  min-width: 80px;
+  max-width: 110px;
 }
 .ms-recon-preview-label {
-  font-size: 10px;
-  color: var(--Neutral-400);
+  font-size: 9px;
+  color: var(--Neutral-500);
   text-transform: uppercase;
-  letter-spacing: 0.05em;
-  margin-bottom: 6px;
+  letter-spacing: 0.04em;
+  margin-bottom: 4px;
 }
 .ms-recon-preview-img {
   width: 100%;
-  aspect-ratio: 3/4;
+  aspect-ratio: 1/1;
   background: var(--Surface-Soft);
   border: 1px solid var(--Glass-Border);
   border-radius: 10px;
@@ -2925,18 +2925,18 @@
 .ms-recon-upload-btn {
   display: inline-flex;
   align-items: center;
-  gap: 6px;
+  gap: 4px;
   background: rgba(255,255,255,0.08);
   border: 1px dashed var(--Glass-Border);
-  color: var(--Neutral-300);
-  font-size: 11px;
+  color: var(--Neutral-400);
+  font-size: 10px;
   font-weight: 600;
-  padding: 8px 16px;
-  border-radius: 8px;
+  padding: 4px 10px;
+  border-radius: 6px;
   cursor: pointer;
   font-family: inherit;
   transition: all 0.2s;
-  margin-top: 8px;
+  margin-top: 4px;
 }
 .ms-recon-upload-btn:hover {
   background: rgba(255,255,255,0.15);
@@ -4101,6 +4101,28 @@ body.vto-synthesizing {
   background: linear-gradient(135deg, rgba(74,144,217,0.25), rgba(53,122,189,0.25));
   border-color: #4A90D9;
   box-shadow: 0 0 16px rgba(74,144,217,0.2);
+}
+.ms-recon-sheet-btn {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 6px;
+  width: 100%;
+  padding: 8px;
+  margin: 4px 0 0;
+  border-radius: 8px;
+  background: linear-gradient(135deg, rgba(74,144,217,0.12), rgba(53,122,189,0.12));
+  border: 1px solid rgba(74,144,217,0.25);
+  color: #4A90D9;
+  font-size: 12px;
+  font-weight: 700;
+  cursor: pointer;
+  font-family: inherit;
+  transition: all 0.2s;
+}
+.ms-recon-sheet-btn:hover {
+  background: linear-gradient(135deg, rgba(74,144,217,0.25), rgba(53,122,189,0.25));
+  border-color: #4A90D9;
 }
 .ms-tryon-ref-thumb .ms-tryon-ref-missing {
   display: flex;
