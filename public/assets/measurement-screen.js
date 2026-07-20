@@ -264,6 +264,10 @@ window.KORRA_MS = {
                 <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M20.84 4.61a5.5 5.5 0 0 0-7.78 0L12 5.67l-1.06-1.06a5.5 5.5 0 0 0-7.78 7.78l1.06 1.06L12 21.23l7.78-7.78 1.06-1.06a5.5 5.5 0 0 0 0-7.78z"/></svg>
                 Try On
               </button>
+              <button class="ms-tryon-btn ms-recon-shortcut-btn" onclick="KORRA_MS.switchView('reconstruct')" title="Reconstruct garment from photo">
+                <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 16V8a2 2 0 0 0-1-1.73l-7-4a2 2 0 0 0-2 0l-7 4A2 2 0 0 0 3 8v8a2 2 0 0 0 1 1.73l7 4a2 2 0 0 0 2 0l7-4A2 2 0 0 0 21 16z"/><polyline points="3.27 6.96 12 12.01 20.73 6.96"/><line x1="12" y1="22.08" x2="12" y2="12"/></svg>
+                Reconstruct
+              </button>
               <div class="ms-unit-toggle">
                 <button class="ms-unit-btn ${this.unit === 'cm' ? 'active' : ''}" onclick="KORRA_MS.setUnit('cm')">CM</button>
                 <button class="ms-unit-btn ${this.unit === 'in' ? 'active' : ''}" onclick="KORRA_MS.setUnit('in')">IN</button>
@@ -415,7 +419,7 @@ window.KORRA_MS = {
       default: content = this.buildMetricsGrid();
     }
     if (this.viewMode === 'ai' || this.viewMode === 'tryon') return content;
-    return content + this.buildNotesHTML();
+    return content;
   },
 
   buildPatternView() {
@@ -672,7 +676,7 @@ window.KORRA_MS = {
       case 'compare': content += this.buildCompareView(); break;
       default: content += this.buildMetricsGrid();
     }
-    if (this.viewMode !== 'ai') content += this.buildNotesHTML();
+    
     body.innerHTML = content;
     void body.scrollHeight; // force reflow for correct scroll extent
     if (this.viewMode === 'compare') this.initCompareViewers();
@@ -2208,11 +2212,8 @@ window.KORRA_MS = {
         <div class="ms-tryon-action-row">
           <button class="ms-tryon-generate-btn" id="ms-tryon-generate-btn" disabled onclick="KORRA_MS._runTryOn()">Generate Try-On</button>
           <!-- Phase 201: Batch mode buttons -->
-          <button class="ms-tryon-generate-btn" id="ms-vto-queue-next" style="background:var(--Neutral-700);margin-left:8px" onclick="KORRA_MS._queueVtoBatch()">Queue Next</button>
+          <button class="ms-tryon-generate-btn ms-vto-queue-btn" id="ms-vto-queue-next" onclick="KORRA_MS._queueVtoBatch()">Queue Next</button>
           <button class="ms-tryon-generate-btn" id="ms-vto-process-queue" style="background:var(--Accent-Teal);margin-left:8px;display:none" onclick="KORRA_MS._processVtoBatch()">Process Queue</button>
-        </div>
-        <div style="text-align: center; margin-top: 8px;">
-          <a href="#" onclick="event.preventDefault(); KORRA_MS.switchView('reconstruct')" style="color: var(--accent); font-size: 13px; text-decoration: underline; cursor: pointer;">Need a 3D garment model? Reconstruct from photo →</a>
         </div>
         <div class="ms-tryon-status" id="ms-tryon-status" style="display:none;">
           <div class="ms-tryon-spinner"></div>
@@ -2228,13 +2229,6 @@ window.KORRA_MS = {
   buildReconstructView() {
     const garmentTypes = ['unknown', 'T-shirt', 'Shirt', 'Dress', 'Jacket', 'Pants', 'Skirt'];
     const historyHTML = this._renderReconHistory();
-    // Phase 225: Loading skeleton (shown before any file is selected)
-    const skeletonHTML = !this._reconFile ? `
-      <div class="ms-recon-skeleton" id="ms-recon-skeleton">
-        <div class="ms-recon-skeleton-item shimmer"></div>
-        <div class="ms-recon-skeleton-item shimmer" style="animation-delay:0.15s"></div>
-        <div class="ms-recon-skeleton-item shimmer" style="animation-delay:0.3s"></div>
-      </div>` : '';
     return `
       <div class="ms-recon-view">
         <div class="ms-recon-topbar">
@@ -2269,7 +2263,6 @@ window.KORRA_MS = {
             </div>
           </div>
         </div>
-        ${skeletonHTML}
         <div class="ms-recon-garment-type-row">
           <label class="ms-recon-garment-type-label">Garment Type</label>
           <select class="ms-recon-garment-type-select" id="ms-recon-garment-type" onchange="KORRA_MS._reconGarmentType = this.value">
@@ -3308,9 +3301,6 @@ window.KORRA_MS = {
       if (placeholder) placeholder.style.display = 'none';
       const btn = document.getElementById('ms-recon-generate-btn');
       if (btn) btn.disabled = false;
-      // Hide skeleton once file is selected
-      const skeleton = document.getElementById('ms-recon-skeleton');
-      if (skeleton) skeleton.style.display = 'none';
     };
 
     // Phase 216: Drag-and-drop handlers
@@ -3344,8 +3334,6 @@ window.KORRA_MS = {
         if (placeholder) placeholder.style.display = 'none';
         const btn = document.getElementById('ms-recon-generate-btn');
         if (btn) btn.disabled = false;
-        const skeleton = document.getElementById('ms-recon-skeleton');
-        if (skeleton) skeleton.style.display = 'none';
       });
     }
 
@@ -3418,7 +3406,7 @@ window.KORRA_MS = {
 
       // Step 1: POST to get job_id (fast, returns immediately)
       const controller = new AbortController();
-      const timeoutId = setTimeout(() => controller.abort(), 30000);
+      const timeoutId = setTimeout(() => controller.abort(), 60000);
       let res;
       try {
         res = await fetch('/api/v2/garment/reconstruct', {
@@ -3724,32 +3712,6 @@ window.KORRA_MS = {
     const hipMidX = (hl[0] + hr[0]) / 2;
     if (Math.abs(shoulderMidX - hipMidX) > 0.04 && posture === 'OPTIMAL') posture = 'LEANING DETECTED';
     return { asymmetry, posture };
-  },
-
-  // ═══ CRAFTSMAN NOTES ═══
-  async saveNotes() {
-    const notes = document.getElementById('ms-notes-input')?.value;
-    if (notes == null) return;
-    const btn = document.querySelector('.ms-notes-save');
-    if (btn) { btn.disabled = true; btn.textContent = 'SAVING...'; }
-    try {
-      const { error } = await window.KORRA_DB.from('measurements').update({ notes }).eq('id', this.data.id);
-      if (error) throw error;
-      this.data.notes = notes;
-      if (btn) { btn.textContent = 'SAVED'; setTimeout(() => { btn.textContent = 'Save Notes'; }, 1500); }
-    } catch(e) {
-      if (btn) { btn.textContent = 'FAILED'; setTimeout(() => { btn.textContent = 'Save Notes'; }, 1500); }
-    } finally { if (btn) btn.disabled = false; }
-  },
-  buildNotesHTML() {
-    const notes = this.data?.notes || '';
-    return `
-      <div class="ms-notes-section">
-        <div class="ms-notes-label">CRAFTSMAN NOTES</div>
-        <textarea class="ms-notes-input" id="ms-notes-input"
-          placeholder="Enter patterns, fabrics, or specific tailoring requirements...">${notes}</textarea>
-        <button class="ms-notes-save" onclick="KORRA_MS.saveNotes()">Save Notes</button>
-      </div>`;
   },
 
   // ═══ EXPORT ═══
@@ -4212,7 +4174,7 @@ window.KORRA_MS = {
     camera.position.set(0, 0.3, 1.8);
     camera.lookAt(0, 0.3, 0);
 
-    const renderer = new THREE.WebGLRenderer({ antialias: true, alpha: true });
+    const renderer = new THREE.WebGLRenderer({ antialias: true, alpha: true, powerPreference: 'high-performance', failIfMajorPerformanceCaveat: false });
     renderer.setSize(w, h);
     renderer.setPixelRatio(Math.min(window.devicePixelRatio, 2));
     renderer.toneMapping = THREE.ACESFilmicToneMapping;
@@ -4241,14 +4203,49 @@ window.KORRA_MS = {
       controls.update();
     }
 
+    let _reconFrameId = null;
+    let _reconCrashCount = 0;
     const animLoop = () => {
-      requestAnimationFrame(animLoop);
-      if (controls) controls.update();
-      renderer.render(scene, camera);
+      try {
+        if (!this._reconViewer) return;
+        _reconFrameId = requestAnimationFrame(animLoop);
+        if (this._reconViewer) this._reconViewer.frameId = _reconFrameId;
+        if (controls) controls.update();
+        renderer.render(scene, camera);
+        _reconCrashCount = 0;
+      } catch (e) {
+        console.warn('[RECON] Render error:', e?.message);
+        _reconCrashCount++;
+        if (_reconCrashCount > 3) {
+          console.warn('[RECON] Too many render errors, stopping loop');
+          if (_reconFrameId) cancelAnimationFrame(_reconFrameId);
+          this._reconViewer = null;
+          return;
+        }
+        _reconFrameId = requestAnimationFrame(animLoop);
+      }
     };
-    animLoop();
+    try {
+      renderer.compile(scene, camera);
+      animLoop();
+    } catch (e) {
+      console.warn('[RECON] Init render failed, retrying on first mesh load:', e.message);
+      this._reconPendingLoop = animLoop;
+    }
 
-    this._reconViewer = { scene, camera, renderer, controls, container };
+    renderer.domElement.addEventListener('webglcontextlost', (e) => {
+      e.preventDefault();
+      console.warn('[RECON] WebGL context lost, will restore automatically');
+      if (_reconFrameId) cancelAnimationFrame(_reconFrameId);
+    }, false);
+    renderer.domElement.addEventListener('webglcontextrestored', () => {
+      console.log('[RECON] WebGL context restored, recompiling shaders');
+      try { renderer.compile(scene, camera); } catch (_) {}
+      animLoop();
+    }, false);
+
+    this._reconViewer = { scene, camera, renderer, controls, container, frameId: null };
+    this._reconViewer.frameId = _reconFrameId;
     return this._reconViewer;
   },
 
@@ -4282,6 +4279,7 @@ window.KORRA_MS = {
     this._reconViewer = null;
     this._reconMesh = null;
     this._reconWireframe = false;
+    this._reconPendingLoop = null;
     const statsEl = document.getElementById('ms-recon-viewer-stats');
     if (statsEl) { statsEl.style.display = 'none'; statsEl.textContent = ''; }
   },
@@ -4310,10 +4308,19 @@ window.KORRA_MS = {
     if (!viewer) return;
 
     JSZip.loadAsync(blob).then(zip => {
-      const objFile = zip.file('garment.obj') || zip.file('mesh.obj') || zip.file('model.obj');
+      const objFile = zip.file('garment.obj') || zip.file('mesh.obj') || zip.file('model.obj')
+        || zip.file(/mesh_upper\.obj$/) || zip.file(/mesh_lower\.obj$/);
       if (!objFile) {
         if (loadingEl) loadingEl.style.display = 'none';
+        if (viewerWrap) viewerWrap.style.display = 'none';
         console.warn('[RECON] No OBJ file found in ZIP');
+        const resultsContent = document.getElementById('ms-recon-results-content');
+        if (resultsContent) {
+          const errEl = document.createElement('div');
+          errEl.style.cssText = 'color:#FF6B6B;font-size:13px;padding:12px 8px;text-align:center;';
+          errEl.textContent = '3D mesh not available for this garment. The download ZIP contains the sewing pattern.';
+          resultsContent.appendChild(errEl);
+        }
         return;
       }
       return objFile.async('string');
@@ -4427,6 +4434,9 @@ window.KORRA_MS = {
         viewer.controls.target.set(0, 0.4, 0);
         viewer.controls.update();
       }
+
+      try { viewer.renderer.compile(viewer.scene, viewer.camera); } catch (_) {}
+      if (this._reconPendingLoop) { this._reconPendingLoop(); this._reconPendingLoop = null; }
 
       if (loadingEl) loadingEl.style.display = 'none';
       console.log('[RECON] 3D mesh loaded:', { vertices: vCount, faces: fCount, label: meshLabel });
@@ -5087,10 +5097,10 @@ window.KORRA_MS = {
     try {
       const payload = JSON.stringify({ events: batch });
       if (navigator.sendBeacon) {
-        const sent = navigator.sendBeacon('/api/v1/analytics', new Blob([payload], { type: 'application/json' }));
+        const sent = navigator.sendBeacon('/api/v2/analytics', new Blob([payload], { type: 'application/json' }));
         if (sent) return;
       }
-      fetch('/api/v1/analytics', {
+      fetch('/api/v2/analytics', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: payload,
