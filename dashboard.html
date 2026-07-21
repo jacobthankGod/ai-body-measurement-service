@@ -245,17 +245,24 @@
 
     /* CREDIT MONITOR BADGE */
     .credit-badge {
-        background: rgba(198, 255, 0, 0.1);
-        border: 1px solid var(--Mint);
-        padding: 6px 16px;
-        border-radius: 99px;
+        background: rgba(30, 30, 35, 0.85);
+        border: 1px solid rgba(255, 255, 255, 0.08);
+        padding: 6px 14px 6px 8px;
+        border-radius: 14px;
         display: flex;
         align-items: center;
-        gap: 8px;
-        font-size: 11px;
-        font-weight: 900;
-        color: var(--Mint);
-        box-shadow: 0 0 20px rgba(198, 255, 0, 0.1);
+        gap: 10px;
+        font-size: 15px;
+        font-weight: 800;
+        color: var(--White);
+        backdrop-filter: blur(12px);
+        -webkit-backdrop-filter: blur(12px);
+    }
+    .credit-icon {
+        width: 30px;
+        height: 30px;
+        border-radius: 9px;
+        object-fit: cover;
     }
     .credit-badge span { color: #fff; opacity: 0.6; font-weight: 500; }
 
@@ -1561,7 +1568,10 @@
         Home
       </a>
       <div class="header-actions" style="flex:1; justify-content:flex-end;">
-        <div class="credit-badge" id="headerCreditMonitor"><span>CREDITS:</span> <b id="headerCredits">0</b></div>
+        <div class="credit-badge" id="headerCreditMonitor">
+          <img src="/assets/wallet.png" alt="Credits" class="credit-icon">
+          <b id="headerCredits">0</b>
+        </div>
         <div class="profile-trigger" id="profileTrigger" onclick="window.toggleProfileMenu(event)">
             <img src="/assets/user-profile-new.png" id="profileImageHeader" alt="User Profile">
         </div>
