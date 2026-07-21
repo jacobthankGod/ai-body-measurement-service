@@ -1013,7 +1013,7 @@ window.KORRA_MS = {
     if (!root || root.querySelector('.ms-right-col')) return;
     const tabs = root.querySelector('.ms-tabs');
     const sheet = root.querySelector('.ms-sheet');
-    const attire = root.querySelector('#ms-attire-selector');
+    const attire = root.querySelector('#ms-attire-selector-parent');
     const controls = root.querySelector('#ms-sheet-controls');
     if (!tabs || !sheet) return;
     const rc = document.createElement('div');
