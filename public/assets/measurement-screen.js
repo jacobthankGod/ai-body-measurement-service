@@ -222,16 +222,16 @@ window.KORRA_MS = {
         onChange: (id) => this.setContext(id)
       });
     }
-    const attireContainer = document.querySelector('.ms-attire-selector-container');
-    if (attireContainer) {
+    const attireInner = document.querySelector('.ms-attire-selector-inner');
+    if (attireInner) {
       if (this.showEased) {
-        attireContainer.classList.remove('collapsed');
-        attireContainer.style.maxHeight = attireContainer.scrollHeight + 'px';
-        attireContainer.style.opacity = '1';
+        attireInner.classList.remove('collapsed');
+        attireInner.style.maxHeight = attireInner.scrollHeight + 'px';
+        attireInner.style.opacity = '1';
       } else {
-        attireContainer.classList.add('collapsed');
-        attireContainer.style.maxHeight = '0px';
-        attireContainer.style.opacity = '0';
+        attireInner.classList.add('collapsed');
+        attireInner.style.maxHeight = '0px';
+        attireInner.style.opacity = '0';
       }
     }
     setTimeout(() => {
@@ -306,7 +306,11 @@ window.KORRA_MS = {
             </button>
           </div>
         </div>
-        <div class="ms-attire-selector-container${this.showEased ? '' : ' collapsed'}" id="ms-attire-selector"></div>
+        <div class="ms-attire-selector-container" id="ms-attire-selector-parent">
+          <div class="ms-attire-selector-inner${this.showEased ? '' : ' collapsed'}">
+            <div id="ms-attire-selector"></div>
+          </div>
+        </div>
         <div class="ms-viewer" id="ms-viewer">
           <button class="ms-back-btn ms-back-viewer" onclick="KORRA_MS.handleBack()">
             <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="15 18 9 12 15 6"/></svg>
@@ -728,7 +732,7 @@ window.KORRA_MS = {
         if (unitToggle) unitToggle.style.display = 'none';
         if (easeToggle) easeToggle.style.display = 'none';
 
-        const attire = document.querySelector('.ms-attire-selector-container');
+        const attire = document.querySelector('#ms-attire-selector-parent');
         const tabs = document.querySelector('.ms-tabs');
         const sticky = document.getElementById('ms-sheet-sticky');
         if (attire) attire.style.display = 'none';
@@ -782,7 +786,7 @@ window.KORRA_MS = {
         const controls = document.querySelector('.ms-sheet-controls');
         if (controls) controls.style.display = '';
 
-        const attire = document.querySelector('.ms-attire-selector-container');
+        const attire = document.querySelector('#ms-attire-selector-parent');
         const tabs = document.querySelector('.ms-tabs');
         const sticky = document.getElementById('ms-sheet-sticky');
         if (attire) attire.style.display = '';
@@ -3754,23 +3758,23 @@ window.KORRA_MS = {
       if (track) track.classList.toggle('active', this.showEased);
       if (thumb) thumb.classList.toggle('right', this.showEased);
     }
-    const attireContainer = document.querySelector('.ms-attire-selector-container');
-    if (attireContainer) {
+    const attireInner = document.querySelector('.ms-attire-selector-inner');
+    if (attireInner) {
       if (this.showEased) {
-        attireContainer.classList.remove('collapsed');
-        attireContainer.style.maxHeight = '0px';
-        attireContainer.style.opacity = '0';
-        attireContainer.offsetHeight;
+        attireInner.classList.remove('collapsed');
+        attireInner.style.maxHeight = '0px';
+        attireInner.style.opacity = '0';
+        attireInner.offsetHeight;
         requestAnimationFrame(() => {
-          attireContainer.style.maxHeight = attireContainer.scrollHeight + 'px';
-          attireContainer.style.opacity = '1';
+          attireInner.style.maxHeight = attireInner.scrollHeight + 'px';
+          attireInner.style.opacity = '1';
         });
       } else {
-        attireContainer.style.maxHeight = attireContainer.scrollHeight + 'px';
-        attireContainer.offsetHeight;
-        attireContainer.style.maxHeight = '0px';
-        attireContainer.style.opacity = '0';
-        attireContainer.classList.add('collapsed');
+        attireInner.style.maxHeight = attireInner.scrollHeight + 'px';
+        attireInner.offsetHeight;
+        attireInner.style.maxHeight = '0px';
+        attireInner.style.opacity = '0';
+        attireInner.classList.add('collapsed');
       }
     }
   },

@@ -1445,10 +1445,12 @@ body.scanresult-active .main-content {
 
 /* ── FIXED ATTIRE SELECTOR CONTAINER ── */
 .ms-attire-selector-container {
-  padding: 2px 20px 2px;
   border-bottom: 1px solid var(--Glass-Border);
   background: var(--Obsidian-Layer);
   z-index: 10;
+}
+.ms-attire-selector-inner {
+  padding: 2px 20px 2px;
   max-height: none;
   opacity: 1;
   overflow: hidden;
@@ -1456,12 +1458,11 @@ body.scanresult-active .main-content {
               opacity 0.35s cubic-bezier(0.4,0,0.2,1),
               padding 0.35s cubic-bezier(0.4,0,0.2,1);
 }
-.ms-attire-selector-container.collapsed {
+.ms-attire-selector-inner.collapsed {
   max-height: 0 !important;
   opacity: 0 !important;
   padding-top: 0 !important;
   padding-bottom: 0 !important;
-  border-bottom-color: transparent;
 }
 
 /* ── ATTIRE CONTEXT (legacy - removed) ── */
