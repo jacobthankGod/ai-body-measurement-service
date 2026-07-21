@@ -375,7 +375,6 @@ window.KORRA_MS = {
         <div class="ms-sheet" id="ms-sheet">
           <div class="ms-sheet-handle" id="ms-sheet-handle"></div>
           <div class="ms-sheet-sticky" id="ms-sheet-sticky">
-            ${this.buildMetaCard()}
           </div>
           <div class="ms-sheet-body" id="ms-sheet-body">${this.buildSheetContent()}</div>
         </div>
@@ -549,29 +548,17 @@ window.KORRA_MS = {
     const m = this.data?.measurements || {};
     const sizeRec = this.data?.size_recommendation || 'M';
     const factor = this.unit === 'in' ? 0.393701 : 1;
-    const getSize = (v, r) => {
-      if (!v) return '—';
-      const s = { chest: [[80,'XS'],[88,'S'],[96,'M'],[104,'L'],[112,'XL'],[120,'XXL']], waist: [[68,'XS'],[76,'S'],[84,'M'],[92,'L'],[100,'XL'],[108,'XXL']], hip: [[84,'XS'],[92,'S'],[100,'M'],[108,'L'],[116,'XL'],[124,'XXL']], shoulder: [[40,'XS'],[43,'S'],[46,'M'],[49,'L'],[52,'XL'],[55,'XXL']], thigh: [[48,'XS'],[52,'S'],[56,'M'],[60,'L'],[64,'XL'],[68,'XXL']] };
-      const t = s[r]; if (!t) return '—';
-      for (const [th, l] of t) { if (v <= th) return l; } return 'XXL';
-    };
-    const items = {
-      'Chest Round': getSize(m['Chest Round'], 'chest'),
-      'Waist Round': getSize(m['Waist Round'], 'waist'),
-      'Hip Round': getSize(m['Hip Round'], 'hip'),
-      'Shoulder': getSize((m['Shoulder'] || 0) * 2, 'shoulder'),
-      'Thigh Round': getSize(m['Thigh Round'], 'thigh'),
-      'Overall': sizeRec,
-    };
-    const sizeHTML = '<div class="ms-size-grid">' + Object.entries(items).map(([label, size]) =>
-      `<div class="ms-size-card">
-        <div class="ms-size-label">${label}</div>
-        <div class="ms-size-value">${size}</div>
-        ${m[label] ? `<div class="ms-size-cm">${(m[label] * factor).toFixed(1)} ${this.unit}</div>` : ''}
-      </div>`
-    ).join('') + '</div>';
+    const shape = this.data?.body_shape || 'Standard';
+    const height = this.data?.height || '—';
 
-    return sizeHTML;
+    const metaHTML = `
+      <div class="ms-meta-card">
+        <div class="ms-meta-item"><div class="ms-meta-item-label">Shape</div><div class="ms-meta-item-value">${shape}</div></div>
+        <div class="ms-meta-item"><div class="ms-meta-item-label">Height</div><div class="ms-meta-item-value">${height} cm</div></div>
+        <div class="ms-meta-item"><div class="ms-meta-item-label">Size</div><div class="ms-meta-item-value">${sizeRec}</div></div>
+      </div>`;
+
+    return metaHTML;
   },
 
   buildShapeCard() {
