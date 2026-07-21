@@ -223,7 +223,17 @@ window.KORRA_MS = {
       });
     }
     const attireContainer = document.querySelector('.ms-attire-selector-container');
-    if (attireContainer) attireContainer.style.display = this.showEased ? '' : 'none';
+    if (attireContainer) {
+      if (this.showEased) {
+        attireContainer.classList.remove('collapsed');
+        attireContainer.style.maxHeight = attireContainer.scrollHeight + 'px';
+        attireContainer.style.opacity = '1';
+      } else {
+        attireContainer.classList.add('collapsed');
+        attireContainer.style.maxHeight = '0px';
+        attireContainer.style.opacity = '0';
+      }
+    }
     setTimeout(() => {
       const hEl = document.querySelector('.ms-summary-value');
       if (hEl) {

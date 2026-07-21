@@ -1449,7 +1449,7 @@ body.scanresult-active .main-content {
   border-bottom: 1px solid var(--Glass-Border);
   background: var(--Obsidian-Layer);
   z-index: 10;
-  max-height: 80px;
+  max-height: none;
   opacity: 1;
   overflow: hidden;
   transition: max-height 0.45s cubic-bezier(0.4,0,0.2,1),
