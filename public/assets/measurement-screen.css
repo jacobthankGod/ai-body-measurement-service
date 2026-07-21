@@ -254,7 +254,7 @@
   background: var(--ms-bg-page);
   overflow: hidden;
   border-radius: var(--ms-radius);
-  margin: 0 24px 12px;
+  margin: 0 24px 0;
 }
 .ms-viewer-canvas {
   width: 100%;

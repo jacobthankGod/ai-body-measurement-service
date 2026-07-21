@@ -344,7 +344,7 @@ window.KORRA_MS = {
         </div>
         <div class="ms-tabs">
           <button class="ms-tab ${this.viewMode === 'avatar' ? 'active' : ''}" onclick="KORRA_MS.switchView('avatar')">
-            <svg class="ms-tab-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M6.5 6.5h11"/><path d="M6.5 17.5h11"/><path d="M12 6.5v11"/><circle cx="12" cy="4" r="2"/><circle cx="12" cy="20" r="2"/><circle cx="4" cy="12" r="2"/><circle cx="20" cy="12" r="2"/></svg>
+            <svg class="ms-tab-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M2 12h20"/><path d="M6 8v8"/><path d="M10 10v4"/><path d="M14 10v4"/><path d="M18 8v8"/></svg>
             Measurements
           </button>
           <button class="ms-tab ${this.viewMode === 'sizes' ? 'active' : ''}" onclick="KORRA_MS.switchView('sizes')">
@@ -720,8 +720,10 @@ window.KORRA_MS = {
 
         const attire = document.querySelector('.ms-attire-selector-container');
         const tabs = document.querySelector('.ms-tabs');
+        const sticky = document.getElementById('ms-sheet-sticky');
         if (attire) attire.style.display = 'none';
         if (tabs) tabs.style.display = 'none';
+        if (sticky) sticky.style.display = mode === 'ai' ? 'none' : '';
 
         const sheet = document.querySelector('.ms-sheet');
         if (sheet) {
@@ -772,8 +774,10 @@ window.KORRA_MS = {
 
         const attire = document.querySelector('.ms-attire-selector-container');
         const tabs = document.querySelector('.ms-tabs');
+        const sticky = document.getElementById('ms-sheet-sticky');
         if (attire) attire.style.display = '';
         if (tabs) tabs.style.display = '';
+        if (sticky) sticky.style.display = '';
 
         const sheet = document.querySelector('.ms-sheet');
         if (sheet) sheet.classList.remove('ai-active', 'tryon-active');
