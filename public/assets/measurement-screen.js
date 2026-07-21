@@ -226,8 +226,8 @@ window.KORRA_MS = {
     if (attireInner) {
       if (this.showEased) {
         attireInner.classList.remove('collapsed');
-        attireInner.style.maxHeight = attireInner.scrollHeight + 'px';
-        attireInner.style.opacity = '1';
+        attireInner.style.maxHeight = '';
+        attireInner.style.opacity = '';
       } else {
         attireInner.classList.add('collapsed');
         attireInner.style.maxHeight = '0px';
@@ -3765,12 +3765,11 @@ window.KORRA_MS = {
         attireInner.style.maxHeight = '0px';
         attireInner.style.opacity = '0';
         attireInner.offsetHeight;
-        requestAnimationFrame(() => {
-          attireInner.style.maxHeight = attireInner.scrollHeight + 'px';
-          attireInner.style.opacity = '1';
-        });
+        attireInner.style.maxHeight = '';
+        attireInner.style.opacity = '';
       } else {
-        attireInner.style.maxHeight = attireInner.scrollHeight + 'px';
+        attireInner.style.maxHeight = '200px';
+        attireInner.style.opacity = '1';
         attireInner.offsetHeight;
         attireInner.style.maxHeight = '0px';
         attireInner.style.opacity = '0';
