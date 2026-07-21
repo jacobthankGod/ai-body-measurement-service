@@ -1458,11 +1458,15 @@ body.scanresult-active .main-content {
               opacity 0.35s cubic-bezier(0.4,0,0.2,1),
               padding 0.35s cubic-bezier(0.4,0,0.2,1);
 }
+.ms-attire-selector-inner:not(.collapsed) {
+  overflow: visible;
+}
 .ms-attire-selector-inner.collapsed {
-  max-height: 0 !important;
-  opacity: 0 !important;
-  padding-top: 0 !important;
-  padding-bottom: 0 !important;
+  max-height: 0;
+  opacity: 0;
+  padding-top: 0;
+  padding-bottom: 0;
+  overflow: hidden;
 }
 
 /* ── ATTIRE CONTEXT (legacy - removed) ── */
