@@ -2746,10 +2746,13 @@ msg.textContent = feedback; msg.style.background = aligned ? "var(--Mint)" : "rg
       if (id !== 'scanresult') {
         if (window.KORRA_MS?.active) window.KORRA_MS.cleanup();
         document.querySelector('main').style.overflow = '';
+        document.body.classList.remove('scanresult-active');
         const mc = document.querySelector('.main-content');
         if (mc) {
           mc.style.padding = '';
         }
+      } else {
+        document.body.classList.add('scanresult-active');
       }
 
       // Update URL hash without causing a page jump
