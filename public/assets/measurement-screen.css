@@ -2410,7 +2410,22 @@ body.scanresult-active .main-content {
     background: var(--Obsidian-Deep);
     color: var(--White);
 }
-.ms-pattern-topbar { padding: 12px 20px; border-bottom: 1px solid var(--Glass-Border); }
+.ms-pattern-topbar { padding: 12px 20px; border-bottom: 1px solid var(--Glass-Border); display: flex; align-items: center; gap: 12px; }
+.ms-pattern-view .ms-ai-back {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  padding: 10px 16px;
+  border-radius: 10px;
+  border: none;
+  background: var(--Mint);
+  color: #000;
+  font-size: 13px;
+  font-weight: 900;
+  cursor: pointer;
+  transition: all 0.2s;
+}
+.ms-pattern-view .ms-ai-back:hover { opacity: 0.85; }
 .ms-pattern-header { padding: 24px 20px; text-align: center; }
 .ms-pattern-title { font-size: 20px; font-weight: 900; color: var(--Accent-Teal); letter-spacing: -0.02em; }
 .ms-pattern-subtitle { font-size: 12px; color: var(--Neutral-400); margin-top: 4px; }
