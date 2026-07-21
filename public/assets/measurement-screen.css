@@ -266,7 +266,7 @@ body.scanresult-active .main-content {
   background: var(--ms-bg-page);
   overflow: hidden;
   border-radius: var(--ms-radius);
-  margin: 0 24px 0;
+  margin: 0;
 }
 .ms-viewer-canvas {
   width: 100%;
