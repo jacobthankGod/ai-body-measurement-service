@@ -1096,10 +1096,12 @@ window.KORRA_MS = {
     if (window.innerWidth <= 900) {
       const rc = document.querySelector('.ms-side-by-side .ms-right-col');
       let startY = 0;
-      const onStart = (y) => { startY = y; if (rc) { rc.style.transition = 'none'; rc.style.overflow = 'visible'; } };
+      let didDrag = false;
+      const onStart = (y) => { startY = y; didDrag = false; if (rc) { rc.style.transition = 'none'; rc.style.overflow = 'visible'; } };
       const onMove = (y) => {
         if (!rc) return;
         const delta = startY - y;
+        if (Math.abs(delta) > 5) didDrag = true;
         const curH = rc.offsetHeight;
         const maxH = window.innerHeight * 0.88;
         const newH = Math.max(48, Math.min(maxH, curH + delta));
@@ -1108,7 +1110,7 @@ window.KORRA_MS = {
       const onEnd = () => {
         if (!rc) return;
         rc.style.transition = '';
-        this._snapSheet();
+        if (didDrag) this._snapSheet();
       };
       const bindDrag = (el) => {
         if (!el) return;
