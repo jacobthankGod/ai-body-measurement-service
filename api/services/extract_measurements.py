@@ -580,7 +580,7 @@ class HMRMasterEngine:
 
     def _calc_circ_from_mesh_slice(self, vertices: np.ndarray, faces: np.ndarray,
                                     group_indices: List[int], scale: float,
-                                    normal=(0, 1, 0),
+                                    normal=None,
                                     face_mask: Optional[np.ndarray] = None) -> float:
         """
         Calculate circumference by slicing the mesh with a cutting plane,
@@ -601,6 +601,8 @@ class HMRMasterEngine:
             if len(faces) == 0:
                 return 0.0
 
+        if normal is None:
+            normal = (0, 1, 0)
         normal = np.asarray(normal, dtype=np.float64)
         origin = np.mean(vertices[group_indices], axis=0)
         points = self._mesh_plane_intersection(vertices, faces, origin, normal)
@@ -666,14 +668,15 @@ class HMRMasterEngine:
         # Helper to calculate circumference using plane-mesh intersection
         # with body-part face filtering. Falls back to bounding-box ellipse
         # when no body-part-specific face filter is available (e.g. wrist).
-        def calc_circ(group_indices, group_name=''):
+        # `normal` overrides the cutting plane orientation (default: horizontal).
+        def calc_circ(group_indices, group_name='', normal=None):
             if not group_indices: return 0.0
             if self.smpl_faces is not None:
                 face_mask = self._get_body_part_faces(group_name, vertices, group_indices)
                 if face_mask is not None:
                     return self._calc_circ_from_mesh_slice(
                         vertices, self.smpl_faces, group_indices, scale,
-                        face_mask=face_mask)
+                        face_mask=face_mask, normal=normal)
             # Default/fallback: bounding-box ellipse
             group_verts = vertices[group_indices]
             w = (np.max(group_verts[:, 0]) - np.min(group_verts[:, 0])) * 100 * scale
@@ -684,12 +687,12 @@ class HMRMasterEngine:
             circ = np.pi * (a + b) * (1 + (3 * h_val) / (10 + np.sqrt(4 - 3 * h_val)))
             return round(circ, 1)
 
-        # Helper to calculate vertical distance between two groups (y-axis)
+        # Helper to calculate 3D Euclidean distance between two vertex group centroids
         def calc_vert_dist(group1, group2):
             if not group1 or not group2: return 0.0
-            y1 = np.mean(vertices[group1][:, 1])
-            y2 = np.mean(vertices[group2][:, 1])
-            return round(abs(y1 - y2) * 100 * scale, 1)
+            p1 = np.mean(vertices[group1], axis=0)
+            p2 = np.mean(vertices[group2], axis=0)
+            return round(np.linalg.norm(p1 - p2) * 100 * scale, 1)
 
         results = {}
 
@@ -754,8 +757,16 @@ class HMRMasterEngine:
             results['Knee Round'] = round(results.get('Thigh Round', 0) * 0.68, 1)
             results['Calf Round'] = round(results.get('Thigh Round', 0) * 0.65, 1)
             results['Trouser Waist'] = results.get('Waist Round', 0)
-            results['Bicep Round'] = calc_circ(self.vertex_map.get('bicep', []), 'bicep')
-            results['Elbow Round'] = calc_circ(self.vertex_map.get('elbow', []), 'elbow')
+            # Arm circumference: cutting plane perpendicular to arm axis (SMPL-Anthropometry method)
+            bi_pts = self.vertex_map.get('bicep', [])
+            el_pts = self.vertex_map.get('elbow', [])
+            if bi_pts and el_pts:
+                arm_axis = np.mean(vertices[el_pts], axis=0) - np.mean(vertices[bi_pts], axis=0)
+                arm_normal = arm_axis / max(np.linalg.norm(arm_axis), 1e-8)
+            else:
+                arm_normal = np.array([1.0, 0.0, 0.0])
+            results['Bicep Round'] = calc_circ(self.vertex_map.get('bicep', []), 'bicep', normal=arm_normal)
+            results['Elbow Round'] = calc_circ(self.vertex_map.get('elbow', []), 'elbow', normal=arm_normal)
             results['Sleeve Length'] = calc_vert_dist(sh_indices, self.vertex_map.get('wrist', []))
 
         # Female Specific
@@ -768,6 +779,16 @@ class HMRMasterEngine:
             results['Waist to Hip'] = calc_vert_dist(waist_pts, hip_pts)
             results['Upper Hip'] = round(results.get('Hip Round', 0) * 0.92, 1)
             results['Armhole Round'] = round(results.get('Shoulder', 0) * 0.45, 1)
+            # Arm circumference: cutting plane perpendicular to arm axis
+            bi_pts = self.vertex_map.get('bicep', [])
+            el_pts = self.vertex_map.get('elbow', [])
+            if bi_pts and el_pts:
+                arm_axis = np.mean(vertices[el_pts], axis=0) - np.mean(vertices[bi_pts], axis=0)
+                arm_normal = arm_axis / max(np.linalg.norm(arm_axis), 1e-8)
+            else:
+                arm_normal = np.array([1.0, 0.0, 0.0])
+            results['Bicep Round'] = calc_circ(self.vertex_map.get('bicep', []), 'bicep', normal=arm_normal)
+            results['Elbow Round'] = calc_circ(self.vertex_map.get('elbow', []), 'elbow', normal=arm_normal)
             results['Sleeve Length'] = calc_vert_dist(sh_indices, self.vertex_map.get('wrist', []))
 
         # Pattern-drafting dimension aliases (Phase 16)
