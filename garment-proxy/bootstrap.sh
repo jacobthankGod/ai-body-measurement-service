@@ -81,6 +81,16 @@ location /api/v2/garment/ {\
     add_header Access-Control-Allow-Origin *;\
     add_header Access-Control-Allow-Methods "POST, GET, OPTIONS";\
     add_header Access-Control-Allow-Headers "Content-Type, Authorization";\
+}\
+\
+# Analytics sink\
+location /api/v2/analytics {\
+    proxy_pass http://127.0.0.1:8001;\
+    proxy_set_header Host \$host;\
+    proxy_set_header X-Real-IP \$remote_addr;\
+    add_header Access-Control-Allow-Origin *;\
+    add_header Access-Control-Allow-Methods "POST, GET, OPTIONS";\
+    add_header Access-Control-Allow-Headers "Content-Type, Authorization";\
 }' /etc/nginx/sites-enabled/korra
     nginx -t && systemctl reload nginx
 fi

@@ -9,6 +9,30 @@
   display: none;
 }
 
+/* ── DESIGN TOKENS ── */
+:root {
+  --ms-bg-page: #0D0D0F;
+  --ms-bg-panel: #141416;
+  --ms-bg-card: #1A1A1E;
+  --ms-bg-card-hover: #222226;
+  --ms-border: #2A2A2E;
+  --ms-border-light: #333338;
+  --ms-text: #F0F0F2;
+  --ms-text-secondary: #909098;
+  --ms-text-tertiary: #606068;
+  --ms-accent: #C6FF00;
+  --ms-accent-dim: rgba(198,255,0,0.12);
+  --ms-shadow: 0 2px 8px rgba(0,0,0,0.3), 0 1px 2px rgba(0,0,0,0.2);
+  --ms-shadow-lg: 0 8px 32px rgba(0,0,0,0.4);
+  --ms-radius: 16px;
+  --ms-radius-sm: 10px;
+  --ms-radius-xs: 8px;
+  --ms-section-upper: #C6FF00;
+  --ms-section-arms: #00D4FF;
+  --ms-section-mid: #FF8C00;
+  --ms-section-lower: #A855F7;
+}
+
 /* ── CONTAINER ── */
 .ms-root {
   display: flex;
@@ -18,7 +42,7 @@
   min-height: 0;
   overflow: hidden;
   position: relative;
-  background: var(--Obsidian-Deep);
+  background: var(--ms-bg-page);
 }
 
 #view-scanresult.active {
@@ -70,9 +94,9 @@
   flex-shrink: 0;
 }
 .ms-sheet-controls {
-  padding: 8px 20px 6px;
-  background: var(--Obsidian-Layer);
-  border-bottom: 1px solid var(--Glass-Border);
+  padding: 16px 28px 14px;
+  background: var(--ms-bg-panel);
+  border-bottom: 1px solid var(--ms-border);
   flex-shrink: 0;
   display: flex;
   flex-direction: column;
@@ -81,8 +105,8 @@
   display: flex;
   align-items: center;
   justify-content: space-between;
-  gap: 12px;
-  margin-bottom: 2px;
+  gap: 16px;
+  margin-bottom: 10px;
 }
 .ms-controls-toggles {
   display: flex;
@@ -93,7 +117,7 @@
 .ms-controls-buttons {
   display: flex;
   align-items: center;
-  gap: 6px;
+  gap: 8px;
   flex-wrap: wrap;
 }
 .ms-scan-info {
@@ -102,18 +126,19 @@
   min-width: 0;
 }
 .ms-scan-title {
-  font-size: 13px;
+  font-size: 15px;
   font-weight: 700;
-  color: var(--White);
-  line-height: 1.2;
+  color: var(--ms-text);
+  line-height: 1.3;
   white-space: nowrap;
   overflow: hidden;
   text-overflow: ellipsis;
 }
 .ms-scan-subtitle {
-  font-size: 10px;
-  color: var(--Neutral-500);
+  font-size: 11px;
+  color: var(--ms-text-secondary);
   font-weight: 500;
+  margin-top: 2px;
 }
 .ms-garment-badge {
   display: inline-block;
@@ -223,11 +248,13 @@
 
 /* ── 3D VIEWER AREA ── */
 .ms-viewer {
-  flex: 0 0 90px;
+  flex: 1;
   position: relative;
-  min-height: 120px;
-  background: #D4D4D4;
+  min-height: 300px;
+  background: var(--ms-bg-page);
   overflow: hidden;
+  border-radius: var(--ms-radius);
+  margin: 0 24px 12px;
 }
 .ms-viewer-canvas {
   width: 100%;
@@ -244,33 +271,63 @@
 }
 .ms-viewer-badge {
   position: absolute;
-  top: 48px;
-  left: 16px;
+  top: 20px;
+  left: 20px;
   z-index: 2;
   pointer-events: none;
+}
+.ms-badge {
+  background: var(--ms-bg-card);
+  border: 1px solid var(--ms-border);
+  border-radius: var(--ms-radius);
+  padding: 16px 20px;
+  min-width: 180px;
+  box-shadow: var(--ms-shadow);
+}
+.ms-badge-label {
+  font-size: 10px;
+  font-weight: 700;
+  color: var(--ms-text-secondary);
+  text-transform: uppercase;
+  letter-spacing: 0.06em;
+  margin-bottom: 4px;
+}
+.ms-badge-value {
+  font-size: 28px;
+  font-weight: 900;
+  line-height: 1.1;
+}
+.ms-badge-unit {
+  font-size: 14px;
+  font-weight: 700;
+  margin-left: 4px;
+  opacity: 0.6;
+}
+.ms-badge-desc {
+  font-size: 11px;
+  color: var(--ms-text-tertiary);
+  margin-top: 4px;
 }
 .ms-bg-toggle {
   position: absolute;
   bottom: 12px;
   left: 12px;
   z-index: 10;
-  width: 32px;
-  height: 32px;
-  border-radius: 50%;
-  border: none;
-  background: rgba(0, 0, 0, 0.5);
-  color: #fff;
+  width: 36px;
+  height: 36px;
+  border-radius: 10px;
+  border: 1px solid var(--ms-border);
+  background: var(--ms-bg-card);
+  color: var(--ms-text-secondary);
   cursor: pointer;
   display: flex;
   align-items: center;
   justify-content: center;
-  backdrop-filter: blur(4px);
-  -webkit-backdrop-filter: blur(4px);
   transition: all 0.2s;
 }
 .ms-bg-toggle:hover {
-  background: rgba(0, 0, 0, 0.7);
-  transform: scale(1.1);
+  background: var(--ms-bg-card-hover);
+  color: var(--ms-text);
 }
 
 /* ── VIEWPORT TOOLBAR (Right) ── */
@@ -282,22 +339,20 @@
   z-index: 5;
   display: flex;
   flex-direction: column;
-  gap: 8px;
+  gap: 6px;
   pointer-events: auto;
 }
 .ms-tool-btn {
-  width: 36px;
-  height: 36px;
-  border-radius: 50%;
-  border: none;
-  background: rgba(0, 0, 0, 0.45);
-  color: rgba(255,255,255,0.85);
+  width: 34px;
+  height: 34px;
+  border-radius: 10px;
+  border: 1px solid var(--ms-border);
+  background: var(--ms-bg-card);
+  color: var(--ms-text-secondary);
   cursor: pointer;
   display: flex;
   align-items: center;
   justify-content: center;
-  backdrop-filter: blur(4px);
-  -webkit-backdrop-filter: blur(4px);
   transition: all 0.2s;
 }
 .ms-tool-btn:hover {
@@ -413,46 +468,50 @@
 /* ── VIEW MODE TABS ── */
 .ms-tabs {
   display: flex;
-  gap: 4px;
-  padding: 0 16px;
-  height: 36px;
+  gap: 0;
+  padding: 0;
+  height: 40px;
   flex-shrink: 0;
-  background: var(--Obsidian-Layer);
-  border-top: 1px solid var(--Glass-Border);
-  border-bottom: 1px solid var(--Glass-Border);
+  background: transparent;
+  border-bottom: 1px solid var(--ms-border);
   overflow-x: auto;
   -webkit-overflow-scrolling: touch;
   scrollbar-width: none;
 }
 .ms-tabs::-webkit-scrollbar { display: none; }
 .ms-tab {
-  padding: 0 16px;
-  height: 44px;
+  padding: 0 20px;
+  height: 40px;
   display: flex;
   align-items: center;
   gap: 6px;
-  font-size: 11px;
-  font-weight: 700;
-  color: var(--Neutral-500);
+  font-size: 13px;
+  font-weight: 800;
+  color: var(--ms-text-secondary);
   background: none;
   border: none;
-  border-bottom: 2px solid transparent;
+  border-bottom: 2.5px solid transparent;
   cursor: pointer;
   transition: all 0.2s;
   white-space: nowrap;
   flex-shrink: 0;
+  font-family: inherit;
+  letter-spacing: 0.02em;
+  text-transform: uppercase;
 }
 .ms-tab:hover {
-  color: var(--Neutral-400);
+  color: var(--ms-text);
 }
 .ms-tab.active {
-  color: var(--Mint);
-  border-bottom-color: var(--Mint);
+  color: var(--ms-accent);
+  border-bottom-color: var(--ms-accent);
+  font-weight: 900;
 }
 .ms-tab-icon {
-  width: 14px;
-  height: 14px;
-  opacity: 0.6;
+  width: 16px;
+  height: 16px;
+  flex-shrink: 0;
+  opacity: 0.7;
 }
 .ms-tab.active .ms-tab-icon {
   opacity: 1;
@@ -548,6 +607,12 @@
   overflow-x: hidden;
   padding: 4px 20px 64px;
   -webkit-overflow-scrolling: touch;
+}
+.ms-sheet-sticky {
+  flex-shrink: 0;
+  padding: 0 20px;
+  border-bottom: 1px solid var(--ms-border);
+  background: var(--ms-bg-panel);
 }
 
 /* ── MEASUREMENT LIST ── */
@@ -1107,91 +1172,263 @@
   display: none;
 }
 
-/* ── SUMMARY BAR ── */
-.ms-summary-bar {
-  display: flex;
-  justify-content: space-around;
-  text-align: center;
-  padding: 8px 12px;
-  margin: 8px 0 12px;
-  background: var(--Mint);
-  border: none;
-  border-radius: 12px;
+/* ── SEARCH BAR ── */
+.ms-search-bar {
+  position: relative;
+  margin: 12px 0 8px;
 }
-.ms-summary-item { text-align: center; }
-.ms-summary-label {
-  font-size: 10px;
-  color: #000;
-  font-weight: 700;
+.ms-search-input {
+  width: 100%;
+  padding: 10px 14px 10px 36px;
+  border-radius: var(--ms-radius-sm);
+  border: 1px solid var(--ms-border);
+  background: var(--ms-bg-card);
+  color: var(--ms-text);
+  font-size: 13px;
+  font-family: inherit;
+  outline: none;
+  transition: border-color 0.2s;
+  box-sizing: border-box;
 }
-.ms-summary-value {
-  font-size: 12px;
-  font-weight: 900;
-  color: #000;
-  margin-top: 2px;
+.ms-search-input::placeholder {
+  color: var(--ms-text-tertiary);
+}
+.ms-search-input:focus {
+  border-color: var(--ms-accent);
+}
+.ms-search-icon {
+  position: absolute;
+  left: 12px;
+  top: 50%;
+  transform: translateY(-50%);
+  color: var(--ms-text-tertiary);
+  pointer-events: none;
+  width: 16px;
+  height: 16px;
 }
 
-/* ── 3-COLUMN METRICS GRID ── */
-.ms-metrics-section { margin-bottom: 6px; }
-.ms-metrics-section-header {
-  font-size: 10px;
-  font-weight: 900;
-  color: var(--Mint);
-  text-transform: uppercase;
-  letter-spacing: 0.5px;
-  padding: 2px 0;
-  margin-bottom: 2px;
-  border-bottom: none;
+/* ── MEASUREMENT SECTIONS ── */
+.ms-metrics-section {
+  margin-bottom: 4px;
+  border: 1px solid var(--ms-border);
+  border-radius: var(--ms-radius);
+  overflow: hidden;
+  background: var(--ms-bg-card);
 }
+.ms-section-header {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  padding: 12px 16px;
+  cursor: pointer;
+  user-select: none;
+  transition: background 0.2s;
+}
+.ms-section-header:hover {
+  background: var(--ms-bg-card-hover);
+}
+.ms-section-indicator {
+  width: 3px;
+  height: 20px;
+  border-radius: 2px;
+  flex-shrink: 0;
+}
+.ms-section-title {
+  font-size: 11px;
+  font-weight: 800;
+  color: var(--ms-text-secondary);
+  text-transform: uppercase;
+  letter-spacing: 0.08em;
+  flex: 1;
+}
+.ms-section-toggle {
+  width: 20px;
+  height: 20px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  color: var(--ms-text-tertiary);
+  transition: transform 0.2s;
+  font-size: 14px;
+}
+.ms-section-toggle.collapsed {
+  transform: rotate(-90deg);
+}
+.ms-section-body {
+  max-height: none;
+  opacity: 1;
+  overflow: hidden;
+  transition: max-height 0.45s cubic-bezier(0.4,0,0.2,1),
+              opacity 0.35s cubic-bezier(0.4,0,0.2,1);
+  padding: 0 12px 12px;
+}
+.ms-section-body.collapsed {
+  pointer-events: none;
+}
+
+/* ── MEASUREMENT CARDS (2-column) ── */
 .ms-metrics-grid {
   display: grid;
-  grid-template-columns: repeat(3, 1fr);
-  gap: 4px;
+  grid-template-columns: repeat(2, 1fr);
+  gap: 6px;
 }
 .ms-metric-cell {
-  padding: 4px;
-  background: rgba(255, 255, 255, 0.05);
-  border-radius: 8px;
+  display: flex;
+  flex-direction: column;
+  padding: 12px 14px;
+  background: var(--ms-bg-panel);
+  border-radius: var(--ms-radius-sm);
   cursor: pointer;
   border: 1px solid transparent;
   transition: all 0.15s;
+  position: relative;
 }
-.ms-metric-cell:hover { border-color: rgba(255, 255, 255, 0.12); }
-.ms-metric-cell.active { border-color: var(--Mint); background: rgba(255, 255, 255, 0.04); }
-.ms-metric-cell.empty { opacity: 0.4; cursor: default; }
+.ms-metric-cell:hover {
+  border-color: var(--ms-border-light);
+  background: var(--ms-bg-card-hover);
+}
+.ms-metric-cell.active {
+  border-color: var(--ms-accent);
+  background: rgba(198,255,0,0.04);
+}
+.ms-metric-cell.empty {
+  opacity: 0.3;
+  cursor: default;
+}
 .ms-metric-name {
-  font-size: 9px;
-  color: var(--Neutral-500);
+  font-size: 10px;
+  font-weight: 600;
+  color: var(--ms-text-tertiary);
   white-space: nowrap;
   overflow: hidden;
   text-overflow: ellipsis;
+  margin-bottom: 4px;
+  text-transform: uppercase;
+  letter-spacing: 0.04em;
 }
 .ms-metric-val {
-  font-size: 12px;
-  font-weight: 700;
-  color: #fff;
-  margin-top: 1px;
+  font-size: 16px;
+  font-weight: 800;
+  color: var(--ms-text);
   font-variant-numeric: tabular-nums;
+  line-height: 1.2;
+}
+.ms-metric-val small {
+  font-size: 11px;
+  font-weight: 600;
+  color: var(--ms-text-tertiary);
+  margin-left: 2px;
 }
 .ms-metric-ease {
-  font-size: 8px;
-  color: var(--Neutral-500);
+  font-size: 9px;
+  color: var(--ms-accent);
+  margin-top: 2px;
+  font-weight: 600;
+}
+
+/* ── SCAN QUALITY CARD ── */
+.ms-quality-card {
+  display: flex;
+  align-items: center;
+  gap: 16px;
+  padding: 14px 18px;
+  background: var(--ms-bg-card);
+  border: 1px solid var(--ms-border);
+  border-radius: var(--ms-radius);
+  margin-bottom: 8px;
+}
+.ms-quality-ring {
+  width: 48px;
+  height: 48px;
+  border-radius: 50%;
+  border: 3px solid var(--ms-accent);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 14px;
+  font-weight: 900;
+  color: var(--ms-accent);
+  flex-shrink: 0;
+}
+.ms-quality-info {
+  flex: 1;
+}
+.ms-quality-label {
+  font-size: 10px;
+  font-weight: 700;
+  color: var(--ms-text-secondary);
+  text-transform: uppercase;
+  letter-spacing: 0.06em;
+}
+.ms-quality-value {
+  font-size: 14px;
+  font-weight: 700;
+  color: var(--ms-accent);
   margin-top: 2px;
 }
 
-/* ── SKELETON LOADING ── */
-.ms-skeleton-cell {
-  padding: 10px;
-  background: rgba(255, 255, 255, 0.03);
-  border-radius: 8px;
+/* ── PRIMARY MEASUREMENT CARD ── */
+.ms-primary-card {
+  text-align: center;
+  padding: 20px 24px;
+  background: var(--ms-bg-card);
+  border: 1px solid var(--ms-border);
+  border-radius: var(--ms-radius);
+  margin-bottom: 8px;
 }
-.ms-sk-line {
-  height: 8px;
-  border-radius: 4px;
-  background: rgba(255, 255, 255, 0.06);
-  animation: msPulse 1.5s ease-in-out infinite;
+.ms-primary-label {
+  font-size: 10px;
+  font-weight: 700;
+  color: var(--ms-text-secondary);
+  text-transform: uppercase;
+  letter-spacing: 0.06em;
+  margin-bottom: 4px;
 }
-.ms-sk-line.short { width: 60%; margin-bottom: 6px; }
+.ms-primary-value {
+  font-size: 32px;
+  font-weight: 900;
+  color: var(--ms-text);
+  line-height: 1.1;
+}
+.ms-primary-unit {
+  font-size: 14px;
+  font-weight: 700;
+  color: var(--ms-text-tertiary);
+  margin-left: 4px;
+}
+.ms-primary-desc {
+  font-size: 11px;
+  color: var(--ms-text-tertiary);
+  margin-top: 6px;
+}
+
+/* ── SCAN METADATA CARD ── */
+.ms-meta-card {
+  display: flex;
+  gap: 16px;
+  padding: 16px 18px;
+  background: var(--ms-bg-card);
+  border: 1px solid var(--ms-border);
+  border-radius: var(--ms-radius);
+  margin-bottom: 12px;
+  margin-top: 12px;
+}
+.ms-meta-item {
+  flex: 1;
+}
+.ms-meta-item-label {
+  font-size: 9px;
+  font-weight: 700;
+  color: var(--ms-text-tertiary);
+  text-transform: uppercase;
+  letter-spacing: 0.06em;
+}
+.ms-meta-item-value {
+  font-size: 13px;
+  font-weight: 700;
+  color: var(--ms-text);
+  margin-top: 2px;
+}
 .ms-sk-line.long { width: 80%; }
 
 /* ── FIXED ATTIRE SELECTOR CONTAINER ── */
@@ -4083,22 +4320,26 @@ body.vto-synthesizing {
   align-items: center;
   justify-content: center;
   gap: 6px;
-  width: 100%;
-  padding: 8px;
-  margin: 4px 0 0;
-  border-radius: 8px;
-  background: linear-gradient(135deg, rgba(74,144,217,0.12), rgba(53,122,189,0.12));
-  border: 1px solid rgba(74,144,217,0.25);
+  padding: 8px 16px;
+  margin-left: auto;
+  border-radius: 10px;
+  background: linear-gradient(135deg, rgba(74,144,217,0.15), rgba(53,122,189,0.15));
+  border: 1.5px solid rgba(74,144,217,0.35);
   color: #4A90D9;
-  font-size: 12px;
-  font-weight: 700;
+  font-size: 13px;
+  font-weight: 800;
   cursor: pointer;
   font-family: inherit;
-  transition: all 0.2s;
+  transition: all 0.25s;
+  white-space: nowrap;
+  height: 34px;
+  letter-spacing: 0.02em;
 }
 .ms-recon-sheet-btn:hover {
   background: linear-gradient(135deg, rgba(74,144,217,0.25), rgba(53,122,189,0.25));
   border-color: #4A90D9;
+  transform: translateY(-1px);
+  box-shadow: 0 4px 16px rgba(74,144,217,0.2);
 }
 .ms-tryon-ref-thumb .ms-tryon-ref-missing {
   display: flex;

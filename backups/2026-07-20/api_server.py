@@ -602,21 +602,7 @@ def _load_garmentrec():
     return net
 
 
-# Garment type mapping: user-friendly names → GarmentRec indices
-# Indices: 0=T-shirt, 1=front_open_T-shirt, 2=Shirt, 3=front_open_Shirt, 4=Shorts, 5=Pants
-GARMENT_TYPE_MAP = {
-    "tshirt": 0, "t-shirt": 0, "tee": 0,
-    "shirt": 2, "dress_shirt": 2, "button_up": 2,
-    "blouse": 3, "top": 3,
-    "jacket": 2, "hoodie": 0, "sweater": 0,
-    "agbada": 2, "senator": 2, "kaftan": 2, "dashiki": 2,
-    "native": 2, "buba": 3, "kente": 2,
-    "shorts": 4, "pants": 5, "trousers": 5, "jeans": 5,
-    "skirt": 4, "dress": 3,
-}
-
-
-def run_garmentrec(net, image: Image.Image, temp_dir: str, garment_type: str = "auto") -> dict:
+def run_garmentrec(net, image: Image.Image, temp_dir: str) -> dict:
     """Run GarmentRec inference, save mesh to temp_dir, return mesh data."""
     import cv2
     import trimesh
@@ -644,15 +630,7 @@ def run_garmentrec(net, image: Image.Image, temp_dir: str, garment_type: str = "
     cam_k = cam_k.matmul(cam_Rt).to(CPU_DEVICE)
 
     imgs_perg = torch.cat((img_tensor, img_tensor), 1).reshape(-1, 3, 540, 540)
-
-    # Map user garment_type to GarmentRec indices
-    gt = garment_type.lower().strip() if garment_type else "auto"
-    upper_idx = GARMENT_TYPE_MAP.get(gt, -1)
-    if upper_idx >= 0 and upper_idx <= 3:
-        input_gtypes = np.array([[upper_idx, -1]])
-        logger.info(f"GarmentRec using user-specified upper type: {gt} -> index {upper_idx}")
-    else:
-        input_gtypes = np.array([[-1, -1]])
+    input_gtypes = np.array([[-1, -1]])
 
     with torch.no_grad():
         up_prob, bottom_prob, cam_Rs, cam_Ts, dis_maps = net(
@@ -669,13 +647,8 @@ def run_garmentrec(net, image: Image.Image, temp_dir: str, garment_type: str = "
     up_path = os.path.join(temp_dir, "input_up.obj")
     bottom_path = os.path.join(temp_dir, "input_bottom.obj")
 
-    # Determine which parts are relevant based on garment_type
-    # 0-3 = upper only, 4-5 = lower only, -1 = both (auto)
-    keep_upper = upper_idx < 0 or upper_idx <= 3
-    keep_lower = upper_idx not in (0, 1, 2, 3)
-
     mesh_data = {"upper": None, "lower": None}
-    if os.path.exists(up_path) and keep_upper:
+    if os.path.exists(up_path):
         mesh = trimesh.load(up_path)
         v = mesh.vertices
         f = mesh.faces
@@ -684,7 +657,7 @@ def run_garmentrec(net, image: Image.Image, temp_dir: str, garment_type: str = "
             "faces": f.tolist(),
             "type": up_name,
         }
-    if os.path.exists(bottom_path) and keep_lower:
+    if os.path.exists(bottom_path):
         mesh = trimesh.load(bottom_path)
         v = mesh.vertices
         f = mesh.faces
@@ -725,10 +698,10 @@ def _load_garmentgpt():
     finally:
         os.chdir(_orig_cwd)
 
-    predictor.codec_model = predictor.codec_model.to(GPU_DEVICE)
-    predictor.rt_model = predictor.rt_model.to(GPU_DEVICE)
+    predictor.codec_model = predictor.codec_model.to(CPU_DEVICE)
+    predictor.rt_model = predictor.rt_model.to(CPU_DEVICE)
     torch.cuda.empty_cache()
-    logger.info("GarmentGPT loaded (all on GPU)")
+    logger.info("GarmentGPT loaded (LLM on GPU, codecs on CPU)")
     return predictor
 
 
@@ -959,7 +932,7 @@ def post_result_to_proxy(job_id: str, result_zip: bytes):
 #  Background task: full pipeline
 # ═══════════════════════════════════════════════════════════════
 
-async def process_full_pipeline(job_id: str, image_bytes: bytes, include_mesh: bool, include_pattern: bool, garment_type: str = "auto"):
+async def process_full_pipeline(job_id: str, image_bytes: bytes, include_mesh: bool, include_pattern: bool):
     """Runs in background. Builds ZIP, stores in jobs dict, posts to EC2 proxy."""
     seq = 0
     def emit_progress(stage, progress, message):
@@ -985,7 +958,7 @@ async def process_full_pipeline(job_id: str, image_bytes: bytes, include_mesh: b
         if include_mesh and garmentrec_model is not None:
             emit_progress("meshing", 40, "Reconstructing 3D mesh...")
             with tempfile.TemporaryDirectory() as tmp:
-                mesh_data = run_garmentrec(garmentrec_model, nobg, tmp, garment_type)
+                mesh_data = run_garmentrec(garmentrec_model, nobg, tmp)
             gc.collect()
 
         if include_pattern and garmentgpt_predictor is not None:
@@ -1228,7 +1201,6 @@ async def reconstruct(
     include_mesh: bool = True,
     include_pattern: bool = True,
     user_id: str = "",
-    garment_type: str = "auto",
 ):
     image_bytes = await file.read()
     if len(image_bytes) > 10 * 1024 * 1024:
@@ -1261,7 +1233,7 @@ async def reconstruct(
     }
 
     # Spawn background task in a thread (non-blocking)
-    _run_in_thread(lambda: process_full_pipeline(job_id, image_bytes, include_mesh, include_pattern, garment_type))
+    _run_in_thread(lambda: process_full_pipeline(job_id, image_bytes, include_mesh, include_pattern))
 
     return {"job_id": job_id, "status": "processing"}
 

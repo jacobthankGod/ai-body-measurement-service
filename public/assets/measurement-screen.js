@@ -273,10 +273,6 @@ window.KORRA_MS = {
               </div>
             </div>
           </div>
-          <button class="ms-recon-sheet-btn" onclick="KORRA_MS.switchView('reconstruct')" title="Convert garment photo to 3D cloth">
-            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 16V8a2 2 0 0 0-1-1.73l-7-4a2 2 0 0 0-2 0l-7 4A2 2 0 0 0 3 8v8a2 2 0 0 0 1 1.73l7 4a2 2 0 0 0 2 0l7-4A2 2 0 0 0 21 16z"/><polyline points="3.27 6.96 12 12.01 20.73 6.96"/><line x1="12" y1="22.08" x2="12" y2="12"/></svg>
-            Reconstruct
-          </button>
           <div class="ms-controls-buttons">
             <button class="ms-share-btn" onclick="KORRA_MS.openShareScan()" title="Share scan">
               <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="18" cy="5" r="3"/><circle cx="6" cy="12" r="3"/><circle cx="18" cy="19" r="3"/><line x1="8.59" y1="13.51" x2="15.42" y2="17.49"/><line x1="15.41" y1="6.51" x2="8.59" y2="10.49"/></svg>
@@ -294,8 +290,9 @@ window.KORRA_MS = {
             <button class="ms-header-btn" onclick="KORRA_MS.resetView()" title="Reset view">
               <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="23 4 23 10 17 10"/><path d="M20.49 15a9 9 0 1 1-2.12-9.36L23 10"/></svg>
             </button>
-            <button class="ms-header-btn" onclick="KORRA_MS.handleBack()" title="Close">
-              <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg>
+            <button class="ms-recon-sheet-btn" onclick="KORRA_MS.switchView('reconstruct')" title="Convert garment photo to 3D cloth for try-on">
+              <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 16V8a2 2 0 0 0-1-1.73l-7-4a2 2 0 0 0-2 0l-7 4A2 2 0 0 0 3 8v8a2 2 0 0 0 1 1.73l7 4a2 2 0 0 0 2 0l7-4A2 2 0 0 0 21 16z"/><polyline points="3.27 6.96 12 12.01 20.73 6.96"/><line x1="12" y1="22.08" x2="12" y2="12"/></svg>
+              Reconstruct Image to 3D Cloth for Try-On
             </button>
           </div>
         </div>
@@ -347,28 +344,31 @@ window.KORRA_MS = {
         </div>
         <div class="ms-tabs">
           <button class="ms-tab ${this.viewMode === 'avatar' ? 'active' : ''}" onclick="KORRA_MS.switchView('avatar')">
-            <svg class="ms-tab-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"/><circle cx="12" cy="7" r="4"/></svg>
+            <svg class="ms-tab-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M6.5 6.5h11"/><path d="M6.5 17.5h11"/><path d="M12 6.5v11"/><circle cx="12" cy="4" r="2"/><circle cx="12" cy="20" r="2"/><circle cx="4" cy="12" r="2"/><circle cx="20" cy="12" r="2"/></svg>
             Measurements
           </button>
           <button class="ms-tab ${this.viewMode === 'sizes' ? 'active' : ''}" onclick="KORRA_MS.switchView('sizes')">
-            <svg class="ms-tab-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M20.59 13.41l-7.17 7.17a2 2 0 0 1-2.83 0L2 12V2h10l8.59 8.59a2 2 0 0 1 0 2.82z"/><line x1="7" y1="7" x2="7.01" y2="7"/></svg>
+            <svg class="ms-tab-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M20.59 13.41l-7.17 7.17a2 2 0 0 1-2.83 0L2 12V2h10l8.59 8.59a2 2 0 0 1 0 2.82z"/><line x1="7" y1="7" x2="7.01" y2="7"/></svg>
             Sizes
           </button>
           <button class="ms-tab ${this.viewMode === 'shape' ? 'active' : ''}" onclick="KORRA_MS.switchView('shape')">
-            <svg class="ms-tab-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"/><path d="M8 14s1.5 2 4 2 4-2 4-2"/><line x1="9" y1="9" x2="9.01" y2="9"/><line x1="15" y1="9" x2="15.01" y2="9"/></svg>
+            <svg class="ms-tab-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 2a5 5 0 0 1 5 5v3a5 5 0 0 1-10 0V7a5 5 0 0 1 5-5z"/><path d="M9 22v-1"/><path d="M15 22v-1"/><path d="M7 10v4a5 5 0 0 0 10 0v-4"/></svg>
             Shape
           </button>
           <button class="ms-tab ${this.viewMode === 'compare' ? 'active' : ''}" onclick="KORRA_MS.switchView('compare')">
-            <svg class="ms-tab-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="2" y="3" width="8" height="18" rx="1"/><rect x="14" y="3" width="8" height="18" rx="1"/></svg>
+            <svg class="ms-tab-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M16 3h5v5"/><path d="M8 3H3v5"/><path d="M12 22v-8.3a4 4 0 0 0-1.172-2.872L3 3"/><path d="m15 9 6-6"/></svg>
             Compare
           </button>
           <button class="ms-tab ${this.viewMode === 'pattern' ? 'active' : ''}" onclick="KORRA_MS.switchView('pattern')">
-            <svg class="ms-tab-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 2L2 7l10 5 10-5-10-5zM2 17l10 5 10-5M2 12l10 5 10-5"/></svg>
+            <svg class="ms-tab-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 2L2 7l10 5 10-5-10-5z"/><path d="M2 17l10 5 10-5"/><path d="M2 12l10 5 10-5"/></svg>
             Pattern
           </button>
         </div>
         <div class="ms-sheet" id="ms-sheet">
           <div class="ms-sheet-handle" id="ms-sheet-handle"></div>
+          <div class="ms-sheet-sticky" id="ms-sheet-sticky">
+            ${this.buildMetaCard()}
+          </div>
           <div class="ms-sheet-body" id="ms-sheet-body">${this.buildSheetContent()}</div>
         </div>
         <button class="ms-ai-fab" onclick="KORRA_MS.switchView('ai')">
@@ -392,6 +392,28 @@ window.KORRA_MS = {
         <div class="ms-badge-label">${this.selectedMeasurement}</div>
         <div class="ms-badge-value" style="color:${color}">${displayVal}<span class="ms-badge-unit">${this.unit}</span></div>
         <div class="ms-badge-desc">${desc}</div>
+      </div>`;
+  },
+
+  // ═══ META CARD (persistent) ═══
+  buildMetaCard() {
+    const shape = this.data?.body_shape || 'Standard';
+    const height = this.data?.height || '—';
+    const size = this.data?.size_recommendation || 'M';
+    return `
+      <div class="ms-meta-card">
+        <div class="ms-meta-item"><div class="ms-meta-item-label">Shape</div><div class="ms-meta-item-value">${shape}</div></div>
+        <div class="ms-meta-item"><div class="ms-meta-item-label">Height</div><div class="ms-meta-item-value">${height} cm</div></div>
+        <div class="ms-meta-item"><div class="ms-meta-item-label">Size</div><div class="ms-meta-item-value">${size}</div></div>
+      </div>`;
+  },
+
+  // ═══ SEARCH BAR (persistent) ═══
+  buildSearchBar() {
+    return `
+      <div class="ms-search-bar">
+        <svg class="ms-search-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/></svg>
+        <input class="ms-search-input" type="text" placeholder="Search measurements..." value="${this._measurementFilter || ''}" oninput="KORRA_MS.filterMeasurements(this.value)">
       </div>`;
   },
 
@@ -472,44 +494,53 @@ window.KORRA_MS = {
       'LOWER': ['Hip Round', 'Thigh Round', 'Knee Round', 'Calf Round', 'Ankle Round', 'Inseam', 'Trouser Length', 'Trouser Waist', 'Crotch Depth']
     };
 
-    return Object.entries(sections).map(([label, keys]) => `
-      <div class="ms-metrics-section">
-        <div class="ms-metrics-section-header">${label}</div>
-        <div class="ms-metrics-grid">
-          ${keys.map(k => {
-            const raw = m[k];
-            if (raw == null) return `<div class="ms-metric-cell empty"><div class="ms-metric-name">${k}</div><div class="ms-metric-val">&mdash;</div></div>`;
-            const ease = this.showEased ? this.getEase(k) : 1;
-            const val = (raw * factor * ease).toFixed(1);
-            const active = k === this.selectedMeasurement ? ' active' : '';
-            const easeLabel = this.showEased && ease !== 1 ? (Math.round((ease - 1) * 1000) / 10) + '% ease' : '';
+    const SECTION_COLORS = { 'UPPER': '#C6FF00', 'ARMS': '#00D4FF', 'MID': '#B388FF', 'LOWER': '#FFC247' };
 
-            // Phase 2: Editable content for contributors
-            const isContributor = window.KORRA_USER_FLAGS?.is_contributor === true;
-            const editableAttr = isContributor ? `contenteditable="true" onblur="KORRA_MS.handleManualEdit('${k}', this.textContent)"` : '';
-            const editHint = isContributor ? `<div style="position:absolute; bottom:4px; right:8px; font-size:8px; opacity:0.3">EDIT</div>` : '';
-
-            return `<div class="ms-metric-cell${active}" onclick="KORRA_MS.selectMeasurement('${k}')" style="position:relative">
-              <div class="ms-metric-name">${k}</div>
-              <div class="ms-metric-val" ${editableAttr}>${val}${factor === 1 ? 'cm' : 'in'}</div>
-              ${easeLabel ? `<div class="ms-metric-ease">${easeLabel}</div>` : ''}
-              ${editHint}
-            </div>`;
-          }).join('')}
+    if (!this._collapsedSections) this._collapsedSections = {};
+    return Object.entries(sections).map(([label, keys]) => {
+      const sectionKey = label;
+      const indicatorColor = SECTION_COLORS[sectionKey] || '#C6FF00';
+      const collapsed = this._collapsedSections?.[sectionKey] ? ' collapsed' : '';
+      return `
+      <div class="ms-metrics-section" data-section="${sectionKey}">
+        <div class="ms-section-header" onclick="KORRA_MS.toggleSection('${sectionKey}')">
+          <div class="ms-section-indicator" style="background:${indicatorColor}"></div>
+          <div class="ms-section-title">${label}</div>
+          <div class="ms-section-toggle${collapsed}">▾</div>
         </div>
-      </div>
-    `).join('');
+        <div class="ms-section-body${collapsed}">
+          <div class="ms-metrics-grid">
+            ${keys.map(k => {
+              const raw = m[k];
+              const filterMatch = !this._measurementFilter || k.toLowerCase().includes(this._measurementFilter.toLowerCase());
+              if (!filterMatch) { return ''; }
+              if (raw == null) return `<div class="ms-metric-cell empty"><div class="ms-metric-name">${k}</div><div class="ms-metric-val">&mdash;</div></div>`;
+              const ease = this.showEased ? this.getEase(k) : 1;
+              const val = (raw * factor * ease).toFixed(1);
+              const active = k === this.selectedMeasurement ? ' active' : '';
+              const easeLabel = this.showEased && ease !== 1 ? (Math.round((ease - 1) * 1000) / 10) + '% ease' : '';
+
+              const isContributor = window.KORRA_USER_FLAGS?.is_contributor === true;
+              const editableAttr = isContributor ? `contenteditable="true" onblur="KORRA_MS.handleManualEdit('${k}', this.textContent)"` : '';
+              const editHint = isContributor ? `<div style="position:absolute; bottom:4px; right:8px; font-size:8px; opacity:0.3">EDIT</div>` : '';
+
+              return `<div class="ms-metric-cell${active}" onclick="KORRA_MS.selectMeasurement('${k}')" style="position:relative">
+                <div class="ms-metric-name">${k}</div>
+                <div class="ms-metric-val" ${editableAttr}>${val}<small>${this.unit}</small></div>
+                ${easeLabel ? `<div class="ms-metric-ease">${easeLabel}</div>` : ''}
+                ${editHint}
+              </div>`;
+            }).join('')}
+          </div>
+        </div>
+      </div>`;
+    }).join('');
   },
 
   buildSizesGrid() {
     const m = this.data?.measurements || {};
     const sizeRec = this.data?.size_recommendation || 'M';
     const factor = this.unit === 'in' ? 0.393701 : 1;
-    const summaryBar = `<div class="ms-summary-bar">
-      <div class="ms-summary-item"><div class="ms-summary-label">HEIGHT</div><div class="ms-summary-value">${this.data?.height ? this.data.height + ' cm' : '—'}</div></div>
-      <div class="ms-summary-item"><div class="ms-summary-label">SHAPE</div><div class="ms-summary-value">${this.data?.body_shape || 'Standard'}</div></div>
-      <div class="ms-summary-item"><div class="ms-summary-label">SIZE REC</div><div class="ms-summary-value">${this.data?.size_recommendation || 'M'}</div></div>
-    </div>`;
     const getSize = (v, r) => {
       if (!v) return '—';
       const s = { chest: [[80,'XS'],[88,'S'],[96,'M'],[104,'L'],[112,'XL'],[120,'XXL']], waist: [[68,'XS'],[76,'S'],[84,'M'],[92,'L'],[100,'XL'],[108,'XXL']], hip: [[84,'XS'],[92,'S'],[100,'M'],[108,'L'],[116,'XL'],[124,'XXL']], shoulder: [[40,'XS'],[43,'S'],[46,'M'],[49,'L'],[52,'XL'],[55,'XXL']], thigh: [[48,'XS'],[52,'S'],[56,'M'],[60,'L'],[64,'XL'],[68,'XXL']] };
@@ -532,24 +563,7 @@ window.KORRA_MS = {
       </div>`
     ).join('') + '</div>';
 
-    const mat = this.activeMaterial;
-    return `
-      ${summaryBar}
-      <div class="ms-material-section">
-        <div class="ms-material-label">FABRIC</div>
-        <div class="ms-material-rail">
-          <button class="ms-material-btn ${mat === 'woven' ? 'active' : ''}" onclick="KORRA_MS.setMaterial('woven')" style="${mat === 'woven' ? 'border-color:var(--Mint)' : ''}">Woven</button>
-          <button class="ms-material-btn ${mat === 'knit' ? 'active' : ''}" onclick="KORRA_MS.setMaterial('knit')">Knit</button>
-          <button class="ms-material-btn ${mat === 'starch_bazin' ? 'active' : ''}" onclick="KORRA_MS.setMaterial('starch_bazin')">Starch Bazin</button>
-          <button class="ms-material-btn ${mat === 'technical' ? 'active' : ''}" onclick="KORRA_MS.setMaterial('technical')">Technical</button>
-          <button class="ms-material-btn ${mat === 'silk' ? 'active' : ''}" onclick="KORRA_MS.setMaterial('silk')">Silk</button>
-          <button class="ms-material-btn ${mat === 'denim' ? 'active' : ''}" onclick="KORRA_MS.setMaterial('denim')">Denim</button>
-          <button class="ms-material-btn ${mat === 'linen' ? 'active' : ''}" onclick="KORRA_MS.setMaterial('linen')">Linen</button>
-          <button class="ms-material-btn ${mat === 'wool' ? 'active' : ''}" onclick="KORRA_MS.setMaterial('wool')">Wool</button>
-        </div>
-      </div>
-      ${sizeHTML}
-    `;
+    return sizeHTML;
   },
 
   buildShapeCard() {
@@ -812,6 +826,48 @@ window.KORRA_MS = {
       this._notifyPostAction();
     } catch (e) {
       console.error(`[SIDEMENU-DBG] ERROR in selectMeasurement:`, e);
+    }
+  },
+
+  // ═══ MEASUREMENT SEARCH & SECTIONS ═══
+  filterMeasurements(query) {
+    this._measurementFilter = query;
+    this.renderMeasurements();
+  },
+  toggleSection(key) {
+    if (!this._collapsedSections) this._collapsedSections = {};
+    const isCurrentlyCollapsed = !!this._collapsedSections[key];
+    const shouldCollapse = !isCurrentlyCollapsed;
+    this._collapsedSections[key] = shouldCollapse;
+
+    const section = document.querySelector(`.ms-metrics-section[data-section="${key}"]`);
+    if (!section) return;
+    const body = section.querySelector('.ms-section-body');
+    const toggle = section.querySelector('.ms-section-toggle');
+    if (!body || !toggle) return;
+
+    if (shouldCollapse) {
+      // COLLAPSE: lock to current height, then animate to 0
+      body.style.maxHeight = body.scrollHeight + 'px';
+      body.offsetHeight; // force reflow
+      body.style.maxHeight = '0px';
+      body.style.opacity = '0';
+      body.classList.add('collapsed');
+      toggle.classList.add('collapsed');
+    } else {
+      // EXPAND: animate from 0 to measured content height
+      body.style.maxHeight = '0px';
+      body.style.opacity = '0';
+      body.classList.remove('collapsed');
+      toggle.classList.remove('collapsed');
+      body.offsetHeight; // force reflow
+      requestAnimationFrame(() => {
+        body.style.maxHeight = body.scrollHeight + 'px';
+        body.style.opacity = '1';
+        body.addEventListener('transitionend', () => {
+          body.style.maxHeight = 'none';
+        }, { once: true });
+      });
     }
   },
 

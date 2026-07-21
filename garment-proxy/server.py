@@ -21,11 +21,16 @@ try:
 except ImportError:
     HAS_IMAGEHASH = False
 import uvicorn
+import logging
+
+logger = logging.getLogger("garment-proxy")
+logging.basicConfig(level=logging.INFO, format="%(asctime)s %(levelname)s %(message)s")
 
 # ── Config (all from env, no local files) ──────────────────────
 KAGGLE_TUNNEL_URL = os.getenv("KAGGLE_TUNNEL_URL", "")
 SUPABASE_URL = os.getenv("SUPABASE_URL", "https://blsettabymllulsxtziw.supabase.co")
 SUPABASE_ANON_KEY = os.getenv("SUPABASE_ANON_KEY", "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImJsc2V0dGFieW1sbHVsc3h0eml3Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3ODAwNTY3NjksImV4cCI6MjA5NTYzMjc2OX0.PuMsTbgyRRcCQ04Y7Y9Y75WjRqmzgMP4S2_B4372V_U")
+SUPABASE_SERVICE_KEY = os.getenv("SUPABASE_SERVICE_KEY", "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImJsc2V0dGFieW1sbHVsc3h0eml3Iiwicm9sZSI6InNlcnZpY2Vfcm9sZSIsImlhdCI6MTc4MDA1Njc2OSwiZXhwIjoyMDk1NjMyNzY5fQ.oQz1KDOXuPdP2l35pXQVjry5stoe9_Wp4nzEDwPXX2I")
 MAX_RETRIES = 5
 TUNNEL_CACHE_FILE = "/tmp/kaggle_tunnel_url.txt"
 PERCEPTUAL_HASH_CACHE = {}  # {phash: result_zip}
@@ -51,19 +56,24 @@ if not KAGGLE_TUNNEL_URL:
 async def sb_query(table: str, select: str = "*", params: dict = None, method: str = "GET", json_data: dict = None):
     """Raw Supabase REST query via httpx."""
     url = f"{SUPABASE_URL}/rest/v1/{table}"
+    # Use service_role for writes (POST/PATCH), anon for reads
+    auth_key = SUPABASE_SERVICE_KEY if method in ("POST", "PATCH") else SUPABASE_ANON_KEY
     headers = {
         "apikey": SUPABASE_ANON_KEY,
-        "Authorization": f"Bearer {SUPABASE_ANON_KEY}",
+        "Authorization": f"Bearer {auth_key}",
         "Content-Type": "application/json",
         "Prefer": "return=representation" if method in ("POST", "PATCH") else "",
     }
+    query_params = dict(params or {})
+    if select and "select" not in query_params:
+        query_params["select"] = select
     async with httpx.AsyncClient(timeout=15) as client:
         if method == "GET":
-            resp = await client.get(url, headers=headers, params=params or {})
+            resp = await client.get(url, headers=headers, params=query_params)
         elif method == "POST":
             resp = await client.post(url, headers=headers, json=json_data)
         elif method == "PATCH":
-            resp = await client.patch(url, headers=headers, params=params or {}, json=json_data)
+            resp = await client.patch(url, headers=headers, params=query_params, json=json_data)
         else:
             raise ValueError(f"Unsupported method: {method}")
         return resp
@@ -83,7 +93,7 @@ async def sb_update_job(job_id: str, data: dict):
 
 async def sb_get_job(job_id: str) -> dict | None:
     """Fetch a job from Supabase."""
-    resp = await sb_query("garment_jobs", select="*", params={"id": f"eq.{job_id}", "select": "*"})
+    resp = await sb_query("garment_jobs", select="*", params={"id": f"eq.{job_id}"})
     if resp.status_code == 200 and resp.json():
         return resp.json()[0]
     return None
@@ -159,7 +169,6 @@ async def sb_get_vto_count_today(user_id: str) -> int:
         params={
             "user_id": f"eq.{user_id}",
             "created_at": f"gte.{today}T00:00:00Z",
-            "select": "id",
         },
     )
     if resp.status_code == 200:
@@ -330,6 +339,71 @@ async def sb_upload_refined_photo(user_id: str, scan_id: str, angle: str, image_
     except Exception as e:
         logger.warning(f"Photo upload error: {e}")
         return ""
+
+
+# ── Phase 048: Upload result ZIP to Supabase Storage ──
+async def sb_upload_result_zip(job_id: str, user_id: str, result_zip: bytes) -> str:
+    """Upload reconstruction ZIP to garment_meshes bucket. Returns storage path."""
+    path = f"{user_id}/{job_id}/result.zip"
+    try:
+        upload_url = f"{SUPABASE_URL}/storage/v1/object/garment_meshes/{path}"
+        headers = {
+            "Authorization": f"Bearer {SUPABASE_SERVICE_KEY}",
+            "Content-Type": "application/zip",
+            "x-upsert": "true",
+        }
+        async with httpx.AsyncClient(timeout=60) as client:
+            resp = await client.put(upload_url, content=result_zip, headers=headers)
+            if resp.status_code in (200, 201):
+                return f"garment_meshes/{path}"
+            else:
+                logger.warning(f"ZIP upload failed: {resp.status_code} {resp.text[:200]}")
+                return ""
+    except Exception as e:
+        logger.warning(f"ZIP upload error: {e}")
+        return ""
+
+
+# ── Phase 045: Persist SSE progress to Supabase garment_jobs ──
+async def sb_update_progress(job_id: str, stage: str, progress: int, message: str):
+    """Update progress stage/pct/message on garment_jobs row for SSE polling."""
+    try:
+        await sb_query(
+            "garment_jobs",
+            method="PATCH",
+            params={"id": f"eq.{job_id}"},
+            json_data={
+                "progress_stage": stage,
+                "progress_pct": progress,
+                "progress_message": message,
+            },
+        )
+    except Exception as e:
+        logger.debug(f"Progress update failed for {job_id}: {e}")
+
+
+# ── Phase 190: Face blur for privacy ──
+def _blur_face(image_bytes: bytes) -> bytes:
+    """Apply Gaussian blur to face region for privacy. Returns processed bytes."""
+    try:
+        import cv2
+        import numpy as np
+        img = cv2.imdecode(np.frombuffer(image_bytes, np.uint8), cv2.IMREAD_COLOR)
+        if img is None:
+            return image_bytes
+        gray = cv2.cvtColor(img, cv2.COLOR_BGR2GRAY)
+        face_cascade = cv2.CascadeClassifier(cv2.data.haarcascades + "haarcascade_frontalface_default.xml")
+        faces = face_cascade.detectMultiScale(gray, scaleFactor=1.3, minNeighbors=5, minSize=(30, 30))
+        for (x, y, w, h) in faces:
+            roi = img[y:y+h, x:x+w]
+            blurred = cv2.GaussianBlur(roi, (51, 51), 30)
+            img[y:y+h, x:x+w] = blurred
+        _, buf = cv2.imencode(".png", img)
+        return buf.tobytes()
+    except Exception:
+        return image_bytes
+
+
 @app.get("/api/v2/garment/health")
 @app.get("/health")
 async def health():
@@ -348,13 +422,31 @@ async def health():
         "sse_supported": True,
     }
 
+@app.post("/api/v1/analytics")
+@app.post("/api/v2/analytics")
+async def analytics_sink(request: Request):
+    """Accept analytics events and discard — no storage needed."""
+    try:
+        body = await request.json()
+        events = body.get("events", [])
+        print(f"[Analytics] Received {len(events)} events")
+    except Exception:
+        pass
+    return {"ok": True}
+
 @app.get("/api/v2/garment/reconstruct/progress/{kaggle_job_id}")
 async def reconstruct_progress_sse(kaggle_job_id: str):
-    """SSE relay — streams progress events from Kaggle to frontend."""
+    """SSE relay — streams progress events from Kaggle to frontend, persists to Supabase."""
     if not KAGGLE_TUNNEL_URL:
         raise HTTPException(503, "No Kaggle backend connected")
 
     async def relay_events():
+        # Resolve job_id from kaggle_job_id for Supabase updates
+        job = await sb_query("garment_jobs", select="id", params={"id": f"eq.{kaggle_job_id}"})
+        local_job_id = kaggle_job_id
+        if job.status_code == 200 and job.json():
+            local_job_id = job.json()[0].get("id", kaggle_job_id)
+
         try:
             async with httpx.AsyncClient(timeout=60) as client:
                 async with client.stream("GET", f"{KAGGLE_TUNNEL_URL}/api/v1/reconstruct/progress/{kaggle_job_id}") as resp:
@@ -364,6 +456,17 @@ async def reconstruct_progress_sse(kaggle_job_id: str):
                     async for line in resp.aiter_lines():
                         if line.startswith("data: "):
                             yield f"{line}\n\n"
+                            # Phase 045: Persist progress to Supabase (fire-and-forget)
+                            try:
+                                data = json.loads(line[6:])
+                                await sb_update_progress(
+                                    local_job_id,
+                                    data.get("stage", ""),
+                                    data.get("progress", 0),
+                                    data.get("message", ""),
+                                )
+                            except Exception:
+                                pass
         except httpx.TimeoutException:
             yield f"data: {json.dumps({'stage': 'error', 'progress': -1, 'message': 'SSE connection timed out'})}\n\n"
         except Exception as e:
@@ -480,7 +583,8 @@ async def reconstruct_garment(
         attempt_start = time.time()
         try:
             async with httpx.AsyncClient(timeout=httpx.Timeout(connect=15.0, read=60.0, write=30.0, pool=10.0)) as client:
-                files = {"file": (file.filename, image_bytes, file.content_type)}
+                fname = file.filename or "image.png"
+                files = {"file": (fname, image_bytes, file.content_type or "image/png")}
                 params = {"include_mesh": include_mesh, "include_pattern": include_pattern, "user_id": user_id}
                 resp = await client.post(f"{KAGGLE_TUNNEL_URL}/api/v1/reconstruct", files=files, params=params)
                 elapsed = time.time() - attempt_start
@@ -492,7 +596,11 @@ async def reconstruct_garment(
                         print(f"[{req_id}] Attempt {attempt+1}/{MAX_RETRIES}: 200 but no job_id in {elapsed:.1f}s")
                         raise HTTPException(502, "No job_id returned from backend")
                     print(f"[{req_id}] Attempt {attempt+1}/{MAX_RETRIES}: OK (job={kaggle_job_id}) in {elapsed:.1f}s")
-                    return await poll_and_return_job(req_id, job_id, kaggle_job_id)
+                    # Return job_id immediately — frontend polls/SSEs for progress
+                    return JSONResponse({
+                        "job_id": kaggle_job_id,
+                        "status": "processing",
+                    })
                 else:
                     backend_detail = ""
                     try:
@@ -529,9 +637,18 @@ async def poll_and_return_job(req_id: str, job_id: str, kaggle_job_id: str, max_
                 elapsed = time.time() - start
                 if resp.status_code == 200 and resp.headers.get("content-type", "").startswith("application/zip"):
                     result_zip = resp.content
+
+                    # Phase 048: Upload ZIP to Supabase storage
+                    result_url = ""
+                    job = await sb_get_job(job_id)
+                    user_id = job.get("user_id", "") if job else ""
+                    if user_id:
+                        result_url = await sb_upload_result_zip(job_id, user_id, result_zip)
+
                     await sb_update_job(job_id, {
                         "status": "completed",
                         "completed_at": datetime.now(timezone.utc).isoformat(),
+                        "result_url": result_url if result_url else None,
                     })
                     print(f"[{req_id}] Job {kaggle_job_id} completed in {elapsed:.0f}s ({len(result_zip)} bytes)")
                     return StreamingResponse(
@@ -557,6 +674,65 @@ async def poll_and_return_job(req_id: str, job_id: str, kaggle_job_id: str, max_
     print(f"[{req_id}] Job {kaggle_job_id} timed out after {max_wait}s")
     await sb_update_job(job_id, {"status": "failed", "error_message": "Processing timed out"})
     raise HTTPException(504, "Processing timed out after 5 minutes")
+
+
+@app.get("/api/v2/garment/job/{kaggle_job_id}")
+async def get_job_result(kaggle_job_id: str, request: Request):
+    """Fetch reconstruction result ZIP from Kaggle backend."""
+    user_id = await verify_jwt(request.headers.get("authorization"))
+    if not KAGGLE_TUNNEL_URL:
+        raise HTTPException(503, "No Kaggle backend connected")
+    try:
+        async with httpx.AsyncClient(timeout=60) as client:
+            resp = await client.get(
+                f"{KAGGLE_TUNNEL_URL}/api/v1/job/{kaggle_job_id}",
+            )
+            if resp.status_code == 200 and resp.headers.get("content-type", "").startswith("application/zip"):
+                # Upload ZIP to Supabase for persistence
+                result_zip = resp.content
+                result_url = ""
+                if user_id:
+                    result_url = await sb_upload_result_zip(kaggle_job_id, user_id, result_zip)
+                if result_url:
+                    await sb_update_job(kaggle_job_id, {"result_url": result_url})
+                return StreamingResponse(
+                    io.BytesIO(result_zip),
+                    media_type="application/zip",
+                    headers={"Content-Disposition": f"attachment; filename=garment_{kaggle_job_id}.zip"},
+                )
+            elif resp.status_code == 500:
+                err = resp.json().get("error", "unknown")
+                raise HTTPException(502, f"Backend failed: {err}")
+            else:
+                raise HTTPException(resp.status_code, f"Backend returned {resp.status_code}")
+    except HTTPException:
+        raise
+    except Exception as e:
+        raise HTTPException(502, f"Failed to fetch result: {str(e)[:200]}")
+
+
+@app.get("/api/v2/garment/status/{kaggle_job_id}")
+async def get_job_status(kaggle_job_id: str, request: Request):
+    """Poll reconstruction status from Kaggle backend."""
+    if not KAGGLE_TUNNEL_URL:
+        raise HTTPException(503, "No Kaggle backend connected")
+    try:
+        async with httpx.AsyncClient(timeout=10) as client:
+            resp = await client.get(
+                f"{KAGGLE_TUNNEL_URL}/api/v1/reconstruct/status",
+                params={"job_id": kaggle_job_id},
+            )
+            if resp.status_code == 200:
+                return resp.json()
+            elif resp.status_code == 404:
+                raise HTTPException(404, "Job not found")
+            else:
+                raise HTTPException(resp.status_code, "Backend error")
+    except HTTPException:
+        raise
+    except Exception as e:
+        raise HTTPException(502, f"Status check failed: {str(e)[:200]}")
+
 
 @app.get("/api/v2/garment/result/{job_id}")
 async def get_result(job_id: str, request: Request):
@@ -930,14 +1106,14 @@ async def gpu_cost_usage(request: Request):
     try:
         async with httpx.AsyncClient(timeout=10) as client:
             resp = await client.get(
-                f"{KAGGLE_URL}/api/v1/cost/usage",
+                f"{KAGGLE_TUNNEL_URL}/api/v1/cost/usage",
                 params={"user_id": user_id},
             )
             if resp.status_code == 200:
                 return resp.json()
     except Exception as e:
         logger.warning(f"Cost usage fetch failed: {e}")
-    return {"error": " unavailable"}
+    return {"error": "unavailable"}
 
 
 

@@ -127,6 +127,14 @@ from contextlib import asynccontextmanager
 import numpy as np
 import torch
 from PIL import Image
+
+# Ensure python-multipart is available (torch --force-reinstall can wipe it)
+import subprocess as _sp, sys as _s
+try:
+    import multipart  # noqa: F401
+except ImportError:
+    _sp.check_call([_s.executable, "-m", "pip", "install", "-q", "python-multipart"])
+
 from fastapi import FastAPI, UploadFile, File, HTTPException
 from fastapi.responses import StreamingResponse, JSONResponse
 import uvicorn
@@ -134,7 +142,32 @@ import uvicorn
 logging.basicConfig(level=logging.INFO)
 logger = logging.getLogger("garment-api")
 
-WORKING_DIR = Path("/kaggle/working")
+def _resolve_working_dir() -> Path:
+    env_dir = os.getenv("GARMENT_WORKING_DIR")
+    if env_dir:
+        try:
+            candidate = Path(env_dir).expanduser()
+            candidate.mkdir(parents=True, exist_ok=True)
+            return candidate.resolve()
+        except OSError:
+            pass
+
+    # Modal: /root is the working dir; Kaggle: /kaggle/working
+    for candidate in [Path("/root"), Path("/kaggle/working"), Path.cwd()]:
+        try:
+            if not candidate.exists():
+                continue  # Don't CREATE dirs — only use existing ones
+            return candidate.resolve()
+        except OSError:
+            continue
+
+    # Fallback: create /root if nothing else exists
+    fallback = Path("/root")
+    fallback.mkdir(parents=True, exist_ok=True)
+    return fallback.resolve()
+
+
+WORKING_DIR = _resolve_working_dir()
 WEIGHTS_DIR = WORKING_DIR / "weights"
 DEVICE = "cuda" if torch.cuda.is_available() else "cpu"
 GPU_DEVICE = DEVICE
@@ -223,7 +256,7 @@ def _write_error_context(error_key, detail=None, request_path=None):
             f"Loading state: {loading_state}",
             "=" * 60,
         ]
-        open("/kaggle/working/last_error.txt", "w").write("\n".join(parts))
+        (WORKING_DIR / "last_error.txt").write_text("\n".join(parts))
     except Exception:
         pass
 
@@ -243,6 +276,14 @@ def _retry_on_oom(func, max_retries=2):
                 continue
             raise
 
+
+# Patch PIL._typing for SAM2 compatibility (Pillow 10+ removed _Ink)
+try:
+    import PIL._typing as _pil_typing
+    if not hasattr(_pil_typing, '_Ink'):
+        _pil_typing._Ink = type(None)
+except ImportError:
+    pass
 
 # ═══════════════════════════════════════════════════════════════
 #  SAM2 segmentation (with checkpoint compatibility patch)
@@ -609,16 +650,23 @@ def _load_rembg():
         try:
             from rembg import remove
             break
-        except BaseException:
+        except BaseException as _err:
+            logger.warning(f"rembg import error (attempt {attempt+1}): {_err}")
             if attempt == 0:
-                logger.warning("rembg import failed, installing rembg[cpu]...")
+                logger.warning("rembg import failed, reinstalling rembg --no-deps...")
                 try:
                     subprocess.check_call(
-                        [_sys.executable, "-m", "pip", "install", "rembg[cpu]"],
+                        [_sys.executable, "-m", "pip", "install", "--force-reinstall",
+                         "rembg", "--no-deps"],
                         stdout=subprocess.DEVNULL, stderr=subprocess.DEVNULL,
                     )
-                except subprocess.CalledProcessError:
-                    pass
+                    subprocess.check_call(
+                        [_sys.executable, "-m", "pip", "install",
+                         "onnxruntime", "Pillow", "numpy", "scipy>=1.14.1"],
+                        stdout=subprocess.DEVNULL, stderr=subprocess.DEVNULL,
+                    )
+                except subprocess.CalledProcessError as _e:
+                    logger.warning(f"rembg reinstall failed: {_e}")
             else:
                 logger.warning("rembg import failed after reinstall, using PIL fallback")
                 rembg_remove = _simple_remove_background
@@ -630,9 +678,17 @@ def _load_rembg():
         remove(dummy)
         rembg_remove = remove
         logger.info("rembg + u2net ready")
-    except Exception:
-        logger.warning("rembg warmup failed, using PIL fallback")
-        rembg_remove = _simple_remove_background
+    except Exception as _warmup_err:
+        logger.warning(f"rembg warmup failed ({_warmup_err}), using PIL fallback")
+        # Try one more time with alpha_matting=False explicitly
+        try:
+            dummy = Image.new("RGB", (8, 8), (255, 255, 255))
+            remove(dummy, alpha_matting_enabled=False)
+            rembg_remove = remove
+            logger.info("rembg ready (without alpha matting)")
+        except Exception:
+            logger.warning("rembg completely unavailable, using PIL fallback")
+            rembg_remove = _simple_remove_background
 
 
 # ═══════════════════════════════════════════════════════════════
@@ -648,57 +704,54 @@ def _log_gpu_memory(tag: str = ""):
 
 
 def _loading_thread():
-    """Run model loading in a background thread so uvicorn can start immediately."""
+    """Run model loading in a background thread so uvicorn can start immediately.
+    Each model is loaded independently — one failure does NOT block others."""
     global rembg_remove, predict_fn, sam2_model, garmentrec_model, garmentgpt_predictor
     global loading_state, loading_errors, MODEL_LOAD_TIMES
     logger.info("Background model loading thread started")
-    try:
+
+    def _safe_load(name, load_fn, *args):
+        """Load a model with individual error handling — never blocks other models."""
+        global loading_errors
         t0 = time.time()
-        loading_state["rembg"] = "loading"
-        _load_rembg()
-        loading_state["rembg"] = "loaded"
-        MODEL_LOAD_TIMES["rembg"] = time.time() - t0
-        gc.collect()
-        if torch.cuda.is_available():
-            torch.cuda.empty_cache()
+        try:
+            loading_state[name] = "loading"
+            result = load_fn(*args) if args else load_fn()
+            loading_state[name] = "loaded"
+            MODEL_LOAD_TIMES[name] = time.time() - t0
+            logger.info(f"{name} loaded in {MODEL_LOAD_TIMES[name]:.1f}s")
+            gc.collect()
+            if torch.cuda.is_available():
+                torch.cuda.empty_cache()
+            return result
+        except Exception as e:
+            loading_state[name] = "failed"
+            loading_errors[name] = traceback.format_exc()
+            logger.error(f"{name} load failed: {e}")
+            return None
 
-        t1 = time.time()
-        loading_state["sam2"] = "loading"
-        _log_gpu_memory("before_sam2")
-        sam2_model, predict_fn = _retry_on_oom(lambda: _load_sam2(), max_retries=2)
-        loading_state["sam2"] = "loaded"
-        MODEL_LOAD_TIMES["sam2"] = time.time() - t1
-        gc.collect()
-        if torch.cuda.is_available():
-            torch.cuda.empty_cache()
+    # rembg (critical — has PIL fallback built in)
+    _safe_load("rembg", _load_rembg)
 
-        t2 = time.time()
-        loading_state["garmentrec"] = "loading"
-        _log_gpu_memory("before_garmentrec")
-        garmentrec_model = _load_garmentrec()
-        loading_state["garmentrec"] = "loaded"
-        MODEL_LOAD_TIMES["garmentrec"] = time.time() - t2
-        gc.collect()
-        if torch.cuda.is_available():
-            torch.cuda.empty_cache()
+    # SAM2 (has fallback to simple foreground mask)
+    result = _safe_load("sam2", lambda: _retry_on_oom(lambda: _load_sam2(), max_retries=2))
+    if result is not None:
+        sam2_model, predict_fn = result
 
-        t3 = time.time()
-        loading_state["garmentgpt"] = "loading"
-        _log_gpu_memory("before_garmentgpt")
-        garmentgpt_predictor = _load_garmentgpt()
-        loading_state["garmentgpt"] = "loaded"
-        MODEL_LOAD_TIMES["garmentgpt"] = time.time() - t3
-        gc.collect()
-        if torch.cuda.is_available():
-            torch.cuda.empty_cache()
+    # GarmentRec (has trimesh shim fallback for pytorch3d)
+    result = _safe_load("garmentrec", _load_garmentrec)
+    if result is not None:
+        garmentrec_model = result
 
-        _log_gpu_memory("all_loaded")
-        logger.info("All models loaded successfully")
-    except Exception as e:
-        logger.error(f"Model loading thread failed: {e}")
-        loading_errors["fatal"] = traceback.format_exc()
-    finally:
-        models_loaded.set()
+    # GarmentGPT (has vllm shim fallback)
+    result = _safe_load("garmentgpt", _load_garmentgpt)
+    if result is not None:
+        garmentgpt_predictor = result
+
+    _log_gpu_memory("all_loaded")
+    loaded = sum(1 for v in loading_state.values() if v == "loaded")
+    logger.info(f"Model loading complete: {loaded}/4 models loaded")
+    models_loaded.set()
 
 
 # ═══════════════════════════════════════════════════════════════
@@ -801,7 +854,7 @@ async def process_full_pipeline(job_id: str, image_bytes: bytes, include_mesh: b
         jobs[job_id]["error"] = str(e)
         emit_progress("error", -1, str(e)[:200])
         try:
-            open("/kaggle/working/last_error.txt", "w").write(err)
+            (WORKING_DIR / "last_error.txt").write_text(err)
         except Exception:
             pass
         logger.error(f"Job {job_id} failed: {e}")
@@ -1168,7 +1221,7 @@ async def pattern_endpoint(file: UploadFile = File(...)):
 @app.get("/debug/error")
 async def debug_error():
     try:
-        return {"error": open("/kaggle/working/last_error.txt").read()}
+        return {"error": (WORKING_DIR / "last_error.txt").read_text()}
     except Exception as e:
         return {"error": f"No error file: {e}"}
 
@@ -1998,7 +2051,7 @@ async def process_vto_synthesis(job_id: str, image_bytes: bytes, user_id: str):
         _vto_emit(job_id, "error", -1, str(e)[:200])
         logger.error(f"VTO job {job_id} failed: {e}")
         try:
-            open("/kaggle/working/last_error.txt", "w").write(tb.format_exc())
+            (WORKING_DIR / "last_error.txt").write_text(tb.format_exc())
         except Exception:
             pass
 
@@ -2108,7 +2161,7 @@ async def process_vto_tryon(job_id: str, image_bytes: bytes, angle: str, user_id
         _vto_emit(job_id, "error", -1, str(e)[:200])
         logger.error(f"VTO try-on {job_id} ({angle}) failed: {e}")
         try:
-            open("/kaggle/working/last_error.txt", "w").write(tb.format_exc())
+            (WORKING_DIR / "last_error.txt").write_text(tb.format_exc())
         except Exception:
             pass
 
@@ -2366,10 +2419,28 @@ async def quality_dashboard():
     }
 
 
+def _start_server():
+    """Start uvicorn directly unless a notebook event loop is active."""
+    try:
+        asyncio.get_running_loop()
+    except RuntimeError:
+        uvicorn.run(app, host="0.0.0.0", port=8000, limit_concurrency=10, backlog=10)
+        return None
+
+    def _target():
+        uvicorn.run(app, host="0.0.0.0", port=8000, limit_concurrency=10, backlog=10)
+
+    thread = threading.Thread(target=_target, daemon=True, name="garment-uvicorn")
+    thread.start()
+    return thread
+
+
 if __name__ == "__main__":
     import signal
-    import nest_asyncio
-    nest_asyncio.apply()
+
+    # Create event loop early to avoid nest_asyncio/uvloop conflict
+    loop = asyncio.new_event_loop()
+    asyncio.set_event_loop(loop)
 
     def _graceful_exit(signum, frame):
         logger.info(f"Received signal {signum}, cleaning up GPU memory...")
@@ -2381,4 +2452,4 @@ if __name__ == "__main__":
 
     signal.signal(signal.SIGTERM, _graceful_exit)
     signal.signal(signal.SIGINT, _graceful_exit)
-    uvicorn.run(app, host="0.0.0.0", port=8000, limit_concurrency=2, backlog=10)
+    _start_server()

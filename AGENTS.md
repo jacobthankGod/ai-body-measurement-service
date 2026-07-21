@@ -209,6 +209,10 @@ Frontend → EC2 Proxy (port 8001) → Cloudflare Tunnel → Kaggle GPU (T4 x2)
 - **Paystack live public**: `pk_live_b401fac946e696dad14e6e4bd13d706313215f06`
 - **Supabase URL**: `https://blsettabymllulsxtziw.supabase.co`
 - **Supabase DB**: `postgresql://postgres:J@c0b@$$#&12345@db.blsettabymllulsxtziw.supabase.co:5432/postgres`
+- **Modal token ID**: `ak-nun3Zn3D5pHeKAphFMmZxI`
+- **Modal token secret**: `as-GRSCptvcyDOLmzDvVHDSaG`
+- **Modal profile**: `jacobthankgod4`
+- **Modal workspace**: `jacobthankgod4`
 
 ## Next Steps
 - Backfill SMPL params for production scans

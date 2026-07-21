@@ -125,7 +125,11 @@ def register_tunnel(url):
 # Locate cloudflared binary
 CLOUDFLARED = shutil.which("cloudflared") or "/kaggle/working/cloudflared"
 if not os.path.exists(CLOUDFLARED):
-    raise FileNotFoundError(f"cloudflared not found at {CLOUDFLARED}")
+    print(f"cloudflared not found at {CLOUDFLARED}, downloading...")
+    import urllib.request
+    urllib.request.urlretrieve("https://github.com/cloudflare/cloudflared/releases/latest/download/cloudflared-linux-amd64", CLOUDFLARED)
+    os.chmod(CLOUDFLARED, 0o755)
+    print(f"cloudflared downloaded: {os.path.getsize(CLOUDFLARED) / 1024:.0f} KB")
 
 # Kill any old processes
 os.system("pkill -f api_server.py 2>/dev/null || true")
@@ -207,10 +211,17 @@ def _pipe_drainer(stream, prefix, log_file=None):
 
 
 def start_server():
-    log_file = open("/kaggle/working/server_logs.txt", "a", buffering=1)
+    working_dir = os.getenv("GARMENT_WORKING_DIR") or "/kaggle/working"
+    os.makedirs(working_dir, exist_ok=True)
+    api_path = os.path.join(working_dir, "api_server.py")
+    if not os.path.exists(api_path):
+        print(f"[ERROR] {api_path} not found! Run Cell 8 (%%writefile) first.")
+        return None
+    log_file = open(os.path.join(working_dir, "server_logs.txt"), "a", buffering=1)
     p = subprocess.Popen(
-        ["python", "/kaggle/working/api_server.py"],
-        stdout=subprocess.PIPE, stderr=subprocess.STDOUT, text=True, bufsize=1
+        [sys.executable, os.path.join(working_dir, "api_server.py")],
+        stdout=subprocess.PIPE, stderr=subprocess.STDOUT, text=True, bufsize=1,
+        env={**os.environ, "GARMENT_WORKING_DIR": working_dir},
     )
     t = threading.Thread(target=_pipe_drainer, args=(p.stdout, "[API]", log_file), daemon=True)
     t.start()
@@ -260,10 +271,13 @@ def kill_server(proc):
     # Force CUDA memory cleanup after kill
     import gc
     gc.collect()
+    # Wait for port to be freed
+    time.sleep(2)
 
 # Start tunnel first (blocking until URL), then server
 t_proc = start_tunnel()
 s_proc = start_server()
+_server_start_time = time.time()
 
 # Wait then health check
 time.sleep(3)
@@ -317,6 +331,7 @@ while time.time() < _startup_deadline:
     if s_proc.poll() is not None:
         print(f"[Server] api_server died (code {s_proc.returncode}), restarting...")
         s_proc = start_server()
+        _server_start_time = time.time()
 
     time.sleep(5)
 
@@ -403,6 +418,19 @@ def _keep_alive_loop():
 
         except Exception as e:
             now = dt.datetime.now().strftime("%H:%M:%S")
+            # Distinguish "server still loading" from "server crashed"
+            err_str = str(e)
+            server_uptime = time.time() - _server_start_time if '_server_start_time' in dir() else 999
+            is_loading = ("Expecting value" in err_str or "RemoteDisconnected" in err_str or
+                          ("Connection refused" in err_str and server_uptime < 120))
+            if is_loading:
+                # Server is alive but returning non-JSON (loading, restarting, etc.)
+                print(f"[{now}] Health check: server still loading ({int(server_uptime)}s uptime): {err_str[:80]}")
+                _health_fails = 0  # Don't count as failure
+                _keep_alive_backoff = max(60, _keep_alive_backoff * 0.75)
+                time.sleep(int(_keep_alive_backoff))
+                continue
+
             _health_fails += 1
             # Phase 41: exponential backoff on failure
             _keep_alive_backoff = min(600, _keep_alive_backoff * 2.0)
@@ -422,6 +450,7 @@ def _keep_alive_loop():
                 print(f"[{now}] Health fail {_health_fails}/3 — restarting server ({_server_restarts}/{_max_server_restarts})")
                 kill_server(s_proc)
                 s_proc = start_server()
+                _server_start_time = time.time()
                 _health_fails = 0
             else:
                 print(f"[{now}] Health fail ({_health_fails}/3): {type(e).__name__}: {e} — not restarting yet")
@@ -452,6 +481,7 @@ def _watchdog_main():
             time.sleep(3)
             t_proc = start_tunnel()
             s_proc = start_server()
+            _server_start_time = time.time()
 
 
 _watchdog_main()
