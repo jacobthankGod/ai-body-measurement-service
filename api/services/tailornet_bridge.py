@@ -4,8 +4,10 @@ Usage:
     result = run_tailornet('t-shirt', 'male', betas=betas_10d)
     mesh = trimesh.Trimesh(vertices=result['garment_verts'], faces=result['garment_faces'])
 """
-import os, sys, json, pickle, gc
+import os, sys, json, pickle, gc, logging
 import numpy as np
+
+logger = logging.getLogger("TAILORNET_BRIDGE")
 
 # NumPy compat aliases (pre-1.24 chumpy compat)
 np.bool = bool
@@ -191,6 +193,7 @@ def run_tailornet(
     thetas=None,
     gammas=None,
     remove_penetration=True,
+    _cache=None,
 ):
     """Run TailorNet inference. Returns dict with garment_verts, garment_faces, body_verts, body_faces.
     Accepts 300-dim betas; passes first 10 to garment neural net (trained w/ 10 PCs),
@@ -200,6 +203,12 @@ def run_tailornet(
         betas = np.asarray(np.zeros(300) if betas is None else betas, dtype=np.float32)
         thetas = np.asarray(np.zeros(72) if thetas is None else thetas, dtype=np.float32)
         gammas = np.asarray(np.zeros(4) if gammas is None else gammas, dtype=np.float32)
+
+        # Check cache (keyed on garment_class + gender + betas hash)
+        cache_key = (garment_class, gender, betas[:10].tobytes())
+        if _cache is not None and cache_key in _cache:
+            logger.info(f"TailorNet cache hit: {garment_class}_{gender}")
+            return _cache[cache_key]
 
         # Garment neural net (SS2G) was trained on 10 betas + 4 gammas = 14-dim input
         betas_nn = betas[:10]
@@ -220,8 +229,24 @@ def run_tailornet(
         if remove_penetration:
             garment_verts = _remove_interpenetration(garment_verts, garment_faces, body_verts, body_faces)
 
-        return dict(success=True, body_verts=body_verts, body_faces=body_faces,
+        result = dict(success=True, body_verts=body_verts, body_faces=body_faces,
                     garment_verts=garment_verts, garment_faces=garment_faces, error=None)
+
+        # Store in cache (copy arrays to prevent mutation)
+        if _cache is not None:
+            _cache[cache_key] = {
+                'success': True,
+                'body_verts': body_verts.copy(),
+                'body_faces': body_faces.copy(),
+                'garment_verts': garment_verts.copy(),
+                'garment_faces': garment_faces.copy(),
+                'error': None,
+            }
+            if len(_cache) > 50:  # prevent unbounded growth
+                oldest = next(iter(_cache))
+                del _cache[oldest]
+
+        return result
 
     except Exception as e:
         import traceback

@@ -1211,10 +1211,11 @@
               <img class="preview-img" id="frontPreview" alt="Front Preview">
               <div class="preview-overlay"><span style="font-size:10px;font-weight:900;color:#fff;">RETAKE</span></div>
               <div class="placeholder-content" style="display:flex;flex-direction:column;align-items:center;">
+                <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" style="margin-bottom:4px;opacity:0.5"><path d="M23 19a2 2 0 0 1-2 2H3a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h4l2-3h6l2 3h4a2 2 0 0 1 2 2z"/><circle cx="12" cy="13" r="4"/></svg>
                 <span>Front Pose</span>
-                <div class="tap-hint">TAP TO SNAP</div>
+                <div class="tap-hint">ADD PHOTO</div>
               </div>
-              <input type="file" id="frontPhoto" accept="image/*" capture="environment" required style="display:none" onchange="window.handleFile(this, 'frontLabel')">
+              <input type="file" id="frontPhoto" accept="image/*" required style="display:none" onchange="window.handleFile(this, 'frontLabel')">
             </div>
           </div>
           <div class="slot-column">
@@ -1226,10 +1227,11 @@
               <img class="preview-img" id="sidePreview" alt="Side Preview">
               <div class="preview-overlay"><span style="font-size:10px;font-weight:900;color:#fff;">RETAKE</span></div>
               <div class="placeholder-content" style="display:flex;flex-direction:column;align-items:center;">
+                <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" style="margin-bottom:4px;opacity:0.5"><path d="M23 19a2 2 0 0 1-2 2H3a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h4l2-3h6l2 3h4a2 2 0 0 1 2 2z"/><circle cx="12" cy="13" r="4"/></svg>
                 <span>Side Profile</span>
-                <div class="tap-hint">TAP TO SNAP</div>
+                <div class="tap-hint">ADD PHOTO</div>
               </div>
-              <input type="file" id="sidePhoto" accept="image/*" capture="environment" required style="display:none" onchange="window.handleFile(this, 'sideLabel')">
+              <input type="file" id="sidePhoto" accept="image/*" required style="display:none" onchange="window.handleFile(this, 'sideLabel')">
             </div>
           </div>
         </div>
@@ -1248,6 +1250,37 @@
           </div>
         </form>
       </div>
+    </div>
+  </div>
+
+  <!-- Photo Source Choice Modal -->
+  <div class="purchase-overlay" id="photoChoiceModal" style="z-index:10001;">
+    <div style="background:var(--Surface-1);border-radius:20px;padding:24px;width:90%;max-width:320px;border:1px solid var(--Glass-Border);">
+      <div style="text-align:center;margin-bottom:20px;">
+        <div style="font-size:15px;font-weight:800;color:var(--Neutral-100);margin-bottom:4px;" id="photoChoiceTitle">Add Front Photo</div>
+        <div style="font-size:12px;color:var(--Neutral-500);">Choose how to add your photo</div>
+      </div>
+      <div style="display:flex;flex-direction:column;gap:10px;">
+        <button onclick="window._photoChoiceSelect('camera')" style="display:flex;align-items:center;gap:14px;padding:16px;background:var(--Glass);border:1px solid var(--Glass-Border);border-radius:14px;cursor:pointer;transition:all 0.2s;color:var(--Neutral-100);font-size:14px;font-weight:600;">
+          <div style="width:42px;height:42px;border-radius:12px;background:var(--Mint);display:flex;align-items:center;justify-content:center;flex-shrink:0;">
+            <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="#000" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M23 19a2 2 0 0 1-2 2H3a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h4l2-3h6l2 3h4a2 2 0 0 1 2 2z"/><circle cx="12" cy="13" r="4"/></svg>
+          </div>
+          <div>
+            <div>Take with Camera</div>
+            <div style="font-size:11px;font-weight:400;color:var(--Neutral-500);margin-top:2px;">Auto-capture with pose guidance</div>
+          </div>
+        </button>
+        <button onclick="window._photoChoiceSelect('upload')" style="display:flex;align-items:center;gap:14px;padding:16px;background:var(--Glass);border:1px solid var(--Glass-Border);border-radius:14px;cursor:pointer;transition:all 0.2s;color:var(--Neutral-100);font-size:14px;font-weight:600;">
+          <div style="width:42px;height:42px;border-radius:12px;background:var(--Accent-Teal);display:flex;align-items:center;justify-content:center;flex-shrink:0;">
+            <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="#000" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="17 8 12 3 7 8"/><line x1="12" y1="3" x2="12" y2="15"/></svg>
+          </div>
+          <div>
+            <div>Upload Existing Photo</div>
+            <div style="font-size:11px;font-weight:400;color:var(--Neutral-500);margin-top:2px;">Select from gallery or files</div>
+          </div>
+        </button>
+      </div>
+      <button onclick="window.closeModal('photoChoiceModal')" style="width:100%;margin-top:14px;padding:12px;background:transparent;border:1px solid var(--Glass-Border);border-radius:12px;cursor:pointer;color:var(--Neutral-500);font-size:13px;font-weight:600;">Cancel</button>
     </div>
   </div>
 
@@ -2707,15 +2740,37 @@ msg.textContent = feedback; msg.style.background = aligned ? "var(--Mint)" : "rg
       const card = document.getElementById(type === 'front' ? 'frontLabel' : 'sideLabel');
       const img = card.querySelector('.preview-img');
       const placeholder = card.querySelector('.placeholder-content');
-      if (placeholder.style.display === 'none') {
+      const hasImage = placeholder && placeholder.style.display === 'none';
+
+      if (hasImage) {
+        window.openCamera(type);
+        return;
+      }
+
+      // Detect desktop (no touch support or no camera)
+      const isDesktop = !('ontouchstart' in window) && !navigator.maxTouchPoints;
+      if (isDesktop) {
+        const fileInput = card.querySelector('input[type="file"]');
+        if (fileInput) fileInput.click();
+        return;
+      }
+
+      // Mobile: show choice modal
+      window._photoChoiceType = type;
+      document.getElementById('photoChoiceTitle').textContent =
+        type === 'front' ? 'Add Front Photo' : 'Add Side Photo';
+      document.getElementById('photoChoiceModal').classList.add('active');
+    };
+
+    window._photoChoiceSelect = (choice) => {
+      const type = window._photoChoiceType;
+      window.closeModal('photoChoiceModal');
+      if (choice === 'camera') {
         window.openCamera(type);
       } else {
-        try {
-          await window.openCamera(type);
-        } catch (e) {
-          const fileInput = card.querySelector('input[type="file"]');
-          if (fileInput) fileInput.click();
-        }
+        const card = document.getElementById(type === 'front' ? 'frontLabel' : 'sideLabel');
+        const fileInput = card.querySelector('input[type="file"]');
+        if (fileInput) fileInput.click();
       }
     };
 
