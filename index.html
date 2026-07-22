@@ -1147,7 +1147,8 @@
         },
 
         _apply: function() {
-          this.vis.updateFromMeasurements(this.measurements);
+          const baseDefaults = this.gender === 'female' ? PRESETS.averageFemale : PRESETS.average;
+          this.vis.updateFromMeasurements(this.measurements, baseDefaults);
         },
 
         _syncSliders: function() {
