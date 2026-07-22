@@ -374,8 +374,33 @@
       color: var(--Neutral-400); font-size: 14px; font-weight: 600; z-index: 5;
     }
     .vis-controls {
-      padding: 32px; display: flex; flex-direction: column; gap: 20px;
-      overflow-y: auto; background: var(--Obsidian-Deep);
+      padding: 24px 16px; display: flex; flex-direction: column; gap: 12px;
+      background: var(--Obsidian-Deep); height: 100%; overflow: hidden;
+    }
+    .vis-m-scroll {
+      flex: 1; overflow-y: auto; overflow-x: hidden;
+      display: flex; flex-direction: column; gap: 2px;
+      scrollbar-width: thin; scrollbar-color: rgba(255,255,255,0.12) transparent;
+    }
+    .vis-m-scroll::-webkit-scrollbar { width: 4px; }
+    .vis-m-scroll::-webkit-scrollbar-thumb { background: rgba(255,255,255,0.12); border-radius: 2px; }
+    .vis-m-section { padding: 0 0 6px; }
+    .vis-m-section-hdr {
+      display: flex; align-items: center; gap: 6px;
+      font-size: 10px; font-weight: 900; color: var(--Neutral-500);
+      text-transform: uppercase; letter-spacing: 0.12em;
+      padding: 6px 0 4px; border-bottom: 1px solid rgba(255,255,255,0.06);
+      margin-bottom: 4px;
+    }
+    .vis-m-dot { width: 6px; height: 6px; border-radius: 50%; flex-shrink: 0; }
+    .vis-m-row {
+      display: flex; justify-content: space-between; align-items: center;
+      padding: 3px 0; border-bottom: 1px solid rgba(255,255,255,0.03);
+    }
+    .vis-m-lbl { font-size: 11px; color: var(--Neutral-400); font-weight: 500; }
+    .vis-m-val {
+      font-size: 11px; color: var(--White); font-weight: 700;
+      font-variant-numeric: tabular-nums; min-width: 48px; text-align: right;
     }
     .vis-gender-toggle {
       display: flex; gap: 6px; background: var(--Obsidian-Layer);
@@ -388,25 +413,25 @@
     }
     .vis-gender-btn.active { background: var(--Mint); color: var(--Obsidian); }
     .vis-gender-btn:hover:not(.active) { color: var(--White); }
-    .vis-slider-group { display: flex; flex-direction: column; gap: 6px; }
+    .vis-slider-group { display: flex; flex-direction: column; gap: 4px; margin-bottom: 2px; }
     .vis-slider-label {
       display: flex; justify-content: space-between; align-items: baseline;
-      font-size: 13px; font-weight: 600; color: var(--White);
+      font-size: 11px; font-weight: 600; color: var(--White);
     }
-    .vis-slider-val { color: var(--Mint); font-weight: 700; font-size: 13px; font-variant-numeric: tabular-nums; }
+    .vis-slider-val { color: var(--Mint); font-weight: 700; font-size: 11px; font-variant-numeric: tabular-nums; }
     .vis-slider-group input[type="range"] {
-      -webkit-appearance: none; width: 100%; height: 6px; border-radius: 3px;
-      background: linear-gradient(90deg, rgba(255,255,255,0.15) 0%, rgba(255,255,255,0.25) 100%); outline: none; margin-top: 2px;
+      -webkit-appearance: none; width: 100%; height: 4px; border-radius: 2px;
+      background: linear-gradient(90deg, rgba(255,255,255,0.12) 0%, rgba(255,255,255,0.2) 100%); outline: none; margin-top: 1px;
     }
     .vis-slider-group input[type="range"]::-webkit-slider-thumb {
-      -webkit-appearance: none; width: 18px; height: 18px; border-radius: 50%;
-      background: var(--Mint); cursor: pointer; box-shadow: 0 2px 8px rgba(198, 255, 0, 0.3);
+      -webkit-appearance: none; width: 14px; height: 14px; border-radius: 50%;
+      background: var(--Mint); cursor: pointer; box-shadow: 0 1px 6px rgba(198, 255, 0, 0.3);
       transition: transform 0.15s;
     }
     .vis-slider-group input[type="range"]::-webkit-slider-thumb:hover { transform: scale(1.15); }
     .vis-slider-group input[type="range"]::-moz-range-thumb {
-      width: 18px; height: 18px; border-radius: 50%; border: none;
-      background: var(--Mint); cursor: pointer; box-shadow: 0 2px 8px rgba(198, 255, 0, 0.3);
+      width: 14px; height: 14px; border-radius: 50%; border: none;
+      background: var(--Mint); cursor: pointer; box-shadow: 0 1px 6px rgba(198, 255, 0, 0.3);
     }
     .vis-presets {
       display: flex; gap: 6px; margin-top: auto; padding-top: 16px;
@@ -735,40 +760,65 @@
             <button class="vis-gender-btn active" data-gender="male" onclick="window.bodyVisUI.setGender('male')">Male</button>
             <button class="vis-gender-btn" data-gender="female" onclick="window.bodyVisUI.setGender('female')">Female</button>
           </div>
-          <div class="vis-section-title">Measurements</div>
-          <div class="vis-slider-group">
-            <div class="vis-slider-label">Height <span class="vis-slider-val" id="val-height">175 cm</span></div>
-            <input type="range" min="150" max="210" value="175" step="1" data-measurement="height">
+          <div class="vis-m-scroll" id="visMeasurements">
+            <div class="vis-m-section">
+              <div class="vis-m-section-hdr"><span class="vis-m-dot" style="background:#fff"></span>Body</div>
+              <div class="vis-slider-group"><div class="vis-slider-label">Height <span class="vis-slider-val" id="val-height">175 cm</span></div><input type="range" min="150" max="210" value="175" step="1" data-measurement="height"></div>
+            </div>
+            <div class="vis-m-section">
+              <div class="vis-m-section-hdr"><span class="vis-m-dot" style="background:var(--Mint)"></span>Torso</div>
+              <div class="vis-slider-group"><div class="vis-slider-label">Chest Round <span class="vis-slider-val" id="val-chest">95 cm</span></div><input type="range" min="65" max="140" value="95" step="1" data-measurement="chest"></div>
+              <div class="vis-slider-group"><div class="vis-slider-label">Waist Round <span class="vis-slider-val" id="val-waist">80 cm</span></div><input type="range" min="55" max="140" value="80" step="1" data-measurement="waist"></div>
+              <div class="vis-m-row"><span class="vis-m-lbl">Stomach Round</span><span class="vis-m-val" id="val-stomach">—</span></div>
+              <div class="vis-slider-group"><div class="vis-slider-label">Hip Round <span class="vis-slider-val" id="val-hip">95 cm</span></div><input type="range" min="65" max="140" value="95" step="1" data-measurement="hip"></div>
+              <div class="vis-slider-group"><div class="vis-slider-label">Neck Round <span class="vis-slider-val" id="val-neck">38 cm</span></div><input type="range" min="28" max="50" value="38" step="1" data-measurement="neck"></div>
+              <div class="vis-m-row"><span class="vis-m-lbl">Upper Hip</span><span class="vis-m-val" id="val-upper_hip">—</span></div>
+            </div>
+            <div class="vis-m-section">
+              <div class="vis-m-section-hdr"><span class="vis-m-dot" style="background:#00E5FF"></span>Torso Lengths</div>
+              <div class="vis-m-row"><span class="vis-m-lbl">Half Length</span><span class="vis-m-val" id="val-half_length">—</span></div>
+              <div class="vis-m-row"><span class="vis-m-lbl">Back Waist Length</span><span class="vis-m-val" id="val-back_waist_length">—</span></div>
+              <div class="vis-m-row"><span class="vis-m-lbl">Front Waist Length</span><span class="vis-m-val" id="val-front_waist_length">—</span></div>
+              <div class="vis-m-row"><span class="vis-m-lbl">Neck to Waist</span><span class="vis-m-val" id="val-neck_to_waist">—</span></div>
+              <div class="vis-m-row"><span class="vis-m-lbl">Waist to Hip</span><span class="vis-m-val" id="val-waist_to_hip">—</span></div>
+              <div class="vis-m-row"><span class="vis-m-lbl">Crotch Depth</span><span class="vis-m-val" id="val-crotch_depth">—</span></div>
+            </div>
+            <div class="vis-m-section">
+              <div class="vis-m-section-hdr"><span class="vis-m-dot" style="background:#FF6B6B"></span>Widths</div>
+              <div class="vis-slider-group"><div class="vis-slider-label">Shoulder Width <span class="vis-slider-val" id="val-shoulder">45 cm</span></div><input type="range" min="30" max="60" value="45" step="1" data-measurement="shoulder"></div>
+              <div class="vis-m-row"><span class="vis-m-lbl">Across Back</span><span class="vis-m-val" id="val-across_back">—</span></div>
+              <div class="vis-m-row"><span class="vis-m-lbl">Across Chest</span><span class="vis-m-val" id="val-across_chest">—</span></div>
+              <div class="vis-m-row"><span class="vis-m-lbl">Across Shoulder</span><span class="vis-m-val" id="val-across_shoulder">—</span></div>
+            </div>
+            <div class="vis-m-section">
+              <div class="vis-m-section-hdr"><span class="vis-m-dot" style="background:#A78BFA"></span>Arms</div>
+              <div class="vis-slider-group"><div class="vis-slider-label">Bicep Round <span class="vis-slider-val" id="val-bicep">30 cm</span></div><input type="range" min="18" max="50" value="30" step="1" data-measurement="bicep"></div>
+              <div class="vis-m-row"><span class="vis-m-lbl">Elbow Round</span><span class="vis-m-val" id="val-elbow_round">—</span></div>
+              <div class="vis-m-row"><span class="vis-m-lbl">Wrist Round</span><span class="vis-m-val" id="val-wrist_round">—</span></div>
+              <div class="vis-m-row"><span class="vis-m-lbl">Sleeve Length</span><span class="vis-m-val" id="val-sleeve_length">—</span></div>
+            </div>
+            <div class="vis-m-section">
+              <div class="vis-m-section-hdr"><span class="vis-m-dot" style="background:#F59E0B"></span>Legs</div>
+              <div class="vis-slider-group"><div class="vis-slider-label">Thigh Round <span class="vis-slider-val" id="val-thigh">55 cm</span></div><input type="range" min="35" max="80" value="55" step="1" data-measurement="thigh"></div>
+              <div class="vis-m-row"><span class="vis-m-lbl">Knee Round</span><span class="vis-m-val" id="val-knee_round">—</span></div>
+              <div class="vis-m-row"><span class="vis-m-lbl">Calf Round</span><span class="vis-m-val" id="val-calf_round">—</span></div>
+              <div class="vis-m-row"><span class="vis-m-lbl">Ankle Round</span><span class="vis-m-val" id="val-ankle_round">—</span></div>
+              <div class="vis-m-row"><span class="vis-m-lbl">Inseam</span><span class="vis-m-val" id="val-inseam">—</span></div>
+              <div class="vis-m-row"><span class="vis-m-lbl">Trouser Length</span><span class="vis-m-val" id="val-trouser_length">—</span></div>
+              <div class="vis-m-row"><span class="vis-m-lbl">Trouser Waist</span><span class="vis-m-val" id="val-trouser_waist">—</span></div>
+            </div>
+            <div class="vis-m-section vis-m-female-section" id="visFemaleSection" style="display:none">
+              <div class="vis-m-section-hdr"><span class="vis-m-dot" style="background:#FF69B4"></span>Female Specific</div>
+              <div class="vis-m-row"><span class="vis-m-lbl">Bust Round</span><span class="vis-m-val" id="val-bust_round">—</span></div>
+              <div class="vis-m-row"><span class="vis-m-lbl">High Bust</span><span class="vis-m-val" id="val-high_bust">—</span></div>
+              <div class="vis-m-row"><span class="vis-m-lbl">Under Bust</span><span class="vis-m-val" id="val-under_bust">—</span></div>
+              <div class="vis-m-row"><span class="vis-m-lbl">Bust Point</span><span class="vis-m-val" id="val-bust_point">—</span></div>
+              <div class="vis-m-row"><span class="vis-m-lbl">Shoulder to Bust</span><span class="vis-m-val" id="val-shoulder_to_bust">—</span></div>
+              <div class="vis-m-row"><span class="vis-m-lbl">Shoulder to Under Bust</span><span class="vis-m-val" id="val-shoulder_to_under_bust">—</span></div>
+              <div class="vis-m-row"><span class="vis-m-lbl">Armhole Round</span><span class="vis-m-val" id="val-armhole_round">—</span></div>
+            </div>
           </div>
-          <div class="vis-slider-group">
-            <div class="vis-slider-label">Chest <span class="vis-slider-val" id="val-chest">95 cm</span></div>
-            <input type="range" min="65" max="140" value="95" step="1" data-measurement="chest">
-          </div>
-          <div class="vis-slider-group">
-            <div class="vis-slider-label">Waist <span class="vis-slider-val" id="val-waist">80 cm</span></div>
-            <input type="range" min="55" max="140" value="80" step="1" data-measurement="waist">
-          </div>
-          <div class="vis-slider-group">
-            <div class="vis-slider-label">Hip <span class="vis-slider-val" id="val-hip">95 cm</span></div>
-            <input type="range" min="65" max="140" value="95" step="1" data-measurement="hip">
-          </div>
-          <div class="vis-slider-group">
-            <div class="vis-slider-label">Shoulder <span class="vis-slider-val" id="val-shoulder">45 cm</span></div>
-            <input type="range" min="30" max="60" value="45" step="1" data-measurement="shoulder">
-          </div>
-          <div class="vis-slider-group">
-            <div class="vis-slider-label">Thigh <span class="vis-slider-val" id="val-thigh">55 cm</span></div>
-            <input type="range" min="35" max="80" value="55" step="1" data-measurement="thigh">
-          </div>
-          <div class="vis-slider-group">
-            <div class="vis-slider-label">Bicep <span class="vis-slider-val" id="val-bicep">30 cm</span></div>
-            <input type="range" min="18" max="50" value="30" step="1" data-measurement="bicep">
-          </div>
-          <div class="vis-slider-group">
-            <div class="vis-slider-label">Neck <span class="vis-slider-val" id="val-neck">38 cm</span></div>
-            <input type="range" min="28" max="50" value="38" step="1" data-measurement="neck">
-          </div>
-          <div style="display:flex;gap:6px;margin-top:10px;">
+          <div style="display:flex;gap:6px;margin-top:10px;padding:0 4px">
             <button id="vis-pause-btn" onclick="window.bodyVisUI.togglePause()" style="flex:1;padding:8px;border:1px solid var(--Glass-Border);border-radius:10px;background:transparent;color:var(--Neutral-400);font-size:12px;font-weight:700;cursor:pointer;font-family:inherit;">Pause</button>
           </div>
           <div class="vis-presets">
@@ -1098,6 +1148,7 @@
   <script src="/assets/three.min.js"></script>
   <script src="/assets/smpl-shape.js"></script>
   <script src="/assets/smpl_segmentation.js"></script>
+  <script src="/assets/custom_body_points.js"></script>
   <script src="/assets/body-visualizer.js"></script>
   <script>
     (function() {
@@ -1129,13 +1180,14 @@
           document.querySelectorAll('.vis-gender-btn').forEach(b => {
             b.classList.toggle('active', b.dataset.gender === gender);
           });
-          // Load gender-appropriate preset
           const preset = gender === 'female' ? PRESETS.averageFemale : PRESETS.average;
           this.measurements = { ...preset };
           this._syncSliders();
           this.vis.setGender(gender);
           this._apply();
           this._setActivePreset('average');
+          const femSection = document.getElementById('visFemaleSection');
+          if (femSection) femSection.style.display = gender === 'female' ? '' : 'none';
         },
 
         setPreset: function(name) {
@@ -1149,6 +1201,37 @@
 
         _apply: function() {
           this.vis.updateFromMeasurements(this.measurements);
+          this._updateComputedMeasurements();
+        },
+
+        _updateComputedMeasurements: function() {
+          if (!this.vis || !this.vis.mesh) return;
+          const pos = this.vis.mesh.geometry.attributes.position;
+          const allMeas = this.vis.computeAllMeasurements(pos);
+          const map = {
+            stomach: 'Stomach Round', upper_hip: 'Upper Hip',
+            half_length: 'Half Length', back_waist_length: 'Back Waist Length',
+            front_waist_length: 'Front Waist Length', neck_to_waist: 'Neck to Waist',
+            waist_to_hip: 'Waist to Hip', crotch_depth: 'Crotch Depth',
+            across_back: 'Across Back', across_chest: 'Across Chest',
+            across_shoulder: 'Across Shoulder',
+            elbow_round: 'Elbow Round', wrist_round: 'Wrist Round',
+            sleeve_length: 'Sleeve Length',
+            knee_round: 'Knee Round', calf_round: 'Calf Round',
+            ankle_round: 'Ankle Round', inseam: 'Inseam',
+            trouser_length: 'Trouser Length', trouser_waist: 'Trouser Waist',
+            bust_round: 'Bust Round', high_bust: 'High Bust',
+            under_bust: 'Under Bust', bust_point: 'Bust Point',
+            shoulder_to_bust: 'Shoulder to Bust Point',
+            shoulder_to_under_bust: 'Shoulder to Under Bust',
+            armhole_round: 'Armhole Round',
+          };
+          for (const [htmlKey, measKey] of Object.entries(map)) {
+            const el = document.getElementById('val-' + htmlKey);
+            if (el && allMeas[measKey] !== undefined) {
+              el.textContent = Math.round(allMeas[measKey] * 10) / 10 + ' cm';
+            }
+          }
         },
 
         _syncSliders: function() {

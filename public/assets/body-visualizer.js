@@ -336,88 +336,139 @@ class BodyVisualizer {
 
   /**
    * Apply per-body-part radial correction to reduce slider coupling.
-   * For each measurement, compute actual circumference from mesh,
-   * then displace part vertices to match target.
+   * Fixes: unit mismatch, per-limb measurement, radial XZ scaling.
+   * Shoulder removed (width, not circumference — regression handles it).
    */
   _applyPartCorrections(pos, measurements) {
-    if (!this._partSets || !this._vertexNormals) return;
+    if (!this._partSets) return;
 
     const corrections = [
-      { key: 'chest',    parts: ['spine2', 'rightShoulder', 'leftShoulder'], band: 0.04 },
-      { key: 'waist',    parts: ['spine1'],                                  band: 0.03 },
-      { key: 'hip',      parts: ['hips', 'rightUpLeg', 'leftUpLeg'],        band: 0.04 },
-      { key: 'shoulder', parts: ['rightArm', 'leftArm'],                     band: 0.06 },
-      { key: 'thigh',    parts: ['rightUpLeg', 'leftUpLeg'],                 band: 0.05 },
-      { key: 'bicep',    parts: ['rightArm', 'leftArm'],                     band: 0.04 },
-      { key: 'neck',     parts: ['neck'],                                     band: 0.03 },
+      { key: 'chest', torso: ['spine2', 'rightShoulder', 'leftShoulder'], band: 0.04 },
+      { key: 'waist', torso: ['spine1'],                                  band: 0.03 },
+      { key: 'hip',   torso: ['hips'],                                    band: 0.04 },
+      { key: 'neck',  torso: ['neck'],                                     band: 0.03 },
+    ];
+
+    const limbCorrections = [
+      { key: 'thigh', rightParts: ['rightUpLeg'], leftParts: ['leftUpLeg'], band: 0.05, yMax: -0.35 },
+      { key: 'bicep', rightParts: ['rightArm'],   leftParts: ['leftArm'],   band: 0.04 },
     ];
 
     for (const corr of corrections) {
-      const target = measurements[corr.key];
-      if (!target) continue;
+      const targetM = (measurements[corr.key] || 0) / 100;
+      if (targetM <= 0) continue;
 
-      const partVerts = this._getPartSet(...corr.parts);
+      const partVerts = this._getPartSet(...corr.torso);
       if (partVerts.size === 0) continue;
 
-      const { circumference, centerY } = this._measurePartCircumference(pos, partVerts, corr.band);
-      if (circumference < 1) continue;
+      this._scaleTorsoPart(pos, partVerts, targetM, corr.band);
+    }
 
-      const ratio = target / circumference;
-      if (Math.abs(ratio - 1) < 0.01) continue;
+    for (const corr of limbCorrections) {
+      const targetM = (measurements[corr.key] || 0) / 100;
+      if (targetM <= 0) continue;
 
-      const strength = Math.min(Math.abs(ratio - 1), 0.3);
-      const sign = ratio > 1 ? 1 : -1;
-      const displacement = sign * strength * 0.01;
+      const rightVerts = this._getPartSet(...corr.rightParts);
+      const leftVerts = this._getPartSet(...corr.leftParts);
+      const yMax = corr.yMax || Infinity;
 
-      for (const vi of partVerts) {
-        const nx = this._vertexNormals[vi * 3];
-        const ny = this._vertexNormals[vi * 3 + 1];
-        const nz = this._vertexNormals[vi * 3 + 2];
-
-        pos.array[vi * 3]     += nx * displacement;
-        pos.array[vi * 3 + 1] += ny * displacement;
-        pos.array[vi * 3 + 2] += nz * displacement;
+      if (rightVerts.size > 0) {
+        this._scaleLimbSide(pos, rightVerts, targetM, corr.band, yMax);
+      }
+      if (leftVerts.size > 0) {
+        this._scaleLimbSide(pos, leftVerts, targetM, corr.band, yMax);
       }
     }
   }
 
-  /**
-   * Measure approximate circumference of a body part from its vertices.
-   * Uses convex hull of XZ-projection of nearby vertices.
-   */
-  _measurePartCircumference(pos, partVerts, bandWidth) {
+  _scaleTorsoPart(pos, partVerts, targetM, bandWidth) {
     let sumY = 0;
     for (const vi of partVerts) sumY += pos.array[vi * 3 + 1];
     const centerY = sumY / partVerts.size;
 
-    const nearVerts = [];
+    const bandVerts = [];
     for (const vi of partVerts) {
-      const y = pos.array[vi * 3 + 1];
-      if (Math.abs(y - centerY) <= bandWidth) {
-        nearVerts.push([pos.array[vi * 3], pos.array[vi * 3 + 2]]);
-      }
+      if (Math.abs(pos.array[vi * 3 + 1] - centerY) <= bandWidth) bandVerts.push(vi);
+    }
+    if (bandVerts.length < 6) {
+      for (const vi of partVerts) bandVerts.push(vi);
+    }
+    if (bandVerts.length < 3) return;
+
+    let cx = 0, cz = 0;
+    for (const vi of bandVerts) { cx += pos.array[vi * 3]; cz += pos.array[vi * 3 + 2]; }
+    cx /= bandVerts.length; cz /= bandVerts.length;
+
+    let sumR = 0;
+    for (const vi of bandVerts) {
+      const dx = pos.array[vi * 3] - cx;
+      const dz = pos.array[vi * 3 + 2] - cz;
+      sumR += Math.sqrt(dx * dx + dz * dz);
+    }
+    const currentR = sumR / bandVerts.length;
+    if (currentR < 0.01) return;
+
+    const ratio = targetM / (currentR * 2 * Math.PI);
+    if (Math.abs(ratio - 1) < 0.01) return;
+    const scale = Math.max(0.5, Math.min(2.0, ratio));
+
+    const bandSet = new Set(bandVerts);
+    for (const vi of partVerts) {
+      if (!bandSet.has(vi)) continue;
+      const dx = pos.array[vi * 3] - cx;
+      const dz = pos.array[vi * 3 + 2] - cz;
+      pos.array[vi * 3]     = cx + dx * scale;
+      pos.array[vi * 3 + 2] = cz + dz * scale;
+    }
+  }
+
+  _scaleLimbSide(pos, sideVerts, targetM, bandWidth, yMax) {
+    let sumX = 0;
+    let count = 0;
+    for (const vi of sideVerts) {
+      if (pos.array[vi * 3 + 1] <= yMax) { sumX += pos.array[vi * 3]; count++; }
+    }
+    if (count === 0) return;
+    const centerX = sumX / count;
+
+    const filtered = [];
+    for (const vi of sideVerts) {
+      if (pos.array[vi * 3 + 1] <= yMax) filtered.push(vi);
     }
 
-    if (nearVerts.length < 6) {
-      for (const vi of partVerts) {
-        nearVerts.push([pos.array[vi * 3], pos.array[vi * 3 + 2]]);
-      }
+    const bandVerts = [];
+    let sumY = 0;
+    for (const vi of filtered) sumY += pos.array[vi * 3 + 1];
+    const centerY = sumY / filtered.length;
+    for (const vi of filtered) {
+      if (Math.abs(pos.array[vi * 3 + 1] - centerY) <= bandWidth) bandVerts.push(vi);
     }
-
-    if (nearVerts.length < 3) return { circumference: 0, centerY };
-
-    const hull = this._convexHull2D(nearVerts);
-    if (hull.length < 3) return { circumference: 0, centerY };
-
-    let perimeter = 0;
-    for (let i = 0; i < hull.length; i++) {
-      const next = (i + 1) % hull.length;
-      const dx = hull[next][0] - hull[i][0];
-      const dz = hull[next][1] - hull[i][1];
-      perimeter += Math.sqrt(dx * dx + dz * dz);
+    if (bandVerts.length < 6) {
+      for (const vi of filtered) bandVerts.push(vi);
     }
+    if (bandVerts.length < 3) return;
 
-    return { circumference: perimeter, centerY };
+    let sumR = 0;
+    for (const vi of bandVerts) {
+      const dx = pos.array[vi * 3] - centerX;
+      const dz = pos.array[vi * 3 + 2] - 0;
+      sumR += Math.sqrt(dx * dx + dz * dz);
+    }
+    const currentR = sumR / bandVerts.length;
+    if (currentR < 0.01) return;
+
+    const ratio = targetM / (currentR * 2 * Math.PI);
+    if (Math.abs(ratio - 1) < 0.01) return;
+    const scale = Math.max(0.5, Math.min(2.0, ratio));
+
+    const bandSet = new Set(bandVerts);
+    for (const vi of filtered) {
+      if (!bandSet.has(vi)) continue;
+      const dx = pos.array[vi * 3] - centerX;
+      const dz = pos.array[vi * 3 + 2] - 0;
+      pos.array[vi * 3]     = centerX + dx * scale;
+      pos.array[vi * 3 + 2] = dz * scale;
+    }
   }
 
   _convexHull2D(points) {
@@ -478,6 +529,222 @@ class BodyVisualizer {
     } catch (e) {
       console.warn('Could not load face indices:', e);
     }
+  }
+
+  /* ===== MEASUREMENT EXTRACTION ENGINE ===== */
+
+  _getPartVerts(name) {
+    if (window.SMPL_PARTS && window.SMPL_PARTS[name]) return window.SMPL_PARTS[name];
+    if (window.CUSTOM_BODY_POINTS) {
+      const key = Object.keys(window.CUSTOM_BODY_POINTS).find(k =>
+        k.toLowerCase().replace(/\s+/g, '') === name.toLowerCase().replace(/\s+/g, '')
+      );
+      if (key) return window.CUSTOM_BODY_POINTS[key];
+    }
+    return [];
+  }
+
+  _computeCircumference(pos, faceArr, verts, planeY, bandW, partVerts) {
+    if (!verts || verts.length < 3 || !faceArr) return 0;
+    const intersections = [];
+    const fCount = faceArr.length / 3;
+    const partSet = partVerts && partVerts.length > 0 ? new Set(partVerts) : null;
+
+    for (let f = 0; f < fCount; f++) {
+      const i0 = faceArr[f * 3], i1 = faceArr[f * 3 + 1], i2 = faceArr[f * 3 + 2];
+      if (partSet) {
+        if (!partSet.has(i0) && !partSet.has(i1) && !partSet.has(i2)) continue;
+      }
+      const edges = [[i0, i1], [i1, i2], [i2, i0]];
+      for (const [a, b] of edges) {
+        const ya = pos[a * 3 + 1], yb = pos[b * 3 + 1];
+        if ((ya - planeY) * (yb - planeY) < 0) {
+          const t = (planeY - ya) / (yb - ya);
+          intersections.push([
+            pos[a * 3] + t * (pos[b * 3] - pos[a * 3]),
+            pos[a * 3 + 2] + t * (pos[b * 3 + 2] - pos[a * 3 + 2])
+          ]);
+        }
+      }
+    }
+
+    if (intersections.length < 3) return 0;
+    const hull = this._convexHull2D(intersections);
+    if (hull.length < 3) return 0;
+    let perim = 0;
+    for (let i = 0; i < hull.length; i++) {
+      const j = (i + 1) % hull.length;
+      const dx = hull[j][0] - hull[i][0], dz = hull[j][1] - hull[i][1];
+      perim += Math.sqrt(dx * dx + dz * dz);
+    }
+    return perim * 100;
+  }
+
+  _computeBandVerts(pos, verts, planeY, bandW) {
+    if (!verts || verts.length === 0) return [];
+    const result = [];
+    for (const vi of verts) {
+      if (Math.abs(pos[vi * 3 + 1] - planeY) <= bandW) result.push(vi);
+    }
+    return result.length >= 4 ? result : verts;
+  }
+
+  _centroidY(pos, verts) {
+    if (!verts || verts.length === 0) return 0;
+    let s = 0;
+    for (const vi of verts) s += pos[vi * 3 + 1];
+    return s / verts.length;
+  }
+
+  _centroid(pos, verts) {
+    if (!verts || verts.length === 0) return [0, 0, 0];
+    let sx = 0, sy = 0, sz = 0;
+    for (const vi of verts) { sx += pos[vi * 3]; sy += pos[vi * 3 + 1]; sz += pos[vi * 3 + 2]; }
+    return [sx / verts.length, sy / verts.length, sz / verts.length];
+  }
+
+  _dist(pos, vertsA, vertsB) {
+    const a = this._centroid(pos, vertsA);
+    const b = this._centroid(pos, vertsB);
+    const dx = a[0] - b[0], dy = a[1] - b[1], dz = a[2] - b[2];
+    return Math.sqrt(dx * dx + dy * dy + dz * dz) * 100;
+  }
+
+  _xSpan(pos, verts) {
+    if (!verts || verts.length === 0) return 0;
+    let minX = Infinity, maxX = -Infinity;
+    for (const vi of verts) {
+      const x = pos[vi * 3];
+      if (x < minX) minX = x;
+      if (x > maxX) maxX = x;
+    }
+    return (maxX - minX) * 100;
+  }
+
+  _circFromVerts(pos, verts, proj) {
+    if (!verts || verts.length < 3) return 0;
+    const pts = [];
+    for (const vi of verts) {
+      if (proj === 'yz') pts.push([pos[vi * 3 + 1], pos[vi * 3 + 2]]);
+      else pts.push([pos[vi * 3], pos[vi * 3 + 2]]);
+    }
+    const hull = this._convexHull2D(pts);
+    if (hull.length < 3) return 0;
+    let perim = 0;
+    for (let i = 0; i < hull.length; i++) {
+      const j = (i + 1) % hull.length;
+      const dx = hull[j][0] - hull[i][0], dz = hull[j][1] - hull[i][1];
+      perim += Math.sqrt(dx * dx + dz * dz);
+    }
+    return perim * 100;
+  }
+
+  computeAllMeasurements(pos) {
+    if (!pos) return {};
+    const faceArr = BodyVisualizer._faceIndices;
+    const M = {};
+
+    const chestV = this._getPartVerts('spine2');
+    const shoulderV = this._getPartVerts('rightShoulder').concat(this._getPartVerts('leftShoulder'));
+    const waistV = this._getPartVerts('spine1');
+    const stomachV = this._getPartVerts('spine');
+    const hipsV = this._getPartVerts('hips');
+    const neckV = this._getPartVerts('neck');
+    const rArmV = this._getPartVerts('rightArm');
+    const lArmV = this._getPartVerts('leftArm');
+    const rForeV = this._getPartVerts('rightForeArm');
+    const lForeV = this._getPartVerts('leftForeArm');
+    const rLegV = this._getPartVerts('rightUpLeg');
+    const lLegV = this._getPartVerts('leftUpLeg');
+    const rCalfV = this._getPartVerts('rightLeg');
+    const lCalfV = this._getPartVerts('leftLeg');
+    const rHandV = this._getPartVerts('rightHand');
+    const lHandV = this._getPartVerts('leftHand');
+    const rFootV = this._getPartVerts('rightFoot');
+    const lFootV = this._getPartVerts('leftFoot');
+    const chestAll = chestV.concat(shoulderV);
+
+    const chestY = this._centroidY(pos, chestAll);
+    const waistY = this._centroidY(pos, waistV);
+    const stomachY = stomachV.length > 0 ? this._centroidY(pos, stomachV) : (chestY + waistY) / 2;
+    const hipsY = this._centroidY(pos, hipsV);
+    const neckY = this._centroidY(pos, neckV);
+    const rArmY = this._centroidY(pos, rArmV);
+    const lArmY = this._centroidY(pos, lArmV);
+    const rForeY = this._centroidY(pos, rForeV);
+    const lForeY = this._centroidY(pos, lForeV);
+    const foreArmY = (rForeY + lForeY) / 2;
+    const rLegY = this._centroidY(pos, rLegV);
+    const lLegY = this._centroidY(pos, lLegV);
+    const rCalfY = this._centroidY(pos, rCalfV);
+    const lCalfY = this._centroidY(pos, lCalfV);
+    const calfY = (rCalfY + lCalfY) / 2;
+
+    const ankleRaw = rCalfV.concat(rFootV);
+    const ankleV = ankleRaw.filter(vi => pos[vi * 3 + 1] < -1.0);
+    const ankleY = ankleV.length > 0 ? this._centroidY(pos, ankleV) : calfY - 0.12;
+    const wristRaw = rForeV.concat(rHandV);
+    const wristV = wristRaw.filter(vi => pos[vi * 3 + 1] < 0.19);
+    const wristY = wristV.length > 0 ? this._centroidY(pos, wristV) : foreArmY - 0.15;
+
+    const rKneeV = rCalfV.filter(vi => pos[vi * 3 + 1] > -0.8);
+    const lKneeV = lCalfV.filter(vi => pos[vi * 3 + 1] > -0.8);
+    const rKneeY = rKneeV.length > 0 ? this._centroidY(pos, rKneeV) : rCalfY + 0.1;
+    const lKneeY = lKneeV.length > 0 ? this._centroidY(pos, lKneeV) : lCalfY + 0.1;
+
+    const shoulderAll = shoulderV;
+
+    const circ = (verts, y, bw, partVerts) => {
+      const band = this._computeBandVerts(pos, verts, y, bw || 0.03);
+      return this._computeCircumference(pos, faceArr, band, y, bw || 0.03, partVerts || verts);
+    };
+
+    const limbCirc = (verts, y, bw, proj) => {
+      const band = this._computeBandVerts(pos, verts, y, bw || 0.03);
+      return this._circFromVerts(pos, band, proj || 'xz');
+    };
+
+    M['Shoulder'] = Math.round(this._xSpan(pos, shoulderAll) * 10) / 10;
+    M['Across Shoulder'] = M['Shoulder'];
+    M['Across Back'] = Math.round(M['Shoulder'] * 0.92 * 10) / 10;
+    M['Across Chest'] = Math.round(M['Shoulder'] * 0.96 * 10) / 10;
+
+    M['Chest Round']    = Math.round(circ(chestAll, chestY, 0.04) * 10) / 10;
+    M['Bust Round']     = M['Chest Round'];
+    M['Waist Round']    = Math.round(circ(waistV, waistY, 0.03) * 10) / 10;
+    M['Stomach Round']  = stomachV.length > 0 ? Math.round(circ(stomachV, stomachY, 0.04) * 10) / 10 : M['Waist Round'];
+    M['Hip Round']      = Math.round(circ(hipsV, hipsY, 0.04) * 10) / 10;
+    M['Neck Round']     = Math.round(circ(neckV, neckY, 0.03) * 10) / 10;
+    M['Thigh Round']    = Math.round((limbCirc(rLegV, rLegY, 0.05) + limbCirc(lLegV, lLegY, 0.05)) / 2 * 10) / 10;
+    M['Knee Round']     = Math.round((limbCirc(rKneeV, rKneeY, 0.03) + limbCirc(lKneeV, lKneeY, 0.03)) / 2 * 10) / 10;
+    M['Calf Round']     = Math.round((limbCirc(rCalfV, rCalfY, 0.04) + limbCirc(lCalfV, lCalfY, 0.04)) / 2 * 10) / 10;
+    M['Ankle Round']    = ankleV.length > 0 ? Math.round(limbCirc(ankleV, ankleY, 0.03) * 10) / 10 : 0;
+    M['Bicep Round']    = Math.round((limbCirc(rArmV, rArmY, 0.04, 'yz') + limbCirc(lArmV, lArmY, 0.04, 'yz')) / 2 * 10) / 10;
+    M['Elbow Round']    = Math.round((limbCirc(rForeV, rForeY, 0.03, 'yz') + limbCirc(lForeV, lForeY, 0.03, 'yz')) / 2 * 10) / 10;
+    M['Wrist Round']    = wristV.length > 0 ? Math.round(limbCirc(wristV, wristY, 0.03, 'yz') * 10) / 10 : 0;
+    M['Upper Hip']      = Math.round(M['Hip Round'] * 0.92 * 10) / 10;
+    M['Armhole Round']  = Math.round(M['Shoulder'] * 0.45 * 10) / 10;
+
+    M['Half Length']    = Math.round(this._dist(pos, neckV, waistV) * 10) / 10;
+    M['Full Top Length']= Math.round(this._dist(pos, neckV, hipsV) * 10) / 10;
+    M['Back Waist Length']  = M['Half Length'];
+    M['Front Waist Length'] = M['Half Length'];
+    M['Neck to Waist']  = M['Half Length'];
+    M['Shoulder to Waist'] = M['Half Length'];
+    M['Waist to Hip']   = Math.round(this._dist(pos, waistV, hipsV) * 10) / 10;
+    M['Crotch Depth']   = M['Waist to Hip'];
+    M['Trouser Waist']  = M['Waist Round'];
+    M['Trouser Length'] = Math.round(this._dist(pos, waistV, ankleV.length > 0 ? ankleV : rCalfV) * 10) / 10;
+    M['Inseam']         = Math.round(M['Trouser Length'] * 0.78 * 10) / 10;
+    M['Sleeve Length']  = Math.round(this._dist(pos, shoulderAll, wristV.length > 0 ? wristV : rForeV) * 10) / 10;
+
+    M['High Bust']      = Math.round(M['Bust Round'] * 0.85 * 10) / 10;
+    M['Under Bust']     = Math.round(M['Bust Round'] * 0.75 * 10) / 10;
+    M['Bust Point']     = Math.round(this._dist(pos, neckV, chestV.slice(0, 3)) * 10) / 10;
+    M['Shoulder to Bust Point'] = Math.round(M['Bust Point'] * 1.1 * 10) / 10;
+    M['Shoulder to Under Bust'] = Math.round(M['Bust Point'] * 1.3 * 10) / 10;
+
+    return M;
   }
 
   dispose() {
