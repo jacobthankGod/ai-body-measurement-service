@@ -188,7 +188,7 @@ window.KORRA_MS = {
     this._vtoVersionHistory = [];
     this.compareHistory = (window.masterHistory || []).filter(s => s.client_name === data.client_name);
     // Preload mesh IMMEDIATELY — starts fetch while HTML renders
-    const meshUrl = data.mesh_storage_url || data.mesh_url;
+    const meshUrl = data.tailornet_body_url || data.biometrics?.__smpl_params?.__tailornet_body_url || data.mesh_storage_url || data.mesh_url;
     if (meshUrl && window.KORRA_VIZ) {
       window.KORRA_VIZ.preloadMesh(meshUrl);
     }
@@ -336,6 +336,9 @@ window.KORRA_MS = {
             </button>
             <button class="ms-tool-btn" onclick="KORRA_MS.resetViewport()" title="Reset view">
               <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="23 4 23 10 17 10"/><path d="M20.49 15a9 9 0 1 1-2.12-9.36L23 10"/></svg>
+            </button>
+            <button class="ms-tool-btn" onclick="KORRA_MS.resetToStanding()" title="Stand upright">
+              <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="5" r="2"/><path d="M10 22V17L7 14V10l5-3 5 3v4l-3 3v5"/></svg>
             </button>
             <button class="ms-tool-btn" id="ms-toggle-autorotate" onclick="KORRA_MS.toggleAutoRotate()" title="Auto-rotate">
               <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="1 4 1 10 7 10"/><path d="M3.51 15a9 9 0 1 0 2.13-9.36L1 10"/></svg>
@@ -1208,7 +1211,7 @@ window.KORRA_MS = {
     this.viewerInstance.onInteract = (active) => {
       if (badge) badge.style.opacity = active ? '0.3' : '1';
     };
-    const meshUrl = this.data?.mesh_storage_url || this.data?.mesh_url;
+    const meshUrl = this.data?.tailornet_body_url || this.data?.biometrics?.__smpl_params?.__tailornet_body_url || this.data?.mesh_storage_url || this.data?.mesh_url;
     if (meshUrl) {
       const lm = this.data?.landmarks;
       const lm3d = lm ? Object.fromEntries(Object.entries(lm).map(([k, v]) => [k, { x: v[0], y: v[1], z: 0 }])) : null;
@@ -1237,7 +1240,7 @@ window.KORRA_MS = {
     }
     // Swap to TailorNet body if available (from extract response or stored DB)
     const tnBodyUrl = this.data?.tailornet_body_url || this.data?.biometrics?.__smpl_params?.__tailornet_body_url;
-    if (tnBodyUrl && this.viewerInstance?.loadTailornetBody) {
+    if (tnBodyUrl && this.viewerInstance?.loadTailornetBody && !this.viewerInstance._tailornetBodyLoaded) {
       const cached = this.viewerInstance._meshCache.get(tnBodyUrl);
       if (cached) {
         requestAnimationFrame(() => this.viewerInstance.loadTailornetBody(tnBodyUrl));
@@ -1285,6 +1288,12 @@ window.KORRA_MS = {
 
   resetViewport() {
     if (this.viewerInstance) this.viewerInstance.resetCamera();
+  },
+
+  resetToStanding() {
+    if (this.viewerInstance && this.viewerInstance.resetToStanding) {
+      this.viewerInstance.resetToStanding();
+    }
   },
 
   _optionsMenuOpen: false,

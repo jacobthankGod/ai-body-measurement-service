@@ -318,6 +318,19 @@ class KorraVisualizer {
         this.mesh.position.set(0, center.y, 0); // Re-center on Y
     }
 
+    resetToStanding() {
+        /**
+         * Reset mesh to standing upright pose: ground feet, center horizontally.
+         */
+        if (!this.mesh) return;
+        this.mesh.geometry.computeBoundingBox();
+        const bbox = this.mesh.geometry.boundingBox;
+        const center = new THREE.Vector3();
+        bbox.getCenter(center);
+        // Ground feet at Y=0, center X/Z
+        this.mesh.position.set(-center.x, -bbox.min.y, -center.z);
+    }
+
     parseAndRenderOBJ(text) {
         const vertices = [];
         const faces = [];
@@ -568,6 +581,7 @@ class KorraVisualizer {
         try {
             const cached = this._meshCache.get(url);
             if (cached) {
+                this._disposeCurrentMesh();
                 this.parseAndRenderOBJ(cached);
                 this._tailornetBodyLoaded = true;
                 return this.mesh;
@@ -580,6 +594,7 @@ class KorraVisualizer {
                 return r.text();
             });
             this._meshCache.set(url, text);
+            this._disposeCurrentMesh();
             this.parseAndRenderOBJ(text);
             this._tailornetBodyLoaded = true;
             return this.mesh;
@@ -587,6 +602,21 @@ class KorraVisualizer {
             console.warn('TailorNet body load failed:', e);
             this._tailornetBodyLoaded = false;
             return null;
+        }
+    }
+
+    _disposeCurrentMesh() {
+        if (this.mesh) {
+            if (this.mesh.geometry) this.mesh.geometry.dispose();
+            if (this.mesh.material) {
+                if (Array.isArray(this.mesh.material)) {
+                    this.mesh.material.forEach(m => m.dispose());
+                } else {
+                    this.mesh.material.dispose();
+                }
+            }
+            this.scene.remove(this.mesh);
+            this.mesh = null;
         }
     }
 

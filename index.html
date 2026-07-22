@@ -356,6 +356,76 @@
       .hero-cta-card .btn { width: 100%; }
       .hero-cta-card style { flex-direction: column; }
     }
+
+    /* BODY SHAPE VISUALIZER */
+    .vis-container {
+      display: grid; grid-template-columns: 1fr 360px; gap: 0;
+      background: var(--Glass); border: 1px solid var(--Glass-Border);
+      border-radius: 24px; overflow: hidden; min-height: 600px;
+    }
+    .vis-viewport {
+      position: relative; background: var(--Obsidian-Layer);
+      border-radius: 24px 0 0 24px; overflow: hidden; min-height: 500px;
+    }
+    .vis-viewport canvas { width: 100% !important; height: 100% !important; display: block; cursor: grab; }
+    .vis-viewport canvas:active { cursor: grabbing; }
+    .vis-loading {
+      position: absolute; inset: 0; display: flex; align-items: center; justify-content: center;
+      color: var(--Neutral-400); font-size: 14px; font-weight: 600; z-index: 5;
+    }
+    .vis-controls {
+      padding: 32px; display: flex; flex-direction: column; gap: 20px;
+      overflow-y: auto; background: var(--Obsidian-Deep);
+    }
+    .vis-gender-toggle {
+      display: flex; gap: 6px; background: var(--Obsidian-Layer);
+      border-radius: 12px; padding: 4px; border: 1px solid var(--Glass-Border);
+    }
+    .vis-gender-btn {
+      flex: 1; padding: 10px; border: none; border-radius: 10px;
+      font-size: 13px; font-weight: 700; cursor: pointer; transition: 0.2s;
+      background: transparent; color: var(--Neutral-400); font-family: inherit;
+    }
+    .vis-gender-btn.active { background: var(--Mint); color: var(--Obsidian); }
+    .vis-gender-btn:hover:not(.active) { color: var(--White); }
+    .vis-slider-group { display: flex; flex-direction: column; gap: 6px; }
+    .vis-slider-label {
+      display: flex; justify-content: space-between; align-items: baseline;
+      font-size: 13px; font-weight: 600; color: var(--White);
+    }
+    .vis-slider-val { color: var(--Mint); font-weight: 700; font-size: 13px; font-variant-numeric: tabular-nums; }
+    .vis-slider-group input[type="range"] {
+      -webkit-appearance: none; width: 100%; height: 4px; border-radius: 2px;
+      background: var(--Obsidian-Layer); outline: none; margin-top: 2px;
+    }
+    .vis-slider-group input[type="range"]::-webkit-slider-thumb {
+      -webkit-appearance: none; width: 18px; height: 18px; border-radius: 50%;
+      background: var(--Mint); cursor: pointer; box-shadow: 0 2px 8px rgba(198, 255, 0, 0.3);
+      transition: transform 0.15s;
+    }
+    .vis-slider-group input[type="range"]::-webkit-slider-thumb:hover { transform: scale(1.15); }
+    .vis-slider-group input[type="range"]::-moz-range-thumb {
+      width: 18px; height: 18px; border-radius: 50%; border: none;
+      background: var(--Mint); cursor: pointer; box-shadow: 0 2px 8px rgba(198, 255, 0, 0.3);
+    }
+    .vis-presets {
+      display: flex; gap: 6px; margin-top: auto; padding-top: 16px;
+      border-top: 1px solid var(--Glass-Border);
+    }
+    .vis-presets button {
+      flex: 1; padding: 10px 8px; border: 1px solid var(--Glass-Border);
+      border-radius: 10px; background: transparent; color: var(--Neutral-400);
+      font-size: 12px; font-weight: 700; cursor: pointer; transition: 0.2s; font-family: inherit;
+    }
+    .vis-presets button.active, .vis-presets button:hover {
+      border-color: var(--Mint); color: var(--Mint);
+    }
+    .vis-section-title { font-size: 11px; font-weight: 900; color: var(--Neutral-500);
+      text-transform: uppercase; letter-spacing: 0.15em; margin-top: 4px; }
+    @media (max-width: 900px) {
+      .vis-container { grid-template-columns: 1fr; grid-template-rows: 400px auto; }
+      .vis-viewport { border-radius: 24px 24px 0 0; min-height: 350px; }
+    }
   </style>
   <style>
     .logo-marquee-container {
@@ -639,6 +709,66 @@
           <div class="step-content-box">
             <div class="step-title-bold">SHARE</div>
             <div class="step-desc-small">Send your profile to any tailor, brand, or shopping site via our measurement link or QR code.</div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- SECTION 5.5: BODY SHAPE VISUALIZER -->
+  <section class="block" id="body-visualizer">
+    <div class="container-wide">
+      <div style="text-align:center; max-width:800px; margin:0 auto 60px" class="reveal">
+        <div class="section-eyebrow">Try it yourself</div>
+        <h2 class="section-title">See your body shape in 3D</h2>
+        <p class="section-desc" style="margin-left:auto; margin-right:auto">
+          Adjust the sliders to see how different measurements affect the human body shape in real time.
+        </p>
+      </div>
+      <div class="vis-container reveal-scale">
+        <div class="vis-viewport" id="bodyViewport">
+          <canvas id="bodyCanvas"></canvas>
+          <div class="vis-loading" id="visLoading">Loading body model...</div>
+        </div>
+        <div class="vis-controls">
+          <div class="vis-gender-toggle">
+            <button class="vis-gender-btn active" data-gender="male" onclick="window.bodyVisUI.setGender('male')">Male</button>
+            <button class="vis-gender-btn" data-gender="female" onclick="window.bodyVisUI.setGender('female')">Female</button>
+          </div>
+          <div class="vis-section-title">Measurements</div>
+          <div class="vis-slider-group">
+            <div class="vis-slider-label">Height <span class="vis-slider-val" id="val-height">175 cm</span></div>
+            <input type="range" min="150" max="210" value="175" step="1" data-measurement="height">
+          </div>
+          <div class="vis-slider-group">
+            <div class="vis-slider-label">Chest <span class="vis-slider-val" id="val-chest">95 cm</span></div>
+            <input type="range" min="65" max="140" value="95" step="1" data-measurement="chest">
+          </div>
+          <div class="vis-slider-group">
+            <div class="vis-slider-label">Waist <span class="vis-slider-val" id="val-waist">80 cm</span></div>
+            <input type="range" min="55" max="140" value="80" step="1" data-measurement="waist">
+          </div>
+          <div class="vis-slider-group">
+            <div class="vis-slider-label">Hip <span class="vis-slider-val" id="val-hip">95 cm</span></div>
+            <input type="range" min="65" max="140" value="95" step="1" data-measurement="hip">
+          </div>
+          <div class="vis-slider-group">
+            <div class="vis-slider-label">Shoulder <span class="vis-slider-val" id="val-shoulder">45 cm</span></div>
+            <input type="range" min="30" max="60" value="45" step="1" data-measurement="shoulder">
+          </div>
+          <div class="vis-slider-group">
+            <div class="vis-slider-label">Thigh <span class="vis-slider-val" id="val-thigh">55 cm</span></div>
+            <input type="range" min="35" max="80" value="55" step="1" data-measurement="thigh">
+          </div>
+          <div class="vis-slider-group">
+            <div class="vis-slider-label">Bicep <span class="vis-slider-val" id="val-bicep">30 cm</span></div>
+            <input type="range" min="18" max="50" value="30" step="1" data-measurement="bicep">
+          </div>
+          <div class="vis-presets">
+            <button data-preset="slim" onclick="window.bodyVisUI.setPreset('slim')">Slim</button>
+            <button data-preset="average" class="active" onclick="window.bodyVisUI.setPreset('average')">Average</button>
+            <button data-preset="heavy" onclick="window.bodyVisUI.setPreset('heavy')">Heavy</button>
+            <button data-preset="athletic" onclick="window.bodyVisUI.setPreset('athletic')">Athletic</button>
           </div>
         </div>
       </div>
@@ -954,6 +1084,106 @@
         } catch (err) { console.error("Auth init failed:", err); }
       }
       initSupabase();
+    })();
+  </script>
+
+  <!-- Body Shape Visualizer Scripts -->
+  <script src="/assets/three.min.js"></script>
+  <script src="/assets/smpl-shape.js"></script>
+  <script src="/assets/body-visualizer.js"></script>
+  <script>
+    (function() {
+      const PRESETS = {
+        slim:      { chest: 82, waist: 68, hip: 85, shoulder: 40, thigh: 48, bicep: 24, height: 175 },
+        average:   { chest: 95, waist: 80, hip: 95, shoulder: 45, thigh: 55, bicep: 30, height: 175 },
+        heavy:     { chest: 115, waist: 105, hip: 115, shoulder: 50, thigh: 68, bicep: 38, height: 175 },
+        athletic:  { chest: 102, waist: 78, hip: 98, shoulder: 48, thigh: 58, bicep: 34, height: 178 },
+        slimFemale:    { chest: 80, waist: 62, hip: 88, shoulder: 38, thigh: 50, bicep: 22, height: 165 },
+        averageFemale: { chest: 90, waist: 72, hip: 98, shoulder: 40, thigh: 56, bicep: 26, height: 165 },
+        heavyFemale:   { chest: 110, waist: 100, hip: 115, shoulder: 44, thigh: 68, bicep: 32, height: 165 },
+      };
+
+      window.bodyVisUI = {
+        vis: null,
+        gender: 'male',
+        measurements: { ...PRESETS.average },
+
+        init: async function() {
+          this.vis = new BodyVisualizer();
+          await this.vis.init('bodyCanvas');
+          await this.vis.loadFaceIndices();
+          this._bindSliders();
+          this._apply();
+        },
+
+        setGender: function(gender) {
+          this.gender = gender;
+          document.querySelectorAll('.vis-gender-btn').forEach(b => {
+            b.classList.toggle('active', b.dataset.gender === gender);
+          });
+          // Load gender-appropriate preset
+          const preset = gender === 'female' ? PRESETS.averageFemale : PRESETS.average;
+          this.measurements = { ...preset };
+          this._syncSliders();
+          this.vis.setGender(gender);
+          this._apply();
+          this._setActivePreset('average');
+        },
+
+        setPreset: function(name) {
+          const key = this.gender === 'female' ? name + 'Female' : name;
+          const preset = PRESETS[key] || PRESETS[name] || PRESETS.average;
+          this.measurements = { ...preset };
+          this._syncSliders();
+          this._apply();
+          this._setActivePreset(name);
+        },
+
+        _apply: function() {
+          this.vis.updateFromMeasurements(this.measurements);
+        },
+
+        _syncSliders: function() {
+          const m = this.measurements;
+          document.querySelectorAll('.vis-slider-group input[type="range"]').forEach(slider => {
+            const key = slider.dataset.measurement;
+            if (m[key] !== undefined) {
+              slider.value = m[key];
+              const valEl = document.getElementById('val-' + key);
+              if (valEl) valEl.textContent = Math.round(m[key]) + ' cm';
+            }
+          });
+        },
+
+        _setActivePreset: function(name) {
+          document.querySelectorAll('.vis-presets button').forEach(b => {
+            b.classList.toggle('active', b.dataset.preset === name);
+          });
+        },
+
+        _bindSliders: function() {
+          const self = this;
+          document.querySelectorAll('.vis-slider-group input[type="range"]').forEach(slider => {
+            slider.addEventListener('input', function() {
+              const key = this.dataset.measurement;
+              const val = parseFloat(this.value);
+              self.measurements[key] = val;
+              const valEl = document.getElementById('val-' + key);
+              if (valEl) valEl.textContent = Math.round(val) + ' cm';
+              self._apply();
+              // Deselect presets
+              document.querySelectorAll('.vis-presets button').forEach(b => b.classList.remove('active'));
+            });
+          });
+        }
+      };
+
+      // Auto-init on DOM ready
+      if (document.readyState === 'loading') {
+        document.addEventListener('DOMContentLoaded', () => window.bodyVisUI.init());
+      } else {
+        window.bodyVisUI.init();
+      }
     })();
   </script>
 </body>
