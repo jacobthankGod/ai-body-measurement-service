@@ -80,7 +80,8 @@ class SMPLShapeEngine {
       for (let j = 0; j < 7; j++) {
         sum += w[i][j] * mNorm[j];
       }
-      betas[i] = sum;
+      // Clamp betas to reasonable range to prevent extreme shapes
+      betas[i] = Math.max(-3, Math.min(3, sum));
     }
     return betas;
   }
