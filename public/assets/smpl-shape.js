@@ -116,9 +116,9 @@ class SMPLShapeEngine {
       new Uint8Array(buf, headerStart, headerLen)
     );
 
-    // Parse dtype
-    const dtypeMatch = headerStr.match(/dtype:\s*(['<>=!|]?\w+)/);
-    if (!dtypeMatch) throw new Error(`Cannot parse dtype in ${url}`);
+    // Parse dtype — NPY header uses 'descr': '<f8' format
+    const dtypeMatch = headerStr.match(/'descr':\s*'([^']+)'/);
+    if (!dtypeMatch) throw new Error(`Cannot parse dtype in ${url}: ${headerStr.substring(0, 100)}`);
     const dtypeStr = dtypeMatch[1];
 
     // Parse shape
