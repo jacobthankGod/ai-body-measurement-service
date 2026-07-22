@@ -13,13 +13,12 @@ class SMPLShapeEngine {
 
   async init() {
     const [vt, sd, rw] = await Promise.all([
-      this._loadNPY('/models/v_template.npy'),
-      this._loadNPY('/models/shapedirs.npy'),
+      this._loadNPY('/models/v_template_apose.npy'),
+      this._loadNPY('/models/shapedirs_apose.npy'),
       fetch('/assets/smpl_regression_weights.json').then(r => r.json()),
     ]);
     this.vTemplate = vt.data;
-    // shapedirs: (6890, 3, 10) stored as (20670, 10) — reshape to (6890, 30)
-    this.shapedirsFlat = sd.data; // (20670, 10) — keep as-is for matrix mult
+    this.shapedirsFlat = sd.data;
     this.weights = rw;
     this.ready = true;
   }
@@ -54,7 +53,8 @@ class SMPLShapeEngine {
 
   /**
    * Convert measurements (cm) to beta parameters.
-   * @param {Object} meas - { chest, waist, hip, shoulder, thigh, bicep, height }
+   * Supports both MLP and Ridge regression models.
+   * @param {Object} meas - { chest, waist, hip, ... }
    * @param {string} gender - 'male' or 'female'
    * @returns {Float32Array} betas (10,)
    */
@@ -64,26 +64,58 @@ class SMPLShapeEngine {
     const order = this.weights.measurement_order;
     const mean = reg.measurements_mean;
     const std = reg.measurements_std;
-    const w = reg.weights;   // (10, 7)
-    const bias = reg.bias;   // (10,)
+    const nMeas = order.length;
 
     // Normalize measurements
-    const mNorm = new Float32Array(7);
-    for (let i = 0; i < 7; i++) {
+    const mNorm = new Float32Array(nMeas);
+    for (let i = 0; i < nMeas; i++) {
       mNorm[i] = ((meas[order[i]] || 0) - mean[i]) / std[i];
     }
 
-    // Linear regression: betas = weights @ mNorm + bias
-    const betas = new Float32Array(10);
-    for (let i = 0; i < 10; i++) {
-      let sum = bias[i];
-      for (let j = 0; j < 7; j++) {
-        sum += w[i][j] * mNorm[j];
+    if (this.weights.model_type === 'mlp') {
+      // MLP forward pass with ReLU activation
+      let layer_input = mNorm;
+      const coefs = reg.weights;   // Array of weight matrices
+      const biases = reg.bias;     // Array of bias vectors
+
+      for (let l = 0; l < coefs.length; l++) {
+        const w = coefs[l];     // (out_size, in_size)
+        const b = biases[l];    // (out_size,)
+        const outSize = w.length;
+        const inSize = w[0].length;
+        const out = new Float32Array(outSize);
+
+        for (let i = 0; i < outSize; i++) {
+          let sum = b[i];
+          for (let j = 0; j < inSize; j++) {
+            sum += w[i][j] * layer_input[j];
+          }
+          // ReLU for hidden layers, linear for output
+          out[i] = l < coefs.length - 1 ? Math.max(0, sum) : sum;
+        }
+        layer_input = out;
       }
-      // Clamp betas to reasonable range to prevent extreme shapes
-      betas[i] = Math.max(-3, Math.min(3, sum));
+
+      // Clamp betas
+      const betas = new Float32Array(10);
+      for (let i = 0; i < 10; i++) {
+        betas[i] = Math.max(-3, Math.min(3, layer_input[i]));
+      }
+      return betas;
+    } else {
+      // Ridge regression (legacy)
+      const w = reg.weights;
+      const bias = reg.bias;
+      const betas = new Float32Array(10);
+      for (let i = 0; i < 10; i++) {
+        let sum = bias[i];
+        for (let j = 0; j < nMeas; j++) {
+          sum += w[i][j] * mNorm[j];
+        }
+        betas[i] = Math.max(-3, Math.min(3, sum));
+      }
+      return betas;
     }
-    return betas;
   }
 
   /**

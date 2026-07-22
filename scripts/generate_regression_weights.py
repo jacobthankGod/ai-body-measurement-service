@@ -1,19 +1,21 @@
 #!/usr/bin/env python3
-"""Generate measurement-to-beta regression weights — optimized version.
+"""Generate measurement-to-beta regression weights — v5: plane-mesh intersection + MLP.
 
-Uses pre-filtered face masks and vectorized operations for speed.
-Falls back to vertex-range ellipse when mesh intersection fails.
+Uses proper plane-mesh intersection for circumferences.
+5K shapes for reasonable training time.
 """
 
 import json, os, sys
 import numpy as np
 from scipy.spatial import ConvexHull
-from sklearn.linear_model import Ridge
+from sklearn.neural_network import MLPRegressor
+from sklearn.preprocessing import StandardScaler
+from sklearn.model_selection import cross_val_score
 
 PROJECT_ROOT = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
 OUTPUT_PATH = os.path.join(PROJECT_ROOT, 'public', 'assets', 'smpl_regression_weights.json')
 NUM_BETAS = 10
-TOTAL_SHAPES = 10000
+TOTAL_SHAPES = 5000
 
 def load_smpl():
     vt = np.load(os.path.join(PROJECT_ROOT, 'models', 'v_template.npy'))
@@ -44,7 +46,6 @@ def load_vertex_groups():
     return groups
 
 def precompute_face_masks(faces, vertex_groups):
-    """Pre-compute which faces belong to each body part."""
     masks = {}
     for part, indices in vertex_groups.items():
         idx_set = set(indices)
@@ -55,27 +56,10 @@ def precompute_face_masks(faces, vertex_groups):
         masks[part] = mask
     return masks
 
-def measure_circ_ellipse(vertices, vertex_indices):
-    """Fast bounding-box ellipse circumference using Ramanujan approximation.
-    All units in meters, returns cm."""
-    if len(vertex_indices) == 0:
-        return 0.0
-    gv = vertices[vertex_indices]
-    w = gv[:, 0].max() - gv[:, 0].min()
-    d = gv[:, 2].max() - gv[:, 2].min()
-    a, b = w / 2, d / 2
-    if a + b < 1e-6:
-        return 0.0
-    h = ((a - b) ** 2) / ((a + b) ** 2)
-    circ = np.pi * (a + b) * (1 + (3 * h) / (10 + np.sqrt(max(4 - 3 * h, 0))))
-    return circ * 100  # meters → cm
-
 def measure_circ_mesh(vertices, faces, face_mask, plane_y):
     """Measure circumference using plane-mesh intersection. Returns cm."""
     relevant_faces = faces[face_mask]
-    if len(relevant_faces) == 0:
-        return 0.0
-
+    if len(relevant_faces) == 0: return 0.0
     intersections = []
     for f in relevant_faces:
         v0, v1, v2 = vertices[f[0]], vertices[f[1]], vertices[f[2]]
@@ -85,79 +69,79 @@ def measure_circ_mesh(vertices, faces, face_mask, plane_y):
                 t = da / (da - db)
                 pt = va + t * (vb - va)
                 intersections.append(pt)
-
-    if len(intersections) < 3:
-        return 0.0
-
-    pts = np.array(intersections)[:, [0, 2]]  # Project to xz
-    # Deduplicate
+    if len(intersections) < 3: return 0.0
+    pts = np.array(intersections)[:, [0, 2]]
     if len(pts) > 3:
         unique = [pts[0]]
         for p in pts[1:]:
             if min(np.linalg.norm(np.array(unique) - p, axis=1)) > 0.0005:
                 unique.append(p)
         pts = np.array(unique)
-
-    if len(pts) < 3:
-        return 0.0
+    if len(pts) < 3: return 0.0
     try:
         hull = ConvexHull(pts)
-        return hull.area * 100  # perimeter × 100 → cm
+        return hull.area * 100
     except Exception:
         return 0.0
 
-def compute_all_measurements(vertices, faces, vertex_groups, face_masks):
-    """Compute all measurements for one body shape. Returns dict in cm."""
+def measure_circ_ellipse(vertices, vertex_indices):
+    if len(vertex_indices) == 0: return 0.0
+    gv = vertices[vertex_indices]
+    w = (gv[:, 0].max() - gv[:, 0].min()) * 100
+    d = (gv[:, 2].max() - gv[:, 2].min()) * 100
+    a, b = w / 2, d / 2
+    if a + b < 1e-6: return 0.0
+    h = ((a - b) ** 2) / ((a + b) ** 2)
+    return np.pi * (a + b) * (1 + (3 * h) / (10 + np.sqrt(max(4 - 3 * h, 0))))
+
+def compute_measurements(verts, faces, vg, fm):
     meas = {}
-    v_height = (vertices[:, 1].max() - vertices[:, 1].min()) * 100
+    v_height = (verts[:, 1].max() - verts[:, 1].min()) * 100
     meas['height'] = v_height
 
-    # Circumference measurements: use mesh intersection with fallback to ellipse
-    # Note: vertex group names from customBodyPoints.txt have spaces
-    circ_parts = {
-        'chest': 'chest',
-        'waist': 'waist',
-        'hip': 'hips',   # vertex group is 'hips' (plural) but measurement label is 'hip'
-        'thigh': 'thigh',
-        'bicep': 'bicep',
-        'neck': 'neck',
+    # Circumferences: plane-mesh intersection with vertex-group landmarks
+    circ_map = {
+        'chest': 'chest', 'waist': 'waist', 'hip': 'hips',
+        'thigh': 'thigh', 'neck': 'neck',
     }
-    for label, group_name in circ_parts.items():
-        if group_name in vertex_groups and len(vertex_groups[group_name]) > 0:
-            indices = vertex_groups[group_name]
-            plane_y = np.mean(vertices[indices, 1])
-            circ = measure_circ_mesh(vertices, faces, face_masks.get(group_name, np.ones(len(faces), bool)), plane_y)
+    for label, gname in circ_map.items():
+        if gname in vg and len(vg[gname]) > 0:
+            plane_y = np.mean(verts[vg[gname], 1])
+            circ = measure_circ_mesh(verts, faces, fm.get(gname, np.ones(len(faces), bool)), plane_y)
             if circ < 1.0:
-                circ = measure_circ_ellipse(vertices, indices)
+                circ = measure_circ_ellipse(verts, vg[gname])
             meas[label] = circ
 
-    # Shoulder width: use vertex group directly
-    sh_key = 'shoulder width'
-    if sh_key in vertex_groups and len(vertex_groups[sh_key]) > 0:
-        sh_verts = vertices[vertex_groups[sh_key]]
-        meas['shoulder'] = (sh_verts[:, 0].max() - sh_verts[:, 0].min()) * 100
+    # Shoulder from vertex group
+    if 'shoulder width' in vg and len(vg['shoulder width']) > 0:
+        sv = verts[vg['shoulder width']]
+        meas['shoulder'] = (sv[:, 0].max() - sv[:, 0].min()) * 100
+
+    # Bicep: plane-mesh intersection at bicep vertex Y level
+    if 'bicep' in vg and len(vg['bicep']) > 0:
+        plane_y = np.mean(verts[vg['bicep'], 1])
+        circ = measure_circ_mesh(verts, faces, fm.get('bicep', np.ones(len(faces), bool)), plane_y)
+        if circ < 1.0:
+            circ = measure_circ_ellipse(verts, vg['bicep'])
+        meas['bicep'] = circ
 
     return meas
 
 def main():
     print("Loading SMPL...")
     v_template, shapedirs, faces = load_smpl()
-    vertex_groups = load_vertex_groups()
-    face_masks = precompute_face_masks(faces, vertex_groups)
-
-    print(f"Loaded: {len(v_template)} vertices, {len(faces)} faces")
-    print(f"Vertex groups: {list(vertex_groups.keys())}")
-
-    # Measurement labels for regression (must match HTML data-measurement attributes)
-    m_labels = ['chest', 'waist', 'hip', 'shoulder', 'thigh', 'bicep', 'height']
+    vg = load_vertex_groups()
+    fm = precompute_face_masks(faces, vg)
 
     np.random.seed(42)
+    m_labels = ['chest', 'waist', 'hip', 'shoulder', 'thigh', 'bicep', 'height', 'neck']
+
     all_betas = []
     all_meas = []
 
-    print(f"\nGenerating {TOTAL_SHAPES} shapes...")
+    print(f"Generating {TOTAL_SHAPES} shapes with plane-mesh intersection...")
     for i in range(TOTAL_SHAPES):
-        if i % 1000 == 0:
+        if i % 500 == 0:
             print(f"  {i}/{TOTAL_SHAPES} (valid: {len(all_betas)})...")
 
         betas = np.random.randn(NUM_BETAS) * 1.2
@@ -166,7 +150,7 @@ def main():
         deltas = np.einsum('ijk,k->ij', shapedirs, betas)
         verts = v_template + deltas
 
-        meas = compute_all_measurements(verts, faces, vertex_groups, face_masks)
+        meas = compute_measurements(verts, faces, vg, fm)
 
         if all(m in meas and meas[m] > 1.0 for m in m_labels):
             all_betas.append(betas)
@@ -177,61 +161,61 @@ def main():
     print(f"\nTotal valid: {len(all_betas)}")
 
     for j, l in enumerate(m_labels):
-        print(f"  {l}: {all_meas[:, j].min():.1f} - {all_meas[:, j].max():.1f} cm")
+        print(f"  {l}: {all_meas[:,j].min():.1f} - {all_meas[:,j].max():.1f} (mean={all_meas[:,j].mean():.1f})")
 
-    # Normalize
-    mean = all_meas.mean(0)
-    std = all_meas.std(0)
-    std[std < 1e-6] = 1.0
-    norm = (all_meas - mean) / std
+    scaler = StandardScaler()
+    norm = scaler.fit_transform(all_meas)
 
-    # Train Ridge
-    print("\nTraining Ridge regression...")
-    ridge = Ridge(alpha=1.0)
-    ridge.fit(norm, all_betas)
-    r2 = ridge.score(norm, all_betas)
-    print(f"R² = {r2:.4f}")
+    print("\nTraining MLP...")
+    mlp = MLPRegressor(
+        hidden_layer_sizes=(128, 64),
+        activation='relu',
+        max_iter=500,
+        early_stopping=True,
+        validation_fraction=0.1,
+        random_state=42,
+    )
+    mlp.fit(norm, all_betas)
+    train_r2 = mlp.score(norm, all_betas)
+    print(f"Train R² = {train_r2:.4f}")
 
-    # Test: average measurements → betas should be near 0
-    avg_meas = np.array([[85, 75, 95, 42, 52, 30, 170]])  # average human
-    avg_norm = (avg_meas - mean) / std
-    pred = ridge.predict(avg_norm)
-    print(f"Predicted betas for avg measurements: {pred[0].round(3)}")
+    cv = cross_val_score(mlp, norm, all_betas, cv=3, scoring='r2')
+    print(f"3-fold CV R² = {cv.mean():.4f} ± {cv.std():.4f}")
 
-    # Default measurements for sliders
-    male_defaults = [96, 84, 95, 45, 55, 33, 175]
-    female_defaults = [89, 72, 97, 39, 54, 27, 163]
+    avg = scaler.transform([[96, 84, 95, 45, 55, 33, 175, 38]])
+    pred = mlp.predict(avg)
+    print(f"Predicted betas for avg male: {pred[0].round(3)}")
 
-    # Slider ranges: [min, max, step]
+    male_defaults = [96, 84, 95, 45, 55, 33, 175, 38]
+    female_defaults = [89, 72, 97, 39, 54, 27, 163, 34]
+
     slider_ranges = {
-        'chest': [60, 140, 1],
-        'waist': [55, 140, 1],
-        'hips': [60, 140, 1],
-        'shoulder': [30, 60, 1],
-        'thigh': [35, 80, 1],
-        'bicep': [18, 50, 1],
-        'height': [140, 210, 1],
+        'chest': [60, 140, 1], 'waist': [55, 140, 1], 'hip': [60, 140, 1],
+        'shoulder': [30, 60, 1], 'thigh': [35, 80, 1], 'bicep': [18, 50, 1],
+        'height': [140, 210, 1], 'neck': [28, 50, 1],
     }
 
     out = {
-        "male": {
-            "weights": ridge.coef_.tolist(),
-            "bias": ridge.intercept_.tolist(),
-            "measurements_mean": mean.tolist(),
-            "measurements_std": std.tolist(),
-            "defaults": male_defaults,
-        },
-        "female": {
-            "weights": ridge.coef_.tolist(),
-            "bias": ridge.intercept_.tolist(),
-            "measurements_mean": mean.tolist(),
-            "measurements_std": std.tolist(),
-            "defaults": female_defaults,
-        },
+        "model_type": "mlp",
         "measurement_order": m_labels,
         "slider_ranges": slider_ranges,
         "num_betas": NUM_BETAS,
-        "r2_score": r2,
+        "train_r2": float(train_r2),
+        "cv_r2": float(cv.mean()),
+        "male": {
+            "weights": [c.T.tolist() for c in mlp.coefs_],
+            "bias": [b.tolist() for b in mlp.intercepts_],
+            "measurements_mean": scaler.mean_.tolist(),
+            "measurements_std": scaler.scale_.tolist(),
+            "defaults": male_defaults,
+        },
+        "female": {
+            "weights": [c.T.tolist() for c in mlp.coefs_],
+            "bias": [b.tolist() for b in mlp.intercepts_],
+            "measurements_mean": scaler.mean_.tolist(),
+            "measurements_std": scaler.scale_.tolist(),
+            "defaults": female_defaults,
+        },
     }
 
     os.makedirs(os.path.dirname(OUTPUT_PATH), exist_ok=True)
