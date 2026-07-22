@@ -24,12 +24,15 @@ class BodyVisualizer {
     const canvas = document.getElementById(canvasId);
     if (!canvas) { console.error('Canvas not found:', canvasId); return; }
 
-    // Init SMPL engine
+    // Init SMPL engine and load face topology
     this.smpl = new SMPLShapeEngine();
-    await this.smpl.init();
+    await Promise.all([
+      this.smpl.init(),
+      this.loadFaceIndices(),
+    ]);
 
     // Load faces for geometry
-    const facesResp = await fetch('/api/services/src/tf_smpl/smpl_faces.npy');
+    const facesResp = await fetch('/models/smpl_faces.npy');
     // Faces not needed for vertex-only rendering (we use the known topology)
     // SMPL faces are pre-defined: 13776 triangles from 6890 vertices
 
@@ -108,7 +111,7 @@ class BodyVisualizer {
     if (!BodyVisualizer._faceIndices) {
       // Inline SMPL face indices (13776 faces)
       // For now, generate from sequential vertices
-      // In production, load from /api/services/src/tf_smpl/smpl_faces.npy
+      // Load from /models/smpl_faces.npy
       const indices = [];
       // We'll load the actual faces asynchronously
       geometry.setIndex([]); // placeholder

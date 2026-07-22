@@ -122,25 +122,27 @@ class SMPLShapeEngine {
     const dtypeStr = dtypeMatch[1];
 
     // Parse shape
-    const shapeMatch = headerStr.match(/shape:\s*\(([^)]+)\)/);
+    const shapeMatch = headerStr.match(/'shape':\s*\(([^)]+)\)/);
     if (!shapeMatch) throw new Error(`Cannot parse shape in ${url}`);
     const shape = shapeMatch[1].split(',').map(s => parseInt(s.trim())).filter(n => !isNaN(n));
 
     const dataStart = headerStart + headerLen;
     const rawBytes = new Uint8Array(buf, dataStart);
 
+    // Normalize dtype: strip endianness marker (<, >, |) and match common aliases
+    const normDtype = dtypeStr.replace(/^<[>]?/, '').replace(/^>/, '');
     // Determine bytes per element
     let elemSize, getter, TypedArray;
-    if (dtypeStr.includes('float64') || dtypeStr === 'f8') {
+    if (normDtype.includes('float64') || normDtype === 'f8' || normDtype === 'double') {
       elemSize = 8; TypedArray = Float64Array;
       getter = (off) => view.getFloat64(off, true);
-    } else if (dtypeStr.includes('float32') || dtypeStr === 'f4') {
+    } else if (normDtype.includes('float32') || normDtype === 'f4' || normDtype === 'single') {
       elemSize = 4; TypedArray = Float32Array;
       getter = (off) => view.getFloat32(off, true);
-    } else if (dtypeStr.includes('int32') || dtypeStr === 'i4') {
+    } else if (normDtype.includes('int32') || normDtype === 'i4') {
       elemSize = 4; TypedArray = Int32Array;
       getter = (off) => view.getInt32(off, true);
-    } else if (dtypeStr.includes('int64') || dtypeStr === 'i8') {
+    } else if (normDtype.includes('int64') || normDtype === 'i8') {
       elemSize = 8; TypedArray = BigInt64Array;
       // Can't use DataView for BigInt64 in all browsers, use manual
       const total = shape.reduce((a, b) => a * b, 1);
@@ -151,7 +153,7 @@ class SMPLShapeEngine {
         arr[i] = lo + hi * 4294967296; // approximate
       }
       return { data: arr, shape };
-    } else if (dtypeStr.includes('uint32') || dtypeStr === 'u4') {
+    } else if (normDtype.includes('uint32') || normDtype === 'u4') {
       elemSize = 4; TypedArray = Uint32Array;
       getter = (off) => view.getUint32(off, true);
     } else {
@@ -161,7 +163,7 @@ class SMPLShapeEngine {
     const total = shape.reduce((a, b) => a * b, 1);
 
     // If dtype is float64, read as float64 then convert to float32 for Three.js
-    if (dtypeStr.includes('float64') || dtypeStr === 'f8') {
+    if (normDtype.includes('float64') || normDtype === 'f8') {
       const arr = new Float64Array(total);
       for (let i = 0; i < total; i++) {
         arr[i] = getter(dataStart + i * elemSize);
