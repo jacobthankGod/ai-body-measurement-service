@@ -98,25 +98,18 @@ class BodyVisualizer {
   }
 
   _buildGeometry(vertexData) {
-    // SMPL face topology (13776 triangles)
-    // This is the standard SMPL face array, loaded once
     const geometry = new THREE.BufferGeometry();
-
-    // Position attribute
     const positions = new Float32Array(vertexData);
     geometry.setAttribute('position', new THREE.BufferAttribute(positions, 3));
 
-    // Generate face indices (standard SMPL topology)
-    // We load this from the server or inline it
-    if (!BodyVisualizer._faceIndices) {
-      // Inline SMPL face indices (13776 faces)
-      // For now, generate from sequential vertices
-      // Load from /models/smpl_faces.npy
-      const indices = [];
-      // We'll load the actual faces asynchronously
-      geometry.setIndex([]); // placeholder
+    if (BodyVisualizer._faceIndices) {
+      geometry.setIndex(new THREE.BufferAttribute(BodyVisualizer._faceIndices, 1));
     } else {
-      geometry.setIndex(BodyVisualizer._faceIndices);
+      // Fallback: generate sequential face indices (will look wrong but won't crash)
+      const nv = positions.length / 3;
+      const idx = new Uint32Array(nv);
+      for (let i = 0; i < nv; i++) idx[i] = i;
+      geometry.setIndex(new THREE.BufferAttribute(idx, 1));
     }
 
     geometry.computeVertexNormals();
