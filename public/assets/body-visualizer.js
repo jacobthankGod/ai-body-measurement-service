@@ -232,21 +232,26 @@ class BodyVisualizer {
   updateFromMeasurements(measurements) {
     if (!this.smpl || !this.smpl.ready) return;
 
-    // Height is handled by Y-scaling, not betas
-    const targetHeight = (measurements.height || 175) / 175; // normalize to average
-
+    const targetHeightCm = measurements.height || 175;
     this.currentBetas = this.smpl.measurementsToBetas(measurements, this.gender);
     const vertices = this.smpl.computeBodyShape(this.currentBetas);
 
-    // Update vertex buffer
     if (this.mesh) {
       const pos = this.mesh.geometry.attributes.position;
       for (let i = 0; i < vertices.length; i++) {
         pos.array[i] = vertices[i];
       }
-      // Apply height scaling (Y axis only)
-      for (let i = 1; i < vertices.length; i += 3) {
-        pos.array[i] *= targetHeight;
+      // Measure actual mesh height after betas, scale Y to match target
+      let minY = Infinity, maxY = -Infinity;
+      for (let i = 1; i < pos.array.length; i += 3) {
+        if (pos.array[i] < minY) minY = pos.array[i];
+        if (pos.array[i] > maxY) maxY = pos.array[i];
+      }
+      const actualHeightM = maxY - minY;
+      const targetHeightM = targetHeightCm / 100;
+      const heightScale = actualHeightM > 0 ? targetHeightM / actualHeightM : 1.0;
+      for (let i = 1; i < pos.array.length; i += 3) {
+        pos.array[i] *= heightScale;
       }
       pos.needsUpdate = true;
       this.mesh.geometry.computeVertexNormals();
