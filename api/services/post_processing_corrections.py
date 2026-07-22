@@ -116,37 +116,56 @@ def apply_silhouette_corrections(
 
 def _extract_silhouette(image: np.ndarray) -> Optional[np.ndarray]:
     """
-    Extract binary silhouette from photo using rembg.
+    Extract binary silhouette from photo using OpenCV GrabCut.
     Returns True/False mask for each pixel.
     """
     try:
-        from rembg import remove
-        from PIL import Image
         import cv2
         
-        # Convert BGR to RGB for rembg
-        if len(image.shape) == 3 and image.shape[2] == 3:
-            rgb = cv2.cvtColor(image, cv2.COLOR_BGR2RGB)
-        else:
-            rgb = image.copy()
+        # Ensure uint8 and BGR 3-channel format for GrabCut
+        img = image.copy()
         
-        # Run rembg
-        pil_img = Image.fromarray(rgb)
-        result = remove(pil_img)
+        # Convert float [0,1] to uint8 [0,255]
+        if img.dtype != np.uint8:
+            if img.max() <= 1.0:
+                img = (img * 255).astype(np.uint8)
+            else:
+                img = img.astype(np.uint8)
         
-        # Convert to numpy mask (alpha channel > 128 = foreground)
-        result_np = np.array(result)
-        if result_np.shape[2] == 4:  # RGBA
-            mask = result_np[:, :, 3] > 128
-        else:
-            # Fallback: use grayscale threshold
-            gray = cv2.cvtColor(result_np, cv2.COLOR_RGB2GRAY)
-            mask = gray > 128
+        # Ensure 3-channel (remove alpha if present)
+        if len(img.shape) == 2:
+            img = cv2.cvtColor(img, cv2.COLOR_GRAY2BGR)
+        elif img.shape[2] == 4:
+            img = cv2.cvtColor(img, cv2.COLOR_BGRA2BGR)
+        elif img.shape[2] == 1:
+            img = cv2.cvtColor(img, cv2.COLOR_GRAY2BGR)
+        
+        # PIL opens as RGB, convert to BGR for OpenCV
+        img = cv2.cvtColor(img, cv2.COLOR_RGB2BGR)
+        
+        h, w = img.shape[:2]
+        
+        # Use GrabCut with image bounds as initial rect
+        gc_mask = np.zeros((h, w), np.uint8)
+        bgd_model = np.zeros((1, 65), np.float64)
+        fgd_model = np.zeros((1, 65), np.float64)
+        rect = (int(w * 0.05), int(h * 0.05), int(w * 0.9), int(h * 0.9))
+        
+        cv2.grabCut(img, gc_mask, rect, bgd_model, fgd_model,
+                    5, cv2.GC_INIT_WITH_RECT)
+        
+        mask = (gc_mask == cv2.GC_FGD) | (gc_mask == cv2.GC_PR_FGD)
+        
+        # Fallback: if GrabCut found very little foreground, use threshold
+        if np.sum(mask) < 1000:
+            gray = cv2.cvtColor(img, cv2.COLOR_BGR2GRAY)
+            _, mask = cv2.threshold(gray, 30, 255, cv2.THRESH_BINARY)
+            mask = mask > 0
         
         return mask
         
     except Exception as e:
-        logger.warning(f"rembg silhouette extraction failed: {e}")
+        logger.warning(f"GrabCut silhouette extraction failed: {e}")
         return None
 
 

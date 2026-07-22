@@ -188,43 +188,50 @@ def run_hmr(front_path, side_path, height_cm, gender, mesh_path=None, attire_nam
             logger.warning(f"Measurement calibration skipped: {e}")
 
         # Post-processing silhouette corrections (AFTER calibration)
-        # Uses rembg to extract front/side silhouettes and corrects torso measurements
-        try:
-            from api.services.post_processing_corrections import apply_silhouette_corrections
-            from PIL import Image as PILImage
-            front_img = np.array(PILImage.open(front_path)) if front_path and os.path.exists(front_path) else None
-            side_img = np.array(PILImage.open(side_path)) if side_path and os.path.exists(side_path) else None
-            
-            # Load vertex map from customBodyPoints.txt (lightweight, no model loading)
-            vertex_map = {}
-            vb_path = os.path.join(os.path.dirname(__file__), '..', '..', 'data', 'customBodyPoints.txt')
-            if os.path.exists(vb_path):
-                current_section = None
-                with open(vb_path, 'r') as f:
-                    for line in f:
-                        line = line.strip()
-                        if line.startswith("#"):
-                            current_section = line[1:].strip().lower()
-                            vertex_map[current_section] = []
-                        elif current_section and line:
-                            parts = line.split()
-                            if len(parts) >= 2:
-                                try:
-                                    vertex_map[current_section].append(int(parts[1]))
-                                except (ValueError, IndexError):
-                                    pass
-            
-            # We need the T-pose vertices for projection
-            if v_measure_tpose is not None and vertex_map:
-                measurements = apply_silhouette_corrections(
-                    measurements, front_img, side_img,
-                    smpl_params, height_cm, gender, vertex_map,
-                    v_measure_tpose
-                )
-            if front_img is not None: del front_img
-            if side_img is not None: del side_img
-        except Exception as e:
-            logger.warning(f"Silhouette corrections skipped: {e}")
+        # DISABLED by default: silhouette corrections can over-correct when the
+        # mesh projection is already accurate. Enable via SILHOUETTE_CORRECTIONS=1 env var.
+        if os.environ.get('SILHOUETTE_CORRECTIONS', '0') == '1':
+            try:
+                from api.services.post_processing_corrections import apply_silhouette_corrections
+                from PIL import Image as PILImage
+                
+                # Load vertex map from customBodyPoints.txt (lightweight, no model loading)
+                vertex_map = {}
+                vb_path = os.path.join(os.path.dirname(__file__), '..', '..', 'data', 'customBodyPoints.txt')
+                if os.path.exists(vb_path):
+                    current_section = None
+                    with open(vb_path, 'r') as f:
+                        for line in f:
+                            line = line.strip()
+                            if line.startswith("#"):
+                                current_section = line[1:].strip().lower()
+                                vertex_map[current_section] = []
+                            elif current_section and line:
+                                parts = line.split()
+                                if len(parts) >= 2:
+                                    try:
+                                        vertex_map[current_section].append(int(parts[1]))
+                                    except (ValueError, IndexError):
+                                        pass
+                
+                if v_measure_tpose is not None and vertex_map and smpl_params and 'camera' in smpl_params:
+                    # Re-load front image for silhouette extraction
+                    front_img = np.array(PILImage.open(front_path)) if front_path and os.path.exists(front_path) else None
+                    side_img = np.array(PILImage.open(side_path)) if side_path and os.path.exists(side_path) else None
+                    
+                    measurements = apply_silhouette_corrections(
+                        measurements, front_img, side_img,
+                        smpl_params, height_cm, gender, vertex_map,
+                        v_measure_tpose
+                    )
+                    if front_img is not None: del front_img
+                    if side_img is not None: del side_img
+                else:
+                    logger.info("Silhouette corrections skipped: missing data")
+            except Exception as e:
+                logger.warning(f"Silhouette corrections skipped: {e}")
+        else:
+            logger.info("Silhouette corrections disabled (set SILHOUETTE_CORRECTIONS=1 to enable)")
 
         # NEW: Export TailorNet body mesh for every scan
         tailornet_body_path = None
