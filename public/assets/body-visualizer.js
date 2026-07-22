@@ -8,8 +8,6 @@ class BodyVisualizer {
     this.camera = null;
     this.renderer = null;
     this.mesh = null;
-    this.garmentMesh = null;
-    this.garmentVisible = false;
     this.smpl = null;
     this.controls = null;
     this.gender = 'male';
@@ -88,9 +86,6 @@ class BodyVisualizer {
     this._groundMesh();
     this.scene.add(this.mesh);
 
-    // Load garment mesh (static t-shirt OBJ)
-    this._loadGarment('/meshes/garments/ssp3d_subj_1_garment.obj');
-
     // Mouse controls
     this._initControls(canvas);
 
@@ -129,49 +124,6 @@ class BodyVisualizer {
     bbox.getCenter(center);
     // Ground feet at Y=0
     this.mesh.position.set(0, -bbox.min.y, 0);
-  }
-
-  async _loadGarment(url) {
-    try {
-      const resp = await fetch(url);
-      if (!resp.ok) return;
-      const text = await resp.text();
-      const lines = text.split('\n');
-      const verts = [], faces = [];
-      for (const line of lines) {
-        if (line.startsWith('v ')) {
-          const parts = line.split(/\s+/);
-          verts.push(parseFloat(parts[1]), parseFloat(parts[2]), parseFloat(parts[3]));
-        } else if (line.startsWith('f ')) {
-          const parts = line.split(/\s+/);
-          faces.push(parseInt(parts[1])-1, parseInt(parts[2])-1, parseInt(parts[3])-1);
-        }
-      }
-      if (verts.length === 0 || faces.length === 0) return;
-      const geom = new THREE.BufferGeometry();
-      geom.setAttribute('position', new THREE.BufferAttribute(new Float32Array(verts), 3));
-      geom.setIndex(new THREE.BufferAttribute(new Uint32Array(faces), 1));
-      geom.computeVertexNormals();
-      const mat = new THREE.MeshStandardMaterial({
-        color: 0x4488cc, roughness: 0.7, metalness: 0.0,
-        transparent: true, opacity: 0.85, side: THREE.DoubleSide,
-      });
-      this.garmentMesh = new THREE.Mesh(geom, mat);
-      this.garmentMesh.visible = false;
-      // Apply same grounding as body
-      if (this.mesh) {
-        this.garmentMesh.position.copy(this.mesh.position);
-      }
-      this.scene.add(this.garmentMesh);
-    } catch (e) {
-      console.warn('Could not load garment:', e);
-    }
-  }
-
-  updateGarment() {
-    if (this.garmentMesh) {
-      this.garmentMesh.visible = this.garmentVisible;
-    }
   }
 
   _updateCamera() {
@@ -280,6 +232,9 @@ class BodyVisualizer {
   updateFromMeasurements(measurements) {
     if (!this.smpl || !this.smpl.ready) return;
 
+    // Height is handled by Y-scaling, not betas
+    const targetHeight = (measurements.height || 175) / 175; // normalize to average
+
     this.currentBetas = this.smpl.measurementsToBetas(measurements, this.gender);
     const vertices = this.smpl.computeBodyShape(this.currentBetas);
 
@@ -288,6 +243,10 @@ class BodyVisualizer {
       const pos = this.mesh.geometry.attributes.position;
       for (let i = 0; i < vertices.length; i++) {
         pos.array[i] = vertices[i];
+      }
+      // Apply height scaling (Y axis only)
+      for (let i = 1; i < vertices.length; i += 3) {
+        pos.array[i] *= targetHeight;
       }
       pos.needsUpdate = true;
       this.mesh.geometry.computeVertexNormals();

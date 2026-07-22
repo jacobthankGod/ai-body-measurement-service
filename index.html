@@ -770,7 +770,6 @@
           </div>
           <div style="display:flex;gap:6px;margin-top:10px;">
             <button id="vis-pause-btn" onclick="window.bodyVisUI.togglePause()" style="flex:1;padding:8px;border:1px solid var(--Glass-Border);border-radius:10px;background:transparent;color:var(--Neutral-400);font-size:12px;font-weight:700;cursor:pointer;font-family:inherit;">Pause</button>
-            <button id="vis-garment-btn" onclick="window.bodyVisUI.toggleGarment()" style="flex:1;padding:8px;border:1px solid var(--Glass-Border);border-radius:10px;background:transparent;color:var(--Neutral-400);font-size:12px;font-weight:700;cursor:pointer;font-family:inherit;">T-Shirt</button>
           </div>
           <div class="vis-presets">
             <button data-preset="slim" onclick="window.bodyVisUI.setPreset('slim')">Slim</button>
@@ -1189,15 +1188,6 @@
             this.vis.isRotating = !this.vis.isRotating;
             const btn = document.getElementById('vis-pause-btn');
             if (btn) btn.textContent = this.vis.isRotating ? 'Pause' : 'Resume';
-          }
-        },
-
-        toggleGarment: function() {
-          if (this.vis) {
-            this.vis.garmentVisible = !this.vis.garmentVisible;
-            const btn = document.getElementById('vis-garment-btn');
-            if (btn) btn.textContent = this.vis.garmentVisible ? 'Hide Shirt' : 'T-Shirt';
-            this.vis.updateGarment();
           }
         },
       };

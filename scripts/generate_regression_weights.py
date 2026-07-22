@@ -1,16 +1,18 @@
 #!/usr/bin/env python3
-"""Generate measurement-to-beta regression weights — v5: plane-mesh intersection + MLP.
+"""Generate measurement-to-beta regression weights — v6: Ridge, height separated.
 
-Uses proper plane-mesh intersection for circumferences.
-5K shapes for reasonable training time.
+Key design decisions:
+- Ridge regression (linear = predictable, no measurement coupling)
+- Height EXCLUDED from regression — handled by direct Y-scaling in JS
+- Plane-mesh intersection for proper measurements
+- 5K shapes for reasonable training time
 """
 
 import json, os, sys
 import numpy as np
 from scipy.spatial import ConvexHull
-from sklearn.neural_network import MLPRegressor
+from sklearn.linear_model import Ridge
 from sklearn.preprocessing import StandardScaler
-from sklearn.model_selection import cross_val_score
 
 PROJECT_ROOT = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
 OUTPUT_PATH = os.path.join(PROJECT_ROOT, 'public', 'assets', 'smpl_regression_weights.json')
@@ -57,7 +59,6 @@ def precompute_face_masks(faces, vertex_groups):
     return masks
 
 def measure_circ_mesh(vertices, faces, face_mask, plane_y):
-    """Measure circumference using plane-mesh intersection. Returns cm."""
     relevant_faces = faces[face_mask]
     if len(relevant_faces) == 0: return 0.0
     intersections = []
@@ -95,14 +96,13 @@ def measure_circ_ellipse(vertices, vertex_indices):
     return np.pi * (a + b) * (1 + (3 * h) / (10 + np.sqrt(max(4 - 3 * h, 0))))
 
 def compute_measurements(verts, faces, vg, fm):
+    """Compute measurements WITHOUT height (height handled separately in JS)."""
     meas = {}
     v_height = (verts[:, 1].max() - verts[:, 1].min()) * 100
-    meas['height'] = v_height
 
-    # Circumferences: plane-mesh intersection with vertex-group landmarks
     circ_map = {
         'chest': 'chest', 'waist': 'waist', 'hip': 'hips',
-        'thigh': 'thigh', 'neck': 'neck',
+        'thigh': 'thigh', 'neck': 'neck', 'bicep': 'bicep',
     }
     for label, gname in circ_map.items():
         if gname in vg and len(vg[gname]) > 0:
@@ -112,18 +112,9 @@ def compute_measurements(verts, faces, vg, fm):
                 circ = measure_circ_ellipse(verts, vg[gname])
             meas[label] = circ
 
-    # Shoulder from vertex group
     if 'shoulder width' in vg and len(vg['shoulder width']) > 0:
         sv = verts[vg['shoulder width']]
         meas['shoulder'] = (sv[:, 0].max() - sv[:, 0].min()) * 100
-
-    # Bicep: plane-mesh intersection at bicep vertex Y level
-    if 'bicep' in vg and len(vg['bicep']) > 0:
-        plane_y = np.mean(verts[vg['bicep'], 1])
-        circ = measure_circ_mesh(verts, faces, fm.get('bicep', np.ones(len(faces), bool)), plane_y)
-        if circ < 1.0:
-            circ = measure_circ_ellipse(verts, vg['bicep'])
-        meas['bicep'] = circ
 
     return meas
 
@@ -134,7 +125,8 @@ def main():
     fm = precompute_face_masks(faces, vg)
 
     np.random.seed(42)
-    m_labels = ['chest', 'waist', 'hip', 'shoulder', 'thigh', 'bicep', 'height', 'neck']
+    # Height EXCLUDED — handled by Y-scaling in JS
+    m_labels = ['chest', 'waist', 'hip', 'shoulder', 'thigh', 'bicep', 'neck']
 
     all_betas = []
     all_meas = []
@@ -163,57 +155,65 @@ def main():
     for j, l in enumerate(m_labels):
         print(f"  {l}: {all_meas[:,j].min():.1f} - {all_meas[:,j].max():.1f} (mean={all_meas[:,j].mean():.1f})")
 
-    scaler = StandardScaler()
-    norm = scaler.fit_transform(all_meas)
+    # Normalize measurements
+    mean = all_meas.mean(0)
+    std = all_meas.std(0)
+    std[std < 1e-6] = 1.0
+    norm = (all_meas - mean) / std
 
-    print("\nTraining MLP...")
-    mlp = MLPRegressor(
-        hidden_layer_sizes=(128, 64),
-        activation='relu',
-        max_iter=500,
-        early_stopping=True,
-        validation_fraction=0.1,
-        random_state=42,
-    )
-    mlp.fit(norm, all_betas)
-    train_r2 = mlp.score(norm, all_betas)
+    # Train Ridge regression (linear = predictable)
+    print("\nTraining Ridge regression...")
+    ridge = Ridge(alpha=1.0)
+    ridge.fit(norm, all_betas)
+    train_r2 = ridge.score(norm, all_betas)
     print(f"Train R² = {train_r2:.4f}")
 
-    cv = cross_val_score(mlp, norm, all_betas, cv=3, scoring='r2')
-    print(f"3-fold CV R² = {cv.mean():.4f} ± {cv.std():.4f}")
-
-    avg = scaler.transform([[96, 84, 95, 45, 55, 33, 175, 38]])
-    pred = mlp.predict(avg)
+    # Test with average measurements
+    avg = np.array([[96, 84, 95, 45, 55, 33, 38]])
+    avg_norm = (avg - mean) / std
+    pred = ridge.predict(avg_norm)
     print(f"Predicted betas for avg male: {pred[0].round(3)}")
+    print(f"Abs max: {np.abs(pred[0]).max():.3f}")
 
-    male_defaults = [96, 84, 95, 45, 55, 33, 175, 38]
-    female_defaults = [89, 72, 97, 39, 54, 27, 163, 34]
+    # Check measurement independence
+    print("\nMeasurement independence check:")
+    for mi, mname in enumerate(m_labels):
+        # Set only this measurement to high, others to average
+        test = np.array([[96, 84, 95, 45, 55, 33, 38]], dtype=float)
+        test[0, mi] = mean[mi] + 2 * std[mi]  # 2 std above mean
+        test_norm = (test - mean) / std
+        test_pred = ridge.predict(test_norm)
+        delta = test_pred[0] - pred[0]
+        print(f"  {mname:10s} high → beta delta: {delta.round(3)}")
+
+    # Default measurements (height excluded — handled in JS)
+    male_defaults = [96, 84, 95, 45, 55, 33, 38]
+    female_defaults = [89, 72, 97, 39, 54, 27, 34]
 
     slider_ranges = {
         'chest': [60, 140, 1], 'waist': [55, 140, 1], 'hip': [60, 140, 1],
         'shoulder': [30, 60, 1], 'thigh': [35, 80, 1], 'bicep': [18, 50, 1],
-        'height': [140, 210, 1], 'neck': [28, 50, 1],
+        'neck': [28, 50, 1],
     }
 
     out = {
-        "model_type": "mlp",
+        "model_type": "ridge",
         "measurement_order": m_labels,
         "slider_ranges": slider_ranges,
         "num_betas": NUM_BETAS,
         "train_r2": float(train_r2),
-        "cv_r2": float(cv.mean()),
         "male": {
-            "weights": [c.T.tolist() for c in mlp.coefs_],
-            "bias": [b.tolist() for b in mlp.intercepts_],
-            "measurements_mean": scaler.mean_.tolist(),
-            "measurements_std": scaler.scale_.tolist(),
+            "weights": ridge.coef_.tolist(),
+            "bias": ridge.intercept_.tolist(),
+            "measurements_mean": mean.tolist(),
+            "measurements_std": std.tolist(),
             "defaults": male_defaults,
         },
         "female": {
-            "weights": [c.T.tolist() for c in mlp.coefs_],
-            "bias": [b.tolist() for b in mlp.intercepts_],
-            "measurements_mean": scaler.mean_.tolist(),
-            "measurements_std": scaler.scale_.tolist(),
+            "weights": ridge.coef_.tolist(),
+            "bias": ridge.intercept_.tolist(),
+            "measurements_mean": mean.tolist(),
+            "measurements_std": std.tolist(),
             "defaults": female_defaults,
         },
     }
