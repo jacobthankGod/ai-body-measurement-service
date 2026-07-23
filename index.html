@@ -359,9 +359,10 @@
 
     /* BODY SHAPE VISUALIZER */
     .vis-container {
-      display: grid; grid-template-columns: 1fr 360px; gap: 0;
+      display: grid; grid-template-columns: 1fr 340px; gap: 0;
       background: var(--Glass); border: 1px solid var(--Glass-Border);
-      border-radius: 24px; overflow: hidden; min-height: 420px;
+      border-radius: 24px; overflow: hidden; min-height: 420px; max-width: 1100px;
+      margin: 0 auto;
     }
     .vis-viewport {
       position: relative; background: var(--Obsidian-Layer);
@@ -378,7 +379,7 @@
       background: var(--Obsidian-Deep); height: 100%; overflow: hidden;
     }
     .vis-m-scroll {
-      flex: 1; overflow-y: auto; overflow-x: hidden;
+      height: 0; flex-grow: 1; overflow-y: auto; overflow-x: hidden;
       display: flex; flex-direction: column; gap: 2px;
       scrollbar-width: thin; scrollbar-color: rgba(255,255,255,0.12) transparent;
     }
@@ -460,7 +461,7 @@
     .vis-section-title { font-size: 11px; font-weight: 900; color: var(--Neutral-500);
       text-transform: uppercase; letter-spacing: 0.15em; margin-top: 4px; }
     @media (max-width: 900px) {
-      .vis-container { grid-template-columns: 1fr; grid-template-rows: 300px auto; }
+      .vis-container { grid-template-columns: 1fr; grid-template-rows: 300px auto; max-width: none; }
       .vis-viewport { border-radius: 24px 24px 0 0; min-height: 280px; }
     }
   </style>
@@ -781,53 +782,53 @@
               <div class="vis-m-section-hdr"><span class="vis-m-dot" style="background:var(--Mint)"></span>Torso</div>
               <div class="vis-slider-group"><div class="vis-slider-label">Chest Round <span class="vis-slider-val" id="val-chest">95 cm</span></div><input type="range" min="65" max="140" value="95" step="1" data-measurement="chest"></div>
               <div class="vis-slider-group"><div class="vis-slider-label">Waist Round <span class="vis-slider-val" id="val-waist">80 cm</span></div><input type="range" min="55" max="140" value="80" step="1" data-measurement="waist"></div>
-              <div class="vis-slider-group vis-slider-disabled"><div class="vis-slider-label">Stomach Round <span class="vis-slider-val" id="val-stomach">—</span></div><input type="range" min="50" max="130" value="0" step="0.1" data-computed="stomach" disabled></div>
+              <div class="vis-slider-group vis-slider-disabled"><div class="vis-slider-label">Stomach Round <span class="vis-slider-val" id="val-stomach">—</span></div><input type="range" min="50" max="130" value="0" step="0.1" data-computed="stomach"></div>
               <div class="vis-slider-group"><div class="vis-slider-label">Hip Round <span class="vis-slider-val" id="val-hip">95 cm</span></div><input type="range" min="65" max="140" value="95" step="1" data-measurement="hip"></div>
               <div class="vis-slider-group"><div class="vis-slider-label">Neck Round <span class="vis-slider-val" id="val-neck">38 cm</span></div><input type="range" min="28" max="50" value="38" step="1" data-measurement="neck"></div>
-              <div class="vis-slider-group vis-slider-disabled"><div class="vis-slider-label">Upper Hip <span class="vis-slider-val" id="val-upper_hip">—</span></div><input type="range" min="55" max="130" value="0" step="0.1" data-computed="upper_hip" disabled></div>
+              <div class="vis-slider-group vis-slider-disabled"><div class="vis-slider-label">Upper Hip <span class="vis-slider-val" id="val-upper_hip">—</span></div><input type="range" min="55" max="130" value="0" step="0.1" data-computed="upper_hip"></div>
             </div>
             <div class="vis-m-section">
               <div class="vis-m-section-hdr"><span class="vis-m-dot" style="background:#00E5FF"></span>Torso Lengths</div>
-              <div class="vis-slider-group vis-slider-disabled"><div class="vis-slider-label">Half Length <span class="vis-slider-val" id="val-half_length">—</span></div><input type="range" min="15" max="50" value="0" step="0.1" data-computed="half_length" disabled></div>
-              <div class="vis-slider-group vis-slider-disabled"><div class="vis-slider-label">Back Waist Length <span class="vis-slider-val" id="val-back_waist_length">—</span></div><input type="range" min="15" max="45" value="0" step="0.1" data-computed="back_waist_length" disabled></div>
-              <div class="vis-slider-group vis-slider-disabled"><div class="vis-slider-label">Front Waist Length <span class="vis-slider-val" id="val-front_waist_length">—</span></div><input type="range" min="15" max="50" value="0" step="0.1" data-computed="front_waist_length" disabled></div>
-              <div class="vis-slider-group vis-slider-disabled"><div class="vis-slider-label">Neck to Waist <span class="vis-slider-val" id="val-neck_to_waist">—</span></div><input type="range" min="25" max="60" value="0" step="0.1" data-computed="neck_to_waist" disabled></div>
-              <div class="vis-slider-group vis-slider-disabled"><div class="vis-slider-label">Waist to Hip <span class="vis-slider-val" id="val-waist_to_hip">—</span></div><input type="range" min="10" max="40" value="0" step="0.1" data-computed="waist_to_hip" disabled></div>
-              <div class="vis-slider-group vis-slider-disabled"><div class="vis-slider-label">Crotch Depth <span class="vis-slider-val" id="val-crotch_depth">—</span></div><input type="range" min="15" max="40" value="0" step="0.1" data-computed="crotch_depth" disabled></div>
+              <div class="vis-slider-group vis-slider-disabled"><div class="vis-slider-label">Half Length <span class="vis-slider-val" id="val-half_length">—</span></div><input type="range" min="15" max="50" value="0" step="0.1" data-computed="half_length"></div>
+              <div class="vis-slider-group vis-slider-disabled"><div class="vis-slider-label">Back Waist Length <span class="vis-slider-val" id="val-back_waist_length">—</span></div><input type="range" min="15" max="45" value="0" step="0.1" data-computed="back_waist_length"></div>
+              <div class="vis-slider-group vis-slider-disabled"><div class="vis-slider-label">Front Waist Length <span class="vis-slider-val" id="val-front_waist_length">—</span></div><input type="range" min="15" max="50" value="0" step="0.1" data-computed="front_waist_length"></div>
+              <div class="vis-slider-group vis-slider-disabled"><div class="vis-slider-label">Neck to Waist <span class="vis-slider-val" id="val-neck_to_waist">—</span></div><input type="range" min="25" max="60" value="0" step="0.1" data-computed="neck_to_waist"></div>
+              <div class="vis-slider-group vis-slider-disabled"><div class="vis-slider-label">Waist to Hip <span class="vis-slider-val" id="val-waist_to_hip">—</span></div><input type="range" min="10" max="40" value="0" step="0.1" data-computed="waist_to_hip"></div>
+              <div class="vis-slider-group vis-slider-disabled"><div class="vis-slider-label">Crotch Depth <span class="vis-slider-val" id="val-crotch_depth">—</span></div><input type="range" min="15" max="40" value="0" step="0.1" data-computed="crotch_depth"></div>
             </div>
             <div class="vis-m-section">
               <div class="vis-m-section-hdr"><span class="vis-m-dot" style="background:#FF6B6B"></span>Widths</div>
               <div class="vis-slider-group"><div class="vis-slider-label">Shoulder Width <span class="vis-slider-val" id="val-shoulder">45 cm</span></div><input type="range" min="30" max="60" value="45" step="1" data-measurement="shoulder"></div>
-              <div class="vis-slider-group vis-slider-disabled"><div class="vis-slider-label">Across Back <span class="vis-slider-val" id="val-across_back">—</span></div><input type="range" min="25" max="55" value="0" step="0.1" data-computed="across_back" disabled></div>
-              <div class="vis-slider-group vis-slider-disabled"><div class="vis-slider-label">Across Chest <span class="vis-slider-val" id="val-across_chest">—</span></div><input type="range" min="25" max="55" value="0" step="0.1" data-computed="across_chest" disabled></div>
-              <div class="vis-slider-group vis-slider-disabled"><div class="vis-slider-label">Across Shoulder <span class="vis-slider-val" id="val-across_shoulder">—</span></div><input type="range" min="25" max="55" value="0" step="0.1" data-computed="across_shoulder" disabled></div>
+              <div class="vis-slider-group vis-slider-disabled"><div class="vis-slider-label">Across Back <span class="vis-slider-val" id="val-across_back">—</span></div><input type="range" min="25" max="55" value="0" step="0.1" data-computed="across_back"></div>
+              <div class="vis-slider-group vis-slider-disabled"><div class="vis-slider-label">Across Chest <span class="vis-slider-val" id="val-across_chest">—</span></div><input type="range" min="25" max="55" value="0" step="0.1" data-computed="across_chest"></div>
+              <div class="vis-slider-group vis-slider-disabled"><div class="vis-slider-label">Across Shoulder <span class="vis-slider-val" id="val-across_shoulder">—</span></div><input type="range" min="25" max="55" value="0" step="0.1" data-computed="across_shoulder"></div>
             </div>
             <div class="vis-m-section">
               <div class="vis-m-section-hdr"><span class="vis-m-dot" style="background:#A78BFA"></span>Arms</div>
               <div class="vis-slider-group"><div class="vis-slider-label">Bicep Round <span class="vis-slider-val" id="val-bicep">30 cm</span></div><input type="range" min="18" max="50" value="30" step="1" data-measurement="bicep"></div>
-              <div class="vis-slider-group vis-slider-disabled"><div class="vis-slider-label">Elbow Round <span class="vis-slider-val" id="val-elbow_round">—</span></div><input type="range" min="15" max="40" value="0" step="0.1" data-computed="elbow_round" disabled></div>
-              <div class="vis-slider-group vis-slider-disabled"><div class="vis-slider-label">Wrist Round <span class="vis-slider-val" id="val-wrist_round">—</span></div><input type="range" min="10" max="25" value="0" step="0.1" data-computed="wrist_round" disabled></div>
-              <div class="vis-slider-group vis-slider-disabled"><div class="vis-slider-label">Sleeve Length <span class="vis-slider-val" id="val-sleeve_length">—</span></div><input type="range" min="40" max="75" value="0" step="0.1" data-computed="sleeve_length" disabled></div>
+              <div class="vis-slider-group vis-slider-disabled"><div class="vis-slider-label">Elbow Round <span class="vis-slider-val" id="val-elbow_round">—</span></div><input type="range" min="15" max="40" value="0" step="0.1" data-computed="elbow_round"></div>
+              <div class="vis-slider-group vis-slider-disabled"><div class="vis-slider-label">Wrist Round <span class="vis-slider-val" id="val-wrist_round">—</span></div><input type="range" min="10" max="25" value="0" step="0.1" data-computed="wrist_round"></div>
+              <div class="vis-slider-group vis-slider-disabled"><div class="vis-slider-label">Sleeve Length <span class="vis-slider-val" id="val-sleeve_length">—</span></div><input type="range" min="40" max="75" value="0" step="0.1" data-computed="sleeve_length"></div>
             </div>
             <div class="vis-m-section">
               <div class="vis-m-section-hdr"><span class="vis-m-dot" style="background:#F59E0B"></span>Legs</div>
               <div class="vis-slider-group"><div class="vis-slider-label">Thigh Round <span class="vis-slider-val" id="val-thigh">55 cm</span></div><input type="range" min="35" max="80" value="55" step="1" data-measurement="thigh"></div>
-              <div class="vis-slider-group vis-slider-disabled"><div class="vis-slider-label">Knee Round <span class="vis-slider-val" id="val-knee_round">—</span></div><input type="range" min="25" max="70" value="0" step="0.1" data-computed="knee_round" disabled></div>
-              <div class="vis-slider-group vis-slider-disabled"><div class="vis-slider-label">Calf Round <span class="vis-slider-val" id="val-calf_round">—</span></div><input type="range" min="20" max="55" value="0" step="0.1" data-computed="calf_round" disabled></div>
-              <div class="vis-slider-group vis-slider-disabled"><div class="vis-slider-label">Ankle Round <span class="vis-slider-val" id="val-ankle_round">—</span></div><input type="range" min="15" max="40" value="0" step="0.1" data-computed="ankle_round" disabled></div>
-              <div class="vis-slider-group vis-slider-disabled"><div class="vis-slider-label">Inseam <span class="vis-slider-val" id="val-inseam">—</span></div><input type="range" min="55" max="95" value="0" step="0.1" data-computed="inseam" disabled></div>
-              <div class="vis-slider-group vis-slider-disabled"><div class="vis-slider-label">Trouser Length <span class="vis-slider-val" id="val-trouser_length">—</span></div><input type="range" min="70" max="120" value="0" step="0.1" data-computed="trouser_length" disabled></div>
-              <div class="vis-slider-group vis-slider-disabled"><div class="vis-slider-label">Trouser Waist <span class="vis-slider-val" id="val-trouser_waist">—</span></div><input type="range" min="55" max="140" value="0" step="0.1" data-computed="trouser_waist" disabled></div>
+              <div class="vis-slider-group vis-slider-disabled"><div class="vis-slider-label">Knee Round <span class="vis-slider-val" id="val-knee_round">—</span></div><input type="range" min="25" max="70" value="0" step="0.1" data-computed="knee_round"></div>
+              <div class="vis-slider-group vis-slider-disabled"><div class="vis-slider-label">Calf Round <span class="vis-slider-val" id="val-calf_round">—</span></div><input type="range" min="20" max="55" value="0" step="0.1" data-computed="calf_round"></div>
+              <div class="vis-slider-group vis-slider-disabled"><div class="vis-slider-label">Ankle Round <span class="vis-slider-val" id="val-ankle_round">—</span></div><input type="range" min="15" max="40" value="0" step="0.1" data-computed="ankle_round"></div>
+              <div class="vis-slider-group vis-slider-disabled"><div class="vis-slider-label">Inseam <span class="vis-slider-val" id="val-inseam">—</span></div><input type="range" min="55" max="95" value="0" step="0.1" data-computed="inseam"></div>
+              <div class="vis-slider-group vis-slider-disabled"><div class="vis-slider-label">Trouser Length <span class="vis-slider-val" id="val-trouser_length">—</span></div><input type="range" min="70" max="120" value="0" step="0.1" data-computed="trouser_length"></div>
+              <div class="vis-slider-group vis-slider-disabled"><div class="vis-slider-label">Trouser Waist <span class="vis-slider-val" id="val-trouser_waist">—</span></div><input type="range" min="55" max="140" value="0" step="0.1" data-computed="trouser_waist"></div>
             </div>
             <div class="vis-m-section vis-m-female-section" id="visFemaleSection" style="display:none">
               <div class="vis-m-section-hdr"><span class="vis-m-dot" style="background:#FF69B4"></span>Female Specific</div>
-              <div class="vis-slider-group vis-slider-disabled"><div class="vis-slider-label">Bust Round <span class="vis-slider-val" id="val-bust_round">—</span></div><input type="range" min="55" max="140" value="0" step="0.1" data-computed="bust_round" disabled></div>
-              <div class="vis-slider-group vis-slider-disabled"><div class="vis-slider-label">High Bust <span class="vis-slider-val" id="val-high_bust">—</span></div><input type="range" min="55" max="130" value="0" step="0.1" data-computed="high_bust" disabled></div>
-              <div class="vis-slider-group vis-slider-disabled"><div class="vis-slider-label">Under Bust <span class="vis-slider-val" id="val-under_bust">—</span></div><input type="range" min="45" max="120" value="0" step="0.1" data-computed="under_bust" disabled></div>
-              <div class="vis-slider-group vis-slider-disabled"><div class="vis-slider-label">Bust Point <span class="vis-slider-val" id="val-bust_point">—</span></div><input type="range" min="15" max="35" value="0" step="0.1" data-computed="bust_point" disabled></div>
-              <div class="vis-slider-group vis-slider-disabled"><div class="vis-slider-label">Shoulder to Bust <span class="vis-slider-val" id="val-shoulder_to_bust">—</span></div><input type="range" min="15" max="40" value="0" step="0.1" data-computed="shoulder_to_bust" disabled></div>
-              <div class="vis-slider-group vis-slider-disabled"><div class="vis-slider-label">Shoulder to Under Bust <span class="vis-slider-val" id="val-shoulder_to_under_bust">—</span></div><input type="range" min="15" max="40" value="0" step="0.1" data-computed="shoulder_to_under_bust" disabled></div>
-              <div class="vis-slider-group vis-slider-disabled"><div class="vis-slider-label">Armhole Round <span class="vis-slider-val" id="val-armhole_round">—</span></div><input type="range" min="15" max="50" value="0" step="0.1" data-computed="armhole_round" disabled></div>
+              <div class="vis-slider-group vis-slider-disabled"><div class="vis-slider-label">Bust Round <span class="vis-slider-val" id="val-bust_round">—</span></div><input type="range" min="55" max="140" value="0" step="0.1" data-computed="bust_round"></div>
+              <div class="vis-slider-group vis-slider-disabled"><div class="vis-slider-label">High Bust <span class="vis-slider-val" id="val-high_bust">—</span></div><input type="range" min="55" max="130" value="0" step="0.1" data-computed="high_bust"></div>
+              <div class="vis-slider-group vis-slider-disabled"><div class="vis-slider-label">Under Bust <span class="vis-slider-val" id="val-under_bust">—</span></div><input type="range" min="45" max="120" value="0" step="0.1" data-computed="under_bust"></div>
+              <div class="vis-slider-group vis-slider-disabled"><div class="vis-slider-label">Bust Point <span class="vis-slider-val" id="val-bust_point">—</span></div><input type="range" min="15" max="35" value="0" step="0.1" data-computed="bust_point"></div>
+              <div class="vis-slider-group vis-slider-disabled"><div class="vis-slider-label">Shoulder to Bust <span class="vis-slider-val" id="val-shoulder_to_bust">—</span></div><input type="range" min="15" max="40" value="0" step="0.1" data-computed="shoulder_to_bust"></div>
+              <div class="vis-slider-group vis-slider-disabled"><div class="vis-slider-label">Shoulder to Under Bust <span class="vis-slider-val" id="val-shoulder_to_under_bust">—</span></div><input type="range" min="15" max="40" value="0" step="0.1" data-computed="shoulder_to_under_bust"></div>
+              <div class="vis-slider-group vis-slider-disabled"><div class="vis-slider-label">Armhole Round <span class="vis-slider-val" id="val-armhole_round">—</span></div><input type="range" min="15" max="50" value="0" step="0.1" data-computed="armhole_round"></div>
             </div>
           </div>
           <div style="display:flex;gap:6px;margin-top:10px;padding:0 4px">
@@ -1269,7 +1270,7 @@
 
         _bindSliders: function() {
           const self = this;
-          document.querySelectorAll('.vis-slider-group input[type="range"]').forEach(slider => {
+          document.querySelectorAll('.vis-slider-group input[type="range"][data-measurement]').forEach(slider => {
             slider.addEventListener('input', function() {
               const key = this.dataset.measurement;
               const val = parseFloat(this.value);
