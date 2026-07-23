@@ -29,10 +29,25 @@ class BodyVisualizer {
     if (!canvas) { console.error('Canvas not found:', canvasId); return; }
 
     this.smpl = new SMPLShapeEngine();
+
+    // Load SMPL models and face indices in parallel
+    console.log('Loading SMPL models and face indices...');
     await Promise.all([
       this.smpl.init(),
       this.loadFaceIndices(),
     ]);
+
+    // Verify face indices loaded
+    if (!BodyVisualizer._faceIndices) {
+      console.error('WARNING: Face indices not loaded. Mesh may render incorrectly.');
+      console.error('Retrying face indices load...');
+      await this.loadFaceIndices();
+      if (!BodyVisualizer._faceIndices) {
+        console.error('CRITICAL: Face indices failed to load after retry. Mesh will be broken.');
+      }
+    } else {
+      console.log('Face indices ready:', BodyVisualizer._faceIndices.length / 3, 'triangles');
+    }
 
     this._initPartSets();
 
@@ -47,14 +62,19 @@ class BodyVisualizer {
     this._resize();
     window.addEventListener('resize', () => this._resize());
 
-    const hemi = new THREE.HemisphereLight(0xffffff, 0x444444, 0.8);
+    const hemi = new THREE.HemisphereLight(0xffffff, 0x666666, 1.0);
     this.scene.add(hemi);
-    const dir1 = new THREE.DirectionalLight(0xffffff, 0.7);
+    const dir1 = new THREE.DirectionalLight(0xffffff, 0.9);
     dir1.position.set(2, 4, 3);
     this.scene.add(dir1);
-    const dir2 = new THREE.DirectionalLight(0xffffff, 0.3);
+    const dir2 = new THREE.DirectionalLight(0xffffff, 0.5);
     dir2.position.set(-2, 2, -1);
     this.scene.add(dir2);
+    const dir3 = new THREE.DirectionalLight(0xffffff, 0.4);
+    dir3.position.set(0, 2, -3);
+    this.scene.add(dir3);
+    const amb = new THREE.AmbientLight(0x404040, 0.3);
+    this.scene.add(amb);
 
     const grid = new THREE.GridHelper(4, 20, 0x333333, 0x222222);
     grid.position.y = 0;
@@ -81,6 +101,9 @@ class BodyVisualizer {
 
     const loading = document.getElementById('visLoading');
     if (loading) loading.style.display = 'none';
+
+    console.log('BodyVisualizer init complete. Mesh:', this.mesh.geometry.attributes.position.count, 'vertices,',
+      this.mesh.geometry.index ? (this.mesh.geometry.index.count / 3) + ' triangles' : 'NO INDEX');
   }
 
   _initPartSets() {
@@ -98,8 +121,10 @@ class BodyVisualizer {
     geometry.setAttribute('position', new THREE.BufferAttribute(positions, 3));
 
     if (BodyVisualizer._faceIndices) {
+      console.log('Building geometry with', BodyVisualizer._faceIndices.length / 3, 'triangles from face indices');
       geometry.setIndex(new THREE.BufferAttribute(BodyVisualizer._faceIndices, 1));
     } else {
+      console.error('CRITICAL: No face indices available! Using identity fallback (mesh will look wrong)');
       const nv = positions.length / 3;
       const idx = new Uint32Array(nv);
       for (let i = 0; i < nv; i++) idx[i] = i;
@@ -215,11 +240,15 @@ class BodyVisualizer {
    * @param {Object} measurements - all measurements with UI keys (lowercase_underscore)
    */
   updateFromMeasurements(measurements) {
-    if (!this.smpl || !this.smpl.ready) return;
+    if (!this.smpl || !this.smpl.ready) {
+      console.warn('updateFromMeasurements: smpl not ready');
+      return;
+    }
 
     const targetHeightCm = measurements.height || 175;
 
     this.currentBetas = this.smpl.measurementsToBetas(measurements, this.gender);
+    console.log('Betas:', Array.from(this.currentBetas).map(v => v.toFixed(3)).join(', '));
     const vertices = this.smpl.computeBodyShape(this.currentBetas);
 
     if (!this.mesh) return;
@@ -289,29 +318,53 @@ class BodyVisualizer {
   }
 
   async loadFaceIndices() {
-    try {
-      const resp = await fetch('/models/smpl_faces.npy');
-      if (!resp.ok) return;
-      const buf = await resp.arrayBuffer();
-      const view = new DataView(buf);
-      const major = view.getUint8(6);
-      let headerLen, headerStart;
-      if (major === 1) { headerLen = view.getUint16(8, true); headerStart = 10; }
-      else { headerLen = view.getUint32(8, true); headerStart = 12; }
-      const dataStart = headerStart + headerLen;
-      const total = 13776 * 3;
-      const indices = new Uint32Array(total);
-      for (let i = 0; i < total; i++) {
-        indices[i] = view.getUint32(dataStart + i * 4, true);
-      }
-      BodyVisualizer._faceIndices = indices;
-      if (this.mesh) {
-        this.mesh.geometry.setIndex(new THREE.BufferAttribute(indices, 1));
+    if (BodyVisualizer._faceIndices) {
+      console.log('Face indices already loaded, applying to mesh');
+      if (this.mesh && !this.mesh.geometry.index) {
+        this.mesh.geometry.setIndex(new THREE.BufferAttribute(BodyVisualizer._faceIndices, 1));
         this.mesh.geometry.computeVertexNormals();
       }
-    } catch (e) {
-      console.warn('Could not load face indices:', e);
+      return;
     }
+    const paths = ['/models/smpl_faces.npy', '/assets/smpl_faces.npy'];
+    for (const url of paths) {
+      try {
+        console.log('Fetching face indices from', url, '...');
+        const resp = await fetch(url);
+        console.log('Response:', resp.status, resp.statusText, 'size:', resp.headers.get('content-length'));
+        if (!resp.ok) { console.warn('Failed:', resp.status, 'from', url); continue; }
+        const buf = await resp.arrayBuffer();
+        const view = new DataView(buf);
+        const magic = String.fromCharCode(view.getUint8(0), view.getUint8(1), view.getUint8(2), view.getUint8(3), view.getUint8(4), view.getUint8(5));
+        if (magic !== '\x93NUMPY') { console.error('Invalid NPY magic from', url); continue; }
+        const major = view.getUint8(6);
+        let headerLen, headerStart;
+        if (major === 1) { headerLen = view.getUint16(8, true); headerStart = 10; }
+        else { headerLen = view.getUint32(8, true); headerStart = 12; }
+        const dataStart = headerStart + headerLen;
+        const total = 13776 * 3;
+        console.log('NPY: major=' + major + ' headerLen=' + headerLen + ' dataStart=' + dataStart);
+        if (buf.byteLength < dataStart + total * 4) {
+          console.error('File too small:', buf.byteLength, 'need', dataStart + total * 4);
+          continue;
+        }
+        const indices = new Uint32Array(total);
+        for (let i = 0; i < total; i++) {
+          indices[i] = view.getUint32(dataStart + i * 4, true);
+        }
+        console.log('Face indices loaded: ' + indices.length + ' values, max=' + indices.max);
+        BodyVisualizer._faceIndices = indices;
+        if (this.mesh) {
+          this.mesh.geometry.setIndex(new THREE.BufferAttribute(indices, 1));
+          this.mesh.geometry.computeVertexNormals();
+          console.log('Applied face indices to existing mesh');
+        }
+        return;
+      } catch (e) {
+        console.error('Error loading from', url, ':', e);
+      }
+    }
+    console.error('CRITICAL: Could not load face indices from any path');
   }
 
   /* ===== MEASUREMENT EXTRACTION ENGINE ===== */

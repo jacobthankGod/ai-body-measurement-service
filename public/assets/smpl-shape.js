@@ -237,7 +237,7 @@ class SMPLShapeEngine {
       const d = disp[dispKey];
       let scale = residual;
 
-      scale = Math.max(-5, Math.min(5, scale));
+      scale = Math.max(-10, Math.min(10, scale));
 
       for (let i = 0; i < delta.indices.length; i++) {
         const vi = delta.indices[i];
