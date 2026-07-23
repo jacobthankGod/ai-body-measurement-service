@@ -1,15 +1,12 @@
 #!/usr/bin/env python3
-"""Train MLP neural network: 35 measurements → 10 SMPL betas.
+"""Train MLP: 35 measurements → 10 SMPL betas.
 
-Architecture: 36 → 128 → 64 → 10 (input includes gender flag)
-Training: 50K synthetic shapes per gender, PyTorch with MPS/CPU
-Output: JSON weights for browser deployment (no ONNX needed)
-
-Key design:
-- Non-linear mapping captures complex measurement-beta relationships
-- Better conditioned than Ridge regression for extreme body types
-- Gender-specific models (male breast betas constrained)
-- Weighted loss: MSE on betas + reconstruction loss on measurements
+Matches browser's computeAllMeasurements exactly:
+- Convex hull perimeter (not ellipse)
+- YZ projection for arms, XZ for everything else
+- Same vertex groups (SMPL segmentation)
+- Same band filtering logic
+- No BatchNorm (avoids training/inference mismatch in JS)
 """
 
 import json, os, sys, time
@@ -26,7 +23,7 @@ SHAPES_PER_GENDER = 2000
 BREAST_BETAS = [1, 2, 5]
 BREAST_CLAMP = 0.3
 BATCH_SIZE = 256
-EPOCHS = 80
+EPOCHS = 100
 LEARNING_RATE = 1e-3
 DEVICE = 'mps' if torch.backends.mps.is_available() else 'cpu'
 
@@ -38,51 +35,13 @@ def load_smpl():
     return vt, sd, faces
 
 
-def load_vertex_groups():
-    path = os.path.join(PROJECT_ROOT, 'data', 'customBodyPoints.txt')
-    groups = {}
-    current = None
-    with open(path) as f:
-        for line in f:
-            line = line.strip()
-            if not line:
-                continue
-            if line.startswith('#'):
-                current = line[1:].strip().lower()
-                groups[current] = []
-            elif current is not None:
-                parts = line.split()
-                if len(parts) >= 2:
-                    try:
-                        idx = int(parts[1])
-                        if 0 <= idx < 6890:
-                            groups[current].append(idx)
-                    except ValueError:
-                        pass
-    return groups
-
-
-def precompute_face_masks(faces, vertex_groups):
-    masks = {}
-    for part, indices in vertex_groups.items():
-        idx_set = set(indices)
-        mask = np.zeros(len(faces), dtype=bool)
-        for fi, f in enumerate(faces):
-            if f[0] in idx_set or f[1] in idx_set or f[2] in idx_set:
-                mask[fi] = True
-        masks[part] = mask
-    return masks
-
-
 def load_smpl_segmentation():
     """Load SMPL part segmentation from the JS file."""
     path = os.path.join(PROJECT_ROOT, 'public', 'assets', 'smpl_segmentation.js')
     parts = {}
     with open(path) as f:
         content = f.read()
-    # Remove 'const SMPL_PARTS = ' prefix and trailing '};'
     import re
-    # Find all "key": [values] patterns - handles both quoted and unquoted keys
     pattern = r'"(\w+)":\s*\[([\d,\s]+)\]'
     for m in re.finditer(pattern, content):
         name = m.group(1)
@@ -91,105 +50,87 @@ def load_smpl_segmentation():
     return parts
 
 
-def measure_circ_mesh(vertices, faces, face_mask, plane_y):
-    """Compute circumference via plane-mesh intersection + convex hull perimeter."""
-    relevant_faces = faces[face_mask]
-    if len(relevant_faces) == 0:
+def convex_hull_perimeter_2d(points):
+    """Convex hull perimeter of 2D points — matches browser's _convexHull2D."""
+    if len(points) < 3:
         return 0.0
-    intersections = []
-    for f in relevant_faces:
-        v0, v1, v2 = vertices[f[0]], vertices[f[1]], vertices[f[2]]
-        for va, vb in [(v0, v1), (v1, v2), (v2, v0)]:
-            da, db = va[1] - plane_y, vb[1] - plane_y
-            if da * db < 0:
-                t = da / (da - db)
-                pt = va + t * (vb - va)
-                intersections.append(pt)
-    if len(intersections) < 3:
-        return 0.0
-    pts = np.array(intersections)[:, [0, 2]]
-    if len(pts) > 3:
-        unique = [pts[0]]
-        for p in pts[1:]:
-            if min(np.linalg.norm(np.array(unique) - p, axis=1)) > 0.0005:
-                unique.append(p)
-        pts = np.array(unique)
-    if len(pts) < 3:
-        return 0.0
+    pts = np.ascontiguousarray(points, dtype=np.float64)
     try:
         from scipy.spatial import ConvexHull
         hull = ConvexHull(pts)
-        return hull.area * 100
+        hp = pts[hull.vertices]
+        perim = 0.0
+        for i in range(len(hp)):
+            j = (i + 1) % len(hp)
+            dx = hp[j][0] - hp[i][0]
+            dz = hp[j][1] - hp[i][1]
+            perim += np.sqrt(dx * dx + dz * dz)
+        return perim * 100
     except Exception:
         return 0.0
 
 
-def measure_circ_ellipse(vertices, vertex_indices):
-    if len(vertex_indices) == 0:
+def circ_xz(verts, indices, plane_y, band_width=0.03):
+    """Circumference via plane-mesh-like intersection on XZ plane — matches browser _computeCircumference."""
+    if len(indices) < 3:
         return 0.0
-    gv = vertices[vertex_indices]
-    w = (gv[:, 0].max() - gv[:, 0].min()) * 100
-    d = (gv[:, 2].max() - gv[:, 2].min()) * 100
-    a, b = w / 2, d / 2
-    if a + b < 1e-6:
+    gv = verts[indices]
+    # Band filter by Y
+    mask = np.abs(gv[:, 1] - plane_y) <= band_width
+    band = gv[mask] if np.sum(mask) >= 4 else gv
+    if len(band) < 3:
         return 0.0
-    h = ((a - b) ** 2) / ((a + b) ** 2)
-    return np.pi * (a + b) * (1 + (3 * h) / (10 + np.sqrt(max(4 - 3 * h, 0))))
+    # Project to XZ and compute convex hull perimeter
+    pts = band[:, [0, 2]]
+    # Remove duplicates
+    unique = [pts[0]]
+    for p in pts[1:]:
+        if min(np.linalg.norm(np.array(unique) - p, axis=1)) > 0.0005:
+            unique.append(p)
+    if len(unique) < 3:
+        return 0.0
+    return convex_hull_perimeter_2d(np.array(unique))
 
 
-def compute_all_measurements(verts, faces, fm, smpl_parts):
-    """Compute all 35 measurements from SMPL mesh vertices."""
+def circ_yz(verts, indices, plane_y, band_width=0.03):
+    """Circumference on YZ plane — matches browser's _circFromVerts with proj='yz'."""
+    if len(indices) < 3:
+        return 0.0
+    gv = verts[indices]
+    mask = np.abs(gv[:, 1] - plane_y) <= band_width
+    band = gv[mask] if np.sum(mask) >= 4 else gv
+    if len(band) < 3:
+        return 0.0
+    pts = band[:, [1, 2]]
+    unique = [pts[0]]
+    for p in pts[1:]:
+        if min(np.linalg.norm(np.array(unique) - p, axis=1)) > 0.0005:
+            unique.append(p)
+    if len(unique) < 3:
+        return 0.0
+    return convex_hull_perimeter_2d(np.array(unique))
+
+
+def compute_all_measurements(verts, faces, smpl_parts):
+    """Compute all 35 measurements — matches browser computeAllMeasurements exactly."""
     M = {}
-
-    # Helper: get vertices for a part
     def pv(name):
         return smpl_parts.get(name, [])
-
-    # Helper: centroid Y of a vertex set
     def cy(vs):
         if not vs:
-            return 0
-        return np.mean(verts[vs, 1])
-
-    # Helper: circumference at Y level - use ellipse for speed (plane-mesh is too slow for generation)
-    def circ(part_names, y, bw=0.03, face_mask=None):
-        all_v = []
-        for pn in part_names:
-            all_v.extend(pv(pn))
-        if not all_v:
             return 0.0
-        band = [vi for vi in all_v if abs(verts[vi, 1] - y) <= bw]
-        if len(band) < 4:
-            band = all_v
-        return measure_circ_ellipse(verts, band)
-
-    # Helper: limb circumference (XZ projection)
-    def limb_circ(part_names, y, bw=0.03):
-        all_v = []
-        for pn in part_names:
-            all_v.extend(pv(pn))
-        if not all_v:
-            return 0.0
-        band = [vi for vi in all_v if abs(verts[vi, 1] - y) <= bw]
-        if len(band) < 4:
-            band = all_v
-        return measure_circ_ellipse(verts, band)
-
-    # Helper: distance between two vertex sets
+        return float(np.mean(verts[vs, 1]))
     def dist(va, vb):
         if not va or not vb:
             return 0.0
         ca = np.mean(verts[va], axis=0)
         cb = np.mean(verts[vb], axis=0)
-        return np.linalg.norm(ca - cb) * 100
-
-    # Helper: X span
+        return float(np.linalg.norm(ca - cb) * 100)
     def xspan(vs):
         if not vs:
             return 0.0
-        return (verts[vs, 0].max() - verts[vs, 0].min()) * 100
+        return float((verts[vs, 0].max() - verts[vs, 0].min()) * 100)
 
-    # Get all vertex sets
     chest_v = pv('spine2')
     shoulder_r = pv('rightShoulder')
     shoulder_l = pv('leftShoulder')
@@ -212,7 +153,6 @@ def compute_all_measurements(verts, faces, fm, smpl_parts):
     l_foot = pv('leftFoot')
     chest_all = chest_v + shoulder_v
 
-    # Y centroids
     chestY = cy(chest_all) if chest_all else 0
     waistY = cy(waist_v)
     stomachY = cy(stomach_v) if stomach_v else (chestY + waistY) / 2
@@ -229,46 +169,43 @@ def compute_all_measurements(verts, faces, fm, smpl_parts):
     lCalfY = cy(l_calf)
     calfY = (rCalfY + lCalfY) / 2
 
-    # Ankle
     ankle_raw = r_calf + r_foot
     ankle_v = [vi for vi in ankle_raw if verts[vi, 1] < -1.0]
     ankleY = cy(ankle_v) if ankle_v else calfY - 0.12
-
-    # Wrist
     wrist_raw = r_fore + r_hand
     wrist_v = [vi for vi in wrist_raw if verts[vi, 1] < 0.19]
     wristY = cy(wrist_v) if wrist_v else foreArmY - 0.15
-
-    # Knee (upper portion of calf)
     r_knee = [vi for vi in r_calf if verts[vi, 1] > -0.8]
     l_knee = [vi for vi in l_calf if verts[vi, 1] > -0.8]
     rKneeY = cy(r_knee) if r_knee else rCalfY + 0.1
     lKneeY = cy(l_knee) if l_knee else lCalfY + 0.1
 
-    # --- Circumferences ---
-    M['Chest Round'] = round(circ(['spine2', 'rightShoulder', 'leftShoulder'], chestY, 0.04, fm.get('spine2')), 1)
+    # Circumferences (XZ convex hull — matches browser _computeCircumference)
+    M['Chest Round'] = round(circ_xz(verts, chest_all, chestY, 0.04), 1)
     M['Bust Round'] = M['Chest Round']
-    M['Waist Round'] = round(circ(['spine1'], waistY, 0.03, fm.get('spine1')), 1)
-    M['Stomach Round'] = round(circ(['spine'], stomachY, 0.04, fm.get('spine')), 1) if stomach_v else M['Waist Round']
-    M['Hip Round'] = round(circ(['hips'], hipsY, 0.04, fm.get('hips')), 1)
-    M['Neck Round'] = round(circ(['neck'], neckY, 0.03, fm.get('neck')), 1)
-    M['Thigh Round'] = round((limb_circ(['rightUpLeg'], rLegY, 0.05) + limb_circ(['leftUpLeg'], lLegY, 0.05)) / 2, 1)
-    M['Knee Round'] = round((limb_circ(['rightLeg'], rKneeY, 0.03) + limb_circ(['leftLeg'], lKneeY, 0.03)) / 2, 1)
-    M['Calf Round'] = round((limb_circ(['rightLeg'], rCalfY, 0.04) + limb_circ(['leftLeg'], lCalfY, 0.04)) / 2, 1)
-    M['Ankle Round'] = round(limb_circ(['rightLeg', 'rightFoot'], ankleY, 0.03), 1) if ankle_v else 22.0
-    M['Bicep Round'] = round((limb_circ(['rightArm'], rArmY, 0.04) + limb_circ(['leftArm'], lArmY, 0.04)) / 2, 1)
-    M['Elbow Round'] = round((limb_circ(['rightForeArm'], rForeY, 0.03) + limb_circ(['leftForeArm'], lForeY, 0.03)) / 2, 1)
-    M['Wrist Round'] = round(limb_circ(['rightForeArm', 'rightHand'], wristY, 0.03), 1) if wrist_v else 15.0
+    M['Waist Round'] = round(circ_xz(verts, waist_v, waistY, 0.03), 1)
+    M['Stomach Round'] = round(circ_xz(verts, stomach_v, stomachY, 0.04), 1) if stomach_v else M['Waist Round']
+    M['Hip Round'] = round(circ_xz(verts, hips_v, hipsY, 0.04), 1)
+    M['Neck Round'] = round(circ_xz(verts, neck_v, neckY, 0.03), 1)
+
+    # Limb circumferences — use YZ for arms (along X in T-pose), XZ for legs (along Y)
+    M['Thigh Round'] = round((circ_xz(verts, r_leg, rLegY, 0.05) + circ_xz(verts, l_leg, lLegY, 0.05)) / 2, 1)
+    M['Knee Round'] = round((circ_xz(verts, r_knee, rKneeY, 0.03) + circ_xz(verts, l_knee, lKneeY, 0.03)) / 2, 1)
+    M['Calf Round'] = round((circ_xz(verts, r_calf, rCalfY, 0.04) + circ_xz(verts, l_calf, lCalfY, 0.04)) / 2, 1)
+    M['Ankle Round'] = round(circ_xz(verts, ankle_v, ankleY, 0.03), 1) if ankle_v else 22.0
+    M['Bicep Round'] = round((circ_yz(verts, r_arm, rArmY, 0.04) + circ_yz(verts, l_arm, lArmY, 0.04)) / 2, 1)
+    M['Elbow Round'] = round((circ_yz(verts, r_fore, rForeY, 0.03) + circ_yz(verts, l_fore, lForeY, 0.03)) / 2, 1)
+    M['Wrist Round'] = round(circ_yz(verts, wrist_v, wristY, 0.03), 1) if wrist_v else 15.0
     M['Upper Hip'] = round(M['Hip Round'] * 0.92, 1)
 
-    # --- Width ---
+    # Widths
     M['Shoulder'] = round(xspan(shoulder_v), 1)
     M['Across Shoulder'] = M['Shoulder']
     M['Across Back'] = round(M['Shoulder'] * 0.92, 1)
     M['Across Chest'] = round(M['Shoulder'] * 0.96, 1)
     M['Armhole Round'] = round(M['Shoulder'] * 0.45, 1)
 
-    # --- Lengths ---
+    # Lengths
     M['Half Length'] = round(dist(neck_v, waist_v), 1)
     M['Full Top Length'] = round(dist(neck_v, hips_v), 1)
     M['Back Waist Length'] = M['Half Length']
@@ -282,7 +219,7 @@ def compute_all_measurements(verts, faces, fm, smpl_parts):
     M['Inseam'] = round(M['Trouser Length'] * 0.78, 1)
     M['Sleeve Length'] = round(dist(shoulder_v, wrist_v if wrist_v else r_fore), 1)
 
-    # --- Bust-specific ---
+    # Bust
     M['High Bust'] = round(M['Bust Round'] * 0.85, 1)
     M['Under Bust'] = round(M['Bust Round'] * 0.75, 1)
     M['Bust Point'] = round(dist(neck_v, chest_v[:3] if len(chest_v) >= 3 else chest_v), 1)
@@ -305,16 +242,14 @@ MEASUREMENT_ORDER = [
 
 
 class MeasurementMLP(nn.Module):
-    """MLP: 36 input (35 measurements + 1 gender) → 10 betas."""
+    """MLP without BatchNorm — matches JS forward pass exactly."""
 
     def __init__(self):
         super().__init__()
         self.net = nn.Sequential(
             nn.Linear(36, 128),
-            nn.BatchNorm1d(128),
             nn.ReLU(),
             nn.Linear(128, 64),
-            nn.BatchNorm1d(64),
             nn.ReLU(),
             nn.Linear(64, 10),
         )
@@ -323,20 +258,7 @@ class MeasurementMLP(nn.Module):
         return self.net(x)
 
 
-def precompute_face_masks_for_parts(faces, smpl_parts):
-    """Precompute face masks for all SMPL parts (run once)."""
-    fm = {}
-    for part_name, part_indices in smpl_parts.items():
-        idx_set = set(part_indices)
-        mask = np.zeros(len(faces), dtype=bool)
-        for fi, f in enumerate(faces):
-            if f[0] in idx_set or f[1] in idx_set or f[2] in idx_set:
-                mask[fi] = True
-        fm[part_name] = mask
-    return fm
-
-
-def generate_shapes(v_template, shapedirs, faces, smpl_parts, fm, n_shapes, gender):
+def generate_shapes(v_template, shapedirs, faces, smpl_parts, n_shapes, gender):
     """Generate n valid shapes with all 35 measurements."""
     betas_list = []
     meas_list = []
@@ -355,9 +277,8 @@ def generate_shapes(v_template, shapedirs, faces, smpl_parts, fm, n_shapes, gend
         deltas = np.einsum('ijk,k->ij', shapedirs, betas)
         verts = v_template + deltas
 
-        meas = compute_all_measurements(verts, faces, fm, smpl_parts)
+        meas = compute_all_measurements(verts, faces, smpl_parts)
 
-        # Validate: all primary measurements must be present and reasonable
         primary = ['Chest Round', 'Waist Round', 'Hip Round', 'Shoulder',
                     'Thigh Round', 'Bicep Round', 'Neck Round']
         if all(m in meas and meas[m] > 5.0 for m in primary):
@@ -376,26 +297,22 @@ def main():
     smpl_parts = load_smpl_segmentation()
     print(f"  SMPL parts: {len(smpl_parts)}")
 
-    print("Precomputing face masks...")
-    fm = precompute_face_masks_for_parts(faces, smpl_parts)
-    print(f"  Face masks: {len(fm)} parts")
-
     np.random.seed(42)
 
     # Generate male shapes
     print(f"\nGenerating {SHAPES_PER_GENDER} MALE shapes...")
     t0 = time.time()
-    male_betas, male_meas = generate_shapes(v_template, shapedirs, faces, smpl_parts, fm, SHAPES_PER_GENDER, 'male')
+    male_betas, male_meas = generate_shapes(v_template, shapedirs, faces, smpl_parts, SHAPES_PER_GENDER, 'male')
     print(f"  Generated {len(male_betas)} in {time.time()-t0:.1f}s")
-    for j, m in enumerate(MEASUREMENT_ORDER[:7]):
+    for j, m in enumerate(MEASUREMENT_ORDER[:15]):
         print(f"    {m}: {male_meas[:,j].min():.1f} - {male_meas[:,j].max():.1f} (mean={male_meas[:,j].mean():.1f})")
 
     # Generate female shapes
     print(f"\nGenerating {SHAPES_PER_GENDER} FEMALE shapes...")
     t0 = time.time()
-    female_betas, female_meas = generate_shapes(v_template, shapedirs, faces, smpl_parts, fm, SHAPES_PER_GENDER, 'female')
+    female_betas, female_meas = generate_shapes(v_template, shapedirs, faces, smpl_parts, SHAPES_PER_GENDER, 'female')
     print(f"  Generated {len(female_betas)} in {time.time()-t0:.1f}s")
-    for j, m in enumerate(MEASUREMENT_ORDER[:7]):
+    for j, m in enumerate(MEASUREMENT_ORDER[:15]):
         print(f"    {m}: {female_meas[:,j].min():.1f} - {female_meas[:,j].max():.1f} (mean={female_meas[:,j].mean():.1f})")
 
     # Compute normalization stats
@@ -414,9 +331,7 @@ def main():
                                       ('female', female_betas, female_meas_norm)]:
         print(f"\n--- Training {gender.upper()} MLP ---")
 
-        # Create dataset
         X = torch.FloatTensor(meas_norm).to(DEVICE)
-        # Add gender flag: 0 for male, 1 for female
         gender_flag = torch.zeros(len(meas_norm), 1).to(DEVICE) if gender == 'male' else torch.ones(len(meas_norm), 1).to(DEVICE)
         X = torch.cat([X, gender_flag], dim=1)
         y = torch.FloatTensor(betas).to(DEVICE)
@@ -455,11 +370,9 @@ def main():
 
         print(f"  Training time: {time.time()-t0:.1f}s")
 
-        # Load best model
         model.load_state_dict(best_state)
         model.eval()
 
-        # Compute R² on training data
         with torch.no_grad():
             pred = model(X)
             ss_res = ((pred - y) ** 2).sum()
@@ -467,40 +380,27 @@ def main():
             r2 = 1 - ss_res / ss_tot
             print(f"  R² = {r2:.4f}")
 
-        # Verify with average measurements
-        if gender == 'male':
-            avg_meas = np.array([[96, 84, 95, 80, 95, 38, 55, 40, 35, 22, 33, 25, 16, 87, 20,
-                                   45, 45, 41, 43, 33, 65, 33, 33, 33, 33, 15, 15, 84, 45, 35, 40,
-                                   81, 71, 20, 22]])
-        else:
-            avg_meas = np.array([[89, 89, 72, 70, 97, 34, 54, 38, 32, 20, 27, 22, 14, 89, 18,
-                                   39, 39, 36, 37, 30, 55, 30, 30, 30, 30, 25, 25, 72, 40, 31, 35,
-                                   76, 67, 18, 20]])
-        avg_norm = (avg_meas - meas_mean) / meas_std
-        gender_flag_val = torch.zeros(1, 1).to(DEVICE) if gender == 'male' else torch.ones(1, 1).to(DEVICE)
-        avg_tensor = torch.FloatTensor(avg_norm).to(DEVICE)
-        avg_tensor = torch.cat([avg_tensor, gender_flag_val], dim=1)
+        # Verify with default T-pose (all zeros)
         with torch.no_grad():
-            pred_betas = model(avg_tensor).cpu().numpy()[0]
-        print(f"  Avg {gender} predicted betas: {pred_betas.round(3)}")
-        print(f"  Breast betas [1,2,5]: {pred_betas[BREAST_BETAS].round(3)}")
+            zero_input = torch.zeros(1, 36).to(DEVICE)
+            if gender == 'female':
+                zero_input[0, 35] = 1.0
+            pred_betas = model(zero_input).cpu().numpy()[0]
+        print(f"  Default betas (zero input): {pred_betas.round(3)}")
 
-        # Export weights to JSON (compact format)
+        # Export weights
         weights = {}
         for name, param in model.named_parameters():
             arr = param.detach().cpu().numpy().astype(np.float32)
-            # Round to 6 decimal places for compactness
             arr = np.round(arr, 6)
             weights[name] = arr.tolist()
 
-        results[gender] = {
-            'weights': weights,
-        }
+        results[gender] = {'weights': weights}
 
     # Output
     out = {
         "model_type": "mlp",
-        "version": 1,
+        "version": 2,
         "architecture": [36, 128, 64, 10],
         "measurement_order": MEASUREMENT_ORDER,
         "num_measurements": NUM_MEASUREMENTS,
@@ -518,11 +418,9 @@ def main():
 
     # Quick inference test
     print("\n--- Browser Inference Test ---")
-    print("Simulating JS forward pass...")
     for gender in ['male', 'female']:
         g = results[gender]
         w = g['weights']
-        # Simulate: x = normalized measurements + gender flag
         if gender == 'male':
             test_meas = np.array([96, 84, 95, 80, 95, 38, 55, 40, 35, 22, 33, 25, 16, 87, 20,
                                    45, 45, 41, 43, 33, 65, 33, 33, 33, 33, 15, 15, 84, 45, 35, 40,
@@ -537,22 +435,15 @@ def main():
         x = (test_meas - meas_mean) / meas_std
         x = np.append(x, gender_flag)
 
-        # Layer 1: Linear + BN + ReLU
-        l1_w = np.array(w['net.0.weight'])  # (128, 36)
-        l1_b = np.array(w['net.0.bias'])    # (128,)
-        h1 = x @ l1_w.T + l1_b
-        h1 = np.maximum(h1, 0)  # ReLU
-
-        # Layer 2: Linear + BN + ReLU
-        l2_w = np.array(w['net.3.weight'])  # (64, 128)
-        l2_b = np.array(w['net.3.bias'])    # (64,)
-        h2 = h1 @ l2_w.T + l2_b
-        h2 = np.maximum(h2, 0)  # ReLU
-
-        # Layer 3: Linear
-        l3_w = np.array(w['net.6.weight'])  # (10, 64)
-        l3_b = np.array(w['net.6.bias'])    # (10,)
-        out = h2 @ l3_w.T + l3_b
+        l0_w = np.array(w['net.0.weight'])
+        l0_b = np.array(w['net.0.bias'])
+        h0 = np.maximum(0, x @ l0_w.T + l0_b)
+        l3_w = np.array(w['net.3.weight'])
+        l3_b = np.array(w['net.3.bias'])
+        h3 = np.maximum(0, h0 @ l3_w.T + l3_b)
+        l6_w = np.array(w['net.6.weight'])
+        l6_b = np.array(w['net.6.bias'])
+        out = h3 @ l6_w.T + l6_b
 
         print(f"  {gender}: betas = {np.clip(out, -2, 2).round(3)}")
 

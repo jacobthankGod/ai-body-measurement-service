@@ -62,21 +62,29 @@ def load_custom_body_points():
 
 
 def measure_circ_ellipse(vertices, vertex_indices, axis='xz'):
-    """Fast ellipse-based circumference approximation."""
+    """Convex hull perimeter — matches browser's _circFromVerts."""
     if len(vertex_indices) == 0:
         return 0.0
     gv = vertices[vertex_indices]
     if axis == 'yz':
-        w = (gv[:, 1].max() - gv[:, 1].min()) * 100
-        d = (gv[:, 2].max() - gv[:, 2].min()) * 100
-    else:  # xz
-        w = (gv[:, 0].max() - gv[:, 0].min()) * 100
-        d = (gv[:, 2].max() - gv[:, 2].min()) * 100
-    a, b = w / 2, d / 2
-    if a + b < 1e-6:
+        pts = gv[:, [1, 2]]
+    else:
+        pts = gv[:, [0, 2]]
+    if len(pts) < 3:
         return 0.0
-    h = ((a - b) ** 2) / ((a + b) ** 2)
-    return np.pi * (a + b) * (1 + (3 * h) / (10 + np.sqrt(max(4 - 3 * h, 0))))
+    try:
+        from scipy.spatial import ConvexHull
+        hull = ConvexHull(pts)
+        hp = pts[hull.vertices]
+        perim = 0.0
+        for i in range(len(hp)):
+            j = (i + 1) % len(hp)
+            dx = hp[j][0] - hp[i][0]
+            dz = hp[j][1] - hp[i][1]
+            perim += np.sqrt(dx * dx + dz * dz)
+        return perim * 100
+    except Exception:
+        return 0.0
 
 
 def compute_vertex_displacement_for_circumference(verts, verts_indices, target_delta_cm, plane_axis='xz'):

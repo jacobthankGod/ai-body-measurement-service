@@ -142,14 +142,15 @@ class SMPLShapeEngine {
 
   /**
    * MLP forward pass: normalized measurements -> betas.
-   * Architecture: 36 -> 128 -> ReLU -> 64 -> ReLU -> 10
+   * Architecture: 36 -> 128 -> ReLU -> 64 -> ReLU -> 10 (no BatchNorm)
    */
   _mlpForward(xNorm, gender, weights) {
     const w = weights || (this.mlpWeights && this.mlpWeights[gender] && this.mlpWeights[gender].weights);
     if (!w) return null;
 
-    const l0w = w['net.0.weight'];
-    const l0b = w['net.0.bias'];
+    // Layer 0: Linear(36, 128) + ReLU
+    const l0w = w['net.0.weight']; // [128][36]
+    const l0b = w['net.0.bias'];   // [128]
     const h0 = new Float32Array(128);
     for (let i = 0; i < 128; i++) {
       let sum = l0b[i];
@@ -157,21 +158,23 @@ class SMPLShapeEngine {
       h0[i] = sum > 0 ? sum : 0;
     }
 
-    const l3w = w['net.3.weight'];
-    const l3b = w['net.3.bias'];
-    const h3 = new Float32Array(64);
+    // Layer 2: Linear(128, 64) + ReLU
+    const l2w = w['net.2.weight']; // [64][128]
+    const l2b = w['net.2.bias'];   // [64]
+    const h2 = new Float32Array(64);
     for (let i = 0; i < 64; i++) {
-      let sum = l3b[i];
-      for (let j = 0; j < 128; j++) sum += l3w[i][j] * h0[j];
-      h3[i] = sum > 0 ? sum : 0;
+      let sum = l2b[i];
+      for (let j = 0; j < 128; j++) sum += l2w[i][j] * h0[j];
+      h2[i] = sum > 0 ? sum : 0;
     }
 
-    const l6w = w['net.6.weight'];
-    const l6b = w['net.6.bias'];
+    // Layer 4: Linear(64, 10)
+    const l4w = w['net.4.weight']; // [10][64]
+    const l4b = w['net.4.bias'];   // [10]
     const out = new Float32Array(10);
     for (let i = 0; i < 10; i++) {
-      let sum = l6b[i];
-      for (let j = 0; j < 64; j++) sum += l6w[i][j] * h3[j];
+      let sum = l4b[i];
+      for (let j = 0; j < 64; j++) sum += l4w[i][j] * h2[j];
       out[i] = Math.max(-2, Math.min(2, sum));
     }
     return out;
