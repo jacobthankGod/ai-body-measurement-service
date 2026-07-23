@@ -2,6 +2,8 @@
  * Body Visualizer - Three.js interactive SMPL body shape viewer
  * SMPL betas for natural mesh; height via Y-scaling (head excluded).
  * Two-layer pipeline: MLP betas + per-measurement displacement correction.
+ *
+ * All internal keys use lowercase_underscore (matching HTML data-measurement).
  */
 class BodyVisualizer {
   constructor() {
@@ -18,9 +20,8 @@ class BodyVisualizer {
     this.lastMouse = { x: 0, y: 0 };
     this.spherical = { theta: 0.3, phi: 1.2, radius: 2.5 };
     this.target = new THREE.Vector3(0, 0.9, 0);
-    this._vertexNormals = null;
-    this._partSets = null;
     this._faceArray = null;
+    this._partSets = null;
   }
 
   async init(canvasId) {
@@ -64,8 +65,6 @@ class BodyVisualizer {
     const vertices = this.smpl.computeBodyShape(this.currentBetas);
 
     const geometry = this._buildGeometry(vertices);
-    this._computeVertexNormals(geometry);
-
     const material = new THREE.MeshStandardMaterial({
       color: 0xD4A574,
       roughness: 0.6,
@@ -85,14 +84,11 @@ class BodyVisualizer {
   }
 
   _initPartSets() {
-    if (!window.SMPL_PARTS) {
-      console.warn('SMPL_PARTS not loaded, using Y-range fallback');
-      this._partSets = null;
-      return;
-    }
-    this._partSets = {};
-    for (const key in window.SMPL_PARTS) {
-      this._partSets[key] = new Set(window.SMPL_PARTS[key]);
+    if (window.SMPL_PARTS) {
+      this._partSets = {};
+      for (const key in window.SMPL_PARTS) {
+        this._partSets[key] = new Set(window.SMPL_PARTS[key]);
+      }
     }
   }
 
@@ -112,65 +108,6 @@ class BodyVisualizer {
 
     geometry.computeVertexNormals();
     return geometry;
-  }
-
-  _computeVertexNormals(geometry) {
-    const pos = geometry.attributes.position;
-    const idx = geometry.index;
-    const nv = pos.count;
-    const normals = new Float32Array(nv * 3);
-
-    if (!idx) {
-      for (let i = 0; i < nv * 3; i++) normals[i] = 0;
-      this._vertexNormals = normals;
-      this._faceArray = null;
-      return;
-    }
-
-    const faceCount = idx.count / 3;
-    const faceNormals = new Float32Array(faceCount * 3);
-
-    for (let f = 0; f < faceCount; f++) {
-      const i0 = idx.array[f * 3];
-      const i1 = idx.array[f * 3 + 1];
-      const i2 = idx.array[f * 3 + 2];
-
-      const ax = pos.array[i1 * 3] - pos.array[i0 * 3];
-      const ay = pos.array[i1 * 3 + 1] - pos.array[i0 * 3 + 1];
-      const az = pos.array[i1 * 3 + 2] - pos.array[i0 * 3 + 2];
-      const bx = pos.array[i2 * 3] - pos.array[i0 * 3];
-      const by = pos.array[i2 * 3 + 1] - pos.array[i0 * 3 + 1];
-      const bz = pos.array[i2 * 3 + 2] - pos.array[i0 * 3 + 2];
-
-      let nx = ay * bz - az * by;
-      let ny = az * bx - ax * bz;
-      let nz = ax * by - ay * bx;
-      const len = Math.sqrt(nx * nx + ny * ny + nz * nz) || 1e-8;
-      nx /= len; ny /= len; nz /= len;
-
-      faceNormals[f * 3] = nx;
-      faceNormals[f * 3 + 1] = ny;
-      faceNormals[f * 3 + 2] = nz;
-
-      for (let j = 0; j < 3; j++) {
-        const vi = idx.array[f * 3 + j];
-        normals[vi * 3] += nx;
-        normals[vi * 3 + 1] += ny;
-        normals[vi * 3 + 2] += nz;
-      }
-    }
-
-    for (let i = 0; i < nv; i++) {
-      const nx = normals[i * 3];
-      const ny = normals[i * 3 + 1];
-      const nz = normals[i * 3 + 2];
-      const len = Math.sqrt(nx * nx + ny * ny + nz * nz) || 1e-8;
-      normals[i * 3] = nx / len;
-      normals[i * 3 + 1] = ny / len;
-      normals[i * 3 + 2] = nz / len;
-    }
-
-    this._vertexNormals = normals;
   }
 
   _groundMesh() {
@@ -274,33 +211,25 @@ class BodyVisualizer {
   }
 
   /**
-   * Two-layer update pipeline:
-   * 1. MLP: 35 measurements → 10 betas (global shape)
-   * 2. Compute beta-mesh
-   * 3. Measure actual values from mesh
-   * 4. Compute residuals (target - actual)
-   * 5. Apply displacement corrections (per-measurement fine-tuning)
+   * Two-layer update pipeline.
+   * @param {Object} measurements - all measurements with UI keys (lowercase_underscore)
    */
   updateFromMeasurements(measurements) {
     if (!this.smpl || !this.smpl.ready) return;
 
     const targetHeightCm = measurements.height || 175;
 
-    // Step 1: Compute betas via MLP
     this.currentBetas = this.smpl.measurementsToBetas(measurements, this.gender);
-
-    // Step 2: Compute beta-mesh
     const vertices = this.smpl.computeBodyShape(this.currentBetas);
 
     if (!this.mesh) return;
     const pos = this.mesh.geometry.attributes.position;
 
-    // Write beta-computed vertices
     for (let i = 0; i < vertices.length; i++) {
       pos.array[i] = vertices[i];
     }
 
-    // Step 3: Height scaling (exclude head+neck)
+    // Height scaling (exclude head+neck)
     let minY = Infinity, maxY = -Infinity;
     const headNeck = this._getPartSet('head', 'neck');
     for (let i = 0; i < pos.count; i++) {
@@ -318,50 +247,31 @@ class BodyVisualizer {
       pos.array[i * 3 + 1] *= heightScale;
     }
 
-    // Step 4: Recompute normals after height scaling
     this.mesh.geometry.computeVertexNormals();
-    this._computeVertexNormals(this.mesh.geometry);
 
-    // Step 5: Measure actual values from current mesh
+    // Measure actual values from current mesh (returns Title Case keys)
     const actualMeas = this.computeAllMeasurements(pos);
 
-    // Map measurement keys to actual values
-    const actualMap = {};
-    const keyMap = {
-      'Chest Round': 'chest', 'Bust Round': 'bust', 'Waist Round': 'waist',
-      'Stomach Round': 'stomach', 'Hip Round': 'hip', 'Neck Round': 'neck',
-      'Thigh Round': 'thigh', 'Knee Round': 'knee', 'Calf Round': 'calf',
-      'Ankle Round': 'ankle', 'Bicep Round': 'bicep', 'Elbow Round': 'elbow',
-      'Wrist Round': 'wrist', 'Upper Hip': 'upper_hip', 'Armhole Round': 'armhole',
-      'Shoulder': 'shoulder', 'Across Shoulder': 'across_shoulder',
-      'Across Back': 'across_back', 'Across Chest': 'across_chest',
-      'Half Length': 'half_length', 'Full Top Length': 'full_top_length',
-      'Back Waist Length': 'back_waist_length', 'Front Waist Length': 'front_waist_length',
-      'Neck to Waist': 'neck_to_waist', 'Shoulder to Waist': 'shoulder_to_waist',
-      'Waist to Hip': 'waist_to_hip', 'Crotch Depth': 'crotch_depth',
-      'Trouser Waist': 'trouser_waist', 'Trouser Length': 'trouser_length',
-      'Inseam': 'inseam', 'Sleeve Length': 'sleeve_length',
-      'High Bust': 'high_bust', 'Under Bust': 'under_bust',
-      'Bust Point': 'bust_point', 'Shoulder to Bust Point': 'shoulder_to_bust',
-      'Shoulder to Under Bust': 'shoulder_to_under_bust',
-    };
-    for (const [measKey, uiKey] of Object.entries(keyMap)) {
-      if (actualMeas[measKey] !== undefined) {
-        actualMap[uiKey] = actualMeas[measKey];
+    // Convert actual measurements from Title Case keys to UI keys
+    const actualUI = {};
+    for (const [mlpKey, uiKey] of Object.entries(this.smpl.MLP_TO_UI)) {
+      if (actualMeas[mlpKey] !== undefined) {
+        actualUI[uiKey] = actualMeas[mlpKey];
       }
     }
-
-    // Step 6: Apply displacement corrections
-    const measForDisplacement = {};
-    for (const [uiKey, measKey] of Object.entries(keyMap)) {
-      const val = measurements[uiKey];
-      if (val !== undefined) measForDisplacement[measKey] = val;
+    // Some measurements have the same key format in both
+    for (const [k, v] of Object.entries(actualMeas)) {
+      if (actualUI[k] === undefined) actualUI[k] = v;
     }
-    this.smpl.applyDisplacements(pos.array, measForDisplacement, actualMap);
+
+    // Apply displacement corrections (both inputs use UI keys)
+    this.smpl.applyDisplacements(pos.array, measurements, actualUI);
 
     pos.needsUpdate = true;
     this.mesh.geometry.computeVertexNormals();
     this._groundMesh();
+
+    return actualUI;
   }
 
   _getPartSet(...names) {
@@ -407,6 +317,7 @@ class BodyVisualizer {
   /* ===== MEASUREMENT EXTRACTION ENGINE ===== */
 
   _getPartVerts(name) {
+    if (this._partSets && this._partSets[name]) return Array.from(this._partSets[name]);
     if (window.SMPL_PARTS && window.SMPL_PARTS[name]) return window.SMPL_PARTS[name];
     if (window.CUSTOM_BODY_POINTS) {
       const key = Object.keys(window.CUSTOM_BODY_POINTS).find(k =>
@@ -542,6 +453,10 @@ class BodyVisualizer {
     return perim * 100;
   }
 
+  /**
+   * Compute all measurements from current mesh positions.
+   * Returns object with MLP-style Title Case keys (e.g. 'Chest Round', 'Elbow Round').
+   */
   computeAllMeasurements(pos) {
     if (!pos) return {};
     const faceArr = BodyVisualizer._faceIndices;
@@ -595,8 +510,6 @@ class BodyVisualizer {
     const rKneeY = rKneeV.length > 0 ? this._centroidY(pos, rKneeV) : rCalfY + 0.1;
     const lKneeY = lKneeV.length > 0 ? this._centroidY(pos, lKneeV) : lCalfY + 0.1;
 
-    const shoulderAll = shoulderV;
-
     const circ = (verts, y, bw, partVerts) => {
       const band = this._computeBandVerts(pos, verts, y, bw || 0.03);
       return this._computeCircumference(pos, faceArr, band, y, bw || 0.03, partVerts || verts);
@@ -607,7 +520,7 @@ class BodyVisualizer {
       return this._circFromVerts(pos, band, proj || 'xz');
     };
 
-    M['Shoulder'] = Math.round(this._xSpan(pos, shoulderAll) * 10) / 10;
+    M['Shoulder'] = Math.round(this._xSpan(pos, shoulderV) * 10) / 10;
     M['Across Shoulder'] = M['Shoulder'];
     M['Across Back'] = Math.round(M['Shoulder'] * 0.92 * 10) / 10;
     M['Across Chest'] = Math.round(M['Shoulder'] * 0.96 * 10) / 10;
@@ -639,7 +552,7 @@ class BodyVisualizer {
     M['Trouser Waist']  = M['Waist Round'];
     M['Trouser Length'] = Math.round(this._dist(pos, waistV, ankleV.length > 0 ? ankleV : rCalfV) * 10) / 10;
     M['Inseam']         = Math.round(M['Trouser Length'] * 0.78 * 10) / 10;
-    M['Sleeve Length']  = Math.round(this._dist(pos, shoulderAll, wristV.length > 0 ? wristV : rForeV) * 10) / 10;
+    M['Sleeve Length']  = Math.round(this._dist(pos, shoulderV, wristV.length > 0 ? wristV : rForeV) * 10) / 10;
 
     M['High Bust']      = Math.round(M['Bust Round'] * 0.85 * 10) / 10;
     M['Under Bust']     = Math.round(M['Bust Round'] * 0.75 * 10) / 10;

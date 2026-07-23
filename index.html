@@ -1165,19 +1165,20 @@
   <script>
     (function() {
       const PRESETS = {
-        slim:      { chest: 82, waist: 68, hip: 85, shoulder: 40, thigh: 48, bicep: 24, height: 175, neck: 35, stomach: 72, elbow: 22, wrist: 14, knee: 32, calf: 30, ankle: 20, across_back: 37, across_chest: 38, across_shoulder: 40, half_length: 30, waist_to_hip: 18, sleeve_length: 55, trouser_length: 90, inseam: 70 },
-        average:   { chest: 95, waist: 84, hip: 95, shoulder: 45, thigh: 55, bicep: 33, height: 175, neck: 38, stomach: 85, elbow: 25, wrist: 16, knee: 35, calf: 34, ankle: 22, across_back: 41, across_chest: 43, across_shoulder: 45, half_length: 33, waist_to_hip: 20, sleeve_length: 60, trouser_length: 96, inseam: 75 },
-        heavy:     { chest: 115, waist: 105, hip: 115, shoulder: 50, thigh: 68, bicep: 38, height: 175, neck: 42, stomach: 108, elbow: 28, wrist: 18, knee: 40, calf: 38, ankle: 25, across_back: 46, across_chest: 48, across_shoulder: 50, half_length: 36, waist_to_hip: 22, sleeve_length: 65, trouser_length: 100, inseam: 78 },
-        athletic:  { chest: 102, waist: 78, hip: 98, shoulder: 48, thigh: 58, bicep: 34, height: 178, neck: 39, stomach: 80, elbow: 24, wrist: 15, knee: 36, calf: 35, ankle: 22, across_back: 44, across_chest: 46, across_shoulder: 48, half_length: 34, waist_to_hip: 20, sleeve_length: 62, trouser_length: 98, inseam: 76 },
-        slimFemale:    { chest: 80, waist: 62, hip: 88, shoulder: 38, thigh: 50, bicep: 22, height: 165, neck: 32, stomach: 66, elbow: 20, wrist: 13, knee: 30, calf: 28, ankle: 19, across_back: 35, across_chest: 36, across_shoulder: 38, half_length: 28, waist_to_hip: 17, sleeve_length: 52, trouser_length: 88, inseam: 68 },
-        averageFemale: { chest: 89, waist: 72, hip: 97, shoulder: 39, thigh: 54, bicep: 27, height: 163, neck: 34, stomach: 76, elbow: 22, wrist: 14, knee: 33, calf: 32, ankle: 21, across_back: 36, across_chest: 37, across_shoulder: 39, half_length: 29, waist_to_hip: 19, sleeve_length: 54, trouser_length: 90, inseam: 70 },
-        heavyFemale:   { chest: 110, waist: 100, hip: 115, shoulder: 44, thigh: 68, bicep: 32, height: 165, neck: 38, stomach: 102, elbow: 26, wrist: 17, knee: 38, calf: 36, ankle: 24, across_back: 40, across_chest: 42, across_shoulder: 44, half_length: 32, waist_to_hip: 22, sleeve_length: 58, trouser_length: 95, inseam: 74 },
+        slim:      { height:175, chest:82, bust_round:82, waist:68, stomach:72, hip:85, neck:35, upper_hip:75, shoulder:40, across_shoulder:40, across_back:37, across_chest:38, thigh:48, knee_round:32, calf_round:30, ankle_round:20, bicep:24, elbow_round:22, wrist_round:14, half_length:30, full_top_length:48, back_waist_length:30, front_waist_length:30, neck_to_waist:30, shoulder_to_waist:30, waist_to_hip:18, crotch_depth:18, sleeve_length:55, trouser_length:90, trouser_waist:68, inseam:70, high_bust:70, under_bust:62, bust_point:16, shoulder_to_bust:18, shoulder_to_under_bust:21, armhole_round:18 },
+        average:   { height:175, chest:95, bust_round:95, waist:84, stomach:85, hip:95, neck:38, upper_hip:87, shoulder:45, across_shoulder:45, across_back:41, across_chest:43, thigh:55, knee_round:35, calf_round:34, ankle_round:22, bicep:33, elbow_round:25, wrist_round:16, half_length:33, full_top_length:52, back_waist_length:33, front_waist_length:33, neck_to_waist:33, shoulder_to_waist:33, waist_to_hip:20, crotch_depth:20, sleeve_length:60, trouser_length:96, trouser_waist:84, inseam:75, high_bust:81, under_bust:71, bust_point:18, shoulder_to_bust:20, shoulder_to_under_bust:23, armhole_round:20 },
+        heavy:     { height:175, chest:115, bust_round:115, waist:105, stomach:108, hip:115, neck:42, upper_hip:106, shoulder:50, across_shoulder:50, across_back:46, across_chest:48, thigh:68, knee_round:40, calf_round:38, ankle_round:25, bicep:38, elbow_round:28, wrist_round:18, half_length:36, full_top_length:56, back_waist_length:36, front_waist_length:36, neck_to_waist:36, shoulder_to_waist:36, waist_to_hip:22, crotch_depth:22, sleeve_length:65, trouser_length:100, trouser_waist:105, inseam:78, high_bust:98, under_bust:86, bust_point:20, shoulder_to_bust:22, shoulder_to_under_bust:26, armhole_round:23 },
+        athletic:  { height:178, chest:102, bust_round:102, waist:78, stomach:80, hip:98, neck:39, upper_hip:90, shoulder:48, across_shoulder:48, across_back:44, across_chest:46, thigh:58, knee_round:36, calf_round:35, ankle_round:22, bicep:34, elbow_round:24, wrist_round:15, half_length:34, full_top_length:54, back_waist_length:34, front_waist_length:34, neck_to_waist:34, shoulder_to_waist:34, waist_to_hip:20, crotch_depth:20, sleeve_length:62, trouser_length:98, trouser_waist:78, inseam:76, high_bust:87, under_bust:77, bust_point:17, shoulder_to_bust:19, shoulder_to_under_bust:22, armhole_round:22 },
+        slimFemale:    { height:165, chest:80, bust_round:80, waist:62, stomach:66, hip:88, neck:32, upper_hip:81, shoulder:38, across_shoulder:38, across_back:35, across_chest:36, thigh:50, knee_round:30, calf_round:28, ankle_round:19, bicep:22, elbow_round:20, wrist_round:13, half_length:28, full_top_length:45, back_waist_length:28, front_waist_length:28, neck_to_waist:28, shoulder_to_waist:28, waist_to_hip:17, crotch_depth:17, sleeve_length:52, trouser_length:88, trouser_waist:62, inseam:68, high_bust:68, under_bust:60, bust_point:16, shoulder_to_bust:18, shoulder_to_under_bust:21, armhole_round:17 },
+        averageFemale: { height:163, chest:89, bust_round:89, waist:72, stomach:76, hip:97, neck:34, upper_hip:89, shoulder:39, across_shoulder:39, across_back:36, across_chest:37, thigh:54, knee_round:33, calf_round:32, ankle_round:21, bicep:27, elbow_round:22, wrist_round:14, half_length:29, full_top_length:46, back_waist_length:29, front_waist_length:29, neck_to_waist:29, shoulder_to_waist:29, waist_to_hip:19, crotch_depth:19, sleeve_length:54, trouser_length:90, trouser_waist:72, inseam:70, high_bust:76, under_bust:67, bust_point:18, shoulder_to_bust:20, shoulder_to_under_bust:23, armhole_round:18 },
+        heavyFemale:   { height:165, chest:110, bust_round:110, waist:100, stomach:102, hip:115, neck:38, upper_hip:106, shoulder:44, across_shoulder:44, across_back:40, across_chest:42, thigh:68, knee_round:38, calf_round:36, ankle_round:24, bicep:32, elbow_round:26, wrist_round:17, half_length:32, full_top_length:50, back_waist_length:32, front_waist_length:32, neck_to_waist:32, shoulder_to_waist:32, waist_to_hip:22, crotch_depth:22, sleeve_length:58, trouser_length:95, trouser_waist:100, inseam:74, high_bust:94, under_bust:83, bust_point:20, shoulder_to_bust:22, shoulder_to_under_bust:26, armhole_round:20 },
       };
 
       window.bodyVisUI = {
         vis: null,
         gender: 'male',
         measurements: { ...PRESETS.average },
+        _applying: false,
 
         init: async function() {
           this.vis = new BodyVisualizer();
@@ -1192,10 +1193,10 @@
           document.querySelectorAll('.vis-gender-btn').forEach(b => {
             b.classList.toggle('active', b.dataset.gender === gender);
           });
+          this.vis.setGender(gender);
           const preset = gender === 'female' ? PRESETS.averageFemale : PRESETS.average;
           this.measurements = { ...preset };
           this._syncSliders();
-          this.vis.setGender(gender);
           this._apply();
           this._setActivePreset('average');
           const femSection = document.getElementById('visFemaleSection');
@@ -1212,51 +1213,16 @@
         },
 
         _apply: function() {
+          if (this._applying) return;
+          this._applying = true;
           this.vis.updateFromMeasurements(this.measurements);
-          this._updateComputedMeasurements();
+          this._applying = false;
         },
 
         _updateComputedMeasurements: function() {
-          if (!this.vis || !this.vis.mesh) return;
-          const pos = this.vis.mesh.geometry.attributes.position;
-          const allMeas = this.vis.computeAllMeasurements(pos);
-          // Map all measurement keys (both editable and derived)
-          const map = {
-            chest: 'Chest Round', waist: 'Waist Round', stomach: 'Stomach Round',
-            hip: 'Hip Round', neck: 'Neck Round',
-            shoulder: 'Shoulder', across_shoulder: 'Across Shoulder',
-            across_back: 'Across Back', across_chest: 'Across Chest',
-            thigh: 'Thigh Round', knee: 'Knee Round', calf: 'Calf Round',
-            ankle: 'Ankle Round', bicep: 'Bicep Round', elbow: 'Elbow Round',
-            wrist: 'Wrist Round', upper_hip: 'Upper Hip', armhole: 'Armhole Round',
-            half_length: 'Half Length', full_top_length: 'Full Top Length',
-            back_waist_length: 'Back Waist Length', front_waist_length: 'Front Waist Length',
-            neck_to_waist: 'Neck to Waist', shoulder_to_waist: 'Shoulder to Waist',
-            waist_to_hip: 'Waist to Hip', crotch_depth: 'Crotch Depth',
-            trouser_waist: 'Trouser Waist', trouser_length: 'Trouser Length',
-            inseam: 'Inseam', sleeve_length: 'Sleeve Length',
-            bust_round: 'Bust Round', high_bust: 'High Bust',
-            under_bust: 'Under Bust', bust_point: 'Bust Point',
-            shoulder_to_bust: 'Shoulder to Bust Point',
-            shoulder_to_under_bust: 'Shoulder to Under Bust',
-          };
-          for (const [htmlKey, measKey] of Object.entries(map)) {
-            const el = document.getElementById('val-' + htmlKey);
-            if (el && allMeas[measKey] !== undefined) {
-              const v = Math.round(allMeas[measKey] * 10) / 10;
-              el.textContent = v + ' cm';
-              // Update slider position too
-              const grp = el.closest('.vis-slider-group');
-              if (grp) {
-                const sl = grp.querySelector('input[type="range"]');
-                if (sl) {
-                  sl.value = v;
-                  // Keep measurements in sync
-                  this.measurements[htmlKey] = v;
-                }
-              }
-            }
-          }
+          // This is intentionally empty — computed values are NOT written back
+          // to measurements to avoid feedback loops. The mesh is shaped by the
+          // MLP+displacement pipeline which already ensures actual ≈ target.
         },
 
         _syncSliders: function() {

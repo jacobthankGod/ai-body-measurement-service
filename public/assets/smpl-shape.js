@@ -3,15 +3,65 @@
  * Loads .npy files and computes SMPL body shape from betas.
  * Supports both Ridge regression (legacy) and MLP neural network.
  * Also loads pre-computed displacement vectors for per-measurement fine-tuning.
+ *
+ * All UI keys are lowercase_underscore (matching data-measurement in HTML).
+ * MLP measurement_order uses Title Case with spaces.
+ * This module handles the mapping internally.
  */
 class SMPLShapeEngine {
   constructor() {
-    this.vTemplate = null;   // Float32Array (6890 * 3)
-    this.shapedirs = null;   // Float32Array (6890 * 3 * 10)
-    this.weights = null;     // Ridge regression weights (legacy)
-    this.mlpWeights = null;  // MLP neural network weights
-    this.displacements = null; // Pre-computed displacement vectors
+    this.vTemplate = null;
+    this.shapedirsFlat = null;
+    this.weights = null;
+    this.mlpWeights = null;
+    this.displacements = null;
     this.ready = false;
+
+    // UI key (data-measurement) → MLP measurement_order key
+    this.UI_TO_MLP = {
+      chest: 'Chest Round',
+      bust_round: 'Bust Round',
+      waist: 'Waist Round',
+      stomach: 'Stomach Round',
+      hip: 'Hip Round',
+      neck: 'Neck Round',
+      thigh: 'Thigh Round',
+      knee_round: 'Knee Round',
+      calf_round: 'Calf Round',
+      ankle_round: 'Ankle Round',
+      bicep: 'Bicep Round',
+      elbow_round: 'Elbow Round',
+      wrist_round: 'Wrist Round',
+      upper_hip: 'Upper Hip',
+      armhole_round: 'Armhole Round',
+      shoulder: 'Shoulder',
+      across_shoulder: 'Across Shoulder',
+      across_back: 'Across Back',
+      across_chest: 'Across Chest',
+      half_length: 'Half Length',
+      full_top_length: 'Full Top Length',
+      back_waist_length: 'Back Waist Length',
+      front_waist_length: 'Front Waist Length',
+      neck_to_waist: 'Neck to Waist',
+      shoulder_to_waist: 'Shoulder to Waist',
+      waist_to_hip: 'Waist to Hip',
+      crotch_depth: 'Crotch Depth',
+      trouser_waist: 'Trouser Waist',
+      trouser_length: 'Trouser Length',
+      inseam: 'Inseam',
+      sleeve_length: 'Sleeve Length',
+      high_bust: 'High Bust',
+      under_bust: 'Under Bust',
+      bust_point: 'Bust Point',
+      shoulder_to_bust: 'Shoulder to Bust Point',
+      shoulder_to_under_bust: 'Shoulder to Under Bust',
+    };
+
+    // Reverse: MLP key → UI key
+    this.MLP_TO_UI = {};
+    for (const [ui, mlp] of Object.entries(this.UI_TO_MLP)) {
+      this.MLP_TO_UI[mlp] = ui;
+    }
   }
 
   async init() {
@@ -42,7 +92,7 @@ class SMPLShapeEngine {
     for (let i = 0; i < 10; i++) b[i] = betas[i] || 0;
 
     const vt = this.vTemplate;
-    const sd = this.shapedirsFlat; // (20670, 10)
+    const sd = this.shapedirsFlat;
     const out = new Float32Array(6890 * 3);
 
     for (let vc = 0; vc < 20670; vc++) {
@@ -57,53 +107,9 @@ class SMPLShapeEngine {
   }
 
   /**
-   * MLP forward pass: normalized measurements → betas.
-   * Architecture: 36 → 128 → ReLU → 64 → ReLU → 10
-   * @param {Float32Array} xNorm - 36-dim normalized input (35 meas + 1 gender)
-   * @param {string} gender - 'male' or 'female'
-   * @returns {Float32Array} betas (10,)
-   */
-  _mlpForward(xNorm, gender) {
-    const mlp = this.mlpWeights[gender];
-    if (!mlp) return null;
-    const w = mlp.weights;
-
-    // Layer 0: Linear(36, 128) + ReLU
-    const l0w = w['net.0.weight']; // [128][36]
-    const l0b = w['net.0.bias'];   // [128]
-    const h0 = new Float32Array(128);
-    for (let i = 0; i < 128; i++) {
-      let sum = l0b[i];
-      for (let j = 0; j < 36; j++) sum += l0w[i][j] * xNorm[j];
-      h0[i] = sum > 0 ? sum : 0; // ReLU
-    }
-
-    // Layer 3: Linear(128, 64) + ReLU
-    const l3w = w['net.3.weight']; // [64][128]
-    const l3b = w['net.3.bias'];   // [64]
-    const h3 = new Float32Array(64);
-    for (let i = 0; i < 64; i++) {
-      let sum = l3b[i];
-      for (let j = 0; j < 128; j++) sum += l3w[i][j] * h0[j];
-      h3[i] = sum > 0 ? sum : 0; // ReLU
-    }
-
-    // Layer 6: Linear(64, 10)
-    const l6w = w['net.6.weight']; // [10][64]
-    const l6b = w['net.6.bias'];   // [10]
-    const out = new Float32Array(10);
-    for (let i = 0; i < 10; i++) {
-      let sum = l6b[i];
-      for (let j = 0; j < 64; j++) sum += l6w[i][j] * h3[j];
-      out[i] = Math.max(-2, Math.min(2, sum)); // Clamp to [-2, 2]
-    }
-    return out;
-  }
-
-  /**
-   * Convert all 35 measurements to beta parameters using MLP.
+   * Convert UI measurements (lowercase_underscore keys) to betas via MLP.
    * Falls back to Ridge regression if MLP unavailable.
-   * @param {Object} meas - all 35 measurements in cm
+   * @param {Object} meas - measurements with UI keys (e.g. {chest: 95, waist: 80, ...})
    * @param {string} gender - 'male' or 'female'
    * @returns {Float32Array} betas (10,)
    */
@@ -112,18 +118,21 @@ class SMPLShapeEngine {
 
     // Try MLP first
     if (this.mlpWeights && this.mlpWeights[gender]) {
-      const mlp = this.mlpWeights[gender];
-      const order = mlp.measurement_order;
+      const mlp = this.mlpWeights;
+      const gWeights = mlp[gender].weights;
+      const order = mlp.measurement_order; // ['Chest Round', 'Bust Round', ...]
       const mean = mlp.meas_mean;
       const std = mlp.meas_std;
 
       const xNorm = new Float32Array(36);
       for (let i = 0; i < order.length; i++) {
-        xNorm[i] = ((meas[order[i]] || 0) - mean[i]) / std[i];
+        // Convert MLP key back to UI key to look up in meas
+        const uiKey = this.MLP_TO_UI[order[i]] || order[i];
+        xNorm[i] = ((meas[uiKey] || 0) - mean[i]) / std[i];
       }
-      xNorm[35] = gender === 'female' ? 1.0 : 0.0; // gender flag
+      xNorm[35] = gender === 'female' ? 1.0 : 0.0;
 
-      const betas = this._mlpForward(xNorm, gender);
+      const betas = this._mlpForward(xNorm, gender, gWeights);
       if (betas) return betas;
     }
 
@@ -132,7 +141,44 @@ class SMPLShapeEngine {
   }
 
   /**
-   * Legacy Ridge regression: 7 measurements → 10 betas.
+   * MLP forward pass: normalized measurements -> betas.
+   * Architecture: 36 -> 128 -> ReLU -> 64 -> ReLU -> 10
+   */
+  _mlpForward(xNorm, gender, weights) {
+    const w = weights || (this.mlpWeights && this.mlpWeights[gender] && this.mlpWeights[gender].weights);
+    if (!w) return null;
+
+    const l0w = w['net.0.weight'];
+    const l0b = w['net.0.bias'];
+    const h0 = new Float32Array(128);
+    for (let i = 0; i < 128; i++) {
+      let sum = l0b[i];
+      for (let j = 0; j < 36; j++) sum += l0w[i][j] * xNorm[j];
+      h0[i] = sum > 0 ? sum : 0;
+    }
+
+    const l3w = w['net.3.weight'];
+    const l3b = w['net.3.bias'];
+    const h3 = new Float32Array(64);
+    for (let i = 0; i < 64; i++) {
+      let sum = l3b[i];
+      for (let j = 0; j < 128; j++) sum += l3w[i][j] * h0[j];
+      h3[i] = sum > 0 ? sum : 0;
+    }
+
+    const l6w = w['net.6.weight'];
+    const l6b = w['net.6.bias'];
+    const out = new Float32Array(10);
+    for (let i = 0; i < 10; i++) {
+      let sum = l6b[i];
+      for (let j = 0; j < 64; j++) sum += l6w[i][j] * h3[j];
+      out[i] = Math.max(-2, Math.min(2, sum));
+    }
+    return out;
+  }
+
+  /**
+   * Legacy Ridge regression: 7 measurements -> 10 betas.
    */
   _ridgeRegression(meas, gender) {
     const reg = this.weights[gender] || this.weights.male;
@@ -162,8 +208,8 @@ class SMPLShapeEngine {
   /**
    * Apply displacement vectors to mesh vertices.
    * @param {Float32Array} positions - vertex positions (6890 * 3), modified in-place
-   * @param {Object} measurements - all 35 measurements in cm
-   * @param {Object} actualMeasurements - measurements from the current mesh
+   * @param {Object} measurements - UI-key measurements (e.g. {chest: 95, elbow_round: 22})
+   * @param {Object} actualMeasurements - actual values from mesh (UI keys)
    */
   applyDisplacements(positions, measurements, actualMeasurements) {
     if (!this.displacements) return;
@@ -171,35 +217,25 @@ class SMPLShapeEngine {
     const disp = this.displacements.displacements;
     if (!ud || !disp) return;
 
-    for (const key of Object.keys(measurements)) {
-      const target = measurements[key];
-      const actual = actualMeasurements[key];
+    for (const uiKey of Object.keys(measurements)) {
+      const target = measurements[uiKey];
+      const actual = actualMeasurements[uiKey];
       if (target === undefined || actual === undefined) continue;
       if (actual <= 0) continue;
 
       const residual = target - actual;
-      if (Math.abs(residual) < 0.1) continue; // Skip tiny corrections
+      if (Math.abs(residual) < 0.1) continue;
 
-      const delta = ud[key];
+      // Convert UI key to displacement key (Title Case)
+      const dispKey = this.UI_TO_MLP[uiKey] || uiKey;
+      const delta = ud[dispKey];
       if (!delta || !delta.indices || delta.indices.length === 0) continue;
 
-      const d = disp[key];
-      let scale = 1.0;
+      const d = disp[dispKey];
+      let scale = residual;
 
-      if (d.type === 'circ' || d.type === 'width') {
-        // Scale displacement by residual
-        scale = residual; // 1cm of displacement per 1cm of residual
-      } else if (d.type === 'length') {
-        scale = residual;
-      } else if (d.type === 'alias') {
-        // For aliases, the unit delta is already scaled
-        scale = residual;
-      }
-
-      // Clamp scale to prevent extreme deformations
       scale = Math.max(-5, Math.min(5, scale));
 
-      // Apply sparse displacement
       for (let i = 0; i < delta.indices.length; i++) {
         const vi = delta.indices[i];
         positions[vi * 3]     += delta.dx[i] * scale;
@@ -209,10 +245,6 @@ class SMPLShapeEngine {
     }
   }
 
-  /**
-   * Parse a numpy .npy file (little-endian, version 1.0/2.0/3.0).
-   * Returns { data: Float32Array, shape: number[] }
-   */
   async _loadNPY(url) {
     const resp = await fetch(url);
     if (!resp.ok) throw new Error(`Failed to load ${url}: ${resp.status}`);
