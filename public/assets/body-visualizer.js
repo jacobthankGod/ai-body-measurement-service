@@ -284,6 +284,11 @@ class BodyVisualizer {
 
     const targetHeightCm = measurements.height || 175;
     this.currentBetas = this.smpl.measurementsToBetas(measurements, this.gender);
+    if (this.gender === 'male') {
+      this.currentBetas[1] = 0;
+      this.currentBetas[2] = 0;
+      this.currentBetas[5] = 0;
+    }
     const vertices = this.smpl.computeBodyShape(this.currentBetas);
 
     if (!this.mesh) return;
