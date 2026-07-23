@@ -347,8 +347,10 @@ class BodyVisualizer {
   _applyPartCorrections(pos, measurements) {
     if (!this._partSets) return;
 
+    const isMale = this.gender === 'male';
+
     const corrections = [
-      { key: 'chest', torso: ['spine2', 'rightShoulder', 'leftShoulder'], band: 0.04 },
+      { key: 'chest', torso: ['spine2', 'rightShoulder', 'leftShoulder'], band: 0.04, lateralOnly: isMale },
       { key: 'waist', torso: ['spine1'],                                  band: 0.03 },
       { key: 'hip',   torso: ['hips'],                                    band: 0.04 },
       { key: 'neck',  torso: ['neck'],                                     band: 0.03 },
@@ -366,7 +368,7 @@ class BodyVisualizer {
       const partVerts = this._getPartSet(...corr.torso);
       if (partVerts.size === 0) continue;
 
-      this._scaleTorsoPart(pos, partVerts, targetM, corr.band);
+      this._scaleTorsoPart(pos, partVerts, targetM, corr.band, corr.lateralOnly);
     }
 
     for (const corr of limbCorrections) {
@@ -386,7 +388,7 @@ class BodyVisualizer {
     }
   }
 
-  _scaleTorsoPart(pos, partVerts, targetM, bandWidth) {
+  _scaleTorsoPart(pos, partVerts, targetM, bandWidth, lateralOnly) {
     let sumY = 0;
     for (const vi of partVerts) sumY += pos.array[vi * 3 + 1];
     const centerY = sumY / partVerts.size;
@@ -417,13 +419,30 @@ class BodyVisualizer {
     if (Math.abs(ratio - 1) < 0.01) return;
     const scale = Math.max(0.5, Math.min(2.0, ratio));
 
+    // Find max lateral (X) distance for weighting
+    let maxAbsX = 0;
+    if (lateralOnly) {
+      for (const vi of bandVerts) {
+        const ax = Math.abs(pos.array[vi * 3] - cx);
+        if (ax > maxAbsX) maxAbsX = ax;
+      }
+    }
+
     const bandSet = new Set(bandVerts);
     for (const vi of partVerts) {
       if (!bandSet.has(vi)) continue;
       const dx = pos.array[vi * 3] - cx;
       const dz = pos.array[vi * 3 + 2] - cz;
-      pos.array[vi * 3]     = cx + dx * scale;
-      pos.array[vi * 3 + 2] = cz + dz * scale;
+
+      let s = scale;
+      if (lateralOnly && maxAbsX > 0.01) {
+        // Weight by lateral distance: sides get full scale, front/back get reduced
+        const lateralWeight = Math.abs(dx) / maxAbsX;
+        s = 1 + (scale - 1) * lateralWeight;
+      }
+
+      pos.array[vi * 3]     = cx + dx * s;
+      pos.array[vi * 3 + 2] = cz + dz * s;
     }
   }
 
