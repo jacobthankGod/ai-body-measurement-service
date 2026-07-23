@@ -19,7 +19,7 @@ PROJECT_ROOT = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
 OUTPUT_PATH = os.path.join(PROJECT_ROOT, 'public', 'assets', 'smpl_mlp_weights.json')
 NUM_BETAS = 10
 NUM_MEASUREMENTS = 35
-SHAPES_PER_GENDER = 2000
+SHAPES_PER_GENDER = 5000
 BREAST_BETAS = [1, 2, 5]
 BREAST_CLAMP = 0.3
 BATCH_SIZE = 256
@@ -267,8 +267,17 @@ def generate_shapes(v_template, shapedirs, faces, smpl_parts, n_shapes, gender):
 
     while len(betas_list) < n_shapes and attempts < max_attempts:
         attempts += 1
-        betas = np.random.randn(NUM_BETAS) * 1.5
-        betas = np.clip(betas, -3, 3)
+        # Mix of distributions: 60% normal (average), 25% wide normal, 15% uniform (extreme)
+        r = np.random.random()
+        if r < 0.60:
+            betas = np.random.randn(NUM_BETAS) * 1.2
+            betas = np.clip(betas, -2.5, 2.5)
+        elif r < 0.85:
+            betas = np.random.randn(NUM_BETAS) * 2.0
+            betas = np.clip(betas, -3.5, 3.5)
+        else:
+            # Uniform sampling for plus-sized / very extreme shapes
+            betas = np.random.uniform(-4, 4, NUM_BETAS)
 
         if gender == 'male':
             for bi in BREAST_BETAS:
@@ -438,12 +447,12 @@ def main():
         l0_w = np.array(w['net.0.weight'])
         l0_b = np.array(w['net.0.bias'])
         h0 = np.maximum(0, x @ l0_w.T + l0_b)
-        l3_w = np.array(w['net.3.weight'])
-        l3_b = np.array(w['net.3.bias'])
-        h3 = np.maximum(0, h0 @ l3_w.T + l3_b)
-        l6_w = np.array(w['net.6.weight'])
-        l6_b = np.array(w['net.6.bias'])
-        out = h3 @ l6_w.T + l6_b
+        l2_w = np.array(w['net.2.weight'])
+        l2_b = np.array(w['net.2.bias'])
+        h2 = np.maximum(0, h0 @ l2_w.T + l2_b)
+        l4_w = np.array(w['net.4.weight'])
+        l4_b = np.array(w['net.4.bias'])
+        out = h2 @ l4_w.T + l4_b
 
         print(f"  {gender}: betas = {np.clip(out, -2, 2).round(3)}")
 
