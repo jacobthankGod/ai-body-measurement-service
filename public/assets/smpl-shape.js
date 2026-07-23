@@ -81,7 +81,7 @@ class SMPLShapeEngine {
       for (let j = 0; j < nMeas; j++) {
         sum += w[i][j] * mNorm[j];
       }
-      betas[i] = Math.max(-3, Math.min(3, sum));
+      betas[i] = Math.max(-2, Math.min(2, sum));
     }
     return betas;
   }
