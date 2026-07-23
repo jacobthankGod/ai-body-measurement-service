@@ -1,7 +1,7 @@
 /**
  * Body Visualizer - Three.js interactive SMPL body shape viewer
  * SMPL betas for natural mesh; height via Y-scaling (head excluded).
- * Per-part radial correction reduces slider coupling.
+ * Two-layer pipeline: MLP betas + per-measurement displacement correction.
  */
 class BodyVisualizer {
   constructor() {
@@ -274,32 +274,33 @@ class BodyVisualizer {
   }
 
   /**
-   * Update body shape from measurement values.
-   * 1. Compute betas → natural mesh
-   * 2. Height via Y-scaling (head excluded)
-   * 3. Per-part radial correction for measurement accuracy
+   * Two-layer update pipeline:
+   * 1. MLP: 35 measurements → 10 betas (global shape)
+   * 2. Compute beta-mesh
+   * 3. Measure actual values from mesh
+   * 4. Compute residuals (target - actual)
+   * 5. Apply displacement corrections (per-measurement fine-tuning)
    */
   updateFromMeasurements(measurements) {
     if (!this.smpl || !this.smpl.ready) return;
 
     const targetHeightCm = measurements.height || 175;
+
+    // Step 1: Compute betas via MLP
     this.currentBetas = this.smpl.measurementsToBetas(measurements, this.gender);
-    if (this.gender === 'male') {
-      this.currentBetas[1] = 0;
-      this.currentBetas[2] = 0;
-      this.currentBetas[5] = 0;
-    }
+
+    // Step 2: Compute beta-mesh
     const vertices = this.smpl.computeBodyShape(this.currentBetas);
 
     if (!this.mesh) return;
     const pos = this.mesh.geometry.attributes.position;
 
-    // Step 1: Write beta-computed vertices
+    // Write beta-computed vertices
     for (let i = 0; i < vertices.length; i++) {
       pos.array[i] = vertices[i];
     }
 
-    // Step 2: Height scaling — exclude head+neck vertices
+    // Step 3: Height scaling (exclude head+neck)
     let minY = Infinity, maxY = -Infinity;
     const headNeck = this._getPartSet('head', 'neck');
     for (let i = 0; i < pos.count; i++) {
@@ -317,12 +318,46 @@ class BodyVisualizer {
       pos.array[i * 3 + 1] *= heightScale;
     }
 
-    // Step 3: Recompute normals after height scaling
+    // Step 4: Recompute normals after height scaling
     this.mesh.geometry.computeVertexNormals();
     this._computeVertexNormals(this.mesh.geometry);
 
-    // Step 4: Per-part radial correction
-    this._applyPartCorrections(pos, measurements);
+    // Step 5: Measure actual values from current mesh
+    const actualMeas = this.computeAllMeasurements(pos);
+
+    // Map measurement keys to actual values
+    const actualMap = {};
+    const keyMap = {
+      'Chest Round': 'chest', 'Bust Round': 'bust', 'Waist Round': 'waist',
+      'Stomach Round': 'stomach', 'Hip Round': 'hip', 'Neck Round': 'neck',
+      'Thigh Round': 'thigh', 'Knee Round': 'knee', 'Calf Round': 'calf',
+      'Ankle Round': 'ankle', 'Bicep Round': 'bicep', 'Elbow Round': 'elbow',
+      'Wrist Round': 'wrist', 'Upper Hip': 'upper_hip', 'Armhole Round': 'armhole',
+      'Shoulder': 'shoulder', 'Across Shoulder': 'across_shoulder',
+      'Across Back': 'across_back', 'Across Chest': 'across_chest',
+      'Half Length': 'half_length', 'Full Top Length': 'full_top_length',
+      'Back Waist Length': 'back_waist_length', 'Front Waist Length': 'front_waist_length',
+      'Neck to Waist': 'neck_to_waist', 'Shoulder to Waist': 'shoulder_to_waist',
+      'Waist to Hip': 'waist_to_hip', 'Crotch Depth': 'crotch_depth',
+      'Trouser Waist': 'trouser_waist', 'Trouser Length': 'trouser_length',
+      'Inseam': 'inseam', 'Sleeve Length': 'sleeve_length',
+      'High Bust': 'high_bust', 'Under Bust': 'under_bust',
+      'Bust Point': 'bust_point', 'Shoulder to Bust Point': 'shoulder_to_bust',
+      'Shoulder to Under Bust': 'shoulder_to_under_bust',
+    };
+    for (const [measKey, uiKey] of Object.entries(keyMap)) {
+      if (actualMeas[measKey] !== undefined) {
+        actualMap[uiKey] = actualMeas[measKey];
+      }
+    }
+
+    // Step 6: Apply displacement corrections
+    const measForDisplacement = {};
+    for (const [uiKey, measKey] of Object.entries(keyMap)) {
+      const val = measurements[uiKey];
+      if (val !== undefined) measForDisplacement[measKey] = val;
+    }
+    this.smpl.applyDisplacements(pos.array, measForDisplacement, actualMap);
 
     pos.needsUpdate = true;
     this.mesh.geometry.computeVertexNormals();
@@ -337,192 +372,6 @@ class BodyVisualizer {
       if (s) for (const v of s) combined.add(v);
     }
     return combined;
-  }
-
-  /**
-   * Apply per-body-part radial correction to reduce slider coupling.
-   * Fixes: unit mismatch, per-limb measurement, radial XZ scaling.
-   * Shoulder removed (width, not circumference — regression handles it).
-   */
-  _applyPartCorrections(pos, measurements) {
-    if (!this._partSets) return;
-
-    const isMale = this.gender === 'male';
-
-    const corrections = [
-      { key: 'chest', torso: ['spine2', 'rightShoulder', 'leftShoulder'], band: 0.04, lateralOnly: isMale },
-      { key: 'waist', torso: ['spine1'],                                  band: 0.03 },
-      { key: 'hip',   torso: ['hips'],                                    band: 0.04 },
-      { key: 'neck',  torso: ['neck'],                                     band: 0.03 },
-    ];
-
-    const limbCorrections = [
-      { key: 'thigh', rightParts: ['rightUpLeg'], leftParts: ['leftUpLeg'], band: 0.05, yMax: -0.35 },
-      { key: 'bicep', rightParts: ['rightArm'],   leftParts: ['leftArm'],   band: 0.04 },
-    ];
-
-    for (const corr of corrections) {
-      const targetM = (measurements[corr.key] || 0) / 100;
-      if (targetM <= 0) continue;
-
-      const partVerts = this._getPartSet(...corr.torso);
-      if (partVerts.size === 0) continue;
-
-      this._scaleTorsoPart(pos, partVerts, targetM, corr.band, corr.lateralOnly);
-    }
-
-    for (const corr of limbCorrections) {
-      const targetM = (measurements[corr.key] || 0) / 100;
-      if (targetM <= 0) continue;
-
-      const rightVerts = this._getPartSet(...corr.rightParts);
-      const leftVerts = this._getPartSet(...corr.leftParts);
-      const yMax = corr.yMax || Infinity;
-
-      if (rightVerts.size > 0) {
-        this._scaleLimbSide(pos, rightVerts, targetM, corr.band, yMax);
-      }
-      if (leftVerts.size > 0) {
-        this._scaleLimbSide(pos, leftVerts, targetM, corr.band, yMax);
-      }
-    }
-  }
-
-  _scaleTorsoPart(pos, partVerts, targetM, bandWidth, lateralOnly) {
-    let sumY = 0;
-    for (const vi of partVerts) sumY += pos.array[vi * 3 + 1];
-    const centerY = sumY / partVerts.size;
-
-    const bandVerts = [];
-    for (const vi of partVerts) {
-      if (Math.abs(pos.array[vi * 3 + 1] - centerY) <= bandWidth) bandVerts.push(vi);
-    }
-    if (bandVerts.length < 6) {
-      for (const vi of partVerts) bandVerts.push(vi);
-    }
-    if (bandVerts.length < 3) return;
-
-    let cx = 0, cz = 0;
-    for (const vi of bandVerts) { cx += pos.array[vi * 3]; cz += pos.array[vi * 3 + 2]; }
-    cx /= bandVerts.length; cz /= bandVerts.length;
-
-    let sumR = 0;
-    for (const vi of bandVerts) {
-      const dx = pos.array[vi * 3] - cx;
-      const dz = pos.array[vi * 3 + 2] - cz;
-      sumR += Math.sqrt(dx * dx + dz * dz);
-    }
-    const currentR = sumR / bandVerts.length;
-    if (currentR < 0.01) return;
-
-    const ratio = targetM / (currentR * 2 * Math.PI);
-    if (Math.abs(ratio - 1) < 0.01) return;
-    const scale = Math.max(0.5, Math.min(2.0, ratio));
-
-    // Find max lateral (X) distance for weighting
-    let maxAbsX = 0;
-    if (lateralOnly) {
-      for (const vi of bandVerts) {
-        const ax = Math.abs(pos.array[vi * 3] - cx);
-        if (ax > maxAbsX) maxAbsX = ax;
-      }
-    }
-
-    const bandSet = new Set(bandVerts);
-    for (const vi of partVerts) {
-      if (!bandSet.has(vi)) continue;
-      const dx = pos.array[vi * 3] - cx;
-      const dz = pos.array[vi * 3 + 2] - cz;
-
-      let s = scale;
-      if (lateralOnly && maxAbsX > 0.01) {
-        // Weight by lateral distance: sides get full scale, front/back get reduced
-        const lateralWeight = Math.abs(dx) / maxAbsX;
-        s = 1 + (scale - 1) * lateralWeight;
-      }
-
-      pos.array[vi * 3]     = cx + dx * s;
-      pos.array[vi * 3 + 2] = cz + dz * s;
-    }
-  }
-
-  _scaleLimbSide(pos, sideVerts, targetM, bandWidth, yMax) {
-    let sumX = 0;
-    let count = 0;
-    for (const vi of sideVerts) {
-      if (pos.array[vi * 3 + 1] <= yMax) { sumX += pos.array[vi * 3]; count++; }
-    }
-    if (count === 0) return;
-    const centerX = sumX / count;
-
-    const filtered = [];
-    for (const vi of sideVerts) {
-      if (pos.array[vi * 3 + 1] <= yMax) filtered.push(vi);
-    }
-
-    const bandVerts = [];
-    let sumY = 0;
-    for (const vi of filtered) sumY += pos.array[vi * 3 + 1];
-    const centerY = sumY / filtered.length;
-    for (const vi of filtered) {
-      if (Math.abs(pos.array[vi * 3 + 1] - centerY) <= bandWidth) bandVerts.push(vi);
-    }
-    if (bandVerts.length < 6) {
-      for (const vi of filtered) bandVerts.push(vi);
-    }
-    if (bandVerts.length < 3) return;
-
-    let sumR = 0;
-    for (const vi of bandVerts) {
-      const dx = pos.array[vi * 3] - centerX;
-      const dz = pos.array[vi * 3 + 2] - 0;
-      sumR += Math.sqrt(dx * dx + dz * dz);
-    }
-    const currentR = sumR / bandVerts.length;
-    if (currentR < 0.01) return;
-
-    const ratio = targetM / (currentR * 2 * Math.PI);
-    if (Math.abs(ratio - 1) < 0.01) return;
-    const scale = Math.max(0.5, Math.min(2.0, ratio));
-
-    const bandSet = new Set(bandVerts);
-    for (const vi of filtered) {
-      if (!bandSet.has(vi)) continue;
-      const dx = pos.array[vi * 3] - centerX;
-      const dz = pos.array[vi * 3 + 2] - 0;
-      pos.array[vi * 3]     = centerX + dx * scale;
-      pos.array[vi * 3 + 2] = dz * scale;
-    }
-  }
-
-  _convexHull2D(points) {
-    const pts = points.slice().sort((a, b) => a[0] - b[0] || a[1] - b[1]);
-    const n = pts.length;
-    if (n <= 1) return pts;
-
-    const cross = (O, A, B) =>
-      (A[0] - O[0]) * (B[1] - O[1]) - (A[1] - O[1]) * (B[0] - O[0]);
-
-    const lower = [];
-    for (const p of pts) {
-      while (lower.length >= 2 && cross(lower[lower.length - 2], lower[lower.length - 1], p) <= 0) {
-        lower.pop();
-      }
-      lower.push(p);
-    }
-
-    const upper = [];
-    for (let i = pts.length - 1; i >= 0; i--) {
-      const p = pts[i];
-      while (upper.length >= 2 && cross(upper[upper.length - 2], upper[upper.length - 1], p) <= 0) {
-        upper.pop();
-      }
-      upper.push(p);
-    }
-
-    lower.pop();
-    upper.pop();
-    return lower.concat(upper);
   }
 
   setGender(gender) {
@@ -566,6 +415,36 @@ class BodyVisualizer {
       if (key) return window.CUSTOM_BODY_POINTS[key];
     }
     return [];
+  }
+
+  _convexHull2D(points) {
+    const pts = points.slice().sort((a, b) => a[0] - b[0] || a[1] - b[1]);
+    const n = pts.length;
+    if (n <= 1) return pts;
+
+    const cross = (O, A, B) =>
+      (A[0] - O[0]) * (B[1] - O[1]) - (A[1] - O[1]) * (B[0] - O[0]);
+
+    const lower = [];
+    for (const p of pts) {
+      while (lower.length >= 2 && cross(lower[lower.length - 2], lower[lower.length - 1], p) <= 0) {
+        lower.pop();
+      }
+      lower.push(p);
+    }
+
+    const upper = [];
+    for (let i = pts.length - 1; i >= 0; i--) {
+      const p = pts[i];
+      while (upper.length >= 2 && cross(upper[upper.length - 2], upper[upper.length - 1], p) <= 0) {
+        upper.pop();
+      }
+      upper.push(p);
+    }
+
+    lower.pop();
+    upper.pop();
+    return lower.concat(upper);
   }
 
   _computeCircumference(pos, faceArr, verts, planeY, bandW, partVerts) {
