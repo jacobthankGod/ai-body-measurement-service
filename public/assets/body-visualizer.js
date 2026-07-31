@@ -1,9 +1,7 @@
 /**
- * Body Visualizer - Three.js interactive SMPL body shape viewer
+ * Body Visualizer — Three.js interactive SMPL body shape viewer.
  * SMPL betas for natural mesh; height via Y-scaling (head excluded).
  * Two-layer pipeline: MLP betas + per-measurement displacement correction.
- *
- * All internal keys use lowercase_underscore (matching HTML data-measurement).
  */
 class BodyVisualizer {
   constructor() {
@@ -20,34 +18,15 @@ class BodyVisualizer {
     this.lastMouse = { x: 0, y: 0 };
     this.spherical = { theta: 0.3, phi: 1.2, radius: 2.5 };
     this.target = new THREE.Vector3(0, 0.9, 0);
-    this._faceArray = null;
     this._partSets = null;
   }
 
   async init(canvasId) {
-    const canvas = document.getElementById(canvasId);
+    var canvas = document.getElementById(canvasId);
     if (!canvas) { console.error('Canvas not found:', canvasId); return; }
 
     this.smpl = new SMPLShapeEngine();
-
-    // Load SMPL models and face indices in parallel
-    console.log('Loading SMPL models and face indices...');
-    await Promise.all([
-      this.smpl.init(),
-      this.loadFaceIndices(),
-    ]);
-
-    // Verify face indices loaded
-    if (!BodyVisualizer._faceIndices) {
-      console.error('WARNING: Face indices not loaded. Mesh may render incorrectly.');
-      console.error('Retrying face indices load...');
-      await this.loadFaceIndices();
-      if (!BodyVisualizer._faceIndices) {
-        console.error('CRITICAL: Face indices failed to load after retry. Mesh will be broken.');
-      }
-    } else {
-      console.log('Face indices ready:', BodyVisualizer._faceIndices.length / 3, 'triangles');
-    }
+    await this.smpl.init('');
 
     this._initPartSets();
 
@@ -57,39 +36,71 @@ class BodyVisualizer {
     this.camera = new THREE.PerspectiveCamera(35, 1, 0.1, 100);
     this._updateCamera();
 
-    this.renderer = new THREE.WebGLRenderer({ canvas, antialias: true });
+    this.renderer = new THREE.WebGLRenderer({ canvas: canvas, antialias: true });
     this.renderer.setPixelRatio(Math.min(window.devicePixelRatio, 2));
     this._resize();
-    window.addEventListener('resize', () => this._resize());
+    window.addEventListener('resize', this._resize.bind(this));
 
-    const hemi = new THREE.HemisphereLight(0xffffff, 0x666666, 1.0);
+    var hemi = new THREE.HemisphereLight(0xffffff, 0x666666, 1.0);
     this.scene.add(hemi);
-    const dir1 = new THREE.DirectionalLight(0xffffff, 0.9);
+    var dir1 = new THREE.DirectionalLight(0xffffff, 0.9);
     dir1.position.set(2, 4, 3);
     this.scene.add(dir1);
-    const dir2 = new THREE.DirectionalLight(0xffffff, 0.5);
+    var dir2 = new THREE.DirectionalLight(0xffffff, 0.5);
     dir2.position.set(-2, 2, -1);
     this.scene.add(dir2);
-    const dir3 = new THREE.DirectionalLight(0xffffff, 0.4);
+    var dir3 = new THREE.DirectionalLight(0xffffff, 0.4);
     dir3.position.set(0, 2, -3);
     this.scene.add(dir3);
-    const amb = new THREE.AmbientLight(0x404040, 0.3);
+    var amb = new THREE.AmbientLight(0x404040, 0.3);
     this.scene.add(amb);
 
-    const grid = new THREE.GridHelper(4, 20, 0x333333, 0x222222);
+    var grid = new THREE.GridHelper(4, 20, 0x333333, 0x222222);
     grid.position.y = 0;
     this.scene.add(grid);
 
-    const defaultMeas = { chest: 95, waist: 80, hip: 95, shoulder: 45, thigh: 55, bicep: 30, height: 175, neck: 38 };
-    this.currentBetas = this.smpl.measurementsToBetas(defaultMeas, this.gender);
-    const vertices = this.smpl.computeBodyShape(this.currentBetas);
+    // Build face index array (SMPL faces are 0-indexed uint32)
+    var faces = this.smpl.faces;
 
-    const geometry = this._buildGeometry(vertices);
-    const material = new THREE.MeshStandardMaterial({
+    // Initial body shape — ALL measurements provided for UI, but only 12 independent ones feed the MLP
+    var defaultMeas = {
+      chest: 96, waist: 84, hip: 96, thigh: 55, bicep: 32, neck: 39,
+      shoulder: 43, half_length: 28, waist_to_hip: 28, trouser_length: 116,
+      sleeve_length: 62, bust_point: 7,
+      // Derived/display-only (not fed to MLP):
+      bust_round: 96, stomach: 82, knee_round: 38, calf_round: 36, ankle_round: 24,
+      elbow_round: 25, wrist_round: 17, upper_hip: 91, armhole_round: 19,
+      across_shoulder: 43, across_back: 39, across_chest: 40,
+      full_top_length: 55, back_waist_length: 28, front_waist_length: 28,
+      neck_to_waist: 28, shoulder_to_waist: 28, crotch_depth: 28,
+      trouser_waist: 84, inseam: 91, high_bust: 85, under_bust: 76,
+      shoulder_to_bust: 8, shoulder_to_under_bust: 9,
+      height: 175
+    };
+    this.currentBetas = this.smpl.measurementsToBetas(defaultMeas, this.gender);
+    var vertices = this.smpl.computeBodyShape(this.currentBetas);
+
+    // Diagnostic: log betas and vertex ranges
+    console.log('[BodyVis] Betas:', Array.from(this.currentBetas).map(function(b) { return b.toFixed(3); }));
+    var xmin = Infinity, xmax = -Infinity, ymin = Infinity, ymax = -Infinity, zmin = Infinity, zmax = -Infinity;
+    for (var i = 0; i < vertices.length; i += 3) {
+      if (vertices[i] < xmin) xmin = vertices[i];
+      if (vertices[i] > xmax) xmax = vertices[i];
+      if (vertices[i+1] < ymin) ymin = vertices[i+1];
+      if (vertices[i+1] > ymax) ymax = vertices[i+1];
+      if (vertices[i+2] < zmin) zmin = vertices[i+2];
+      if (vertices[i+2] > zmax) zmax = vertices[i+2];
+    }
+    console.log('[BodyVis] Vertices X=[' + xmin.toFixed(3) + ',' + xmax.toFixed(3) + '] Y=[' + ymin.toFixed(3) + ',' + ymax.toFixed(3) + '] Z=[' + zmin.toFixed(3) + ',' + zmax.toFixed(3) + ']');
+    console.log('[BodyVis] Height: ' + ((ymax - ymin) * 100).toFixed(1) + 'cm');
+
+    var geometry = this._buildGeometry(vertices, faces);
+    var material = new THREE.MeshStandardMaterial({
       color: 0xD4A574,
       roughness: 0.6,
       metalness: 0.05,
       flatShading: false,
+      side: THREE.DoubleSide,
     });
 
     this.mesh = new THREE.Mesh(geometry, material);
@@ -99,36 +110,33 @@ class BodyVisualizer {
     this._initControls(canvas);
     this._animate();
 
-    const loading = document.getElementById('visLoading');
+    var loading = document.getElementById('visLoading');
     if (loading) loading.style.display = 'none';
 
-    console.log('BodyVisualizer init complete. Mesh:', this.mesh.geometry.attributes.position.count, 'vertices,',
-      this.mesh.geometry.index ? (this.mesh.geometry.index.count / 3) + ' triangles' : 'NO INDEX');
+    console.log('[BodyVis] Ready: ' + this.mesh.geometry.attributes.position.count + ' verts, ' +
+      (this.mesh.geometry.index ? (this.mesh.geometry.index.count / 3) + ' tris' : 'no index'));
   }
 
   _initPartSets() {
     if (window.SMPL_PARTS) {
       this._partSets = {};
-      for (const key in window.SMPL_PARTS) {
+      for (var key in window.SMPL_PARTS) {
         this._partSets[key] = new Set(window.SMPL_PARTS[key]);
       }
     }
   }
 
-  _buildGeometry(vertexData) {
-    const geometry = new THREE.BufferGeometry();
-    const positions = new Float32Array(vertexData);
+  _buildGeometry(vertexData, faceIndices) {
+    var geometry = new THREE.BufferGeometry();
+    var positions = new Float32Array(vertexData);
     geometry.setAttribute('position', new THREE.BufferAttribute(positions, 3));
 
-    if (BodyVisualizer._faceIndices) {
-      console.log('Building geometry with', BodyVisualizer._faceIndices.length / 3, 'triangles from face indices');
-      geometry.setIndex(new THREE.BufferAttribute(BodyVisualizer._faceIndices, 1));
-    } else {
-      console.error('CRITICAL: No face indices available! Using identity fallback (mesh will look wrong)');
-      const nv = positions.length / 3;
-      const idx = new Uint32Array(nv);
-      for (let i = 0; i < nv; i++) idx[i] = i;
+    if (faceIndices && faceIndices.length > 0) {
+      var idx = new Uint32Array(faceIndices);
       geometry.setIndex(new THREE.BufferAttribute(idx, 1));
+      console.log('[BodyVis] Indexed: ' + (idx.length / 3) + ' triangles');
+    } else {
+      console.error('[BodyVis] No face indices!');
     }
 
     geometry.computeVertexNormals();
@@ -138,50 +146,53 @@ class BodyVisualizer {
   _groundMesh() {
     if (!this.mesh) return;
     this.mesh.geometry.computeBoundingBox();
-    const bbox = this.mesh.geometry.boundingBox;
+    var bbox = this.mesh.geometry.boundingBox;
     this.mesh.position.set(0, -bbox.min.y, 0);
   }
 
   _updateCamera() {
     if (!this.camera) return;
-    const { theta, phi, radius } = this.spherical;
+    var theta = this.spherical.theta;
+    var phi = this.spherical.phi;
+    var r = this.spherical.radius;
     this.camera.position.set(
-      this.target.x + radius * Math.sin(phi) * Math.sin(theta),
-      this.target.y + radius * Math.cos(phi),
-      this.target.z + radius * Math.sin(phi) * Math.cos(theta)
+      this.target.x + r * Math.sin(phi) * Math.sin(theta),
+      this.target.y + r * Math.cos(phi),
+      this.target.z + r * Math.sin(phi) * Math.cos(theta)
     );
     this.camera.lookAt(this.target);
   }
 
   _initControls(canvas) {
-    canvas.addEventListener('mousedown', (e) => {
-      this.mouseDown = true;
-      this.lastMouse = { x: e.clientX, y: e.clientY };
-      this.isRotating = false;
+    var self = this;
+    canvas.addEventListener('mousedown', function(e) {
+      self.mouseDown = true;
+      self.lastMouse = { x: e.clientX, y: e.clientY };
+      self.isRotating = false;
     });
-    window.addEventListener('mouseup', () => { this.mouseDown = false; });
-    window.addEventListener('mousemove', (e) => {
-      if (!this.mouseDown) return;
-      const dx = e.clientX - this.lastMouse.x;
-      const dy = e.clientY - this.lastMouse.y;
-      this.spherical.theta -= dx * 0.005;
-      this.spherical.phi = Math.max(0.3, Math.min(Math.PI - 0.3, this.spherical.phi - dy * 0.005));
-      this.lastMouse = { x: e.clientX, y: e.clientY };
-      this._updateCamera();
+    window.addEventListener('mouseup', function() { self.mouseDown = false; });
+    window.addEventListener('mousemove', function(e) {
+      if (!self.mouseDown) return;
+      var dx = e.clientX - self.lastMouse.x;
+      var dy = e.clientY - self.lastMouse.y;
+      self.spherical.theta -= dx * 0.005;
+      self.spherical.phi = Math.max(0.3, Math.min(Math.PI - 0.3, self.spherical.phi - dy * 0.005));
+      self.lastMouse = { x: e.clientX, y: e.clientY };
+      self._updateCamera();
     });
 
-    canvas.addEventListener('wheel', (e) => {
+    canvas.addEventListener('wheel', function(e) {
       e.preventDefault();
-      this.spherical.radius = Math.max(1.2, Math.min(6, this.spherical.radius + e.deltaY * 0.002));
-      this._updateCamera();
+      self.spherical.radius = Math.max(1.2, Math.min(6, self.spherical.radius + e.deltaY * 0.002));
+      self._updateCamera();
     }, { passive: false });
 
-    let touchStart = null;
-    let pinchDist = null;
-    canvas.addEventListener('touchstart', (e) => {
+    var touchStart = null;
+    var pinchDist = null;
+    canvas.addEventListener('touchstart', function(e) {
       if (e.touches.length === 1) {
         touchStart = { x: e.touches[0].clientX, y: e.touches[0].clientY };
-        this.isRotating = false;
+        self.isRotating = false;
       } else if (e.touches.length === 2) {
         pinchDist = Math.hypot(
           e.touches[0].clientX - e.touches[1].clientX,
@@ -189,34 +200,34 @@ class BodyVisualizer {
         );
       }
     });
-    canvas.addEventListener('touchmove', (e) => {
+    canvas.addEventListener('touchmove', function(e) {
       e.preventDefault();
       if (e.touches.length === 1 && touchStart) {
-        const dx = e.touches[0].clientX - touchStart.x;
-        const dy = e.touches[0].clientY - touchStart.y;
-        this.spherical.theta -= dx * 0.005;
-        this.spherical.phi = Math.max(0.3, Math.min(Math.PI - 0.3, this.spherical.phi - dy * 0.005));
+        var dx = e.touches[0].clientX - touchStart.x;
+        var dy = e.touches[0].clientY - touchStart.y;
+        self.spherical.theta -= dx * 0.005;
+        self.spherical.phi = Math.max(0.3, Math.min(Math.PI - 0.3, self.spherical.phi - dy * 0.005));
         touchStart = { x: e.touches[0].clientX, y: e.touches[0].clientY };
-        this._updateCamera();
+        self._updateCamera();
       } else if (e.touches.length === 2 && pinchDist !== null) {
-        const newDist = Math.hypot(
+        var newDist = Math.hypot(
           e.touches[0].clientX - e.touches[1].clientX,
           e.touches[0].clientY - e.touches[1].clientY
         );
-        this.spherical.radius = Math.max(1.2, Math.min(6, this.spherical.radius * (pinchDist / newDist)));
+        self.spherical.radius = Math.max(1.2, Math.min(6, self.spherical.radius * (pinchDist / newDist)));
         pinchDist = newDist;
-        this._updateCamera();
+        self._updateCamera();
       }
     }, { passive: false });
   }
 
   _resize() {
     if (!this.renderer || !this.camera) return;
-    const canvas = this.renderer.domElement;
-    const parent = canvas.parentElement;
+    var canvas = this.renderer.domElement;
+    var parent = canvas.parentElement;
     if (!parent) return;
-    const w = parent.clientWidth;
-    const h = parent.clientHeight;
+    var w = parent.clientWidth;
+    var h = parent.clientHeight;
     canvas.width = w * Math.min(window.devicePixelRatio, 2);
     canvas.height = h * Math.min(window.devicePixelRatio, 2);
     canvas.style.width = w + 'px';
@@ -227,7 +238,8 @@ class BodyVisualizer {
   }
 
   _animate() {
-    this.animId = requestAnimationFrame(() => this._animate());
+    var self = this;
+    this.animId = requestAnimationFrame(function() { self._animate(); });
     if (this.isRotating) {
       this.spherical.theta += 0.003;
       this._updateCamera();
@@ -236,79 +248,74 @@ class BodyVisualizer {
   }
 
   /**
-   * Two-layer update pipeline.
-   * @param {Object} measurements - all measurements with UI keys (lowercase_underscore)
+   * Two-layer update: MLP betas → mesh → weighted height scaling.
    */
   updateFromMeasurements(measurements) {
     if (!this.smpl || !this.smpl.ready) {
-      console.warn('updateFromMeasurements: smpl not ready');
+      console.warn('[BodyVis] updateFromMeasurements: smpl not ready');
       return;
     }
 
-    const targetHeightCm = measurements.height || 175;
+    var targetHeightCm = measurements.height || 175;
 
     this.currentBetas = this.smpl.measurementsToBetas(measurements, this.gender);
-    console.log('Betas:', Array.from(this.currentBetas).map(v => v.toFixed(3)).join(', '));
-    const vertices = this.smpl.computeBodyShape(this.currentBetas);
+    var vertices = this.smpl.computeBodyShape(this.currentBetas);
 
     if (!this.mesh) return;
-    const pos = this.mesh.geometry.attributes.position;
+    var pos = this.mesh.geometry.attributes.position;
 
-    for (let i = 0; i < vertices.length; i++) {
+    for (var i = 0; i < vertices.length; i++) {
       pos.array[i] = vertices[i];
     }
 
-    // Height scaling (exclude head+neck)
-    let minY = Infinity, maxY = -Infinity;
-    const headNeck = this._getPartSet('head', 'neck');
-    for (let i = 0; i < pos.count; i++) {
-      if (headNeck.has(i)) continue;
-      const y = pos.array[i * 3 + 1];
+    // Height scaling with weighted neck transition
+    var headSet = this._partSets['head'];
+    var neckSet = this._partSets['neck'];
+    var minY = Infinity, maxY = -Infinity;
+    for (var i = 0; i < pos.count; i++) {
+      if (headSet.has(i) || neckSet.has(i)) continue;
+      var y = pos.array[i * 3 + 1];
       if (y < minY) minY = y;
       if (y > maxY) maxY = y;
     }
-    const actualHeightM = maxY - minY;
-    const targetHeightM = targetHeightCm / 100;
-    const heightScale = actualHeightM > 0 ? targetHeightM / actualHeightM : 1.0;
+    var actualHeightM = maxY - minY;
+    var targetHeightM = targetHeightCm / 100;
+    var heightScale = actualHeightM > 0 ? targetHeightM / actualHeightM : 1.0;
 
-    for (let i = 0; i < pos.count; i++) {
-      if (headNeck.has(i)) continue;
-      pos.array[i * 3 + 1] *= heightScale;
+    // Compute neck Y range for weighted scaling
+    var neckMinY = Infinity, neckMaxY = -Infinity;
+    for (var vi of neckSet) {
+      var ny = pos.array[vi * 3 + 1];
+      if (ny < neckMinY) neckMinY = ny;
+      if (ny > neckMaxY) neckMaxY = ny;
     }
+    var neckRange = neckMaxY - neckMinY;
 
-    this.mesh.geometry.computeVertexNormals();
-
-    // Measure actual values from current mesh (returns Title Case keys)
-    const actualMeas = this.computeAllMeasurements(pos);
-
-    // Convert actual measurements from Title Case keys to UI keys
-    const actualUI = {};
-    for (const [mlpKey, uiKey] of Object.entries(this.smpl.MLP_TO_UI)) {
-      if (actualMeas[mlpKey] !== undefined) {
-        actualUI[uiKey] = actualMeas[mlpKey];
+    for (var i = 0; i < pos.count; i++) {
+      if (headSet.has(i)) {
+        continue;
+      } else if (neckSet.has(i)) {
+        var weight = neckRange > 0.001 ? (neckMaxY - pos.array[i * 3 + 1]) / neckRange : 0.5;
+        pos.array[i * 3 + 1] *= 1.0 + (heightScale - 1.0) * weight;
+      } else {
+        pos.array[i * 3 + 1] *= heightScale;
       }
     }
-    // Some measurements have the same key format in both
-    for (const [k, v] of Object.entries(actualMeas)) {
-      if (actualUI[k] === undefined) actualUI[k] = v;
-    }
 
-    // Apply displacement corrections (both inputs use UI keys)
-    this.smpl.applyDisplacements(pos.array, measurements, actualUI);
+    this.mesh.geometry.computeVertexNormals();
 
     pos.needsUpdate = true;
-    this.mesh.geometry.computeVertexNormals();
     this._groundMesh();
 
-    return actualUI;
+    return {};
   }
 
-  _getPartSet(...names) {
-    const combined = new Set();
+  _getPartSet() {
+    var combined = new Set();
     if (!this._partSets) return combined;
-    for (const name of names) {
-      const s = this._partSets[name];
-      if (s) for (const v of s) combined.add(v);
+    for (var i = 0; i < arguments.length; i++) {
+      var s = this._partSets[arguments[i]];
+      if (s) for (var v of s) combined.add(v);
     }
     return combined;
   }
@@ -317,93 +324,39 @@ class BodyVisualizer {
     this.gender = gender;
   }
 
-  async loadFaceIndices() {
-    if (BodyVisualizer._faceIndices) {
-      console.log('Face indices already loaded, applying to mesh');
-      if (this.mesh && !this.mesh.geometry.index) {
-        this.mesh.geometry.setIndex(new THREE.BufferAttribute(BodyVisualizer._faceIndices, 1));
-        this.mesh.geometry.computeVertexNormals();
-      }
-      return;
-    }
-    const paths = ['/models/smpl_faces.npy', '/assets/smpl_faces.npy'];
-    for (const url of paths) {
-      try {
-        console.log('Fetching face indices from', url, '...');
-        const resp = await fetch(url);
-        console.log('Response:', resp.status, resp.statusText, 'size:', resp.headers.get('content-length'));
-        if (!resp.ok) { console.warn('Failed:', resp.status, 'from', url); continue; }
-        const buf = await resp.arrayBuffer();
-        const view = new DataView(buf);
-        const magic = String.fromCharCode(view.getUint8(0), view.getUint8(1), view.getUint8(2), view.getUint8(3), view.getUint8(4), view.getUint8(5));
-        if (magic !== '\x93NUMPY') { console.error('Invalid NPY magic from', url); continue; }
-        const major = view.getUint8(6);
-        let headerLen, headerStart;
-        if (major === 1) { headerLen = view.getUint16(8, true); headerStart = 10; }
-        else { headerLen = view.getUint32(8, true); headerStart = 12; }
-        const dataStart = headerStart + headerLen;
-        const total = 13776 * 3;
-        console.log('NPY: major=' + major + ' headerLen=' + headerLen + ' dataStart=' + dataStart);
-        if (buf.byteLength < dataStart + total * 4) {
-          console.error('File too small:', buf.byteLength, 'need', dataStart + total * 4);
-          continue;
-        }
-        const indices = new Uint32Array(total);
-        for (let i = 0; i < total; i++) {
-          indices[i] = view.getUint32(dataStart + i * 4, true);
-        }
-        console.log('Face indices loaded: ' + indices.length + ' values, max=' + indices.max);
-        BodyVisualizer._faceIndices = indices;
-        if (this.mesh) {
-          this.mesh.geometry.setIndex(new THREE.BufferAttribute(indices, 1));
-          this.mesh.geometry.computeVertexNormals();
-          console.log('Applied face indices to existing mesh');
-        }
-        return;
-      } catch (e) {
-        console.error('Error loading from', url, ':', e);
-      }
-    }
-    console.error('CRITICAL: Could not load face indices from any path');
-  }
-
-  /* ===== MEASUREMENT EXTRACTION ENGINE ===== */
+  /* ===== MEASUREMENT EXTRACTION ===== */
 
   _getPartVerts(name) {
     if (this._partSets && this._partSets[name]) return Array.from(this._partSets[name]);
     if (window.SMPL_PARTS && window.SMPL_PARTS[name]) return window.SMPL_PARTS[name];
     if (window.CUSTOM_BODY_POINTS) {
-      const key = Object.keys(window.CUSTOM_BODY_POINTS).find(k =>
-        k.toLowerCase().replace(/\s+/g, '') === name.toLowerCase().replace(/\s+/g, '')
-      );
+      var key = Object.keys(window.CUSTOM_BODY_POINTS).find(function(k) {
+        return k.toLowerCase().replace(/\s+/g, '') === name.toLowerCase().replace(/\s+/g, '');
+      });
       if (key) return window.CUSTOM_BODY_POINTS[key];
     }
     return [];
   }
 
   _convexHull2D(points) {
-    const pts = points.slice().sort((a, b) => a[0] - b[0] || a[1] - b[1]);
-    const n = pts.length;
+    var pts = points.slice().sort(function(a, b) { return a[0] - b[0] || a[1] - b[1]; });
+    var n = pts.length;
     if (n <= 1) return pts;
 
-    const cross = (O, A, B) =>
-      (A[0] - O[0]) * (B[1] - O[1]) - (A[1] - O[1]) * (B[0] - O[0]);
+    var cross = function(O, A, B) {
+      return (A[0] - O[0]) * (B[1] - O[1]) - (A[1] - O[1]) * (B[0] - O[0]);
+    };
 
-    const lower = [];
-    for (const p of pts) {
-      while (lower.length >= 2 && cross(lower[lower.length - 2], lower[lower.length - 1], p) <= 0) {
-        lower.pop();
-      }
-      lower.push(p);
+    var lower = [];
+    for (var i = 0; i < n; i++) {
+      while (lower.length >= 2 && cross(lower[lower.length - 2], lower[lower.length - 1], pts[i]) <= 0) lower.pop();
+      lower.push(pts[i]);
     }
 
-    const upper = [];
-    for (let i = pts.length - 1; i >= 0; i--) {
-      const p = pts[i];
-      while (upper.length >= 2 && cross(upper[upper.length - 2], upper[upper.length - 1], p) <= 0) {
-        upper.pop();
-      }
-      upper.push(p);
+    var upper = [];
+    for (var i = n - 1; i >= 0; i--) {
+      while (upper.length >= 2 && cross(upper[upper.length - 2], upper[upper.length - 1], pts[i]) <= 0) upper.pop();
+      upper.push(pts[i]);
     }
 
     lower.pop();
@@ -413,20 +366,21 @@ class BodyVisualizer {
 
   _computeCircumference(pos, faceArr, verts, planeY, bandW, partVerts) {
     if (!verts || verts.length < 3 || !faceArr) return 0;
-    const intersections = [];
-    const fCount = faceArr.length / 3;
-    const partSet = partVerts && partVerts.length > 0 ? new Set(partVerts) : null;
+    var intersections = [];
+    var fCount = faceArr.length / 3;
+    var partSet = partVerts && partVerts.length > 0 ? new Set(partVerts) : null;
 
-    for (let f = 0; f < fCount; f++) {
-      const i0 = faceArr[f * 3], i1 = faceArr[f * 3 + 1], i2 = faceArr[f * 3 + 2];
+    for (var f = 0; f < fCount; f++) {
+      var i0 = faceArr[f * 3], i1 = faceArr[f * 3 + 1], i2 = faceArr[f * 3 + 2];
       if (partSet) {
         if (!partSet.has(i0) && !partSet.has(i1) && !partSet.has(i2)) continue;
       }
-      const edges = [[i0, i1], [i1, i2], [i2, i0]];
-      for (const [a, b] of edges) {
-        const ya = pos[a * 3 + 1], yb = pos[b * 3 + 1];
+      var edges = [[i0, i1], [i1, i2], [i2, i0]];
+      for (var e = 0; e < 3; e++) {
+        var a = edges[e][0], b = edges[e][1];
+        var ya = pos[a * 3 + 1], yb = pos[b * 3 + 1];
         if ((ya - planeY) * (yb - planeY) < 0) {
-          const t = (planeY - ya) / (yb - ya);
+          var t = (planeY - ya) / (yb - ya);
           intersections.push([
             pos[a * 3] + t * (pos[b * 3] - pos[a * 3]),
             pos[a * 3 + 2] + t * (pos[b * 3 + 2] - pos[a * 3 + 2])
@@ -436,12 +390,12 @@ class BodyVisualizer {
     }
 
     if (intersections.length < 3) return 0;
-    const hull = this._convexHull2D(intersections);
+    var hull = this._convexHull2D(intersections);
     if (hull.length < 3) return 0;
-    let perim = 0;
-    for (let i = 0; i < hull.length; i++) {
-      const j = (i + 1) % hull.length;
-      const dx = hull[j][0] - hull[i][0], dz = hull[j][1] - hull[i][1];
+    var perim = 0;
+    for (var i = 0; i < hull.length; i++) {
+      var j = (i + 1) % hull.length;
+      var dx = hull[j][0] - hull[i][0], dz = hull[j][1] - hull[i][1];
       perim += Math.sqrt(dx * dx + dz * dz);
     }
     return perim * 100;
@@ -449,39 +403,43 @@ class BodyVisualizer {
 
   _computeBandVerts(pos, verts, planeY, bandW) {
     if (!verts || verts.length === 0) return [];
-    const result = [];
-    for (const vi of verts) {
-      if (Math.abs(pos[vi * 3 + 1] - planeY) <= bandW) result.push(vi);
+    var result = [];
+    for (var vi = 0; vi < verts.length; vi++) {
+      if (Math.abs(pos[verts[vi] * 3 + 1] - planeY) <= bandW) result.push(verts[vi]);
     }
     return result.length >= 4 ? result : verts;
   }
 
   _centroidY(pos, verts) {
     if (!verts || verts.length === 0) return 0;
-    let s = 0;
-    for (const vi of verts) s += pos[vi * 3 + 1];
+    var s = 0;
+    for (var vi = 0; vi < verts.length; vi++) s += pos[verts[vi] * 3 + 1];
     return s / verts.length;
   }
 
   _centroid(pos, verts) {
     if (!verts || verts.length === 0) return [0, 0, 0];
-    let sx = 0, sy = 0, sz = 0;
-    for (const vi of verts) { sx += pos[vi * 3]; sy += pos[vi * 3 + 1]; sz += pos[vi * 3 + 2]; }
+    var sx = 0, sy = 0, sz = 0;
+    for (var vi = 0; vi < verts.length; vi++) {
+      sx += pos[verts[vi] * 3];
+      sy += pos[verts[vi] * 3 + 1];
+      sz += pos[verts[vi] * 3 + 2];
+    }
     return [sx / verts.length, sy / verts.length, sz / verts.length];
   }
 
   _dist(pos, vertsA, vertsB) {
-    const a = this._centroid(pos, vertsA);
-    const b = this._centroid(pos, vertsB);
-    const dx = a[0] - b[0], dy = a[1] - b[1], dz = a[2] - b[2];
+    var a = this._centroid(pos, vertsA);
+    var b = this._centroid(pos, vertsB);
+    var dx = a[0] - b[0], dy = a[1] - b[1], dz = a[2] - b[2];
     return Math.sqrt(dx * dx + dy * dy + dz * dz) * 100;
   }
 
   _xSpan(pos, verts) {
     if (!verts || verts.length === 0) return 0;
-    let minX = Infinity, maxX = -Infinity;
-    for (const vi of verts) {
-      const x = pos[vi * 3];
+    var minX = Infinity, maxX = -Infinity;
+    for (var vi = 0; vi < verts.length; vi++) {
+      var x = pos[verts[vi] * 3];
       if (x < minX) minX = x;
       if (x > maxX) maxX = x;
     }
@@ -490,87 +448,84 @@ class BodyVisualizer {
 
   _circFromVerts(pos, verts, proj) {
     if (!verts || verts.length < 3) return 0;
-    const pts = [];
-    for (const vi of verts) {
-      if (proj === 'yz') pts.push([pos[vi * 3 + 1], pos[vi * 3 + 2]]);
-      else pts.push([pos[vi * 3], pos[vi * 3 + 2]]);
+    var pts = [];
+    for (var vi = 0; vi < verts.length; vi++) {
+      if (proj === 'yz') pts.push([pos[verts[vi] * 3 + 1], pos[verts[vi] * 3 + 2]]);
+      else pts.push([pos[verts[vi] * 3], pos[verts[vi] * 3 + 2]]);
     }
-    const hull = this._convexHull2D(pts);
+    var hull = this._convexHull2D(pts);
     if (hull.length < 3) return 0;
-    let perim = 0;
-    for (let i = 0; i < hull.length; i++) {
-      const j = (i + 1) % hull.length;
-      const dx = hull[j][0] - hull[i][0], dz = hull[j][1] - hull[i][1];
+    var perim = 0;
+    for (var i = 0; i < hull.length; i++) {
+      var j = (i + 1) % hull.length;
+      var dx = hull[j][0] - hull[i][0], dz = hull[j][1] - hull[i][1];
       perim += Math.sqrt(dx * dx + dz * dz);
     }
     return perim * 100;
   }
 
-  /**
-   * Compute all measurements from current mesh positions.
-   * Returns object with MLP-style Title Case keys (e.g. 'Chest Round', 'Elbow Round').
-   */
   computeAllMeasurements(pos) {
     if (!pos) return {};
-    const faceArr = BodyVisualizer._faceIndices;
-    const M = {};
+    var faceArr = this.smpl.faces;
+    var M = {};
 
-    const chestV = this._getPartVerts('spine2');
-    const shoulderV = this._getPartVerts('rightShoulder').concat(this._getPartVerts('leftShoulder'));
-    const waistV = this._getPartVerts('spine1');
-    const stomachV = this._getPartVerts('spine');
-    const hipsV = this._getPartVerts('hips');
-    const neckV = this._getPartVerts('neck');
-    const rArmV = this._getPartVerts('rightArm');
-    const lArmV = this._getPartVerts('leftArm');
-    const rForeV = this._getPartVerts('rightForeArm');
-    const lForeV = this._getPartVerts('leftForeArm');
-    const rLegV = this._getPartVerts('rightUpLeg');
-    const lLegV = this._getPartVerts('leftUpLeg');
-    const rCalfV = this._getPartVerts('rightLeg');
-    const lCalfV = this._getPartVerts('leftLeg');
-    const rHandV = this._getPartVerts('rightHand');
-    const lHandV = this._getPartVerts('leftHand');
-    const rFootV = this._getPartVerts('rightFoot');
-    const lFootV = this._getPartVerts('leftFoot');
-    const chestAll = chestV.concat(shoulderV);
+    var chestV = this._getPartVerts('spine2');
+    var shoulderV = this._getPartVerts('rightShoulder').concat(this._getPartVerts('leftShoulder'));
+    var waistV = this._getPartVerts('spine1');
+    var stomachV = this._getPartVerts('spine');
+    var hipsV = this._getPartVerts('hips');
+    var neckV = this._getPartVerts('neck');
+    var rArmV = this._getPartVerts('rightArm');
+    var lArmV = this._getPartVerts('leftArm');
+    var rForeV = this._getPartVerts('rightForeArm');
+    var lForeV = this._getPartVerts('leftForeArm');
+    var rLegV = this._getPartVerts('rightUpLeg');
+    var lLegV = this._getPartVerts('leftUpLeg');
+    var rCalfV = this._getPartVerts('rightLeg');
+    var lCalfV = this._getPartVerts('leftLeg');
+    var rHandV = this._getPartVerts('rightHand');
+    var lHandV = this._getPartVerts('leftHand');
+    var rFootV = this._getPartVerts('rightFoot');
+    var lFootV = this._getPartVerts('leftFoot');
+    var chestAll = chestV.concat(shoulderV);
 
-    const chestY = this._centroidY(pos, chestAll);
-    const waistY = this._centroidY(pos, waistV);
-    const stomachY = stomachV.length > 0 ? this._centroidY(pos, stomachV) : (chestY + waistY) / 2;
-    const hipsY = this._centroidY(pos, hipsV);
-    const neckY = this._centroidY(pos, neckV);
-    const rArmY = this._centroidY(pos, rArmV);
-    const lArmY = this._centroidY(pos, lArmV);
-    const rForeY = this._centroidY(pos, rForeV);
-    const lForeY = this._centroidY(pos, lForeV);
-    const foreArmY = (rForeY + lForeY) / 2;
-    const rLegY = this._centroidY(pos, rLegV);
-    const lLegY = this._centroidY(pos, lLegV);
-    const rCalfY = this._centroidY(pos, rCalfV);
-    const lCalfY = this._centroidY(pos, lCalfV);
-    const calfY = (rCalfY + lCalfY) / 2;
+    var chestY = this._centroidY(pos, chestAll);
+    var waistY = this._centroidY(pos, waistV);
+    var stomachY = stomachV.length > 0 ? this._centroidY(pos, stomachV) : (chestY + waistY) / 2;
+    var hipsY = this._centroidY(pos, hipsV);
+    var neckY = this._centroidY(pos, neckV);
+    var rArmY = this._centroidY(pos, rArmV);
+    var lArmY = this._centroidY(pos, lArmV);
+    var rForeY = this._centroidY(pos, rForeV);
+    var lForeY = this._centroidY(pos, lForeV);
+    var foreArmY = (rForeY + lForeY) / 2;
+    var rLegY = this._centroidY(pos, rLegV);
+    var lLegY = this._centroidY(pos, lLegV);
+    var rCalfY = this._centroidY(pos, rCalfV);
+    var lCalfY = this._centroidY(pos, lCalfV);
+    var calfY = (rCalfY + lCalfY) / 2;
 
-    const ankleRaw = rCalfV.concat(rFootV);
-    const ankleV = ankleRaw.filter(vi => pos[vi * 3 + 1] < -1.0);
-    const ankleY = ankleV.length > 0 ? this._centroidY(pos, ankleV) : calfY - 0.12;
-    const wristRaw = rForeV.concat(rHandV);
-    const wristV = wristRaw.filter(vi => pos[vi * 3 + 1] < 0.19);
-    const wristY = wristV.length > 0 ? this._centroidY(pos, wristV) : foreArmY - 0.15;
+    var ankleRaw = rCalfV.concat(rFootV);
+    var ankleV = ankleRaw.filter(function(vi) { return pos[vi * 3 + 1] < -1.0; });
+    var ankleY = ankleV.length > 0 ? this._centroidY(pos, ankleV) : calfY - 0.12;
+    var wristRaw = rForeV.concat(rHandV);
+    var wristV = wristRaw.filter(function(vi) { return pos[vi * 3 + 1] < 0.19; });
+    var wristY = wristV.length > 0 ? this._centroidY(pos, wristV) : foreArmY - 0.15;
 
-    const rKneeV = rCalfV.filter(vi => pos[vi * 3 + 1] > -0.8);
-    const lKneeV = lCalfV.filter(vi => pos[vi * 3 + 1] > -0.8);
-    const rKneeY = rKneeV.length > 0 ? this._centroidY(pos, rKneeV) : rCalfY + 0.1;
-    const lKneeY = lKneeV.length > 0 ? this._centroidY(pos, lKneeV) : lCalfY + 0.1;
+    var rKneeV = rCalfV.filter(function(vi) { return pos[vi * 3 + 1] > -0.8; });
+    var lKneeV = lCalfV.filter(function(vi) { return pos[vi * 3 + 1] > -0.8; });
+    var rKneeY = rKneeV.length > 0 ? this._centroidY(pos, rKneeV) : rCalfY + 0.1;
+    var lKneeY = lKneeV.length > 0 ? this._centroidY(pos, lKneeV) : lCalfY + 0.1;
 
-    const circ = (verts, y, bw, partVerts) => {
-      const band = this._computeBandVerts(pos, verts, y, bw || 0.03);
-      return this._computeCircumference(pos, faceArr, band, y, bw || 0.03, partVerts || verts);
+    var self = this;
+    var circ = function(verts, y, bw, partVerts) {
+      var band = self._computeBandVerts(pos, verts, y, bw || 0.03);
+      return self._computeCircumference(pos, faceArr, band, y, bw || 0.03, partVerts || verts);
     };
 
-    const limbCirc = (verts, y, bw, proj) => {
-      const band = this._computeBandVerts(pos, verts, y, bw || 0.03);
-      return this._circFromVerts(pos, band, proj || 'xz');
+    var limbCirc = function(verts, y, bw, proj) {
+      var band = self._computeBandVerts(pos, verts, y, bw || 0.03);
+      return self._circFromVerts(pos, band, proj || 'xz');
     };
 
     M['Shoulder'] = Math.round(this._xSpan(pos, shoulderV) * 10) / 10;

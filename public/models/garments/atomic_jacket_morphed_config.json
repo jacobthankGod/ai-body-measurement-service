@@ -1,0 +1,94 @@
+{
+  "garment": "atomic_jacket",
+  "base_size": "XXS",
+  "morph_targets": {
+    "draped_XS": {
+      "size": "XS",
+      "max_displacement_cm": 121.18556946516037
+    },
+    "draped_S": {
+      "size": "S",
+      "max_displacement_cm": 156.297504901886
+    },
+    "draped_M": {
+      "size": "M",
+      "max_displacement_cm": 279.2495787143707
+    },
+    "draped_ML": {
+      "size": "ML",
+      "max_displacement_cm": 312.1382534503937
+    },
+    "draped_L": {
+      "size": "L",
+      "max_displacement_cm": 340.37550687789917
+    },
+    "draped_XL": {
+      "size": "XL",
+      "max_displacement_cm": 391.3295090198517
+    },
+    "draped_XXL": {
+      "size": "XXL",
+      "max_displacement_cm": 409.9162697792053
+    },
+    "draped_3XL": {
+      "size": "3XL",
+      "max_displacement_cm": 459.67568159103394
+    }
+  },
+  "anchors": {
+    "XXS": {
+      "chest": 82,
+      "waist": 70,
+      "hip": 82,
+      "height": 160
+    },
+    "XS": {
+      "chest": 88,
+      "waist": 76,
+      "hip": 88,
+      "height": 165
+    },
+    "S": {
+      "chest": 94,
+      "waist": 82,
+      "hip": 94,
+      "height": 170
+    },
+    "M": {
+      "chest": 100,
+      "waist": 88,
+      "hip": 100,
+      "height": 175
+    },
+    "ML": {
+      "chest": 106,
+      "waist": 94,
+      "hip": 106,
+      "height": 178
+    },
+    "L": {
+      "chest": 112,
+      "waist": 100,
+      "hip": 112,
+      "height": 180
+    },
+    "XL": {
+      "chest": 118,
+      "waist": 106,
+      "hip": 118,
+      "height": 183
+    },
+    "XXL": {
+      "chest": 124,
+      "waist": 112,
+      "hip": 124,
+      "height": 185
+    },
+    "3XL": {
+      "chest": 130,
+      "waist": 118,
+      "hip": 130,
+      "height": 188
+    }
+  }
+}

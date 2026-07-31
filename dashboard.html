@@ -521,7 +521,7 @@
     #shareModal, #shareScanModal { align-items:stretch; justify-content:stretch; }
     #shareModal .ss-split, #shareScanModal .ss-split { width:100%; max-width:100%; height:100%; max-height:100%; border-radius:0; border:none; min-height:100vh; }
     .ss-split { display:flex; width:100%; height:100%; min-height:100vh; background:#0a0a0a; }
-    .ss-left { flex:0 0 45%; background:linear-gradient(135deg, rgba(0,0,0,0.6), rgba(0,0,0,0.2)), url('/assets/Invite-screen-image.png') center/cover no-repeat; display:flex; align-items:flex-end; padding:60px; position:relative; }
+    .ss-left { flex:0 0 45%; background:linear-gradient(135deg, rgba(0,0,0,0.6), rgba(0,0,0,0.2)), url('/assets/Invite-screen-image.webp') center/cover no-repeat; display:flex; align-items:flex-end; padding:60px; position:relative; }
     .ss-left::after { content:''; position:absolute; inset:0; background:linear-gradient(to top, rgba(0,0,0,0.8) 0%, transparent 60%); }
     .ss-left-content { position:relative; z-index:2; }
     .ss-brand { font-size:12px; font-weight:900; letter-spacing:0.3em; color:var(--Mint); margin-bottom:24px; }
@@ -1204,7 +1204,7 @@
         <div class="photo-grid">
           <div class="slot-column">
             <div class="guide-box">
-              <img src="/assets/front_pose.png" alt="Front Reference">
+              <img src="/assets/front_pose.webp" alt="Front Reference">
               <span class="guide-tag">REF: FRONT</span>
             </div>
             <div class="photo-box" id="frontLabel" onclick="window.handlePreviewClick('front')">
@@ -1439,7 +1439,7 @@
   <!-- INVITE MODAL (split-screen) -->
   <div class="modal-overlay" id="shareModal" style="z-index:3000;">
     <div class="ss-split">
-      <div class="ss-left" style="background: linear-gradient(135deg, rgba(0,0,0,0.3), rgba(0,0,0,0.1)), url('/assets/Invite-screen-image.png') center/cover no-repeat;">
+      <div class="ss-left" style="background: linear-gradient(135deg, rgba(0,0,0,0.3), rgba(0,0,0,0.1)), url('/assets/Invite-screen-image.webp') center/cover no-repeat;">
         <div class="ss-left-content">
           <div class="ss-brand">KORRA</div>
           <h2 class="ss-tagline">Scale your practice,<br>seamlessly.</h2>
@@ -1602,11 +1602,11 @@
       </a>
       <div class="header-actions" style="flex:1; justify-content:flex-end;">
         <div class="credit-badge" id="headerCreditMonitor">
-          <img src="/assets/wallet.png" alt="Credits" class="credit-icon">
+          <img src="/assets/wallet.webp" alt="Credits" class="credit-icon">
           <b id="headerCredits">0</b>
         </div>
         <div class="profile-trigger" id="profileTrigger" onclick="window.toggleProfileMenu(event)">
-            <img src="/assets/user-profile-new.png" id="profileImageHeader" alt="User Profile">
+            <img src="/assets/user-profile-new.webp" id="profileImageHeader" alt="User Profile">
         </div>
         <div class="profile-dropdown" id="profileDropdown">
             <div class="dropdown-item" onclick="window.switchTab('settings')">
@@ -1678,7 +1678,7 @@
             <div class="hero-grid">
                 <!-- SCAN CARD -->
                 <div class="action-card" onclick="window.openModal('scanModal');">
-                    <img src="/assets/get_measurement.png" class="card-img-zoom">
+                    <img src="/assets/get_measurement.webp" class="card-img-zoom">
                     <div class="action-overlay">
                         <div class="action-tag">Acuracy First</div>
                         <h3 class="action-title">Start My Digital<br>Fitting session</h3>
@@ -1688,7 +1688,7 @@
 
                 <!-- PASSPORT CARD -->
                 <div class="action-card" onclick="window.switchTab('passports')">
-                    <img src="/assets/mannequin.png" class="card-img-zoom">
+                    <img src="/assets/mannequin.webp" class="card-img-zoom">
                     <div class="action-overlay">
                         <div class="action-tag">Universal Identity</div>
                         <h3 class="action-title">Access My 3D<br>Profile</h3>
@@ -1698,7 +1698,7 @@
 
                 <!-- STUDIO CARD -->
                 <div class="action-card" onclick="window.switchTab('widget')">
-                    <img src="/assets/widget-ui.png" style="padding:8px">
+                    <img src="/assets/widget-ui.webp" style="padding:8px">
                     <div class="action-overlay">
                         <div class="action-tag">Brand Control</div>
                         <h3 class="action-title">Configure My<br>Widget Interface</h3>
@@ -1708,7 +1708,7 @@
 
                 <!-- NEW: INVITE CLIENT CARD -->
                 <div class="action-card" onclick="window.openModal('shareModal')">
-                    <img src="/assets/Invite-screen-image.png" class="card-img-zoom">
+                    <img src="/assets/Invite-screen-image.webp" class="card-img-zoom">
                     <div class="action-overlay">
                         <div class="action-tag">Enrollment</div>
                         <h3 class="action-title">Invite A New<br>Client to Scan</h3>
@@ -1718,7 +1718,7 @@
 
                 <!-- SETTINGS CARD -->
                 <div class="action-card" onclick="window.switchTab('settings')">
-                    <img src="/assets/settings.png" class="card-img-zoom">
+                    <img src="/assets/settings.webp" class="card-img-zoom">
                     <div class="action-overlay">
                         <div class="action-tag">Configuration</div>
                         <h3 class="action-title">Account<br>Settings</h3>
@@ -1738,7 +1738,7 @@
 
                 <!-- CLIENTS CARD -->
                 <div class="action-card" onclick="window.switchTab('vault')">
-                    <img src="/assets/view-clients-new.png" class="card-img-zoom">
+                    <img src="/assets/view-clients-new.webp" class="card-img-zoom">
                     <div class="action-overlay">
                         <div class="action-tag">Client Ledger</div>
                         <h3 class="action-title">View All<br>Clients</h3>
@@ -1748,7 +1748,7 @@
 
                 <!-- DRAFT CARD -->
                 <div class="action-card" id="draftCard" style="display:none" onclick="(async()=>{let d=await window._draftLoadFromSupabase();if(d){window._draftRestoreToForm(d);window.openModal('scanModal')}else{window.showAlert('No saved draft.')}})()">
-                    <img src="/assets/get_measurement.png" class="card-img-zoom" style="opacity:0.6">
+                    <img src="/assets/get_measurement.webp" class="card-img-zoom" style="opacity:0.6">
                     <div class="action-overlay">
                         <div class="action-tag" id="draftBadge" style="background:var(--Accent-Teal);color:#000">1 Saved</div>
                         <h3 class="action-title">Draft<br>Scan</h3>
@@ -2076,7 +2076,7 @@
                                 <span class="mock-label" style="margin-bottom:12px">Biometric Capture</span>
                                 <div class="mock-guide-grid">
                                     <div>
-                                        <div class="mock-guide-box"><img src="/assets/front_pose.png"></div>
+                                        <div class="mock-guide-box"><img src="/assets/front_pose.webp"></div>
                                         <div class="mock-slot">
                                             <span style="font-size:8px; font-weight:800; color:var(--Neutral-500)">FRONT</span>
                                             <div style="font-size:7px; color:var(--Accent-Teal); font-weight:700" class="mock-accent-text">READY</div>
@@ -2166,7 +2166,7 @@
                   <label class="form-label">PROFILE PICTURE</label>
                   <div style="display:flex; align-items:center; gap:16px">
                     <div class="profile-trigger" style="width:72px; height:72px; border-width:1px">
-                      <img src="/assets/user-profile-new.png" id="settingsProfilePreview">
+                      <img src="/assets/user-profile-new.webp" id="settingsProfilePreview">
                     </div>
                     <button class="btn-outline" style="height:36px; font-size:10px" onclick="document.getElementById('profileImageUpload').click()">Change</button>
                     <input type="file" id="profileImageUpload" style="display:none" accept="image/*" onchange="window.handleProfileImage(this)">
@@ -4692,7 +4692,7 @@ window.generateDeepLink = async () => {
         container.innerHTML = `
           <div class="at-wrapper">
             <div class="at-trigger" id="at-trigger-${containerId}" tabindex="0" role="combobox" aria-expanded="false">
-              <span class="at-trigger-icon"><img src="/assets/scissors-new.png" class="at-trigger-img"></span>
+              <span class="at-trigger-icon"><img src="/assets/scissors-new.webp" class="at-trigger-img"></span>
               <div class="at-trigger-info">
                 <div class="at-trigger-name">${a.name}</div>
                 <div class="at-trigger-sub">${a.subtitle} · ${a.region}</div>

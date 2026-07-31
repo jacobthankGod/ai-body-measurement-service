@@ -1,0 +1,305 @@
+/**
+ * MakeHuman Engine — Browser-native morph target body shape.
+ *
+ * Loads binary model files (vertices, faces, morphs) and blends
+ * morph targets to produce body shapes from measurements.
+ *
+ * Public API:
+ *   engine.init(basePath, gender) → Promise<void>
+ *   engine.setMorphTarget(name, influence) → void
+ *   engine.setMorphTargets(names, influences) → void
+ *   engine.computeVertices() → Float32Array(vertCount*3)
+ *   engine.computeNormals() → Float32Array(vertCount*3)
+ *   engine.faces → Uint32Array(faceCount*3)
+ *   engine.morphNames → string[]
+ *   engine.morphLimits → {low: [], high: [], defaults: []}
+ *   engine.ready → boolean
+ *   engine.vertCount → 14380
+ *   engine.faceCount → 28256
+ */
+var MakeHumanEngine = (function () {
+  'use strict';
+
+  function Engine() {
+    this.ready = false;
+    this.gender = 'male';
+    this._initGeneration = 0;  // Incremented on each init call to cancel stale loads
+
+    // Base mesh
+    this.baseVertices = null;   // Float32Array(V*3) — template positions
+    this.baseNormals = null;    // Float32Array(V*3)
+    this.faces = null;          // Uint32Array(F*3) — triangulated
+
+    // UV data
+    this.uvs = null;            // Float32Array(U*2) — UV coordinates
+    this.faceUVIndices = null;  // Uint32Array(F*3) — UV index per tri vertex
+    this.faceMaterials = null;  // Uint8Array(F) — material index per tri
+
+    // Morph targets
+    this.morphCount = 0;
+    this.morphNames = [];
+    this.morphDeltas = null;    // Float32Array(morphCount × V*3) — precomputed deltas
+    this.morphInfluences = null; // Float32Array(morphCount) — current weights
+
+    // Morph limits (physical measurement range in cm)
+    this.morphLimits = { low: [], high: [], defaults: [] };
+
+    // Computed output
+    this.vertices = null;       // Float32Array(V*3) — blended result
+    this.normals = null;        // Float32Array(V*3)
+
+    // Mesh info
+    this.vertCount = 0;
+    this.faceCount = 0;
+    this.texturePath = null;  // URL to diffuse texture
+
+    this.ready = false;
+    this.VERSION = '1.3.0-body-only';
+  }
+
+  /**
+   * Load model files for a given gender ('male', 'female', or 'child').
+   */
+  Engine.prototype.init = async function (basePath, gender) {
+    var base = basePath || '';
+    this.gender = gender || 'male';
+
+    // Cancel any stale in-progress init by incrementing generation
+    var gen = ++this._initGeneration;
+
+    var loadingEl = document.getElementById('visLoading');
+    if (loadingEl) loadingEl.textContent = 'Loading ' + gender + ' body model...';
+
+    // Load config + binary files in parallel
+    var configUrl = base + '/models/makehuman/model_config.json?v=' + Date.now();
+    var configRes = await fetch(configUrl);
+    var config = await configRes.json();
+    var modelConfig = config.models[this.gender];
+    if (!modelConfig) throw new Error('Unknown gender: ' + this.gender);
+
+    // Check if a newer init was started while we were fetching config
+    if (gen !== this._initGeneration) {
+      console.log('[MakeHuman] Stale init for ' + this.gender + ' (gen ' + gen + ' < ' + this._initGeneration + '), aborting');
+      return;
+    }
+
+    this.morphNames = modelConfig.morph_names;
+    this.morphCount = modelConfig.morph_count;
+    this.vertCount = modelConfig.vert_count;
+    this.faceCount = modelConfig.face_count;
+    this.morphLimits = modelConfig.morph_limits;
+    this.texturePath = modelConfig.texture_path || null;
+
+    var gDir = base + '/models/makehuman/' + this.gender + '/';
+    var cb = '?v=' + Date.now();
+    var results = await Promise.all([
+      this._loadBin(gDir + this.gender + '_vertices.bin' + cb),
+      this._loadBinU32(gDir + this.gender + '_faces.bin' + cb),
+      this._loadBin(gDir + this.gender + '_morphs.bin' + cb),
+      this._loadBin(gDir + this.gender + '_normals.bin' + cb).catch(function() { return null; }),
+      this._loadBin(gDir + this.gender + '_uvs.bin' + cb).catch(function() { return null; }),
+      this._loadBinU32(gDir + this.gender + '_face_uv_idx.bin' + cb).catch(function() { return null; }),
+      this._loadBinU8(gDir + this.gender + '_face_mats.bin' + cb).catch(function() { return null; }),
+    ]);
+
+    // Check again after binary loads complete
+    if (gen !== this._initGeneration) {
+      console.log('[MakeHuman] Stale init for ' + this.gender + ' (gen ' + gen + ' < ' + this._initGeneration + '), aborting');
+      return;
+    }
+
+    this.baseVertices = results[0];  // Float32Array(V*3)
+    this.faces = results[1];         // Uint32Array(F*3)
+    var morphsFlat = results[2];     // Float32Array(morphs × V*3)
+    this.baseNormals = results[3];   // Float32Array(V*3) or null
+    this.uvs = results[4];           // Float32Array(U*2) or null
+    this.faceUVIndices = results[5]; // Uint32Array(F*3) or null
+    this.faceMaterials = results[6]; // Uint8Array(F) or null
+
+    // Precompute deltas: delta[j][i] = morph[j][i] - base[i]
+    // Stored as flat: morphDeltas[j * V*3 + i]
+    var V3 = this.vertCount * 3;
+    this.morphDeltas = new Float32Array(this.morphCount * V3);
+    for (var j = 0; j < this.morphCount; j++) {
+      var offset = j * V3;
+      for (var i = 0; i < V3; i++) {
+        this.morphDeltas[offset + i] = morphsFlat[offset + i] - this.baseVertices[i];
+      }
+    }
+
+    // Initialize influences to 0
+    this.morphInfluences = new Float32Array(this.morphCount);
+
+    // Allocate output buffers
+    this.vertices = new Float32Array(V3);
+    this.normals = new Float32Array(V3);
+
+    this.ready = true;
+    if (loadingEl) loadingEl.style.display = 'none';
+    console.log('[MakeHuman] v' + this.VERSION + ' Ready: ' + this.gender + ' V=' + this.vertCount +
+      ' F=' + this.faceCount + ' morphs=' + this.morphCount);
+  };
+
+  /**
+   * Set a single morph target influence by name.
+   * @param {string} name - Morph target name (e.g. 'chest', 'waist')
+   * @param {number} influence - Blend weight 0.0–1.0 (clamped)
+   */
+  Engine.prototype.setMorphTarget = function (name, influence) {
+    var idx = this.morphNames.indexOf(name);
+    if (idx === -1) {
+      console.warn('[MakeHuman] Unknown morph: ' + name);
+      return;
+    }
+    this.morphInfluences[idx] = Math.max(0, Math.min(1, influence));
+  };
+
+  /**
+   * Set multiple morph targets at once.
+   * @param {string[]} names
+   * @param {number[]} influences
+   */
+  Engine.prototype.setMorphTargets = function (names, influences) {
+    for (var i = 0; i < names.length; i++) {
+      this.setMorphTarget(names[i], influences[i]);
+    }
+  };
+
+  /**
+   * Convert a physical measurement (cm) to a morph influence (0–1).
+   * @param {number} measurement - Value in cm
+   * @param {number} morphIndex - Index into morphNames
+   * @returns {number} influence 0–1
+   */
+  Engine.prototype.measurementToInfluence = function (measurement, morphIndex) {
+    var lo = this.morphLimits.low[morphIndex];
+    var def = this.morphLimits.default[morphIndex];
+    var hi = this.morphLimits.high[morphIndex];
+    if (hi <= lo) return 0;
+    return Math.max(0, Math.min(1, (measurement - lo) / (hi - lo)));
+  };
+
+  /**
+   * Compute blended vertex positions from current morph influences.
+   * Formula: result = base + Σ(delta[j] × influence[j])
+   * @returns {Float32Array} vertex positions (vertCount*3)
+   */
+  Engine.prototype.computeVertices = function () {
+    var V3 = this.vertCount * 3;
+    var out = this.vertices;
+    var base = this.baseVertices;
+    var deltas = this.morphDeltas;
+    var infl = this.morphInfluences;
+
+    // Start with base vertices
+    for (var i = 0; i < V3; i++) {
+      out[i] = base[i];
+    }
+
+    // Add weighted deltas
+    for (var j = 0; j < this.morphCount; j++) {
+      var w = infl[j];
+      if (w === 0) continue;
+      var off = j * V3;
+      for (var i = 0; i < V3; i++) {
+        out[i] += deltas[off + i] * w;
+      }
+    }
+
+    // Debug: check for NaN/Inf on first call only
+    if (!this._debugChecked) {
+      this._debugChecked = true;
+      var nanCount = 0, infCount = 0;
+      for (var i = 0; i < V3; i++) {
+        if (isNaN(out[i])) nanCount++;
+        if (!isFinite(out[i])) infCount++;
+      }
+      if (nanCount > 0 || infCount > 0) {
+        console.error('[MakeHuman] VERTEX ERROR: NaN=' + nanCount + ' Inf=' + infCount);
+      }
+    }
+
+    return out;
+  };
+
+  /**
+   * Recompute smooth per-vertex normals from the current vertex positions.
+   * Area-weighted face normal accumulation (same approach as anny-js).
+   */
+  Engine.prototype.computeNormals = function () {
+    var out = this.normals;
+    var pos = this.vertices;
+    var fArr = this.faces;
+    var V = this.vertCount;
+    var F = this.faceCount;
+
+    // Zero normals
+    for (var i = 0; i < out.length; i++) out[i] = 0;
+
+    // Accumulate face normals
+    for (var f = 0; f < F; f++) {
+      var ia = fArr[f * 3] * 3;
+      var ib = fArr[f * 3 + 1] * 3;
+      var ic = fArr[f * 3 + 2] * 3;
+
+      var ax = pos[ia], ay = pos[ia + 1], az = pos[ia + 2];
+      var bx = pos[ib], by = pos[ib + 1], bz = pos[ib + 2];
+      var cx = pos[ic], cy = pos[ic + 1], cz = pos[ic + 2];
+
+      // (b - a) × (c - a)
+      var ex = bx - ax, ey = by - ay, ez = bz - az;
+      var fx = cx - ax, fy = cy - ay, fz = cz - az;
+      var nx = ey * fz - ez * fy;
+      var ny = ez * fx - ex * fz;
+      var nz = ex * fy - ey * fx;
+
+      out[ia] += nx; out[ia + 1] += ny; out[ia + 2] += nz;
+      out[ib] += nx; out[ib + 1] += ny; out[ib + 2] += nz;
+      out[ic] += nx; out[ic + 1] += ny; out[ic + 2] += nz;
+    }
+
+    // Normalize
+    for (var v = 0; v < V; v++) {
+      var i = v * 3;
+      var len = Math.sqrt(out[i] * out[i] + out[i + 1] * out[i + 1] + out[i + 2] * out[i + 2]);
+      if (len > 0) {
+        out[i] /= len;
+        out[i + 1] /= len;
+        out[i + 2] /= len;
+      }
+    }
+
+    return out;
+  };
+
+  Engine.prototype._loadBin = function (url) {
+    return fetch(url).then(function (r) {
+      if (!r.ok) throw new Error('Failed to load ' + url + ': ' + r.status);
+      return r.arrayBuffer();
+    }).then(function (buf) {
+      return new Float32Array(buf);
+    });
+  };
+
+  Engine.prototype._loadBinU32 = function (url) {
+    return fetch(url).then(function (r) {
+      if (!r.ok) throw new Error('Failed to load ' + url + ': ' + r.status);
+      return r.arrayBuffer();
+    }).then(function (buf) {
+      return new Uint32Array(buf);
+    });
+  };
+
+  Engine.prototype._loadBinU8 = function (url) {
+    return fetch(url).then(function (r) {
+      if (!r.ok) throw new Error('Failed to load ' + url + ': ' + r.status);
+      return r.arrayBuffer();
+    }).then(function (buf) {
+      return new Uint8Array(buf);
+    });
+  };
+
+  return Engine;
+})();
+
+window.MakeHumanEngine = MakeHumanEngine;

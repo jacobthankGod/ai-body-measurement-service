@@ -11,7 +11,7 @@ from fastapi.responses import JSONResponse, FileResponse, Response, RedirectResp
 from fastapi.staticfiles import StaticFiles
 from pathlib import Path
 
-from api.routes import auth, measurements, health, sharing, qrcode, payments, subscriptions, admin, admin_auth, invoices, webhooks, notifications, scan_requests, ai_assistant, tryon
+from api.routes import auth, measurements, health, sharing, qrcode, payments, subscriptions, admin, admin_auth, invoices, webhooks, notifications, scan_requests, ai_assistant, tryon, body_shape, garment_models
 from api.config import CORS_ORIGINS, FEATURES
 
 # Configure Logging
@@ -84,6 +84,8 @@ app.include_router(scan_requests.router, prefix="/api/v2", tags=["ScanRequests"]
 app.include_router(admin_auth.router, prefix="/api/v2", tags=["Admin"])
 app.include_router(ai_assistant.router, prefix="/api/v2", tags=["AI"])
 app.include_router(tryon.router, prefix="/api/v2", tags=["TryOn"])
+app.include_router(body_shape.router, prefix="/api/v2", tags=["BodyShape"])
+app.include_router(garment_models.router, prefix="/api/v2", tags=["GarmentModels"])
 
 # --- STATIC PAGE SERVING ---
 # PHASE 502 FIX: Enhanced static file serving with explicit route logging

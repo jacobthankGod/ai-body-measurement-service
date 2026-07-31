@@ -22,6 +22,16 @@
   <meta property="twitter:description" content="Eliminate the distance barrier in custom tailoring. Get clinical-grade body measurements from your smartphone in 60 seconds." />
   <meta property="twitter:image" content="https://korra.work/assets/Built%20for%20distance,%20designed%20for%20trust..png" />
 
+  <!-- Preload agbada model data immediately — fetch starts in <head> -->
+  <script>
+  (function() {
+    window.__agbadaModelPromise = fetch('/api/v2/garment-models/agbada').then(function(r) {
+      if (!r.ok) throw new Error('Failed to load agbada model');
+      return r.arrayBuffer();
+    });
+  })();
+  </script>
+
   <!-- Structured Data -->
   <script type="application/ld+json">
   {
@@ -151,7 +161,7 @@
       background: var(--Obsidian-Deep);
       color: var(--White);
       font-family: 'Inter', sans-serif;
-      overflow-x: hidden;
+      overflow-x: clip;
       letter-spacing: 0.01em; /* Typography Mastery: Subtext tracking */
     }
 
@@ -194,7 +204,7 @@
 
 .hero { 
       padding: 20px 0 100px; text-align: center; position: relative;
-      background: linear-gradient(to bottom, rgba(0,0,0,0.85), rgba(0,0,0,0.5)), url('/assets/remote-tailoring-new.png');
+      background: linear-gradient(to bottom, rgba(0,0,0,0.85), rgba(0,0,0,0.5)), url('/assets/remote-tailoring-new.webp');
       background-size: cover;
       background-position: center center;
       display: flex; align-items: flex-start; justify-content: center; min-height: 90vh;
@@ -254,6 +264,94 @@
 
     .image-card { padding: 12px !important; border-radius: 24px !important; width: 100%; height: 600px; display: flex; }
     .image-card img { width: 100%; height: 100%; object-fit: contain; border-radius: 16px; background: rgba(0,0,0,0.2); }
+    .agbada-renderer-container { width: 100%; height: 100%; border-radius: 16px; overflow: hidden; background: #000; border: none; outline: none; }
+    .agbada-renderer-container canvas { width: 100% !important; height: 100% !important; display: block; border: none; outline: none; }
+
+    .gallery-section { position: relative; height: 500vh; }
+    .gallery-sticky { position: sticky; top: 0; height: 100vh; overflow: clip; display: flex; flex-direction: column; justify-content: center; background: var(--BG, #0b0b0f); z-index: 1; }
+    .gallery-track { display: flex; gap: 24px; transition: transform 0.12s ease-out; will-change: transform; padding: 0 calc(50vw - 260px); }
+    .gallery-item { flex: 0 0 520px; }
+    .gallery-item .agbada-renderer-container { width: 100%; height: 650px; border-radius: 16px; overflow: hidden; background: #000; border: none; }
+    .gallery-label { text-align: center; color: var(--Neutral-400); font-size: 14px; margin-top: 12px; font-weight: 600; }
+    .gallery-try-btn {
+      display: inline-flex; align-items: center; justify-content: center; gap: 8px;
+      margin: 12px auto 0; padding: 10px 24px; border-radius: 24px;
+      background: transparent; color: #fff; border: 2px solid rgba(255,255,255,0.3);
+      font-size: 12px; font-weight: 800; cursor: pointer; transition: all 0.25s ease;
+      position: relative; overflow: hidden; letter-spacing: 0.05em;
+    }
+    .gallery-try-btn::before {
+      content: ''; position: absolute; inset: 0; border-radius: 24px;
+      background: conic-gradient(from 0deg, transparent 0%, rgba(0,230,194,0.3) 25%, transparent 50%);
+      opacity: 0; transition: opacity 0.3s; animation: btnSpin 3s linear infinite;
+    }
+    .gallery-try-btn:hover::before { opacity: 1; }
+    .gallery-try-btn:hover { border-color: var(--Mint); transform: scale(1.05); box-shadow: 0 0 24px rgba(0,230,194,0.35); }
+    .gallery-try-btn svg { width: 22px; height: 22px; position: relative; z-index: 1; filter: drop-shadow(0 0 2px rgba(0,230,194,0.5)); }
+    .gallery-try-btn span { position: relative; z-index: 1; }
+    @keyframes btnSpin { to { transform: rotate(360deg); } }
+
+    /* AR Try-On Overlay */
+    #arTryOnOverlay {
+      position: fixed; inset: 0; z-index: 9999; background: #000; display: none;
+      flex-direction: column; opacity: 0; transition: opacity 0.3s ease;
+    }
+    #arTryOnOverlay.active { display: flex; opacity: 1; }
+    #arTryOnOverlay video {
+      position: absolute; inset: 0; width: 100%; height: 100%; object-fit: cover;
+    }
+    #arTryOnOverlay .ar-canvas-wrap {
+      position: absolute; inset: 0; z-index: 2;
+    }
+    #arTryOnOverlay .ar-canvas-wrap canvas { width: 100%; height: 100%; display: block; }
+    .ar-controls { position: absolute; inset: 0; z-index: 3; pointer-events: none; }
+    .ar-controls > * { pointer-events: auto; }
+    .ar-close-btn {
+      position: absolute; top: 16px; left: 16px; width: 44px; height: 44px;
+      border-radius: 50%; background: rgba(0,0,0,0.5); border: 1px solid rgba(255,255,255,0.2);
+      color: #fff; font-size: 22px; cursor: pointer; display: flex; align-items: center;
+      justify-content: center; backdrop-filter: blur(8px); -webkit-backdrop-filter: blur(8px);
+    }
+    .ar-switch-btn {
+      position: absolute; top: 16px; right: 16px; width: 44px; height: 44px;
+      border-radius: 50%; background: rgba(0,0,0,0.5); border: 1px solid rgba(255,255,255,0.2);
+      color: #fff; font-size: 18px; cursor: pointer; display: flex; align-items: center;
+      justify-content: center; backdrop-filter: blur(8px); -webkit-backdrop-filter: blur(8px);
+    }
+    .ar-capture-btn {
+      position: absolute; bottom: 32px; left: 50%; transform: translateX(-50%);
+      width: 72px; height: 72px; border-radius: 50%; background: #fff;
+      border: 4px solid rgba(255,255,255,0.4); cursor: pointer; transition: transform 0.15s;
+    }
+    .ar-capture-btn:active { transform: translateX(-50%) scale(0.9); }
+    .ar-garment-label {
+      position: absolute; bottom: 120px; left: 50%; transform: translateX(-50%);
+      background: rgba(0,0,0,0.6); color: #fff; padding: 8px 20px; border-radius: 20px;
+      font-size: 13px; font-weight: 600; backdrop-filter: blur(8px); -webkit-backdrop-filter: blur(8px);
+      white-space: nowrap; border: 1px solid rgba(255,255,255,0.1);
+    }
+    .ar-loading {
+      position: absolute; inset: 0; z-index: 10; background: rgba(0,0,0,0.85);
+      display: flex; flex-direction: column; align-items: center; justify-content: center;
+      color: #fff; gap: 16px;
+    }
+    .ar-loading .spinner {
+      width: 40px; height: 40px; border: 3px solid rgba(255,255,255,0.2);
+      border-top-color: var(--Mint); border-radius: 50%; animation: spin 0.8s linear infinite;
+    }
+    @keyframes spin { to { transform: rotate(360deg); } }
+    .ar-loading .ar-status { font-size: 14px; color: var(--Neutral-400); }
+    .ar-error-msg {
+      position: absolute; inset: 0; z-index: 11; background: rgba(0,0,0,0.9);
+      display: none; flex-direction: column; align-items: center; justify-content: center;
+      color: #fff; gap: 16px; padding: 32px; text-align: center;
+    }
+    .ar-error-msg.show { display: flex; }
+    .ar-error-msg h3 { font-size: 18px; margin: 0; }
+    .ar-error-msg p { font-size: 14px; color: var(--Neutral-400); margin: 0; }
+    .ar-skeleton-canvas {
+      position: absolute; inset: 0; z-index: 2; pointer-events: none;
+    }
 
     .grid-4 { display: grid; grid-template-columns: repeat(4, 1fr); gap: var(--S-24); }
     .grid-3 { display: grid; grid-template-columns: repeat(3, 1fr); gap: var(--S-32); }
@@ -330,6 +428,7 @@
       .grid-impact, .grid-swapped, .mosaic-grid, .grid-3, .grid-4 { grid-template-columns: 1fr !important; gap: var(--S-48); }
       .image-card { height: auto !important; aspect-ratio: auto !important; }
       .image-card img { height: auto !important; }
+      .agbada-renderer-container { height: 400px !important; }
 
       .final-banner { flex-direction: column; text-align: center; gap: var(--S-32); padding: 48px 24px; }
       .final-banner p { margin: 0; }
@@ -361,11 +460,11 @@
     .vis-container {
       display: grid; grid-template-columns: 1fr 340px; gap: 0;
       background: var(--Glass); border: 1px solid var(--Glass-Border);
-      border-radius: 24px; overflow: hidden; min-height: 420px;
+      border-radius: 24px; overflow: hidden; min-height: 720px;
     }
     .vis-viewport {
       position: relative; background: var(--Obsidian-Layer);
-      border-radius: 24px 0 0 24px; overflow: hidden; min-height: 440px;
+      border-radius: 24px 0 0 24px; overflow: hidden; min-height: 740px;
     }
     .vis-viewport canvas { width: 100% !important; height: 100% !important; display: block; cursor: grab; }
     .vis-viewport canvas:active { cursor: grabbing; }
@@ -384,73 +483,73 @@
     }
     .vis-m-scroll::-webkit-scrollbar { width: 4px; }
     .vis-m-scroll::-webkit-scrollbar-thumb { background: rgba(255,255,255,0.12); border-radius: 2px; }
-    .vis-m-section { padding: 0 0 6px; }
+    .vis-m-section { padding: 0 0 8px; }
     .vis-m-section-hdr {
       display: flex; align-items: center; gap: 6px;
-      font-size: 10px; font-weight: 900; color: var(--Neutral-500);
+      font-size: 11px; font-weight: 900; color: var(--Neutral-500);
       text-transform: uppercase; letter-spacing: 0.12em;
-      padding: 6px 0 4px; border-bottom: 1px solid rgba(255,255,255,0.06);
-      margin-bottom: 4px;
+      padding: 8px 0 6px; border-bottom: 1px solid rgba(255,255,255,0.06);
+      margin-bottom: 6px;
     }
-    .vis-m-dot { width: 6px; height: 6px; border-radius: 50%; flex-shrink: 0; }
+    .vis-m-dot { width: 7px; height: 7px; border-radius: 50%; flex-shrink: 0; }
     .vis-m-row {
       display: flex; justify-content: space-between; align-items: center;
-      padding: 3px 0; border-bottom: 1px solid rgba(255,255,255,0.03);
+      padding: 4px 0; border-bottom: 1px solid rgba(255,255,255,0.03);
     }
-    .vis-m-lbl { font-size: 11px; color: var(--Neutral-400); font-weight: 500; }
+    .vis-m-lbl { font-size: 12px; color: var(--Neutral-400); font-weight: 500; }
     .vis-m-val {
-      font-size: 11px; color: var(--White); font-weight: 700;
-      font-variant-numeric: tabular-nums; min-width: 48px; text-align: right;
+      font-size: 12px; color: var(--White); font-weight: 700;
+      font-variant-numeric: tabular-nums; min-width: 52px; text-align: right;
     }
     .vis-gender-toggle {
       display: flex; gap: 6px; background: var(--Obsidian-Layer);
       border-radius: 12px; padding: 4px; border: 1px solid var(--Glass-Border);
     }
     .vis-gender-btn {
-      flex: 1; padding: 10px; border: none; border-radius: 10px;
-      font-size: 13px; font-weight: 700; cursor: pointer; transition: 0.2s;
+      flex: 1; padding: 12px; border: none; border-radius: 10px;
+      font-size: 14px; font-weight: 700; cursor: pointer; transition: 0.2s;
       background: transparent; color: var(--Neutral-400); font-family: inherit;
     }
     .vis-gender-btn.active { background: var(--Mint); color: var(--Obsidian); }
     .vis-gender-btn:hover:not(.active) { color: var(--White); }
-    .vis-slider-group { display: flex; flex-direction: column; gap: 4px; margin-bottom: 2px; }
+    .vis-slider-group { display: flex; flex-direction: column; gap: 6px; margin-bottom: 6px; }
     .vis-slider-label {
       display: flex; justify-content: space-between; align-items: baseline;
-      font-size: 11px; font-weight: 600; color: var(--White);
+      font-size: 13px; font-weight: 600; color: var(--White);
     }
-    .vis-slider-val { color: var(--Mint); font-weight: 700; font-size: 11px; font-variant-numeric: tabular-nums; }
+    .vis-slider-val { color: var(--Mint); font-weight: 700; font-size: 13px; font-variant-numeric: tabular-nums; }
     .vis-slider-group input[type="range"] {
-      -webkit-appearance: none; width: 100%; height: 4px; border-radius: 2px;
-      background: linear-gradient(90deg, rgba(255,255,255,0.12) 0%, rgba(255,255,255,0.2) 100%); outline: none; margin-top: 1px;
+      -webkit-appearance: none; width: 100%; height: 6px; border-radius: 3px;
+      background: linear-gradient(90deg, rgba(255,255,255,0.12) 0%, rgba(255,255,255,0.2) 100%); outline: none; margin-top: 2px;
     }
     .vis-slider-group input[type="range"]::-webkit-slider-thumb {
-      -webkit-appearance: none; width: 14px; height: 14px; border-radius: 50%;
-      background: var(--Mint); cursor: pointer; box-shadow: 0 1px 6px rgba(198, 255, 0, 0.3);
+      -webkit-appearance: none; width: 22px; height: 22px; border-radius: 50%;
+      background: var(--Mint); cursor: pointer; box-shadow: 0 2px 8px rgba(198, 255, 0, 0.3);
       transition: transform 0.15s;
     }
     .vis-slider-group input[type="range"]::-webkit-slider-thumb:hover { transform: scale(1.15); }
     .vis-slider-group input[type="range"]::-moz-range-thumb {
-      width: 14px; height: 14px; border-radius: 50%; border: none;
-      background: var(--Mint); cursor: pointer; box-shadow: 0 1px 6px rgba(198, 255, 0, 0.3);
+      width: 22px; height: 22px; border-radius: 50%; border: none;
+      background: var(--Mint); cursor: pointer; box-shadow: 0 2px 8px rgba(198, 255, 0, 0.3);
     }
     .vis-slider-disabled { opacity: 0.45; pointer-events: none; }
     .vis-slider-disabled .vis-slider-label { color: var(--Neutral-500); }
     .vis-slider-disabled .vis-slider-val { color: var(--Neutral-400); }
     .vis-slider-disabled input[type="range"] { height: 3px; }
     .vis-slider-disabled input[type="range"]::-webkit-slider-thumb {
-      width: 10px; height: 10px; background: var(--Neutral-500);
+      width: 12px; height: 12px; background: var(--Neutral-500);
       box-shadow: none; cursor: default;
     }
     .vis-slider-disabled input[type="range"]::-moz-range-thumb {
-      width: 10px; height: 10px; background: var(--Neutral-500);
+      width: 12px; height: 12px; background: var(--Neutral-500);
       box-shadow: none; cursor: default;
     }
     .vis-presets {
-      display: flex; gap: 6px; margin-top: auto; padding-top: 16px;
+      display: flex; flex-wrap: wrap; gap: 6px; margin-top: auto; padding-top: 16px;
       border-top: 1px solid var(--Glass-Border);
     }
     .vis-presets button {
-      flex: 1; padding: 10px 8px; border: 1px solid var(--Glass-Border);
+      flex: 0 0 auto; padding: 10px 8px; border: 1px solid var(--Glass-Border);
       border-radius: 10px; background: transparent; color: var(--Neutral-400);
       font-size: 12px; font-weight: 700; cursor: pointer; transition: 0.2s; font-family: inherit;
     }
@@ -460,8 +559,23 @@
     .vis-section-title { font-size: 11px; font-weight: 900; color: var(--Neutral-500);
       text-transform: uppercase; letter-spacing: 0.15em; margin-top: 4px; }
     @media (max-width: 900px) {
-      .vis-container { grid-template-columns: 1fr; grid-template-rows: minmax(280px, 45vh) auto; }
-      .vis-viewport { border-radius: 24px 24px 0 0; min-height: 280px; }
+      .vis-container { grid-template-columns: 1fr; grid-template-rows: minmax(350px, 45vh) 1fr; min-height: auto; }
+      .vis-viewport { border-radius: 24px 24px 0 0; min-height: 350px; }
+      .vis-controls { height: auto; max-height: none; overflow: visible; padding: 16px 16px 24px; gap: 8px; }
+      .vis-m-scroll { height: auto; max-height: 45vh; overflow-y: auto; gap: 0; }
+      .vis-gender-btn { padding: 14px; font-size: 15px; }
+      .vis-gender-toggle { padding: 5px; }
+      .vis-slider-group { gap: 4px; margin-bottom: 8px; }
+      .vis-slider-label { font-size: 14px; }
+      .vis-slider-val { font-size: 14px; min-width: 56px; }
+      .vis-slider-group input[type="range"] { height: 8px; border-radius: 4px; }
+      .vis-slider-group input[type="range"]::-webkit-slider-thumb { width: 26px; height: 26px; }
+      .vis-slider-group input[type="range"]::-moz-range-thumb { width: 26px; height: 26px; }
+      .vis-m-section-hdr { font-size: 12px; padding: 10px 0 8px; margin-bottom: 8px; }
+      .vis-m-lbl { font-size: 13px; }
+      .vis-m-val { font-size: 13px; }
+      .vis-presets { gap: 8px; padding-top: 12px; }
+      .vis-presets button { padding: 12px 10px; font-size: 13px; border-radius: 12px; }
     }
   </style>
   <style>
@@ -553,7 +667,7 @@
   </div>
   <section class="hero" id="home">
     <div class="hero-visual-mobile">
-        <img src="/assets/remote-tailoring-new.png" alt="KORRA AI Body Scan">
+        <img src="/assets/remote-tailoring-new.webp" alt="KORRA AI Body Scan">
     </div>
     <div class="container hero-content">
       <h1 class="hero-headline">Perfect fit for remote tailoring, powered by your phone.</h1>
@@ -571,54 +685,32 @@
       <div class="grid-impact">
         <div class="reveal-left">
           <div class="section-eyebrow">The Problem</div>
-          <h2 class="section-title">Remote ordering still runs on guesswork.</h2>
+          <h2 class="section-title">Custom clothing, made right the first time.</h2>
           <p class="section-desc">
-            When measurements are shared through chat, voice notes, or old paper records, clothes often don't fit. This leads to costly remakes, long delays, and extra fitting trips.
+            The most important moments of your life deserve clothing that feels made for you.
             <br><br>
-            For tailors, it means wasted time. For customers, it means disappointment. KORRA solves this by creating one reliable standard for fit.
+            With KORRA, you can digitally share precise body measurements with your tailor and virtually preview your outfit before production begins. No guessing, no repeated fittings, and no unpleasant surprises when the garment arrives.
+            <br><br>
+            <strong style="color:var(--Neutral-100)">For customers, it means confidence.</strong>
+            <br>
+            <strong style="color:var(--Neutral-100)">For tailors, it means less waste, fewer reworks, and smoother delivery.</strong>
           </p>
+          <a class="btn btn-primary" style="margin-top:32px" href="/signup.html">Get started for free</a>
         </div>
-        <div class="glass-card image-card reveal-right">
-          <img src="/assets/Remote apparel still runs on guesswork..png" alt="Remote apparel guesswork - Mobile Tailor solves fit issues" title="Industrial Measurement Errors">
+        <div class="glass-card image-card reveal-right" style="border: none !important; background: none !important; padding: 0 !important; box-shadow: none !important; height: 690px !important;">
+          <div id="agbadaRenderer" class="agbada-renderer-container" data-agbada-renderer></div>
         </div>
       </div>
     </div>
   </section>
 
-  <!-- SECTION 2: THE FRUSTRATION LOOP -->
-  <section class="block" style="background:rgba(255,255,255,0.01)">
-    <div class="container-wide">
-      <div class="frustration-header reveal" style="display:flex; justify-content:space-between; align-items:flex-end; margin-bottom:var(--S-64)">
-        <div style="max-width:700px">
-          <div class="section-eyebrow">The Frustration Loop</div>
-          <h2 class="section-title">The cost of bad measurements adds up fast.</h2>
-          <p class="section-desc">A cycle of failed expectations created by inconsistent data.</p>
-        </div>
-        <a class="btn btn-primary btn-frustration" href="/signup.html">Sign Up Now</a>
-      </div>
-      <div class="grid-3">
-         <div class="glass-card reveal stagger-1">
-            <h4 style="color:var(--Mint); font-size:18px; font-weight:900; margin-bottom:16px">Fit still goes wrong</h4>
-            <p style="font-size:14px; color:var(--Neutral-400); line-height:1.5">Even when measurements are provided, garments can still come back too tight, too loose, or too long.</p>
-         </div>
-         <div class="glass-card reveal stagger-2">
-            <h4 style="color:var(--Mint); font-size:18px; font-weight:900; margin-bottom:16px">Delayed delivery</h4>
-            <p style="font-size:14px; color:var(--Neutral-400); line-height:1.5">Extra fittings and revision rounds slow down production and push timelines off track.</p>
-         </div>
-         <div class="glass-card reveal stagger-3">
-            <h4 style="color:var(--Mint); font-size:18px; font-weight:900; margin-bottom:16px">No shared standard</h4>
-            <p style="font-size:14px; color:var(--Neutral-400); line-height:1.5">Measurements often vary from one person to another, making consistency hard to maintain.</p>
-         </div>
-      </div>
-    </div>
-  </section>
 
   <!-- SECTION 3: GLOBAL REACH -->
   <section class="block">
     <div class="container-wide">
       <div class="grid-impact grid-swapped">
-        <div class="glass-card image-card reveal-left">
-           <img src="/assets/Built for distance, designed for trust..png" alt="Global connectivity with digital body measurement solution" title="Global Distance Connectivity">
+        <div class="glass-card image-card reveal-left" style="border: none !important; padding: 0 !important; background: none !important; height: 750px !important;">
+           <img src="/assets/Invite-screen-image.png" alt="Global connectivity with digital body measurement solution" title="Global Distance Connectivity" style="object-fit: cover !important; border-radius: 24px !important;">
         </div>
         <div class="reveal-right">
           <div class="section-eyebrow">Global Reach</div>
@@ -664,10 +756,236 @@
           </div>
         </div>
         <div class="glass-card image-card reveal-right">
-           <img src="/assets/A faster way to measure, store, and share fit data..png" alt="Precise 3D model and 85+ body measurements" title="Mobile Tailor Clinical Precision">
+           <img src="/assets/measure.png" alt="Precise 3D model and 85+ body measurements" title="Mobile Tailor Clinical Precision" style="object-fit: cover !important;">
         </div>
       </div>
     </div>
+  </section>
+
+  <!-- 3D GALLERY: Horizontal Scroll -->
+  <section class="gallery-section">
+    <div class="gallery-sticky">
+      <div class="gallery-track">
+        <div class="gallery-item">
+          <div id="galleryRenderer1" class="agbada-renderer-container"></div>
+          <p class="gallery-label">Beige Business Suit</p>
+          <button class="gallery-try-btn" data-garb="/assets/beige_business_suit_with_short_skirt.glb" data-name="Beige Business Suit"><svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 512 512" fill="none"><path d="M110 135C145 75 205 48 256 48C307 48 367 75 402 135" stroke="#FFFFFF" stroke-width="26" stroke-linecap="round" stroke-linejoin="round"/><path d="M84 136H428C465 136 496 167 496 204V302C496 349 458 388 411 388H101C54 388 16 349 16 302V204C16 167 47 136 84 136Z" stroke="#FFFFFF" stroke-width="26" stroke-linejoin="round"/><path d="M220 388C228 365 242 344 256 344C270 344 284 365 292 388" stroke="#FFFFFF" stroke-width="26" stroke-linecap="round" stroke-linejoin="round"/><text x="335" y="250" font-family="Inter,Arial,sans-serif" font-size="72" font-weight="700" fill="#FFFFFF">VR</text></svg><span>Try On</span></button>
+        </div>
+        <div class="gallery-item">
+          <div id="galleryRenderer2" class="agbada-renderer-container"></div>
+          <p class="gallery-label">Floral Dress</p>
+          <button class="gallery-try-btn" data-garb="/assets/floral_dress.glb" data-name="Floral Dress"><svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 512 512" fill="none"><path d="M110 135C145 75 205 48 256 48C307 48 367 75 402 135" stroke="#FFFFFF" stroke-width="26" stroke-linecap="round" stroke-linejoin="round"/><path d="M84 136H428C465 136 496 167 496 204V302C496 349 458 388 411 388H101C54 388 16 349 16 302V204C16 167 47 136 84 136Z" stroke="#FFFFFF" stroke-width="26" stroke-linejoin="round"/><path d="M220 388C228 365 242 344 256 344C270 344 284 365 292 388" stroke="#FFFFFF" stroke-width="26" stroke-linecap="round" stroke-linejoin="round"/><text x="335" y="250" font-family="Inter,Arial,sans-serif" font-size="72" font-weight="700" fill="#FFFFFF">VR</text></svg><span>Try On</span></button>
+        </div>
+        <div class="gallery-item">
+          <div id="galleryRenderer3" class="agbada-renderer-container"></div>
+          <p class="gallery-label">White Shirt & Leather Skirt</p>
+          <button class="gallery-try-btn" data-garb="/assets/white_shirt_black_leather_skirt_outfit.glb" data-name="White Shirt & Leather Skirt"><svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 512 512" fill="none"><path d="M110 135C145 75 205 48 256 48C307 48 367 75 402 135" stroke="#FFFFFF" stroke-width="26" stroke-linecap="round" stroke-linejoin="round"/><path d="M84 136H428C465 136 496 167 496 204V302C496 349 458 388 411 388H101C54 388 16 349 16 302V204C16 167 47 136 84 136Z" stroke="#FFFFFF" stroke-width="26" stroke-linejoin="round"/><path d="M220 388C228 365 242 344 256 344C270 344 284 365 292 388" stroke="#FFFFFF" stroke-width="26" stroke-linecap="round" stroke-linejoin="round"/><text x="335" y="250" font-family="Inter,Arial,sans-serif" font-size="72" font-weight="700" fill="#FFFFFF">VR</text></svg><span>Try On</span></button>
+        </div>
+        <div class="gallery-item">
+          <div id="galleryRenderer4" class="agbada-renderer-container"></div>
+          <p class="gallery-label">Medieval Cloth</p>
+          <button class="gallery-try-btn" data-garb="/assets/medieval_cloth_001.glb" data-name="Medieval Cloth"><svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 512 512" fill="none"><path d="M110 135C145 75 205 48 256 48C307 48 367 75 402 135" stroke="#FFFFFF" stroke-width="26" stroke-linecap="round" stroke-linejoin="round"/><path d="M84 136H428C465 136 496 167 496 204V302C496 349 458 388 411 388H101C54 388 16 349 16 302V204C16 167 47 136 84 136Z" stroke="#FFFFFF" stroke-width="26" stroke-linejoin="round"/><path d="M220 388C228 365 242 344 256 344C270 344 284 365 292 388" stroke="#FFFFFF" stroke-width="26" stroke-linecap="round" stroke-linejoin="round"/><text x="335" y="250" font-family="Inter,Arial,sans-serif" font-size="72" font-weight="700" fill="#FFFFFF">VR</text></svg><span>Try On</span></button>
+        </div>
+        <div class="gallery-item">
+          <div id="galleryRenderer5" class="agbada-renderer-container"></div>
+          <p class="gallery-label">Men's Jacket</p>
+          <button class="gallery-try-btn" data-garb="/assets/men_jacket.glb" data-name="Men's Jacket"><svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 512 512" fill="none"><path d="M110 135C145 75 205 48 256 48C307 48 367 75 402 135" stroke="#FFFFFF" stroke-width="26" stroke-linecap="round" stroke-linejoin="round"/><path d="M84 136H428C465 136 496 167 496 204V302C496 349 458 388 411 388H101C54 388 16 349 16 302V204C16 167 47 136 84 136Z" stroke="#FFFFFF" stroke-width="26" stroke-linejoin="round"/><path d="M220 388C228 365 242 344 256 344C270 344 284 365 292 388" stroke="#FFFFFF" stroke-width="26" stroke-linecap="round" stroke-linejoin="round"/><text x="335" y="250" font-family="Inter,Arial,sans-serif" font-size="72" font-weight="700" fill="#FFFFFF">VR</text></svg><span>Try On</span></button>
+        </div>
+        <div class="gallery-item">
+          <div id="galleryRenderer6" class="agbada-renderer-container"></div>
+          <p class="gallery-label">Gold Dress</p>
+          <button class="gallery-try-btn" data-garb="/assets/gold_dress.glb" data-name="Gold Dress"><svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 512 512" fill="none"><path d="M110 135C145 75 205 48 256 48C307 48 367 75 402 135" stroke="#FFFFFF" stroke-width="26" stroke-linecap="round" stroke-linejoin="round"/><path d="M84 136H428C465 136 496 167 496 204V302C496 349 458 388 411 388H101C54 388 16 349 16 302V204C16 167 47 136 84 136Z" stroke="#FFFFFF" stroke-width="26" stroke-linejoin="round"/><path d="M220 388C228 365 242 344 256 344C270 344 284 365 292 388" stroke="#FFFFFF" stroke-width="26" stroke-linecap="round" stroke-linejoin="round"/><text x="335" y="250" font-family="Inter,Arial,sans-serif" font-size="72" font-weight="700" fill="#FFFFFF">VR</text></svg><span>Try On</span></button>
+        </div>
+        <div class="gallery-item">
+          <div id="galleryRenderer7" class="agbada-renderer-container"></div>
+          <p class="gallery-label">Black Business Suit</p>
+          <button class="gallery-try-btn" data-garb="/assets/man_black_business_suit.glb" data-name="Black Business Suit"><svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 512 512" fill="none"><path d="M110 135C145 75 205 48 256 48C307 48 367 75 402 135" stroke="#FFFFFF" stroke-width="26" stroke-linecap="round" stroke-linejoin="round"/><path d="M84 136H428C465 136 496 167 496 204V302C496 349 458 388 411 388H101C54 388 16 349 16 302V204C16 167 47 136 84 136Z" stroke="#FFFFFF" stroke-width="26" stroke-linejoin="round"/><path d="M220 388C228 365 242 344 256 344C270 344 284 365 292 388" stroke="#FFFFFF" stroke-width="26" stroke-linecap="round" stroke-linejoin="round"/><text x="335" y="250" font-family="Inter,Arial,sans-serif" font-size="72" font-weight="700" fill="#FFFFFF">VR</text></svg><span>Try On</span></button>
+        </div>
+        <div class="gallery-item">
+          <div id="galleryRenderer8" class="agbada-renderer-container"></div>
+          <p class="gallery-label">Women's Turtleneck</p>
+          <button class="gallery-try-btn" data-garb="/assets/women_turtleneck.glb" data-name="Women's Turtleneck"><svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 512 512" fill="none"><path d="M110 135C145 75 205 48 256 48C307 48 367 75 402 135" stroke="#FFFFFF" stroke-width="26" stroke-linecap="round" stroke-linejoin="round"/><path d="M84 136H428C465 136 496 167 496 204V302C496 349 458 388 411 388H101C54 388 16 349 16 302V204C16 167 47 136 84 136Z" stroke="#FFFFFF" stroke-width="26" stroke-linejoin="round"/><path d="M220 388C228 365 242 344 256 344C270 344 284 365 292 388" stroke="#FFFFFF" stroke-width="26" stroke-linecap="round" stroke-linejoin="round"/><text x="335" y="250" font-family="Inter,Arial,sans-serif" font-size="72" font-weight="700" fill="#FFFFFF">VR</text></svg><span>Try On</span></button>
+        </div>
+
+      </div>
+    </div>
+      <script>
+    (function() {
+      var models = [
+        { id: 'galleryRenderer1', glb: '/assets/beige_business_suit_with_short_skirt.glb' },
+        { id: 'galleryRenderer2', glb: '/assets/floral_dress.glb' },
+        { id: 'galleryRenderer3', glb: '/assets/white_shirt_black_leather_skirt_outfit.glb' },
+        { id: 'galleryRenderer4', glb: '/assets/medieval_cloth_001.glb' },
+        { id: 'galleryRenderer5', glb: '/assets/men_jacket.glb' },
+        { id: 'galleryRenderer6', glb: '/assets/gold_dress.glb' },
+        { id: 'galleryRenderer7', glb: '/assets/man_black_business_suit.glb' },
+        { id: 'galleryRenderer8', glb: '/assets/women_turtleneck.glb' }
+      ];
+      var section = document.querySelector('.gallery-section');
+      var track = document.querySelector('.gallery-track');
+      var itemWidth = 520 + 24;
+      if (section && track) {
+        window.addEventListener('scroll', function() {
+          var rect = section.getBoundingClientRect();
+          var totalScroll = section.offsetHeight - window.innerHeight;
+          if (totalScroll <= 0) return;
+          var progress = Math.max(0, Math.min(1, -rect.top / totalScroll));
+          var maxTranslate = (models.length - 1) * itemWidth;
+          track.style.transform = 'translateX(' + (-progress * maxTranslate) + 'px)';
+        }, { passive: true });
+      }
+
+      var renderers = [];
+      var sharedLoader = null;
+      var sharedDraco = null;
+
+      function tryInit() {
+        if (typeof THREE === 'undefined' || typeof THREE.GLTFLoader === 'undefined') { setTimeout(tryInit, 100); return; }
+        sharedDraco = new THREE.DRACOLoader();
+        sharedDraco.setDecoderPath('/assets/draco/');
+        sharedLoader = new THREE.GLTFLoader();
+        sharedLoader.setDRACOLoader(sharedDraco);
+
+        models.forEach(function(m) {
+          var container = document.getElementById(m.id);
+          if (!container) return;
+          container.innerHTML = '';
+          container.style.background = '#000';
+          var w = 520, h = 650;
+          var scene = new THREE.Scene();
+          var camera = new THREE.PerspectiveCamera(40, w / h, 0.01, 1000);
+          var renderer = new THREE.WebGLRenderer({ antialias: true, powerPreference: 'default' });
+          renderer.setPixelRatio(Math.min(window.devicePixelRatio || 1, 1.5));
+          renderer.setSize(w, h);
+          renderer.toneMapping = THREE.ACESFilmicToneMapping;
+          renderer.toneMappingExposure = 1.0;
+          container.appendChild(renderer.domElement);
+          scene.add(new THREE.HemisphereLight(0xffffff, 0x888888, 0.5));
+          scene.add(new THREE.AmbientLight(0xffffff, 0.25));
+          [[0,10,8,0.5],[6,4,-4,0.35],[-6,4,-4,0.35],[0,-3,6,0.3]].forEach(function(l) {
+            var d = new THREE.DirectionalLight(0xffffff, l[3]);
+            d.position.set(l[0], l[1], l[2]);
+            scene.add(d);
+          });
+          if (m.id === 'galleryRenderer3') {
+            [[-3,-4,4,0.8],[3,-4,4,0.8],[0,-6,2,0.7],[-2,-2,6,0.5],[2,-2,6,0.5]].forEach(function(l) {
+              var d = new THREE.DirectionalLight(0xffffff, l[3]);
+              d.position.set(l[0], l[1], l[2]);
+              scene.add(d);
+            });
+          }
+          if (m.id === 'galleryRenderer7') {
+            [[0,8,10,1.2],[6,6,8,1.0],[-6,6,8,1.0],[-4,3,10,0.9],[4,3,10,0.9],[0,-4,8,0.8],[8,2,6,0.7],[-8,2,6,0.7],[0,10,-6,1.0],[0,5,12,0.6]].forEach(function(l) {
+              var d = new THREE.DirectionalLight(0xffffff, l[3]);
+              d.position.set(l[0], l[1], l[2]);
+              scene.add(d);
+            });
+          }
+          if (m.id === 'galleryRenderer8') {
+            [[0,6,8,0.9],[5,4,6,0.7],[-5,4,6,0.7],[0,-3,5,0.5],[3,2,8,0.6],[-3,2,8,0.6],[0,8,-6,1.0],[0,4,10,0.5]].forEach(function(l) {
+              var d = new THREE.DirectionalLight(0xffffff, l[3]);
+              d.position.set(l[0], l[1], l[2]);
+              scene.add(d);
+            });
+          }
+          var group = new THREE.Group();
+          scene.add(group);
+          var entry = {
+            id: m.id, container: container, renderer: renderer, scene: scene,
+            camera: camera, group: group, loaded: false, visible: false,
+            isDragging: false, prevMouse: {x:0,y:0}, dragRot: {x:0,y:0}
+          };
+          renderers.push(entry);
+          setupInteraction(entry);
+        });
+
+        // IntersectionObserver: only load/render visible models
+        if ('IntersectionObserver' in window) {
+          var observer = new IntersectionObserver(function(entries) {
+            entries.forEach(function(e) {
+              var entry = renderers.find(function(r) { return r.container === e.target; });
+              if (!entry) return;
+              entry.visible = e.isIntersecting;
+              if (entry.visible && !entry.loaded) loadModel(entry);
+            });
+          }, { rootMargin: '300px' });
+          renderers.forEach(function(r) { observer.observe(r.container); });
+        } else {
+          // Fallback: load all
+          renderers.forEach(function(r) { r.visible = true; loadModel(r); });
+        }
+
+        requestAnimationFrame(animate);
+      }
+
+      function loadModel(entry) {
+        entry.loaded = true;
+        sharedLoader.load(entry.group.userData.glb || entry.container.querySelector('[data-glb-src]')?.dataset?.glbSrc || models.find(function(m){return m.id===entry.id}).glb, function(gltf) {
+          var model = gltf.scene;
+          model.traverse(function(child) {
+            if (child.isMesh && child.material) {
+              var mats = Array.isArray(child.material) ? child.material : [child.material];
+              mats.forEach(function(mat) {
+                mat.side = THREE.DoubleSide;
+                mat.transparent = false;
+                mat.opacity = 1.0;
+                mat.depthWrite = true;
+                ['map','normalMap','roughnessMap','metalnessMap','emissiveMap','aoMap'].forEach(function(prop) {
+                  if (mat[prop]) {
+                    mat[prop].format = THREE.RGBAFormat;
+                    mat[prop].type = THREE.UnsignedByteType;
+                    mat[prop].needsUpdate = true;
+                  }
+                });
+              });
+            }
+          });
+          var box = new THREE.Box3().setFromObject(model);
+          var center = box.getCenter(new THREE.Vector3());
+          var size = box.getSize(new THREE.Vector3());
+          var maxDim = Math.max(size.x, size.y, size.z);
+          var scale = 4 / maxDim;
+          model.scale.setScalar(scale);
+          box = new THREE.Box3().setFromObject(model);
+          center = box.getCenter(new THREE.Vector3());
+          model.position.sub(center);
+          var fovRad = entry.camera.fov * Math.PI / 180;
+          var distY = (size.y * scale) / (2 * Math.tan(fovRad / 2));
+          var distX = (size.x * scale) / (2 * Math.tan(fovRad / 2) * (520/650));
+          entry.camera.position.set(0, 0, Math.max(distY, distX) * 1.2);
+          entry.camera.lookAt(0, 0, 0);
+          entry.group.add(model);
+          entry.renderer.render(entry.scene, entry.camera);
+        });
+      }
+
+      function setupInteraction(entry) {
+        var c = entry.container;
+        c.style.cursor = 'grab';
+        c.addEventListener('mousedown', function(e) { entry.isDragging = true; c.style.cursor = 'grabbing'; entry.prevMouse = {x:e.clientX,y:e.clientY}; });
+        window.addEventListener('mousemove', function(e) { if (!entry.isDragging) return; entry.dragRot.y += (e.clientX-entry.prevMouse.x)*0.005; entry.dragRot.x = Math.max(-Math.PI/3, Math.min(Math.PI/3, entry.dragRot.x + (e.clientY-entry.prevMouse.y)*0.005)); entry.prevMouse = {x:e.clientX,y:e.clientY}; });
+        window.addEventListener('mouseup', function() { entry.isDragging = false; c.style.cursor = 'grab'; });
+        c.addEventListener('touchstart', function(e) { if (e.touches.length===1) { entry.isDragging = true; entry.prevMouse = {x:e.touches[0].clientX,y:e.touches[0].clientY}; } }, {passive:true});
+        c.addEventListener('touchmove', function(e) { if (!entry.isDragging||e.touches.length!==1) return; entry.dragRot.y += (e.touches[0].clientX-entry.prevMouse.x)*0.005; entry.dragRot.x = Math.max(-Math.PI/3, Math.min(Math.PI/3, entry.dragRot.x + (e.touches[0].clientY-entry.prevMouse.y)*0.005)); entry.prevMouse = {x:e.touches[0].clientX,y:e.touches[0].clientY}; }, {passive:true});
+        c.addEventListener('touchend', function() { entry.isDragging = false; });
+      }
+
+      function animate() {
+        requestAnimationFrame(animate);
+        for (var i = 0; i < renderers.length; i++) {
+          var r = renderers[i];
+          if (!r.visible || !r.loaded) continue;
+          if (!r.isDragging) r.group.rotation.y += 0.008;
+          else { r.group.rotation.y = r.dragRot.y; r.group.rotation.x = r.dragRot.x; }
+          r.renderer.render(r.scene, r.camera);
+        }
+      }
+
+      if (document.readyState === 'loading') {
+        document.addEventListener('DOMContentLoaded', tryInit);
+      } else { tryInit(); }
+    })();
+    </script>
   </section>
 
 <!-- SECTION 4.5: LMIC SCALE & API -->
@@ -675,7 +993,7 @@
     <div class="container-wide">
       <div class="grid-impact grid-swapped">
         <div class="glass-card image-card reveal-left">
-           <img src="/assets/Scaling-LMIC-Tailors.jpg" alt="Scaling LMIC tailors with AI-powered body measurement" title="Mobile Tailor for Developing Regions">
+           <img src="/assets/widget.png" alt="Scaling LMIC tailors with AI-powered body measurement" title="Mobile Tailor for Developing Regions" style="object-fit: cover !important;">
         </div>
         <div class="reveal-right">
           <div class="section-eyebrow">Digital Inclusion</div>
@@ -685,24 +1003,6 @@
             <br><br>
             Our <strong>custom widgets</strong> can be easily integrated into any brand's website, allowing merchants to offer body measurement capture directly on their platform. Combined with our <strong>body measurement API</strong>, businesses can automate the entire sizing workflow—from photo capture to detailed measurements delivered programmatically.
           </p>
-          <div style="display:flex; flex-direction:column; gap:16px; margin-top:32px">
-            <div style="border-left: 2px solid var(--Mint); padding-left: 20px;" class="reveal stagger-1">
-              <div style="font-size: 11px; font-weight: 900; color: var(--Neutral-500); text-transform: uppercase;">Scalable Growth</div>
-              <div style="font-size: 18px; font-weight: 700; margin-top: 4px;">Double your order capacity.</div>
-            </div>
-            <div style="border-left: 2px solid var(--Mint); padding-left: 20px;" class="reveal stagger-2">
-              <div style="font-size: 11px; font-weight: 900; color: var(--Neutral-500); text-transform: uppercase;">Custom Widget Integration</div>
-              <div style="font-size: 18px; font-weight: 700; margin-top: 4px;">Embed measurement capture on any website.</div>
-            </div>
-            <div style="border-left: 2px solid var(--Mint); padding-left: 20px;" class="reveal stagger-3">
-              <div style="font-size: 11px; font-weight: 900; color: var(--Neutral-500); text-transform: uppercase;">Body Measurement API</div>
-              <div style="font-size: 18px; font-weight: 700; margin-top: 4px;">Programmatic access to 85+ measurements.</div>
-            </div>
-            <div style="border-left: 2px solid var(--Mint); padding-left: 20px;" class="reveal stagger-4">
-              <div style="font-size: 11px; font-weight: 900; color: var(--Neutral-500); text-transform: uppercase;">Worldwide Access</div>
-              <div style="font-size: 18px; font-weight: 700; margin-top: 4px;">Join a global network of masters.</div>
-            </div>
-          </div>
           <a class="btn btn-outline reveal" style="margin-top:40px" href="/developers">View developer portal</a>
         </div>
       </div>
@@ -730,12 +1030,12 @@
         </div>
         <div class="step-card-visual reveal stagger-2">
           <div class="step-img-container">
-            <img src="/assets/How it works 2.png" alt="AI-generated 3D model and body measurements" title="Save your profile">
+            <img src="/assets/How it works 2.webp" alt="AI-generated 3D model and body measurements" title="Save your profile">
             <div class="step-badge">2</div>
           </div>
           <div class="step-content-box">
             <div class="step-title-bold">SAVE</div>
-            <div class="step-desc-small">Your measurements are generated into a precise 3D model and saved as a secure digital size profile.</div>
+            <div class="step-desc-small">Your measurements are converted into a Digital Twin. This 3D blueprint captures your unique posture and volume, eliminating the 'manual ease' guesswork for your tailor.</div>
           </div>
         </div>
         <div class="step-card-visual reveal stagger-3">
@@ -756,10 +1056,10 @@
   <section class="block" id="body-visualizer">
     <div class="container-wide">
       <div style="text-align:center; max-width:800px; margin:0 auto 60px" class="reveal">
-        <div class="section-eyebrow">Try it yourself</div>
-        <h2 class="section-title">See your body shape in 3D</h2>
+        <div class="section-eyebrow">See It In Action</div>
+        <h2 class="section-title">Your body, in 3D</h2>
         <p class="section-desc" style="margin-left:auto; margin-right:auto">
-          Adjust the sliders to see how different measurements affect the human body shape in real time.
+          Adjust the sliders to see your measurements come to life as a 3D body shape. This is the same model your tailor uses to craft clothes that fit the first time.
         </p>
       </div>
       <div class="vis-container reveal-scale">
@@ -775,59 +1075,61 @@
           <div class="vis-m-scroll" id="visMeasurements">
             <div class="vis-m-section">
               <div class="vis-m-section-hdr"><span class="vis-m-dot" style="background:#fff"></span>Body</div>
-              <div class="vis-slider-group"><div class="vis-slider-label">Height <span class="vis-slider-val" id="val-height">175 cm</span></div><input type="range" min="150" max="210" value="175" step="1" data-measurement="height"></div>
+              <div class="vis-slider-group"><div class="vis-slider-label">Height <span class="vis-slider-val" id="val-height">175 cm</span></div><input type="range" min="150" max="200" value="175" step="1" data-measurement="height"></div>
             </div>
             <div class="vis-m-section">
               <div class="vis-m-section-hdr"><span class="vis-m-dot" style="background:var(--Mint)"></span>Torso</div>
-              <div class="vis-slider-group"><div class="vis-slider-label">Chest Round <span class="vis-slider-val" id="val-chest">110 cm</span></div><input type="range" min="60" max="155" value="110" step="1" data-measurement="chest"></div>
-              <div class="vis-slider-group"><div class="vis-slider-label">Waist Round <span class="vis-slider-val" id="val-waist">98 cm</span></div><input type="range" min="50" max="150" value="98" step="1" data-measurement="waist"></div>
-              <div class="vis-slider-group"><div class="vis-slider-label">Stomach Round <span class="vis-slider-val" id="val-stomach">90 cm</span></div><input type="range" min="40" max="150" value="90" step="1" data-measurement="stomach"></div>
-              <div class="vis-slider-group"><div class="vis-slider-label">Hip Round <span class="vis-slider-val" id="val-hip">104 cm</span></div><input type="range" min="55" max="150" value="104" step="1" data-measurement="hip"></div>
-              <div class="vis-slider-group"><div class="vis-slider-label">Neck Round <span class="vis-slider-val" id="val-neck">43 cm</span></div><input type="range" min="25" max="60" value="43" step="1" data-measurement="neck"></div>
-              <div class="vis-slider-group"><div class="vis-slider-label">Upper Hip <span class="vis-slider-val" id="val-upper_hip">96 cm</span></div><input type="range" min="50" max="135" value="96" step="1" data-measurement="upper_hip"></div>
+              <div class="vis-slider-group"><div class="vis-slider-label">Muscle <span class="vis-slider-val" id="val-chest">96 cm</span></div><input type="range" min="70" max="140" value="96" step="1" data-measurement="chest"></div>
+              <div class="vis-slider-group"><div class="vis-slider-label">Chest Round <span class="vis-slider-val" id="val-chest_circ">86 cm</span></div><input type="range" min="70" max="120" value="86" step="1" data-measurement="chest_circ"></div>
+              <div class="vis-slider-group"><div class="vis-slider-label">Waist Round <span class="vis-slider-val" id="val-waist">84 cm</span></div><input type="range" min="55" max="140" value="84" step="1" data-measurement="waist"></div>
+              <div class="vis-slider-group"><div class="vis-slider-label">Stomach Round <span class="vis-slider-val" id="val-stomach">82 cm</span></div><input type="range" min="40" max="150" value="82" step="1" data-measurement="stomach"></div>
+              <div class="vis-slider-group"><div class="vis-slider-label">Hip Round <span class="vis-slider-val" id="val-hip">96 cm</span></div><input type="range" min="75" max="140" value="96" step="1" data-measurement="hip"></div>
+              <div class="vis-slider-group"><div class="vis-slider-label">Neck Round <span class="vis-slider-val" id="val-neck">39 cm</span></div><input type="range" min="28" max="50" value="39" step="1" data-measurement="neck"></div>
+              <div class="vis-slider-group "><div class="vis-slider-label">Upper Hip <span class="vis-slider-val" id="val-upper_hip">91 cm</span></div><input type="range" min="50" max="135" value="91" step="1" data-measurement="upper_hip"></div>
             </div>
             <div class="vis-m-section">
               <div class="vis-m-section-hdr"><span class="vis-m-dot" style="background:#00E5FF"></span>Torso Lengths</div>
               <div class="vis-slider-group"><div class="vis-slider-label">Half Length <span class="vis-slider-val" id="val-half_length">28 cm</span></div><input type="range" min="18" max="40" value="28" step="1" data-measurement="half_length"></div>
-              <div class="vis-slider-group"><div class="vis-slider-label">Back Waist Length <span class="vis-slider-val" id="val-back_waist_length">28 cm</span></div><input type="range" min="18" max="40" value="28" step="1" data-measurement="back_waist_length"></div>
-              <div class="vis-slider-group"><div class="vis-slider-label">Front Waist Length <span class="vis-slider-val" id="val-front_waist_length">28 cm</span></div><input type="range" min="18" max="40" value="28" step="1" data-measurement="front_waist_length"></div>
-              <div class="vis-slider-group"><div class="vis-slider-label">Neck to Waist <span class="vis-slider-val" id="val-neck_to_waist">28 cm</span></div><input type="range" min="18" max="40" value="28" step="1" data-measurement="neck_to_waist"></div>
+              <div class="vis-slider-group "><div class="vis-slider-label">Back Waist Length <span class="vis-slider-val" id="val-back_waist_length">28 cm</span></div><input type="range" min="18" max="40" value="28" step="1" data-measurement="back_waist_length"></div>
+              <div class="vis-slider-group "><div class="vis-slider-label">Front Waist Length <span class="vis-slider-val" id="val-front_waist_length">28 cm</span></div><input type="range" min="18" max="40" value="28" step="1" data-measurement="front_waist_length"></div>
+              <div class="vis-slider-group "><div class="vis-slider-label">Neck to Waist <span class="vis-slider-val" id="val-neck_to_waist">28 cm</span></div><input type="range" min="18" max="40" value="28" step="1" data-measurement="neck_to_waist"></div>
               <div class="vis-slider-group"><div class="vis-slider-label">Waist to Hip <span class="vis-slider-val" id="val-waist_to_hip">28 cm</span></div><input type="range" min="18" max="40" value="28" step="1" data-measurement="waist_to_hip"></div>
-              <div class="vis-slider-group"><div class="vis-slider-label">Crotch Depth <span class="vis-slider-val" id="val-crotch_depth">28 cm</span></div><input type="range" min="18" max="40" value="28" step="1" data-measurement="crotch_depth"></div>
+              <div class="vis-slider-group "><div class="vis-slider-label">Crotch Depth <span class="vis-slider-val" id="val-crotch_depth">28 cm</span></div><input type="range" min="18" max="40" value="28" step="1" data-measurement="crotch_depth"></div>
             </div>
             <div class="vis-m-section">
               <div class="vis-m-section-hdr"><span class="vis-m-dot" style="background:#FF6B6B"></span>Widths</div>
-              <div class="vis-slider-group"><div class="vis-slider-label">Shoulder Width <span class="vis-slider-val" id="val-shoulder">42 cm</span></div><input type="range" min="25" max="60" value="42" step="1" data-measurement="shoulder"></div>
-              <div class="vis-slider-group"><div class="vis-slider-label">Across Back <span class="vis-slider-val" id="val-across_back">39 cm</span></div><input type="range" min="25" max="55" value="39" step="1" data-measurement="across_back"></div>
+              <div class="vis-slider-group"><div class="vis-slider-label">Shoulder Width <span class="vis-slider-val" id="val-shoulder">42 cm</span></div><input type="range" min="32" max="55" value="42" step="1" data-measurement="shoulder"></div>
+              <div class="vis-slider-group "><div class="vis-slider-label">Across Back <span class="vis-slider-val" id="val-across_back">39 cm</span></div><input type="range" min="25" max="55" value="39" step="1" data-measurement="across_back"></div>
               <div class="vis-slider-group"><div class="vis-slider-label">Across Chest <span class="vis-slider-val" id="val-across_chest">41 cm</span></div><input type="range" min="25" max="55" value="41" step="1" data-measurement="across_chest"></div>
-              <div class="vis-slider-group"><div class="vis-slider-label">Across Shoulder <span class="vis-slider-val" id="val-across_shoulder">42 cm</span></div><input type="range" min="25" max="60" value="42" step="1" data-measurement="across_shoulder"></div>
+              <div class="vis-slider-group "><div class="vis-slider-label">Across Shoulder <span class="vis-slider-val" id="val-across_shoulder">42 cm</span></div><input type="range" min="25" max="60" value="42" step="1" data-measurement="across_shoulder"></div>
             </div>
             <div class="vis-m-section">
               <div class="vis-m-section-hdr"><span class="vis-m-dot" style="background:#A78BFA"></span>Arms</div>
-              <div class="vis-slider-group"><div class="vis-slider-label">Bicep Round <span class="vis-slider-val" id="val-bicep">35 cm</span></div><input type="range" min="20" max="50" value="35" step="1" data-measurement="bicep"></div>
-              <div class="vis-slider-group"><div class="vis-slider-label">Elbow Round <span class="vis-slider-val" id="val-elbow_round">25 cm</span></div><input type="range" min="15" max="35" value="25" step="1" data-measurement="elbow_round"></div>
-              <div class="vis-slider-group"><div class="vis-slider-label">Wrist Round <span class="vis-slider-val" id="val-wrist_round">20 cm</span></div><input type="range" min="5" max="35" value="20" step="1" data-measurement="wrist_round"></div>
-              <div class="vis-slider-group"><div class="vis-slider-label">Sleeve Length <span class="vis-slider-val" id="val-sleeve_length">59 cm</span></div><input type="range" min="40" max="75" value="59" step="1" data-measurement="sleeve_length"></div>
+              <div class="vis-slider-group"><div class="vis-slider-label">Bicep Round <span class="vis-slider-val" id="val-bicep">32 cm</span></div><input type="range" min="20" max="50" value="32" step="1" data-measurement="bicep"></div>
+              <div class="vis-slider-group "><div class="vis-slider-label">Elbow Round <span class="vis-slider-val" id="val-elbow_round">25 cm</span></div><input type="range" min="15" max="35" value="25" step="1" data-measurement="elbow_round"></div>
+              <div class="vis-slider-group"><div class="vis-slider-label">Wrist Round <span class="vis-slider-val" id="val-wrist_round">17 cm</span></div><input type="range" min="12" max="24" value="17" step="1" data-measurement="wrist_round"></div>
+              <div class="vis-slider-group"><div class="vis-slider-label">Sleeve Length <span class="vis-slider-val" id="val-sleeve_length">59 cm</span></div><input type="range" min="45" max="75" value="59" step="1" data-measurement="sleeve_length"></div>
             </div>
             <div class="vis-m-section">
               <div class="vis-m-section-hdr"><span class="vis-m-dot" style="background:#F59E0B"></span>Legs</div>
-              <div class="vis-slider-group"><div class="vis-slider-label">Thigh Round <span class="vis-slider-val" id="val-thigh">57 cm</span></div><input type="range" min="30" max="85" value="57" step="1" data-measurement="thigh"></div>
-              <div class="vis-slider-group"><div class="vis-slider-label">Knee Round <span class="vis-slider-val" id="val-knee_round">38 cm</span></div><input type="range" min="20" max="55" value="38" step="1" data-measurement="knee_round"></div>
-              <div class="vis-slider-group"><div class="vis-slider-label">Calf Round <span class="vis-slider-val" id="val-calf_round">35 cm</span></div><input type="range" min="20" max="50" value="35" step="1" data-measurement="calf_round"></div>
-              <div class="vis-slider-group"><div class="vis-slider-label">Ankle Round <span class="vis-slider-val" id="val-ankle_round">43 cm</span></div><input type="range" min="5" max="60" value="43" step="1" data-measurement="ankle_round"></div>
-              <div class="vis-slider-group"><div class="vis-slider-label">Inseam <span class="vis-slider-val" id="val-inseam">90 cm</span></div><input type="range" min="55" max="110" value="90" step="1" data-measurement="inseam"></div>
-              <div class="vis-slider-group"><div class="vis-slider-label">Trouser Length <span class="vis-slider-val" id="val-trouser_length">115 cm</span></div><input type="range" min="70" max="135" value="115" step="1" data-measurement="trouser_length"></div>
-              <div class="vis-slider-group"><div class="vis-slider-label">Trouser Waist <span class="vis-slider-val" id="val-trouser_waist">98 cm</span></div><input type="range" min="50" max="150" value="98" step="1" data-measurement="trouser_waist"></div>
+              <div class="vis-slider-group"><div class="vis-slider-label">Thigh Round <span class="vis-slider-val" id="val-thigh">80 cm</span></div><input type="range" min="35" max="80" value="80" step="1" data-measurement="thigh"></div>
+              <div class="vis-slider-group"><div class="vis-slider-label">Knee Round <span class="vis-slider-val" id="val-knee_round">55 cm</span></div><input type="range" min="20" max="55" value="55" step="1" data-measurement="knee_round"></div>
+              <div class="vis-slider-group"><div class="vis-slider-label">Calf Round <span class="vis-slider-val" id="val-calf_round">36 cm</span></div><input type="range" min="22" max="50" value="36" step="1" data-measurement="calf_round"></div>
+              <div class="vis-slider-group"><div class="vis-slider-label">Ankle Round <span class="vis-slider-val" id="val-ankle_round">24 cm</span></div><input type="range" min="5" max="60" value="24" step="1" data-measurement="ankle_round"></div>
+              <div class="vis-slider-group "><div class="vis-slider-label">Inseam <span class="vis-slider-val" id="val-inseam">90 cm</span></div><input type="range" min="55" max="110" value="90" step="1" data-measurement="inseam"></div>
+              <div class="vis-slider-group"><div class="vis-slider-label">Trouser Length <span class="vis-slider-val" id="val-trouser_length">115 cm</span></div><input type="range" min="80" max="135" value="115" step="1" data-measurement="trouser_length"></div>
+              <div class="vis-slider-group "><div class="vis-slider-label">Trouser Waist <span class="vis-slider-val" id="val-trouser_waist">150 cm</span></div><input type="range" min="50" max="150" value="150" step="1" data-measurement="trouser_waist"></div>
             </div>
             <div class="vis-m-section vis-m-female-section" id="visFemaleSection" style="display:none">
               <div class="vis-m-section-hdr"><span class="vis-m-dot" style="background:#FF69B4"></span>Female Specific</div>
-              <div class="vis-slider-group"><div class="vis-slider-label">Bust Round <span class="vis-slider-val" id="val-bust_round">110 cm</span></div><input type="range" min="55" max="155" value="110" step="1" data-measurement="bust_round"></div>
-              <div class="vis-slider-group"><div class="vis-slider-label">High Bust <span class="vis-slider-val" id="val-high_bust">94 cm</span></div><input type="range" min="50" max="135" value="94" step="1" data-measurement="high_bust"></div>
-              <div class="vis-slider-group"><div class="vis-slider-label">Under Bust <span class="vis-slider-val" id="val-under_bust">83 cm</span></div><input type="range" min="40" max="120" value="83" step="1" data-measurement="under_bust"></div>
+              <div class="vis-slider-group"><div class="vis-slider-label">Bust Round <span class="vis-slider-val" id="val-bust_round">88 cm</span></div><input type="range" min="55" max="155" value="88" step="1" data-measurement="bust_round"></div>
+              <div class="vis-slider-group "><div class="vis-slider-label">High Bust <span class="vis-slider-val" id="val-high_bust">83 cm</span></div><input type="range" min="50" max="135" value="83" step="1" data-measurement="high_bust"></div>
+              <div class="vis-slider-group "><div class="vis-slider-label">Under Bust <span class="vis-slider-val" id="val-under_bust">73 cm</span></div><input type="range" min="40" max="120" value="73" step="1" data-measurement="under_bust"></div>
               <div class="vis-slider-group"><div class="vis-slider-label">Bust Point <span class="vis-slider-val" id="val-bust_point">7 cm</span></div><input type="range" min="4" max="12" value="7" step="1" data-measurement="bust_point"></div>
-              <div class="vis-slider-group"><div class="vis-slider-label">Shoulder to Bust <span class="vis-slider-val" id="val-shoulder_to_bust">8 cm</span></div><input type="range" min="5" max="14" value="8" step="1" data-measurement="shoulder_to_bust"></div>
-              <div class="vis-slider-group"><div class="vis-slider-label">Shoulder to Under Bust <span class="vis-slider-val" id="val-shoulder_to_under_bust">9 cm</span></div><input type="range" min="5" max="15" value="9" step="1" data-measurement="shoulder_to_under_bust"></div>
-              <div class="vis-slider-group"><div class="vis-slider-label">Armhole Round <span class="vis-slider-val" id="val-armhole_round">19 cm</span></div><input type="range" min="10" max="30" value="19" step="1" data-measurement="armhole_round"></div>
+              <div class="vis-slider-group "><div class="vis-slider-label">Shoulder to Bust <span class="vis-slider-val" id="val-shoulder_to_bust">8 cm</span></div><input type="range" min="5" max="14" value="8" step="1" data-measurement="shoulder_to_bust"></div>
+              <div class="vis-slider-group "><div class="vis-slider-label">Armhole Round <span class="vis-slider-val" id="val-armhole_round">19 cm</span></div><input type="range" min="10" max="30" value="19" step="1" data-measurement="armhole_round"></div>
+              <div class="vis-slider-group"><div class="vis-slider-label">Breast Size <span class="vis-slider-val" id="val-breast_size">50%</span></div><input type="range" min="0" max="100" value="50" step="1" data-measurement="breast_size"></div>
+              <div class="vis-slider-group"><div class="vis-slider-label">Buttocks <span class="vis-slider-val" id="val-buttocks_size">50%</span></div><input type="range" min="0" max="100" value="50" step="1" data-measurement="buttocks_size"></div>
             </div>
           </div>
           <div style="display:flex;gap:6px;margin-top:10px;padding:0 4px">
@@ -838,38 +1140,17 @@
             <button data-preset="average" class="active" onclick="window.bodyVisUI.setPreset('average')">Average</button>
             <button data-preset="heavy" onclick="window.bodyVisUI.setPreset('heavy')">Heavy</button>
             <button data-preset="athletic" onclick="window.bodyVisUI.setPreset('athletic')">Athletic</button>
+            <button data-preset="xl" onclick="window.bodyVisUI.setPreset('xl')">XL</button>
+            <button data-preset="xxl" onclick="window.bodyVisUI.setPreset('xxl')">XXL</button>
+            <button data-preset="pregnant" onclick="window.bodyVisUI.setPreset('pregnant')">Pregnant</button>
           </div>
         </div>
       </div>
-    </div>
-  </section>
-
-  <!-- SECTION 6: GLOBAL SIZE PASSPORT -->
-  <section class="block">
-    <div class="container-wide">
-      <div class="grid-impact">
-        <div class="reveal-left">
-          <div class="section-eyebrow">Size Profile</div>
-          <h2 class="section-title">Your global size profile.</h2>
-          <p class="section-desc">
-            Own your data. Scan once. Use everywhere.
-            <br><br>
-            KORRA gives you a secure digital size profile that can be used with local tailors, international brands, and online shopping sites.
-          </p>
-          <div style="display:flex; flex-direction:column; gap:12px; margin-top:40px">
-             <div style="display:flex; align-items:center; gap:12px; font-weight:700; color:var(--Neutral-400); font-size:14px" class="reveal stagger-1"><span style="color:var(--Mint)">✓</span> Own your biometric identity</div>
-             <div style="display:flex; align-items:center; gap:12px; font-weight:700; color:var(--Neutral-400); font-size:14px" class="reveal stagger-2"><span style="color:var(--Mint)">✓</span> No more repeated measurement visits</div>
-             <div style="display:flex; align-items:center; gap:12px; font-weight:700; color:var(--Neutral-400); font-size:14px" class="reveal stagger-3"><span style="color:var(--Mint)">✓</span> Share with any tailor worldwide</div>
-          </div>
-        </div>
-        <div class="glass-card image-card reveal-right">
-           <img src="/assets/Your global size passport..png" alt="Mobile Tailor dashboard size profile interface" title="Digital Profile Interface">
-        </div>
+      <div style="text-align:center; margin-top:40px">
+        <a class="btn btn-primary" href="/signup.html">Get Your 3D Model Free</a>
       </div>
     </div>
   </section>
-
-  <!-- SECTION 6.5: E-COMMERCE CONNECTIVITY -->
   <section class="block" style="padding-top: 0; background: #000;">
     <div class="container-wide">
 <div style="text-align:center; margin-bottom: 60px;" class="reveal">
@@ -924,15 +1205,15 @@
           <div class="mosaic-overlay"><div class="mosaic-title">Luxury made-to-measure</div><div class="mosaic-desc">For premium custom brands.</div></div>
         </a>
         <a class="mosaic-card" href="/manufacturing">
-          <img src="/assets/ready-to-wear.jpg" class="mosaic-img" alt="Manufacturing">
+          <img src="/assets/ready-to-wear.webp" class="mosaic-img" alt="Manufacturing">
           <div class="mosaic-overlay"><div class="mosaic-title">On-demand manufacturing</div><div class="mosaic-desc">For production workflows that need fit data.</div></div>
         </a>
         <a class="mosaic-card" href="/rtw">
-          <img src="/assets/ready-to-wear-womens-wear.jpg" class="mosaic-img" alt="RTW">
+          <img src="/assets/ready-to-wear-womens-wear.webp" class="mosaic-img" alt="RTW">
           <div class="mosaic-overlay"><div class="mosaic-title">Ready-to-wear</div><div class="mosaic-desc">For brands improving size confidence.</div></div>
         </a>
         <a class="mosaic-card" href="/bridal">
-          <img src="/assets/bridal-and-tuxedo-.jpg" class="mosaic-img" alt="Bridal">
+          <img src="/assets/bridal-and-tuxedo-.webp" class="mosaic-img" alt="Bridal">
           <div class="mosaic-overlay"><div class="mosaic-title">Bridal and tuxedo</div><div class="mosaic-desc">For high-stakes occasions where fit matters.</div></div>
         </a>
         <a class="mosaic-card" href="/custom">
@@ -943,30 +1224,6 @@
           <img src="/assets/uniform-manufacturer-hero.png.webp" class="mosaic-img" alt="Uniforms">
           <div class="mosaic-overlay"><div class="mosaic-title">Uniform manufacturers</div><div class="mosaic-desc">For schools, companies, and institutions.</div></div>
         </a>
-      </div>
-    </div>
-  </section>
-
-  <!-- SECTION 8: MERCHANT SUCCESS -->
-  <section class="block" id="merchant-success">
-    <div class="container-wide">
-      <div class="grid-impact">
-        <div>
-          <div class="section-eyebrow">Merchant Success</div>
-          <h2 class="section-title">Turn measurements into a repeatable system.</h2>
-          <p class="section-desc">KORRA helps merchants serve more customers with more confidence.</p>
-          <div style="display:flex; flex-direction:column; gap:12px; margin-top:40px">
-             <div style="display:flex; align-items:center; gap:12px; font-weight:700; color:var(--Neutral-400); font-size:14px"><span style="color:var(--Mint)">✓</span> Faster measurement capture</div>
-             <div style="display:flex; align-items:center; gap:12px; font-weight:700; color:var(--Neutral-400); font-size:14px"><span style="color:var(--Mint)">✓</span> Fewer fitting errors</div>
-             <div style="display:flex; align-items:center; gap:12px; font-weight:700; color:var(--Neutral-400); font-size:14px"><span style="color:var(--Mint)">✓</span> Less rework and waste</div>
-             <div style="display:flex; align-items:center; gap:12px; font-weight:700; color:var(--Neutral-400); font-size:14px"><span style="color:var(--Mint)">✓</span> Better customer trust</div>
-             <div style="display:flex; align-items:center; gap:12px; font-weight:700; color:var(--Neutral-400); font-size:14px"><span style="color:var(--Mint)">✓</span> Stronger remote servicing</div>
-          </div>
-          <a class="btn btn-outline" style="margin-top:40px" href="/signup.html">Request a demo</a>
-        </div>
-        <div class="glass-card image-card">
-           <img src="/assets/Mass-Personalization.png" alt="Mobile Tailor Admin Panel for business growth" title="Merchant Management Dashboard">
-        </div>
       </div>
     </div>
   </section>
@@ -1156,23 +1413,33 @@
     })();
   </script>
 
-  <!-- Body Shape Visualizer Scripts -->
+  <!-- Body Shape Visualizer Scripts (MakeHuman) -->
   <script src="/assets/three.min.js"></script>
-  <script src="/assets/smpl-shape.js"></script>
-  <script src="/assets/smpl_segmentation.js"></script>
-  <script src="/assets/custom_body_points.js"></script>
-  <script src="/assets/body-visualizer.js"></script>
+  <script src="/assets/DRACOLoader.js"></script>
+  <script src="/assets/GLTFLoader.js"></script>
+  <script src="/assets/agbada-renderer.js?v=2"></script>
+  <script src="/assets/cloth/cloth-solver.js?v=3"></script>
+  <script src="/assets/cloth/measurement-to-weight.js?v=2"></script>
+  <script src="/assets/cloth/garment-morph-controller.js?v=3"></script>
+  <script src="/assets/makehuman-engine.js?v=8"></script>
+  <script src="/assets/makehuman_body_points.js?v=4"></script>
+  <script src="/assets/makehuman-body-visualizer.js?v=16"></script>
   <script>
     (function() {
       const PRESETS = {
-        slim:      { height:175, chest:101, bust_round:101, waist:93, stomach:82, hip:100, neck:40, upper_hip:92, shoulder:39, across_shoulder:39, across_back:36, across_chest:37, thigh:55, knee_round:37, calf_round:34, ankle_round:47, bicep:33, elbow_round:24, wrist_round:28, half_length:26, full_top_length:51, back_waist_length:26, front_waist_length:26, neck_to_waist:26, shoulder_to_waist:26, waist_to_hip:26, crotch_depth:26, sleeve_length:65, trouser_length:109, trouser_waist:93, inseam:85, high_bust:86, under_bust:76, bust_point:6, shoulder_to_bust:7, shoulder_to_under_bust:8, armhole_round:17 },
-        average:   { height:175, chest:110, bust_round:110, waist:98, stomach:89, hip:103, neck:43, upper_hip:95, shoulder:42, across_shoulder:42, across_back:39, across_chest:41, thigh:57, knee_round:39, calf_round:35, ankle_round:49, bicep:34, elbow_round:26, wrist_round:24, half_length:28, full_top_length:55, back_waist_length:28, front_waist_length:28, neck_to_waist:28, shoulder_to_waist:28, waist_to_hip:28, crotch_depth:28, sleeve_length:62, trouser_length:116, trouser_waist:98, inseam:91, high_bust:93, under_bust:82, bust_point:7, shoulder_to_bust:8, shoulder_to_under_bust:9, armhole_round:19 },
-        heavy:     { height:175, chest:110, bust_round:110, waist:94, stomach:85, hip:99, neck:43, upper_hip:91, shoulder:43, across_shoulder:43, across_back:40, across_chest:41, thigh:55, knee_round:38, calf_round:35, ankle_round:43, bicep:33, elbow_round:25, wrist_round:20, half_length:28, full_top_length:57, back_waist_length:28, front_waist_length:28, neck_to_waist:28, shoulder_to_waist:28, waist_to_hip:29, crotch_depth:29, sleeve_length:49, trouser_length:121, trouser_waist:94, inseam:94, high_bust:93, under_bust:82, bust_point:7, shoulder_to_bust:7, shoulder_to_under_bust:9, armhole_round:19 },
-        athletic:  { height:178, chest:102, bust_round:102, waist:88, stomach:79, hip:94, neck:41, upper_hip:87, shoulder:40, across_shoulder:40, across_back:37, across_chest:38, thigh:52, knee_round:36, calf_round:33, ankle_round:48, bicep:32, elbow_round:24, wrist_round:25, half_length:26, full_top_length:53, back_waist_length:26, front_waist_length:26, neck_to_waist:26, shoulder_to_waist:26, waist_to_hip:27, crotch_depth:27, sleeve_length:64, trouser_length:115, trouser_waist:88, inseam:90, high_bust:87, under_bust:76, bust_point:6, shoulder_to_bust:7, shoulder_to_under_bust:8, armhole_round:18 },
-        slimFemale:    { height:165, chest:100, bust_round:100, waist:94, stomach:83, hip:101, neck:39, upper_hip:93, shoulder:38, across_shoulder:38, across_back:35, across_chest:36, thigh:55, knee_round:37, calf_round:34, ankle_round:46, bicep:33, elbow_round:24, wrist_round:27, half_length:26, full_top_length:50, back_waist_length:26, front_waist_length:26, neck_to_waist:26, shoulder_to_waist:26, waist_to_hip:25, crotch_depth:25, sleeve_length:63, trouser_length:108, trouser_waist:94, inseam:84, high_bust:85, under_bust:75, bust_point:6, shoulder_to_bust:7, shoulder_to_under_bust:8, armhole_round:17 },
-        averageFemale: { height:163, chest:110, bust_round:110, waist:98, stomach:89, hip:103, neck:43, upper_hip:95, shoulder:42, across_shoulder:42, across_back:39, across_chest:41, thigh:56, knee_round:39, calf_round:35, ankle_round:49, bicep:35, elbow_round:25, wrist_round:22, half_length:28, full_top_length:55, back_waist_length:28, front_waist_length:28, neck_to_waist:28, shoulder_to_waist:28, waist_to_hip:28, crotch_depth:28, sleeve_length:61, trouser_length:116, trouser_waist:98, inseam:91, high_bust:93, under_bust:82, bust_point:7, shoulder_to_bust:8, shoulder_to_under_bust:9, armhole_round:19 },
-        heavyFemale:   { height:165, chest:110, bust_round:110, waist:94, stomach:84, hip:98, neck:43, upper_hip:90, shoulder:43, across_shoulder:43, across_back:40, across_chest:41, thigh:54, knee_round:38, calf_round:34, ankle_round:43, bicep:34, elbow_round:25, wrist_round:18, half_length:28, full_top_length:57, back_waist_length:28, front_waist_length:28, neck_to_waist:28, shoulder_to_waist:28, waist_to_hip:29, crotch_depth:29, sleeve_length:50, trouser_length:119, trouser_waist:94, inseam:93, high_bust:93, under_bust:82, bust_point:7, shoulder_to_bust:7, shoulder_to_under_bust:9, armhole_round:19 },
-        athleticFemale: { height:165, chest:104, bust_round:104, waist:91, stomach:81, hip:96, neck:41, upper_hip:89, shoulder:40, across_shoulder:40, across_back:37, across_chest:39, thigh:53, knee_round:37, calf_round:33, ankle_round:48, bicep:32, elbow_round:24, wrist_round:25, half_length:26, full_top_length:53, back_waist_length:26, front_waist_length:26, neck_to_waist:26, shoulder_to_waist:26, waist_to_hip:27, crotch_depth:27, sleeve_length:64, trouser_length:114, trouser_waist:91, inseam:89, high_bust:88, under_bust:78, bust_point:6, shoulder_to_bust:7, shoulder_to_under_bust:8, armhole_round:18 },
+        slim:      { height:175, age:28, chest:92, chest_circ:90, bust_round:92, waist:78, stomach:76, hip:92, neck:38, upper_hip:88, shoulder:40, across_shoulder:40, across_back:36, across_chest:38, thigh:52, knee_round:36, calf_round:34, ankle_round:23, bicep:29, elbow_round:24, wrist_round:16, half_length:26, full_top_length:51, back_waist_length:26, front_waist_length:26, neck_to_waist:26, shoulder_to_waist:26, waist_to_hip:26, crotch_depth:26, sleeve_length:62, trouser_length:109, trouser_waist:78, inseam:85, high_bust:82, under_bust:74, bust_point:6, shoulder_to_bust:7, shoulder_to_under_bust:8, armhole_round:17 },
+        average:   { height:175, age:30, chest:96, chest_circ:93, bust_round:96, waist:84, stomach:82, hip:96, neck:39, upper_hip:91, shoulder:43, across_shoulder:43, across_back:39, across_chest:40, thigh:55, knee_round:38, calf_round:36, ankle_round:24, bicep:32, elbow_round:25, wrist_round:17, half_length:28, full_top_length:55, back_waist_length:28, front_waist_length:28, neck_to_waist:28, shoulder_to_waist:28, waist_to_hip:28, crotch_depth:28, sleeve_length:62, trouser_length:116, trouser_waist:84, inseam:91, high_bust:85, under_bust:76, bust_point:7, shoulder_to_bust:8, shoulder_to_under_bust:9, armhole_round:19 },
+        heavy:     { height:175, age:32, chest:108, chest_circ:103, bust_round:108, waist:100, stomach:98, hip:104, neck:42, upper_hip:98, shoulder:44, across_shoulder:44, across_back:40, across_chest:41, thigh:58, knee_round:40, calf_round:37, ankle_round:26, bicep:35, elbow_round:27, wrist_round:19, half_length:28, full_top_length:57, back_waist_length:28, front_waist_length:28, neck_to_waist:28, shoulder_to_waist:28, waist_to_hip:29, crotch_depth:29, sleeve_length:58, trouser_length:121, trouser_waist:100, inseam:94, high_bust:94, under_bust:84, bust_point:7, shoulder_to_bust:7, shoulder_to_under_bust:9, armhole_round:21 },
+        athletic:  { height:178, age:26, chest:102, chest_circ:98, bust_round:102, waist:82, stomach:80, hip:96, neck:40, upper_hip:89, shoulder:44, across_shoulder:44, across_back:38, across_chest:40, thigh:56, knee_round:37, calf_round:36, ankle_round:24, bicep:34, elbow_round:25, wrist_round:17, half_length:27, full_top_length:53, back_waist_length:27, front_waist_length:27, neck_to_waist:27, shoulder_to_waist:27, waist_to_hip:27, crotch_depth:27, sleeve_length:64, trouser_length:115, trouser_waist:82, inseam:90, high_bust:89, under_bust:78, bust_point:6, shoulder_to_bust:7, shoulder_to_under_bust:8, armhole_round:18 },
+        xl:        { height:180, age:34, chest:118, chest_circ:110, bust_round:118, waist:108, stomach:106, hip:114, neck:43, upper_hip:106, shoulder:46, across_shoulder:46, across_back:42, across_chest:42, thigh:64, knee_round:42, calf_round:39, ankle_round:27, bicep:38, elbow_round:28, wrist_round:20, half_length:29, full_top_length:59, back_waist_length:29, front_waist_length:29, neck_to_waist:29, shoulder_to_waist:29, waist_to_hip:30, crotch_depth:30, sleeve_length:56, trouser_length:124, trouser_waist:108, inseam:96, high_bust:104, under_bust:92, bust_point:8, shoulder_to_bust:8, shoulder_to_under_bust:10, armhole_round:23 },
+        xxl:       { height:180, age:36, chest:130, chest_circ:118, bust_round:130, waist:122, stomach:120, hip:126, neck:45, upper_hip:118, shoulder:48, across_shoulder:48, across_back:44, across_chest:44, thigh:70, knee_round:45, calf_round:41, ankle_round:29, bicep:42, elbow_round:30, wrist_round:22, half_length:30, full_top_length:61, back_waist_length:30, front_waist_length:30, neck_to_waist:30, shoulder_to_waist:30, waist_to_hip:31, crotch_depth:31, sleeve_length:54, trouser_length:126, trouser_waist:122, inseam:98, high_bust:116, under_bust:102, bust_point:9, shoulder_to_bust:9, shoulder_to_under_bust:11, armhole_round:25 },
+        slimFemale:    { height:165, age:28, chest:84, chest_circ:82, bust_round:84, waist:68, stomach:70, hip:140, neck:34, upper_hip:82, shoulder:37, across_shoulder:37, across_back:33, across_chest:32, thigh:80, knee_round:55, calf_round:33, ankle_round:22, bicep:27, elbow_round:22, wrist_round:14, half_length:25, full_top_length:50, back_waist_length:25, front_waist_length:25, neck_to_waist:25, shoulder_to_waist:25, waist_to_hip:24, crotch_depth:24, sleeve_length:60, trouser_length:108, trouser_waist:68, inseam:84, high_bust:80, under_bust:70, bust_point:22, shoulder_to_bust:24, shoulder_to_under_bust:28, armhole_round:16, breast_size:30, buttocks_size:30 },
+        averageFemale: { height:165, age:30, chest:88, chest_circ:86, bust_round:88, waist:72, stomach:75, hip:140, neck:35, upper_hip:86, shoulder:38, across_shoulder:38, across_back:34, across_chest:33, thigh:80, knee_round:55, calf_round:35, ankle_round:23, bicep:29, elbow_round:23, wrist_round:15, half_length:26, full_top_length:52, back_waist_length:26, front_waist_length:26, neck_to_waist:26, shoulder_to_waist:26, waist_to_hip:26, crotch_depth:26, sleeve_length:60, trouser_length:112, trouser_waist:150, inseam:86, high_bust:83, under_bust:73, bust_point:23, shoulder_to_bust:25, shoulder_to_under_bust:29, armhole_round:17, breast_size:50, buttocks_size:50 },
+        heavyFemale:   { height:165, age:32, chest:100, chest_circ:96, bust_round:100, waist:88, stomach:86, hip:140, neck:38, upper_hip:92, shoulder:40, across_shoulder:40, across_back:36, across_chest:36, thigh:80, knee_round:55, calf_round:36, ankle_round:24, bicep:33, elbow_round:25, wrist_round:17, half_length:27, full_top_length:55, back_waist_length:27, front_waist_length:27, neck_to_waist:27, shoulder_to_waist:27, waist_to_hip:27, crotch_depth:27, sleeve_length:58, trouser_length:118, trouser_waist:88, inseam:90, high_bust:90, under_bust:80, bust_point:24, shoulder_to_bust:26, shoulder_to_under_bust:30, armhole_round:19, breast_size:60, buttocks_size:60 },
+        athleticFemale: { height:168, age:26, chest:86, chest_circ:84, bust_round:86, waist:70, stomach:72, hip:140, neck:34, upper_hip:84, shoulder:39, across_shoulder:39, across_back:35, across_chest:34, thigh:80, knee_round:55, calf_round:34, ankle_round:22, bicep:30, elbow_round:23, wrist_round:15, half_length:26, full_top_length:53, back_waist_length:26, front_waist_length:26, neck_to_waist:26, shoulder_to_waist:26, waist_to_hip:25, crotch_depth:25, sleeve_length:62, trouser_length:114, trouser_waist:70, inseam:88, high_bust:82, under_bust:72, bust_point:22, shoulder_to_bust:24, shoulder_to_under_bust:28, armhole_round:17, breast_size:40, buttocks_size:45 },
+        xlFemale:      { height:168, age:34, chest:108, chest_circ:100, bust_round:108, waist:95, stomach:93, hip:140, neck:39, upper_hip:100, shoulder:42, across_shoulder:42, across_back:38, across_chest:38, thigh:80, knee_round:55, calf_round:38, ankle_round:25, bicep:36, elbow_round:27, wrist_round:18, half_length:28, full_top_length:56, back_waist_length:28, front_waist_length:28, neck_to_waist:28, shoulder_to_waist:28, waist_to_hip:28, crotch_depth:28, sleeve_length:56, trouser_length:120, trouser_waist:95, inseam:92, high_bust:96, under_bust:84, bust_point:26, shoulder_to_bust:27, shoulder_to_under_bust:31, armhole_round:21, breast_size:70, buttocks_size:65 },
+        xxlFemale:     { height:168, age:36, chest:120, chest_circ:110, bust_round:120, waist:110, stomach:108, hip:140, neck:41, upper_hip:112, shoulder:44, across_shoulder:44, across_back:40, across_chest:40, thigh:80, knee_round:55, calf_round:40, ankle_round:27, bicep:40, elbow_round:29, wrist_round:20, half_length:29, full_top_length:58, back_waist_length:29, front_waist_length:29, neck_to_waist:29, shoulder_to_waist:29, waist_to_hip:29, crotch_depth:29, sleeve_length:54, trouser_length:122, trouser_waist:110, inseam:94, high_bust:108, under_bust:94, bust_point:28, shoulder_to_bust:28, shoulder_to_under_bust:32, armhole_round:23, breast_size:80, buttocks_size:75 },
+        pregnant:      { height:165, age:30, chest:96, chest_circ:92, bust_round:96, waist:135, stomach:145, hip:140, neck:37, upper_hip:98, shoulder:39, across_shoulder:39, across_back:36, across_chest:35, thigh:80, knee_round:55, calf_round:40, ankle_round:28, bicep:32, elbow_round:26, wrist_round:17, half_length:26, full_top_length:54, back_waist_length:26, front_waist_length:34, neck_to_waist:30, shoulder_to_waist:30, waist_to_hip:26, crotch_depth:26, sleeve_length:58, trouser_length:112, trouser_waist:135, inseam:86, high_bust:90, under_bust:80, bust_point:26, shoulder_to_bust:27, shoulder_to_under_bust:31, armhole_round:20, breast_size:65, buttocks_size:55 },
       };
 
       window.bodyVisUI = {
@@ -1182,31 +1449,45 @@
         _applying: false,
 
         init: async function() {
-          this.vis = new BodyVisualizer();
-          await this.vis.init('bodyCanvas');
+          this.vis = new MakeHumanBodyVisualizer();
+          try {
+            await this.vis.init('bodyCanvas');
+          } catch (err) {
+            console.error('[bodyVisUI] Init failed:', err);
+            var el = document.getElementById('visLoading');
+            if (el) { el.textContent = 'Failed to load body model: ' + err.message; el.style.color = '#ff4444'; }
+            return;
+          }
           this._bindSliders();
           this._syncSliders();
-          this._apply();
         },
 
         setGender: function(gender) {
+          if (!this.vis) return;
           this.gender = gender;
           document.querySelectorAll('.vis-gender-btn').forEach(b => {
             b.classList.toggle('active', b.dataset.gender === gender);
           });
-          this.vis.setGender(gender);
           const preset = gender === 'female' ? PRESETS.averageFemale : PRESETS.average;
           this.measurements = { ...preset };
           this._syncSliders();
-          this._apply();
           this._setActivePreset('average');
           const femSection = document.getElementById('visFemaleSection');
           if (femSection) femSection.style.display = gender === 'female' ? '' : 'none';
+
+          // Always store measurements on the visualizer so they apply after any pending switch
+          if (this.vis) this.vis._lastMeasurements = { ...this.measurements };
+
+          this.vis.setGender(gender).then(() => {
+            // Only apply if the visualizer actually switched to the requested gender
+            if (this.vis.gender === gender) {
+              this._apply();
+            }
+          });
         },
 
         setPreset: function(name) {
-          const key = this.gender === 'female' ? name + 'Female' : name;
-          const preset = PRESETS[key] || PRESETS[name] || PRESETS.average;
+          const preset = PRESETS[name + (this.gender === 'female' && name !== 'pregnant' ? 'Female' : '')] || PRESETS[name] || PRESETS.average;
           this.measurements = { ...preset };
           this._syncSliders();
           this._apply();
@@ -1214,10 +1495,9 @@
         },
 
         _apply: function() {
-          if (this._applying) return;
-          this._applying = true;
-          this.vis.updateFromMeasurements(this.measurements);
-          this._applying = false;
+          if (this.vis) {
+            this.vis.updateFromMeasurements(this.measurements);
+          }
         },
 
         _updateComputedMeasurements: function() {
@@ -1233,7 +1513,11 @@
             if (m[key] !== undefined) {
               slider.value = m[key];
               const valEl = document.getElementById('val-' + key);
-              if (valEl) valEl.textContent = Math.round(m[key]) + ' cm';
+              if (valEl) {
+                const pctMorphs = ['breast_size', 'buttocks_size'];
+                const unit = pctMorphs.includes(key) ? '%' : ' cm';
+                valEl.textContent = Math.round(m[key]) + unit;
+              }
             }
           });
         },
@@ -1248,11 +1532,17 @@
           const self = this;
           document.querySelectorAll('.vis-slider-group input[type="range"][data-measurement]').forEach(slider => {
             slider.addEventListener('input', function() {
+              // Skip disabled (derived) sliders — they don't feed the MLP
+              if (this.closest('.vis-slider-disabled')) return;
               const key = this.dataset.measurement;
               const val = parseFloat(this.value);
               self.measurements[key] = val;
               const valEl = document.getElementById('val-' + key);
-              if (valEl) valEl.textContent = Math.round(val) + ' cm';
+              if (valEl) {
+                const pctMorphs = ['breast_size', 'buttocks_size'];
+                const unit = pctMorphs.includes(key) ? '%' : ' cm';
+                valEl.textContent = Math.round(val) + unit;
+              }
               self._apply();
               document.querySelectorAll('.vis-presets button').forEach(b => b.classList.remove('active'));
             });
@@ -1266,6 +1556,7 @@
             if (btn) btn.textContent = this.vis.isRotating ? 'Pause' : 'Resume';
           }
         },
+
       };
 
       // Auto-init on DOM ready
@@ -1276,5 +1567,31 @@
       }
     })();
   </script>
+
+  <!-- AR Try-On Overlay -->
+  <div id="arTryOnOverlay">
+    <video id="arVideo" autoplay playsinline muted></video>
+    <canvas id="arSkeletonCanvas" class="ar-skeleton-canvas"></canvas>
+    <div class="ar-canvas-wrap"><canvas id="arThreeCanvas"></canvas></div>
+    <div class="ar-controls">
+      <button class="ar-close-btn" id="arCloseBtn">&times;</button>
+      <button class="ar-switch-btn" id="arSwitchBtn">&#x21C4;</button>
+      <div class="ar-garment-label" id="arGarmentLabel"></div>
+      <button class="ar-capture-btn" id="arCaptureBtn"></button>
+    </div>
+    <div class="ar-loading" id="arLoading">
+      <div class="spinner"></div>
+      <div class="ar-status" id="arStatus">Initializing camera...</div>
+    </div>
+    <div class="ar-error-msg" id="arErrorMsg">
+      <h3 id="arErrorTitle">Camera Access Needed</h3>
+      <p id="arErrorDesc">Please allow camera access to try on garments in AR.</p>
+    </div>
+  </div>
+
+  <script src="https://cdn.jsdelivr.net/npm/@mediapipe/pose@0.5.1675469404"></script>
+  <script src="https://cdn.jsdelivr.net/npm/@mediapipe/camera_utils@0.3.1675466862/camera_utils.js"></script>
+  <script src="/assets/ar-tryon.js"></script>
+
 </body>
 </html>

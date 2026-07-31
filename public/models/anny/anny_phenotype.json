@@ -1,0 +1,107 @@
+{
+  "version": 6,
+  "vert_count": 13718,
+  "blendshape_count": 624,
+  "mask_cols": 26,
+  "face_count": 27420,
+  "anchors": {
+    "age": [
+      -0.3333333333333333,
+      0.0,
+      0.33333333333333337,
+      0.6666666666666667,
+      1.0
+    ],
+    "gender": [
+      0.0,
+      1.0
+    ],
+    "muscle": [
+      0.0,
+      0.5,
+      1.0
+    ],
+    "weight": [
+      0.0,
+      0.5,
+      1.0
+    ],
+    "height": [
+      0.0,
+      1.0
+    ],
+    "proportions": [
+      0.0,
+      1.0
+    ],
+    "cupsize": [
+      0.0,
+      0.5,
+      1.0
+    ],
+    "firmness": [
+      0.0,
+      0.5,
+      1.0
+    ]
+  },
+  "phenotype_labels": [
+    "gender",
+    "age",
+    "muscle",
+    "weight",
+    "height",
+    "proportions",
+    "cupsize",
+    "firmness",
+    "african",
+    "asian",
+    "caucasian"
+  ],
+  "phenotype_variations": {
+    "race": [
+      "african",
+      "asian",
+      "caucasian"
+    ],
+    "gender": [
+      "male",
+      "female"
+    ],
+    "age": [
+      "newborn",
+      "baby",
+      "child",
+      "young",
+      "old"
+    ],
+    "muscle": [
+      "minmuscle",
+      "averagemuscle",
+      "maxmuscle"
+    ],
+    "weight": [
+      "minweight",
+      "averageweight",
+      "maxweight"
+    ],
+    "height": [
+      "minheight",
+      "maxheight"
+    ],
+    "proportions": [
+      "idealproportions",
+      "uncommonproportions"
+    ],
+    "cupsize": [
+      "mincup",
+      "averagecup",
+      "maxcup"
+    ],
+    "firmness": [
+      "minfirmness",
+      "averagefirmness",
+      "maxfirmness"
+    ]
+  }
+}

@@ -55,11 +55,41 @@ deploy_frontend() {
     $SCP "$PROJECT_DIR/public/assets/measurement-screen.js" "$EC2_HOST:/home/ubuntu/app/public/assets/"
     $SCP "$PROJECT_DIR/public/assets/measurement-screen.css" "$EC2_HOST:/home/ubuntu/app/public/assets/"
     $SCP "$PROJECT_DIR/public/assets/korra_export.js" "$EC2_HOST:/home/ubuntu/app/public/assets/"
+    $SCP "$PROJECT_DIR/public/assets/three.min.js" "$EC2_HOST:/home/ubuntu/app/public/assets/"
+    $SCP "$PROJECT_DIR/public/assets/DRACOLoader.js" "$EC2_HOST:/home/ubuntu/app/public/assets/"
+    $SCP "$PROJECT_DIR/public/assets/GLTFLoader.js" "$EC2_HOST:/home/ubuntu/app/public/assets/"
+    $SCP "$PROJECT_DIR/public/assets/model-renderer.js" "$EC2_HOST:/home/ubuntu/app/public/assets/"
+    $SCP "$PROJECT_DIR/public/assets/makehuman-engine.js" "$EC2_HOST:/home/ubuntu/app/public/assets/"
+    $SCP "$PROJECT_DIR/public/assets/makehuman_body_points.js" "$EC2_HOST:/home/ubuntu/app/public/assets/"
+    $SCP "$PROJECT_DIR/public/assets/makehuman-body-visualizer.js" "$EC2_HOST:/home/ubuntu/app/public/assets/"
+    $SCP "$PROJECT_DIR/public/models/makehuman/model_config.json" "$EC2_HOST:/home/ubuntu/app/public/models/makehuman/"
+    for gender in male female; do
+        $SSH "mkdir -p /home/ubuntu/app/public/models/makehuman/$gender"
+        $SCP "$PROJECT_DIR/public/models/makehuman/$gender/${gender}_vertices.bin" "$EC2_HOST:/home/ubuntu/app/public/models/makehuman/$gender/"
+        $SCP "$PROJECT_DIR/public/models/makehuman/$gender/${gender}_faces.bin" "$EC2_HOST:/home/ubuntu/app/public/models/makehuman/$gender/"
+        $SCP "$PROJECT_DIR/public/models/makehuman/$gender/${gender}_morphs.bin" "$EC2_HOST:/home/ubuntu/app/public/models/makehuman/$gender/"
+        $SCP "$PROJECT_DIR/public/models/makehuman/$gender/${gender}_normals.bin" "$EC2_HOST:/home/ubuntu/app/public/models/makehuman/$gender/"
+        $SCP "$PROJECT_DIR/public/models/makehuman/$gender/${gender}_uvs.bin" "$EC2_HOST:/home/ubuntu/app/public/models/makehuman/$gender/"
+        $SCP "$PROJECT_DIR/public/models/makehuman/$gender/${gender}_face_uv_idx.bin" "$EC2_HOST:/home/ubuntu/app/public/models/makehuman/$gender/"
+        $SCP "$PROJECT_DIR/public/models/makehuman/$gender/${gender}_face_mats.bin" "$EC2_HOST:/home/ubuntu/app/public/models/makehuman/$gender/"
+    done
+    $SCP "$PROJECT_DIR/public/models/skinned/UCS/Highlighted_Muscles.jpg" "$EC2_HOST:/home/ubuntu/app/public/models/skinned/UCS/"
+    $SCP "$PROJECT_DIR/public/models/skinned/UCS/brown_eye.png" "$EC2_HOST:/home/ubuntu/app/public/models/skinned/UCS/"
+    $SCP "$PROJECT_DIR/index.html" "$EC2_HOST:/home/ubuntu/app/"
+    $SSH "mkdir -p /home/ubuntu/app/public/models/garments/"
+    $SCP "$PROJECT_DIR/public/models/garments/atomic_jacket_morphed.glb" "$EC2_HOST:/home/ubuntu/app/public/models/garments/"
+    $SCP "$PROJECT_DIR/public/models/garments/atomic_jacket_morphed_config.json" "$EC2_HOST:/home/ubuntu/app/public/models/garments/"
     $SSH "
+        # index.html must also go inside the container (not mounted as volume)
+        docker cp /home/ubuntu/app/index.html korra-ai-prod:/app/index.html 2>/dev/null || true
+        # Copy models into container
+        docker cp /home/ubuntu/app/public/models/makehuman/ korra-ai-prod:/app/public/models/makehuman/ 2>/dev/null || true
+        docker cp /home/ubuntu/app/public/models/skinned/ korra-ai-prod:/app/public/models/skinned/ 2>/dev/null || true
+        docker cp /home/ubuntu/app/public/models/garments/ korra-ai-prod:/app/public/models/garments/ 2>/dev/null || true
         # Verify files exist on host volume
-        wc -l /home/ubuntu/app/public/assets/measurement-screen.js \
-              /home/ubuntu/app/public/assets/measurement-screen.css \
-              /home/ubuntu/app/public/assets/korra_export.js
+        ls -la /home/ubuntu/app/public/models/makehuman/male/male_vertices.bin \
+              /home/ubuntu/app/public/assets/makehuman-engine.js \
+              /home/ubuntu/app/public/models/garments/atomic_jacket_morphed.glb
     "
     log "Frontend deployed ✓"
 }
