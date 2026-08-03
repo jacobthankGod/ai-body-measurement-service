@@ -882,6 +882,7 @@
       ];
       var section = document.querySelector('.gallery-section');
       var track = document.querySelector('.gallery-track');
+      var totalItems = document.querySelectorAll('.gallery-item').length;
       var itemWidth = 520 + 24;
       if (section && track) {
         window.addEventListener('scroll', function() {
@@ -889,7 +890,7 @@
           var totalScroll = section.offsetHeight - window.innerHeight;
           if (totalScroll <= 0) return;
           var progress = Math.max(0, Math.min(1, -rect.top / totalScroll));
-          var maxTranslate = (models.length - 1) * itemWidth;
+          var maxTranslate = (totalItems - 1) * itemWidth;
           track.style.transform = 'translateX(' + (-progress * maxTranslate) + 'px)';
         }, { passive: true });
       }
