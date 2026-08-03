@@ -214,9 +214,44 @@ Frontend → EC2 Proxy (port 8001) → Cloudflare Tunnel → Kaggle GPU (T4 x2)
 - **Modal profile**: `jacobthankgod4`
 - **Modal workspace**: `jacobthankgod4`
 
+## Snapchat Camera Kit Integration (2026-08-03)
+
+### Overview
+Virtual try-on using Snapchat's AR technology. Users can try on clothing virtually using their webcam.
+
+### Configuration
+- **API Tokens**: Stored in `.env` (SNAP_API_TOKEN_STAGING, SNAP_API_TOKEN_PRODUCTION)
+- **Public Client ID**: `d6524989-00bd-4129-bbd1-b754ebb43b3b`
+- **Confidential Client ID**: `775ad7c3-575f-48b8-9428-3256c5cc126e`
+
+### Files
+| File | Purpose |
+|------|---------|
+| `public/camerakit-config.js` | Camera Kit configuration (tokens, client IDs) |
+| `public/camerakit-integration.js` | Camera Kit JavaScript module |
+| `camera-kit-tryon.html` | Virtual try-on page with Camera Kit UI |
+| `api/routes/tryon.py` | Backend endpoints for captures |
+| `scripts/create_tryon_captures_table.sql` | Database migration |
+
+### Endpoints
+- `POST /api/v2/tryon/capture` - Save Camera Kit capture
+- `GET /api/v2/tryon/captures` - Get user's captures
+- `DELETE /api/v2/tryon/capture/{id}` - Delete a capture
+
+### Lens Setup
+1. Create lens in Lens Studio (Clothing Try-On sample)
+2. Publish to Snap for review
+3. Get Lens ID and Group ID from Lens Scheduler
+4. Update `camerakit-config.js` with lens IDs
+
+### Database
+- Table: `tryon_captures` (see migration script)
+- Storage bucket: `tryon_captures`
+
 ## Next Steps
 - Backfill SMPL params for production scans
 - Build first dataset → train models → deploy via A/B test
 - Upload notebook.ipynb to Kaggle and start GPU session
 - Update tunnel URL on EC2 after Kaggle notebook starts
 - Add Replicate credits for try-on inference
+- Complete Camera Kit lens publishing and get lens IDs

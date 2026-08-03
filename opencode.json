@@ -1,0 +1,24 @@
+{
+  "$schema": "https://opencode.ai/config.json",
+  "instructions": [
+    "AGENTS.md",
+    "PLAN_VTO_INTEGRATION.md",
+    "PLAN_200PHASE_AR_TRYON.md"
+  ],
+  "references": {
+    "docs": {
+      "path": ".",
+      "description": "AI Body Scan SaaS project documentation, AR try-on plans, and measurement pipeline docs"
+    }
+  },
+  "permission": {
+    "bash": {
+      "python *": "allow",
+      "pip *": "allow",
+      "uvicorn *": "allow",
+      "git *": "allow",
+      "node *": "allow",
+      "npm *": "allow"
+    }
+  }
+}

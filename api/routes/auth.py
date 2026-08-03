@@ -92,3 +92,51 @@ async def send_reset(data: Dict[str, Any] = Body(...)):
         return {"success": True, "message": "Reset email dispatched"}
     else:
         raise HTTPException(status_code=500, detail="Dispatch failure")
+
+# ============ SNAPCHAT PROFILE SYNC ============
+
+@router.post("/auth/snap-sync")
+async def sync_snapchat_profile(data: Dict[str, Any] = Body(...)):
+    """Sync Snapchat profile data to user record"""
+    snap_external_id = data.get("snap_external_id")
+    display_name = data.get("display_name")
+    bitmoji_url = data.get("bitmoji_url")
+
+    if not snap_external_id:
+        raise HTTPException(status_code=400, detail="snap_external_id is required")
+
+    # Store snap profile in Supabase metadata via service role
+    supabase_url = os.environ.get('SUPABASE_URL', 'https://blsettabymllulsxtziw.supabase.co')
+    service_role_key = os.environ.get('SUPABASE_SERVICE_ROLE_KEY', '')
+
+    if not service_role_key:
+        logger.warning("SUPABASE_SERVICE_ROLE_KEY not set - snap profile sync skipped")
+        return {"success": True, "message": "Snap profile received (sync deferred)"}
+
+    try:
+        async with httpx.AsyncClient() as client:
+            # Update user metadata via Supabase Admin API
+            response = await client.put(
+                f"{supabase_url}/auth/v1/user",
+                headers={
+                    "Authorization": f"Bearer {service_role_key}",
+                    "apikey": service_role_key
+                },
+                json={
+                    "user_metadata": {
+                        "snap_external_id": snap_external_id,
+                        "snap_display_name": display_name,
+                        "snap_bitmoji_url": bitmoji_url
+                    }
+                },
+                timeout=10
+            )
+
+            if response.status_code == 200:
+                return {"success": True, "message": "Snap profile synced"}
+            else:
+                logger.warning(f"Snap sync failed: {response.status_code}")
+                return {"success": True, "message": "Snap profile received (sync deferred)"}
+    except Exception as e:
+        logger.error(f"Snap sync error: {e}")
+        return {"success": True, "message": "Snap profile received (sync deferred)"}

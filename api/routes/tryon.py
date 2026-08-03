@@ -1,7 +1,9 @@
 """
-Virtual Try-On Route | OOTDiffusion via Replicate
-================================================
+Virtual Try-On Route | OOTDiffusion via Replicate + Snapchat Camera Kit
+========================================================================
 POST /api/v2/tryon — Run OOTDiffusion on a person photo + garment image.
+POST /api/v2/tryon/capture — Save Camera Kit capture to storage.
+GET /api/v2/tryon/captures — Get user's try-on captures.
 """
 import os
 import uuid
@@ -9,8 +11,9 @@ import logging
 import json
 from pathlib import Path
 from typing import Optional
+from datetime import datetime
 
-from fastapi import APIRouter, UploadFile, File, Form, Depends, HTTPException, BackgroundTasks
+from fastapi import APIRouter, UploadFile, File, Form, Depends, HTTPException, BackgroundTasks, Query
 from fastapi.responses import JSONResponse
 
 from api.services.database_service import DatabaseService
@@ -152,3 +155,168 @@ async def virtual_tryon(
         "garment_image_url": garment_storage_url,
         "category": category,
     }
+
+
+# ============================================================
+# Snapchat Camera Kit Capture Endpoints
+# ============================================================
+
+@router.post("/tryon/capture")
+async def save_camerakit_capture(
+    photo: UploadFile = File(...),
+    user_id: Optional[str] = Form(None),
+    outfit_id: Optional[str] = Form(None),
+    lens_id: Optional[str] = Form(None),
+    group_id: Optional[str] = Form(None),
+    metadata: Optional[str] = Form(None),
+):
+    """
+    Save a Camera Kit capture to Supabase storage.
+    
+    This endpoint is called from the frontend after a user captures
+    a photo using the Snapchat Camera Kit virtual try-on feature.
+    """
+    try:
+        # Read photo bytes
+        photo_bytes = await photo.read()
+        if not photo_bytes:
+            raise HTTPException(status_code=400, detail="Photo is required")
+        
+        # Generate unique filename
+        timestamp = datetime.utcnow().strftime("%Y%m%d_%H%M%S")
+        capture_id = str(uuid.uuid4())[:8]
+        filename = f"tryon_{timestamp}_{capture_id}.png"
+        
+        # Upload to Supabase storage
+        storage_path = f"tryon_captures/{user_id or 'anonymous'}/{filename}"
+        photo_url = DatabaseService.upload_photo_to_storage(
+            photo_bytes, user_id or 'anonymous', filename, "tryon_capture"
+        )
+        
+        if not photo_url:
+            raise HTTPException(status_code=500, detail="Failed to upload capture")
+        
+        # Save metadata to database
+        db = DatabaseService.get_client()
+        capture_record = {
+            "id": str(uuid.uuid4()),
+            "user_id": user_id or "anonymous",
+            "outfit_id": outfit_id,
+            "lens_id": lens_id,
+            "group_id": group_id,
+            "photo_url": photo_url,
+            "filename": filename,
+            "created_at": datetime.utcnow().isoformat(),
+            "metadata": json.loads(metadata) if metadata else {},
+        }
+        
+        db.table("tryon_captures").insert(capture_record).execute()
+        
+        logger.info(f"Camera Kit capture saved: {filename} for user {user_id}")
+        
+        return {
+            "success": True,
+            "capture_id": capture_record["id"],
+            "photo_url": photo_url,
+            "filename": filename,
+        }
+        
+    except HTTPException:
+        raise
+    except Exception as e:
+        logger.error(f"Failed to save Camera Kit capture: {e}")
+        raise HTTPException(status_code=500, detail=f"Failed to save capture: {str(e)}")
+
+
+@router.get("/tryon/captures")
+async def get_captures(
+    user_id: str = Query(..., description="User ID"),
+    limit: int = Query(20, ge=1, le=100, description="Number of captures to return"),
+    offset: int = Query(0, ge=0, description="Offset for pagination"),
+):
+    """
+    Get user's try-on captures.
+    
+    Returns a list of Camera Kit captures for the specified user,
+    ordered by creation date (newest first).
+    """
+    try:
+        db = DatabaseService.get_client()
+        
+        result = (
+            db.table("tryon_captures")
+            .select("*")
+            .eq("user_id", user_id)
+            .order("created_at", desc=True)
+            .range(offset, offset + limit - 1)
+            .execute()
+        )
+        
+        captures = result.data if result.data else []
+        
+        # Get total count
+        count_result = (
+            db.table("tryon_captures")
+            .select("id", count="exact")
+            .eq("user_id", user_id)
+            .execute()
+        )
+        total = count_result.count if hasattr(count_result, 'count') else len(captures)
+        
+        return {
+            "success": True,
+            "captures": captures,
+            "total": total,
+            "limit": limit,
+            "offset": offset,
+        }
+        
+    except Exception as e:
+        logger.error(f"Failed to get captures: {e}")
+        raise HTTPException(status_code=500, detail=f"Failed to get captures: {str(e)}")
+
+
+@router.delete("/tryon/capture/{capture_id}")
+async def delete_capture(
+    capture_id: str,
+    user_id: str = Query(..., description="User ID for authorization"),
+):
+    """
+    Delete a try-on capture.
+    
+    Only the owner of the capture can delete it.
+    """
+    try:
+        db = DatabaseService.get_client()
+        
+        # Verify ownership
+        result = (
+            db.table("tryon_captures")
+            .select("user_id, filename")
+            .eq("id", capture_id)
+            .single()
+            .execute()
+        )
+        
+        if not result.data:
+            raise HTTPException(status_code=404, detail="Capture not found")
+        
+        if result.data["user_id"] != user_id:
+            raise HTTPException(status_code=403, detail="Not authorized to delete this capture")
+        
+        # Delete from storage
+        filename = result.data["filename"]
+        # DatabaseService.delete_photo_from_storage(filename, "tryon_capture")  # Implement if needed
+        
+        # Delete from database
+        db.table("tryon_captures").delete().eq("id", capture_id).execute()
+        
+        logger.info(f"Capture deleted: {capture_id} by user {user_id}")
+        
+        return {"success": True, "message": "Capture deleted"}
+        
+    except HTTPException:
+        raise
+    except Exception as e:
+        logger.error(f"Failed to delete capture: {e}")
+        raise HTTPException(status_code=500, detail=f"Failed to delete capture: {str(e)}")

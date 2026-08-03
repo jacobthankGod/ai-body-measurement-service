@@ -1,0 +1,606 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Virtual Try-On | KORRA AI</title>
+  
+  <!-- Content Security Policy for Camera Kit -->
+  <meta http-equiv="Content-Security-Policy" content="
+    connect-src 'self' https://*.snapar.com https://*.supabase.co;
+    script-src 'self' 'unsafe-eval' 'wasm-unsafe-eval' https://cf-st.sc-cdn.net blob:;
+    media-src 'self' blob:;
+  ">
+  
+  <style>
+    * { margin: 0; padding: 0; box-sizing: border-box; }
+    
+    body {
+      background: #0a0a0a;
+      color: #fff;
+      font-family: 'Inter', -apple-system, BlinkMacSystemFont, sans-serif;
+      min-height: 100vh;
+    }
+    
+    /* Header */
+    .header {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      padding: 16px 24px;
+      background: rgba(11, 11, 12, 0.9);
+      backdrop-filter: blur(16px);
+      border-bottom: 1px solid rgba(255, 255, 255, 0.06);
+      position: sticky;
+      top: 0;
+      z-index: 100;
+    }
+    
+    .header-logo {
+      display: flex;
+      align-items: center;
+      gap: 12px;
+    }
+    
+    .header-logo img {
+      height: 32px;
+    }
+    
+    .header-title {
+      font-size: 14px;
+      font-weight: 700;
+      color: #c6ff00;
+      letter-spacing: 0.1em;
+      text-transform: uppercase;
+    }
+    
+    .header-badge {
+      font-size: 10px;
+      padding: 4px 8px;
+      background: rgba(198, 255, 0, 0.15);
+      border: 1px solid rgba(198, 255, 0, 0.3);
+      border-radius: 99px;
+      color: #c6ff00;
+      font-weight: 600;
+    }
+    
+    /* Main Container */
+    .main-container {
+      display: grid;
+      grid-template-columns: 1fr 320px;
+      height: calc(100vh - 65px);
+    }
+    
+    @media (max-width: 900px) {
+      .main-container {
+        grid-template-columns: 1fr;
+        grid-template-rows: 1fr auto;
+      }
+    }
+    
+    /* Camera Section */
+    .camera-section {
+      position: relative;
+      background: #111;
+      display: flex;
+      flex-direction: column;
+    }
+    
+    .canvas-container {
+      flex: 1;
+      position: relative;
+      overflow: hidden;
+    }
+    
+    #tryon-canvas {
+      width: 100%;
+      height: 100%;
+      object-fit: contain;
+    }
+    
+    .camera-status {
+      position: absolute;
+      bottom: 100px;
+      left: 50%;
+      transform: translateX(-50%);
+      background: rgba(0, 0, 0, 0.8);
+      padding: 8px 16px;
+      border-radius: 8px;
+      font-size: 12px;
+      color: #a3a3a3;
+      z-index: 10;
+    }
+    
+    /* Camera Controls */
+    .camera-controls {
+      position: absolute;
+      bottom: 24px;
+      left: 50%;
+      transform: translateX(-50%);
+      display: flex;
+      gap: 16px;
+      align-items: center;
+      background: rgba(11, 11, 12, 0.85);
+      backdrop-filter: blur(16px);
+      border: 1px solid rgba(255, 255, 255, 0.08);
+      border-radius: 16px;
+      padding: 12px 20px;
+      z-index: 10;
+    }
+    
+    .capture-btn {
+      width: 64px;
+      height: 64px;
+      border-radius: 50%;
+      border: 4px solid #fff;
+      background: rgba(255, 255, 255, 0.1);
+      cursor: pointer;
+      transition: all 0.2s;
+      position: relative;
+    }
+    
+    .capture-btn:hover {
+      background: rgba(198, 255, 0, 0.2);
+      border-color: #c6ff00;
+    }
+    
+    .capture-btn::after {
+      content: '';
+      position: absolute;
+      inset: 4px;
+      border-radius: 50%;
+      background: #fff;
+      transition: all 0.2s;
+    }
+    
+    .capture-btn:hover::after {
+      background: #c6ff00;
+    }
+    
+    .control-btn {
+      padding: 8px 16px;
+      border-radius: 8px;
+      border: 1px solid rgba(255, 255, 255, 0.1);
+      background: rgba(255, 255, 255, 0.04);
+      color: #fff;
+      font-size: 12px;
+      font-weight: 600;
+      cursor: pointer;
+      transition: all 0.2s;
+    }
+    
+    .control-btn:hover {
+      background: rgba(198, 255, 0, 0.15);
+      border-color: #c6ff00;
+    }
+    
+    .control-btn.active {
+      background: rgba(198, 255, 0, 0.2);
+      border-color: #c6ff00;
+      color: #c6ff00;
+    }
+    
+    /* Sidebar */
+    .sidebar {
+      background: #111;
+      border-left: 1px solid rgba(255, 255, 255, 0.06);
+      display: flex;
+      flex-direction: column;
+      overflow: hidden;
+    }
+    
+    .sidebar-header {
+      padding: 16px 20px;
+      border-bottom: 1px solid rgba(255, 255, 255, 0.06);
+    }
+    
+    .sidebar-title {
+      font-size: 14px;
+      font-weight: 700;
+      margin-bottom: 4px;
+    }
+    
+    .sidebar-subtitle {
+      font-size: 11px;
+      color: #737373;
+    }
+    
+    /* Outfit List */
+    .outfit-list {
+      flex: 1;
+      overflow-y: auto;
+      padding: 12px;
+    }
+    
+    .outfit-card {
+      background: rgba(255, 255, 255, 0.03);
+      border: 1px solid rgba(255, 255, 255, 0.06);
+      border-radius: 12px;
+      padding: 12px;
+      margin-bottom: 8px;
+      cursor: pointer;
+      transition: all 0.2s;
+    }
+    
+    .outfit-card:hover {
+      background: rgba(198, 255, 0, 0.05);
+      border-color: rgba(198, 255, 0, 0.2);
+    }
+    
+    .outfit-card.active {
+      background: rgba(198, 255, 0, 0.1);
+      border-color: #c6ff00;
+    }
+    
+    .outfit-preview {
+      width: 100%;
+      height: 80px;
+      background: #1a1a1a;
+      border-radius: 8px;
+      margin-bottom: 8px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      color: #555;
+      font-size: 11px;
+    }
+    
+    .outfit-name {
+      font-size: 12px;
+      font-weight: 600;
+      margin-bottom: 2px;
+    }
+    
+    .outfit-category {
+      font-size: 10px;
+      color: #737373;
+    }
+    
+    /* Captures Gallery */
+    .captures-section {
+      border-top: 1px solid rgba(255, 255, 255, 0.06);
+      padding: 12px;
+      max-height: 200px;
+      overflow-y: auto;
+    }
+    
+    .captures-title {
+      font-size: 11px;
+      font-weight: 600;
+      color: #737373;
+      margin-bottom: 8px;
+      text-transform: uppercase;
+      letter-spacing: 0.05em;
+    }
+    
+    .captures-grid {
+      display: grid;
+      grid-template-columns: repeat(3, 1fr);
+      gap: 8px;
+    }
+    
+    .capture-thumb {
+      aspect-ratio: 1;
+      background: #1a1a1a;
+      border-radius: 8px;
+      overflow: hidden;
+      cursor: pointer;
+      border: 2px solid transparent;
+      transition: all 0.2s;
+    }
+    
+    .capture-thumb:hover {
+      border-color: rgba(198, 255, 0, 0.5);
+    }
+    
+    .capture-thumb img {
+      width: 100%;
+      height: 100%;
+      object-fit: cover;
+    }
+    
+    /* Loading Overlay */
+    .loading-overlay {
+      position: fixed;
+      inset: 0;
+      background: rgba(0, 0, 0, 0.9);
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      z-index: 1000;
+      gap: 16px;
+    }
+    
+    .loading-overlay.hidden {
+      display: none;
+    }
+    
+    .loading-spinner {
+      width: 48px;
+      height: 48px;
+      border: 3px solid rgba(198, 255, 0, 0.2);
+      border-top-color: #c6ff00;
+      border-radius: 50%;
+      animation: spin 1s linear infinite;
+    }
+    
+    @keyframes spin {
+      to { transform: rotate(360deg); }
+    }
+    
+    .loading-text {
+      font-size: 14px;
+      color: #a3a3a3;
+    }
+    
+    .loading-error {
+      color: #ff4444;
+      text-align: center;
+      max-width: 400px;
+    }
+    
+    .retry-btn {
+      margin-top: 16px;
+      padding: 10px 24px;
+      background: #c6ff00;
+      color: #000;
+      border: none;
+      border-radius: 8px;
+      font-weight: 600;
+      cursor: pointer;
+    }
+  </style>
+</head>
+<body>
+  <!-- Header -->
+  <header class="header">
+    <div class="header-logo">
+      <span class="header-title">KORRA AI</span>
+      <span class="header-badge">BETA</span>
+    </div>
+    <div style="display: flex; gap: 12px; align-items: center;">
+      <a href="/" style="color: #737373; text-decoration: none; font-size: 12px;">← Back to Dashboard</a>
+    </div>
+  </header>
+  
+  <!-- Main Container -->
+  <div class="main-container">
+    <!-- Camera Section -->
+    <div class="camera-section">
+      <div class="canvas-container">
+        <canvas id="tryon-canvas"></canvas>
+        <div class="camera-status" id="camera-status">Initializing...</div>
+      </div>
+      
+      <div class="camera-controls">
+        <button class="control-btn" id="btn-pause">⏸ Pause</button>
+        <button class="capture-btn" id="btn-capture" title="Capture Photo"></button>
+        <button class="control-btn" id="btn-remove-lens">✕ Remove</button>
+      </div>
+    </div>
+    
+    <!-- Sidebar -->
+    <aside class="sidebar">
+      <div class="sidebar-header">
+        <div class="sidebar-title">Clothing Try-On</div>
+        <div class="sidebar-subtitle">Select an outfit to try on</div>
+      </div>
+      
+      <div class="outfit-list" id="outfit-list">
+        <!-- Outfit cards will be populated by JS -->
+      </div>
+      
+      <div class="captures-section">
+        <div class="captures-title">Recent Captures</div>
+        <div class="captures-grid" id="captures-grid">
+          <!-- Capture thumbnails will appear here -->
+        </div>
+      </div>
+    </aside>
+  </div>
+  
+  <!-- Loading Overlay -->
+  <div class="loading-overlay" id="loading-overlay">
+    <div class="loading-spinner"></div>
+    <div class="loading-text" id="loading-text">Initializing Camera Kit...</div>
+  </div>
+  
+  <!-- Camera Kit Scripts -->
+  <script src="/camerakit-config.js"></script>
+  <script src="/camerakit-integration.js"></script>
+  
+  <script>
+    // Outfit configuration
+    const OUTFITS = [
+      { id: '1', name: 'Classic T-Shirt', category: 'Casual', lensId: 'ccc9d825-d8ec-41ca-910a-7fd372065026', groupId: '6af97e7a-6e80-4d9e-86b7-8ffe3a6bd150' },
+      { id: '2', name: 'Formal Shirt', category: 'Business', lensId: 'ccc9d825-d8ec-41ca-910a-7fd372065026', groupId: '6af97e7a-6e80-4d9e-86b7-8ffe3a6bd150' },
+      { id: '3', name: 'Traditional Agbada', category: 'Traditional', lensId: 'ccc9d825-d8ec-41ca-910a-7fd372065026', groupId: '6af97e7a-6e80-4d9e-86b7-8ffe3a6bd150' },
+      { id: '4', name: 'Ankara Print', category: 'Traditional', lensId: 'ccc9d825-d8ec-41ca-910a-7fd372065026', groupId: '6af97e7a-6e80-4d9e-86b7-8ffe3a6bd150' },
+      { id: '5', name: 'Wedding Suit', category: 'Formal', lensId: 'ccc9d825-d8ec-41ca-910a-7fd372065026', groupId: '6af97e7a-6e80-4d9e-86b7-8ffe3a6bd150' },
+    ];
+    
+    // State
+    let cameraKit = null;
+    let captures = [];
+    let selectedOutfit = null;
+    let isPaused = false;
+    
+    // DOM Elements
+    const loadingOverlay = document.getElementById('loading-overlay');
+    const loadingText = document.getElementById('loading-text');
+    const cameraStatus = document.getElementById('camera-status');
+    const outfitList = document.getElementById('outfit-list');
+    const capturesGrid = document.getElementById('captures-grid');
+    const btnCapture = document.getElementById('btn-capture');
+    const btnPause = document.getElementById('btn-pause');
+    const btnRemoveLens = document.getElementById('btn-remove-lens');
+    
+    // Initialize
+    async function init() {
+      try {
+        // Create Camera Kit instance
+        cameraKit = new CameraKitTryOn();
+        cameraKit.statusEl = cameraStatus;
+        
+        // Initialize SDK
+        loadingText.textContent = 'Loading Camera Kit SDK...';
+        await cameraKit.initialize();
+        
+        // Create session
+        loadingText.textContent = 'Creating camera session...';
+        await cameraKit.createSession('tryon-canvas');
+        
+        // Start camera
+        loadingText.textContent = 'Starting camera...';
+        const cameraStarted = await cameraKit.startCamera();
+        
+        if (!cameraStarted) {
+          throw new Error('Failed to start camera');
+        }
+        
+        // Load outfits
+        loadOutfits();
+        
+        // Hide loading overlay
+        loadingOverlay.classList.add('hidden');
+        
+        // Setup event listeners
+        setupEventListeners();
+        
+      } catch (error) {
+        console.error('Initialization error:', error);
+        loadingText.innerHTML = `
+          <div class="loading-error">
+            <p>Failed to initialize Camera Kit</p>
+            <p style="font-size: 12px; margin-top: 8px;">${error.message}</p>
+            <button class="retry-btn" onclick="location.reload()">Try Again</button>
+          </div>
+        `;
+      }
+    }
+    
+    // Load outfit cards
+    function loadOutfits() {
+      outfitList.innerHTML = OUTFITS.map(outfit => `
+        <div class="outfit-card" data-id="${outfit.id}" data-lens-id="${outfit.lensId}" data-group-id="${outfit.groupId}">
+          <div class="outfit-preview">${outfit.name}</div>
+          <div class="outfit-name">${outfit.name}</div>
+          <div class="outfit-category">${outfit.category}</div>
+        </div>
+      `).join('');
+      
+      // Add click handlers
+      document.querySelectorAll('.outfit-card').forEach(card => {
+        card.addEventListener('click', () => selectOutfit(card));
+      });
+    }
+    
+    // Select outfit
+    async function selectOutfit(card) {
+      const lensId = card.dataset.lensId;
+      const groupId = card.dataset.groupId;
+      
+      // Update UI
+      document.querySelectorAll('.outfit-card').forEach(c => c.classList.remove('active'));
+      card.classList.add('active');
+      
+      // Apply lens if IDs are configured
+      if (lensId && groupId) {
+        await cameraKit.applyLens(lensId, groupId);
+      } else {
+        cameraStatus.textContent = 'Lens not configured for this outfit';
+      }
+      
+      selectedOutfit = card.dataset.id;
+    }
+    
+    // Setup event listeners
+    function setupEventListeners() {
+      // Capture button
+      btnCapture.addEventListener('click', async () => {
+        const blob = await cameraKit.capturePhoto();
+        if (blob) {
+          addCapture(blob);
+        }
+      });
+      
+      // Pause/Resume button
+      btnPause.addEventListener('click', () => {
+        if (isPaused) {
+          cameraKit.resume();
+          btnPause.textContent = '⏸ Pause';
+          btnPause.classList.remove('active');
+        } else {
+          cameraKit.pause();
+          btnPause.textContent = '▶ Resume';
+          btnPause.classList.add('active');
+        }
+        isPaused = !isPaused;
+      });
+      
+      // Remove lens button
+      btnRemoveLens.addEventListener('click', () => {
+        cameraKit.removeLens();
+        document.querySelectorAll('.outfit-card').forEach(c => c.classList.remove('active'));
+        selectedOutfit = null;
+      });
+      
+      // Keyboard shortcuts
+      document.addEventListener('keydown', (e) => {
+        if (e.code === 'Space' && !e.repeat) {
+          e.preventDefault();
+          btnCapture.click();
+        }
+      });
+    }
+    
+    // Add capture to gallery
+    function addCapture(blob) {
+      const url = URL.createObjectURL(blob);
+      captures.unshift({ blob, url, timestamp: Date.now() });
+      
+      // Update gallery UI
+      updateCapturesGrid();
+      
+      // Save to server (optional)
+      // cameraKit.saveCapture(blob, userId, selectedOutfit);
+    }
+    
+    // Update captures grid
+    function updateCapturesGrid() {
+      capturesGrid.innerHTML = captures.slice(0, 9).map((capture, i) => `
+        <div class="capture-thumb" data-index="${i}">
+          <img src="${capture.url}" alt="Capture ${i + 1}">
+        </div>
+      `).join('');
+      
+      // Add click handlers
+      document.querySelectorAll('.capture-thumb').forEach(thumb => {
+        thumb.addEventListener('click', () => {
+          const index = parseInt(thumb.dataset.index);
+          downloadCapture(captures[index]);
+        });
+      });
+    }
+    
+    // Download capture
+    function downloadCapture(capture) {
+      const a = document.createElement('a');
+      a.href = capture.url;
+      a.download = `korra-tryon-${capture.timestamp}.png`;
+      a.click();
+    }
+    
+    // Initialize on load
+    window.addEventListener('DOMContentLoaded', init);
+    
+    // Cleanup on unload
+    window.addEventListener('beforeunload', () => {
+      if (cameraKit) {
+        cameraKit.destroy();
+      }
+    });
+  </script>
+</body>
+</html>
