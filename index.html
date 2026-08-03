@@ -299,7 +299,6 @@
       border: 2px solid transparent; transition: border-color 0.3s;
     }
     .gc-card:hover { border-color: rgba(198,255,0,0.3); }
-    .gc-card iframe { width: 100%; height: 100%; border: none; border-radius: 16px; }
 
     /* AR Try-On Overlay */
     #arTryOnOverlay {
@@ -786,13 +785,16 @@
         <!-- WEBAR LENS: Hosted AR Try-On -->
         <div class="gallery-item">
           <div class="gc-card">
-            <iframe 
-              src="https://lens.snap.com/experience/814fb955-e874-4698-8d26-0e0b2a955172" 
-              style="width:100%;height:100%;border:none;border-radius:16px;" 
-              allow="camera;microphone" 
-              loading="lazy"
-              title="Virtual Try-On AR Experience"
-            ></iframe>
+            <div style="width:100%;height:100%;display:flex;flex-direction:column;align-items:center;justify-content:center;background:linear-gradient(135deg,#0a0a0a 0%,#1a1a2e 100%);padding:40px;text-align:center">
+              <div style="font-size:72px;margin-bottom:24px">👗</div>
+              <div style="color:#fff;font-size:20px;font-weight:800;margin-bottom:8px">Virtual Try-On</div>
+              <div style="color:#666;font-size:14px;margin-bottom:32px;max-width:280px">Try on clothes with live AR body tracking</div>
+              <a href="https://lens.snap.com/experience/814fb955-e874-4698-8d26-0e0b2a955172" target="_blank" rel="noopener" style="display:inline-flex;align-items:center;gap:8px;padding:14px 32px;border-radius:30px;background:var(--Mint);color:#000;font-size:14px;font-weight:800;text-decoration:none;letter-spacing:0.04em;transition:all 0.3s">
+                <svg width="18" height="18" viewBox="0 0 24 24" fill="none"><path d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm-2 14.5v-9l6 4.5-6 4.5z" fill="#000"/></svg>
+                Open AR Experience
+              </a>
+              <div style="color:#444;font-size:11px;margin-top:16px">Opens in Snapchat WebAR</div>
+            </div>
           </div>
           <p class="gallery-label">Virtual Try-On (Live AR)</p>
           <button class="gallery-try-btn" onclick="window.open('https://lens.snap.com/experience/814fb955-e874-4698-8d26-0e0b2a955172','_blank')"><svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 512 512" fill="none"><path d="M110 135C145 75 205 48 256 48C307 48 367 75 402 135" stroke="#FFFFFF" stroke-width="26" stroke-linecap="round" stroke-linejoin="round"/><path d="M84 136H428C465 136 496 167 496 204V302C496 349 458 388 411 388H101C54 388 16 349 16 302V204C16 167 47 136 84 136Z" stroke="#FFFFFF" stroke-width="26" stroke-linejoin="round"/><path d="M220 388C228 365 242 344 256 344C270 344 284 365 292 388" stroke="#FFFFFF" stroke-width="26" stroke-linecap="round" stroke-linejoin="round"/><text x="335" y="250" font-family="Inter,Arial,sans-serif" font-size="72" font-weight="700" fill="#FFFFFF">VR</text></svg><span>Try On Live</span></button>
