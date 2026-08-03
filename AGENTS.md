@@ -222,7 +222,7 @@ Virtual try-on using Snapchat's AR technology. Users can try on clothing virtual
 ### Configuration
 - **API Tokens**: Stored in `.env` (SNAP_API_TOKEN_STAGING, SNAP_API_TOKEN_PRODUCTION)
 - **Public Client ID**: `d6524989-00bd-4129-bbd1-b754ebb43b3b`
-- **Confidential Client ID**: `775ad7c3-575f-48b8-9428-3256c5cc126e`
+- **Confidential Client ID**: `see .env`
 
 ### Files
 | File | Purpose |
