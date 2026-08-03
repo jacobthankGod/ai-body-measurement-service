@@ -87,13 +87,6 @@
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
   <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800;900&display=swap" rel="stylesheet" />
 
-  <!-- Snapchat Camera Kit Web SDK -->
-  <script type="module">
-    import { bootstrapCameraKit, createMediaStreamSource, Transform2D } from 'https://cf-st.sc-cdn.net/als/camera-kit/1.19.0/camera-kit.js';
-    window.bootstrapCameraKit = bootstrapCameraKit;
-    window.createMediaStreamSource = createMediaStreamSource;
-    window.Transform2D = Transform2D;
-  </script>
 
   <style>
     /* --- UNIFIED HEADER SYSTEM --- */
@@ -306,27 +299,7 @@
       border: 2px solid transparent; transition: border-color 0.3s;
     }
     .gc-card:hover { border-color: rgba(198,255,0,0.3); }
-    .gc-card canvas { width: 100% !important; height: 100% !important; display: block; }
-    .gc-placeholder {
-      position: absolute; inset: 0; z-index: 5;
-      display: flex; flex-direction: column; align-items: center;
-      justify-content: center; background: #0a0a0a; cursor: pointer;
-      transition: opacity 0.4s;
-    }
-    .gc-placeholder.hidden { opacity: 0; pointer-events: none; }
-    .gc-placeholder .icon { font-size: 64px; margin-bottom: 16px; }
-    .gc-placeholder .title { color: #fff; font-size: 16px; font-weight: 700; }
-    .gc-placeholder .sub { color: #666; font-size: 13px; margin-top: 6px; }
-    .gc-placeholder .cta {
-      margin-top: 20px; padding: 10px 28px; border-radius: 24px;
-      background: transparent; color: #fff; border: 2px solid rgba(255,255,255,0.3);
-      font-size: 13px; font-weight: 700; cursor: pointer; transition: all 0.25s;
-      letter-spacing: 0.05em;
-    }
-    .gc-placeholder .cta:hover {
-      border-color: var(--Mint); color: var(--Mint);
-      box-shadow: 0 0 20px rgba(198,255,0,0.3);
-    }
+    .gc-card iframe { width: 100%; height: 100%; border: none; border-radius: 16px; }
 
     /* AR Try-On Overlay */
     #arTryOnOverlay {
@@ -810,19 +783,19 @@
   <section class="gallery-section">
     <div class="gallery-sticky">
       <div class="gallery-track">
-        <!-- CAMERA KIT: Official SDK Live AR Try-On -->
+        <!-- WEBAR LENS: Hosted AR Try-On -->
         <div class="gallery-item">
-          <div class="gc-card" id="gcCard">
-            <canvas id="gcCanvas"></canvas>
-            <div class="gc-placeholder" id="gcPlaceholder">
-              <span class="icon">👗</span>
-              <span class="title">Virtual Try-On</span>
-              <span class="sub">Try on clothes with live AR</span>
-              <button class="cta" id="gcCtaBtn">Activate Camera</button>
-            </div>
+          <div class="gc-card">
+            <iframe 
+              src="https://lens.snap.com/experience/814fb955-e874-4698-8d26-0e0b2a955172" 
+              style="width:100%;height:100%;border:none;border-radius:16px;" 
+              allow="camera;microphone" 
+              loading="lazy"
+              title="Virtual Try-On AR Experience"
+            ></iframe>
           </div>
           <p class="gallery-label">Virtual Try-On (Live AR)</p>
-          <button class="gallery-try-btn" id="gcActivateBtn"><svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 512 512" fill="none"><path d="M110 135C145 75 205 48 256 48C307 48 367 75 402 135" stroke="#FFFFFF" stroke-width="26" stroke-linecap="round" stroke-linejoin="round"/><path d="M84 136H428C465 136 496 167 496 204V302C496 349 458 388 411 388H101C54 388 16 349 16 302V204C16 167 47 136 84 136Z" stroke="#FFFFFF" stroke-width="26" stroke-linejoin="round"/><path d="M220 388C228 365 242 344 256 344C270 344 284 365 292 388" stroke="#FFFFFF" stroke-width="26" stroke-linecap="round" stroke-linejoin="round"/><text x="335" y="250" font-family="Inter,Arial,sans-serif" font-size="72" font-weight="700" fill="#FFFFFF">VR</text></svg><span>Try On Live</span></button>
+          <button class="gallery-try-btn" onclick="window.open('https://lens.snap.com/experience/814fb955-e874-4698-8d26-0e0b2a955172','_blank')"><svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 512 512" fill="none"><path d="M110 135C145 75 205 48 256 48C307 48 367 75 402 135" stroke="#FFFFFF" stroke-width="26" stroke-linecap="round" stroke-linejoin="round"/><path d="M84 136H428C465 136 496 167 496 204V302C496 349 458 388 411 388H101C54 388 16 349 16 302V204C16 167 47 136 84 136Z" stroke="#FFFFFF" stroke-width="26" stroke-linejoin="round"/><path d="M220 388C228 365 242 344 256 344C270 344 284 365 292 388" stroke="#FFFFFF" stroke-width="26" stroke-linecap="round" stroke-linejoin="round"/><text x="335" y="250" font-family="Inter,Arial,sans-serif" font-size="72" font-weight="700" fill="#FFFFFF">VR</text></svg><span>Try On Live</span></button>
         </div>
         <div class="gallery-item">
           <div id="galleryRenderer1" class="agbada-renderer-container"></div>
@@ -1046,61 +1019,6 @@
     })();
     </script>
 
-    <!-- Camera Kit Gallery Integration -->
-    <script>
-    (async function() {
-      var canvas = document.getElementById('gcCanvas');
-      var placeholder = document.getElementById('gcPlaceholder');
-      var ctaBtn = document.getElementById('gcCtaBtn');
-      var activateBtn = document.getElementById('gcActivateBtn');
-      
-      if (!canvas || !placeholder) return;
-      
-      var API_TOKEN = 'eyJhbGciOiJIUzI1NiIsImtpZCI6IkNhbnZhc1MyU0hNQUNQcm9kIiwidHlwIjoiSldUIn0.eyJhdWQiOiJjYW52YXMtY2FudmFzYXBpIiwiaXNzIjoiY2FudmFzLXMyc3Rva2VuIiwibmJmIjoxNzg1NzM4MTYzLCJzdWIiOiI2N2EzNDhiYS1hYTU1LTQxNTgtOTQ1MS05NGZmMjc3ZTk2Yzd-UFJPRFVDVElPTn5mMjE4MGY3Mi0xOWVhLTRlZDEtYTdjMC1jMDA4MDQxM2I5MDkifQ.Sd2D8tVHzAPgvrT5HLthEcIoet_zh3Dxgx9culi5grI';
-      var LENS_ID = 'ccc9d825-d8ec-41ca-910a-7fd372065026';
-      var GROUP_ID = '6af97e7a-6e80-4d9e-86b7-8ffe3a6bd150';
-      
-      var isActive = false;
-      
-      async function activate() {
-        if (isActive) return;
-        placeholder.innerHTML = '<span class="icon">⏳</span><span class="title">Starting camera...</span><span class="sub">Please allow camera access</span>';
-        
-        try {
-          var cameraKit = await window.bootstrapCameraKit({ apiToken: API_TOKEN });
-          var session = await cameraKit.createSession({ liveRenderTarget: canvas });
-          
-          session.events.addEventListener('error', function(event) {
-            console.error('Camera Kit error:', event.detail.error);
-          });
-          
-          var stream = await navigator.mediaDevices.getUserMedia({ video: true });
-          var source = window.createMediaStreamSource(stream, {
-            transform: window.Transform2D.MirrorX,
-            cameraType: 'user'
-          });
-          await session.setSource(source);
-          
-          var lens = await cameraKit.lensRepository.loadLens(LENS_ID, GROUP_ID);
-          await session.applyLens(lens);
-          
-          await session.play();
-          
-          isActive = true;
-          placeholder.classList.add('hidden');
-          
-        } catch (err) {
-          console.error('Camera Kit activation failed:', err);
-          placeholder.innerHTML = '<span class="icon">⚠️</span><span class="title">Camera access needed</span><span class="sub">Click to retry</span>';
-          placeholder.onclick = activate;
-        }
-      }
-      
-      placeholder.onclick = activate;
-      if (ctaBtn) ctaBtn.onclick = function(e) { e.stopPropagation(); activate(); };
-      if (activateBtn) activateBtn.onclick = function(e) { e.preventDefault(); activate(); };
-    })();
-    </script>
 
   </section>
 
