@@ -785,16 +785,16 @@
         <!-- WEBAR LENS: Hosted AR Try-On -->
         <div class="gallery-item">
           <div class="gc-card" style="position:relative">
+            <!-- Preloaded iframe (hidden, loads in background on page load) -->
             <iframe 
               id="webarIframe"
-              src="" 
-              data-src="/experience/814fb955-e874-4698-8d26-0e0b2a955172"
-              style="width:100%;height:100%;border:none;border-radius:16px;display:none;" 
+              src="/experience/814fb955-e874-4698-8d26-0e0b2a955172"
+              style="width:100%;height:100%;border:none;border-radius:16px;position:absolute;inset:0;display:none;z-index:3;" 
               allow="camera;microphone" 
-              loading="lazy"
               title="Virtual Try-On AR Experience"
             ></iframe>
-            <div id="webarConsent" style="position:absolute;inset:0;z-index:10;display:flex;flex-direction:column;align-items:center;justify-content:center;background:linear-gradient(135deg,#0a0a0a 0%,#1a1a2e 100%);padding:32px;text-align:center;border-radius:16px">
+            <!-- Consent overlay (shown after clicking Try On) -->
+            <div id="webarConsent" style="position:absolute;inset:0;z-index:5;display:none;flex-direction:column;align-items:center;justify-content:center;background:linear-gradient(135deg,#0a0a0a 0%,#1a1a2e 100%);padding:32px;text-align:center;border-radius:16px">
               <div style="width:56px;height:56px;border-radius:50%;border:2px solid rgba(198,255,0,0.4);display:flex;align-items:center;justify-content:center;margin-bottom:20px">
                 <svg width="24" height="24" viewBox="0 0 24 24" fill="none"><path d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm-2 14.5v-9l6 4.5-6 4.5z" fill="var(--Mint)"/></svg>
               </div>
@@ -802,22 +802,37 @@
               <div style="color:#666;font-size:12px;margin-bottom:24px;max-width:260px;line-height:1.5">
                 This experience uses your camera for AR body tracking. By continuing, you agree to Snapchat's <a href="https://snap.com/privacy" target="_blank" style="color:var(--Mint);text-decoration:underline">Privacy Policy</a> and <a href="https://snap.com/terms" target="_blank" style="color:var(--Mint);text-decoration:underline">Terms of Service</a>.
               </div>
-              <button onclick="loadWebarLens()" style="padding:12px 28px;border-radius:24px;background:var(--Mint);color:#000;border:none;font-size:13px;font-weight:800;cursor:pointer;letter-spacing:0.04em;transition:all 0.25s">
+              <button onclick="grantWebarConsent()" style="padding:12px 28px;border-radius:24px;background:var(--Mint);color:#000;border:none;font-size:13px;font-weight:800;cursor:pointer;letter-spacing:0.04em;transition:all 0.25s">
                 Grant Camera Access
               </button>
               <div style="color:#444;font-size:10px;margin-top:12px">Camera access is required for AR try-on</div>
+            </div>
+            <!-- Video preview (shown first) -->
+            <div id="webarPreview" style="position:absolute;inset:0;z-index:2;display:flex;flex-direction:column;align-items:center;justify-content:center;border-radius:16px;overflow:hidden">
+              <video autoplay muted loop playsinline style="position:absolute;inset:0;width:100%;height:100%;object-fit:cover">
+                <source src="/assets/korra-cloth-try-on.mp4" type="video/mp4">
+              </video>
+              <div style="position:absolute;inset:0;background:linear-gradient(to top, rgba(0,0,0,0.8) 0%, transparent 40%)"></div>
+              <div style="position:absolute;bottom:0;left:0;right:0;padding:24px;text-align:center">
+                <div style="color:#fff;font-size:18px;font-weight:800;margin-bottom:8px">Virtual Try-On</div>
+                <div style="color:#999;font-size:12px;margin-bottom:16px">Try on clothes with live AR body tracking</div>
+                <button onclick="showWebarConsent()" style="padding:12px 28px;border-radius:24px;background:var(--Mint);color:#000;border:none;font-size:13px;font-weight:800;cursor:pointer;letter-spacing:0.04em;transition:all 0.25s">
+                  Try On
+                </button>
+              </div>
             </div>
           </div>
           <p class="gallery-label">Virtual Try-On (Live AR)</p>
           <button class="gallery-try-btn" onclick="window.open('https://lens.snap.com/experience/814fb955-e874-4698-8d26-0e0b2a955172','_blank')"><svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 512 512" fill="none"><path d="M110 135C145 75 205 48 256 48C307 48 367 75 402 135" stroke="#FFFFFF" stroke-width="26" stroke-linecap="round" stroke-linejoin="round"/><path d="M84 136H428C465 136 496 167 496 204V302C496 349 458 388 411 388H101C54 388 16 349 16 302V204C16 167 47 136 84 136Z" stroke="#FFFFFF" stroke-width="26" stroke-linejoin="round"/><path d="M220 388C228 365 242 344 256 344C270 344 284 365 292 388" stroke="#FFFFFF" stroke-width="26" stroke-linecap="round" stroke-linejoin="round"/><text x="335" y="250" font-family="Inter,Arial,sans-serif" font-size="72" font-weight="700" fill="#FFFFFF">VR</text></svg><span>Try On Live</span></button>
         </div>
         <script>
-        function loadWebarLens() {
-          var iframe = document.getElementById('webarIframe');
-          var consent = document.getElementById('webarConsent');
-          iframe.src = iframe.dataset.src;
-          iframe.style.display = 'block';
-          consent.style.display = 'none';
+        function showWebarConsent() {
+          document.getElementById('webarPreview').style.display = 'none';
+          document.getElementById('webarConsent').style.display = 'flex';
+        }
+        function grantWebarConsent() {
+          document.getElementById('webarConsent').style.display = 'none';
+          document.getElementById('webarIframe').style.display = 'block';
         }
         </script>
         <div class="gallery-item">
