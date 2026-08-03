@@ -82,10 +82,18 @@
   }
   </script>
 
-  <link rel="icon" type="image/png" href="/assets/body-capture.png">
+  <link rel="icon" type="image/png" href="/assets/Korra_logo_final.png">
   <link rel="preconnect" href="https://fonts.googleapis.com" />
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
   <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800;900&display=swap" rel="stylesheet" />
+
+  <!-- Snapchat Camera Kit Web SDK -->
+  <script type="module">
+    import { bootstrapCameraKit, createMediaStreamSource, Transform2D } from 'https://cf-st.sc-cdn.net/als/camera-kit/1.19.0/camera-kit.js';
+    window.bootstrapCameraKit = bootstrapCameraKit;
+    window.createMediaStreamSource = createMediaStreamSource;
+    window.Transform2D = Transform2D;
+  </script>
 
   <style>
     /* --- UNIFIED HEADER SYSTEM --- */
@@ -291,6 +299,35 @@
     .gallery-try-btn span { position: relative; z-index: 1; }
     @keyframes btnSpin { to { transform: rotate(360deg); } }
 
+    /* Camera Kit Gallery Item */
+    .gc-card {
+      width: 100%; height: 650px; border-radius: 16px; overflow: hidden;
+      background: #000; position: relative; cursor: pointer;
+      border: 2px solid transparent; transition: border-color 0.3s;
+    }
+    .gc-card:hover { border-color: rgba(198,255,0,0.3); }
+    .gc-card canvas { width: 100% !important; height: 100% !important; display: block; }
+    .gc-placeholder {
+      position: absolute; inset: 0; z-index: 5;
+      display: flex; flex-direction: column; align-items: center;
+      justify-content: center; background: #0a0a0a; cursor: pointer;
+      transition: opacity 0.4s;
+    }
+    .gc-placeholder.hidden { opacity: 0; pointer-events: none; }
+    .gc-placeholder .icon { font-size: 64px; margin-bottom: 16px; }
+    .gc-placeholder .title { color: #fff; font-size: 16px; font-weight: 700; }
+    .gc-placeholder .sub { color: #666; font-size: 13px; margin-top: 6px; }
+    .gc-placeholder .cta {
+      margin-top: 20px; padding: 10px 28px; border-radius: 24px;
+      background: transparent; color: #fff; border: 2px solid rgba(255,255,255,0.3);
+      font-size: 13px; font-weight: 700; cursor: pointer; transition: all 0.25s;
+      letter-spacing: 0.05em;
+    }
+    .gc-placeholder .cta:hover {
+      border-color: var(--Mint); color: var(--Mint);
+      box-shadow: 0 0 20px rgba(198,255,0,0.3);
+    }
+
     /* AR Try-On Overlay */
     #arTryOnOverlay {
       position: fixed; inset: 0; z-index: 9999; background: #000; display: none;
@@ -298,13 +335,14 @@
     }
     #arTryOnOverlay.active { display: flex; opacity: 1; }
     #arTryOnOverlay video {
-      position: absolute; inset: 0; width: 100%; height: 100%; object-fit: cover;
+      position: absolute; inset: 0; width: 100%; height: 100%; object-fit: contain;
+      background: #000;
     }
     #arTryOnOverlay .ar-canvas-wrap {
-      position: absolute; inset: 0; z-index: 2;
+      position: absolute; inset: 0; z-index: 4; pointer-events: none;
     }
-    #arTryOnOverlay .ar-canvas-wrap canvas { width: 100%; height: 100%; display: block; }
-    .ar-controls { position: absolute; inset: 0; z-index: 3; pointer-events: none; }
+    #arTryOnOverlay .ar-canvas-wrap canvas { width: 100%; height: 100%; display: block; transform: scaleX(-1); }
+    .ar-controls { position: absolute; inset: 0; z-index: 10; pointer-events: none; }
     .ar-controls > * { pointer-events: auto; }
     .ar-close-btn {
       position: absolute; top: 16px; left: 16px; width: 44px; height: 44px;
@@ -350,7 +388,7 @@
     .ar-error-msg h3 { font-size: 18px; margin: 0; }
     .ar-error-msg p { font-size: 14px; color: var(--Neutral-400); margin: 0; }
     .ar-skeleton-canvas {
-      position: absolute; inset: 0; z-index: 2; pointer-events: none;
+      position: absolute; inset: 0; z-index: 5; pointer-events: none;
     }
 
     .grid-4 { display: grid; grid-template-columns: repeat(4, 1fr); gap: var(--S-24); }
@@ -577,6 +615,12 @@
       .vis-presets { gap: 8px; padding-top: 12px; }
       .vis-presets button { padding: 12px 10px; font-size: 13px; border-radius: 12px; }
     }
+    @media (max-width: 900px) {
+      .split-eco-why { flex-direction: column-reverse !important; min-height: auto !important; }
+      .split-eco-why > div:first-child { padding: 48px 24px !important; gap: 40px !important; }
+      .split-eco-why .split-img-col { flex: none !important; width: 100% !important; height: 100dvh !important; min-height: 100dvh !important; position: relative !important; overflow: hidden !important; }
+      .split-eco-why .split-img-col img { position: absolute !important; top: 0 !important; left: 0 !important; width: 100% !important; height: 100% !important; object-fit: cover !important; object-position: center !important; }
+    }
   </style>
   <style>
     .logo-marquee-container {
@@ -766,6 +810,20 @@
   <section class="gallery-section">
     <div class="gallery-sticky">
       <div class="gallery-track">
+        <!-- CAMERA KIT: Official SDK Live AR Try-On -->
+        <div class="gallery-item">
+          <div class="gc-card" id="gcCard">
+            <canvas id="gcCanvas"></canvas>
+            <div class="gc-placeholder" id="gcPlaceholder">
+              <span class="icon">👗</span>
+              <span class="title">Virtual Try-On</span>
+              <span class="sub">Try on clothes with live AR</span>
+              <button class="cta" id="gcCtaBtn">Activate Camera</button>
+            </div>
+          </div>
+          <p class="gallery-label">Virtual Try-On (Live AR)</p>
+          <button class="gallery-try-btn" id="gcActivateBtn"><svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 512 512" fill="none"><path d="M110 135C145 75 205 48 256 48C307 48 367 75 402 135" stroke="#FFFFFF" stroke-width="26" stroke-linecap="round" stroke-linejoin="round"/><path d="M84 136H428C465 136 496 167 496 204V302C496 349 458 388 411 388H101C54 388 16 349 16 302V204C16 167 47 136 84 136Z" stroke="#FFFFFF" stroke-width="26" stroke-linejoin="round"/><path d="M220 388C228 365 242 344 256 344C270 344 284 365 292 388" stroke="#FFFFFF" stroke-width="26" stroke-linecap="round" stroke-linejoin="round"/><text x="335" y="250" font-family="Inter,Arial,sans-serif" font-size="72" font-weight="700" fill="#FFFFFF">VR</text></svg><span>Try On Live</span></button>
+        </div>
         <div class="gallery-item">
           <div id="galleryRenderer1" class="agbada-renderer-container"></div>
           <p class="gallery-label">Beige Business Suit</p>
@@ -835,7 +893,8 @@
         }, { passive: true });
       }
 
-      var renderers = [];
+      window._galleryRenderers = [];
+      var renderers = window._galleryRenderers;
       var sharedLoader = null;
       var sharedDraco = null;
 
@@ -986,6 +1045,63 @@
       } else { tryInit(); }
     })();
     </script>
+
+    <!-- Camera Kit Gallery Integration -->
+    <script>
+    (async function() {
+      var canvas = document.getElementById('gcCanvas');
+      var placeholder = document.getElementById('gcPlaceholder');
+      var ctaBtn = document.getElementById('gcCtaBtn');
+      var activateBtn = document.getElementById('gcActivateBtn');
+      
+      if (!canvas || !placeholder) return;
+      
+      var API_TOKEN = 'eyJhbGciOiJIUzI1NiIsImtpZCI6IkNhbnZhc1MyU0hNQUNQcm9kIiwidHlwIjoiSldUIn0.eyJhdWQiOiJjYW52YXMtY2FudmFzYXBpIiwiaXNzIjoiY2FudmFzLXMyc3Rva2VuIiwibmJmIjoxNzg1NzM4MTYzLCJzdWIiOiI2N2EzNDhiYS1hYTU1LTQxNTgtOTQ1MS05NGZmMjc3ZTk2Yzd-UFJPRFVDVElPTn5mMjE4MGY3Mi0xOWVhLTRlZDEtYTdjMC1jMDA4MDQxM2I5MDkifQ.Sd2D8tVHzAPgvrT5HLthEcIoet_zh3Dxgx9culi5grI';
+      var LENS_ID = 'ccc9d825-d8ec-41ca-910a-7fd372065026';
+      var GROUP_ID = '6af97e7a-6e80-4d9e-86b7-8ffe3a6bd150';
+      
+      var isActive = false;
+      
+      async function activate() {
+        if (isActive) return;
+        placeholder.innerHTML = '<span class="icon">⏳</span><span class="title">Starting camera...</span><span class="sub">Please allow camera access</span>';
+        
+        try {
+          var cameraKit = await window.bootstrapCameraKit({ apiToken: API_TOKEN });
+          var session = await cameraKit.createSession({ liveRenderTarget: canvas });
+          
+          session.events.addEventListener('error', function(event) {
+            console.error('Camera Kit error:', event.detail.error);
+          });
+          
+          var stream = await navigator.mediaDevices.getUserMedia({ video: true });
+          var source = window.createMediaStreamSource(stream, {
+            transform: window.Transform2D.MirrorX,
+            cameraType: 'user'
+          });
+          await session.setSource(source);
+          
+          var lens = await cameraKit.lensRepository.loadLens(LENS_ID, GROUP_ID);
+          await session.applyLens(lens);
+          
+          await session.play();
+          
+          isActive = true;
+          placeholder.classList.add('hidden');
+          
+        } catch (err) {
+          console.error('Camera Kit activation failed:', err);
+          placeholder.innerHTML = '<span class="icon">⚠️</span><span class="title">Camera access needed</span><span class="sub">Click to retry</span>';
+          placeholder.onclick = activate;
+        }
+      }
+      
+      placeholder.onclick = activate;
+      if (ctaBtn) ctaBtn.onclick = function(e) { e.stopPropagation(); activate(); };
+      if (activateBtn) activateBtn.onclick = function(e) { e.preventDefault(); activate(); };
+    })();
+    </script>
+
   </section>
 
 <!-- SECTION 4.5: LMIC SCALE & API -->
@@ -1228,55 +1344,79 @@
     </div>
   </section>
 
-  <!-- SECTION 9: THE ECONOMIC ENGINE -->
-  <section class="block" style="background:rgba(255,255,255,0.01)">
-    <div class="container-wide">
-      <div style="display:flex; justify-content:space-between; align-items:flex-end; margin-bottom:60px">
-        <div><div class="section-eyebrow">The Economic Engine</div><h2 class="section-title">Less time. Less waste. Better fit.</h2></div>
-        <a class="btn btn-primary" href="/signup.html">Sign Up Now</a>
+  <!-- SECTION 9+10: THE ECONOMIC ENGINE + WHY KORRA (50/50 split) -->
+  <section class="block" style="padding:0; background:var(--Obsidian-Deep)">
+    <div class="split-eco-why" style="display:flex; min-height:100vh">
+      <!-- Left column: text + stats + cards -->
+      <div style="flex:1; min-width:0; display:flex; flex-direction:column; justify-content:center; padding:80px 60px 80px 80px; gap:56px">
+        <!-- Economic Engine -->
+        <div>
+          <div class="section-eyebrow" style="margin-bottom:20px">The Economic Engine</div>
+          <h2 style="font-size:44px; font-weight:800; line-height:1.08; letter-spacing:-0.03em; margin:0 0 40px">Less time.<br>Less waste.<br><span style="color:var(--Mint)">Better fit.</span></h2>
+          <div class="stat-carousel-wrap" style="position:relative; overflow:hidden; border-radius:20px; background:var(--Glass); border:1px solid var(--Glass-Border); height:220px">
+            <div class="stat-carousel-track" style="display:flex; height:100%; transition:transform 0.7s cubic-bezier(0.25,0.1,0.25,1)">
+              <div class="stat-carousel-slide" style="flex:0 0 100%; width:100%; height:100%; display:flex; flex-direction:column; align-items:center; justify-content:center; text-align:center; padding:32px 40px; box-sizing:border-box">
+                <div style="font-size:72px; font-weight:900; color:var(--Mint); letter-spacing:-0.03em; line-height:1; margin-bottom:12px">90%</div>
+                <p style="font-size:15px; color:var(--Neutral-300); line-height:1.5; margin:0; max-width:360px">reduction in fabric waste from measurement error</p>
+              </div>
+              <div class="stat-carousel-slide" style="flex:0 0 100%; width:100%; height:100%; display:flex; flex-direction:column; align-items:center; justify-content:center; text-align:center; padding:32px 40px; box-sizing:border-box">
+                <div style="font-size:72px; font-weight:900; color:var(--Mint); letter-spacing:-0.03em; line-height:1; margin-bottom:12px">2x</div>
+                <p style="font-size:15px; color:var(--Neutral-300); line-height:1.5; margin:0; max-width:360px">more customers served per worker daily</p>
+              </div>
+              <div class="stat-carousel-slide" style="flex:0 0 100%; width:100%; height:100%; display:flex; flex-direction:column; align-items:center; justify-content:center; text-align:center; padding:32px 40px; box-sizing:border-box">
+                <div style="font-size:72px; font-weight:900; color:var(--Mint); letter-spacing:-0.03em; line-height:1; margin-bottom:12px">$0.50</div>
+                <p style="font-size:15px; color:var(--Neutral-300); line-height:1.5; margin:0; max-width:360px">cost per measurement using smartphone AI</p>
+              </div>
+              <div class="stat-carousel-slide" style="flex:0 0 100%; width:100%; height:100%; display:flex; flex-direction:column; align-items:center; justify-content:center; text-align:center; padding:32px 40px; box-sizing:border-box">
+                <div style="font-size:72px; font-weight:900; color:var(--Mint); letter-spacing:-0.03em; line-height:1; margin-bottom:12px">Clinical-Grade</div>
+                <p style="font-size:15px; color:var(--Neutral-300); line-height:1.5; margin:0; max-width:360px">Accuracy with 99% consistency across all body types</p>
+              </div>
+            </div>
+            <!-- Indicators -->
+            <div style="position:absolute; bottom:16px; left:50%; transform:translateX(-50%); display:flex; gap:8px">
+              <button class="stat-dot active" data-i="0" style="width:24px; height:6px; border-radius:3px; border:none; background:var(--Mint); cursor:pointer; transition:0.3s; padding:0"></button>
+              <button class="stat-dot" data-i="1" style="width:8px; height:6px; border-radius:3px; border:none; background:var(--Neutral-600); cursor:pointer; transition:0.3s; padding:0"></button>
+              <button class="stat-dot" data-i="2" style="width:8px; height:6px; border-radius:3px; border:none; background:var(--Neutral-600); cursor:pointer; transition:0.3s; padding:0"></button>
+              <button class="stat-dot" data-i="3" style="width:8px; height:6px; border-radius:3px; border:none; background:var(--Neutral-600); cursor:pointer; transition:0.3s; padding:0"></button>
+            </div>
+          </div>
+        </div>
+        <!-- Divider -->
+        <div style="width:60px; height:2px; background:linear-gradient(90deg, var(--Mint), transparent); margin:0"></div>
+        <!-- Why KORRA -->
+        <div>
+          <div class="section-eyebrow" style="margin-bottom:20px">Why KORRA</div>
+          <h2 style="font-size:36px; font-weight:800; line-height:1.1; letter-spacing:-0.03em; margin:0 0 12px">One measurement can power<br><span style="color:var(--Mint)">many future transactions.</span></h2>
+          <p style="font-size:15px; color:var(--Neutral-400); line-height:1.6; margin:0 0 32px; max-width:480px">KORRA is more than a measurement tool. It is a reusable fit layer for apparel commerce.</p>
+          <div style="display:flex; flex-direction:column; gap:12px">
+            <div style="display:flex; align-items:flex-start; gap:16px; background:var(--Glass); border:1px solid var(--Glass-Border); border-radius:14px; padding:20px 24px; transition:0.3s" onmouseover="this.style.borderColor='var(--Mint)'" onmouseout="this.style.borderColor='var(--Glass-Border)'">
+              <div style="flex:0 0 36px; height:36px; border-radius:10px; background:rgba(198,255,0,0.1); display:flex; align-items:center; justify-content:center; font-size:16px">&#10003;</div>
+              <div>
+                <h4 style="color:#fff; font-size:15px; font-weight:700; margin:0 0 4px">Fewer repeat fittings</h4>
+                <p style="font-size:13px; color:var(--Neutral-400); line-height:1.5; margin:0">Eliminate the need for multiple client visits by starting with a high-fidelity 3D digital twin.</p>
+              </div>
+            </div>
+            <div style="display:flex; align-items:flex-start; gap:16px; background:var(--Glass); border:1px solid var(--Glass-Border); border-radius:14px; padding:20px 24px; transition:0.3s" onmouseover="this.style.borderColor='var(--Mint)'" onmouseout="this.style.borderColor='var(--Glass-Border)'">
+              <div style="flex:0 0 36px; height:36px; border-radius:10px; background:rgba(198,255,0,0.1); display:flex; align-items:center; justify-content:center; font-size:16px">&#10003;</div>
+              <div>
+                <h4 style="color:#fff; font-size:15px; font-weight:700; margin:0 0 4px">Faster fulfillment</h4>
+                <p style="font-size:13px; color:var(--Neutral-400); line-height:1.5; margin:0">Streamline the journey from measurement to production, cutting lead times by up to 50%.</p>
+              </div>
+            </div>
+            <div style="display:flex; align-items:flex-start; gap:16px; background:var(--Glass); border:1px solid var(--Glass-Border); border-radius:14px; padding:20px 24px; transition:0.3s" onmouseover="this.style.borderColor='var(--Mint)'" onmouseout="this.style.borderColor='var(--Glass-Border)'">
+              <div style="flex:0 0 36px; height:36px; border-radius:10px; background:rgba(198,255,0,0.1); display:flex; align-items:center; justify-content:center; font-size:16px">&#10003;</div>
+              <div>
+                <h4 style="color:#fff; font-size:15px; font-weight:700; margin:0 0 4px">Customer loyalty</h4>
+                <p style="font-size:13px; color:var(--Neutral-400); line-height:1.5; margin:0">Give your customers a reusable size identity that makes ordering from you again frictionless.</p>
+              </div>
+            </div>
+          </div>
+        </div>
       </div>
-      <div class="grid-4">
-        <div class="glass-card" style="padding:var(--S-32)">
-          <h4 style="color:var(--Mint); font-size:24px; font-weight:900; margin-bottom:8px">90%</h4>
-          <p style="font-size:13px; color:var(--Neutral-400)">reduction in fabric waste from measurement error</p>
-        </div>
-        <div class="glass-card" style="padding:var(--S-32)">
-          <h4 style="color:var(--Mint); font-size:24px; font-weight:900; margin-bottom:8px">2x</h4>
-          <p style="font-size:13px; color:var(--Neutral-400)">more customers served per worker daily</p>
-        </div>
-        <div class="glass-card" style="padding:var(--S-32)">
-          <h4 style="color:var(--Mint); font-size:24px; font-weight:900; margin-bottom:8px">$0.50</h4>
-          <p style="font-size:13px; color:var(--Neutral-400)">cost per measurement using smartphone AI</p>
-        </div>
-        <div class="glass-card" style="padding:var(--S-32)">
-          <h4 style="color:var(--Mint); font-size:24px; font-weight:900; margin-bottom:8px">Clinical-Grade</h4>
-          <p style="font-size:13px; color:var(--Neutral-400)">Accuracy with 99% consistency across all body types</p>
-        </div>
-      </div>
-    </div>
-  </section>
-
-  <!-- SECTION 10: WHY KORRA -->
-  <section class="block">
-    <div class="container-wide">
-      <div style="text-align:center; max-width:800px; margin:0 auto 80px">
-        <div class="section-eyebrow">Why KORRA</div>
-        <h2 class="section-title">One measurement can power many future transactions.</h2>
-        <p class="section-desc" style="margin-left:auto; margin-right:auto">KORRA is more than a measurement tool. It is a reusable fit layer for apparel commerce.</p>
-      </div>
-      <div class="grid-3">
-         <div class="glass-card">
-            <h4 style="color:var(--Mint); font-size:18px; font-weight:900; margin-bottom:16px">Fewer repeat fittings</h4>
-            <p style="font-size:14px; color:var(--Neutral-400); line-height:1.5">Eliminate the need for multiple client visits by starting with a high-fidelity 3D digital twin.</p>
-         </div>
-         <div class="glass-card">
-            <h4 style="color:var(--Mint); font-size:18px; font-weight:900; margin-bottom:16px">Faster fulfillment</h4>
-            <p style="font-size:14px; color:var(--Neutral-400); line-height:1.5">Streamline the journey from measurement to production, cutting lead times by up to 50%.</p>
-         </div>
-         <div class="glass-card">
-            <h4 style="color:var(--Mint); font-size:18px; font-weight:900; margin-bottom:16px">Customer loyalty</h4>
-            <p style="font-size:14px; color:var(--Neutral-400); line-height:1.5">Give your customers a reusable size identity that makes ordering from you again frictionless.</p>
-         </div>
+      <!-- Right column: full-height image -->
+      <div class="split-img-col" style="flex:0 0 50%; position:relative; overflow:hidden">
+        <img src="/assets/traditional-dress.png" alt="Traditional Dress" style="width:100%; height:100%; object-fit:cover; display:block; position:absolute; inset:0">
+        <div style="position:absolute; inset:0; background:linear-gradient(90deg, var(--Obsidian-Deep) 0%, transparent 30%); pointer-events:none"></div>
       </div>
     </div>
   </section>
@@ -1591,6 +1731,35 @@
 
   <script src="https://cdn.jsdelivr.net/npm/@mediapipe/pose@0.5.1675469404"></script>
   <script src="https://cdn.jsdelivr.net/npm/@mediapipe/camera_utils@0.3.1675466862/camera_utils.js"></script>
+  <script>
+  (function(){
+    const track = document.querySelector('.stat-carousel-track');
+    const dots = document.querySelectorAll('.stat-dot');
+    const wrap = document.querySelector('.stat-carousel-wrap');
+    if(!track || !dots.length) return;
+    const count = dots.length;
+    let cur = 0, autoTimer;
+    function goTo(i){
+      cur = ((i % count) + count) % count;
+      track.style.transform = 'translateX(-' + (cur * 100) + '%)';
+      dots.forEach((d,idx) => {
+        d.style.background = idx === cur ? 'var(--Mint)' : 'var(--Neutral-600)';
+        d.style.width = idx === cur ? '24px' : '8px';
+        d.style.borderRadius = '3px';
+      });
+    }
+    function next(){ goTo(cur + 1); }
+    function startAuto(){ autoTimer = setInterval(next, 3500); }
+    function stopAuto(){ clearInterval(autoTimer); }
+    dots.forEach(d => d.addEventListener('click', () => { stopAuto(); goTo(+d.dataset.i); startAuto(); }));
+    if(wrap){
+      wrap.addEventListener('mouseenter', stopAuto);
+      wrap.addEventListener('mouseleave', startAuto);
+    }
+    goTo(0);
+    startAuto();
+  })();
+  </script>
   <script src="/assets/ar-tryon.js"></script>
 
 </body>
