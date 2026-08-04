@@ -1360,13 +1360,29 @@
           </div>
         </div>
       </div>
-      <!-- Right column: full-height image -->
+      <!-- Right column: image carousel -->
       <div class="split-img-col" style="flex:0 0 50%; position:relative; overflow:hidden">
-        <img src="/assets/traditional-dress.png" alt="Traditional Dress" style="width:100%; height:100%; object-fit:cover; display:block; position:absolute; inset:0">
+        <div class="split-carousel" style="position:absolute; inset:0">
+          <img src="/assets/traditional-dress.png" alt="Traditional Dress" class="split-carousel-img active" style="width:100%; height:100%; object-fit:cover; position:absolute; inset:0; transition:opacity 1.2s ease; opacity:1">
+          <img src="/assets/Aso-oke.png" alt="Aso Oke" class="split-carousel-img" style="width:100%; height:100%; object-fit:cover; position:absolute; inset:0; transition:opacity 1.2s ease; opacity:0">
+        </div>
         <div style="position:absolute; inset:0; background:linear-gradient(90deg, var(--Obsidian-Deep) 0%, transparent 30%); pointer-events:none"></div>
       </div>
     </div>
   </section>
+
+  <script>
+  (function() {
+    var imgs = document.querySelectorAll('.split-carousel-img');
+    if (imgs.length < 2) return;
+    var current = 0;
+    setInterval(function() {
+      imgs[current].style.opacity = '0';
+      current = (current + 1) % imgs.length;
+      imgs[current].style.opacity = '1';
+    }, 4000);
+  })();
+  </script>
 
   <!-- SECTION 12: FINAL CTA -->
   <section class="block">
