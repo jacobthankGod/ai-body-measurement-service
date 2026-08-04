@@ -592,6 +592,7 @@
       .split-eco-why > div:first-child { padding: 48px 24px !important; gap: 40px !important; }
       .split-eco-why .split-img-col { flex: none !important; width: 100% !important; height: 100dvh !important; min-height: 100dvh !important; position: relative !important; overflow: hidden !important; }
       .split-eco-why .split-img-col img { position: absolute !important; top: 0 !important; left: 0 !important; width: 100% !important; height: 100% !important; object-fit: cover !important; object-position: center !important; }
+      .split-eco-why .split-carousel-img { object-fit: contain !important; background: #000 !important; }
     }
   </style>
   <style>
@@ -1363,7 +1364,7 @@
       <!-- Right column: image carousel -->
       <div class="split-img-col" style="flex:0 0 50%; position:relative; overflow:hidden">
         <div class="split-carousel" style="position:absolute; inset:0">
-          <img src="/assets/traditional-dress.png" alt="Traditional Dress" class="split-carousel-img active" style="width:100%; height:100%; object-fit:contain; position:absolute; inset:0; transition:opacity 1.2s ease; opacity:1; background:#000">
+          <img src="/assets/traditional-dress.png" alt="Traditional Dress" class="split-carousel-img active" style="width:100%; height:100%; object-fit:cover; position:absolute; inset:0; transition:opacity 1.2s ease; opacity:1; object-position:center top">
           <img src="/assets/Aso-oke.png" alt="Aso Oke" class="split-carousel-img" style="width:100%; height:100%; object-fit:contain; position:absolute; inset:0; transition:opacity 1.2s ease; opacity:0; background:#000">
         </div>
         <div style="position:absolute; inset:0; background:linear-gradient(90deg, var(--Obsidian-Deep) 0%, transparent 30%); pointer-events:none"></div>
