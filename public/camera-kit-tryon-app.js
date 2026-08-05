@@ -147,7 +147,7 @@ function downloadCapture(capture) {
   a.click();
 }
 
-window.addEventListener('DOMContentLoaded', init);
+init();
 
 window.addEventListener('beforeunload', function() {
   if (cameraKit) {

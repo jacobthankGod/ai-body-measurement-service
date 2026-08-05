@@ -7,8 +7,8 @@
   
   <!-- Content Security Policy for Camera Kit -->
   <meta http-equiv="Content-Security-Policy" content="
-    connect-src 'self' https://*.snapar.com https://*.supabase.co;
-    script-src 'self' 'unsafe-eval' 'wasm-unsafe-eval' https://cf-st.sc-cdn.net blob:;
+    connect-src 'self' https://*.snapar.com https://*.supabase.co https://esm.sh https://*.esm.sh;
+    script-src 'self' 'unsafe-eval' 'wasm-unsafe-eval' https://cf-st.sc-cdn.net https://esm.sh blob:;
     media-src 'self' blob:;
   ">
   
@@ -408,7 +408,7 @@
   
   <!-- Camera Kit Scripts -->
   <script src="/camerakit-config.js"></script>
-  <script src="/camerakit-integration.js"></script>
-  <script src="/camera-kit-tryon-app.js"></script>
+  <script type="module" src="/camerakit-integration.js"></script>
+  <script type="module" src="/camera-kit-tryon-app.js"></script>
 </body>
 </html>
