@@ -1243,12 +1243,12 @@
             <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M5 12h14"/><path d="M12 5l7 7-7 7"/></svg>
             Get Measurements
           </button>
-          <div style="display:flex; gap:8px; justify-content:center; margin-top:8px">
-            <button type="button" id="btnSaveDraft" class="btn-dismiss" style="flex:0; padding:10px 20px; font-size:12px; color:var(--Accent-Teal)" onclick="window._draftSaveToSupabase()">
-              <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="vertical-align:middle;margin-right:6px"><path d="M19 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h11l5 5v11a2 2 0 0 1-2 2z"/><polyline points="17 21 17 13 7 13 7 21"/><polyline points="7 3 7 8 15 8"/></svg>
-              Save as Draft
+          <div style="display:flex; gap:8px; justify-content:center; margin-top:12px">
+            <button type="button" style="flex:1;height:40px;border:none;border-radius:10px;background:rgba(198,255,0,0.08);border:1px solid rgba(198,255,0,0.2);color:var(--Accent-Teal);font-size:12px;font-weight:700;cursor:pointer;transition:all 0.2s;display:flex;align-items:center;justify-content:center;gap:6px;" onmouseover="this.style.background='rgba(198,255,0,0.15)'" onmouseout="this.style.background='rgba(198,255,0,0.08)'" onclick="window._draftSaveToSupabase()">
+              <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M19 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h11l5 5v11a2 2 0 0 1-2 2z"/><polyline points="17 21 17 13 7 13 7 21"/><polyline points="7 3 7 8 15 8"/></svg>
+              Save Draft
             </button>
-            <button type="button" class="btn-dismiss" onclick="if(document.getElementById('frontPhoto').files[0] || document.getElementById('sidePhoto').files[0] || document.getElementById('scanClientName').value) { if(!confirm('Discard current scan data?')) return; _draftClear(); } window.closeModal('scanModal')">Cancel</button>
+            <button type="button" style="flex:1;height:40px;border:none;border-radius:10px;background:rgba(255,255,255,0.04);border:1px solid rgba(255,255,255,0.08);color:var(--Neutral-400);font-size:12px;font-weight:700;cursor:pointer;transition:all 0.2s;" onmouseover="this.style.background='rgba(255,255,255,0.08)'" onmouseout="this.style.background='rgba(255,255,255,0.04)'" onclick="if(document.getElementById('frontPhoto').files[0] || document.getElementById('sidePhoto').files[0] || document.getElementById('scanClientName').value) { if(!confirm('Discard current scan data?')) return; _draftClear(); } window.closeModal('scanModal')">Cancel</button>
           </div>
         </form>
       </div>
