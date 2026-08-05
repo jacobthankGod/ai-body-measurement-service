@@ -13,7 +13,7 @@ const CameraKitConfig = {
   // OAuth Client IDs
   clientId: {
     public: 'd6524989-00bd-4129-bbd1-b754ebb43b3b',
-    confidential: process.env.SNAP_CONFIDENTIAL_CLIENT_ID || ''
+    confidential: ''
   },
   
   // Lens Configuration
