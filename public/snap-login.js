@@ -30,7 +30,7 @@ class SnapLoginKit {
 
       const script = document.createElement('script');
       script.src = 'https://sdk.snapkit.com/js/v1/login.js';
-      script.crossOrigin = 'anonymous';
+      // No crossOrigin - avoid CORS block if server doesn't send header
       
       script.onload = () => {
         const checkSDK = setInterval(() => {

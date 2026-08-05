@@ -109,6 +109,24 @@
     </div>
   </div>
 
+  <!-- CHOICE MODAL -->
+  <div id="capture-choice-modal" style="position:fixed; inset:0; z-index:99999; background:rgba(0,0,0,0.9); display:none; align-items:center; justify-content:center; padding:24px;">
+    <div style="width:100%; max-width:400px; background:var(--Glass); border:1px solid var(--Glass-Border); border-radius:24px; padding:32px; backdrop-filter:blur(20px); text-align:center;">
+        <h3 style="color:var(--Mint); font-size:20px; font-weight:900; margin-bottom:8px;">Capture Method</h3>
+        <p style="color:var(--Neutral-400); font-size:13px; margin-bottom:32px;">How would you like to provide your <span id="choice-type-label">front</span> pose?</p>
+
+        <div style="display:flex; flex-direction:column; gap:16px;">
+            <button class="btn-submit" onclick="window.confirmChoice('camera')">
+                <span style="font-size:18px;">📸</span> Use AI Camera
+            </button>
+            <button class="btn-submit" style="background:rgba(255,255,255,0.05); color:#fff; border:1px solid var(--Glass-Border);" onclick="window.confirmChoice('upload')">
+                <span style="font-size:18px;">📁</span> Upload from Gallery
+            </button>
+            <button style="background:none; border:none; color:var(--Neutral-500); font-weight:700; margin-top:8px; cursor:pointer; text-transform:uppercase; font-size:11px; letter-spacing:0.1em" onclick="window.closeChoice()">Cancel</button>
+        </div>
+    </div>
+  </div>
+
   <div class="widget-viewport">
     <div class="widget-card" id="mainCard">
 
@@ -155,46 +173,49 @@
             <div class="photo-col">
               <label style="font-size: 10px; font-weight: 900; color: var(--Neutral-500); text-transform: uppercase; letter-spacing: 0.1em; margin-bottom: 8px; display: block;">Biometric Capture</label>
               <div class="photo-grid">
+                <!-- FRONT SLOT -->
                 <div class="slot-column">
                   <div class="guide-box">
                     <img src="/assets/front_pose.png" alt="Front Reference">
                     <span class="guide-tag">REF: FRONT</span>
                   </div>
-                  <div class="photo-box" id="fLabel" onclick="window.handlePreviewClick('front')">
+                  <div class="photo-box" id="fLabel" style="pointer-events: none; border-style: solid; background: rgba(255,255,255,0.05);">
                     <img class="preview-img" id="fPrev">
-                    <div class="preview-overlay">
-                       <span style="font-size:10px; font-weight:900; color:#fff;">RETAKE</span>
-                    </div>
                     <div class="placeholder-content" style="display:flex; flex-direction:column; align-items:center">
-                      <span>Front Pose</span>
-                      <div class="tap-hint">TAP TO SNAP</div>
+                      <span style="opacity: 0.5;">No Photo Yet</span>
                     </div>
-                    <input type="file" id="front" accept="image/*" required style="display:none" onchange="window.preview(this, 'fPrev')">
+                  </div>
+                  <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 8px; margin-top: 4px;">
+                    <button type="button" class="btn-submit" style="height: 40px; font-size: 10px; padding: 0;" onclick="window.openCamera('front')">📸 SNAP</button>
+                    <button type="button" class="btn-submit" style="height: 40px; font-size: 10px; padding: 0; background: rgba(255,255,255,0.1); color: #fff;" onclick="document.getElementById('front').click()">📁 UPLOAD</button>
                   </div>
                 </div>
 
+                <!-- SIDE SLOT -->
                 <div class="slot-column">
                   <div class="guide-box">
                     <img src="/assets/side_pose.png" alt="Side Reference">
                     <span class="guide-tag">REF: SIDE</span>
                   </div>
-                  <div class="photo-box" id="sLabel" onclick="window.handlePreviewClick('side')">
+                  <div class="photo-box" id="sLabel" style="pointer-events: none; border-style: solid; background: rgba(255,255,255,0.05);">
                     <img class="preview-img" id="sPrev">
-                    <div class="preview-overlay">
-                       <span style="font-size:10px; font-weight:900; color:#fff;">RETAKE</span>
-                    </div>
                     <div class="placeholder-content" style="display:flex; flex-direction:column; align-items:center">
-                      <span>Side Profile</span>
-                      <div class="tap-hint">TAP TO SNAP</div>
+                      <span style="opacity: 0.5;">No Photo Yet</span>
                     </div>
-                    <input type="file" id="side" accept="image/*" required style="display:none" onchange="window.preview(this, 'sPrev')">
+                  </div>
+                  <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 8px; margin-top: 4px;">
+                    <button type="button" class="btn-submit" style="height: 40px; font-size: 10px; padding: 0;" onclick="window.openCamera('side')">📸 SNAP</button>
+                    <button type="button" class="btn-submit" style="height: 40px; font-size: 10px; padding: 0; background: rgba(255,255,255,0.1); color: #fff;" onclick="document.getElementById('side').click()">📁 UPLOAD</button>
                   </div>
                 </div>
               </div>
 
-              <button type="submit" class="btn-submit">Get Body Measurements</button>
+              <button type="submit" class="btn-submit" style="margin-top: 12px;">Get Body Measurements</button>
             </div>
           </div>
+          <!-- HIDDEN INPUTS COMPLETELY DECOUPLED -->
+          <input type="file" id="front" accept="image/*" style="display:none" onchange="window.preview(this, 'fPrev')">
+          <input type="file" id="side" accept="image/*" style="display:none" onchange="window.preview(this, 'sPrev')">
         </form>
       </div>
 
@@ -224,16 +245,31 @@
 
 <script>
     let activeCameraType = null, poseModel = null, cameraInstance = null, isPoseAligned = false, alignmentStartTime = 0, autoSnapTriggered = false, isReviewing = false, capturedDataUrl = null;
-    let lastSpokenText = "", lastSpokenTime = 0;
+    let lastSpokenText = "", lastSpokenTime = 0, pendingChoiceType = null;
 
-window.handlePreviewClick = function(type) {
-      const label = document.getElementById(type === 'front' ? 'fLabel' : 'sLabel');
-      const placeholder = label?.querySelector('.placeholder-content');
-      const previewImg = label?.querySelector('.preview-img');
-      
-      // If placeholder is visible OR image already exists, open camera for retake
-      if ((placeholder && placeholder.style.display !== 'none') || (previewImg && previewImg.src && previewImg.src !== window.location.href)) {
+    window.handlePreviewClick = function(e, type) {
+      if (e) {
+        e.preventDefault();
+        e.stopPropagation();
+      }
+      pendingChoiceType = type;
+      document.getElementById('choice-type-label').textContent = type;
+      document.getElementById('capture-choice-modal').style.display = 'flex';
+      return false;
+    };
+
+    window.closeChoice = function() {
+      document.getElementById('capture-choice-modal').style.display = 'none';
+      pendingChoiceType = null;
+    };
+
+    window.confirmChoice = function(choice) {
+      const type = pendingChoiceType;
+      window.closeChoice();
+      if (choice === 'camera') {
         window.openCamera(type);
+      } else {
+        document.getElementById(type).click();
       }
     };
 

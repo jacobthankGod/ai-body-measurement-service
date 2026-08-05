@@ -13,7 +13,7 @@
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
   <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800;900&display=swap" rel="stylesheet" />
   <link rel="stylesheet" href="/assets/measurement-screen.css?v=5.5.9" />
-  <script src="https://sdk.snapkit.com/js/v1/login.js" defer crossorigin="anonymous"></script>
+  <script src="https://sdk.snapkit.com/js/v1/login.js" defer></script>
   <script src="/snap-login.js" defer></script>
   <style>
     :root {
@@ -1798,7 +1798,7 @@
 
                 <!-- MY TRY-ONS CARD -->
                 <div class="action-card" onclick="window.openModal('tryOnsModal')">
-                    <img src="/assets/tryon-preview.webp" class="card-img-zoom" onerror="this.src='/assets/get_measurement.webp'">
+                    <img src="/assets/remote-tailoring-new.webp" class="card-img-zoom" onerror="this.src='/assets/get_measurement.webp'">
                     <div class="action-overlay">
                         <div class="action-tag" style="background:rgba(168,85,247,0.9); color:#fff;">Virtual Try-On</div>
                         <h3 class="action-title">View My<br>Try-Ons</h3>
@@ -2807,15 +2807,7 @@ msg.textContent = feedback; msg.style.background = aligned ? "var(--Mint)" : "rg
         return;
       }
 
-      // Detect desktop (no touch support or no camera)
-      const isDesktop = !('ontouchstart' in window) && !navigator.maxTouchPoints;
-      if (isDesktop) {
-        const fileInput = card.querySelector('input[type="file"]');
-        if (fileInput) fileInput.click();
-        return;
-      }
-
-      // Mobile: show choice modal
+      // Always show choice modal (desktop + mobile)
       window._photoChoiceType = type;
       document.getElementById('photoChoiceTitle').textContent =
         type === 'front' ? 'Add Front Photo' : 'Add Side Photo';
