@@ -78,6 +78,10 @@ class CameraKitTryOn {
     try {
       this.updateStatus('Requesting camera access...');
 
+      if (this.source && this.source.stream) {
+        this.source.stream.getTracks().forEach(function(t) { t.stop(); });
+      }
+
       const stream = await navigator.mediaDevices.getUserMedia({
         video: {
           facingMode: facingMode,

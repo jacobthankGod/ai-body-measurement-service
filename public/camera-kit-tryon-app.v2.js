@@ -1,10 +1,9 @@
-// Outfit configuration
 const OUTFITS = [
-  { id: '1', name: 'Classic T-Shirt', category: 'Casual', lensId: 'ccc9d825-d8ec-41ca-910a-7fd372065026', groupId: '6af97e7a-6e80-4d9e-86b7-8ffe3a6bd150' },
-  { id: '2', name: 'Formal Shirt', category: 'Business', lensId: 'ccc9d825-d8ec-41ca-910a-7fd372065026', groupId: '6af97e7a-6e80-4d9e-86b7-8ffe3a6bd150' },
-  { id: '3', name: 'Traditional Agbada', category: 'Traditional', lensId: 'ccc9d825-d8ec-41ca-910a-7fd372065026', groupId: '6af97e7a-6e80-4d9e-86b7-8ffe3a6bd150' },
-  { id: '4', name: 'Ankara Print', category: 'Traditional', lensId: 'ccc9d825-d8ec-41ca-910a-7fd372065026', groupId: '6af97e7a-6e80-4d9e-86b7-8ffe3a6bd150' },
-  { id: '5', name: 'Wedding Suit', category: 'Formal', lensId: 'ccc9d825-d8ec-41ca-910a-7fd372065026', groupId: '6af97e7a-6e80-4d9e-86b7-8ffe3a6bd150' },
+  { id: '1', name: 'Classic T-Shirt', category: 'Casual', lensId: 'ccc9d825-d8ec-41ca-910a-7fd372065026', groupId: '6af97e7a-6e80-4d9e-86b7-8ffe3a6bd150', color: '#f5f5f5' },
+  { id: '2', name: 'Formal Shirt', category: 'Business', lensId: 'ccc9d825-d8ec-41ca-910a-7fd372065026', groupId: '6af97e7a-6e80-4d9e-86b7-8ffe3a6bd150', color: '#3b82f6' },
+  { id: '3', name: 'Traditional Agbada', category: 'Traditional', lensId: 'ccc9d825-d8ec-41ca-910a-7fd372065026', groupId: '6af97e7a-6e80-4d9e-86b7-8ffe3a6bd150', color: '#8b5cf6' },
+  { id: '4', name: 'Ankara Print', category: 'Traditional', lensId: 'ccc9d825-d8ec-41ca-910a-7fd372065026', groupId: '6af97e7a-6e80-4d9e-86b7-8ffe3a6bd150', color: '#f59e0b' },
+  { id: '5', name: 'Wedding Suit', category: 'Formal', lensId: 'ccc9d825-d8ec-41ca-910a-7fd372065026', groupId: '6af97e7a-6e80-4d9e-86b7-8ffe3a6bd150', color: '#1f2937' },
 ];
 
 const SVG_PAUSE = '<svg viewBox="0 0 24 24"><rect x="6" y="4" width="4" height="16" rx="1"/><rect x="14" y="4" width="4" height="16" rx="1"/></svg>';
@@ -12,18 +11,138 @@ const SVG_PLAY = '<svg viewBox="0 0 24 24"><polygon points="5,3 19,12 5,21"/></s
 
 let cameraKit = null;
 let captures = [];
-let selectedOutfit = null;
+let selectedOutfitIndex = -1;
 let isPaused = false;
 
 const loadingOverlay = document.getElementById('loading-overlay');
 const loadingText = document.getElementById('loading-text');
 const cameraStatus = document.getElementById('camera-status');
 const outfitStrip = document.getElementById('outfit-strip');
-const capturesGrid = document.getElementById('captures-grid');
+const outfitDots = document.getElementById('outfit-dots');
+const sidebarOutfitList = document.getElementById('sidebar-outfit-list');
+const sidebarCaptures = document.getElementById('sidebar-captures');
 const btnCapture = document.getElementById('btn-capture');
 const btnPause = document.getElementById('btn-pause');
 const btnRemoveLens = document.getElementById('btn-remove-lens');
 const btnFlipCamera = document.getElementById('btn-flip-camera');
+const btnPrev = document.getElementById('btn-prev');
+const btnNext = document.getElementById('btn-next');
+
+function createOutfitThumbnailSVG(outfit) {
+  return '<div style="width:100%;aspect-ratio:1;background:' + outfit.color + ';display:flex;align-items:center;justify-content:center;">' +
+    '<svg viewBox="0 0 64 64" width="40" height="40" fill="none" stroke="rgba(0,0,0,0.3)" stroke-width="2">' +
+    '<path d="M22 18l-8 4v14l8 4h20l8-4V22l-8-4z"/>' +
+    '<path d="M22 18v22"/>' +
+    '<path d="M42 18v22"/>' +
+    '</svg></div>';
+}
+
+function renderOutfitStrips(iconMap) {
+  var stripHTML = '';
+  var dotsHTML = '';
+
+  OUTFITS.forEach(function(outfit, i) {
+    var imgContent = iconMap[outfit.id]
+      ? '<img class="outfit-chip-img" src="' + iconMap[outfit.id] + '" alt="' + outfit.name + '">'
+      : createOutfitThumbnailSVG(outfit);
+
+    stripHTML += '<button class="outfit-chip" data-index="' + i + '">' +
+      imgContent +
+      '<span class="outfit-chip-label">' + outfit.name + '</span>' +
+      '</button>';
+
+    dotsHTML += '<button class="outfit-dot" data-index="' + i + '"></button>';
+  });
+
+  outfitStrip.innerHTML = stripHTML;
+  outfitDots.innerHTML = dotsHTML;
+
+  outfitStrip.querySelectorAll('.outfit-chip').forEach(function(chip) {
+    chip.addEventListener('click', function() {
+      selectOutfit(parseInt(chip.dataset.index));
+    });
+  });
+
+  outfitDots.querySelectorAll('.outfit-dot').forEach(function(dot) {
+    dot.addEventListener('click', function() {
+      selectOutfit(parseInt(dot.dataset.index));
+    });
+  });
+}
+
+function renderSidebar(iconMap) {
+  var html = '';
+  OUTFITS.forEach(function(outfit, i) {
+    var thumbContent = iconMap[outfit.id]
+      ? '<img src="' + iconMap[outfit.id] + '" alt="' + outfit.name + '">'
+      : '<div style="width:100%;height:100%;background:' + outfit.color + ';display:flex;align-items:center;justify-content:center;">' +
+        '<svg viewBox="0 0 48 48" width="32" height="32" fill="none" stroke="rgba(0,0,0,0.3)" stroke-width="2">' +
+        '<path d="M16 14l-6 3v10l6 3h16l6-3V17l-6-3z"/>' +
+        '</svg></div>';
+
+    html += '<div class="sidebar-outfit-card" data-index="' + i + '">' +
+      '<div class="sidebar-outfit-thumb">' + thumbContent + '</div>' +
+      '<div class="sidebar-outfit-info">' +
+      '<div class="sidebar-outfit-name">' + outfit.name + '</div>' +
+      '<div class="sidebar-outfit-category">' + outfit.category + '</div>' +
+      '</div></div>';
+  });
+
+  sidebarOutfitList.innerHTML = html;
+
+  sidebarOutfitList.querySelectorAll('.sidebar-outfit-card').forEach(function(card) {
+    card.addEventListener('click', function() {
+      selectOutfit(parseInt(card.dataset.index));
+    });
+  });
+}
+
+function selectOutfit(index) {
+  if (index < 0 || index >= OUTFITS.length) return;
+
+  selectedOutfitIndex = index;
+  var outfit = OUTFITS[index];
+
+  document.querySelectorAll('.outfit-chip').forEach(function(c, i) {
+    c.classList.toggle('active', i === index);
+  });
+  document.querySelectorAll('.outfit-dot').forEach(function(d, i) {
+    d.classList.toggle('active', i === index);
+  });
+  document.querySelectorAll('.sidebar-outfit-card').forEach(function(c, i) {
+    c.classList.toggle('active', i === index);
+  });
+
+  var chip = outfitStrip.querySelectorAll('.outfit-chip')[index];
+  if (chip) chip.scrollIntoView({ behavior: 'smooth', inline: 'center', block: 'nearest' });
+
+  cameraKit.applyLens(outfit.lensId, outfit.groupId);
+}
+
+function updateCapturesDisplay() {
+  if (captures.length === 0) {
+    sidebarCaptures.innerHTML = '<div style="padding: 8px; font-size: 12px; color: #525252;">No captures yet</div>';
+    return;
+  }
+  sidebarCaptures.innerHTML = captures.slice(0, 12).map(function(c, i) {
+    return '<div class="sidebar-capture-thumb" data-index="' + i + '">' +
+      '<img src="' + c.url + '" alt="Capture">' +
+      '</div>';
+  }).join('');
+
+  sidebarCaptures.querySelectorAll('.sidebar-capture-thumb').forEach(function(thumb) {
+    thumb.addEventListener('click', function() {
+      downloadCapture(captures[parseInt(thumb.dataset.index)]);
+    });
+  });
+}
+
+function downloadCapture(capture) {
+  var a = document.createElement('a');
+  a.href = capture.url;
+  a.download = 'korra-tryon-' + capture.timestamp + '.png';
+  a.click();
+}
 
 async function init() {
   try {
@@ -37,14 +156,20 @@ async function init() {
     await cameraKit.createSession('tryon-canvas');
 
     loadingText.textContent = 'Starting camera...';
-    const cameraStarted = await cameraKit.startCamera();
-
-    if (!cameraStarted) {
-      throw new Error('Failed to start camera');
-    }
+    var cameraStarted = await cameraKit.startCamera();
+    if (!cameraStarted) throw new Error('Failed to start camera');
 
     loadingText.textContent = 'Loading augmented outfits...';
-    await loadOutfits();
+    var iconMap = {};
+    for (var i = 0; i < OUTFITS.length; i++) {
+      try {
+        var lens = await cameraKit.cameraKit.lensRepository.loadLens(OUTFITS[i].lensId, OUTFITS[i].groupId);
+        iconMap[OUTFITS[i].id] = lens.iconUrl;
+      } catch (e) { /* use fallback thumbnail */ }
+    }
+
+    renderOutfitStrips(iconMap);
+    renderSidebar(iconMap);
 
     loadingOverlay.classList.add('hidden');
     setupEventListeners();
@@ -52,61 +177,20 @@ async function init() {
   } catch (error) {
     console.error('Initialization error:', error);
     loadingText.innerHTML =
-      '<div class="loading-error">' +
+      '<div style="text-align:center;">' +
       '<p>Failed to initialize Camera Kit</p>' +
-      '<p style="font-size: 12px; margin-top: 8px;">' + error.message + '</p>' +
-      '<button class="retry-btn" id="retry-btn">Try Again</button>' +
+      '<p style="font-size:12px;margin-top:8px;color:#737373;">' + error.message + '</p>' +
+      '<button onclick="location.reload()" style="margin-top:12px;padding:8px 20px;background:#c6ff00;color:#000;border:none;border-radius:8px;font-weight:600;cursor:pointer;">Try Again</button>' +
       '</div>';
-    document.getElementById('retry-btn').addEventListener('click', function() { location.reload(); });
   }
-}
-
-async function loadOutfits() {
-  const outfitsWithIcons = await Promise.all(OUTFITS.map(async function(outfit) {
-    try {
-      const lens = await cameraKit.cameraKit.lensRepository.loadLens(outfit.lensId, outfit.groupId);
-      return { ...outfit, iconUrl: lens.iconUrl };
-    } catch (e) {
-      return outfit;
-    }
-  }));
-
-  outfitStrip.innerHTML = outfitsWithIcons.map(function(outfit) {
-    const previewContent = outfit.iconUrl
-      ? '<img src="' + outfit.iconUrl + '" alt="' + outfit.name + '">'
-      : '<span>' + outfit.name.charAt(0) + '</span>';
-
-    return '<button class="outfit-chip" data-id="' + outfit.id + '" data-lens-id="' + outfit.lensId + '" data-group-id="' + outfit.groupId + '">' +
-      previewContent +
-      '</button>';
-  }).join('');
-
-  document.querySelectorAll('.outfit-chip').forEach(function(chip) {
-    chip.addEventListener('click', function() { selectOutfit(chip); });
-  });
-}
-
-async function selectOutfit(chip) {
-  var lensId = chip.dataset.lensId;
-  var groupId = chip.dataset.groupId;
-
-  document.querySelectorAll('.outfit-chip').forEach(function(c) { c.classList.remove('active'); });
-  chip.classList.add('active');
-
-  if (lensId && groupId) {
-    await cameraKit.applyLens(lensId, groupId);
-  } else {
-    cameraStatus.textContent = 'Lens not configured for this outfit';
-  }
-
-  selectedOutfit = chip.dataset.id;
 }
 
 function setupEventListeners() {
   btnCapture.addEventListener('click', async function() {
     var blob = await cameraKit.capturePhoto();
     if (blob) {
-      addCapture(blob);
+      captures.unshift({ blob: blob, url: URL.createObjectURL(blob), timestamp: Date.now() });
+      updateCapturesDisplay();
     }
   });
 
@@ -125,12 +209,24 @@ function setupEventListeners() {
 
   btnRemoveLens.addEventListener('click', function() {
     cameraKit.removeLens();
+    selectedOutfitIndex = -1;
     document.querySelectorAll('.outfit-chip').forEach(function(c) { c.classList.remove('active'); });
-    selectedOutfit = null;
+    document.querySelectorAll('.outfit-dot').forEach(function(d) { d.classList.remove('active'); });
+    document.querySelectorAll('.sidebar-outfit-card').forEach(function(c) { c.classList.remove('active'); });
   });
 
   btnFlipCamera.addEventListener('click', async function() {
     await cameraKit.flipCamera();
+  });
+
+  btnPrev.addEventListener('click', function() {
+    var next = selectedOutfitIndex <= 0 ? OUTFITS.length - 1 : selectedOutfitIndex - 1;
+    selectOutfit(next);
+  });
+
+  btnNext.addEventListener('click', function() {
+    var next = selectedOutfitIndex >= OUTFITS.length - 1 ? 0 : selectedOutfitIndex + 1;
+    selectOutfit(next);
   });
 
   document.addEventListener('keydown', function(e) {
@@ -138,25 +234,13 @@ function setupEventListeners() {
       e.preventDefault();
       btnCapture.click();
     }
+    if (e.code === 'ArrowLeft') btnPrev.click();
+    if (e.code === 'ArrowRight') btnNext.click();
   });
-}
-
-function addCapture(blob) {
-  var url = URL.createObjectURL(blob);
-  captures.unshift({ blob: blob, url: url, timestamp: Date.now() });
-}
-
-function downloadCapture(capture) {
-  var a = document.createElement('a');
-  a.href = capture.url;
-  a.download = 'korra-tryon-' + capture.timestamp + '.png';
-  a.click();
 }
 
 init();
 
 window.addEventListener('beforeunload', function() {
-  if (cameraKit) {
-    cameraKit.destroy();
-  }
+  if (cameraKit) cameraKit.destroy();
 });
