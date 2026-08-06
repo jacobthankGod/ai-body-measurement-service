@@ -5,7 +5,7 @@
  * Uses esm.sh to serve @snap/camera-kit as an ES module in the browser.
  */
 
-import { bootstrapCameraKit, createMediaStreamSource, Transform2D } from 'https://esm.sh/@snap/camera-kit@1.19.0';
+import { bootstrapCameraKit, createMediaStreamSource, Transform2D } from 'https://esm.sh/@snap/camera-kit@1.19.0/es2022/camera-kit.bundle.mjs';
 
 class CameraKitTryOn {
   constructor() {
