@@ -261,23 +261,22 @@
       padding: 20px 20px 10px;
     }
 
-    .sidebar-outfit-list {
-      display: flex;
-      flex-direction: column;
-      gap: 8px;
+    .sidebar-outfit-grid {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 10px;
       padding: 0 12px;
     }
 
     .sidebar-outfit-card {
-      display: flex;
-      align-items: center;
-      gap: 14px;
-      padding: 10px 12px;
       border-radius: 12px;
       border: 1px solid rgba(255,255,255,0.06);
       background: rgba(255,255,255,0.03);
       cursor: pointer;
       transition: all 0.2s;
+      overflow: hidden;
+      display: flex;
+      flex-direction: column;
     }
     .sidebar-outfit-card:hover { background: rgba(255,255,255,0.06); border-color: rgba(255,255,255,0.12); }
     .sidebar-outfit-card.active {
@@ -285,10 +284,9 @@
       background: rgba(198,255,0,0.06);
     }
     .sidebar-outfit-thumb {
-      width: 64px; height: 64px;
-      border-radius: 10px;
+      width: 100%;
+      aspect-ratio: 3/4;
       overflow: hidden;
-      flex-shrink: 0;
       background: rgba(255,255,255,0.05);
     }
     .sidebar-outfit-thumb img {
@@ -296,9 +294,11 @@
       object-fit: cover;
       display: block;
     }
-    .sidebar-outfit-info { display: flex; flex-direction: column; gap: 2px; min-width: 0; }
-    .sidebar-outfit-name { font-size: 14px; font-weight: 600; }
-    .sidebar-outfit-category { font-size: 12px; color: #737373; }
+    .sidebar-outfit-info {
+      padding: 8px 10px;
+    }
+    .sidebar-outfit-name { font-size: 12px; font-weight: 600; line-height: 1.2; }
+    .sidebar-outfit-category { font-size: 10px; color: #737373; margin-top: 2px; }
 
     /* Recent Captures */
     .sidebar-captures { padding: 0 12px; display: flex; flex-wrap: wrap; gap: 8px; }
@@ -355,7 +355,7 @@
       <span class="header-title">KORRA AI</span>
       <span class="header-badge">BETA</span>
     </div>
-    <a href="/dashboard.html" class="header-link">
+    <a href="/dashboard" class="header-link">
       <svg viewBox="0 0 24 24"><path d="M19 12H5"/><path d="M12 19l-7-7 7-7"/></svg>
       Back to Dashboard
     </a>
@@ -409,7 +409,7 @@
         <div class="sidebar-subtitle">Select an outfit to try on</div>
       </div>
       <div class="sidebar-section-label">Outfits</div>
-      <div class="sidebar-outfit-list" id="sidebar-outfit-list"></div>
+      <div class="sidebar-outfit-grid" id="sidebar-outfit-list"></div>
       <div class="sidebar-section-label">Recent Captures</div>
       <div class="sidebar-captures" id="sidebar-captures">
         <div style="padding: 8px 8px; font-size: 12px; color: #525252;">No captures yet</div>

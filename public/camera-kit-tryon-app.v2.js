@@ -74,8 +74,8 @@ function renderSidebar(iconMap) {
     var thumbContent = iconMap[outfit.id]
       ? '<img src="' + iconMap[outfit.id] + '" alt="' + outfit.name + '">'
       : '<div style="width:100%;height:100%;background:' + outfit.color + ';display:flex;align-items:center;justify-content:center;">' +
-        '<svg viewBox="0 0 48 48" width="32" height="32" fill="none" stroke="rgba(0,0,0,0.3)" stroke-width="2">' +
-        '<path d="M16 14l-6 3v10l6 3h16l6-3V17l-6-3z"/>' +
+        '<svg viewBox="0 0 48 64" width="32" height="42" fill="none" stroke="rgba(0,0,0,0.3)" stroke-width="2">' +
+        '<path d="M16 14l-6 3v30l6 3h16l6-3V17l-6-3z"/>' +
         '</svg></div>';
 
     html += '<div class="sidebar-outfit-card" data-index="' + i + '">' +
