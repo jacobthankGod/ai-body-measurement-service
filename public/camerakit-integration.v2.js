@@ -214,6 +214,37 @@ class CameraKitTryOn {
     }
   }
 
+  async changeResolution(width, height) {
+    try {
+      if (this.source && this.source.stream) {
+        this.source.stream.getTracks().forEach(function(t) { t.stop(); });
+      }
+
+      const stream = await navigator.mediaDevices.getUserMedia({
+        video: {
+          facingMode: this.currentFacing || 'user',
+          width: { ideal: width },
+          height: { ideal: height }
+        },
+        audio: false
+      });
+
+      this.source = createMediaStreamSource(stream, {
+        transform: Transform2D.MirrorX,
+        cameraType: (this.currentFacing || 'user') === 'user' ? 'user' : 'environment'
+      });
+
+      await this.session.setSource(this.source);
+      await this.session.play();
+      this.updateStatus(`Camera ${width}x${height}`);
+      return true;
+    } catch (err) {
+      this.error = err.message;
+      this.updateStatus(`Resolution change failed: ${err.message}`);
+      return false;
+    }
+  }
+
   pause() {
     if (this.session) {
       this.session.pause();

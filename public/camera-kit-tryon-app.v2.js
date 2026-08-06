@@ -219,14 +219,25 @@ function setupEventListeners() {
     await cameraKit.flipCamera();
   });
 
-  btnToggleSidebar.addEventListener('click', function() {
-    document.querySelector('.sidebar').classList.toggle('collapsed');
-    document.querySelector('.main-container').classList.toggle('sidebar-collapsed');
+  btnToggleSidebar.addEventListener('click', async function() {
+    var sidebar = document.querySelector('.sidebar');
+    var main = document.querySelector('.main-container');
+    var isCollapsing = !sidebar.classList.contains('collapsed');
+
+    sidebar.classList.toggle('collapsed');
+    main.classList.toggle('sidebar-collapsed');
+
+    if (isCollapsing) {
+      await cameraKit.changeResolution(1280, 720);
+    } else {
+      await cameraKit.changeResolution(640, 480);
+    }
   });
 
-  btnRestoreSidebar.addEventListener('click', function() {
+  btnRestoreSidebar.addEventListener('click', async function() {
     document.querySelector('.sidebar').classList.remove('collapsed');
     document.querySelector('.main-container').classList.remove('sidebar-collapsed');
+    await cameraKit.changeResolution(640, 480);
   });
 
   document.addEventListener('keydown', function(e) {
