@@ -25,8 +25,6 @@ const btnCapture = document.getElementById('btn-capture');
 const btnPause = document.getElementById('btn-pause');
 const btnRemoveLens = document.getElementById('btn-remove-lens');
 const btnFlipCamera = document.getElementById('btn-flip-camera');
-const btnPrev = document.getElementById('btn-prev');
-const btnNext = document.getElementById('btn-next');
 
 function createOutfitThumbnailSVG(outfit) {
   return '<div style="width:100%;aspect-ratio:1;background:' + outfit.color + ';display:flex;align-items:center;justify-content:center;">' +
@@ -219,23 +217,11 @@ function setupEventListeners() {
     await cameraKit.flipCamera();
   });
 
-  btnPrev.addEventListener('click', function() {
-    var next = selectedOutfitIndex <= 0 ? OUTFITS.length - 1 : selectedOutfitIndex - 1;
-    selectOutfit(next);
-  });
-
-  btnNext.addEventListener('click', function() {
-    var next = selectedOutfitIndex >= OUTFITS.length - 1 ? 0 : selectedOutfitIndex + 1;
-    selectOutfit(next);
-  });
-
   document.addEventListener('keydown', function(e) {
     if (e.code === 'Space' && !e.repeat) {
       e.preventDefault();
       btnCapture.click();
     }
-    if (e.code === 'ArrowLeft') btnPrev.click();
-    if (e.code === 'ArrowRight') btnNext.click();
   });
 }
 

@@ -153,37 +153,15 @@
       stroke-width: 2; stroke-linecap: round; stroke-linejoin: round;
     }
 
-    /* ── Navigation Arrows ── */
-    .nav-arrow {
-      position: absolute;
-      top: 50%;
-      transform: translateY(-50%);
-      width: 48px; height: 48px;
-      border-radius: 50%;
-      border: 1px solid rgba(255,255,255,0.15);
-      background: rgba(0,0,0,0.5);
-      backdrop-filter: blur(10px);
-      color: #fff;
-      display: flex;
-      align-items: center;
-      justify-content: center;
-      cursor: pointer;
-      transition: all 0.2s;
-      z-index: 55;
-    }
-    .nav-arrow:hover { background: rgba(255,255,255,0.15); border-color: rgba(255,255,255,0.3); }
-    .nav-arrow svg { width: 22px; height: 22px; stroke: currentColor; fill: none; stroke-width: 2; stroke-linecap: round; stroke-linejoin: round; }
-    .nav-arrow-prev { left: 80px; }
-    .nav-arrow-next { right: 16px; }
-
-    /* ── Outfit Strip — Bottom thumbnails ── */
+    /* ── Outfit Strip — Bottom thumbnails (MOBILE ONLY) ── */
     .outfit-strip-container {
       position: absolute;
-      bottom: 0;
+      bottom: 40px;
       left: 0; right: 0;
       z-index: 50;
-      padding: 0 0 20px;
+      display: none;
       background: linear-gradient(to top, rgba(0,0,0,0.7) 0%, transparent 100%);
+      padding-bottom: 8px;
     }
     .outfit-strip {
       display: flex;
@@ -236,12 +214,15 @@
       transform: scale(1.08);
     }
 
-    /* Pagination dots */
+    /* Pagination dots — always visible */
     .outfit-dots {
+      position: absolute;
+      bottom: 12px;
+      left: 50%;
+      transform: translateX(-50%);
       display: flex;
-      justify-content: center;
       gap: 6px;
-      padding-top: 10px;
+      z-index: 55;
     }
     .outfit-dot {
       width: 6px; height: 6px;
@@ -358,11 +339,12 @@
     /* ── Mobile Responsive ── */
     @media (max-width: 768px) {
       .sidebar { display: none; }
-      .nav-arrow { display: none; }
+      .outfit-strip-container { display: block; }
       .camera-controls { left: 12px; }
       .capture-btn { width: 60px; height: 60px; }
       .control-btn { width: 38px; height: 38px; }
       .outfit-chip { flex: 0 0 60px; width: 60px; }
+      .outfit-dots { bottom: 8px; }
     }
   </style>
 </head>
@@ -387,14 +369,6 @@
         <canvas id="tryon-canvas"></canvas>
         <div class="camera-status" id="camera-status">Initializing...</div>
 
-        <!-- Navigation Arrows -->
-        <button class="nav-arrow nav-arrow-prev" id="btn-prev" title="Previous outfit">
-          <svg viewBox="0 0 24 24"><path d="M15 18l-6-6 6-6"/></svg>
-        </button>
-        <button class="nav-arrow nav-arrow-next" id="btn-next" title="Next outfit">
-          <svg viewBox="0 0 24 24"><path d="M9 18l6-6-6-6"/></svg>
-        </button>
-
         <!-- Camera Controls — Left Vertical Pill -->
         <div class="camera-controls">
           <button class="control-btn" id="btn-flip-camera" title="Flip Camera">
@@ -418,11 +392,13 @@
           </button>
         </div>
 
-        <!-- Outfit Strip — Bottom thumbnails -->
+        <!-- Outfit Strip — Bottom thumbnails (MOBILE ONLY) -->
         <div class="outfit-strip-container">
           <div class="outfit-strip" id="outfit-strip"></div>
-          <div class="outfit-dots" id="outfit-dots"></div>
         </div>
+
+        <!-- Pagination Dots — always visible -->
+        <div class="outfit-dots" id="outfit-dots"></div>
       </div>
     </div>
 
