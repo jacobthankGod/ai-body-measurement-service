@@ -25,6 +25,7 @@ const btnCapture = document.getElementById('btn-capture');
 const btnPause = document.getElementById('btn-pause');
 const btnRemoveLens = document.getElementById('btn-remove-lens');
 const btnFlipCamera = document.getElementById('btn-flip-camera');
+const btnToggleSidebar = document.getElementById('btn-toggle-sidebar');
 
 function createOutfitThumbnailSVG(outfit) {
   return '<div style="width:100%;aspect-ratio:1;background:' + outfit.color + ';display:flex;align-items:center;justify-content:center;">' +
@@ -215,6 +216,10 @@ function setupEventListeners() {
 
   btnFlipCamera.addEventListener('click', async function() {
     await cameraKit.flipCamera();
+  });
+
+  btnToggleSidebar.addEventListener('click', function() {
+    document.querySelector('.sidebar').classList.toggle('collapsed');
   });
 
   document.addEventListener('keydown', function(e) {
