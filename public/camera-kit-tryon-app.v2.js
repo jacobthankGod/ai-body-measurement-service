@@ -26,6 +26,7 @@ const btnPause = document.getElementById('btn-pause');
 const btnRemoveLens = document.getElementById('btn-remove-lens');
 const btnFlipCamera = document.getElementById('btn-flip-camera');
 const btnToggleSidebar = document.getElementById('btn-toggle-sidebar');
+const btnRestoreSidebar = document.getElementById('btn-restore-sidebar');
 
 function createOutfitThumbnailSVG(outfit) {
   return '<div style="width:100%;aspect-ratio:1;background:' + outfit.color + ';display:flex;align-items:center;justify-content:center;">' +
@@ -220,6 +221,12 @@ function setupEventListeners() {
 
   btnToggleSidebar.addEventListener('click', function() {
     document.querySelector('.sidebar').classList.toggle('collapsed');
+    document.querySelector('.main-container').classList.toggle('sidebar-collapsed');
+  });
+
+  btnRestoreSidebar.addEventListener('click', function() {
+    document.querySelector('.sidebar').classList.remove('collapsed');
+    document.querySelector('.main-container').classList.remove('sidebar-collapsed');
   });
 
   document.addEventListener('keydown', function(e) {

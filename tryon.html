@@ -74,7 +74,7 @@
       width: 100%;
       height: 100%;
       display: block;
-      object-fit: contain;
+      object-fit: cover;
     }
 
     /* Camera status pill */
@@ -287,6 +287,34 @@
     }
     .sidebar.collapsed .sidebar-toggle svg { transform: rotate(180deg); }
 
+    /* Sidebar Restore Button — visible when collapsed */
+    .sidebar-restore {
+      position: absolute;
+      right: 12px;
+      top: 50%;
+      transform: translateY(-50%);
+      width: 36px;
+      height: 36px;
+      border-radius: 10px;
+      border: 1px solid rgba(255,255,255,0.12);
+      background: rgba(0,0,0,0.5);
+      backdrop-filter: blur(12px);
+      color: #fff;
+      display: none;
+      align-items: center;
+      justify-content: center;
+      cursor: pointer;
+      z-index: 60;
+      transition: background 0.2s;
+    }
+    .sidebar-restore:hover { background: rgba(255,255,255,0.15); }
+    .sidebar-restore svg {
+      width: 18px; height: 18px;
+      stroke: currentColor; fill: none;
+      stroke-width: 2; stroke-linecap: round; stroke-linejoin: round;
+    }
+    .main-container.sidebar-collapsed .sidebar-restore { display: flex; }
+
     .sidebar-section-label {
       font-size: 10px;
       font-weight: 600;
@@ -434,6 +462,11 @@
 
         <!-- Pagination Dots — always visible -->
         <div class="outfit-dots" id="outfit-dots"></div>
+
+        <!-- Sidebar Restore Button — shown when sidebar collapsed -->
+        <button class="sidebar-restore" id="btn-restore-sidebar" title="Show sidebar">
+          <svg viewBox="0 0 24 24"><path d="M15 18l-6-6 6-6"/></svg>
+        </button>
       </div>
     </div>
 
