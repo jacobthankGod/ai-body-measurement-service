@@ -2,7 +2,8 @@
  * Snapchat Camera Kit Integration - ES Module
  * AI Body Scan SaaS - Virtual Try-On Module
  *
- * Uses esm.sh to serve @snap/camera-kit as an ES module in the browser.
+ * Performance: Uses direct esm.sh import with modulepreload hint in HTML.
+ * Lens is cached after first load to avoid re-downloading on outfit switch.
  */
 
 import { bootstrapCameraKit, createMediaStreamSource, Transform2D } from 'https://esm.sh/@snap/camera-kit@1.19.0/es2022/camera-kit.bundle.mjs';
@@ -15,6 +16,8 @@ class CameraKitTryOn {
     this.isLoading = false;
     this.error = null;
     this.currentLens = null;
+    this.lensCache = {};
+    this.currentFacing = 'user';
 
     this.canvas = null;
     this.statusEl = null;
@@ -78,8 +81,8 @@ class CameraKitTryOn {
       const stream = await navigator.mediaDevices.getUserMedia({
         video: {
           facingMode: facingMode,
-          width: { ideal: 1280 },
-          height: { ideal: 720 }
+          width: { ideal: 640 },
+          height: { ideal: 480 }
         },
         audio: false
       });
@@ -109,9 +112,19 @@ class CameraKitTryOn {
     try {
       if (!groupId || !lensId) throw new Error('Lens ID and Group ID are required');
 
+      const cacheKey = `${lensId}:${groupId}`;
       this.updateStatus('Loading lens...');
 
-      const lens = await this.cameraKit.lensRepository.loadLens(lensId, groupId);
+      let lens;
+      if (this.lensCache[cacheKey]) {
+        lens = this.lensCache[cacheKey];
+        this.updateStatus('Lens loaded (cached)');
+      } else {
+        lens = await this.cameraKit.lensRepository.loadLens(lensId, groupId);
+        this.lensCache[cacheKey] = lens;
+        this.updateStatus('Lens loaded');
+      }
+
       await this.session.applyLens(lens);
 
       this.currentLens = { lensId, groupId };
@@ -183,6 +196,20 @@ class CameraKitTryOn {
     }
   }
 
+  async flipCamera() {
+    try {
+      const newFacing = this.currentFacing === 'user' ? 'environment' : 'user';
+      await this.startCamera(newFacing);
+      this.currentFacing = newFacing;
+      this.updateStatus(`Camera flipped: ${newFacing}`);
+      return true;
+    } catch (err) {
+      this.error = err.message;
+      this.updateStatus(`Flip failed: ${err.message}`);
+      return false;
+    }
+  }
+
   pause() {
     if (this.session) {
       this.session.pause();
@@ -207,6 +234,7 @@ class CameraKitTryOn {
       if (stream) stream.getTracks().forEach(track => track.stop());
       this.source = null;
     }
+    this.lensCache = {};
     this.cameraKit = null;
     this.updateStatus('Camera Kit destroyed');
   }
