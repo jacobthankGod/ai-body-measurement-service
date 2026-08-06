@@ -25,7 +25,7 @@
 | URI |
 |-----|
 | `https://korra.work` |
-| `https://korra.work/camera-kit-tryon.html` |
+| `https://korra.work/tryon.html` |
 | `https://korra.work/dashboard.html` |
 | `http://localhost:5001` (development) |
 | `http://localhost:3000` (development) |
@@ -58,7 +58,7 @@ INTEGRATION OVERVIEW:
    - Captures are saved to the user's account
 
 USER FLOW:
-1. User visits https://korra.work/camera-kit-tryon.html
+1. User visits https://korra.work/tryon.html
 2. User clicks "Sign in with Snapchat" (Login Kit)
 3. Snapchat authentication popup appears
 4. User authorizes the app

@@ -229,7 +229,7 @@ Virtual try-on using Snapchat's AR technology. Users can try on clothing virtual
 |------|---------|
 | `public/camerakit-config.js` | Camera Kit configuration (tokens, client IDs) |
 | `public/camerakit-integration.js` | Camera Kit JavaScript module |
-| `camera-kit-tryon.html` | Virtual try-on page with Camera Kit UI |
+| `tryon.html` | Virtual try-on page with Camera Kit UI |
 | `api/routes/tryon.py` | Backend endpoints for captures |
 | `scripts/create_tryon_captures_table.sql` | Database migration |
 
