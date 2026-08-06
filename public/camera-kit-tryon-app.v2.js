@@ -174,6 +174,8 @@ async function init() {
     loadingOverlay.classList.add('hidden');
     setupEventListeners();
 
+    await cameraKit.setSidebarRegions(true);
+
   } catch (error) {
     console.error('Initialization error:', error);
     loadingText.innerHTML =
@@ -227,17 +229,13 @@ function setupEventListeners() {
     sidebar.classList.toggle('collapsed');
     main.classList.toggle('sidebar-collapsed');
 
-    if (isCollapsing) {
-      await cameraKit.changeResolution(1280, 720);
-    } else {
-      await cameraKit.changeResolution(640, 480);
-    }
+    await cameraKit.setSidebarRegions(!isCollapsing);
   });
 
   btnRestoreSidebar.addEventListener('click', async function() {
     document.querySelector('.sidebar').classList.remove('collapsed');
     document.querySelector('.main-container').classList.remove('sidebar-collapsed');
-    await cameraKit.changeResolution(640, 480);
+    await cameraKit.setSidebarRegions(true);
   });
 
   document.addEventListener('keydown', function(e) {

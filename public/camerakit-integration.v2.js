@@ -2,7 +2,8 @@
  * Snapchat Camera Kit Integration - ES Module
  * AI Body Scan SaaS - Virtual Try-On Module
  *
- * Performance: Uses direct esm.sh import with modulepreload hint in HTML.
+ * Always uses 16:9 camera (1280x720) per Snap's official recommendation.
+ * Uses setScreenRegions() to tell Lenses where our UI elements are.
  * Lens is cached after first load to avoid re-downloading on outfit switch.
  */
 
@@ -85,8 +86,8 @@ class CameraKitTryOn {
       const stream = await navigator.mediaDevices.getUserMedia({
         video: {
           facingMode: facingMode,
-          width: { ideal: 640 },
-          height: { ideal: 480 }
+          width: { ideal: 1280 },
+          height: { ideal: 720 }
         },
         audio: false
       });
@@ -99,6 +100,7 @@ class CameraKitTryOn {
       await this.session.setSource(this.source);
       await this.session.play();
 
+      this.currentFacing = facingMode;
       this.updateStatus('Camera active');
       return true;
     } catch (err) {
@@ -109,6 +111,34 @@ class CameraKitTryOn {
         this.updateStatus(`Camera error: ${err.message}`);
       }
       return false;
+    }
+  }
+
+  async setScreenRegions(regions) {
+    try {
+      if (!this.session) return false;
+      await this.session.setScreenRegions(regions);
+      this.updateStatus('Screen regions updated');
+      return true;
+    } catch (err) {
+      this.error = err.message;
+      return false;
+    }
+  }
+
+  setSidebarRegions(sidebarOpen) {
+    if (sidebarOpen) {
+      return this.setScreenRegions({
+        safeRender: { x: 0, y: 0, width: 0.72, height: 1.0 },
+        roundButton: { x: 0, y: 0.35, width: 0.08, height: 0.3 },
+        topBar: { x: 0, y: 0, width: 1.0, height: 0.05 }
+      });
+    } else {
+      return this.setScreenRegions({
+        safeRender: { x: 0, y: 0, width: 1.0, height: 1.0 },
+        roundButton: { x: 0, y: 0.35, width: 0.06, height: 0.3 },
+        topBar: { x: 0, y: 0, width: 1.0, height: 0.05 }
+      });
     }
   }
 
@@ -204,43 +234,11 @@ class CameraKitTryOn {
     try {
       const newFacing = this.currentFacing === 'user' ? 'environment' : 'user';
       await this.startCamera(newFacing);
-      this.currentFacing = newFacing;
       this.updateStatus(`Camera flipped: ${newFacing}`);
       return true;
     } catch (err) {
       this.error = err.message;
       this.updateStatus(`Flip failed: ${err.message}`);
-      return false;
-    }
-  }
-
-  async changeResolution(width, height) {
-    try {
-      if (this.source && this.source.stream) {
-        this.source.stream.getTracks().forEach(function(t) { t.stop(); });
-      }
-
-      const stream = await navigator.mediaDevices.getUserMedia({
-        video: {
-          facingMode: this.currentFacing || 'user',
-          width: { ideal: width },
-          height: { ideal: height }
-        },
-        audio: false
-      });
-
-      this.source = createMediaStreamSource(stream, {
-        transform: Transform2D.MirrorX,
-        cameraType: (this.currentFacing || 'user') === 'user' ? 'user' : 'environment'
-      });
-
-      await this.session.setSource(this.source);
-      await this.session.play();
-      this.updateStatus(`Camera ${width}x${height}`);
-      return true;
-    } catch (err) {
-      this.error = err.message;
-      this.updateStatus(`Resolution change failed: ${err.message}`);
       return false;
     }
   }
