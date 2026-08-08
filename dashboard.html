@@ -1799,6 +1799,16 @@
                     </div>
                 </div>
 
+                <!-- DEVELOPER PORTAL CARD -->
+                <div class="action-card" id="devPortalCard" style="display:none" onclick="window.location.href='/developers'">
+                    <div style="position:absolute; inset:0; background:radial-gradient(circle at center, var(--Mint) 0%, transparent 70%); opacity:0.1"></div>
+                    <div class="action-overlay">
+                        <div class="action-tag">Integration</div>
+                        <h3 class="action-title">Developer<br>Documentation</h3>
+                        <div class="action-cta"><svg class="korra-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor"><polyline points="16 18 22 12 16 6"/><polyline points="8 6 2 12 8 18"/></svg></div>
+                    </div>
+                </div>
+
                 <!-- MY TRY-ONS CARD -->
                 <div class="action-card" onclick="window.openModal('tryOnsModal')">
                     <img src="/assets/vr-cloth-tryon.png" class="card-img-zoom" onerror="this.src='/assets/remote-tailoring-new.webp'">
@@ -2250,6 +2260,7 @@
                     <option value="artisan">Artisan</option>
                     <option value="merchant">Merchant</option>
                     <option value="enterprise">Enterprise</option>
+                    <option value="developer">Developer</option>
                   </select>
                 </div>
                 <div class="settings-field-group">
@@ -2335,14 +2346,56 @@
                 <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 2l-2 2m-7.61 7.61a5.5 5.5 0 1 1-7.778 7.778 5.5 5.5 0 0 1 7.777-7.777zm0 0L15.5 7.5m0 0l3 3L22 7l-3-3m-3.5 3.5L19 4"/></svg>
                 <div>
                   <h3>API Access</h3>
-                  <p>Your secret key for programmatic access</p>
+                  <p>Secret keys for programmatic and wholesale access</p>
                 </div>
               </div>
-              <div style="background:rgba(0,0,0,0.3);border-radius:12px;padding:16px 20px;border:1px solid var(--Glass-Border);display:flex;align-items:center;justify-content:space-between;gap:16px">
-                <code id="apiKeyDisplay" style="font-family:monospace;color:var(--Mint);font-size:13px;word-break:break-all;flex:1">********************************</code>
-                <button class="btn-outline" style="height:36px;font-size:10px;flex-shrink:0;white-space:nowrap" onclick="window.copyApiKey()">Copy Key</button>
+
+              <div style="display:grid; grid-template-columns: 1fr 1fr; gap:20px; margin-bottom:24px">
+                <div style="background:rgba(0,0,0,0.3); border-radius:12px; padding:16px; border:1px solid var(--Glass-Border)">
+                   <div style="font-size:10px; font-weight:800; color:var(--Neutral-500); margin-bottom:8px">LIVE KEY</div>
+                   <div style="display:flex; align-items:center; gap:12px">
+                     <code id="apiKeyDisplay" style="font-family:monospace;color:var(--Mint);font-size:12px;word-break:break-all;flex:1">********************************</code>
+                     <button class="btn-outline" style="height:32px; font-size:9px" onclick="window.copyApiKey()">Copy</button>
+                   </div>
+                </div>
+                <div style="background:rgba(198,255,0,0.03); border-radius:12px; padding:16px; border:1px solid rgba(198,255,0,0.1)">
+                   <div style="font-size:10px; font-weight:800; color:var(--Neutral-500); margin-bottom:8px">SANDBOX KEY (FREE)</div>
+                   <div style="display:flex; align-items:center; gap:12px">
+                     <code style="font-family:monospace;color:var(--Mint);font-size:12px;word-break:break-all;flex:1">korra_test_dev_sandbox</code>
+                     <button class="btn-outline" style="height:32px; font-size:9px" onclick="navigator.clipboard.writeText('korra_test_dev_sandbox').then(()=>window.showToast('Sandbox key copied'))">Copy</button>
+                   </div>
+                </div>
               </div>
-              <button class="btn-outline" style="border-color:var(--Error);color:var(--Error);font-size:10px;margin-top:16px;height:36px" id="btnRegenKey">Regenerate Key</button>
+
+              <div style="display:flex; gap:12px">
+                <button class="btn-outline" style="border-color:var(--Error);color:var(--Error);font-size:10px;height:36px" id="btnRegenKey">Regenerate Live Key</button>
+                <a href="/developers#billing" class="btn-outline" style="font-size:10px;height:36px;text-decoration:none">View Wholesale Pricing</a>
+              </div>
+            </div>
+
+            <!-- API PERFORMANCE MONITOR -->
+            <div class="glass-card" style="margin-top:24px; padding:24px">
+                <div class="settings-section-header" style="margin-bottom:20px">
+                  <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 20v-6M6 20V10M18 20V4"/></svg>
+                  <div>
+                    <h3>API Performance</h3>
+                    <p>Real-time telemetry and error rates</p>
+                  </div>
+                </div>
+                <div style="display:grid; grid-template-columns: repeat(3, 1fr); gap:16px">
+                    <div style="text-align:center; padding:20px; background:var(--Glass); border-radius:12px">
+                        <div style="font-size:10px; color:var(--Neutral-500); margin-bottom:4px">TOTAL REQUESTS</div>
+                        <div style="font-size:24px; font-weight:900; color:var(--Mint)" id="telemetryRequests">0</div>
+                    </div>
+                    <div style="text-align:center; padding:20px; background:var(--Glass); border-radius:12px">
+                        <div style="font-size:10px; color:var(--Neutral-500); margin-bottom:4px">LAST USED</div>
+                        <div style="font-size:16px; font-weight:900; color:var(--Mint)" id="telemetryLastUsed">NEVER</div>
+                    </div>
+                    <div style="text-align:center; padding:20px; background:var(--Glass); border-radius:12px">
+                        <div style="font-size:10px; color:var(--Neutral-500); margin-bottom:4px">MONTHLY QUOTA</div>
+                        <div style="font-size:16px; font-weight:900; color:#fff" id="telemetryQuota">0 / 0</div>
+                    </div>
+                </div>
             </div>
 
             <div class="glass-card" style="margin-top:24px;padding:24px">
@@ -2353,13 +2406,14 @@
                   <p>Deliver measurement data to your inventory or design systems automatically.</p>
                 </div>
               </div>
-              <button class="btn-primary" style="margin-bottom:20px" onclick="window.addWebhook()">+ Add Webhook</button>
+              <button class="btn-primary" style="margin-bottom:20px" id="btnAddWebhook">+ Add Webhook</button>
               <div id="webhookDestinations">
-                <div class="glass-card" style="padding:32px; border-style:dashed; text-align:center; background:transparent">
+                <div class="glass-card" style="padding:32px; border-style:dashed; text-align:center; background:transparent" id="webhookEmptyState">
                   <div style="font-size:36px; margin-bottom:16px">🔄</div>
                   <h4 style="margin-bottom:8px; font-size:14px">No Destinations Configured</h4>
                   <p style="color:var(--Neutral-400); font-size:12px">Configure a URL to receive real-time measurement updates whenever a client scan is completed.</p>
                 </div>
+                <div id="webhookList" style="display:flex; flex-direction:column; gap:12px"></div>
               </div>
             </div>
 
@@ -2975,6 +3029,8 @@ window.loadSettings = async () => {
             }
         }
         window.updateWidgetPreview();
+        window.loadWebhooks();
+        window.loadApiTelemetry();
 
         // HYDRATE REAL-TIME STATS
         if (document.getElementById('statStudioCredits')) document.getElementById('statStudioCredits').textContent = profile.credits || 0;
@@ -2989,6 +3045,10 @@ window.loadSettings = async () => {
             if (entTab) entTab.style.display = 'flex';
             const dropdownEnt = document.getElementById('dropdownEnterprise');
             if (dropdownEnt) dropdownEnt.style.display = 'flex';
+        } else if (profile.account_type === 'developer') {
+            // Priority view for developers
+            const devCard = document.getElementById('devPortalCard');
+            if (devCard) devCard.style.display = 'flex';
         }
       }
 
@@ -5225,9 +5285,90 @@ window.generateDeepLink = async () => {
         window.updateWidgetPreview();
     };
 
+    window.loadWebhooks = async () => {
+        if (!currentApiKey) return;
+        try {
+            const res = await fetch('/api/v2/webhooks', {
+                headers: { 'X-API-Key': currentApiKey }
+            });
+            const data = await res.json();
+            const list = document.getElementById('webhookList');
+            const empty = document.getElementById('webhookEmptyState');
+            if (data.status && data.webhooks.length > 0) {
+                empty.style.display = 'none';
+                list.innerHTML = data.webhooks.map(w => `
+                    <div class="glass-card" style="padding:16px; display:flex; align-items:center; justify-content:space-between; background:rgba(255,255,255,0.02)">
+                        <div style="flex:1; min-width:0">
+                            <div style="font-size:13px; font-weight:700; color:#fff; word-break:break-all">${w.webhook_url}</div>
+                            <div style="font-size:10px; color:var(--Neutral-500); margin-top:4px">Events: ${w.events.join(', ')} • Active: ${w.is_active}</div>
+                        </div>
+                        <div style="display:flex; gap:8px; margin-left:16px">
+                            <button class="btn-outline" style="height:32px; font-size:10px; border-color:var(--Error); color:var(--Error)" onclick="window.deleteWebhook('${w.id}')">Delete</button>
+                        </div>
+                    </div>
+                `).join('');
+            } else {
+                empty.style.display = 'block';
+                list.innerHTML = '';
+            }
+        } catch (e) { console.error('Webhook load failed:', e); }
+    };
+
     window.addWebhook = async () => {
-        const url = await window.showPrompt("Enter the destination URL for measurement events:");
-        if (url) window.showToast("Success", "Webhook Destination Secured.");
+        const url = await window.showPrompt("Enter your webhook destination URL:");
+        if (!url) return;
+        if (!url.startsWith('http')) { window.showAlert('URL must start with http:// or https://'); return; }
+
+        try {
+            const res = await fetch('/api/v2/webhooks/register', {
+                method: 'POST',
+                headers: {
+                    'X-API-Key': currentApiKey,
+                    'Content-Type': 'application/json'
+                },
+                body: JSON.stringify({ webhook_url: url, events: ['scan_completed'] })
+            });
+            if (res.ok) {
+                window.showToast("Success", "Webhook registered.");
+                window.loadWebhooks();
+            } else {
+                const err = await res.json();
+                window.showAlert(err.detail || "Registration failed.");
+            }
+        } catch (e) { window.showAlert("Network error."); }
+    };
+
+    window.deleteWebhook = async (id) => {
+        if (!(await window.showConfirm("Deactivate this webhook destination?"))) return;
+        try {
+            const res = await fetch(`/api/v2/webhooks/${id}`, {
+                method: 'DELETE',
+                headers: { 'X-API-Key': currentApiKey }
+            });
+            if (res.ok) {
+                window.showToast("Success", "Webhook deleted.");
+                window.loadWebhooks();
+            }
+        } catch (e) { window.showAlert("Delete failed."); }
+    };
+
+    window.loadApiTelemetry = async () => {
+        if (!currentApiKey) return;
+        try {
+            // 1. Load Total Usage
+            const { data: usage } = await window.KORRA_DB.from('usage_logs').select('*').eq('api_key', currentApiKey).single();
+            if (usage) {
+                document.getElementById('telemetryRequests').textContent = usage.total_count || 0;
+                document.getElementById('telemetryLastUsed').textContent = usage.last_used ? new Date(usage.last_used).toLocaleDateString() : 'NEVER';
+            }
+
+            // 2. Load Quota (Approximated based on tier)
+            const { data: profile } = await window.KORRA_DB.from('profiles').select('account_type').eq('id', userId).single();
+            const quotas = { 'tailor_basic': 0, 'tailor_pro': 10, 'tailor_elite': 50, 'developer': 100, 'enterprise': 999999 };
+            const limit = quotas[profile?.account_type] || 0;
+            const used = usage?.total_count || 0;
+            document.getElementById('telemetryQuota').textContent = `${used} / ${limit}`;
+        } catch (e) { console.warn('Telemetry load failed:', e); }
     };
 
     window.handleWidgetLogo = async (input) => {

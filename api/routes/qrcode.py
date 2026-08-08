@@ -1,21 +1,23 @@
 """
 QR Code Engine | KORRA In-Store Integration
 ==========================================
-Generates ephemeral scan tokens and base64 QR imagery.
+Generates persistent scan tokens and base64 QR imagery.
+Now backed by PostgreSQL (qr_sessions) for fail-proof scaling.
 """
 from fastapi import APIRouter, HTTPException, Form
 import qrcode
 import io
 import base64
 import uuid
+import logging
 from datetime import datetime, timedelta
 from pathlib import Path
 import os
 
-router = APIRouter()
+from api.services.database_service import DatabaseService
 
-# Simple In-Memory Session Store (To be migrated to Redis/Postgres in Phase 22)
-ACTIVE_SESSIONS = {}
+router = APIRouter()
+logger = logging.getLogger("KORRA_QR")
 
 @router.post("/generate")
 async def generate_qr(
@@ -23,18 +25,22 @@ async def generate_qr(
     expiry_minutes: int = Form(60),
     client_name: str = Form(None)
 ):
-    """Generates a high-authority in-store scan QR."""
+    """Generates a persistent in-store scan QR."""
 
     # Create secure token
     token = str(uuid.uuid4())
     expires_at = datetime.utcnow() + timedelta(minutes=expiry_minutes)
 
-    # Register session
-    ACTIVE_SESSIONS[token] = {
-        "merchant_id": merchant_id,
-        "client_name": client_name or "Retail Customer",
-        "expires_at": expires_at
-    }
+    # Register session in DB (Unicorn-Grade Persistence)
+    success = DatabaseService.save_qr_session(
+        merchant_id=merchant_id,
+        token=token,
+        client_name=client_name or "Retail Customer",
+        expires_at=expires_at
+    )
+
+    if not success:
+        raise HTTPException(status_code=500, detail="Failed to register scan session.")
 
     # Generate QR URL
     host = os.environ.get("EXTERNAL_URL", "https://korra.work")
@@ -60,13 +66,19 @@ async def generate_qr(
 
 @router.get("/verify/{token}")
 async def verify_token(token: str):
-    """Checks if a QR session is still valid."""
-    session = ACTIVE_SESSIONS.get(token)
+    """Checks if a persistent QR session is still valid."""
+    session = DatabaseService.get_qr_session(token)
+
     if not session:
         raise HTTPException(status_code=404, detail="Invalid session token.")
 
-    if datetime.utcnow() > session["expires_at"]:
-        del ACTIVE_SESSIONS[token]
+    # Check expiration (DB column is TIMESTAMPTZ)
+    expires_at = datetime.fromisoformat(session["expires_at"].replace('Z', '+00:00'))
+    if datetime.utcnow().replace(tzinfo=expires_at.tzinfo) > expires_at:
         raise HTTPException(status_code=410, detail="QR Link Expired.")
 
-    return {"valid": True, "merchant_id": session["merchant_id"]}
+    return {
+        "valid": True,
+        "merchant_id": session["merchant_id"],
+        "client_name": session.get("client_name")
+    }

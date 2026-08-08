@@ -11,7 +11,7 @@ from fastapi.responses import JSONResponse, FileResponse, Response, RedirectResp
 from fastapi.staticfiles import StaticFiles
 from pathlib import Path
 
-from api.routes import auth, measurements, health, sharing, qrcode, payments, subscriptions, admin, admin_auth, invoices, webhooks, notifications, scan_requests, ai_assistant, tryon, body_shape, garment_models
+from api.routes import auth, measurements, health, sharing, qrcode, payments, subscriptions, admin, admin_auth, invoices, webhooks, notifications, scan_requests, ai_assistant, tryon, body_shape, garment_models, analytics
 from api.config import CORS_ORIGINS, FEATURES
 
 # Configure Logging
@@ -85,6 +85,7 @@ app.include_router(admin_auth.router, prefix="/api/v2", tags=["Admin"])
 app.include_router(ai_assistant.router, prefix="/api/v2", tags=["AI"])
 app.include_router(tryon.router, prefix="/api/v2", tags=["TryOn"])
 app.include_router(body_shape.router, prefix="/api/v2", tags=["BodyShape"])
+app.include_router(analytics.router, prefix="/api/v2", tags=["Telemetry"])
 app.include_router(garment_models.router, prefix="/api/v2", tags=["GarmentModels"])
 
 # --- STATIC PAGE SERVING ---
@@ -122,6 +123,9 @@ async def serve_signup(): return get_safe_file("signup.html")
 
 @app.get("/onboarding")
 async def serve_onboarding(): return get_safe_file("onboarding.html")
+
+@app.get("/onboarding-developer")
+async def serve_onboarding_developer(): return get_safe_file("onboarding-developer.html")
 
 @app.get("/dashboard")
 async def serve_dashboard(): 

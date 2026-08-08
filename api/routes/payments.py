@@ -93,8 +93,15 @@ def get_scan_price() -> tuple:
     return price, curr, label
 
 def get_discount_rate(quantity: int) -> float:
-    if quantity >= 2000:
-        return 0.25
+    """Hyper-Volume Regressive Pricing ($0.08 Tier - Phase 221)"""
+    if quantity >= 100000:
+        return 0.84  # $0.08 per scan
+    elif quantity >= 50000:
+        return 0.76  # $0.12 per scan
+    elif quantity >= 10000:
+        return 0.60  # $0.20 per scan
+    elif quantity >= 2000:
+        return 0.30  # $0.35 per scan
     elif quantity > 500:
         return 0.20
     elif quantity == 500:

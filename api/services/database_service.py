@@ -271,3 +271,54 @@ class DatabaseService:
             else:
                 client.table("usage_logs").insert({"api_key": api_key, "total_count": 1, "last_used": datetime.now().isoformat()}).execute()
         except: pass
+
+    @classmethod
+    def save_qr_session(cls, merchant_id: str, token: str, client_name: str, expires_at: datetime) -> bool:
+        """Persist QR scan session to database."""
+        client = cls.get_client()
+        if not client: return False
+        try:
+            client.table("qr_sessions").insert({
+                "merchant_id": merchant_id,
+                "token": token,
+                "client_name": client_name,
+                "expires_at": expires_at.isoformat()
+            }).execute()
+            return True
+        except Exception as e:
+            logger.error(f"Failed to save QR session: {e}")
+            return False
+
+    @classmethod
+    def get_qr_session(cls, token: str) -> Optional[dict]:
+        """Fetch valid QR session by token."""
+        client = cls.get_client()
+        if not client: return None
+        try:
+            res = client.table("qr_sessions").select("*").eq("token", token).execute()
+            return res.data[0] if res.data else None
+        except Exception as e:
+            logger.error(f"Failed to fetch QR session: {e}")
+            return None
+
+    @classmethod
+    def save_analytics_batch(cls, events: list) -> bool:
+        """Atomic batch insert for usage analytics."""
+        client = cls.get_client()
+        if not client or not events: return False
+        try:
+            # Map frontend keys to DB columns
+            payload = []
+            for e in events:
+                payload.append({
+                    "category": e.get("category"),
+                    "action": e.get("action"),
+                    "label": e.get("label"),
+                    "page": e.get("page"),
+                    "client_timestamp": datetime.fromtimestamp(e.get("timestamp")/1000.0).isoformat() if e.get("timestamp") else None
+                })
+            client.table("usage_analytics").insert(payload).execute()
+            return True
+        except Exception as e:
+            logger.error(f"Failed to save analytics batch: {e}")
+            return False

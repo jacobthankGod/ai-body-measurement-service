@@ -6,191 +6,348 @@
   <title>Developer Center | KORRA AI | Body Scanning API & SDKs</title>
   <meta name="description" content="Integrate clinical-grade body scanning into your app. Explore KORRA's REST API, JavaScript SDK, and Flutter SDK for seamless fit data integration." />
 
-  <!-- Open Graph -->
-  <meta property="og:title" content="Developer Center | KORRA AI | Body Scanning API & SDKs" />
-  <meta property="og:description" content="Integrate clinical-grade body scanning into your app. Explore KORRA's REST API, JavaScript SDK, and Flutter SDK for seamless fit data integration." />
-  <meta property="og:url" content="https://korra.work/developers" />
-  <meta property="og:image" content="https://korra.work/assets/Seamless-Integration.png" />
-
   <link rel="icon" type="image/png" href="/assets/Korra_logo_final.png">
   <link rel="preconnect" href="https://fonts.googleapis.com" />
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
-  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800;900&display=swap" rel="stylesheet" />
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800;900&family=JetBrains+Mono:wght@500&display=swap" rel="stylesheet" />
+
   <style>
     :root {
-      --Obsidian: #000000; --Mint: #C6FF00; --Teal-900: #002D2A; --Glass: rgba(255, 255, 255, 0.04);
-      --Glass-Border: rgba(255, 255, 255, 0.1); --Neutral-400: #A3A3A3; --Neutral-500: #737373; --White: #FFFFFF; --Error: #D63031;
-      --S-8: 8px; --S-16: 16px; --S-24: 24px; --S-32: 32px; --S-48: 48px; --S-64: 64px; --S-80: 80px; --S-120: 120px; --S-160: 160px;
+      --Obsidian: #050505; --Obsidian-Layer: #0B0B0C; --Mint: #C6FF00; --Teal-900: #002D2A; --Glass: rgba(255, 255, 255, 0.04);
+      --Glass-Border: rgba(255, 255, 255, 0.08); --Neutral-400: #A3A3A3; --Neutral-500: #737373; --White: #FFFFFF; --Error: #D63031;
     }
     * { box-sizing: border-box; -webkit-font-smoothing: antialiased; margin: 0; padding: 0; }
-    html, body { height: 100%; background: var(--Obsidian); color: var(--White); font-family: 'Inter', sans-serif; overflow-x: hidden; }
-    .container { width: 100%; max-width: 1200px; margin: 0 auto; padding: 0 48px; }
+    html, body { height: 100%; background: var(--Obsidian); color: var(--White); font-family: 'Inter', sans-serif; scroll-behavior: smooth; }
+
+    /* CUSTOM SCROLLBAR */
+    ::-webkit-scrollbar { width: 6px; }
+    ::-webkit-scrollbar-track { background: transparent; }
+    ::-webkit-scrollbar-thumb { background: rgba(198, 255, 0, 0.2); border-radius: 10px; }
+    ::-webkit-scrollbar-thumb:hover { background: var(--Mint); }
+
+    .container { width: 100%; max-width: 1300px; margin: 0 auto; padding: 0 40px; }
 
     /* --- UNIFIED HEADER SYSTEM --- */
     header {
       width: 100%; height: 80px; display: flex; align-items: center; position: fixed; top: 0; z-index: 999999;
-      background: rgba(0, 0, 0, 0.8); backdrop-filter: blur(20px); border-bottom: 1px solid var(--Glass-Border); transition: all 0.3s ease;
+      background: rgba(5, 5, 5, 0.8); backdrop-filter: blur(20px); border-bottom: 1px solid var(--Glass-Border); transition: all 0.3s ease;
     }
-    header.scrolled { height: 64px; background: rgba(0, 0, 0, 0.95); }
-    header .container { display: flex; align-items: center; justify-content: space-between; padding: 0; position: relative; max-width: 1200px; }
+    header.scrolled { height: 64px; background: rgba(5, 5, 5, 0.95); }
+    header .container { display: flex; align-items: center; justify-content: space-between; padding: 0; position: relative; width: 100%; }
 
-    .logo { display: flex; align-items: center; gap: 16px; cursor: pointer; text-decoration: none; color: inherit; z-index: 1000001; }
-    .logo-mark { width: 32px; height: 32px; border-radius: 8px; background: var(--Mint); transform: rotate(-8deg); }
-    .logo-text { font-size: 20px; font-weight: 900; letter-spacing: -0.05em; }
+    .logo { display: flex; align-items: center; gap: 16px; cursor: pointer; text-decoration: none; color: inherit; }
+    .logo img { height: 36px; width: auto; }
+    .logo-text { font-size: 20px; font-weight: 900; letter-spacing: -0.05em; color: var(--White); }
 
-    .header-auth { display: flex; align-items: center; gap: var(--S-16); z-index: 1000001; }
+    .header-auth { display: flex; align-items: center; gap: 24px; }
+    .btn-back { color: var(--Neutral-400); text-decoration: none; font-size: 11px; font-weight: 800; text-transform: uppercase; letter-spacing: 0.1em; transition: 0.2s; }
+    .btn-back:hover { color: var(--White); }
+    .btn-nav-signup {
+        height: 36px; padding: 0 16px; background: var(--Mint); color: var(--Obsidian);
+        border-radius: 8px; font-size: 11px; font-weight: 800; text-decoration: none;
+        display: flex; align-items: center; justify-content: center; transition: 0.2s;
+    }
+    .btn-nav-signup:hover { background: #fff; transform: scale(1.02); }
 
     .hamburger {
       display: none; width: 44px; height: 44px; background: var(--Glass); border: 1px solid var(--Glass-Border);
       border-radius: 12px; cursor: pointer; flex-direction: column; align-items: center; justify-content: center; gap: 5px;
-      z-index: 1000001; transition: 0.2s; position: relative;
     }
-    .hamburger:hover { border-color: var(--Mint); background: rgba(255,255,255,0.08); }
-    .hamburger span { width: 22px; height: 2px; background: var(--Mint); border-radius: 2px; transition: 0.4s cubic-bezier(0.4, 0, 0.2, 1); }
-    .hamburger.active span:nth-child(1) { transform: translateY(7px) rotate(45deg); width: 24px; }
-    .hamburger.active span:nth-child(2) { opacity: 0; transform: translateX(-10px); }
-    .hamburger.active span:nth-child(3) { transform: translateY(-7px) rotate(-45deg); width: 24px; }
+    .hamburger span { width: 22px; height: 2px; background: var(--Mint); border-radius: 2px; }
 
-    .mobile-menu {
-      position: fixed; inset: 0; background: rgba(0,0,0,0.98); backdrop-filter: blur(40px);
-      z-index: 1000000; display: flex; flex-direction: column; align-items: center; justify-content: center;
-      gap: 32px; padding: 40px; transform: translateY(-100%); transition: 0.6s cubic-bezier(0.4, 0, 0.2, 1); opacity: 0; pointer-events: none;
+    /* --- LAYOUT GRID --- */
+    main { padding-top: 160px; padding-bottom: 100px; min-height: 100vh; }
+    .grid-api { display: grid; grid-template-columns: 280px 1fr; gap: 60px; align-items: start; }
+
+    /* FIX FOR HEADER CLIPPING */
+    .section-card { scroll-margin-top: 140px; }
+
+    /* --- SIDEBAR --- */
+    aside { position: sticky; top: 120px; }
+    .sidebar-nav { display: flex; flex-direction: column; gap: 4px; }
+    .sidebar-nav a {
+        display: flex; align-items: center; gap: 12px; padding: 14px 20px; border-radius: 14px;
+        color: var(--Neutral-400); text-decoration: none; font-size: 13px; font-weight: 700;
+        transition: 0.25s cubic-bezier(0.4, 0, 0.2, 1); border: 1px solid transparent;
     }
-    .mobile-menu.active { transform: translateY(0); opacity: 1; pointer-events: auto; }
-    .mobile-menu a { font-size: 28px; font-weight: 900; color: #fff; text-decoration: none; text-transform: uppercase; letter-spacing: -0.02em; transition: 0.3s; }
-    .mobile-menu a:hover { color: var(--Mint); transform: scale(1.05); }
+    .sidebar-nav a:hover { background: rgba(255,255,255,0.03); color: var(--White); }
+    .sidebar-nav a.active { background: rgba(198, 255, 0, 0.08); color: var(--Mint); border-color: rgba(198, 255, 0, 0.2); box-shadow: 0 0 20px rgba(198, 255, 0, 0.05); }
+    .sidebar-nav .nav-dot { width: 6px; height: 6px; border-radius: 50%; background: currentColor; opacity: 0.4; }
 
-    /* --- API UNIQUE STYLES --- */
-    main { padding-top: 120px; padding-bottom: 80px; }
-    .grid-api { display: grid; grid-template-columns: 300px 1fr; gap: 64px; align-items: start; }
-    .sidebar-nav a { display: block; padding: 12px 16px; border-radius: 12px; color: var(--Neutral-400); text-decoration: none; font-size: 14px; font-weight: 600; transition: 0.2s; }
-    .sidebar-nav a:hover, .sidebar-nav a.active { background: var(--Glass); color: var(--Mint); }
-    .glass-card { background: var(--Glass); border: 1px solid var(--Glass-Border); border-radius: 20px; padding: 48px; margin-bottom: 32px; }
-    .section-title { font-size: 32px; font-weight: 800; margin-bottom: 16px; color: #fff; letter-spacing: -0.03em; }
-    .section-desc { font-size: 16px; color: var(--Neutral-400); line-height: 1.6; margin-bottom: 40px; }
-    .endpoint-card { background: #0a0a0a; border: 1px solid var(--Glass-Border); border-radius: 16px; padding: 32px; margin-bottom: 24px; position: relative; }
-    .method { font-size: 10px; font-weight: 900; padding: 4px 8px; border-radius: 4px; margin-right: 12px; vertical-align: middle; }
+    /* --- CONTENT SECTIONS --- */
+    .section-card {
+        background: var(--Obsidian-Layer); border: 1px solid var(--Glass-Border); border-radius: 24px;
+        padding: 60px; margin-bottom: 40px; position: relative; overflow: hidden;
+    }
+    .section-card::before {
+        content: ''; position: absolute; top: 0; left: 0; width: 100%; height: 100%;
+        background: radial-gradient(circle at 100% 0%, rgba(198, 255, 0, 0.03) 0%, transparent 50%);
+        pointer-events: none;
+    }
+
+    .section-title { font-size: 40px; font-weight: 900; margin-bottom: 20px; color: #fff; letter-spacing: -0.04em; line-height: 1.1; }
+    .section-desc { font-size: 17px; color: var(--Neutral-400); line-height: 1.7; margin-bottom: 48px; max-width: 800px; font-weight: 500; }
+
+    /* --- ENDPOINT CARDS --- */
+    .endpoint-card {
+        background: rgba(0,0,0,0.3); border: 1px solid var(--Glass-Border); border-radius: 20px;
+        padding: 32px; margin-bottom: 32px; transition: 0.3s;
+    }
+    .endpoint-card:hover { border-color: rgba(198, 255, 0, 0.2); transform: translateY(-2px); }
+
+    .endpoint-header { display: flex; align-items: center; gap: 16px; margin-bottom: 24px; }
+    .method {
+        font-size: 11px; font-weight: 900; padding: 6px 12px; border-radius: 6px;
+        letter-spacing: 0.05em; text-transform: uppercase;
+    }
     .method-post { background: var(--Mint); color: var(--Obsidian); }
     .method-get { background: var(--Teal-900); color: var(--Mint); }
-    .path { font-family: monospace; font-size: 15px; color: #fff; font-weight: 700; }
-    .code-block { background: #000; border: 1px solid var(--Glass-Border); border-radius: 12px; padding: 24px; font-family: monospace; font-size: 13px; color: var(--Neutral-400); margin-top: 20px; overflow-x: auto; }
-    .code-block b { color: var(--Mint); }
-    .btn-portal { display: inline-flex; align-items: center; gap: 12px; height: 52px; padding: 0 32px; background: var(--Mint); color: var(--Obsidian); border-radius: 12px; font-weight: 800; font-size: 14px; text-decoration: none; transition: 0.2s; margin-top: 20px; }
+    .path { font-family: 'JetBrains Mono', monospace; font-size: 16px; color: #fff; font-weight: 700; opacity: 0.9; }
 
-    @media (max-width: 1050px) {
-      .container { padding: 0 24px; }
-      .grid-api { grid-template-columns: 1fr; gap: 32px; }
-      .sidebar-nav { display: flex; overflow-x: auto; gap: 8px; padding-bottom: 8px; }
-      .sidebar-nav a { white-space: nowrap; border: 1px solid var(--Glass-Border); }
-      .hamburger { display: flex; }
-      .section-title { font-size: 24px; }
-      .glass-card { padding: 24px; }
+    /* --- CODE BLOCKS --- */
+    .code-container { margin-top: 24px; position: relative; }
+    .code-block {
+        background: #020202; border: 1px solid rgba(255,255,255,0.06); border-radius: 16px;
+        padding: 24px; font-family: 'JetBrains Mono', monospace; font-size: 14px;
+        color: #e0e0e0; overflow-x: auto; line-height: 1.6;
     }
+    .code-block b { color: var(--Mint); }
+    .code-block .comment { color: var(--Neutral-500); font-style: italic; }
+    .code-block .string { color: #fce883; }
+    .code-block .number { color: #82aaff; }
+    .code-copy {
+        position: absolute; top: 12px; right: 12px; padding: 6px 12px;
+        background: rgba(255,255,255,0.05); border: 1px solid rgba(255,255,255,0.1);
+        border-radius: 8px; color: var(--Neutral-400); font-size: 10px; font-weight: 800;
+        cursor: pointer; transition: 0.2s;
+    }
+    .code-copy:hover { background: rgba(255,255,255,0.1); color: var(--White); }
+
+    /* --- INFO BOXES --- */
+    .info-box {
+        display: flex; gap: 20px; align-items: center; padding: 32px;
+        background: linear-gradient(135deg, var(--Teal-900), #050505);
+        border-radius: 20px; border: 1px solid rgba(198, 255, 0, 0.2);
+    }
+    .info-box h4 { font-size: 10px; font-weight: 900; color: var(--Mint); text-transform: uppercase; letter-spacing: 0.2em; margin-bottom: 8px; }
+    .info-box code { font-size: 24px; font-weight: 800; color: #fff; font-family: 'JetBrains Mono', monospace; }
+
+    .btn-portal {
+        display: inline-flex; align-items: center; gap: 12px; height: 60px; padding: 0 40px;
+        background: var(--Mint); color: var(--Obsidian); border-radius: 16px;
+        font-weight: 800; font-size: 15px; text-decoration: none; transition: 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+        margin-top: 24px; box-shadow: 0 10px 40px rgba(198, 255, 0, 0.2);
+    }
+    .btn-portal:hover { transform: translateY(-4px) scale(1.02); box-shadow: 0 20px 60px rgba(198, 255, 0, 0.3); }
+
+    /* --- MOBILE RESPONSIVE --- */
+    @media (max-width: 1100px) {
+      .container { padding: 0 24px; }
+      .grid-api { grid-template-columns: 1fr; gap: 40px; }
+      aside { position: relative; top: 0; z-index: 10; }
+      .sidebar-nav { flex-direction: row; overflow-x: auto; padding-bottom: 12px; mask-image: linear-gradient(to right, #000 90%, transparent); }
+      .sidebar-nav a { white-space: nowrap; padding: 12px 16px; border: 1px solid var(--Glass-Border); }
+      .section-card { padding: 40px 24px; border-radius: 20px; }
+      .section-title { font-size: 32px; }
+      .endpoint-card { padding: 24px; }
+      .info-box { padding: 24px; flex-direction: column; align-items: flex-start; text-align: left; }
+    }
+
+    /* --- HELPER CLASSES --- */
+    .text-mint { color: var(--Mint); }
+    .mt-40 { margin-top: 40px; }
   </style>
 </head>
 <body>
   <header id="mainHeader">
     <div class="container">
       <a class="logo" href="/">
-        <img src="/assets/Korra_logo_final.png" alt="Korra" style="height:40px; width:auto;">
-        <span style="font-size:22px; font-weight:900; letter-spacing:-0.03em; color:var(--Mint);">Korra</span>
-        <span style="font-size:10px; color:var(--Mint); vertical-align:middle; margin-left:8px">DEVELOPER</span>
+        <img src="/assets/Korra_logo_final.png" alt="Korra">
+        <span class="logo-text">Korra <span style="font-size:10px; color:var(--Mint); font-weight:900; vertical-align:middle; margin-left:4px; opacity:0.8">DEVELOPER</span></span>
       </a>
       <div class="header-auth">
-        <a href="/dashboard" style="color:var(--Mint); text-decoration:none; font-size:12px; font-weight:800; text-transform:uppercase">Back to Dashboard</a>
-        <div class="hamburger" id="btnHamburger"><span></span><span></span><span></span></div>
+        <a href="/dashboard" class="btn-back">Dashboard</a>
+        <a href="/signup.html?role=developer" class="btn-nav-signup">Sign Up for API</a>
+        <div class="hamburger" id="btnHamburger"><span></span></div>
       </div>
     </div>
   </header>
 
-  <div class="mobile-menu" id="mobileMenu">
-    <a href="/#technology" onclick="toggleMenu()">Technology</a>
-    <a href="/casestudies.html">Success Stories</a>
-    <a href="/dashboard">Merchant Portal</a>
-    <div style="width:100%; height:1px; background:var(--Glass-Border); margin:16px 0"></div>
-    <a href="/docs" class="btn-portal" style="width:100%; height:64px; justify-content:center">Interactive Swagger UI</a>
-    <div class="mobile-close-hint" style="position:static; margin-top:20px; text-align:center">Tap Hamburger to Close</div>
-  </div>
-
   <main class="container">
     <div class="grid-api">
       <aside>
-        <div class="sidebar-nav">
-          <a href="#introduction" class="active">Introduction</a>
-          <a href="#authentication">Authentication</a>
-          <a href="#measurements">Biometric Extraction</a>
-          <a href="#swagger" style="color:var(--Mint); border: 1px solid var(--Mint); margin-top:32px; text-align:center">Launch Swagger UI</a>
-        </div>
+        <nav class="sidebar-nav">
+          <a href="#introduction" class="active"><span class="nav-dot"></span> Introduction</a>
+          <a href="#authentication"><span class="nav-dot"></span> Authentication</a>
+          <a href="#measurements"><span class="nav-dot"></span> Biometric Extraction</a>
+          <a href="#ai-assistant"><span class="nav-dot"></span> AI Consultation</a>
+          <a href="#body-models"><span class="nav-dot"></span> 3D Body Models</a>
+          <a href="#webhooks"><span class="nav-dot"></span> Webhooks</a>
+          <a href="/docs" target="_blank" style="margin-top:20px; border-color:var(--Mint); color:var(--Mint)"><span class="nav-dot"></span> Swagger UI</a>
+        </nav>
       </aside>
 
       <section>
-        <div id="introduction" class="glass-card">
+        <!-- INTRODUCTION -->
+        <div id="introduction" class="section-card">
           <h1 class="section-title">Industrial AI Infrastructure</h1>
           <p class="section-desc">Integrate KORRA's clinical-grade body measurement engine directly into your custom tailoring platform, e-commerce flow, or manufacturing pipeline.</p>
 
-          <div style="background:var(--Teal-900); padding:24px; border-radius:12px; border:1px solid var(--Mint)">
-            <h4 style="font-size:11px; font-weight:900; color:var(--Mint); margin-bottom:8px">BASE ENDPOINT</h4>
-            <code style="color:#fff; font-size:18px; font-weight:800">/api/v2</code>
-            <p style="font-size:11px; color:var(--Neutral-400); margin-top:8px">For local development. In production, replace with your deployed domain.</p>
+          <div style="display:flex; gap:16px; margin-bottom:40px">
+             <a href="/signup.html?role=developer" class="btn-portal" style="margin-top:0; height:52px">Get Secret Key Now</a>
+             <a href="#authentication" class="btn-portal" style="margin-top:0; height:52px; background:rgba(255,255,255,0.05); color:#fff; border:1px solid var(--Glass-Border); box-shadow:none">How it works</a>
           </div>
-        </div>
 
-        <div id="authentication" class="glass-card">
-          <h2 class="section-title">Authentication</h2>
-          <p class="section-desc">KORRA uses API Keys to authenticate requests. Your Merchant key must be included in the header of every technical handshake.</p>
-          <div class="code-block">
-            curl -X POST "https://korra.ai/api/v2/measurements/extract" \<br>
-            &nbsp;&nbsp;<b>-H "X-API-Key: YOUR_MERCHANT_KEY"</b> \<br>
-            &nbsp;&nbsp;-F "front=@photo.jpg" ...
-          </div>
-        </div>
-
-        <div id="measurements" class="glass-card">
-          <h2 class="section-title">Biometric Extraction</h2>
-          <p class="section-desc">The core endpoint for 3D body regression. Requires a Front and Side photo for volumetric accuracy.</p>
-          <div class="endpoint-card">
-            <span class="method method-post">POST</span>
-            <span class="path">/measurements/extract</span>
-            <p style="margin-top:20px; font-size:14px; color:var(--Neutral-400)">Takes multipart/form-data images and returns personalized circumferences.</p>
-            <div class="code-block">
-              {<br>
-              &nbsp;&nbsp;"success": <b>true</b>,<br>
-              &nbsp;&nbsp;"measurements": {<br>
-              &nbsp;&nbsp;&nbsp;&nbsp;"Chest Round": 102.4,<br>
-              &nbsp;&nbsp;&nbsp;&nbsp;"Waist Round": 88.6,<br>
-              &nbsp;&nbsp;&nbsp;&nbsp;"Hips Round": 105.1<br>
-              &nbsp;&nbsp;},<br>
-              &nbsp;&nbsp;"scan_id": "9b1deb4d-3b7d-4bad-9bdd-2b0d7b3dcb6d"<br>
-              }
+          <div class="info-box">
+            <div>
+              <h4>API BASE URL</h4>
+              <code>https://korra.work/api/v2</code>
+              <p style="font-size:12px; color:var(--Neutral-500); margin-top:12px; font-weight:600">Production environment for authenticated merchant requests.</p>
             </div>
           </div>
         </div>
 
-        <div id="swagger" class="glass-card" style="border-color:var(--Mint); text-align:center">
-           <h2 class="section-title">Interactive Documentation</h2>
-           <p class="section-desc">Launch the real-time Swagger UI to test endpoints, inspect schemas, and verify your API keys directly in the browser.</p>
-           <a href="/docs" target="_blank" class="btn-portal">Open Interactive Swagger UI</a>
+        <!-- AUTHENTICATION -->
+        <div id="authentication" class="section-card">
+          <h2 class="section-title">Authentication</h2>
+          <p class="section-desc">Access to the KORRA API is secured via secret merchant keys. You must include your key in the <span class="text-mint">X-API-Key</span> header of every technical handshake.</p>
+
+          <div class="code-container">
+            <div class="code-copy" onclick="copyCode(this)">Copy</div>
+            <pre class="code-block">
+<span class="comment"># Example request using cURL</span>
+curl -X POST "https://korra.work/api/v2/measurements/extract" \
+  <b>-H "X-API-Key: YOUR_SECRET_KEY"</b> \
+  -F "front=@front_photo.jpg" \
+  -F "side=@side_photo.jpg" \
+  -F "height=180" \
+  -F "gender=male"</pre>
+          </div>
+        </div>
+
+        <!-- BIOMETRIC EXTRACTION -->
+        <div id="measurements" class="section-card">
+          <h2 class="section-title">Biometric Extraction</h2>
+          <p class="section-desc">The core endpoint for 3D body regression. Our vision engine analyzes front and side silhouettes to return over 85 personalized measurements with clinical-grade precision.</p>
+
+          <div class="endpoint-card">
+            <div class="endpoint-header">
+              <span class="method method-post">POST</span>
+              <span class="path">/measurements/extract</span>
+            </div>
+            <p style="font-size:14px; color:var(--Neutral-400); line-height:1.6">Accepts <code class="text-mint">multipart/form-data</code> with image files and returns a structured JSON object of body perimeters.</p>
+
+            <div class="code-container">
+                <div class="code-copy" onclick="copyCode(this)">Copy</div>
+                <pre class="code-block">
+{
+  <span class="string">"success"</span>: <b>true</b>,
+  <span class="string">"measurements"</span>: {
+    <span class="string">"Chest Round"</span>: <span class="number">102.4</span>,
+    <span class="string">"Waist Round"</span>: <span class="number">88.6</span>,
+    <span class="string">"Hip Round"</span>: <span class="number">105.1</span>,
+    <span class="string">"Shoulder"</span>: <span class="number">44.2</span>
+  },
+  <span class="string">"scan_id"</span>: <span class="string">"korra_v2_f8d2..."</span>
+}</pre>
+            </div>
+          </div>
+        </div>
+
+        <!-- AI CONSULTATION -->
+        <div id="ai-assistant" class="section-card">
+          <h2 class="section-title">AI Consultation</h2>
+          <p class="section-desc">Interrogate scan data using our multi-LLM fallback chain. Get professional fit advice and style recommendations based on real biological measurements.</p>
+
+          <div class="endpoint-card">
+            <div class="endpoint-header">
+              <span class="method method-post">POST</span>
+              <span class="path">/ai/assist</span>
+            </div>
+            <p style="font-size:14px; color:var(--Neutral-400); line-height:1.6">Sends a natural language prompt along with measurement context to generate insights.</p>
+          </div>
+        </div>
+
+        <!-- 3D BODY MODELS -->
+        <div id="body-models" class="section-card">
+          <h2 class="section-title">3D Body Models</h2>
+          <p class="section-desc">Generate high-fidelity binary 3D vertex data directly on the server. Optimized for Three.js and custom garment design engines.</p>
+
+          <div class="endpoint-card">
+            <div class="endpoint-header">
+              <span class="method method-post">POST</span>
+              <span class="path">/body-shape/compute</span>
+            </div>
+            <p style="font-size:14px; color:var(--Neutral-400); line-height:1.6">Evaluates complex blendshapes and returns a <code class="text-mint">Float32Array</code> of 13,334 vertices in 60ms.</p>
+          </div>
+        </div>
+
+        <!-- WEBHOOKS -->
+        <div id="webhooks" class="section-card">
+          <h2 class="section-title">Webhooks & Security</h2>
+          <p style="margin-bottom:32px; font-size:16px; color:var(--Neutral-400)">Real-time event synchronization for enterprise workflows.</p>
+
+          <div class="endpoint-card">
+            <div class="endpoint-header">
+              <span class="method method-post">POST</span>
+              <span class="path">/webhooks/register</span>
+            </div>
+            <p style="font-size:14px; color:var(--Neutral-400); margin-bottom:20px">Register your endpoint to receive automated <code class="text-mint">scan_completed</code> notifications.</p>
+            <div class="info-box" style="background: rgba(214, 48, 49, 0.05); border-color: rgba(214, 48, 49, 0.2);">
+                <div>
+                    <h4 style="color: var(--Error)">VERIFICATION REQUIRED</h4>
+                    <p style="font-size:12px; color:var(--Neutral-400); line-height:1.5">All payloads are signed with your secret key. Use HMAC SHA256 to verify the <code style="color:#fff">X-KORRA-Signature</code> header.</p>
+                </div>
+            </div>
+          </div>
+        </div>
+
+        <!-- SWAGGER UI -->
+        <div id="swagger" class="section-card" style="text-align:center; border-color:var(--Mint)">
+           <h2 class="section-title">Interactive Reference</h2>
+           <p class="section-desc" style="margin-left:auto; margin-right:auto">Launch the live Swagger UI to test endpoints, inspect full schemas, and verify your API keys directly in the browser.</p>
+           <a href="/docs" target="_blank" class="btn-portal">Launch Interactive Swagger UI</a>
         </div>
       </section>
     </div>
   </main>
 
-  <script src="/assets/supabase.min.js"></script>
   <script>
     (function() {
-      const hamburger = document.getElementById('btnHamburger');
-      const mobileMenu = document.getElementById('mobileMenu');
-      window.toggleMenu = function() {
-        if (!hamburger || !mobileMenu) return;
-        hamburger.classList.toggle('active');
-        mobileMenu.classList.toggle('active');
-        document.body.style.overflow = mobileMenu.classList.contains('active') ? 'hidden' : '';
-      };
-      if (hamburger) hamburger.addEventListener('click', toggleMenu);
+      // --- INTERACTIVE NAVIGATION ---
+      const navLinks = document.querySelectorAll('.sidebar-nav a');
+      const sections = document.querySelectorAll('.section-card');
+
       window.addEventListener('scroll', () => {
+        let current = "";
+        sections.forEach(section => {
+          const sectionTop = section.offsetTop;
+          if (pageYOffset >= sectionTop - 150) {
+            current = section.getAttribute('id');
+          }
+        });
+
+        navLinks.forEach(link => {
+          link.classList.remove('active');
+          if (link.getAttribute('href').includes(current)) {
+            link.classList.add('active');
+          }
+        });
+
+        // Header scroll effect
         const header = document.getElementById('mainHeader');
-        if (header) { if (window.scrollY > 40) header.classList.add('scrolled'); else header.classList.remove('scrolled'); }
+        if (window.scrollY > 40) header.classList.add('scrolled');
+        else header.classList.remove('scrolled');
       });
+
+      window.copyCode = function(btn) {
+          const pre = btn.nextElementSibling;
+          const text = pre.innerText;
+          navigator.clipboard.writeText(text).then(() => {
+              btn.innerText = "Copied!";
+              setTimeout(() => btn.innerText = "Copy", 2000);
+          });
+      };
     })();
   </script>
 </body>

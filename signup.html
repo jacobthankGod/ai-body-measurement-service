@@ -168,7 +168,7 @@
 
       const params = new URLSearchParams(window.location.search);
       const next = params.get('next');
-      const role = params.get('role'); // individual | artisan | merchant | enterprise
+      const role = params.get('role'); // individual | artisan | merchant | enterprise | developer
       const mId = params.get('m');
 
       if (role === 'individual') {
@@ -183,6 +183,10 @@
           document.getElementById('viewTitle').textContent = "Enterprise Solutions";
           document.getElementById('viewSub').textContent = "Scale your production with precision data.";
           document.getElementById('btnSignUp').textContent = 'Start Integration';
+      } else if (role === 'developer') {
+          document.getElementById('viewTitle').textContent = "Developer Portal";
+          document.getElementById('viewSub').textContent = "Build with clinical-grade biometric AI.";
+          document.getElementById('btnSignUp').textContent = 'Create Developer Account';
       }
 
 if (next) {
@@ -220,6 +224,7 @@ const email = document.getElementById('upEmail').value;
         if (role === 'individual') userType = 'individual';
         else if (role === 'merchant') userType = 'merchant';
         else if (role === 'enterprise') userType = 'enterprise';
+        else if (role === 'developer') userType = 'developer';
         else if (role === 'client') userType = 'individual';
 
         const metadata = {
@@ -240,9 +245,9 @@ const email = document.getElementById('upEmail').value;
           const { error } = await KORRA_CORE.auth.signUp({
             email,
             password,
-options: {
+            options: {
               data: metadata,
-              emailRedirectTo: window.location.origin + '/onboarding'
+              emailRedirectTo: window.location.origin + (role === 'developer' ? '/onboarding-developer' : '/onboarding')
             }
           });
 

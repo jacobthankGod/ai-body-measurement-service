@@ -129,15 +129,15 @@ class CameraKitTryOn {
   setSidebarRegions(sidebarOpen) {
     if (sidebarOpen) {
       return this.setScreenRegions({
-        safeRender: { x: 0, y: 0, width: 0.72, height: 1.0 },
-        roundButton: { x: 0, y: 0.35, width: 0.08, height: 0.3 },
-        topBar: { x: 0, y: 0, width: 1.0, height: 0.05 }
+        safeRender: { x: 0.10, y: 0.16, width: 0.58, height: 0.90 },
+        roundButton: { x: 0.00, y: 0.28, width: 0.10, height: 0.44 },
+        topBar: { x: 0, y: 0, width: 1.0, height: 0.06 }
       });
     } else {
       return this.setScreenRegions({
-        safeRender: { x: 0, y: 0, width: 1.0, height: 1.0 },
-        roundButton: { x: 0, y: 0.35, width: 0.06, height: 0.3 },
-        topBar: { x: 0, y: 0, width: 1.0, height: 0.05 }
+        safeRender: { x: 0.08, y: 0.16, width: 0.84, height: 0.90 },
+        roundButton: { x: 0.00, y: 0.28, width: 0.09, height: 0.44 },
+        topBar: { x: 0, y: 0, width: 1.0, height: 0.06 }
       });
     }
   }

@@ -26,6 +26,15 @@ def validate_subscription(api_key):
     if not api_key:
         return {'valid': False, 'error': 'API key required'}
 
+    # 1. SANDBOX MODE (Pillar 5)
+    if api_key.startswith("korra_test_"):
+        return {
+            'valid': True,
+            'tier': 'sandbox',
+            'is_sandbox': True,
+            'user_id': 'sandbox_dummy'
+        }
+
     master_key = os.environ.get("PRECISIONFIT_MASTER_KEY")
     is_admin = (master_key and api_key == master_key) or api_key.startswith("korra_admin_")
 

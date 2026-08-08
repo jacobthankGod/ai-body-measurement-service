@@ -816,6 +816,11 @@
       }
       
       if (profile) {
+        // Redirect developers to their special flow
+        if (profile.account_type === 'developer') {
+          return window.location.href = '/onboarding-developer';
+        }
+
         // Recovery Logic: Map profile data to userData
         Object.keys(userData).forEach(k => {
             if (profile[k] !== undefined && profile[k] !== null) userData[k] = profile[k];
